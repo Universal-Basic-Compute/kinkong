@@ -4,8 +4,8 @@ import Image from 'next/image';
 export default function Home() {
   return (
     <main className="min-h-screen bg-black text-white">
-      <section className="hero px-4 py-20 text-center bg-gradient-to-b from-darkred/20 to-black">
-        <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-darkred to-gold bg-clip-text text-transparent animate-glow electric-text">
+      <section className="hero px-4 py-20 text-center bg-gradient-to-b from-black via-darkred/10 to-black">
+        <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-darkred to-gold bg-clip-text text-transparent">
           24/7 Superhuman Trading Intelligence
         </h1>
         <p className="text-xl mb-8 text-gray-300 max-w-3xl mx-auto">
@@ -14,7 +14,7 @@ export default function Home() {
         </p>
         <Link 
           href="/invest" 
-          className="inline-block px-8 py-4 bg-gradient-to-r from-darkred to-gold text-black font-bold rounded-lg hover:scale-105 transition-transform duration-200 electric-border"
+          className="inline-block px-8 py-4 bg-gradient-to-r from-darkred/90 to-gold/90 text-black font-bold rounded-lg hover-effect transition-all"
         >
           Start Earning With Our AI Traders
         </Link>
@@ -51,7 +51,7 @@ export default function Home() {
               ]
             }
           ].map((benefit, i) => (
-            <div key={i} className="benefit-card p-6 rounded-lg metallic-surface border border-gold/20 hover:border-gold/50 transition-colors">
+            <div key={i} className="benefit-card p-6 rounded-lg metallic-surface border border-gold/10 hover:border-gold/20 transition-all">
               <div className="text-4xl mb-4">{benefit.icon}</div>
               <h3 className="text-xl font-bold mb-4 text-gold">{benefit.title}</h3>
               <ul className="space-y-2">
@@ -72,7 +72,7 @@ export default function Home() {
             { label: "Profit Share", value: "75%", unit: "Weekly Distribution" },
             { label: "Trading Volume", value: "14.16M", unit: "$COMPUTE Total" }
           ].map((metric, i) => (
-            <div key={i} className="metric p-6 rounded-lg metallic-surface border border-gold/20 text-center electric-border">
+            <div key={i} className="metric p-6 rounded-lg metallic-surface border border-gold/10 text-center transition-all hover-effect">
               <h4 className="text-gray-300 mb-2">{metric.label}</h4>
               <p className="text-4xl font-bold text-gold mb-1">{metric.value}</p>
               <p className="text-sm text-gray-400">{metric.unit}</p>
@@ -89,7 +89,7 @@ export default function Home() {
             { number: 2, title: "AI Trades", desc: "Our AI trades 24/7 across markets" },
             { number: 3, title: "Get Paid", desc: "Receive 75% profits every Friday" }
           ].map((step, i) => (
-            <div key={i} className="step p-6 rounded-lg metallic-surface border border-gold/20 text-center">
+            <div key={i} className="step p-6 rounded-lg metallic-surface border border-gold/10 text-center transition-all hover-effect">
               <div className="w-12 h-12 rounded-full bg-gold text-black font-bold text-xl flex items-center justify-center mx-auto mb-4">
                 {step.number}
               </div>

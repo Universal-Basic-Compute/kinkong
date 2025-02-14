@@ -6,7 +6,7 @@
   --color-darkred: #8B0000;
   --color-gold: #FFD700;
   --color-black: #0a0a0a;
-  --color-metallic: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+  --color-metallic: linear-gradient(145deg, #1a1a1a, #0a0a0a);
 }
 
 body {
@@ -14,127 +14,135 @@ body {
   color: #ffffff;
 }
 
-/* Enhanced Glow Effects */
-@keyframes glow {
+/* Subtle Metallic Glow */
+@keyframes subtleGlow {
   0%, 100% { 
     text-shadow: 
-      0 0 25px rgba(255, 215, 0, 0.6),
-      0 0 50px rgba(139, 0, 0, 0.4),
-      0 0 75px rgba(255, 215, 0, 0.2);
+      0 0 15px rgba(255, 215, 0, 0.3),
+      0 0 30px rgba(139, 0, 0, 0.2);
   }
   50% { 
     text-shadow: 
-      0 0 40px rgba(255, 215, 0, 1),
-      0 0 70px rgba(139, 0, 0, 0.6),
-      0 0 100px rgba(255, 215, 0, 0.3);
+      0 0 20px rgba(255, 215, 0, 0.4),
+      0 0 40px rgba(139, 0, 0, 0.3);
   }
 }
 
-/* Electric Pulse Effect */
-@keyframes electricPulse {
-  0% {
+/* Refined Electric Border */
+@keyframes subtlePulse {
+  0%, 100% {
     box-shadow: 
-      0 0 5px rgba(255, 215, 0, 0.5),
-      0 0 10px rgba(255, 215, 0, 0.3),
-      inset 0 0 5px rgba(255, 215, 0, 0.5);
+      0 0 5px rgba(255, 215, 0, 0.2),
+      inset 0 0 5px rgba(255, 215, 0, 0.1);
   }
   50% {
     box-shadow: 
-      0 0 20px rgba(255, 215, 0, 0.8),
-      0 0 30px rgba(139, 0, 0, 0.5),
-      inset 0 0 10px rgba(255, 215, 0, 0.8);
-  }
-  100% {
-    box-shadow: 
-      0 0 5px rgba(255, 215, 0, 0.5),
       0 0 10px rgba(255, 215, 0, 0.3),
-      inset 0 0 5px rgba(255, 215, 0, 0.5);
+      inset 0 0 8px rgba(255, 215, 0, 0.2);
   }
 }
 
-/* Metallic Surface Effect */
+/* Sleek Metallic Surface */
 .metallic-surface {
   background: var(--color-metallic);
   box-shadow: 
-    inset 0 0 10px rgba(255, 255, 255, 0.1),
-    inset 0 0 20px rgba(255, 215, 0, 0.05);
-  border: 1px solid rgba(255, 215, 0, 0.1);
+    inset 0 0 20px rgba(0, 0, 0, 0.5),
+    inset 0 0 30px rgba(255, 215, 0, 0.03);
+  border: 1px solid rgba(255, 215, 0, 0.08);
+  backdrop-filter: blur(5px);
 }
 
-/* Enhanced Animations */
 .animate-glow {
-  animation: glow 2s ease-in-out infinite;
+  animation: subtleGlow 3s ease-in-out infinite;
 }
 
 .electric-border {
-  animation: electricPulse 2s infinite;
-  transition: all 0.3s ease;
+  animation: subtlePulse 4s infinite;
+  transition: all 0.5s ease;
 }
 
 .benefit-card {
   position: relative;
   overflow: hidden;
+  transition: transform 0.3s ease;
+}
+
+.benefit-card:hover {
+  transform: translateY(-2px);
 }
 
 .benefit-card::before {
   content: '';
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
   background: linear-gradient(
-    45deg,
+    90deg,
     transparent,
-    rgba(255, 215, 0, 0.1),
+    rgba(255, 215, 0, 0.05),
     transparent
   );
-  transform: rotate(45deg);
-  animation: metalShine 3s infinite;
+  transition: left 0.7s ease;
 }
 
-@keyframes metalShine {
-  0% {
-    transform: translateX(-100%) translateY(-100%) rotate(45deg);
-  }
-  50% {
-    transform: translateX(100%) translateY(100%) rotate(45deg);
-  }
-  100% {
-    transform: translateX(-100%) translateY(-100%) rotate(45deg);
-  }
+.benefit-card:hover::before {
+  left: 100%;
 }
 
 .metric {
   transition: all 0.3s ease;
-  background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
+  background: linear-gradient(145deg, #0f0f0f, #050505);
 }
 
 .metric:hover {
-  transform: scale(1.05);
-  border-color: var(--color-gold);
+  transform: translateY(-2px);
+  border-color: rgba(255, 215, 0, 0.3);
   box-shadow: 
-    0 0 20px rgba(255, 215, 0, 0.2),
-    inset 0 0 10px rgba(255, 215, 0, 0.1);
+    0 5px 15px rgba(0, 0, 0, 0.3),
+    inset 0 0 20px rgba(255, 215, 0, 0.05);
 }
 
-/* Electric Text Effect */
+/* Refined Text Effect */
 .electric-text {
-  color: #fff;
-  text-shadow:
-    0 0 5px #fff,
-    0 0 10px #fff,
-    0 0 15px var(--color-gold),
-    0 0 20px var(--color-gold),
-    0 0 25px var(--color-gold);
-  animation: electricFlicker 2s infinite;
+  background: linear-gradient(
+    to right,
+    var(--color-gold) 20%,
+    #fff 40%,
+    #fff 60%,
+    var(--color-gold) 80%
+  );
+  background-size: 200% auto;
+  color: #000;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transition: all 0.3s ease;
 }
 
-@keyframes electricFlicker {
-  0%, 19.999%, 22%, 62.999%, 64%, 64.999%, 70%, 100% {
-    opacity: 1;
-  }
-  20%, 21.999%, 63%, 63.999%, 65%, 69.999% {
-    opacity: 0.4;
-  }
+.electric-text:hover {
+  background-position: right center;
+}
+
+/* Dark Gradient Overlays */
+.dark-gradient {
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.8),
+    rgba(139, 0, 0, 0.1)
+  );
+}
+
+/* Smooth Transitions */
+.transition-all {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Button Hover Effects */
+.hover-effect:hover {
+  box-shadow: 
+    0 5px 15px rgba(0, 0, 0, 0.3),
+    inset 0 0 20px rgba(255, 215, 0, 0.05);
+  transform: translateY(-1px);
 }
