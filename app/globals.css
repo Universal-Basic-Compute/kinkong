@@ -2,8 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-
-:root {
+@layer base {
+  :root {
+    --background: #000000;
+    --foreground: #ffffff;
   --color-darkred: #8B0000;
   --color-gold: #FFD700;
   --color-black: #0a0a0a;
@@ -146,4 +148,14 @@ body {
     0 5px 15px rgba(0, 0, 0, 0.3),
     inset 0 0 20px rgba(255, 215, 0, 0.05);
   transform: translateY(-1px);
+}
+
+@layer components {
+  .nav-link {
+    @apply text-gray-300 hover:text-gold transition-colors;
+  }
+
+  .cta-button {
+    @apply px-4 py-2 bg-gradient-to-r from-darkred to-gold text-black font-semibold rounded-md hover:shadow-lg hover:scale-105 transition-all duration-200;
+  }
 }
