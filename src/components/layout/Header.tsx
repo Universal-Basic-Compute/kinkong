@@ -15,19 +15,19 @@ export default function Header() {
   ];
 
   return (
-    <header className="fixed w-full bg-black/95 backdrop-blur-sm border-b border-gold/10 z-50 shadow-lg">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+    <header className="fixed top-0 left-0 right-0 bg-black border-b border-gold/20">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex items-center justify-between px-4 py-4">
           {/* Logo */}
           <Link 
             href="/" 
-            className="text-gold font-bold text-xl hover:text-gold/80 transition-colors"
+            className="text-gold font-bold text-2xl"
           >
             KinKong
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
+          <nav className="hidden md:flex items-center gap-8">
             {navItems.map((item) => (
               <Link
                 key={item.href}
@@ -45,9 +45,7 @@ export default function Header() {
             {/* CTA Button - Desktop only */}
             <Link
               href="/invest"
-              className="hidden md:inline-block px-4 py-2 bg-gradient-to-r from-darkred/90 to-gold/90 
-                         text-black font-semibold rounded hover:scale-105 transition-all duration-200 
-                         shadow-md hover:shadow-lg text-sm"
+              className="hidden md:block px-4 py-2 bg-gradient-to-r from-darkred to-gold text-black font-semibold rounded"
             >
               Start Trading
             </Link>
@@ -86,12 +84,10 @@ export default function Header() {
       </div>
 
       {/* Mobile menu */}
-      <div 
-        className={`md:hidden transition-all duration-200 ease-in-out ${
-          isMobileMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
-        }`}
-      >
-        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-black/95 border-b border-gold/10">
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden border-t border-gold/20">
+            <nav className="px-4 py-2 space-y-2">
           {navItems.map((item) => (
             <Link
               key={item.href}
