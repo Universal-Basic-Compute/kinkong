@@ -26,13 +26,13 @@ For optimal short-term results in the Solana ecosystem, KinKong implements a 4x 
 
 ## Recommended Trading Schedule
 
-KinKong executes trades at four strategic times daily:
-- 00:00 UTC (Asian session)
-- 06:00 UTC (European session start)
-- 12:00 UTC (European/American overlap)
-- 18:00 UTC (American session)
+KinKong executes trades four times daily within flexible windows:
+- Asian window: 00:00 UTC ±30min
+- European window: 06:00 UTC ±30min
+- Overlap window: 12:00 UTC ±30min
+- American window: 18:00 UTC ±30min
 
-This schedule provides comprehensive coverage of major market movements while allowing sufficient time between trades for analysis and strategy adjustment.
+Trades only execute if any position requires >3% adjustment, providing efficient rebalancing while avoiding unnecessary transactions.
 
 ## Core Trading Strategy
 
@@ -148,20 +148,17 @@ Note: All indicators prioritize data readily available from Solana DEX APIs and 
 ### Reallocation Process (6-Hour Intervals)
 
 #### Portfolio Components
-1. AI Tokens (Selected 10)
-   - Individual allocation: 3-15% each
-   - Combined allocation: 30-80% of portfolio
-   - Minimum position size: $1,000
+1. Bull Market Allocation
+   - AI Tokens (Selected 10): 70%
+   - SOL Position: 20%
+   - Stablecoin Reserve: 10%
 
-2. SOL Position
-   - Allocation range: 10-40%
-   - Acts as ecosystem hedge
-   - Minimum position: 5%
+2. Bear Market Allocation
+   - AI Tokens (Selected 10): 40%
+   - SOL Position: 20%
+   - Stablecoin Reserve: 40%
 
-3. Stablecoin Reserve
-   - Allocation range: 15-60%
-   - Higher during bearish weeks
-   - Minimum position: 15%
+Note: Market condition (bull/bear) determined by weekly sentiment analysis
 
 ### Project Fundamentals & Sentiment Analysis
 
@@ -280,46 +277,24 @@ Note: All indicators prioritize data readily available from Solana DEX APIs and 
 - Cap individual holder influence
 - Filter out coordinated signal attempts
 
-#### New Token Suggestions
+#### New Token Addition Process
 
-1. Submission Process
-   - Dedicated #new-tokens channel
-   - Required format:
-     ```
-     New Token Submission:
-     Token: $SYMBOL
-     Contract: [ADDRESS]
-     Category: [AI/ML focus area]
-     Reason: [Analysis]
-     Liquidity: [Current DEX liquidity]
-     Volume: [24h volume]
-     ```
+1. Base Requirements
+   - Listed on Jupiter DEX
+   - 7-day average daily volume > $10,000
+   - Minimum liquidity of 3x intended position size
+   - Active USDC liquidity pools
+
+2. Addition Criteria
+   - Must receive 3+ holder suggestions
+   - Must pass 48h monitoring period
+   - Must maintain base requirements throughout monitoring
+
+3. Submission Process
+   - Submit via #new-tokens channel
+   - Include token symbol, contract address, and basic metrics
    - One submission per holder per week
 
-2. Fast-Track Evaluation
-   - Tokens suggested by verified holders skip initial screening
-   - Automatically added to next weekly review if:
-     - Minimum 3 different holders suggest same token
-     - Combined suggester stake > 100,000 $COMPUTE
-     - Meets basic liquidity/volume requirements
-
-3. Reserved Allocation
-   - 1 of the 3 "new entry" slots reserved for shareholder suggestions
-   - Must still meet minimum criteria:
-     - DEX listing
-     - Liquidity requirements
-     - Trading history
-   
-4. Suggestion Scoring
-   - Base points from technical criteria (70%)
-   - Additional weight factors:
-     - Number of suggesting holders
-     - Suggesters' historical accuracy
-     - Combined stake of suggesting holders
-     - Quality of submitted analysis
-
-5. Risk Controls
-   - Mandatory 48h monitoring period before inclusion
-   - Maximum 2 shareholder-suggested tokens at once
-   - Immediate removal if manipulation detected
-   - Extra scrutiny on newly launched tokens
+4. Risk Controls
+   - Maximum 2 new tokens added per week
+   - Immediate removal if base requirements violated
