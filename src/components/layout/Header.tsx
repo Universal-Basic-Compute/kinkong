@@ -25,19 +25,19 @@ export default function Header() {
             KinKong
           </Link>
 
-          <nav className="hidden md:flex gap-8">
+          <nav className="hidden md:flex items-center space-x-12">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-gray-300 hover:text-gold transition-colors duration-200 font-medium tracking-wide"
+                className="text-gray-300 hover:text-gold transition-colors duration-200 font-medium tracking-wide px-2 py-1"
               >
                 {item.label}
               </Link>
             ))}
           </nav>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center space-x-8">
             <Link
               href="/invest"
               className="hidden md:block px-6 py-2 bg-gradient-to-r from-darkred to-gold text-black font-semibold rounded-lg hover:scale-105 transition-all duration-200 shadow-lg shadow-gold/10"
