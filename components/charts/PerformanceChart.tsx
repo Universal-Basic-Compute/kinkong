@@ -1,4 +1,6 @@
 'use client'
+'use client';
+
 import { LineChart, Line, XAxis, YAxis, Tooltip, Legend } from 'recharts'
 
 export function PerformanceChart() {

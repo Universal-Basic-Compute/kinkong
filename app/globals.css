@@ -163,4 +163,29 @@ body {
   .cta-button {
     @apply px-4 py-2 bg-gradient-to-r from-[#8B0000] to-[#FFD700] text-black font-semibold rounded-md hover:shadow-lg hover:scale-105 transition-all duration-200;
   }
+
+  .input-field {
+    @apply w-full p-2 bg-black/50 border border-gold/20 rounded-lg text-white focus:border-gold focus:outline-none;
+  }
+
+  .btn-primary {
+    @apply px-4 py-2 bg-gradient-to-r from-darkred to-gold text-black font-semibold rounded-lg 
+    hover:scale-105 transition-all duration-200 shadow-lg shadow-gold/10;
+  }
+
+  .stat-card {
+    @apply p-6 bg-black/50 border border-gold/20 rounded-lg;
+  }
+
+  .info-card {
+    @apply p-6 bg-black/50 border border-gold/20 rounded-lg;
+  }
+
+  .metric-card {
+    @apply p-6 bg-black/50 border border-gold/20 rounded-lg;
+  }
+
+  .investment-form {
+    @apply space-y-4;
+  }
 }
