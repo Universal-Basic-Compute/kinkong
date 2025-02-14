@@ -122,10 +122,9 @@ Note: All indicators prioritize data readily available from Solana DEX APIs and 
    - Gradual position adjustment over 24h for new entries
 
 4. Emergency Removal Criteria
-   - Volume drops below threshold
-   - Liquidity removal > 50%
-   - Suspicious trading patterns
-   - Major negative project news
+   - Portfolio value drops >10%
+   - Liquidity falls below 2x position size
+   - Critical verified negative news
 
 ### Daily Trading Operations
 1. Position Management (4x Daily)
