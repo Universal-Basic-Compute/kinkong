@@ -82,30 +82,30 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile menu */}
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-gold/20">
-            <nav className="px-4 py-2 space-y-2">
-          {navItems.map((item) => (
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden border-t border-gold/20">
+          <nav className="px-4 py-2 space-y-2">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="block text-gray-300 hover:text-gold py-2"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ))}
             <Link
-              key={item.href}
-              href={item.href}
-              className="text-gray-300 hover:text-gold block px-3 py-2 text-base transition-colors"
+              href="/invest"
+              className="block text-gold hover:text-gold/80 py-2"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              {item.label}
+              Start Trading
             </Link>
-          ))}
-          <Link
-            href="/invest"
-            className="block px-3 py-2 text-base text-gold hover:text-gold/80 transition-colors"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            Start Trading
-          </Link>
+          </nav>
         </div>
-      </div>
+      )}
     </header>
   );
 }
