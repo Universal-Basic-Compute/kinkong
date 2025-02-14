@@ -19,7 +19,8 @@
     "pino-pretty": "^13.0.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "recharts": "^2.10.3"
+    "recharts": "^2.10.3",
+    "react-markdown": "^9.0.1"
   },
   "devDependencies": {
     "@types/airtable": "^0.10.1",
@@ -30,6 +31,7 @@
     "pino-pretty": "^10.2.3",
     "postcss": "^8.0.0",
     "tailwindcss": "^3.3.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "@tailwindcss/typography": "^0.5.10"
   }
 }
