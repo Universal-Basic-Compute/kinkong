@@ -6,6 +6,7 @@
   --color-darkred: #8B0000;
   --color-gold: #FFD700;
   --color-black: #0a0a0a;
+  --color-metallic: linear-gradient(145deg, #2a2a2a, #1a1a1a);
 }
 
 body {
@@ -13,37 +14,127 @@ body {
   color: #ffffff;
 }
 
+/* Enhanced Glow Effects */
 @keyframes glow {
   0%, 100% { 
     text-shadow: 
       0 0 25px rgba(255, 215, 0, 0.6),
-      0 0 50px rgba(139, 0, 0, 0.4);
+      0 0 50px rgba(139, 0, 0, 0.4),
+      0 0 75px rgba(255, 215, 0, 0.2);
   }
   50% { 
     text-shadow: 
       0 0 40px rgba(255, 215, 0, 1),
-      0 0 70px rgba(139, 0, 0, 0.6);
+      0 0 70px rgba(139, 0, 0, 0.6),
+      0 0 100px rgba(255, 215, 0, 0.3);
   }
 }
 
+/* Electric Pulse Effect */
+@keyframes electricPulse {
+  0% {
+    box-shadow: 
+      0 0 5px rgba(255, 215, 0, 0.5),
+      0 0 10px rgba(255, 215, 0, 0.3),
+      inset 0 0 5px rgba(255, 215, 0, 0.5);
+  }
+  50% {
+    box-shadow: 
+      0 0 20px rgba(255, 215, 0, 0.8),
+      0 0 30px rgba(139, 0, 0, 0.5),
+      inset 0 0 10px rgba(255, 215, 0, 0.8);
+  }
+  100% {
+    box-shadow: 
+      0 0 5px rgba(255, 215, 0, 0.5),
+      0 0 10px rgba(255, 215, 0, 0.3),
+      inset 0 0 5px rgba(255, 215, 0, 0.5);
+  }
+}
+
+/* Metallic Surface Effect */
+.metallic-surface {
+  background: var(--color-metallic);
+  box-shadow: 
+    inset 0 0 10px rgba(255, 255, 255, 0.1),
+    inset 0 0 20px rgba(255, 215, 0, 0.05);
+  border: 1px solid rgba(255, 215, 0, 0.1);
+}
+
+/* Enhanced Animations */
 .animate-glow {
   animation: glow 2s ease-in-out infinite;
 }
 
-.shadow-glow {
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+.electric-border {
+  animation: electricPulse 2s infinite;
+  transition: all 0.3s ease;
 }
 
-.benefit-card:hover {
-  transform: translateY(-2px);
-  transition: all 0.3s ease;
+.benefit-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.benefit-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(255, 215, 0, 0.1),
+    transparent
+  );
+  transform: rotate(45deg);
+  animation: metalShine 3s infinite;
+}
+
+@keyframes metalShine {
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+  50% {
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
 }
 
 .metric {
   transition: all 0.3s ease;
+  background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
 }
 
 .metric:hover {
   transform: scale(1.05);
   border-color: var(--color-gold);
+  box-shadow: 
+    0 0 20px rgba(255, 215, 0, 0.2),
+    inset 0 0 10px rgba(255, 215, 0, 0.1);
+}
+
+/* Electric Text Effect */
+.electric-text {
+  color: #fff;
+  text-shadow:
+    0 0 5px #fff,
+    0 0 10px #fff,
+    0 0 15px var(--color-gold),
+    0 0 20px var(--color-gold),
+    0 0 25px var(--color-gold);
+  animation: electricFlicker 2s infinite;
+}
+
+@keyframes electricFlicker {
+  0%, 19.999%, 22%, 62.999%, 64%, 64.999%, 70%, 100% {
+    opacity: 1;
+  }
+  20%, 21.999%, 63%, 63.999%, 65%, 69.999% {
+    opacity: 0.4;
+  }
 }
