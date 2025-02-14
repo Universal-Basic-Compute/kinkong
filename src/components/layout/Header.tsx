@@ -15,64 +15,59 @@ export default function Header() {
   ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 bg-black border-b border-gold/20">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-black/95 backdrop-blur-sm border-b border-gold/20 shadow-lg">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between px-4 py-4">
-          {/* Logo */}
           <Link 
             href="/" 
-            className="text-gold font-bold text-2xl"
+            className="text-gold font-bold text-2xl hover:text-gold/80 transition-colors"
           >
             KinKong
           </Link>
 
-          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-gray-300 hover:text-gold transition-colors"
+                className="text-gray-300 hover:text-gold transition-colors relative group"
               >
                 {item.label}
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gold transition-all duration-300 group-hover:w-full"/>
               </Link>
             ))}
           </nav>
 
-          {/* Right side buttons */}
-          <div className="flex items-center space-x-4">
-            {/* CTA Button - Desktop only */}
+          <div className="flex items-center gap-4">
             <Link
               href="/invest"
-              className="hidden md:block px-4 py-2 bg-gradient-to-r from-darkred to-gold text-black font-semibold rounded hover-effect transition-all"
+              className="hidden md:block px-4 py-2 bg-gradient-to-r from-darkred to-gold text-black font-semibold rounded-md hover:shadow-lg hover:scale-105 transition-all duration-200"
             >
               Start Trading
             </Link>
-            
-            {/* Mobile menu button */}
-            <button 
+
+            <button
               className="md:hidden text-gray-300 hover:text-gold transition-colors"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
-              <svg 
-                className="h-6 w-6" 
-                fill="none" 
-                viewBox="0 0 24 24" 
+              <svg
+                className="w-6 h-6"
+                fill="none"
                 stroke="currentColor"
-                aria-hidden="true"
+                viewBox="0 0 24 24"
               >
                 {isMobileMenuOpen ? (
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
                     d="M6 18L18 6M6 6l12 12"
                   />
                 ) : (
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
                     d="M4 6h16M4 12h16M4 18h16"
                   />
                 )}
@@ -80,32 +75,31 @@ export default function Header() {
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Mobile Menu */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden border-t border-gold/20">
-          <nav className="px-4 py-2 space-y-2">
-            {navItems.map((item) => (
+        {isMobileMenuOpen && (
+          <div className="md:hidden border-t border-gold/20 bg-black/95 backdrop-blur-sm">
+            <nav className="px-4 py-2 space-y-2">
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="block text-gray-300 hover:text-gold py-2 transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              ))}
               <Link
-                key={item.href}
-                href={item.href}
-                className="block text-gray-300 hover:text-gold py-2"
+                href="/invest"
+                className="block text-gold hover:text-gold/80 py-2 transition-colors"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                {item.label}
+                Start Trading
               </Link>
-            ))}
-            <Link
-              href="/invest"
-              className="block text-gold hover:text-gold/80 py-2"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Start Trading
-            </Link>
-          </nav>
-        </div>
-      )}
+            </nav>
+          </div>
+        )}
+      </div>
     </header>
   );
 }
