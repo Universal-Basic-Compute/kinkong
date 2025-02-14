@@ -13,9 +13,7 @@ const nextConfig = {
         https: false,
         zlib: false,
         net: false,
-        tls: false,
-        'rpc-websockets': require.resolve('rpc-websockets'),
-        'websocket': require.resolve('websocket').replace('index.js', 'lib/websocket.js')
+        tls: false
       };
     }
     return config;
