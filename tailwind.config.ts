@@ -2,10 +2,12 @@ import type { Config } from "tailwindcss";
 
 const config: Config = {
   content: [
+    "./src/**/*.{js,ts,jsx,tsx}",
     "./src/app/**/*.{js,ts,jsx,tsx}",
     "./src/components/**/*.{js,ts,jsx,tsx}",
     "./src/pages/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
@@ -15,6 +17,10 @@ const config: Config = {
         'gold/20': 'rgba(255, 215, 0, 0.2)',
         'gold/80': 'rgba(255, 215, 0, 0.8)',
         'black/95': 'rgba(0, 0, 0, 0.95)',
+      },
+      fontFamily: {
+        sans: ['var(--font-inter)'],
+        mono: ['var(--font-jetbrains)'],
       },
     },
   },
