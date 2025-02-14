@@ -166,6 +166,50 @@ Note: All indicators prioritize data readily available from Solana DEX APIs and 
    - Higher during bearish weeks
    - Minimum position: 15%
 
+### Project Fundamentals & Sentiment Analysis
+
+#### Fundamental Scoring (Weekly Review)
+Simple scoring system (1-5) for each metric:
+
+1. Development Activity
+   - GitHub commits/activity
+   - Major updates/releases
+   Primary source: GitHub API
+
+2. Community Engagement
+   - Twitter followers growth
+   - Discord/Telegram activity
+   Primary source: Social APIs
+
+3. Partnership/Integration News
+   - New partnerships
+   - Protocol integrations
+   Primary source: Official announcements
+
+#### Sentiment Integration
+
+1. Token Selection Impact
+   - Fundamental score affects weekly token selection
+   - Minimum score of 3/5 required for inclusion
+   - Bonus points in ranking for scores 4+
+
+2. Allocation Adjustment
+   During 6-hour reallocation:
+   - +1% allocation for tokens with positive news
+   - -1% for negative sentiment
+   - Maximum ±2% total sentiment adjustment
+
+3. Risk Management
+   - Immediate review if sentiment score drops below 2
+   - Emergency exit if critical negative news
+   - Double check unusual social activity spikes
+
+#### Implementation Rules
+- Keep sentiment data fresh (max 24h old)
+- Ignore minor news/social chatter
+- Focus on verifiable information
+- Don't override technical signals
+
 #### Reallocation Rules
 
 1. Market Sentiment Based
