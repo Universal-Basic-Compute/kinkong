@@ -11,6 +11,10 @@
     --color-black: #0a0a0a;
     --color-metallic: linear-gradient(145deg, #1a1a1a, #0a0a0a);
   }
+
+  body {
+    @apply bg-black text-white;
+  }
 }
 
 body {

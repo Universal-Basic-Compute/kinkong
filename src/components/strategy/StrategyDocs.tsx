@@ -23,7 +23,7 @@ export function StrategyDocs() {
   }, []);
 
   return (
-    <div className="prose prose-invert prose-gold max-w-none">
+    <div className="prose prose-invert max-w-none">
       <ReactMarkdown>{content}</ReactMarkdown>
     </div>
   );
