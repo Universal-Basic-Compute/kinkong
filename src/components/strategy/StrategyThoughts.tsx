@@ -11,17 +11,17 @@ export function StrategyThoughts() {
   const messages: Message[] = [
     {
       role: 'assistant',
-      content: 'I've been analyzing the AI token market structure. Notable increase in liquidity across major pairs.',
+      content: "I have been analyzing the AI token market structure. Notable increase in liquidity across major pairs.",
       timestamp: '2024-01-20T10:00:00Z'
     },
     {
       role: 'user',
-      content: 'What's your view on market direction?',
+      content: "What's your view on market direction?",
       timestamp: '2024-01-20T10:01:00Z'
     },
     {
       role: 'assistant',
-      content: 'Bullish bias confirmed. Key metrics: rising volume, decreasing volatility, stable SOL correlation.',
+      content: "Bullish bias confirmed. Key metrics: rising volume, decreasing volatility, stable SOL correlation.",
       timestamp: '2024-01-20T10:02:00Z'
     }
   ];
