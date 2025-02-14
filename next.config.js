@@ -7,17 +7,11 @@ const nextConfig = {
         fs: false,
         os: false,
         path: false,
-        crypto: false,
-        stream: false,
-        http: false,
-        https: false,
-        zlib: false,
-        net: false,
-        tls: false
+        crypto: false
       };
     }
     return config;
-  },
+  }
 };
 
 module.exports = nextConfig;
