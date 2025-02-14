@@ -2,6 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Header specific styles */
+.backdrop-blur-sm {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Enhanced hover effect for header links */
+.hover\:text-gold:hover {
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+}
+
+/* Mobile menu animation */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.md\:hidden {
+  animation: slideDown 0.2s ease-out;
+}
+
 :root {
   --color-darkred: #8B0000;
   --color-gold: #FFD700;
