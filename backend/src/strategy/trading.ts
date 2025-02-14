@@ -9,8 +9,12 @@ export async function executeTrades(trades: Trade[]) {
     try {
       const result = await jupiterTrade(trade);
       results.push(result);
-    } catch (error) {
-      console.error(`Trade failed: ${error.message}`);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error(`Trade failed: ${error.message}`);
+      } else {
+        console.error('Trade failed with unknown error');
+      }
     }
   }
   
