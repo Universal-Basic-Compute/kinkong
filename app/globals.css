@@ -3,19 +3,39 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-darkred: #8B0000;
+  --color-gold: #FFD700;
+  --color-black: #0a0a0a;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-black);
+  color: #ffffff;
+}
+
+@keyframes glow {
+  0%, 100% { text-shadow: 0 0 10px rgba(255, 215, 0, 0.2); }
+  50% { text-shadow: 0 0 20px rgba(255, 215, 0, 0.4); }
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+.shadow-glow {
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+}
+
+.benefit-card:hover {
+  transform: translateY(-2px);
+  transition: all 0.3s ease;
+}
+
+.metric {
+  transition: all 0.3s ease;
+}
+
+.metric:hover {
+  transform: scale(1.05);
+  border-color: var(--color-gold);
 }
