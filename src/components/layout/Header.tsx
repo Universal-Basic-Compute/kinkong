@@ -15,13 +15,13 @@ export default function Header() {
   ];
 
   return (
-    <header className="fixed w-full bg-black/95 backdrop-blur-sm border-b border-gold/10 z-50">
+    <header className="header-container">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link 
             href="/" 
-            className="text-gold font-bold text-xl hover:text-gold/80 transition-colors"
+            className="header-logo"
           >
             KinKong
           </Link>
@@ -32,7 +32,7 @@ export default function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-gray-300 hover:text-gold transition-colors"
+                className="nav-link"
               >
                 {item.label}
               </Link>
@@ -44,14 +44,14 @@ export default function Header() {
             {/* CTA Button - Desktop only */}
             <Link
               href="/invest"
-              className="hidden md:inline-block px-4 py-2 bg-gradient-to-r from-darkred/90 to-gold/90 text-black font-semibold rounded hover:scale-105 transition-all duration-200 text-sm"
+              className="hidden md:inline-block cta-button"
             >
               Start Trading
             </Link>
             
             {/* Mobile menu button */}
             <button 
-              className="md:hidden text-gray-300 hover:text-gold"
+              className="mobile-menu-btn md:hidden"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               <svg 
@@ -84,12 +84,12 @@ export default function Header() {
 
       {/* Mobile menu */}
       <div className={`md:hidden ${isMobileMenuOpen ? 'block' : 'hidden'}`}>
-        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-black/95 border-b border-gold/10">
+        <div className="mobile-menu">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="text-gray-300 hover:text-gold block px-3 py-2 text-base"
+              className="mobile-menu-link"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               {item.label}
@@ -97,7 +97,7 @@ export default function Header() {
           ))}
           <Link
             href="/invest"
-            className="block px-3 py-2 text-base text-gold hover:text-gold/80"
+            className="mobile-menu-link text-gold hover:text-gold/80"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             Start Trading
