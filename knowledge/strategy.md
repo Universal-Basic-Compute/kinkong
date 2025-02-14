@@ -81,30 +81,27 @@ Note: All indicators prioritize data readily available from Solana DEX APIs and 
 
 #### Selection Pool
 - All Solana tokens with AI/ML focus
-- Minimum requirements:
-  - Listed on Jupiter/Orca DEX
-  - Minimum 7-day average daily volume > $10,000
-  - At least 2 weeks of trading history
-  - Active liquidity pools with SOL and USDC
+- Core Requirements:
+  - Listed on Jupiter DEX
+  - 7-day average daily volume > $10,000
+  - Minimum liquidity of 3x intended position size
+  - Active liquidity pools with USDC
 
-#### Ranking Criteria (Weighted Score)
+#### Ranking Criteria (Simple Score)
 
-1. Liquidity Metrics (40%)
-   - 7-day average daily volume
-   - Liquidity depth in main pools
-   - Number of active trading pairs
-   Primary source: Jupiter/Birdeye APIs
+1. Volume Trend
+   - 7-day volume growth rate
+   - Consistent daily trading activity
+   Primary source: Jupiter API
 
-2. Price Performance (30%)
-   - 7-day price trend
-   - Volatility score (based on daily ranges)
-   - Relative strength vs SOL
-   Primary source: DEX price feeds
+2. Price Momentum
+   - Performance vs SOL (7-day)
+   - Simple trend direction
+   Primary source: Jupiter API
 
-3. Market Structure (30%)
-   - Market cap
-   - Token distribution metrics
-   - Number of holders trend
+3. Market Health
+   - Number of active holders
+   - Basic liquidity metrics
    Primary source: Birdeye API
 
 #### Weekly Update Process (Every Friday)
@@ -168,36 +165,18 @@ Note: All indicators prioritize data readily available from Solana DEX APIs and 
 
 ### Project Fundamentals & Sentiment Analysis
 
-#### Fundamental Scoring (Weekly Review)
-Simple scoring system (1-5) for each metric:
+#### News & Sentiment Analysis
 
-1. Development Activity
-   - GitHub commits/activity
-   - Major updates/releases
-   Primary source: GitHub API
+1. Major News Impact
+   - Focus on verifiable announcements only
+   - Sources: Official channels only
+   - Binary classification: Positive/Negative
 
-2. Community Engagement
-   - Twitter followers growth
-   - Discord/Telegram activity
-   Primary source: Social APIs
-
-3. Partnership/Integration News
-   - New partnerships
-   - Protocol integrations
-   Primary source: Official announcements
-
-#### Sentiment Integration
-
-1. Token Selection Impact
-   - Fundamental score affects weekly token selection
-   - Minimum score of 3/5 required for inclusion
-   - Bonus points in ranking for scores 4+
-
-2. Allocation Adjustment
-   During 6-hour reallocation:
-   - +1% allocation for tokens with positive news
-   - -1% for negative sentiment
-   - Maximum ±2% total sentiment adjustment
+2. Simple Integration
+   - Positive news: +1% allocation
+   - Negative news: -1% allocation
+   - Emergency exit on critical negative news
+   - Maximum 2% total sentiment impact
 
 3. Risk Management
    - Immediate review if sentiment score drops below 2
@@ -212,25 +191,18 @@ Simple scoring system (1-5) for each metric:
 
 #### Reallocation Rules
 
-1. Market Sentiment Based
-   Bullish Week:
-   - AI Tokens: 60-75%
+1. Base Portfolio Structure
+   - AI Tokens: 50-70%
    - SOL: 15-25%
-   - Stables: 15-25%
-
-   Bearish Week:
-   - AI Tokens: 30-50%
-   - SOL: 10-20%
-   - Stables: 30-60%
+   - Stables: Minimum 15%
 
 2. Individual Token Allocation
-   - Base allocation: Equal weight (10% each)
-   - Maximum allocation: 12% per token
-   - Adjustment factors:
-     - +2% for top 3 performing tokens
-     - +2% for positive 24h momentum
-     - -2% for negative 24h momentum
-     - -3% for tokens below 20-day MA
+   - Base allocation: 10% per token
+   - Simple adjustments:
+     - +2% for top 3 performers (7-day)
+     - -2% for bottom 3 performers
+   - Maximum single token: 12%
+   - Minimum stablecoin reserve: 15%
 
 3. Reallocation Triggers
    - Mandatory time-based (every 6 hours)
@@ -266,26 +238,22 @@ Simple scoring system (1-5) for each metric:
 
 ### UBC Shareholder Intelligence Integration
 
-#### Signal Collection
-1. Telegram Channel Structure
-   - Dedicated #kinkong-signals channel
-   - Structured message format:
+#### Shareholder Input System
+
+1. Signal Collection
+   - One signal per holder per day
+   - Simple format:
      ```
-     $TOKEN: [BULLISH/BEARISH]
-     Timeframe: [SHORT/MEDIUM/LONG]
-     Confidence: [1-5]
+     $TOKEN: LONG/SHORT
      Reason: [Brief explanation]
      ```
-   - Maximum 1 signal per holder per day
+   - Submit via #kinkong-signals channel
 
-#### Signal Processing
-1. Weight Calculation
-   - Base weight: 0.5% allocation impact
-   - Multipliers:
-     - Holder tier (based on $COMPUTE stake)
-     - Historical accuracy score
-     - Signal confidence level
-   - Maximum combined impact: ±2% per token
+2. Signal Processing
+   - Simple majority voting system
+   - Minimum 3 signals for action
+   - Maximum 2% allocation impact
+   - 24-hour signal validity
 
 2. Integration Rules
    - Signals valid for 24 hours
