@@ -263,3 +263,51 @@ Simple scoring system (1-5) for each metric:
    - Monitor slippage vs estimates
    - Record execution costs
    - Compare actual vs target allocations
+
+### UBC Shareholder Intelligence Integration
+
+#### Signal Collection
+1. Telegram Channel Structure
+   - Dedicated #kinkong-signals channel
+   - Structured message format:
+     ```
+     $TOKEN: [BULLISH/BEARISH]
+     Timeframe: [SHORT/MEDIUM/LONG]
+     Confidence: [1-5]
+     Reason: [Brief explanation]
+     ```
+   - Maximum 1 signal per holder per day
+
+#### Signal Processing
+1. Weight Calculation
+   - Base weight: 0.5% allocation impact
+   - Multipliers:
+     - Holder tier (based on $COMPUTE stake)
+     - Historical accuracy score
+     - Signal confidence level
+   - Maximum combined impact: ±2% per token
+
+2. Integration Rules
+   - Signals valid for 24 hours
+   - Minimum 3 signals for consideration
+   - Conflicting signals cancel out
+   - Emergency signals require verification
+
+#### Implementation
+1. Allocation Impact
+   - Added to 6-hour reallocation process
+   - Applied after technical analysis
+   - Cannot override risk management rules
+   - Maximum 5% total shareholder influence
+
+2. Performance Tracking
+   - Track signal accuracy by holder
+   - Update holder influence weights monthly
+   - Report effectiveness to community
+   - Adjust weights based on performance
+
+#### Risk Controls
+- Ignore signals during extreme market conditions
+- Require multiple signals for major changes
+- Cap individual holder influence
+- Filter out coordinated signal attempts
