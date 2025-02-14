@@ -15,89 +15,42 @@ export default function Header() {
   ];
 
   return (
-    <header style={{ 
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      zIndex: 50,
-      backgroundColor: 'rgba(0, 0, 0, 0.95)',
-      borderBottom: '1px solid rgba(255, 215, 0, 0.2)'
-    }}>
-      <div style={{ maxWidth: '80rem', margin: '0 auto' }}>
-        <div style={{ 
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '1rem'
-        }}>
+    <header className="fixed top-0 left-0 right-0 z-50 bg-black/95 border-b border-gold/20">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex items-center justify-between p-4">
           <Link 
             href="/" 
-            style={{
-              color: '#FFD700',
-              fontWeight: 'bold',
-              fontSize: '1.5rem'
-            }}
+            className="text-gold font-bold text-2xl"
           >
             KinKong
           </Link>
 
-          <nav style={{
-            display: 'none',
-            gap: '2rem',
-            '@media (min-width: 768px)': {
-              display: 'flex'
-            }
-          }}>
+          <nav className="hidden md:flex gap-8">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                style={{
-                  color: '#D1D5DB',
-                  transition: 'color 0.2s',
-                  ':hover': {
-                    color: '#FFD700'
-                  }
-                }}
+                className="text-gray-300 hover:text-gold transition-colors"
               >
                 {item.label}
               </Link>
             ))}
           </nav>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div className="flex items-center gap-4">
             <Link
               href="/invest"
-              style={{
-                display: 'none',
-                '@media (min-width: 768px)': {
-                  display: 'block'
-                },
-                padding: '0.5rem 1rem',
-                background: 'linear-gradient(to right, #8B0000, #FFD700)',
-                color: 'black',
-                fontWeight: 600,
-                borderRadius: '0.375rem'
-              }}
+              className="hidden md:block px-4 py-2 bg-gradient-to-r from-darkred to-gold text-black font-semibold rounded-md"
             >
               Start Trading
             </Link>
 
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              style={{
-                color: '#D1D5DB',
-                '@media (min-width: 768px)': {
-                  display: 'none'
-                }
-              }}
+              className="text-gray-300 md:hidden"
             >
               <svg
-                style={{
-                  width: '1.5rem',
-                  height: '1.5rem'
-                }}
+                className="w-6 h-6"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -123,26 +76,13 @@ export default function Header() {
         </div>
 
         {isMobileMenuOpen && (
-          <div style={{
-            borderTop: '1px solid rgba(255, 215, 0, 0.2)',
-            backgroundColor: 'rgba(0, 0, 0, 0.95)',
-            '@media (min-width: 768px)': {
-              display: 'none'
-            }
-          }}>
-            <nav style={{ padding: '0.5rem 1rem' }}>
+          <div className="border-t border-gold/20 bg-black/95 md:hidden">
+            <nav className="p-4 flex flex-col space-y-2">
               {navItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  style={{
-                    display: 'block',
-                    color: '#D1D5DB',
-                    padding: '0.5rem 0',
-                    ':hover': {
-                      color: '#FFD700'
-                    }
-                  }}
+                  className="text-gray-300 hover:text-gold py-2"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {item.label}
@@ -150,11 +90,7 @@ export default function Header() {
               ))}
               <Link
                 href="/invest"
-                style={{
-                  display: 'block',
-                  color: '#FFD700',
-                  padding: '0.5rem 0'
-                }}
+                className="text-gold py-2"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Start Trading
