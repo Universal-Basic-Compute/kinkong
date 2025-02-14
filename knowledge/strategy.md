@@ -42,20 +42,40 @@ This schedule provides comprehensive coverage of major market movements while al
 - Stablecoin position for risk management
 - Total portfolio rebalanced 4x daily
 
-### Weekly Market Analysis
-1. Macro Trend Assessment
-   - Determine overall market sentiment (bullish/bearish) for AI tokens
-   - Weekly analysis of AI sector performance
-   - Technical analysis of sector leaders
+### Weekly Market Sentiment Analysis (Friday Assessment)
 
-2. Token Selection Process
-   - Weekly review and update of 10-token portfolio
-   - Selection criteria:
-     - Trading volume and liquidity
-     - Project fundamentals
-     - Technical indicators
-     - Recent development activity
-     - Market sentiment
+#### Core Indicators (API-Friendly)
+
+1. Price Action (via DEX APIs)
+   - Weekly close vs Weekly open for top AI tokens
+   - Simple 7-day trend (higher highs/lower lows)
+   - Position relative to 20-day MA
+   Primary source: Jupiter/Orca DEX APIs
+
+2. Volume Analysis (via DEX APIs)
+   - 7-day volume trend
+   - Compare current week's volume to previous week
+   - Volume concentration (up days vs down days)
+   Primary source: Birdeye/Jupiter APIs
+
+3. Market Dominance (via price feeds)
+   - AI tokens total marketcap vs SOL
+   - Week-over-week change in dominance
+   Primary source: Birdeye API
+
+#### Bullish Week Classification (Need 3/4):
+- >60% of AI tokens above their 7-day average price
+- Weekly volume higher than previous week
+- >60% of volume on up days
+- AI tokens outperforming SOL (relative strength)
+
+#### Bearish Week Classification (Need 3/4):
+- <40% of AI tokens above their 7-day average price
+- Weekly volume lower than previous week
+- >60% of volume on down days
+- AI tokens underperforming SOL (relative strength)
+
+Note: All indicators prioritize data readily available from Solana DEX APIs and price feeds.
 
 ### Daily Trading Operations
 1. Position Management (4x Daily)
