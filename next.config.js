@@ -11,7 +11,11 @@ const nextConfig = {
     }
     return config;
   },
-  transpilePackages: ['@solana/web3.js']
+  transpilePackages: ['@solana/web3.js'],
+  generateBuildId: () => 'build',
+  experimental: {
+    outputFileTracingRoot: undefined
+  }
 };
 
 module.exports = nextConfig;
