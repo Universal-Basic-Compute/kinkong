@@ -162,17 +162,17 @@ Note: All indicators prioritize data readily available from Solana DEX APIs and 
    - Minimum position: 5%
 
 3. Stablecoin Reserve
-   - Allocation range: 10-60%
+   - Allocation range: 15-60%
    - Higher during bearish weeks
-   - Minimum position: 10%
+   - Minimum position: 15%
 
 #### Reallocation Rules
 
 1. Market Sentiment Based
    Bullish Week:
-   - AI Tokens: 60-80%
-   - SOL: 15-30%
-   - Stables: 10-25%
+   - AI Tokens: 60-75%
+   - SOL: 15-25%
+   - Stables: 15-25%
 
    Bearish Week:
    - AI Tokens: 30-50%
@@ -181,8 +181,9 @@ Note: All indicators prioritize data readily available from Solana DEX APIs and 
 
 2. Individual Token Allocation
    - Base allocation: Equal weight (10% each)
+   - Maximum allocation: 12% per token
    - Adjustment factors:
-     - +3% for top 3 performing tokens
+     - +2% for top 3 performing tokens
      - +2% for positive 24h momentum
      - -2% for negative 24h momentum
      - -3% for tokens below 20-day MA
@@ -190,8 +191,8 @@ Note: All indicators prioritize data readily available from Solana DEX APIs and 
 3. Reallocation Triggers
    - Mandatory time-based (every 6 hours)
    - Emergency triggers:
-     - Single token drops >15% in 6 hours
-     - Overall portfolio drops >10% in 6 hours
+     - Single token drops >12% in 6 hours
+     - Overall portfolio drops >8% in 6 hours
      - Liquidity crisis in any holding
 
 4. Execution Process
@@ -202,7 +203,7 @@ Note: All indicators prioritize data readily available from Solana DEX APIs and 
       - Estimate slippage
 
    b. Trade Execution
-      - Maximum 3% slippage tolerance
+      - Maximum 2% slippage tolerance
       - Use split orders for large trades
       - Priority: Sell overweight → Buy underweight
       - Use Jupiter aggregator for best execution
