@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
@@ -12,17 +13,8 @@ const nextConfig = {
     return config;
   },
   transpilePackages: ['@solana/web3.js'],
-  generateBuildId: () => 'build',
-  experimental: {
-    outputFileTracingRoot: undefined
-  },
-  async rewrites() {
-    return [
-      {
-        source: '/:path*',
-        destination: '/:path*'
-      }
-    ];
+  images: {
+    domains: ['localhost', 'vercel.app'],
   }
 };
 

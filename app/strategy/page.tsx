@@ -6,15 +6,17 @@ export default function Strategy() {
     <main className="min-h-screen p-4 max-w-7xl mx-auto">
       <h1 className="text-4xl font-bold mb-8">KinKong Strategy</h1>
       
-      <section className="mb-12">
-        <h2 className="text-2xl font-bold mb-6">KinKong's Thoughts</h2>
-        <StrategyThoughts />
-      </section>
+      <div className="grid grid-cols-1 gap-8">
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold mb-6">KinKong's Thoughts</h2>
+          <StrategyThoughts />
+        </section>
 
-      <section className="mb-8">
-        <h2 className="text-2xl font-bold mb-6">Strategy Documentation</h2>
-        <StrategyDocs />
-      </section>
+        <section className="mb-8">
+          <h2 className="text-2xl font-bold mb-6">Strategy Documentation</h2>
+          <StrategyDocs />
+        </section>
+      </div>
     </main>
-  )
+  );
 }
