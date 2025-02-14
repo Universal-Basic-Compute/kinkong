@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import Header from "@/components/layout/Header";
-import { SolanaWalletProvider } from "@/components/wallet/WalletProvider";
+import { Providers } from "./providers";
 import "./globals.css";
 
 const inter = Inter({
@@ -27,12 +27,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}>
-        <SolanaWalletProvider>
+        <Providers>
           <Header />
           <div className="pt-16">
             {children}
           </div>
-        </SolanaWalletProvider>
+        </Providers>
       </body>
     </html>
   );
