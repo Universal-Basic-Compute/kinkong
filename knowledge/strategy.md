@@ -77,6 +77,59 @@ This schedule provides comprehensive coverage of major market movements while al
 
 Note: All indicators prioritize data readily available from Solana DEX APIs and price feeds.
 
+### Token Selection Process (Weekly Review)
+
+#### Selection Pool
+- All Solana tokens with AI/ML focus
+- Minimum requirements:
+  - Listed on Jupiter/Orca DEX
+  - Minimum 7-day average daily volume > $10,000
+  - At least 2 weeks of trading history
+  - Active liquidity pools with SOL and USDC
+
+#### Ranking Criteria (Weighted Score)
+
+1. Liquidity Metrics (40%)
+   - 7-day average daily volume
+   - Liquidity depth in main pools
+   - Number of active trading pairs
+   Primary source: Jupiter/Birdeye APIs
+
+2. Price Performance (30%)
+   - 7-day price trend
+   - Volatility score (based on daily ranges)
+   - Relative strength vs SOL
+   Primary source: DEX price feeds
+
+3. Market Structure (30%)
+   - Market cap
+   - Token distribution metrics
+   - Number of holders trend
+   Primary source: Birdeye API
+
+#### Weekly Update Process (Every Friday)
+1. Score Calculation
+   - Generate weighted scores for all eligible tokens
+   - Rank tokens by total score
+   - Flag tokens with significant score changes
+
+2. Portfolio Updates
+   - Keep top 7 tokens by score
+   - Reserve 3 slots for:
+     - 2 highest positive score changes
+     - 1 new entry meeting criteria
+
+3. Replacement Rules
+   - Replace tokens that fall below minimum requirements
+   - Maximum 3 new entries per week for stability
+   - Gradual position adjustment over 24h for new entries
+
+4. Emergency Removal Criteria
+   - Volume drops below threshold
+   - Liquidity removal > 50%
+   - Suspicious trading patterns
+   - Major negative project news
+
 ### Daily Trading Operations
 1. Position Management (4x Daily)
    - Reallocation between:
