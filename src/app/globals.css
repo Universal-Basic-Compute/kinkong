@@ -24,7 +24,7 @@ body {
 
 /* Subtle Metallic Glow */
 @keyframes subtleGlow {
-  0%, 100% {
+  from, to {
     text-shadow: 
       0 0 15px rgba(255, 215, 0, 0.3),
       0 0 30px rgba(139, 0, 0, 0.2);
@@ -38,7 +38,7 @@ body {
 
 /* Refined Electric Border */
 @keyframes subtlePulse {
-  0%, 100% {
+  from, to {
     box-shadow: 
       0 0 5px rgba(255, 215, 0, 0.2),
       inset 0 0 5px rgba(255, 215, 0, 0.1);
@@ -157,10 +157,10 @@ body {
 
 @layer components {
   .nav-link {
-    @apply text-gray-300 hover:text-[color:var(--color-gold)] transition-colors;
+    @apply text-gray-300 hover:text-[#FFD700] transition-colors;
   }
 
   .cta-button {
-    @apply px-4 py-2 bg-gradient-to-r from-[color:var(--color-darkred)] to-[color:var(--color-gold)] text-black font-semibold rounded-md hover:shadow-lg hover:scale-105 transition-all duration-200;
+    @apply px-4 py-2 bg-gradient-to-r from-[#8B0000] to-[#FFD700] text-black font-semibold rounded-md hover:shadow-lg hover:scale-105 transition-all duration-200;
   }
 }
