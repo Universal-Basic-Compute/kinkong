@@ -15,12 +15,12 @@ export default function Header() {
   ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-black/95 border-b border-gold/20">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-black/95 border-b border-gold/20 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between p-4">
           <Link 
             href="/" 
-            className="text-gold font-bold text-2xl"
+            className="text-gold font-bold text-2xl tracking-tight hover:text-gold/80 transition-colors"
           >
             KinKong
           </Link>
@@ -30,7 +30,7 @@ export default function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-gray-300 hover:text-gold transition-colors"
+                className="text-gray-300 hover:text-gold transition-colors duration-200 font-medium tracking-wide"
               >
                 {item.label}
               </Link>
@@ -40,14 +40,14 @@ export default function Header() {
           <div className="flex items-center gap-4">
             <Link
               href="/invest"
-              className="hidden md:block px-4 py-2 bg-gradient-to-r from-darkred to-gold text-black font-semibold rounded-md"
+              className="hidden md:block px-6 py-2 bg-gradient-to-r from-darkred to-gold text-black font-semibold rounded-lg hover:scale-105 transition-all duration-200 shadow-lg shadow-gold/10"
             >
               Start Trading
             </Link>
 
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="text-gray-300 md:hidden"
+              className="text-gray-300 hover:text-gold transition-colors duration-200 md:hidden"
             >
               <svg
                 className="w-6 h-6"
@@ -76,13 +76,13 @@ export default function Header() {
         </div>
 
         {isMobileMenuOpen && (
-          <div className="border-t border-gold/20 bg-black/95 md:hidden">
+          <div className="border-t border-gold/20 bg-black/95 backdrop-blur-sm md:hidden">
             <nav className="p-4 flex flex-col space-y-2">
               {navItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="text-gray-300 hover:text-gold py-2"
+                  className="text-gray-300 hover:text-gold py-2 transition-colors duration-200 font-medium tracking-wide"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {item.label}
@@ -90,7 +90,7 @@ export default function Header() {
               ))}
               <Link
                 href="/invest"
-                className="text-gold py-2"
+                className="text-black py-2 px-4 bg-gradient-to-r from-darkred to-gold font-semibold rounded-lg hover:scale-105 transition-all duration-200 shadow-lg shadow-gold/10 text-center"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Start Trading
