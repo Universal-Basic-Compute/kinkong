@@ -18,7 +18,11 @@
     "next": "^14.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "recharts": "^2.10.3"
+    "recharts": "^2.10.3",
+    "rpc-websockets": "^7.5.1",
+    "ws": "^8.13.0",
+    "bufferutil": "^4.0.7",
+    "utf-8-validate": "^6.0.3"
   },
   "devDependencies": {
     "@types/airtable": "^0.10.1",
