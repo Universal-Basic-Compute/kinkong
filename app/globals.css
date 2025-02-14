@@ -6,11 +6,11 @@
   :root {
     --background: #000000;
     --foreground: #ffffff;
-  --color-darkred: #8B0000;
-  --color-gold: #FFD700;
-  --color-black: #0a0a0a;
-  --color-metallic: linear-gradient(145deg, #1a1a1a, #0a0a0a);
-}
+    --color-darkred: #8B0000;
+    --color-gold: #FFD700;
+    --color-black: #0a0a0a;
+    --color-metallic: linear-gradient(145deg, #1a1a1a, #0a0a0a);
+  }
 
 body {
   background: var(--color-black);
@@ -19,7 +19,7 @@ body {
 
 /* Subtle Metallic Glow */
 @keyframes subtleGlow {
-  0%, 100% {
+      0%, 100% {
     text-shadow: 
       0 0 15px rgba(255, 215, 0, 0.3),
       0 0 30px rgba(139, 0, 0, 0.2);
