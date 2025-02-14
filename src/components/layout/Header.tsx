@@ -44,7 +44,7 @@ export default function Header() {
             {/* CTA Button - Desktop only */}
             <Link
               href="/invest"
-              className="hidden md:block px-4 py-2 bg-gradient-to-r from-darkred to-gold text-black font-semibold rounded"
+              className="hidden md:block px-4 py-2 bg-gradient-to-r from-darkred to-gold text-black font-semibold rounded hover-effect transition-all"
             >
               Start Trading
             </Link>
