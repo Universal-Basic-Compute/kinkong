@@ -19,7 +19,7 @@ body {
 
 /* Subtle Metallic Glow */
 @keyframes subtleGlow {
-      0%, 100% {
+  0%, 100% {
     text-shadow: 
       0 0 15px rgba(255, 215, 0, 0.3),
       0 0 30px rgba(139, 0, 0, 0.2);
