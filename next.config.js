@@ -15,6 +15,14 @@ const nextConfig = {
   generateBuildId: () => 'build',
   experimental: {
     outputFileTracingRoot: undefined
+  },
+  async rewrites() {
+    return [
+      {
+        source: '/:path*',
+        destination: '/:path*'
+      }
+    ];
   }
 };
 
