@@ -9,7 +9,7 @@
 }
 
 /* Enhanced hover effect for header links */
-.hover\:text-gold:hover {
+.hover-text-gold:hover {
   text-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
 }
 
@@ -25,7 +25,7 @@
   }
 }
 
-.md\:hidden {
+.md-hidden {
   animation: slideDown 0.2s ease-out;
 }
 
@@ -43,7 +43,7 @@ body {
 
 /* Subtle Metallic Glow */
 @keyframes subtleGlow {
-  0%,100% {
+  0%, 100% {
     text-shadow: 
       0 0 15px rgba(255, 215, 0, 0.3),
       0 0 30px rgba(139, 0, 0, 0.2);
@@ -57,7 +57,7 @@ body {
 
 /* Refined Electric Border */
 @keyframes subtlePulse {
-  0%,100% {
+  0%, 100% {
     box-shadow: 
       0 0 5px rgba(255, 215, 0, 0.2),
       inset 0 0 5px rgba(255, 215, 0, 0.1);

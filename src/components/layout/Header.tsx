@@ -25,7 +25,7 @@ export default function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-gray-300 hover:text-gold transition-colors"
+                className="text-gray-300 hover-text-gold transition-colors"
               >
                 {item.label}
               </Link>
@@ -51,7 +51,7 @@ export default function Header() {
       </div>
 
       {/* Mobile menu (hidden by default) */}
-      <div className="md:hidden">
+      <div className="md-hidden">
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
           {navItems.map((item) => (
             <Link
