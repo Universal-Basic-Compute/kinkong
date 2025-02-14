@@ -33,3 +33,44 @@ KinKong executes trades at four strategic times daily:
 - 18:00 UTC (American session)
 
 This schedule provides comprehensive coverage of major market movements while allowing sufficient time between trades for analysis and strategy adjustment.
+
+## Core Trading Strategy
+
+### Portfolio Composition
+- Dynamic portfolio of 10 selected AI tokens on Solana
+- SOL position for ecosystem exposure
+- Stablecoin position for risk management
+- Total portfolio rebalanced 4x daily
+
+### Weekly Market Analysis
+1. Macro Trend Assessment
+   - Determine overall market sentiment (bullish/bearish) for AI tokens
+   - Weekly analysis of AI sector performance
+   - Technical analysis of sector leaders
+
+2. Token Selection Process
+   - Weekly review and update of 10-token portfolio
+   - Selection criteria:
+     - Trading volume and liquidity
+     - Project fundamentals
+     - Technical indicators
+     - Recent development activity
+     - Market sentiment
+
+### Daily Trading Operations
+1. Position Management (4x Daily)
+   - Reallocation between:
+     - Selected AI tokens
+     - SOL holdings
+     - Stablecoin reserves
+   - Based on:
+     - Short-term technical indicators
+     - Relative strength between assets
+     - Risk metrics
+     - Market volatility
+
+2. Risk Management
+   - Dynamic stablecoin allocation based on market conditions
+   - Increased stablecoin position during bearish weeks
+   - Higher token exposure during bullish conditions
+   - SOL position as ecosystem hedge
