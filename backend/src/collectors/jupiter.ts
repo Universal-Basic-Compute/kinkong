@@ -3,7 +3,7 @@ import type { Token } from '../airtable/tables';
 
 export async function getJupiterData(): Promise<Partial<Token>[]> {
   // TODO: Implement Jupiter API calls
-  const data = [];
+  const data: Partial<Token>[] = [];
   // Fetch price & liquidity data
   return data;
 }
