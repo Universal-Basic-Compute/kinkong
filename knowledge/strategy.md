@@ -147,3 +147,74 @@ Note: All indicators prioritize data readily available from Solana DEX APIs and 
    - Increased stablecoin position during bearish weeks
    - Higher token exposure during bullish conditions
    - SOL position as ecosystem hedge
+
+### Reallocation Process (6-Hour Intervals)
+
+#### Portfolio Components
+1. AI Tokens (Selected 10)
+   - Individual allocation: 3-15% each
+   - Combined allocation: 30-80% of portfolio
+   - Minimum position size: $1,000
+
+2. SOL Position
+   - Allocation range: 10-40%
+   - Acts as ecosystem hedge
+   - Minimum position: 5%
+
+3. Stablecoin Reserve
+   - Allocation range: 10-60%
+   - Higher during bearish weeks
+   - Minimum position: 10%
+
+#### Reallocation Rules
+
+1. Market Sentiment Based
+   Bullish Week:
+   - AI Tokens: 60-80%
+   - SOL: 15-30%
+   - Stables: 10-25%
+
+   Bearish Week:
+   - AI Tokens: 30-50%
+   - SOL: 10-20%
+   - Stables: 30-60%
+
+2. Individual Token Allocation
+   - Base allocation: Equal weight (10% each)
+   - Adjustment factors:
+     - +3% for top 3 performing tokens
+     - +2% for positive 24h momentum
+     - -2% for negative 24h momentum
+     - -3% for tokens below 20-day MA
+
+3. Reallocation Triggers
+   - Mandatory time-based (every 6 hours)
+   - Emergency triggers:
+     - Single token drops >15% in 6 hours
+     - Overall portfolio drops >10% in 6 hours
+     - Liquidity crisis in any holding
+
+4. Execution Process
+   a. Analysis Phase (15 minutes before execution)
+      - Calculate target allocations
+      - Measure current allocations
+      - Compute required trades
+      - Estimate slippage
+
+   b. Trade Execution
+      - Maximum 3% slippage tolerance
+      - Use split orders for large trades
+      - Priority: Sell overweight → Buy underweight
+      - Use Jupiter aggregator for best execution
+
+5. Risk Controls
+   - Maximum single trade size: 10% of token liquidity
+   - Minimum liquidity requirement: 3x position size
+   - Circuit breaker: Pause trading if slippage >5%
+   - Position building: Graduate entries over 2-3 cycles
+
+6. Performance Tracking
+   - Track reallocation success rate
+   - Monitor slippage vs estimates
+   - Record execution costs
+   - Compare actual vs target allocations
