@@ -311,3 +311,47 @@ Simple scoring system (1-5) for each metric:
 - Require multiple signals for major changes
 - Cap individual holder influence
 - Filter out coordinated signal attempts
+
+#### New Token Suggestions
+
+1. Submission Process
+   - Dedicated #new-tokens channel
+   - Required format:
+     ```
+     New Token Submission:
+     Token: $SYMBOL
+     Contract: [ADDRESS]
+     Category: [AI/ML focus area]
+     Reason: [Analysis]
+     Liquidity: [Current DEX liquidity]
+     Volume: [24h volume]
+     ```
+   - One submission per holder per week
+
+2. Fast-Track Evaluation
+   - Tokens suggested by verified holders skip initial screening
+   - Automatically added to next weekly review if:
+     - Minimum 3 different holders suggest same token
+     - Combined suggester stake > 100,000 $COMPUTE
+     - Meets basic liquidity/volume requirements
+
+3. Reserved Allocation
+   - 1 of the 3 "new entry" slots reserved for shareholder suggestions
+   - Must still meet minimum criteria:
+     - DEX listing
+     - Liquidity requirements
+     - Trading history
+   
+4. Suggestion Scoring
+   - Base points from technical criteria (70%)
+   - Additional weight factors:
+     - Number of suggesting holders
+     - Suggesters' historical accuracy
+     - Combined stake of suggesting holders
+     - Quality of submitted analysis
+
+5. Risk Controls
+   - Mandatory 48h monitoring period before inclusion
+   - Maximum 2 shareholder-suggested tokens at once
+   - Immediate removal if manipulation detected
+   - Extra scrutiny on newly launched tokens
