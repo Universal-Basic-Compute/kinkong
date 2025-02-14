@@ -11,6 +11,7 @@
     --color-black: #0a0a0a;
     --color-metallic: linear-gradient(145deg, #1a1a1a, #0a0a0a);
   }
+}
 
 body {
   background: var(--color-black);
@@ -152,10 +153,10 @@ body {
 
 @layer components {
   .nav-link {
-    @apply text-gray-300 hover:text-gold transition-colors;
+    @apply text-gray-300 hover:text-[color:var(--color-gold)] transition-colors;
   }
 
   .cta-button {
-    @apply px-4 py-2 bg-gradient-to-r from-darkred to-gold text-black font-semibold rounded-md hover:shadow-lg hover:scale-105 transition-all duration-200;
+    @apply px-4 py-2 bg-gradient-to-r from-[color:var(--color-darkred)] to-[color:var(--color-gold)] text-black font-semibold rounded-md hover:shadow-lg hover:scale-105 transition-all duration-200;
   }
 }
