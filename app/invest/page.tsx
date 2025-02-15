@@ -10,6 +10,7 @@ import {
 } from '@solana/web3.js';
 import { 
   getAssociatedTokenAddress, 
+  createAssociatedTokenAccountInstruction,
   createTransferInstruction 
 } from '@solana/spl-token';
 
@@ -36,7 +37,7 @@ export default function Invest() {
     try {
       const connection = new Connection(
         clusterApiUrl('mainnet-beta'),
-        { commitment: 'confirmed', wsEndpoint: false }
+        { commitment: 'confirmed' }
       );
         
       // Get user's USDC token account
@@ -45,31 +46,68 @@ export default function Invest() {
         publicKey
       );
 
-      // Check user's USDC balance
-      const balance = await connection.getTokenAccountBalance(userTokenAccount);
-      const userBalance = Number(balance.value.amount) / 1_000_000; // Convert from decimals
-        
-      if (userBalance < amount) {
-        alert(`Insufficient USDC balance. You have ${userBalance} USDC`);
-        return;
-      }
-
       // Get treasury's USDC token account
       const treasuryTokenAccount = await getAssociatedTokenAddress(
         USDC_MINT,
         TREASURY_WALLET
       );
 
-      // Create transfer instruction
-      const transferInstruction = createTransferInstruction(
-        userTokenAccount,
-        treasuryTokenAccount,
-        publicKey,
-        amount * 1_000_000 // Convert to USDC decimals (6)
-      );
-
       // Create transaction
-      const transaction = new Transaction().add(transferInstruction);
+      const transaction = new Transaction();
+
+      // Check if user's token account exists
+      const userAccountInfo = await connection.getAccountInfo(userTokenAccount);
+      if (!userAccountInfo) {
+        console.log('Creating user token account...');
+        transaction.add(
+          createAssociatedTokenAccountInstruction(
+            publicKey,
+            userTokenAccount,
+            publicKey,
+            USDC_MINT
+          )
+        );
+      }
+
+      // Check if treasury token account exists
+      const treasuryAccountInfo = await connection.getAccountInfo(treasuryTokenAccount);
+      if (!treasuryAccountInfo) {
+        console.log('Creating treasury token account...');
+        transaction.add(
+          createAssociatedTokenAccountInstruction(
+            publicKey,
+            treasuryTokenAccount,
+            TREASURY_WALLET,
+            USDC_MINT
+          )
+        );
+      }
+
+      // Check user's USDC balance
+      try {
+        const balance = await connection.getTokenAccountBalance(userTokenAccount);
+        const userBalance = Number(balance.value.amount) / 1_000_000; // Convert from decimals
+        console.log('User USDC balance:', userBalance);
+          
+        if (userBalance < amount) {
+          alert(`Insufficient USDC balance. You have ${userBalance} USDC`);
+          return;
+        }
+      } catch (error) {
+        console.error('Error checking balance:', error);
+        alert('Error checking USDC balance. Please try again.');
+        return;
+      }
+
+      // Add transfer instruction
+      transaction.add(
+        createTransferInstruction(
+          userTokenAccount,
+          treasuryTokenAccount,
+          publicKey,
+          amount * 1_000_000 // Convert to USDC decimals (6)
+        )
+      );
       
       // Get latest blockhash
       const { blockhash } = await connection.getLatestBlockhash();
@@ -81,12 +119,20 @@ export default function Invest() {
       const signature = await connection.sendRawTransaction(signed.serialize());
       
       // Wait for confirmation
-      await connection.confirmTransaction(signature, 'confirmed');
+      const confirmation = await connection.confirmTransaction(signature, 'confirmed');
+      
+      if (confirmation.value.err) {
+        throw new Error('Transaction failed to confirm');
+      }
 
       alert('Investment successful! Transaction signature: ' + signature);
     } catch (error) {
       console.error('Investment failed:', error);
-      alert('Investment failed. Please check your USDC balance and try again.');
+      if (error instanceof Error) {
+        alert(`Investment failed: ${error.message}`);
+      } else {
+        alert('Investment failed. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
