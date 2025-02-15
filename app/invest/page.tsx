@@ -14,7 +14,7 @@ import {
 } from '@solana/spl-token';
 
 const USDC_MINT = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'); // Mainnet USDC
-const TREASURY_WALLET = new PublicKey('YOUR_TREASURY_WALLET_ADDRESS'); // Replace with your treasury wallet
+const TREASURY_WALLET = new PublicKey('FnWyN4t1aoZWFjEEBxopMaAgk5hjL5P3K65oc2T9FBJY');
 
 export default function Invest() {
   const { connected, publicKey, signTransaction } = useWallet();
