@@ -35,28 +35,36 @@ export default function Invest() {
 
     setIsSubmitting(true);
     try {
+      console.log('Creating connection...');
       const connection = new Connection(
         clusterApiUrl('mainnet-beta'),
         { commitment: 'confirmed' }
       );
         
       // Get user's USDC token account
+      console.log('Getting user token account...');
       const userTokenAccount = await getAssociatedTokenAddress(
         USDC_MINT,
         publicKey
       );
+      console.log('User token account:', userTokenAccount.toString());
 
       // Get treasury's USDC token account
+      console.log('Getting treasury token account...');
       const treasuryTokenAccount = await getAssociatedTokenAddress(
         USDC_MINT,
         TREASURY_WALLET
       );
+      console.log('Treasury token account:', treasuryTokenAccount.toString());
 
       // Create transaction
       const transaction = new Transaction();
 
       // Check if user's token account exists
+      console.log('Checking user account info...');
       const userAccountInfo = await connection.getAccountInfo(userTokenAccount);
+      console.log('User account exists:', !!userAccountInfo);
+      
       if (!userAccountInfo) {
         console.log('Creating user token account...');
         transaction.add(
@@ -70,7 +78,10 @@ export default function Invest() {
       }
 
       // Check if treasury token account exists
+      console.log('Checking treasury account info...');
       const treasuryAccountInfo = await connection.getAccountInfo(treasuryTokenAccount);
+      console.log('Treasury account exists:', !!treasuryAccountInfo);
+      
       if (!treasuryAccountInfo) {
         console.log('Creating treasury token account...');
         transaction.add(
@@ -85,6 +96,7 @@ export default function Invest() {
 
       // Check user's USDC balance
       try {
+        console.log('Checking USDC balance...');
         const balance = await connection.getTokenAccountBalance(userTokenAccount);
         const userBalance = Number(balance.value.amount) / 1_000_000; // Convert from decimals
         console.log('User USDC balance:', userBalance);
