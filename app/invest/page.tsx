@@ -1,6 +1,37 @@
-import { WalletConnect } from '@/components/wallet/WalletConnect'
+'use client';
+import { useState } from 'react';
+import { WalletConnect } from '@/components/wallet/WalletConnect';
+import { useWallet } from '@solana/wallet-adapter-react';
 
 export default function Invest() {
+  const { connected, publicKey } = useWallet();
+  const [amount, setAmount] = useState<number>(1000);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleInvest = async () => {
+    if (!connected || !publicKey) {
+      alert('Please connect your wallet first');
+      return;
+    }
+
+    if (amount < 1000) {
+      alert('Minimum investment is 1,000 USDC');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // TODO: Implement actual investment logic here
+      console.log('Investing:', amount, 'USDC');
+      // Add your investment transaction logic
+      
+    } catch (error) {
+      console.error('Investment failed:', error);
+      alert('Investment failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   return (
     <main className="min-h-screen p-4 max-w-6xl mx-auto">
       <h1 className="text-4xl font-bold mb-8 text-center">Invest in KinKong</h1>
@@ -75,6 +106,8 @@ export default function Invest() {
                     className="input-field"
                     min="1000"
                     step="100"
+                    value={amount}
+                    onChange={(e) => setAmount(Number(e.target.value))}
                   />
                 </div>
                 <div>
@@ -85,8 +118,12 @@ export default function Invest() {
                     Calculate based on amount
                   </div>
                 </div>
-                <button className="btn-primary w-full py-3">
-                  Invest Now
+                <button 
+                  className="btn-primary w-full py-3"
+                  onClick={handleInvest}
+                  disabled={!connected || isSubmitting || amount < 1000}
+                >
+                  {isSubmitting ? 'Processing...' : 'Invest Now'}
                 </button>
                 <p className="text-sm text-gray-400 text-center">
                   Minimum investment: 1,000 USDC
