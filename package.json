@@ -22,7 +22,8 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-markdown": "^9.0.1",
-    "recharts": "^2.10.3"
+    "recharts": "^2.10.3",
+    "rpc-websockets": "^7.5.1"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.10",
