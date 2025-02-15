@@ -20,8 +20,14 @@ export function WalletProviderComponent({ children }: { children: React.ReactNod
     [network]
   );
 
+  // Add config object to disable websockets
+  const connectionConfig = {
+    commitment: 'confirmed',
+    wsEndpoint: false
+  };
+
   return (
-    <ConnectionProvider endpoint={endpoint}>
+    <ConnectionProvider endpoint={endpoint} config={connectionConfig}>
       <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
           {children}
