@@ -1,5 +1,11 @@
 'use client'
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
+import dynamic from 'next/dynamic'
+
+// Dynamically import WalletMultiButton with ssr disabled
+const WalletMultiButton = dynamic(
+  async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
+  { ssr: false }
+);
 
 export function WalletConnect() {
   return (
