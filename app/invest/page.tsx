@@ -15,7 +15,7 @@ export default function Invest() {
         <div className="grid grid-cols-2 gap-4">
           <div className="info-card">
             <h3>Total Raise</h3>
-            <p>7,000,000 $COMPUTE</p>
+            <p>7,000,000 USDC</p>
           </div>
           <div className="info-card">
             <h3>Focus</h3>
@@ -29,7 +29,7 @@ export default function Invest() {
         <div className="investment-form">
           <input 
             type="number" 
-            placeholder="Amount in COMPUTE"
+            placeholder="Amount in USDC"
             className="input-field"
           />
           <button className="btn-primary">
