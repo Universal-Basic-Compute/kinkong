@@ -35,12 +35,21 @@ export default function Invest() {
     setIsSubmitting(true);
     try {
       const connection = new Connection(clusterApiUrl('mainnet-beta'), 'confirmed');
-      
+        
       // Get user's USDC token account
       const userTokenAccount = await getAssociatedTokenAddress(
         USDC_MINT,
         publicKey
       );
+
+      // Check user's USDC balance
+      const balance = await connection.getTokenAccountBalance(userTokenAccount);
+      const userBalance = Number(balance.value.amount) / 1_000_000; // Convert from decimals
+        
+      if (userBalance < amount) {
+        alert(`Insufficient USDC balance. You have ${userBalance} USDC`);
+        return;
+      }
 
       // Get treasury's USDC token account
       const treasuryTokenAccount = await getAssociatedTokenAddress(
