@@ -34,7 +34,10 @@ export default function Invest() {
 
     setIsSubmitting(true);
     try {
-      const connection = new Connection(clusterApiUrl('mainnet-beta'), 'confirmed');
+      const connection = new Connection(
+        clusterApiUrl('mainnet-beta'),
+        { commitment: 'confirmed', wsEndpoint: false }
+      );
         
       // Get user's USDC token account
       const userTokenAccount = await getAssociatedTokenAddress(
