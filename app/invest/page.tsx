@@ -2,9 +2,22 @@
 import { useState } from 'react';
 import { WalletConnect } from '@/components/wallet/WalletConnect';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { 
+  Connection, 
+  clusterApiUrl, 
+  PublicKey, 
+  Transaction 
+} from '@solana/web3.js';
+import { 
+  getAssociatedTokenAddress, 
+  createTransferInstruction 
+} from '@solana/spl-token';
+
+const USDC_MINT = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'); // Mainnet USDC
+const TREASURY_WALLET = new PublicKey('YOUR_TREASURY_WALLET_ADDRESS'); // Replace with your treasury wallet
 
 export default function Invest() {
-  const { connected, publicKey } = useWallet();
+  const { connected, publicKey, signTransaction } = useWallet();
   const [amount, setAmount] = useState<number>(1000);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -21,13 +34,47 @@ export default function Invest() {
 
     setIsSubmitting(true);
     try {
-      // TODO: Implement actual investment logic here
-      console.log('Investing:', amount, 'USDC');
-      // Add your investment transaction logic
+      const connection = new Connection(clusterApiUrl('mainnet-beta'), 'confirmed');
       
+      // Get user's USDC token account
+      const userTokenAccount = await getAssociatedTokenAddress(
+        USDC_MINT,
+        publicKey
+      );
+
+      // Get treasury's USDC token account
+      const treasuryTokenAccount = await getAssociatedTokenAddress(
+        USDC_MINT,
+        TREASURY_WALLET
+      );
+
+      // Create transfer instruction
+      const transferInstruction = createTransferInstruction(
+        userTokenAccount,
+        treasuryTokenAccount,
+        publicKey,
+        amount * 1_000_000 // Convert to USDC decimals (6)
+      );
+
+      // Create transaction
+      const transaction = new Transaction().add(transferInstruction);
+      
+      // Get latest blockhash
+      const { blockhash } = await connection.getLatestBlockhash();
+      transaction.recentBlockhash = blockhash;
+      transaction.feePayer = publicKey;
+
+      // Send transaction
+      const signed = await signTransaction(transaction);
+      const signature = await connection.sendRawTransaction(signed.serialize());
+      
+      // Wait for confirmation
+      await connection.confirmTransaction(signature, 'confirmed');
+
+      alert('Investment successful! Transaction signature: ' + signature);
     } catch (error) {
       console.error('Investment failed:', error);
-      alert('Investment failed. Please try again.');
+      alert('Investment failed. Please check your USDC balance and try again.');
     } finally {
       setIsSubmitting(false);
     }
