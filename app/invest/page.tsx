@@ -18,7 +18,7 @@ const TREASURY_WALLET = new PublicKey('FnWyN4t1aoZWFjEEBxopMaAgk5hjL5P3K65oc2T9F
 
 export default function Invest() {
   const { connected, publicKey, signTransaction } = useWallet();
-  const [amount, setAmount] = useState<number>(1000);
+  const [amount, setAmount] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInvest = async () => {
@@ -27,8 +27,8 @@ export default function Invest() {
       return;
     }
 
-    if (amount < 1000) {
-      alert('Minimum investment is 1,000 USDC');
+    if (amount < 1) {
+      alert('Minimum investment is 1 USDC');
       return;
     }
 
@@ -163,8 +163,8 @@ export default function Invest() {
                     type="number" 
                     placeholder="Amount in USDC"
                     className="input-field"
-                    min="1000"
-                    step="100"
+                    min="1"
+                    step="0.1"
                     value={amount}
                     onChange={(e) => setAmount(Number(e.target.value))}
                   />
@@ -180,12 +180,12 @@ export default function Invest() {
                 <button 
                   className="btn-primary w-full py-3"
                   onClick={handleInvest}
-                  disabled={!connected || isSubmitting || amount < 1000}
+                  disabled={!connected || isSubmitting || amount < 1}
                 >
                   {isSubmitting ? 'Processing...' : 'Invest Now'}
                 </button>
                 <p className="text-sm text-gray-400 text-center">
-                  Minimum investment: 1,000 USDC
+                  Minimum investment: 1 USDC
                 </p>
               </div>
             </div>
