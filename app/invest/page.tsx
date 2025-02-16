@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { WalletConnect } from '@/components/wallet/WalletConnect';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { 
@@ -20,10 +20,38 @@ import {
 const USDC_MINT = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'); // Mainnet USDC
 const TREASURY_WALLET = new PublicKey('FnWyN4t1aoZWFjEEBxopMaAgk5hjL5P3K65oc2T9FBJY');
 
+interface Investment {
+  investmentId: string;
+  amount: number;
+  solscanUrl: string;
+  date: string;
+  username: string;
+  wallet: string;
+}
+
 export default function Invest() {
   const { connected, publicKey, signTransaction } = useWallet();
   const [amount, setAmount] = useState<number>(500);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [investments, setInvestments] = useState<Investment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchInvestments() {
+      try {
+        const response = await fetch('/api/investments');
+        if (!response.ok) throw new Error('Failed to fetch');
+        const data = await response.json();
+        setInvestments(data);
+      } catch (error) {
+        console.error('Error fetching investments:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchInvestments();
+  }, []);
 
   const handleInvest = async () => {
     if (!connected || !publicKey) {
@@ -155,6 +183,47 @@ export default function Invest() {
   return (
     <main className="min-h-screen p-4 max-w-6xl mx-auto">
       <h1 className="text-4xl font-bold mb-8 text-center">Invest in KinKong</h1>
+
+      <section className="mb-8">
+        <h2 className="text-2xl font-bold mb-4">Current Investors</h2>
+        {isLoading ? (
+          <div className="text-center">Loading investors...</div>
+        ) : (
+          <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
+            <div className="overflow-x-auto">
+              <table className="min-w-full">
+                <thead>
+                  <tr className="border-b border-gold/20">
+                    <th className="px-4 py-2 text-left">Username</th>
+                    <th className="px-4 py-2 text-right">Amount</th>
+                    <th className="px-4 py-2 text-left">Date</th>
+                    <th className="px-4 py-2 text-left">Transaction</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {investments.map((investment) => (
+                    <tr key={investment.investmentId} className="border-b border-gold/10 hover:bg-gold/5">
+                      <td className="px-4 py-2">{investment.username}</td>
+                      <td className="px-4 py-2 text-right">{investment.amount.toLocaleString()} USDC</td>
+                      <td className="px-4 py-2">{new Date(investment.date).toLocaleDateString()}</td>
+                      <td className="px-4 py-2">
+                        <a 
+                          href={investment.solscanUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-gold hover:text-gold/80 underline"
+                        >
+                          View on Solscan
+                        </a>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </section>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Left Column */}
