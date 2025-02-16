@@ -1,24 +1,24 @@
 import { getTable } from '@/backend/src/airtable/tables';
 import { NextResponse } from 'next/server';
 
-// Check for required environment variables
-if (!process.env.KINKONG_AIRTABLE_API_KEY || !process.env.KINKONG_AIRTABLE_BASE_ID) {
-  console.error('Missing required environment variables:', {
-    hasApiKey: !!process.env.KINKONG_AIRTABLE_API_KEY,
-    hasBaseId: !!process.env.KINKONG_AIRTABLE_BASE_ID
-  });
-}
-
 export async function GET() {
   try {
-    console.log('Fetching signals...');
+    console.log('Starting GET request for signals...');
+    console.log('Environment variables:', {
+      hasApiKey: !!process.env.KINKONG_AIRTABLE_API_KEY,
+      hasBaseId: !!process.env.KINKONG_AIRTABLE_BASE_ID
+    });
+
     const table = getTable('Signals');
+    console.log('Got Airtable table reference');
+
     const records = await table
       .select({
         sort: [{ field: 'timestamp', direction: 'desc' }],
-        maxRecords: 100 // Limit to last 100 signals
+        maxRecords: 100
       })
       .all();
+    console.log(`Retrieved ${records.length} signals`);
 
     const signals = records.map(record => ({
       id: record.id,
@@ -32,9 +32,14 @@ export async function GET() {
 
     return NextResponse.json(signals);
   } catch (error) {
-    console.error('Failed to fetch signals:', error);
+    console.error('Detailed error in GET /api/signals:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    
     return NextResponse.json(
-      { error: 'Failed to fetch signals' },
+      { error: 'Failed to fetch signals', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
@@ -42,10 +47,14 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    console.log('Starting POST request for signals...');
     const body = await request.json();
+    console.log('Request body:', body);
+
     const { token, direction, reason, url, wallet } = body;
 
     if (!token || !direction || !reason || !wallet) {
+      console.log('Missing required fields:', { token, direction, reason, wallet });
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -53,6 +62,8 @@ export async function POST(request: Request) {
     }
 
     const table = getTable('Signals');
+    console.log('Got Airtable table reference');
+
     const record = await table.create([
       {
         fields: {
@@ -65,12 +76,18 @@ export async function POST(request: Request) {
         },
       },
     ]);
+    console.log('Created signal record:', record);
 
     return NextResponse.json({ success: true, record: record[0] });
   } catch (error) {
-    console.error('Failed to create signal:', error);
+    console.error('Detailed error in POST /api/signals:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    });
+
     return NextResponse.json(
-      { error: 'Failed to create signal' },
+      { error: 'Failed to create signal', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
