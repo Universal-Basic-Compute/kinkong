@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { WalletConnect } from '@/components/wallet/WalletConnect';
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -39,12 +40,9 @@ export default function Header() {
           </nav>
 
           <div className="flex items-center space-x-8">
-            <Link
-              href="/invest"
-              className="hidden md:block px-6 py-2 bg-gradient-to-r from-darkred to-gold text-black font-semibold rounded-lg hover:scale-105 transition-all duration-200 shadow-lg shadow-gold/10"
-            >
-              Start Trading
-            </Link>
+            <div className="hidden md:block">
+              <WalletConnect />
+            </div>
 
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -89,13 +87,9 @@ export default function Header() {
                   {item.label}
                 </Link>
               ))}
-              <Link
-                href="/invest"
-                className="text-black py-2 px-4 bg-gradient-to-r from-darkred to-gold font-semibold rounded-lg hover:scale-105 transition-all duration-200 shadow-lg shadow-gold/10 text-center"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Start Trading
-              </Link>
+              <div className="pt-2">
+                <WalletConnect />
+              </div>
             </nav>
           </div>
         )}

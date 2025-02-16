@@ -14,9 +14,6 @@ export default function Signals() {
               Share valuable trading insights with the community and earn additional profit share allocations.
             </p>
           </div>
-          <div className="flex-shrink-0">
-            <WalletConnect />
-          </div>
         </div>
 
         {/* Signal History - Now First */}
