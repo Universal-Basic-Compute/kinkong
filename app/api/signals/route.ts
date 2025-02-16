@@ -1,8 +1,17 @@
 import { getTable } from '@/backend/src/airtable/tables';
 import { NextResponse } from 'next/server';
 
+// Check for required environment variables
+if (!process.env.KINKONG_AIRTABLE_API_KEY || !process.env.KINKONG_AIRTABLE_BASE_ID) {
+  console.error('Missing required environment variables:', {
+    hasApiKey: !!process.env.KINKONG_AIRTABLE_API_KEY,
+    hasBaseId: !!process.env.KINKONG_AIRTABLE_BASE_ID
+  });
+}
+
 export async function GET() {
   try {
+    console.log('Fetching signals...');
     const table = getTable('SIGNALS');
     const records = await table
       .select({
