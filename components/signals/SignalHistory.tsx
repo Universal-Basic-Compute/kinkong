@@ -1,6 +1,22 @@
 'use client';
 import { useEffect, useState } from 'react';
 
+type SignalUpdateListener = () => void;
+const signalUpdateListeners: SignalUpdateListener[] = [];
+
+export const signalEvents = {
+  subscribe: (listener: SignalUpdateListener) => {
+    signalUpdateListeners.push(listener);
+    return () => {
+      const index = signalUpdateListeners.indexOf(listener);
+      if (index > -1) signalUpdateListeners.splice(index, 1);
+    };
+  },
+  emit: () => {
+    signalUpdateListeners.forEach(listener => listener());
+  }
+};
+
 function formatTokenSymbol(token: string): string {
   return token.startsWith('$') ? token : `$${token}`;
 }
@@ -49,24 +65,34 @@ export function SignalHistory() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function fetchSignals() {
-      try {
-        const response = await fetch('/api/signals');
-        if (!response.ok) {
-          throw new Error('Failed to fetch signals');
-        }
-        const data = await response.json();
-        setSignals(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load signals');
-        console.error('Error fetching signals:', err);
-      } finally {
-        setIsLoading(false);
+  const fetchSignals = async () => {
+    try {
+      const response = await fetch('/api/signals');
+      if (!response.ok) {
+        throw new Error('Failed to fetch signals');
       }
+      const data = await response.json();
+      setSignals(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load signals');
+      console.error('Error fetching signals:', err);
+    } finally {
+      setIsLoading(false);
     }
+  };
 
+  useEffect(() => {
     fetchSignals();
+    
+    // Subscribe to signal updates
+    const unsubscribe = signalEvents.subscribe(() => {
+      fetchSignals();
+    });
+
+    // Cleanup subscription on unmount
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   if (isLoading) {

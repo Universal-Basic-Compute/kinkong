@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { WalletConnect } from '@/components/wallet/WalletConnect'
+import { signalEvents } from './SignalHistory'
 
 export function SignalForm() {
   const { connected, publicKey } = useWallet()
@@ -49,6 +50,9 @@ export function SignalForm() {
         url: ''
       })
       setSuccess(true)
+
+      // Emit signal update event
+      signalEvents.emit();
 
       // Reset success message after 3 seconds
       setTimeout(() => setSuccess(false), 3000)
