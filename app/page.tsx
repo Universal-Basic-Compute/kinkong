@@ -109,7 +109,7 @@ export default function Home() {
         >
           Start Earning Now
         </Link>
-        <p className="text-sm text-gray-400">Minimum investment: 1,000 USDC</p>
+        <p className="text-sm text-gray-400">Minimum investment: 500 USDC</p>
       </section>
     </main>
   );

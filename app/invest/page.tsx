@@ -22,7 +22,7 @@ const TREASURY_WALLET = new PublicKey('FnWyN4t1aoZWFjEEBxopMaAgk5hjL5P3K65oc2T9F
 
 export default function Invest() {
   const { connected, publicKey, signTransaction } = useWallet();
-  const [amount, setAmount] = useState<number>(1);
+  const [amount, setAmount] = useState<number>(500);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInvest = async () => {
@@ -31,8 +31,8 @@ export default function Invest() {
       return;
     }
 
-    if (amount < 1) {
-      alert('Minimum investment is 1 USDC');
+    if (amount < 500) {
+      alert('Minimum investment is 500 USDC');
       return;
     }
 
@@ -163,16 +163,12 @@ export default function Invest() {
             <h2 className="text-2xl font-bold mb-4">Investment Details</h2>
             <div className="grid grid-cols-1 gap-4">
               <div className="info-card">
-                <h3 className="text-lg mb-2">Total Raise</h3>
-                <p className="text-3xl text-gold">7,000,000 USDC</p>
-              </div>
-              <div className="info-card">
                 <h3 className="text-lg mb-2">Focus</h3>
                 <p className="text-xl">AI token trading on Solana</p>
               </div>
               <div className="info-card">
                 <h3 className="text-lg mb-2">Minimum Investment</h3>
-                <p className="text-xl">1,000 USDC</p>
+                <p className="text-xl">500 USDC</p>
               </div>
             </div>
           </section>
@@ -246,7 +242,7 @@ export default function Invest() {
                   {isSubmitting ? 'Processing...' : 'Invest Now'}
                 </button>
                 <p className="text-sm text-gray-400 text-center">
-                  Minimum investment: 1 USDC
+                  Minimum investment: 500 USDC
                 </p>
               </div>
             </div>
