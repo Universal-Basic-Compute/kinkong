@@ -220,7 +220,7 @@ export default function Invest() {
                       <td className="px-4 py-2">{investment.username}</td>
                       <td className="px-4 py-2 text-right">
                         {typeof investment.amount === 'number' 
-                          ? `${investment.amount.toLocaleString()} USDC`
+                          ? `${investment.amount.toLocaleString('en-US')} USDC`
                           : 'N/A'}
                       </td>
                       <td className="px-4 py-2">
