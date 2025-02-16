@@ -23,7 +23,7 @@ export function WalletProviderComponent({ children }: { children: React.ReactNod
   // Add config object to disable websockets
   const connectionConfig = {
     commitment: 'confirmed' as Commitment,
-    wsEndpoint: false
+    wsEndpoint: '' // Empty string instead of false
   };
 
   return (
