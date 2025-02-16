@@ -7,17 +7,19 @@ console.log('Initializing Airtable client...', {
 
 // Check for required environment variables
 if (!process.env.KINKONG_AIRTABLE_API_KEY) {
-  throw new Error('KINKONG_AIRTABLE_API_KEY is not defined in environment variables');
+  throw new Error('KINKONG_AIRTABLE_API_KEY is not defined');
 }
 
 if (!process.env.KINKONG_AIRTABLE_BASE_ID) {
-  throw new Error('KINKONG_AIRTABLE_BASE_ID is not defined in environment variables');
+  throw new Error('KINKONG_AIRTABLE_BASE_ID is not defined');
 }
 
-// Configure Airtable client
+// Configure Airtable client with additional logging
+console.log('Configuring Airtable client...');
 const base = new Airtable({
   apiKey: process.env.KINKONG_AIRTABLE_API_KEY
 }).base(process.env.KINKONG_AIRTABLE_BASE_ID);
+console.log('Airtable client configured successfully');
 
 // Add a test function to verify the client
 export const testConnection = async () => {
@@ -32,6 +34,9 @@ export const testConnection = async () => {
   }
 };
 
-export const getTable = (tableName: string) => base(tableName);
+export const getTable = (tableName: string) => {
+  console.log('Getting table:', tableName);
+  return base(tableName);
+};
 
 export default base;

@@ -1,4 +1,4 @@
-import { getTable } from '@/backend/src/airtable/tables';
+import { getTable, TABLES } from '@/backend/src/airtable/tables';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
@@ -9,7 +9,7 @@ export async function GET() {
       hasBaseId: !!process.env.KINKONG_AIRTABLE_BASE_ID
     });
 
-    const table = getTable('Signals');
+    const table = getTable(TABLES.SIGNALS);
     console.log('Got Airtable table reference');
 
     const records = await table
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const table = getTable('Signals');
+    const table = getTable(TABLES.SIGNALS);
     console.log('Got Airtable table reference');
 
     const record = await table.create([
