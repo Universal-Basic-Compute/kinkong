@@ -36,6 +36,13 @@ export interface Signal {
   holder: string;
   token: string;
   type: 'BUY' | 'SELL';
+  timeframe: 'SCALP' | 'INTRADAY' | 'SWING' | 'POSITION';
+  entryPrice?: number;
+  targetPrice?: number;
+  stopLoss?: number;
+  confidence: 'LOW' | 'MEDIUM' | 'HIGH';
+  reason: string;
+  url?: string;
 }
 
 export const getTable = (tableName: string) => {

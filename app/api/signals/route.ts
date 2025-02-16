@@ -68,9 +68,20 @@ export async function POST(request: Request) {
     const body = await request.json();
     console.log('Request body:', body);
 
-    const { token, direction, reason, url, wallet } = body;
+    const { 
+      token, 
+      direction, 
+      timeframe,
+      entryPrice,
+      targetPrice,
+      stopLoss,
+      confidence,
+      reason, 
+      url, 
+      wallet 
+    } = body;
 
-    if (!token || !direction || !reason || !wallet) {
+    if (!token || !direction || !timeframe || !confidence || !reason || !wallet) {
       console.log('Missing required fields:', { token, direction, reason, wallet });
       return NextResponse.json(
         { error: 'Missing required fields' },
@@ -86,6 +97,11 @@ export async function POST(request: Request) {
         fields: {
           token: token.toUpperCase(),
           type: direction,
+          timeframe,
+          entryPrice: entryPrice || null,
+          targetPrice: targetPrice || null,
+          stopLoss: stopLoss || null,
+          confidence,
           reason,
           url: url || '',
           wallet,

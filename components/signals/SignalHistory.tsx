@@ -55,9 +55,27 @@ interface Signal {
   timestamp: string;
   token: string;
   type: 'BUY' | 'SELL';
+  timeframe: 'SCALP' | 'INTRADAY' | 'SWING' | 'POSITION';
+  entryPrice?: number;
+  targetPrice?: number;
+  stopLoss?: number;
+  confidence: 'LOW' | 'MEDIUM' | 'HIGH';
   wallet: string;
-  reason?: string;
+  reason: string;
   url?: string;
+}
+
+function getConfidenceClass(confidence: Signal['confidence']) {
+  switch (confidence) {
+    case 'HIGH':
+      return 'bg-green-900/50 text-green-400';
+    case 'MEDIUM':
+      return 'bg-yellow-900/50 text-yellow-400';
+    case 'LOW':
+      return 'bg-red-900/50 text-red-400';
+    default:
+      return 'bg-gray-900/50 text-gray-400';
+  }
 }
 
 export function SignalHistory() {
@@ -127,6 +145,9 @@ export function SignalHistory() {
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Time</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Token</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Type</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Timeframe</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Prices</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Confidence</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">From</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Reason</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Reference</th>
@@ -150,6 +171,27 @@ export function SignalHistory() {
                     : 'bg-red-900/50 text-red-400'
                 }`}>
                   {signal.type}
+                </span>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm">
+                <span className="text-gray-300">{signal.timeframe}</span>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm">
+                <div className="text-xs space-y-1">
+                  {signal.entryPrice && (
+                    <div>Entry: <span className="text-gray-300">${signal.entryPrice}</span></div>
+                  )}
+                  {signal.targetPrice && (
+                    <div>Target: <span className="text-green-400">${signal.targetPrice}</span></div>
+                  )}
+                  {signal.stopLoss && (
+                    <div>Stop: <span className="text-red-400">${signal.stopLoss}</span></div>
+                  )}
+                </div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm">
+                <span className={`px-2 py-1 rounded-full text-xs ${getConfidenceClass(signal.confidence)}`}>
+                  {signal.confidence}
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">

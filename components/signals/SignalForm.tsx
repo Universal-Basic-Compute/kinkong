@@ -8,7 +8,12 @@ export function SignalForm() {
   const { connected, publicKey } = useWallet()
   const [formData, setFormData] = useState({
     token: '',
-    direction: 'BUY',
+    direction: 'BUY' as 'BUY' | 'SELL',
+    timeframe: 'INTRADAY' as 'SCALP' | 'INTRADAY' | 'SWING' | 'POSITION',
+    entryPrice: '',
+    targetPrice: '',
+    stopLoss: '',
+    confidence: 'MEDIUM' as 'LOW' | 'MEDIUM' | 'HIGH',
     reason: '',
     url: ''
   })
@@ -101,12 +106,79 @@ export function SignalForm() {
         <label className="block mb-2">Direction</label>
         <select
           value={formData.direction}
-          onChange={e => setFormData({...formData, direction: e.target.value})}
+          onChange={e => setFormData({...formData, direction: e.target.value as 'BUY' | 'SELL'})}
           className="input-field"
           required
         >
           <option value="BUY">BUY</option>
           <option value="SELL">SELL</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block mb-2">Timeframe</label>
+        <select
+          value={formData.timeframe}
+          onChange={e => setFormData({...formData, timeframe: e.target.value as typeof formData.timeframe})}
+          className="input-field"
+          required
+        >
+          <option value="SCALP">Scalp (minutes to hours)</option>
+          <option value="INTRADAY">Intraday (hours to 1 day)</option>
+          <option value="SWING">Swing (days to weeks)</option>
+          <option value="POSITION">Position (weeks to months)</option>
+        </select>
+      </div>
+
+      <div className="grid grid-cols-3 gap-4">
+        <div>
+          <label className="block mb-2">Entry Price</label>
+          <input
+            type="number"
+            step="any"
+            value={formData.entryPrice}
+            onChange={e => setFormData({...formData, entryPrice: e.target.value})}
+            className="input-field"
+            placeholder="Current/Expected"
+          />
+        </div>
+
+        <div>
+          <label className="block mb-2">Target Price</label>
+          <input
+            type="number"
+            step="any"
+            value={formData.targetPrice}
+            onChange={e => setFormData({...formData, targetPrice: e.target.value})}
+            className="input-field"
+            placeholder="Take profit"
+          />
+        </div>
+
+        <div>
+          <label className="block mb-2">Stop Loss</label>
+          <input
+            type="number"
+            step="any"
+            value={formData.stopLoss}
+            onChange={e => setFormData({...formData, stopLoss: e.target.value})}
+            className="input-field"
+            placeholder="Stop loss"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block mb-2">Confidence Level</label>
+        <select
+          value={formData.confidence}
+          onChange={e => setFormData({...formData, confidence: e.target.value as typeof formData.confidence})}
+          className="input-field"
+          required
+        >
+          <option value="LOW">Low (Speculative)</option>
+          <option value="MEDIUM">Medium (Good Setup)</option>
+          <option value="HIGH">High (Strong Conviction)</option>
         </select>
       </div>
 
