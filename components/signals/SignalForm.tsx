@@ -1,7 +1,10 @@
 'use client'
 import { useState } from 'react'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { WalletConnect } from '@/components/wallet/WalletConnect'
 
 export function SignalForm() {
+  const { connected } = useWallet()
   const [formData, setFormData] = useState({
     token: '',
     direction: 'BUY',
@@ -13,6 +16,15 @@ export function SignalForm() {
     e.preventDefault()
     // TODO: Implement signal submission
     console.log('Signal submitted:', formData)
+  }
+
+  if (!connected) {
+    return (
+      <div className="space-y-4 p-6 bg-black/30 border border-gold/20 rounded-lg">
+        <p className="text-gray-300 mb-4">Connect your wallet to submit signals</p>
+        <WalletConnect />
+      </div>
+    )
   }
 
   return (
