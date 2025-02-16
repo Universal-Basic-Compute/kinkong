@@ -5,7 +5,7 @@ interface Signal {
   timestamp: string;
   token: string;
   type: 'BUY' | 'SELL';
-  status: 'PENDING' | 'ACCEPTED' | 'REJECTED';
+  wallet: string;
   reason?: string;
   url?: string;
 }
@@ -18,8 +18,8 @@ export function SignalHistory() {
       timestamp: '2024-01-20 14:30',
       token: 'AI_TOKEN1',
       type: 'BUY',
-      status: 'ACCEPTED',
-      reason: 'Strong momentum indicators',
+      wallet: 'KinKong',
+      reason: 'Strong momentum indicators and increasing volume',
       url: 'https://twitter.com/example/status/123'
     },
     {
@@ -27,8 +27,8 @@ export function SignalHistory() {
       timestamp: '2024-01-20 15:45',
       token: 'AI_TOKEN2',
       type: 'SELL',
-      status: 'REJECTED',
-      reason: 'Insufficient liquidity',
+      wallet: 'Gx7F...j9k2',
+      reason: 'Technical resistance reached',
       url: 'https://discord.com/channels/123/456'
     },
     {
@@ -36,7 +36,8 @@ export function SignalHistory() {
       timestamp: '2024-01-20 16:15',
       token: 'SOL',
       type: 'BUY',
-      status: 'PENDING'
+      wallet: 'KinKong',
+      reason: 'Market structure showing reversal signs',
     }
   ];
 
@@ -48,7 +49,7 @@ export function SignalHistory() {
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Time</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Token</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Type</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Status</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">From</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Reason</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Reference</th>
           </tr>
@@ -72,14 +73,12 @@ export function SignalHistory() {
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">
-                <span className={`px-2 py-1 rounded-full text-xs ${
-                  signal.status === 'ACCEPTED' 
-                    ? 'bg-green-900/50 text-green-400'
-                    : signal.status === 'REJECTED'
-                    ? 'bg-red-900/50 text-red-400'
-                    : 'bg-yellow-900/50 text-yellow-400'
+                <span className={`text-sm ${
+                  signal.wallet === 'KinKong' 
+                    ? 'text-gold font-semibold' 
+                    : 'text-gray-300'
                 }`}>
-                  {signal.status}
+                  {signal.wallet}
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">

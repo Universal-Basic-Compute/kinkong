@@ -1,16 +1,22 @@
 import { SignalForm } from '@/components/signals/SignalForm'
 import { SignalHistory } from '@/components/signals/SignalHistory'
+import { WalletConnect } from '@/components/wallet/WalletConnect'
 
 export default function Signals() {
   return (
     <main className="min-h-screen p-4 max-w-7xl mx-auto">
       <div className="space-y-8">
-        {/* Header Section */}
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Community Signals</h1>
-          <p className="text-sm text-gray-400">
-            Share valuable trading insights with the community and earn additional profit share allocations based on signal performance.
-          </p>
+        {/* Header Section with Wallet Connect */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Community Signals</h1>
+            <p className="text-sm text-gray-400">
+              Share valuable trading insights with the community and earn additional profit share allocations.
+            </p>
+          </div>
+          <div className="flex-shrink-0">
+            <WalletConnect />
+          </div>
         </div>
 
         {/* Signal History - Now First */}
