@@ -187,6 +187,80 @@ body {
   transform: translateY(-1px);
 }
 
+@keyframes metallic-shine {
+  0% {
+    background-position: -200%;
+  }
+  100% {
+    background-position: 200%;
+  }
+}
+
+.metallic-text {
+  background: linear-gradient(
+    120deg,
+    #5b21b6 0%,
+    #7c3aed 10%,
+    #c4b5fd 20%,
+    #7c3aed 30%,
+    #5b21b6 40%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: metallic-shine 6s linear infinite;
+}
+
+.metallic-text-compute {
+  background: linear-gradient(
+    120deg,
+    #f59e0b 0%,
+    #fbbf24 10%,
+    #fef3c7 20%,
+    #fbbf24 30%,
+    #f59e0b 40%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: metallic-shine 8s linear infinite;
+}
+
+.metallic-text-sol {
+  background: linear-gradient(
+    120deg,
+    #ec4899 0%,
+    #f472b6 10%,
+    #fce7f3 20%,
+    #f472b6 30%,
+    #ec4899 40%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: metallic-shine 10s linear infinite;
+  animation-delay: 1.5s;
+}
+
+.metallic-text-ubc {
+  background: linear-gradient(
+    120deg,
+    #f59e0b 0%,
+    #fbbf24 10%,
+    #fef3c7 20%,
+    #fbbf24 30%,
+    #f59e0b 40%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: metallic-shine 8s linear infinite;
+}
+
 @layer components {
   .nav-link {
     @apply text-gray-300 hover:text-[#FFD700] transition-colors;

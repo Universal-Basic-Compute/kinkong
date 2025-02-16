@@ -1,6 +1,20 @@
 'use client';
 import { useEffect, useState } from 'react';
 
+function getTokenClass(token: string): string {
+  const upperToken = token.toUpperCase();
+  switch (upperToken) {
+    case 'UBC':
+      return 'metallic-text-ubc font-bold';
+    case 'COMPUTE':
+      return 'metallic-text-compute font-bold';
+    case 'SOL':
+      return 'metallic-text-sol font-bold';
+    default:
+      return 'text-gray-300';
+  }
+}
+
 function formatDisplayDate(isoString: string): string {
   try {
     return new Date(isoString).toLocaleString(undefined, {
@@ -94,8 +108,10 @@ export function SignalHistory() {
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                 {formatDisplayDate(signal.timestamp)}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                {signal.token}
+              <td className="px-6 py-4 whitespace-nowrap text-sm">
+                <span className={getTokenClass(signal.token)}>
+                  {signal.token}
+                </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">
                 <span className={`px-2 py-1 rounded-full text-xs ${
