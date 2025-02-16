@@ -10,7 +10,7 @@ export interface Investment {
 }
 
 export async function getInvestments(): Promise<Investment[]> {
-  if (!process.env.KINOS_AIRTABLE_API_KEY || !process.env.KINOS_AIRTABLE_BASE_ID) {
+  if (!process.env.KINKONG_AIRTABLE_API_KEY || !process.env.KINKONG_AIRTABLE_BASE_ID) {
     throw new Error('Airtable configuration is missing');
   }
 
