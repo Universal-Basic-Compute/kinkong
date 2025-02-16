@@ -5,7 +5,8 @@ export function SignalForm() {
   const [formData, setFormData] = useState({
     token: '',
     direction: 'BUY',
-    reason: ''
+    reason: '',
+    url: ''
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,10 +47,22 @@ export function SignalForm() {
           onChange={e => setFormData({...formData, reason: e.target.value})}
           className="input-field"
           placeholder="Explain your signal..."
+          rows={3}
         />
       </div>
 
-      <button type="submit" className="btn-primary">
+      <div>
+        <label className="block mb-2">Reference URL</label>
+        <input
+          type="url"
+          value={formData.url}
+          onChange={e => setFormData({...formData, url: e.target.value})}
+          className="input-field"
+          placeholder="Add a reference link (Twitter, Discord, etc.)"
+        />
+      </div>
+
+      <button type="submit" className="btn-primary w-full">
         Submit Signal
       </button>
     </form>

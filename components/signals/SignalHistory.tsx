@@ -7,6 +7,7 @@ interface Signal {
   type: 'BUY' | 'SELL';
   status: 'PENDING' | 'ACCEPTED' | 'REJECTED';
   reason?: string;
+  url?: string;
 }
 
 export function SignalHistory() {
@@ -18,7 +19,8 @@ export function SignalHistory() {
       token: 'AI_TOKEN1',
       type: 'BUY',
       status: 'ACCEPTED',
-      reason: 'Strong momentum indicators'
+      reason: 'Strong momentum indicators',
+      url: 'https://twitter.com/example/status/123'
     },
     {
       id: 2,
@@ -26,7 +28,8 @@ export function SignalHistory() {
       token: 'AI_TOKEN2',
       type: 'SELL',
       status: 'REJECTED',
-      reason: 'Insufficient liquidity'
+      reason: 'Insufficient liquidity',
+      url: 'https://discord.com/channels/123/456'
     },
     {
       id: 3,
@@ -47,6 +50,7 @@ export function SignalHistory() {
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Type</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Status</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Reason</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Reference</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gold/10">
@@ -80,6 +84,20 @@ export function SignalHistory() {
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                 {signal.reason || '-'}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm">
+                {signal.url ? (
+                  <a 
+                    href={signal.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gold hover:text-gold/80 underline"
+                  >
+                    View
+                  </a>
+                ) : (
+                  '-'
+                )}
               </td>
             </tr>
           ))}
