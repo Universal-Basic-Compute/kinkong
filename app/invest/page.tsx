@@ -62,7 +62,7 @@ export default function Invest() {
   }, []);
 
   const handleInvest = async () => {
-    if (!connected || !publicKey) {
+    if (!connected || !publicKey || !signTransaction) {  // Add signTransaction check
       alert('Please connect your wallet first');
       return;
     }
