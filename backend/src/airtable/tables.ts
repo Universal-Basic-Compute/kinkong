@@ -5,18 +5,9 @@ export const TABLES = {
   PORTFOLIO: 'Portfolio',
   TRADES: 'Trades', 
   TOKENS: 'Tokens',
-  SIGNALS: 'Signals', // Ensure exact match with Airtable
+  SIGNALS: 'Signals',
   REPORTS: 'Reports'
 } as const;
-
-// Add table name validation
-export const getTable = (tableName: string) => {
-  if (!tableName) {
-    throw new Error('Table name is required');
-  }
-  console.log('Getting table:', tableName);
-  return base(tableName);
-};
 
 // Table interfaces
 export interface Portfolio {
@@ -47,5 +38,10 @@ export interface Signal {
   type: 'BUY' | 'SELL';
 }
 
-// Table methods
-export const getTable = (table: keyof typeof TABLES) => base(TABLES[table]);
+export const getTable = (tableName: string) => {
+  if (!tableName) {
+    throw new Error('Table name is required');
+  }
+  console.log('Getting table:', tableName);
+  return base(tableName);
+};
