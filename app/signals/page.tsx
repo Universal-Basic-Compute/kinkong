@@ -4,74 +4,76 @@ import { SignalHistory } from '@/components/signals/SignalHistory'
 export default function Signals() {
   return (
     <main className="min-h-screen p-4 max-w-7xl mx-auto">
-      <h1 className="text-4xl font-bold mb-8">Community Signals</h1>
+      <div className="space-y-6">
+        {/* Header Section */}
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Community Signals</h1>
+          <p className="text-sm text-gray-400">
+            Share valuable trading insights with the community and earn additional profit share allocations based on signal performance.
+          </p>
+        </div>
 
-      <div className="bg-black/30 border border-gold/20 rounded-lg p-6 mb-8">
-        <h2 className="text-2xl font-bold mb-4">About Community Signals</h2>
-        <p className="text-gray-300 mb-4">
-          Community Signals is a collaborative platform where KinKong holders can share their trading insights and analysis. 
-          High-quality signals that lead to profitable trades are rewarded with additional profit share allocations.
-        </p>
-        
-        <h3 className="text-xl font-bold text-gold mb-3">How to Submit Quality Signals</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-          <div className="space-y-2">
-            <h4 className="font-bold">Technical Analysis</h4>
-            <ul className="list-disc list-inside text-gray-300 space-y-1">
-              <li>Volume trends and anomalies</li>
-              <li>Price action patterns</li>
-              <li>Key support/resistance levels</li>
-              <li>Momentum indicators</li>
-            </ul>
+        {/* Info Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-black/30 border border-gold/20 rounded-lg p-4">
+            <h3 className="text-lg font-bold text-gold mb-2">Technical Analysis</h3>
+            <p className="text-sm text-gray-300 leading-relaxed">
+              Strong technical signals combine volume analysis, price action patterns, and momentum indicators. Look for clear breakout points and established support/resistance levels. Consider multiple timeframes to confirm trends and identify optimal entry points.
+            </p>
           </div>
-          <div className="space-y-2">
-            <h4 className="font-bold">Fundamental Analysis</h4>
-            <ul className="list-disc list-inside text-gray-300 space-y-1">
-              <li>Project development updates</li>
-              <li>Team activity and announcements</li>
-              <li>Community growth metrics</li>
-              <li>Market sentiment analysis</li>
-            </ul>
+
+          <div className="bg-black/30 border border-gold/20 rounded-lg p-4">
+            <h3 className="text-lg font-bold text-gold mb-2">Fundamental Analysis</h3>
+            <p className="text-sm text-gray-300 leading-relaxed">
+              Focus on project development activity, team updates, and community growth metrics. Track social engagement trends and analyze market positioning. Consider the broader market context and potential catalysts for price movement.
+            </p>
+          </div>
+
+          <div className="bg-black/30 border border-gold/20 rounded-lg p-4">
+            <h3 className="text-lg font-bold text-gold mb-2">Quality Guidelines</h3>
+            <p className="text-sm text-gray-300 leading-relaxed">
+              Provide specific entry and exit points with clear reasoning. Support your analysis with multiple indicators and consider overall market conditions. Keep your signals updated as market conditions evolve.
+            </p>
           </div>
         </div>
 
-        <div className="bg-darkred/10 border border-gold/20 rounded-lg p-4 mt-4">
-          <h4 className="font-bold text-gold mb-2">Signal Quality Guidelines</h4>
-          <ul className="list-disc list-inside text-gray-300 space-y-1">
-            <li>Include specific entry and exit points</li>
-            <li>Provide clear reasoning for your analysis</li>
-            <li>Back your signal with multiple indicators</li>
-            <li>Consider market conditions and timing</li>
-            <li>Update your signal if conditions change</li>
-          </ul>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <section>
-          <h2 className="text-2xl font-bold mb-4">Submit New Signal</h2>
-          <SignalForm />
-        </section>
-
-        <section>
-          <h2 className="text-2xl font-bold mb-4">Signal Performance</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="stat-card">
-              <h3>Community Success Rate</h3>
-              <p className="text-2xl">XX%</p>
-            </div>
-            <div className="stat-card">
-              <h3>Active Signals</h3>
-              <p className="text-2xl">XX</p>
+        {/* Stats and Form Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Stats */}
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold">Performance Metrics</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-black/30 border border-gold/20 rounded-lg p-4">
+                <p className="text-sm text-gray-400">Success Rate</p>
+                <p className="text-2xl font-bold text-gold">XX%</p>
+              </div>
+              <div className="bg-black/30 border border-gold/20 rounded-lg p-4">
+                <p className="text-sm text-gray-400">Active Signals</p>
+                <p className="text-2xl font-bold text-gold">XX</p>
+              </div>
             </div>
           </div>
-        </section>
-      </div>
 
-      <section className="mt-8">
-        <h2 className="text-2xl font-bold mb-4">Recent Signals</h2>
-        <SignalHistory />
-      </section>
+          {/* Signal Form */}
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold">Submit Signal</h2>
+            <SignalForm />
+          </div>
+        </div>
+
+        {/* Signal History */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold">Recent Signals</h2>
+          <SignalHistory />
+        </div>
+
+        {/* Bottom Notice */}
+        <div className="bg-darkred/10 border border-gold/20 rounded-lg p-4">
+          <p className="text-sm text-gray-300 leading-relaxed">
+            High-quality signals that lead to profitable trades increase your profit share allocation. Focus on AI tokens with strong fundamentals and back your analysis with on-chain data. Regular updates to your active signals help maintain signal quality and improve community trading success.
+          </p>
+        </div>
+      </div>
     </main>
   )
 }
