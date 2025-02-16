@@ -16,9 +16,19 @@ export default function Signals() {
           </div>
         </div>
 
-        {/* Signal History - Now First */}
+        {/* Signal History Section */}
         <div className="space-y-4">
-          <h2 className="text-xl font-bold">Recent Signals</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-bold">Recent Signals</h2>
+            <div className="group relative">
+              <div className="cursor-help text-gray-400 border border-gray-400 rounded-full w-4 h-4 flex items-center justify-center text-xs">
+                i
+              </div>
+              <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-72 p-2 bg-black/90 border border-gold/20 rounded-lg text-xs text-gray-300 z-10">
+                Displays both community and KinKong's trading signals. KinKong analyzes and incorporates community signals into its trading decisions, with influence weighted by signal quality and historical accuracy. KinKong signals are highlighted in gold.
+              </div>
+            </div>
+          </div>
           <SignalHistory />
         </div>
 
