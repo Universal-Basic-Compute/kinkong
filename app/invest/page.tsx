@@ -11,6 +11,10 @@ import {
 if (!process.env.NEXT_PUBLIC_HELIUS_RPC_URL) {
   throw new Error('NEXT_PUBLIC_HELIUS_RPC_URL is not defined');
 }
+
+if (!process.env.NEXT_PUBLIC_HELIUS_RPC_URL) {
+  throw new Error('NEXT_PUBLIC_HELIUS_RPC_URL is not defined');
+}
 import { 
   getAssociatedTokenAddress, 
   createAssociatedTokenAccountInstruction,
@@ -79,7 +83,7 @@ export default function Invest() {
     try {
       console.log('Creating connection...');
       const connection = new Connection(
-        process.env.NEXT_PUBLIC_HELIUS_RPC_URL,
+        process.env.NEXT_PUBLIC_HELIUS_RPC_URL, // TypeScript now knows this is defined
         { commitment: 'confirmed' }
       );
         
