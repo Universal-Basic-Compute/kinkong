@@ -59,22 +59,52 @@ export default function Signals() {
           <div className="bg-black/30 border border-gold/20 rounded-lg p-4">
             <h3 className="text-lg font-bold text-gold mb-2">Technical Analysis</h3>
             <p className="text-sm text-gray-300 leading-relaxed">
-              Strong technical signals combine volume analysis, price action patterns, and momentum indicators. Look for clear breakout points and established support/resistance levels. Consider multiple timeframes to confirm trends and identify optimal entry points.
+              Effective technical analysis combines multiple indicators:
+              • Volume & liquidity trends to confirm moves
+              • Price action patterns (breakouts, reversals)
+              • Key support/resistance levels
+              • Momentum indicators (RSI, MACD)
+              • Multiple timeframe analysis (1H, 4H, 1D)
+              • Risk/reward ratio assessment
             </p>
           </div>
 
           <div className="bg-black/30 border border-gold/20 rounded-lg p-4">
             <h3 className="text-lg font-bold text-gold mb-2">Fundamental Analysis</h3>
             <p className="text-sm text-gray-300 leading-relaxed">
-              Focus on project development activity, team updates, and community growth metrics. Track social engagement trends and analyze market positioning. Consider the broader market context and potential catalysts for price movement.
+              Key fundamental factors to consider:
+              • Development activity & GitHub metrics
+              • Team updates & partnerships
+              • Community growth & engagement
+              • Token utility & tokenomics
+              • Market positioning vs competitors
+              • Upcoming catalysts & roadmap
             </p>
           </div>
 
-          <div className="bg-black/30 border border-gold/20 rounded-lg p-4">
-            <h3 className="text-lg font-bold text-gold mb-2">Quality Guidelines</h3>
-            <p className="text-sm text-gray-300 leading-relaxed">
-              Provide specific entry and exit points with clear reasoning. Support your analysis with multiple indicators and consider overall market conditions. Keep your signals updated as market conditions evolve.
-            </p>
+          <div className="bg-black/30 border border-gold/20 rounded-lg p-4 space-y-4">
+            <div>
+              <h3 className="text-lg font-bold text-gold mb-2">Using Signals</h3>
+              <p className="text-sm text-gray-300 leading-relaxed">
+                • Check signal source credibility
+                • Verify analysis with your research
+                • Monitor signal updates & changes
+                • Consider position sizing
+                • Set clear entry/exit points
+                • Use stop losses for risk management
+              </p>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gold mb-2">Creating Quality Signals</h3>
+              <p className="text-sm text-gray-300 leading-relaxed">
+                • Provide clear token symbol & direction
+                • Include specific entry/exit prices
+                • Back analysis with multiple indicators
+                • Add reference links & charts
+                • Update signal as conditions change
+                • Consider market correlation
+              </p>
+            </div>
           </div>
         </div>
 
