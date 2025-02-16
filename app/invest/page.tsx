@@ -8,13 +8,6 @@ import {
   Transaction 
 } from '@solana/web3.js';
 
-if (!process.env.NEXT_PUBLIC_HELIUS_RPC_URL) {
-  throw new Error('NEXT_PUBLIC_HELIUS_RPC_URL is not defined');
-}
-
-if (!process.env.NEXT_PUBLIC_HELIUS_RPC_URL) {
-  throw new Error('NEXT_PUBLIC_HELIUS_RPC_URL is not defined');
-}
 import { 
   getAssociatedTokenAddress, 
   createAssociatedTokenAccountInstruction,
@@ -79,11 +72,17 @@ export default function Invest() {
       return;
     }
 
+    // Add the environment variable check here
+    if (!process.env.NEXT_PUBLIC_HELIUS_RPC_URL) {
+      alert('RPC URL configuration is missing');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       console.log('Creating connection...');
       const connection = new Connection(
-        process.env.NEXT_PUBLIC_HELIUS_RPC_URL, // TypeScript now knows this is defined
+        process.env.NEXT_PUBLIC_HELIUS_RPC_URL as string, // Cast to string since we checked it above
         { commitment: 'confirmed' }
       );
         
