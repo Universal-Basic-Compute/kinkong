@@ -22,7 +22,7 @@ const base = new Airtable({
 // Add a test function to verify the client
 export const testConnection = async () => {
   try {
-    const table = base('INVESTMENTS');
+    const table = base('Investments');
     await table.select().firstPage();
     console.log('Airtable connection test successful');
     return true;
