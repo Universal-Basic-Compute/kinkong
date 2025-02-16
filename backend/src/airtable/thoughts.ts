@@ -4,7 +4,7 @@ export interface Thought {
   thoughtId: string;
   swarmId: string;
   content: string;
-  createdAt: string;
+  created: string;
 }
 
 export async function getLastThoughts(count: number = 50): Promise<Thought[]> {
@@ -14,7 +14,7 @@ export async function getLastThoughts(count: number = 50): Promise<Thought[]> {
     .select({
       maxRecords: count,
       filterByFormula: "{swarmId} = 'kinkong'",
-      sort: [{ field: 'createdAt', direction: 'desc' }]
+      sort: [{ field: 'created', direction: 'desc' }]
     })
     .all();
 
@@ -22,6 +22,6 @@ export async function getLastThoughts(count: number = 50): Promise<Thought[]> {
     thoughtId: record.get('thoughtId') as string,
     swarmId: record.get('swarmId') as string,
     content: record.get('content') as string,
-    createdAt: record.get('createdAt') as string
+    created: record.get('created') as string
   }));
 }
