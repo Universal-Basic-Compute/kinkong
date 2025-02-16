@@ -1,6 +1,21 @@
 'use client';
 import { useEffect, useState } from 'react';
 
+function formatDisplayDate(isoString: string): string {
+  try {
+    return new Date(isoString).toLocaleString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch (error) {
+    console.warn('Error formatting date:', error);
+    return 'Invalid date';
+  }
+}
+
 interface Signal {
   id: string;
   timestamp: string;
@@ -77,7 +92,7 @@ export function SignalHistory() {
           {signals.map((signal) => (
             <tr key={signal.id} className="hover:bg-gold/5">
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                {signal.timestamp ? new Date(signal.timestamp).toLocaleString() : 'N/A'}
+                {formatDisplayDate(signal.timestamp)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                 {signal.token}
