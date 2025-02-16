@@ -11,7 +11,7 @@ export default function Signals() {
           <div>
             <h1 className="text-3xl font-bold mb-2">Community Signals</h1>
             <p className="text-sm text-gray-400">
-              Share valuable trading insights with the community and earn additional profit share allocations.
+              Be part of KinKong's trading intelligence! Share your market insights and influence our trading decisions while earning extra profit share allocations. Together, we're smarter! 🚀
             </p>
           </div>
         </div>
