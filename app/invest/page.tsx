@@ -29,6 +29,17 @@ interface Investment {
   wallet: string;
 }
 
+const validateInvestment = (inv: any): inv is Investment => {
+  return (
+    typeof inv.investmentId === 'string' &&
+    typeof inv.amount === 'number' &&
+    typeof inv.solscanUrl === 'string' &&
+    typeof inv.date === 'string' &&
+    typeof inv.username === 'string' &&
+    typeof inv.wallet === 'string'
+  );
+};
+
 export default function Invest() {
   const { connected, publicKey, signTransaction } = useWallet();
   const [amount, setAmount] = useState<number>(500);
@@ -201,11 +212,19 @@ export default function Invest() {
                   </tr>
                 </thead>
                 <tbody>
-                  {investments.map((investment) => (
+                  {investments.filter(validateInvestment).map((investment) => (
                     <tr key={investment.investmentId} className="border-b border-gold/10 hover:bg-gold/5">
                       <td className="px-4 py-2">{investment.username}</td>
-                      <td className="px-4 py-2 text-right">{investment.amount.toLocaleString()} USDC</td>
-                      <td className="px-4 py-2">{new Date(investment.date).toLocaleDateString()}</td>
+                      <td className="px-4 py-2 text-right">
+                        {typeof investment.amount === 'number' 
+                          ? `${investment.amount.toLocaleString()} USDC`
+                          : 'N/A'}
+                      </td>
+                      <td className="px-4 py-2">
+                        {investment.date 
+                          ? new Date(investment.date).toLocaleDateString()
+                          : 'N/A'}
+                      </td>
                       <td className="px-4 py-2">
                         <a 
                           href={investment.solscanUrl}
