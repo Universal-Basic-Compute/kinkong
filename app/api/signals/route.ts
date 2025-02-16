@@ -12,34 +12,49 @@ export async function GET() {
     const table = getTable(TABLES.SIGNALS);
     console.log('Got Airtable table reference');
 
-    const records = await table
-      .select({
-        sort: [{ field: 'timestamp', direction: 'desc' }],
-        maxRecords: 100
-      })
-      .all();
-    console.log(`Retrieved ${records.length} signals`);
+    // Specific try/catch for the Airtable query
+    try {
+      const records = await table
+        .select({
+          sort: [{ field: 'timestamp', direction: 'desc' }],
+          maxRecords: 100
+        })
+        .all();
+      console.log(`Retrieved ${records.length} signals`);
 
-    const signals = records.map(record => ({
-      id: record.id,
-      timestamp: record.get('timestamp'),
-      token: record.get('token'),
-      type: record.get('type'),
-      wallet: record.get('wallet'),
-      reason: record.get('reason'),
-      url: record.get('url'),
-    }));
+      const signals = records.map(record => ({
+        id: record.id,
+        timestamp: record.get('timestamp'),
+        token: record.get('token'),
+        type: record.get('type'),
+        wallet: record.get('wallet'),
+        reason: record.get('reason'),
+        url: record.get('url'),
+      }));
 
-    return NextResponse.json(signals);
+      return NextResponse.json(signals);
+    } catch (queryError) {
+      console.error('Error querying Airtable:', {
+        error: queryError,
+        message: queryError instanceof Error ? queryError.message : 'Unknown query error',
+        stack: queryError instanceof Error ? queryError.stack : undefined
+      });
+      throw queryError; // Rethrow to be caught by outer try/catch
+    }
   } catch (error) {
     console.error('Detailed error in GET /api/signals:', {
       name: error instanceof Error ? error.name : 'Unknown',
       message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
+      stack: error instanceof Error ? error.stack : undefined,
+      fullError: error // Log the complete error
     });
     
     return NextResponse.json(
-      { error: 'Failed to fetch signals', details: error instanceof Error ? error.message : 'Unknown error' },
+      { 
+        error: 'Failed to fetch signals', 
+        details: error instanceof Error ? error.message : 'Unknown error',
+        errorType: error instanceof Error ? error.name : typeof error
+      },
       { status: 500 }
     );
   }
