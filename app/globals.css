@@ -215,17 +215,34 @@ body {
 .metallic-text-compute {
   background: linear-gradient(
     120deg,
-    #f59e0b 0%,
-    #fbbf24 10%,
-    #fef3c7 20%,
-    #fbbf24 30%,
-    #f59e0b 40%
+    #5b21b6 0%,    /* More blueish violet base */
+    #7c3aed 10%,   /* Lighter blueish violet */
+    #c4b5fd 20%,   /* Very light blueish violet */
+    #7c3aed 30%,   /* Lighter blueish violet */
+    #5b21b6 40%    /* More blueish violet base */
   );
   background-size: 200% auto;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: metallic-shine 8s linear infinite;
+}
+
+/* Add argent style for other tokens */
+.metallic-text-argent {
+  background: linear-gradient(
+    120deg,
+    #94a3b8 0%,    /* Slate-400 */
+    #cbd5e1 10%,   /* Slate-300 */
+    #e2e8f0 20%,   /* Slate-200 */
+    #cbd5e1 30%,   /* Slate-300 */
+    #94a3b8 40%    /* Slate-400 */
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: metallic-shine 6s linear infinite;
 }
 
 .metallic-text-sol {

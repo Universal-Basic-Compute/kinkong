@@ -5,13 +5,13 @@ function getTokenClass(token: string): string {
   const upperToken = token.toUpperCase();
   switch (upperToken) {
     case 'UBC':
-      return 'metallic-text-ubc font-bold';
+      return 'metallic-text-ubc';
     case 'COMPUTE':
-      return 'metallic-text-compute font-bold';
+      return 'metallic-text-compute';
     case 'SOL':
-      return 'metallic-text-sol font-bold';
+      return 'metallic-text-sol';
     default:
-      return 'text-gray-300';
+      return 'metallic-text-argent';
   }
 }
 
