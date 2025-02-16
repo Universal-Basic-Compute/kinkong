@@ -1,7 +1,8 @@
 'use client';
+import { useEffect, useState } from 'react';
 
 interface Signal {
-  id: number;
+  id: string;
   timestamp: string;
   token: string;
   type: 'BUY' | 'SELL';
@@ -11,35 +12,53 @@ interface Signal {
 }
 
 export function SignalHistory() {
-  // Mock data - replace with real data later
-  const mockSignals: Signal[] = [
-    {
-      id: 1,
-      timestamp: '2024-01-20 14:30',
-      token: 'AI_TOKEN1',
-      type: 'BUY',
-      wallet: 'KinKong',
-      reason: 'Strong momentum indicators and increasing volume',
-      url: 'https://twitter.com/example/status/123'
-    },
-    {
-      id: 2,
-      timestamp: '2024-01-20 15:45',
-      token: 'AI_TOKEN2',
-      type: 'SELL',
-      wallet: 'Gx7F...j9k2',
-      reason: 'Technical resistance reached',
-      url: 'https://discord.com/channels/123/456'
-    },
-    {
-      id: 3,
-      timestamp: '2024-01-20 16:15',
-      token: 'SOL',
-      type: 'BUY',
-      wallet: 'KinKong',
-      reason: 'Market structure showing reversal signs',
+  const [signals, setSignals] = useState<Signal[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchSignals() {
+      try {
+        const response = await fetch('/api/signals');
+        if (!response.ok) {
+          throw new Error('Failed to fetch signals');
+        }
+        const data = await response.json();
+        setSignals(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load signals');
+        console.error('Error fetching signals:', err);
+      } finally {
+        setIsLoading(false);
+      }
     }
-  ];
+
+    fetchSignals();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-8">
+        <div className="animate-pulse text-gold">Loading signals...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8 text-red-400">
+        Error: {error}
+      </div>
+    );
+  }
+
+  if (signals.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-400">
+        No signals found. Be the first to submit one!
+      </div>
+    );
+  }
 
   return (
     <div className="overflow-x-auto">
@@ -55,10 +74,10 @@ export function SignalHistory() {
           </tr>
         </thead>
         <tbody className="divide-y divide-gold/10">
-          {mockSignals.map((signal) => (
+          {signals.map((signal) => (
             <tr key={signal.id} className="hover:bg-gold/5">
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                {signal.timestamp}
+                {new Date(signal.timestamp).toLocaleString()}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                 {signal.token}
@@ -78,7 +97,7 @@ export function SignalHistory() {
                     ? 'text-gold font-semibold' 
                     : 'text-gray-300'
                 }`}>
-                  {signal.wallet}
+                  {signal.wallet.slice(0, 4)}...{signal.wallet.slice(-4)}
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">

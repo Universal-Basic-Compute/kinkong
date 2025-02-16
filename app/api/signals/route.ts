@@ -1,6 +1,36 @@
 import { getTable } from '@/backend/src/airtable/tables';
 import { NextResponse } from 'next/server';
 
+export async function GET() {
+  try {
+    const table = getTable('SIGNALS');
+    const records = await table
+      .select({
+        sort: [{ field: 'timestamp', direction: 'desc' }],
+        maxRecords: 100 // Limit to last 100 signals
+      })
+      .all();
+
+    const signals = records.map(record => ({
+      id: record.id,
+      timestamp: record.get('timestamp'),
+      token: record.get('token'),
+      type: record.get('type'),
+      wallet: record.get('wallet'),
+      reason: record.get('reason'),
+      url: record.get('url'),
+    }));
+
+    return NextResponse.json(signals);
+  } catch (error) {
+    console.error('Failed to fetch signals:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch signals' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
