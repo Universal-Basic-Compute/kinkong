@@ -77,7 +77,7 @@ export function SignalHistory() {
           {signals.map((signal) => (
             <tr key={signal.id} className="hover:bg-gold/5">
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                {new Date(signal.timestamp).toLocaleString()}
+                {signal.timestamp ? new Date(signal.timestamp).toLocaleString() : 'N/A'}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                 {signal.token}

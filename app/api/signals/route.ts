@@ -22,16 +22,41 @@ export async function GET() {
         .all();
       console.log(`Retrieved ${records.length} signals`);
 
-      const signals = records.map(record => ({
-        id: record.id,
-        timestamp: record.get('timestamp'),
-        token: record.get('token'),
-        type: record.get('type'),
-        wallet: record.get('wallet'),
-        reason: record.get('reason'),
-        url: record.get('url'),
-      }));
+      const signals = records.map(record => {
+        // Get timestamp value
+        const timestamp = record.get('timestamp');
+        
+        // Verify and format date
+        let formattedTimestamp;
+        if (timestamp) {
+          try {
+            // If already ISO date
+            if (typeof timestamp === 'string' && timestamp.includes('T')) {
+              formattedTimestamp = timestamp;
+            } else {
+              // If Airtable Date object
+              formattedTimestamp = new Date(timestamp).toISOString();
+            }
+          } catch (dateError) {
+            console.warn('Error formatting date:', timestamp, dateError);
+            formattedTimestamp = new Date().toISOString(); // Fallback to current date
+          }
+        } else {
+          formattedTimestamp = new Date().toISOString(); // Fallback if no timestamp
+        }
 
+        return {
+          id: record.id,
+          timestamp: formattedTimestamp,
+          token: record.get('token'),
+          type: record.get('type'),
+          wallet: record.get('wallet'),
+          reason: record.get('reason'),
+          url: record.get('url'),
+        };
+      });
+
+      console.log('Formatted first signal:', signals[0]); // Debug log
       return NextResponse.json(signals);
     } catch (queryError) {
       console.error('Error querying Airtable:', {
