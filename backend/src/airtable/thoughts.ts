@@ -4,7 +4,7 @@ export interface Thought {
   thoughtId: string;
   swarmId: string;
   content: string;
-  created: string;
+  createdAt: string;
 }
 
 export async function getLastThoughts(count: number = 50): Promise<Thought[]> {
@@ -24,7 +24,7 @@ export async function getLastThoughts(count: number = 50): Promise<Thought[]> {
       .select({
         maxRecords: count,
         filterByFormula: "{swarmId} = 'kinkong'",
-        sort: [{ field: 'created', direction: 'desc' }]
+        sort: [{ field: 'createdAt', direction: 'desc' }]
       })
       .all();
 
@@ -32,7 +32,7 @@ export async function getLastThoughts(count: number = 50): Promise<Thought[]> {
       thoughtId: record.get('thoughtId') as string,
       swarmId: record.get('swarmId') as string,
       content: record.get('content') as string,
-      created: record.get('created') as string
+      createdAt: record.get('createdAt') as string
     }));
   } catch (error) {
     console.error('Error fetching thoughts from Kinos Airtable:', error);
