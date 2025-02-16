@@ -12,7 +12,7 @@ if (!process.env.KINKONG_AIRTABLE_API_KEY || !process.env.KINKONG_AIRTABLE_BASE_
 export async function GET() {
   try {
     console.log('Fetching signals...');
-    const table = getTable('SIGNALS');
+    const table = getTable('Signals');
     const records = await table
       .select({
         sort: [{ field: 'timestamp', direction: 'desc' }],
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const table = getTable('SIGNALS');
+    const table = getTable('Signals');
     const record = await table.create([
       {
         fields: {
