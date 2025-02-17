@@ -5,6 +5,7 @@ from airtable import Airtable
 from dotenv import load_dotenv
 from generate_chart import fetch_token_data
 from analyze_charts import get_dexscreener_data, calculate_position_size
+from execute_trade import execute_trade_with_phantom
 
 def get_token_price(token: str) -> Optional[float]:
     """Get current token price from most recent candle"""
