@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
+import fetch from 'node-fetch';
 import { getTable } from '../backend/src/airtable/tables';
 import { FieldSet } from 'airtable';
 
@@ -117,14 +118,45 @@ async function getBirdeyeData(mint: string) {
   }
 }
 
-async function getJupiterData(mint: string) {
-  try {
-    const response = await fetch(`https://price.jup.ag/v4/price?ids=${mint}`);
-    return await response.json();
-  } catch (error) {
-    console.warn(`Warning: Failed to fetch Jupiter data for ${mint}:`, error);
-    return null;
+async function getJupiterData(mint: string, retries = 3) {
+  const timeout = 5000; // 5 seconds timeout
+  
+  for (let i = 0; i < retries; i++) {
+    try {
+      console.log(`Attempting to fetch Jupiter data for ${mint} (attempt ${i + 1}/${retries})...`);
+      
+      const response = await fetch(
+        `https://price.jup.ag/v4/price?ids=${mint}`,
+        {
+          timeout,
+          headers: {
+            'Accept': 'application/json'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log(`Successfully fetched Jupiter data for ${mint}`);
+      return data;
+
+    } catch (error) {
+      console.warn(`Attempt ${i + 1}/${retries} failed for ${mint}:`, error);
+      
+      if (i === retries - 1) {
+        console.warn(`All ${retries} attempts failed for ${mint}`);
+        return null;
+      }
+      
+      // Wait before retry (exponential backoff)
+      await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+    }
   }
+  
+  return null;
 }
 
 async function fetchTokenData(): Promise<TokenData[]> {
