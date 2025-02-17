@@ -28,7 +28,7 @@ export async function getTokenPrice(tokenIdentifier: string): Promise<number | n
 
     // If it's a symbol rather than a mint, try to get the mint from Airtable
     let mint = tokenIdentifier;
-    if (tokenIdentifier.length < 32) { // If it's not a mint address
+    if (tokenIdentifier.length < 32) {
       const tokensTable = getTable('TOKENS');
       const records = await tokensTable
         .select({
@@ -47,45 +47,64 @@ export async function getTokenPrice(tokenIdentifier: string): Promise<number | n
 
     console.log(`Fetching prices from DexScreener for mint: ${mint}`);
     
-    const response = await fetch(`${DEXSCREENER_API}/solana/${mint}`);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch token prices: ${response.status}`);
-    }
-
-    const data = await response.json();
-    console.log('DexScreener response:', data);
-
-    if (data.pairs?.length > 0) {
-      // Try to find the best pair in this order: USDC > USDT > SOL
-      const usdcPair = data.pairs.find((p: DexScreenerPair) => p.quoteToken.symbol === 'USDC');
-      if (usdcPair) {
-        const price = Number(usdcPair.priceUsd);
-        console.log(`Found USDC pair price for ${tokenIdentifier}: $${price}`);
-        return price;
-      }
-
-      const usdtPair = data.pairs.find((p: DexScreenerPair) => p.quoteToken.symbol === 'USDT');
-      if (usdtPair) {
-        const price = Number(usdtPair.priceUsd);
-        console.log(`Found USDT pair price for ${tokenIdentifier}: $${price}`);
-        return price;
-      }
-
-      const solPair = data.pairs.find((p: DexScreenerPair) => p.quoteToken.symbol === 'SOL');
-      if (solPair) {
-        // Get SOL price first
-        const solPrice = await getTokenPrice('So11111111111111111111111111111111111111112');
-        if (!solPrice) {
-          throw new Error('Could not get SOL price for conversion');
+    // Try up to 3 times with exponential backoff
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const response = await fetch(`${DEXSCREENER_API}/search/tokens?query=${mint}`);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch token prices: ${response.status}`);
         }
-        const price = Number(solPair.priceUsd) * solPrice;
-        console.log(`Found SOL pair price for ${tokenIdentifier}: ${solPair.priceUsd} SOL * $${solPrice} = $${price}`);
-        return price;
+
+        const data = await response.json();
+        console.log('DexScreener response:', data);
+
+        if (data.pairs?.length > 0) {
+          // Filter for Solana pairs only
+          const solanaPairs = data.pairs.filter((p: DexScreenerPair) => 
+            p.baseToken.address.toLowerCase() === mint.toLowerCase()
+          );
+
+          if (solanaPairs.length > 0) {
+            // Try to find the best pair in this order: USDC > USDT > SOL
+            const usdcPair = solanaPairs.find((p: DexScreenerPair) => p.quoteToken.symbol === 'USDC');
+            if (usdcPair) {
+              const price = Number(usdcPair.priceUsd);
+              console.log(`Found USDC pair price for ${tokenIdentifier}: $${price}`);
+              return price;
+            }
+
+            const usdtPair = solanaPairs.find((p: DexScreenerPair) => p.quoteToken.symbol === 'USDT');
+            if (usdtPair) {
+              const price = Number(usdtPair.priceUsd);
+              console.log(`Found USDT pair price for ${tokenIdentifier}: $${price}`);
+              return price;
+            }
+
+            const solPair = solanaPairs.find((p: DexScreenerPair) => p.quoteToken.symbol === 'SOL');
+            if (solPair) {
+              const solPrice = await getTokenPrice('So11111111111111111111111111111111111111112');
+              if (!solPrice) {
+                throw new Error('Could not get SOL price for conversion');
+              }
+              const price = Number(solPair.priceUsd) * solPrice;
+              console.log(`Found SOL pair price for ${tokenIdentifier}: ${solPair.priceUsd} SOL * $${solPrice} = $${price}`);
+              return price;
+            }
+          }
+        }
+
+        console.warn(`No suitable pairs found for ${tokenIdentifier}`);
+        return null;
+
+      } catch (error) {
+        if (attempt === 3) throw error;
+        const delay = Math.pow(2, attempt) * 1000; // Exponential backoff: 2s, 4s, 8s
+        console.log(`Attempt ${attempt} failed, retrying in ${delay/1000}s...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
 
-    console.warn(`No suitable pairs found for ${tokenIdentifier}`);
     return null;
 
   } catch (error) {
