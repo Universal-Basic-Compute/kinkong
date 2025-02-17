@@ -616,24 +616,10 @@ def process_signals_batch(token_analyses):
         print(f"Analysis structure: {type(analyses)}")
         print(f"Available timeframes: {list(analyses.keys())}")
         
-        # Debug print each analysis
-        for timeframe, analysis in analyses.items():
-            if timeframe != 'overall':
-                print(f"\nTimeframe {timeframe}:")
-                print(f"Analysis type: {type(analysis)}")
-                if isinstance(analysis, ChartAnalysis):
-                    print(f"Signal: {analysis.signal}")
-                    print(f"Confidence: {analysis.confidence}")
-                    print(f"Key levels: {analysis.key_levels}")
-                elif isinstance(analysis, dict):
-                    print(f"Signal: {analysis.get('signal')}")
-                    print(f"Confidence: {analysis.get('confidence')}")
-                    print(f"Key levels: {analysis.get('key_levels')}")
-        
         # Filter valid timeframes
         valid_timeframes = {
             tf: analysis for tf, analysis in analyses.items()
-            if tf in ['15m', '2h', '8h']  # Explicit timeframe list
+            if tf in ['15m', '2h', '8h']
         }
         
         print(f"\nFound {len(valid_timeframes)} valid timeframe analyses")
@@ -644,26 +630,30 @@ def process_signals_batch(token_analyses):
             # Extract signal details
             signal_type = None
             confidence = 0
+            key_levels = None
             
-            if isinstance(analysis, ChartAnalysis):
-                signal_type = analysis.signal
-                confidence = analysis.confidence
-            elif isinstance(analysis, dict):
+            if isinstance(analysis, dict):
                 signal_type = analysis.get('signal')
                 confidence = analysis.get('confidence', 0)
+                key_levels = analysis.get('key_levels')
             
             print(f"Signal type: {signal_type}")
             print(f"Confidence: {confidence}")
+            print(f"Key levels: {key_levels}")
             
-            if signal_type and signal_type != 'HOLD' and confidence >= 60:
+            if signal_type and signal_type != 'HOLD' and confidence >= 60 and key_levels:
                 print("✅ Signal meets criteria for creation")
                 
-                # Create signal data
+                # Create signal data with key levels
                 signal_data = {
                     'timeframe': timeframe,
                     'signal': signal_type,
                     'confidence': confidence,
-                    'token_info': token_info
+                    'token_info': token_info,
+                    'key_levels': key_levels,  # Add key levels to signal data
+                    'entryPrice': key_levels['resistance'][0] if signal_type == 'SELL' else key_levels['support'][0],
+                    'targetPrice': key_levels['support'][0] if signal_type == 'SELL' else key_levels['resistance'][0],
+                    'stopLoss': key_levels['support'][1] if signal_type == 'SELL' else key_levels['resistance'][1]
                 }
                 
                 # Validate signal
