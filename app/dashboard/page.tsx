@@ -199,11 +199,11 @@ export default function Dashboard() {
         <div className="mb-12 relative h-[400px] bg-black/30 rounded-lg border border-gold/20 p-4">
           <div className="absolute inset-0">
             {trackedTokens.map((token) => {
-              const nodeRef = useRef(null);
               const position = bubblePositions[token.mint] || {
                 x: Math.random() * 500,
                 y: Math.random() * 300
               };
+              const nodeRef = useRef(null); // Move ref inside map
 
               return (
                 <Draggable
