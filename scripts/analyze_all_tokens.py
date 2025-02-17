@@ -134,7 +134,10 @@ async def analyze_token(token):
             
             if analyses:
                 # Generate signal
-                signal = generate_signal(analyses)
+                signal = generate_signal(analyses, {
+                    'symbol': token['symbol'],
+                    'mint': token['mint']
+                })
                 print(f"\nCompleted analysis for {token['symbol']}")
                 
                 # Save analysis to file

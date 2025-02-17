@@ -373,7 +373,7 @@ Analyze each timeframe in sequence, considering how they relate to each other:
         print(f"Failed to analyze charts: {e}")
         raise
 
-def create_airtable_signal(analysis, timeframe, token_symbol='UBC'):
+def create_airtable_signal(analysis, timeframe, token_info):
     """Create a signal record in Airtable"""
     try:
         # Initialize Airtable
@@ -384,7 +384,7 @@ def create_airtable_signal(analysis, timeframe, token_symbol='UBC'):
             print("Airtable configuration missing")
             return
             
-        print(f"Creating signal in Airtable with key: {api_key[:8]}...")
+        print(f"Creating signal in Airtable for {token_info['symbol']}...")
         airtable = Airtable(base_id, 'SIGNALS', api_key)
         
         # Map timeframe to signal type
@@ -417,7 +417,7 @@ def create_airtable_signal(analysis, timeframe, token_symbol='UBC'):
         if analysis.signal in ['BUY', 'SELL']:
             signal_data = {
                 'timestamp': datetime.now(timezone.utc).isoformat(),
-                'token': token_symbol,
+                'token': token_info['symbol'],  # Use the actual token symbol
                 'type': analysis.signal,
                 'timeframe': timeframe_mapping.get(timeframe, 'INTRADAY'),
                 'entryPrice': current_price,
@@ -451,7 +451,7 @@ def create_airtable_signal(analysis, timeframe, token_symbol='UBC'):
             print(f"Error attributes: {e.__dict__}")
         return None
 
-def generate_signal(analyses):
+def generate_signal(analyses, token_info):  # Add token_info parameter
     """Generate combined signal from multiple timeframe analyses"""
     # Extract timeframe analyses (excluding 'overall' key)
     timeframe_analyses = {k: v for k, v in analyses.items() if k != 'overall'}
@@ -488,7 +488,7 @@ def generate_signal(analyses):
     high_confidence_signals = []
     for timeframe, analysis in timeframe_analyses.items():
         if analysis and analysis.signal != 'HOLD' and analysis.confidence >= 60:
-            result = create_airtable_signal(analysis, timeframe)
+            result = create_airtable_signal(analysis, timeframe, token_info)  # Pass token_info
             if result:
                 high_confidence_signals.append({
                     'timeframe': timeframe,
