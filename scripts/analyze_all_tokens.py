@@ -121,7 +121,7 @@ async def analyze_token(token):
                 print(f"No charts generated for {token['symbol']}")
                 return
                 
-            # Analyze charts and generate signal only once
+            # Do analysis only once
             print(f"\nAnalyzing charts for {token['symbol']}...")
             analyses = analyze_charts_with_claude(
                 chart_paths,
@@ -131,42 +131,45 @@ async def analyze_token(token):
                 }
             )
             
-            if analyses:
-                # Convert ChartAnalysis objects to dictionaries for JSON serialization
-                serializable_analyses = {}
-                for timeframe, analysis in analyses.items():
-                    if timeframe == 'overall':
-                        serializable_analyses[timeframe] = analysis  # Overall is already a dict
-                    else:
-                        serializable_analyses[timeframe] = {
-                            'timeframe': analysis.timeframe,
-                            'signal': analysis.signal,
-                            'confidence': analysis.confidence,
-                            'reasoning': analysis.reasoning,
-                            'key_levels': analysis.key_levels,
-                            'risk_reward_ratio': analysis.risk_reward_ratio,
-                            'reassess_conditions': analysis.reassess_conditions
-                        }
-
-                # Save analysis to file
-                analysis_path = token_dir / 'analysis.json'
-                with open(analysis_path, 'w') as f:
-                    json.dump({
-                        'timestamp': datetime.now().isoformat(),
-                        'token': token['symbol'],
-                        'analyses': serializable_analyses
-                    }, f, indent=2)
-                print(f"Saved analysis to {analysis_path}")
-                
-                # Generate signal only after saving analysis
-                signal_message = generate_signal(analyses, {
-                    'symbol': token['symbol'],
-                    'mint': token['mint']
-                })
-                print(f"\nCompleted analysis and signal generation for {token['symbol']}")
-                
-            else:
+            if not analyses:
                 print(f"No analysis generated for {token['symbol']}")
+                return
+
+            # Convert ChartAnalysis objects to dictionaries for JSON serialization
+            serializable_analyses = {}
+            for timeframe, analysis in analyses.items():
+                if timeframe == 'overall':
+                    serializable_analyses[timeframe] = analysis  # Overall is already a dict
+                else:
+                    serializable_analyses[timeframe] = {
+                        'timeframe': analysis.timeframe,
+                        'signal': analysis.signal,
+                        'confidence': analysis.confidence,
+                        'reasoning': analysis.reasoning,
+                        'key_levels': analysis.key_levels,
+                        'risk_reward_ratio': analysis.risk_reward_ratio,
+                        'reassess_conditions': analysis.reassess_conditions
+                    }
+
+            # Save analysis to file
+            analysis_path = token_dir / 'analysis.json'
+            with open(analysis_path, 'w') as f:
+                json.dump({
+                    'timestamp': datetime.now().isoformat(),
+                    'token': token['symbol'],
+                    'analyses': serializable_analyses
+                }, f, indent=2)
+            print(f"Saved analysis to {analysis_path}")
+            
+            # Generate signal using the already-performed analysis
+            signal_message = generate_signal(serializable_analyses, {
+                'symbol': token['symbol'],
+                'mint': token['mint']
+            })
+            print(f"\nCompleted analysis and signal generation for {token['symbol']}")
+            
+            # If we get here, processing was successful
+            break
             
         except Exception as e:
             if attempt == retries - 1:
