@@ -21,6 +21,29 @@ interface TokenMetrics {
   };
 }
 
+interface HistoricalData {
+  highPrice: number;
+  lowPrice: number;
+  openPrice: number;
+  volume24h: number;
+  previousDayVolume: number;
+  buyVolume: number;
+  sellVolume: number;
+}
+
+async function get24hHistoricalData(token: string): Promise<HistoricalData> {
+  // For now, return default values until we implement the actual data fetching
+  return {
+    highPrice: 0,
+    lowPrice: 0,
+    openPrice: 0,
+    volume24h: 0,
+    previousDayVolume: 0,
+    buyVolume: 0,
+    sellVolume: 0
+  };
+}
+
 export async function getTokenMetrics(token: string): Promise<TokenMetrics> {
   // Get current price and 24h historical data
   const currentPrice = await getTokenPrice(token);
@@ -49,21 +72,6 @@ export async function getTokenMetrics(token: string): Promise<TokenMetrics> {
     volume: volumeMetrics,
     liquidity: liquidityMetrics
   };
-}
-
-async function get24hHistoricalData(token: string) {
-  // Fetch 24h historical data from your preferred data source
-  // Implementation will depend on your data provider
-  // Should return:
-  // {
-  //   highPrice: number,
-  //   lowPrice: number,
-  //   openPrice: number,
-  //   volume24h: number,
-  //   previousDayVolume: number,
-  //   buyVolume: number,
-  //   sellVolume: number
-  // }
 }
 
 async function getLiquidityMetrics(token: string) {
