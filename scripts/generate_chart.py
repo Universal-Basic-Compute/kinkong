@@ -12,21 +12,24 @@ load_dotenv()
 
 CHART_CONFIGS = [
     {
-        'timeframe': '5m',
-        'duration_hours': 24,
-        'title': '24H Short-term View',
+        'timeframe': '15m',  # Changed from 5m to 15m
+        'duration_hours': 34,  # ~136 candles (34 hours * 4 candles per hour)
+        'title': 'UBC/USD Short-term Analysis (34H)',
+        'subtitle': '15-minute candles - Trading Setup View',
         'filename': 'ubc-chart-short.png'
     },
     {
-        'timeframe': '1H',
-        'duration_hours': 168,  # 7 days
-        'title': '7D Medium-term View',
+        'timeframe': '2H',   # Changed from 1H to 2H
+        'duration_hours': 270,  # ~135 candles (270 hours / 2 hours per candle)
+        'title': 'UBC/USD Medium-term Analysis (11D)',
+        'subtitle': '2-hour candles - Swing Trading View',
         'filename': 'ubc-chart-medium.png'
     },
     {
-        'timeframe': '4H',
-        'duration_hours': 720,  # 30 days
-        'title': '30D Long-term View',
+        'timeframe': '8H',   # Changed from 4H to 8H
+        'duration_hours': 1080,  # ~135 candles (1080 hours / 8 hours per candle)
+        'title': 'UBC/USD Long-term Analysis (45D)',
+        'subtitle': '8-hour candles - Trend Analysis View',
         'filename': 'ubc-chart-long.png'
     }
 ]
@@ -138,8 +141,7 @@ def create_sample_data():
     
     return df
 
-def generate_chart(df, title, filename, support_levels=None):
-    
+def generate_chart(df, config, support_levels=None):
     if df is None:
         print("Using sample data as fallback...")
         df = create_sample_data()
@@ -158,10 +160,14 @@ def generate_chart(df, title, filename, support_levels=None):
             wick='inherit',
             volume='gray'
         ),
-        rc={'axes.labelcolor': 'white',
+        rc={
+            'axes.labelcolor': 'white',
             'axes.edgecolor': 'gray',
             'xtick.color': 'white',
-            'ytick.color': 'white'}
+            'ytick.color': 'white',
+            'figure.titlesize': 'large',
+            'figure.titleweight': 'bold'
+        }
     )
     
     # Create figure
@@ -170,8 +176,10 @@ def generate_chart(df, title, filename, support_levels=None):
         type='candle',
         volume=True,
         style=style,
-        title=title,
-        ylabel='Price (SOL)',
+        title=dict(title=config['title'], 
+                  subtitle=config['subtitle'],
+                  style={'color': 'white'}),
+        ylabel='Price (USD)',
         ylabel_lower='Volume',
         returnfig=True,
         figsize=(12, 8),
@@ -179,18 +187,30 @@ def generate_chart(df, title, filename, support_levels=None):
         mav=(20, 50)  # Add 20 and 50 period moving averages
     )
     
+    # Add timestamp to the bottom right
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M UTC')
+    plt.figtext(0.99, 0.01, f'Generated: {timestamp}', 
+                ha='right', va='bottom', 
+                color='gray', size=8)
+    
     # Customize the figure
     fig.patch.set_facecolor('black')
     
-    # Save the chart
     # Add support/resistance levels if provided
     if support_levels:
         ax = axes[0]
         for level_type, price in support_levels:
             color = '#22c55e' if level_type == 'support' else '#ef4444'
             ax.axhline(y=price, color=color, linestyle='--', alpha=0.5)
+            
+            # Add price label
+            ax.text(df.index[-1], price, 
+                   f'{level_type.title()}: ${price:.4f}',
+                   color=color, alpha=0.8, 
+                   va='center', ha='left')
     
-    plt.savefig(filename, 
+    # Save the chart
+    plt.savefig(config['filename'], 
                 dpi=100, 
                 bbox_inches='tight', 
                 facecolor='black',
@@ -209,8 +229,7 @@ def generate_all_charts():
             support_levels = calculate_support_levels(df)
             generate_chart(
                 df,
-                config['title'],
-                config['filename'],
+                config,
                 support_levels
             )
             print(f"Generated {config['filename']}")
