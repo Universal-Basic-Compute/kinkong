@@ -92,7 +92,11 @@ export default function Portfolio() {
                 i
               </div>
               <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-80 p-2 bg-black/90 border border-gold/20 rounded-lg text-xs text-gray-300 z-10 whitespace-pre-line">
-                {STRATEGY_INFO.metrics}
+                KinKong's allocation strategy:
+                • Dynamic position sizing based on market conditions
+                • Risk-weighted exposure across AI tokens
+                • Regular rebalancing to maintain optimal ratios
+                • Liquidity-aware position management
               </div>
             </div>
           </div>
