@@ -188,13 +188,13 @@ def analyze_charts_with_claude(chart_paths):
     for chart_path in chart_paths:
         # Convert WindowsPath to string
         chart_path_str = str(chart_path)
-            with open(chart_path, "rb") as image_file:
-                image_data = base64.b64encode(image_file.read()).decode('utf-8')
-                timeframe = '15m' if '15m' in chart_path_str else '2h' if '2h' in chart_path_str else '8h'
-                chart_contents.append({
-                    "timeframe": timeframe,
-                    "data": image_data
-                })
+        with open(chart_path, "rb") as image_file:
+            image_data = base64.b64encode(image_file.read()).decode('utf-8')
+            timeframe = '15m' if '15m' in chart_path_str else '2h' if '2h' in chart_path_str else '8h'
+            chart_contents.append({
+                "timeframe": timeframe,
+                "data": image_data
+            })
         
         # Format market data for prompt
         market_data_str = ""
