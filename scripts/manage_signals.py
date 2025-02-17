@@ -122,7 +122,6 @@ def calculate_pnl(signal_data: dict, current_price: float = None) -> dict:
     Returns dict with:
     - unrealized_pnl: Current P&L if position is still open
     - realized_pnl: Final P&L if position is closed
-    - pnl_percentage: P&L as percentage of initial investment
     - roi: Return on investment considering trading costs
     """
     try:
@@ -134,7 +133,6 @@ def calculate_pnl(signal_data: dict, current_price: float = None) -> dict:
             return {
                 'unrealized_pnl': 0,
                 'realized_pnl': 0,
-                'pnl_percentage': 0,
                 'roi': 0
             }
 
@@ -142,13 +140,11 @@ def calculate_pnl(signal_data: dict, current_price: float = None) -> dict:
         if signal_data.get('status') == 'ACTIVE' and current_price:
             current_value = amount * current_price
             unrealized_pnl = current_value - entry_value
-            pnl_percentage = (unrealized_pnl / entry_value) * 100
             roi = ((current_value - entry_value - trading_costs) / entry_value) * 100
             
             return {
                 'unrealized_pnl': unrealized_pnl,
                 'realized_pnl': None,
-                'pnl_percentage': pnl_percentage,
                 'roi': roi
             }
             
@@ -157,20 +153,17 @@ def calculate_pnl(signal_data: dict, current_price: float = None) -> dict:
             exit_price = float(signal_data.get('exitPrice', 0))
             exit_value = amount * exit_price
             realized_pnl = exit_value - entry_value
-            pnl_percentage = (realized_pnl / entry_value) * 100
             roi = ((exit_value - entry_value - trading_costs) / entry_value) * 100
             
             return {
                 'unrealized_pnl': None,
                 'realized_pnl': realized_pnl,
-                'pnl_percentage': pnl_percentage,
                 'roi': roi
             }
             
         return {
             'unrealized_pnl': 0,
             'realized_pnl': 0,
-            'pnl_percentage': 0,
             'roi': 0
         }
         
@@ -179,7 +172,6 @@ def calculate_pnl(signal_data: dict, current_price: float = None) -> dict:
         return {
             'unrealized_pnl': 0,
             'realized_pnl': 0,
-            'pnl_percentage': 0,
             'roi': 0
         }
 

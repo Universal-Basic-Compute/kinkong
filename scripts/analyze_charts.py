@@ -457,11 +457,9 @@ def create_airtable_signal(analysis, timeframe, token_info):
                           f"Support Levels: {', '.join(map(str, support_levels))}\n"
                           f"Resistance Levels: {', '.join(map(str, resistance_levels))}\n"
                           f"R/R Ratio: {analysis.get('risk_reward_ratio', 'N/A')}"),
-                'currentPrice': None,  # Will be updated regularly
                 'exitPrice': None,    # Set when position closes
                 'unrealizedPnl': None,  # Updated while position is open
                 'realizedPnl': None,   # Set when position closes
-                'pnlPercentage': None, # Updated throughout
                 'roi': None           # Return on investment including costs
             }
 
