@@ -239,6 +239,50 @@ export default function Dashboard() {
           </div>
         </div>
         
+        <div className="mb-8">
+          <div className="flex flex-wrap gap-4 justify-center">
+            {tokens.map((token) => (
+              <div 
+                key={token.mint}
+                className="relative group"
+              >
+                <div 
+                  className={`
+                    w-24 h-24 rounded-full flex items-center justify-center
+                    transition-all duration-300 cursor-pointer
+                    ${token.pricePerformance >= 0 ? 'bg-green-900/20' : 'bg-red-900/20'}
+                    hover:scale-110
+                  `}
+                  style={{
+                    boxShadow: `0 0 20px ${token.pricePerformance >= 0 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`,
+                    transform: `scale(${Math.min(1 + Math.abs(token.volumeGrowth) / 1000, 1.5)})`
+                  }}
+                >
+                  <div className="text-center">
+                    <div className={`text-lg font-bold ${getTokenClass(token.symbol)}`}>
+                      ${token.symbol}
+                    </div>
+                    <div className={`text-sm ${token.pricePerformance >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {token.pricePerformance.toFixed(1)}%
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tooltip */}
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block">
+                  <div className="bg-black/90 border border-gold/20 rounded-lg p-3 whitespace-nowrap text-sm">
+                    <div className="text-gray-300">Volume: ${token.volume7d.toLocaleString()}</div>
+                    <div className="text-gray-300">Liquidity: ${token.liquidity.toLocaleString()}</div>
+                    <div className={token.volumeGrowth >= 0 ? 'text-green-400' : 'text-red-400'}>
+                      Volume Growth: {token.volumeGrowth.toFixed(1)}%
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
           {isTokensLoading ? (
             <div className="text-center py-4">Loading tokens...</div>
