@@ -42,10 +42,14 @@ def send_telegram_message(message):
     }
     
     try:
+        print("\nSending Telegram message...")
         response = requests.post(url, json=data)
         response.raise_for_status()
+        print("Telegram message sent successfully")
     except Exception as e:
         print(f"Failed to send Telegram message: {e}")
+        if hasattr(response, 'text'):
+            print(f"Telegram API response: {response.text}")
 
 import requests
 from typing import Dict, Optional
