@@ -3,6 +3,8 @@ import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { NextResponse } from 'next/server';
 import { getTokenPrices } from '@/backend/src/utils/jupiter';
 
+import { getTable } from '../airtable/tables';
+
 const DEXSCREENER_API = 'https://api.dexscreener.com/latest/dex/tokens';
 
 const TREASURY_WALLET = new PublicKey('FnWyN4t1aoZWFjEEBxopMaAgk5hjL5P3K65oc2T9FBJY');
