@@ -34,7 +34,7 @@ export function ChartFlow() {
     const high = Math.max(prevClose, close) + (Math.random() * wickSize);
     const low = Math.min(prevClose, close) - (Math.random() * wickSize);
 
-    lastPrice = prevClose; // Keep track of last price for trend
+    setLastPrice(prevClose); // Keep track of last price for trend
 
     return {
       id,
