@@ -4,15 +4,15 @@ from datetime import datetime
 import asyncio
 from airtable import Airtable
 from ratelimit import limits, sleep_and_retry
+import json
+from pathlib import Path
+from generate_chart import generate_chart, fetch_ubc_sol_data, calculate_support_levels, fetch_token_data
+from analyze_charts import analyze_charts_with_claude, generate_signal
 
 @sleep_and_retry
 @limits(calls=5, period=1)  # 5 calls per second
 def rate_limited_fetch(timeframe, hours, token_address):
     return fetch_token_data(timeframe, hours, token_address)
-import json
-from pathlib import Path
-from generate_chart import generate_chart, fetch_ubc_sol_data, calculate_support_levels
-from analyze_charts import analyze_charts_with_claude, generate_signal
 
 # Load environment variables
 load_dotenv()
