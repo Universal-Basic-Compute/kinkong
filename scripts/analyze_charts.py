@@ -163,16 +163,21 @@ def clean_json_string(json_str):
 
 def analyze_charts_with_claude(chart_paths):
     """Analyze multiple timeframe charts together using Claude 3"""
-    try:
-        api_key = os.getenv('ANTHROPIC_API_KEY')
-        if not api_key:
-            raise ValueError("ANTHROPIC_API_KEY not found in environment variables")
-        
-        print(f"API Key from .env: {api_key[:8]}...{api_key[-4:]}")
-        
-        client = anthropic.Client(
-            api_key=api_key,
-        )
+    # Force reload environment variables
+    load_dotenv(override=True)
+    
+    # Explicitly get API key from .env
+    api_key = os.getenv('ANTHROPIC_API_KEY')
+    if not api_key:
+        raise ValueError("ANTHROPIC_API_KEY not found in .env file")
+    
+    # Debug print to verify the key
+    print(f"API Key from .env: {api_key[:8]}...{api_key[-4:]}")
+    
+    # Create client with explicit API key
+    client = anthropic.Client(
+        api_key=api_key,
+    )
         
         # Get market data and context
         market_data = get_dexscreener_data()
