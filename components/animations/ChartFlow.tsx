@@ -17,44 +17,41 @@ export function ChartFlow() {
   const [lastPrice, setLastPrice] = useState(100);
 
   const generateCandle = (id: number, prevClose: number): Candle => {
-    // Mouvement maximum de 2% par rapport au prix précédent
-    const maxMove = prevClose * 0.02;
-    
     // Le open est TOUJOURS égal au close précédent
     const open = prevClose;
     
-    // Générer le close avec un mouvement aléatoire
+    // Mouvement maximum de 2% par rapport au prix précédent
+    const maxMove = prevClose * 0.02;
     const moveAmount = Math.random() * maxMove;
     const direction = Math.random() > 0.5 ? 1 : -1;
-    const close = open + (direction * moveAmount);
+    const close = prevClose + (direction * moveAmount);
     
     // Générer les mèches proportionnellement au corps
     const bodyRange = Math.abs(close - open);
     const wickSize = bodyRange * 0.5;
     
-    // Mèche haute au-dessus du plus haut entre open et close
     const high = Math.max(open, close) + (Math.random() * wickSize);
-    // Mèche basse en-dessous du plus bas entre open et close
     const low = Math.min(open, close) - (Math.random() * wickSize);
 
     return {
       id,
-      open,
+      open: prevClose,
       high,
       low, 
       close,
-      color: close >= open ? '#22c55e' : '#ef4444'
+      color: close >= prevClose ? '#22c55e' : '#ef4444'
     };
   };
 
   useEffect(() => {
+    // Initialiser avec un prix de départ
     const initialCandles = [];
     let currentPrice = lastPrice;
     
     for (let i = 0; i < 20; i++) {
       const candle = generateCandle(i, currentPrice);
       initialCandles.push(candle);
-      currentPrice = candle.close;
+      currentPrice = candle.close; // Utiliser le close comme prix pour la prochaine bougie
     }
 
     setCandles(initialCandles);
@@ -63,7 +60,6 @@ export function ChartFlow() {
     const interval = setInterval(() => {
       setCandles(prev => {
         const newCandle = generateCandle(prev[prev.length - 1].id + 1, prev[prev.length - 1].close);
-        setLastPrice(newCandle.close);
         return [...prev.slice(1), newCandle];
       });
     }, 1000);
