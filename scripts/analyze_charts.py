@@ -22,9 +22,6 @@ import statistics
 from airtable import Airtable
 from validate_signal import validate_signal
 
-# Load environment variables
-load_dotenv()
-
 class ChartAnalysis:
     def __init__(self, timeframe, signal, confidence, reasoning, key_levels, risk_reward_ratio=None, reassess_conditions=None):
         self.timeframe = timeframe
