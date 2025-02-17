@@ -78,7 +78,7 @@ export function ChartFlow() {
                   className="absolute w-full"
                   style={{
                     height: `${bodyHeight}%`,
-                    bottom: `${bodyBottom - bottom}%`,
+                    bottom: `${bodyBottom}%`,
                     backgroundColor: candle.color
                   }}
                   initial={{ scaleY: 0 }}
