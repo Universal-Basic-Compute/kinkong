@@ -333,28 +333,26 @@ Analyze each timeframe in sequence, considering how they relate to each other:
             
             # Clean and parse response
             cleaned_response = clean_json_string(message.content[0].text)
+            analysis = json.loads(cleaned_response)
             
-            try:
-                analysis = json.loads(cleaned_response)
-                
-                # Convert to ChartAnalysis objects
-                analyses = {
-                    timeframe: ChartAnalysis(
-                        timeframe=timeframe,
-                        signal=data["signal"],
-                        confidence=data["confidence"],
-                        reasoning=data["reasoning"],
-                        key_levels=data["key_levels"],
-                        risk_reward_ratio=data.get("risk_reward_ratio"),
-                        reassess_conditions=None  # Could add this to the schema if needed
-                    )
-                    for timeframe, data in analysis["timeframes"].items()
-                }
-                
-                # Add overall analysis
-                analyses["overall"] = analysis["overall_analysis"]
-                
-                return analyses
+            # Convert to ChartAnalysis objects without generating signals
+            analyses = {
+                timeframe: ChartAnalysis(
+                    timeframe=timeframe,
+                    signal=data["signal"],
+                    confidence=data["confidence"],
+                    reasoning=data["reasoning"],
+                    key_levels=data["key_levels"],
+                    risk_reward_ratio=data.get("risk_reward_ratio"),
+                    reassess_conditions=None
+                )
+                for timeframe, data in analysis["timeframes"].items()
+            }
+            
+            # Add overall analysis
+            analyses["overall"] = analysis["overall_analysis"]
+            
+            return analyses
                 
             except Exception as e:
                 print(f"Failed to parse analysis: {e}")
