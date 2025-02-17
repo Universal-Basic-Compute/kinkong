@@ -45,6 +45,7 @@ export interface Token {
   isActive: boolean;
   volume7d: number;
   liquidity: number;
+  priceChange24h?: number;
 }
 
 export interface Signal {
