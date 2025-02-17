@@ -421,11 +421,12 @@ def create_airtable_signal(analysis, timeframe, token_info):
         print(f"Prices - Entry: {current_price}, Target: {target_price}, Stop: {stop_price}")
         
         # Create signal record
-        if analysis.get('signal') in ['BUY', 'SELL']:
+        signal_type = analysis.get('signal')
+        if signal_type in ['BUY', 'SELL']:
             signal_data = {
                 'timestamp': datetime.now(timezone.utc).isoformat(),
                 'token': token_info['symbol'],
-                'type': analysis.get('signal'),
+                'type': signal_type,
                 'timeframe': timeframe_mapping.get(timeframe, 'INTRADAY'),
                 'entryPrice': current_price,
                 'targetPrice': target_price,
@@ -444,7 +445,7 @@ def create_airtable_signal(analysis, timeframe, token_info):
             response = airtable.insert(signal_data)
             
             print(f"\nAirtable response: {json.dumps(response, indent=2)}")
-            print(f"Created {analysis.signal} signal in Airtable for {timeframe} timeframe")
+            print(f"Created {signal_type} signal in Airtable for {timeframe} timeframe")
             
             return response
         else:
