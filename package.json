@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "analyze-sentiment": "ts-node scripts/analyze-market-sentiment.ts"
+    "analyze-sentiment": "ts-node scripts/analyze-market-sentiment.ts",
+    "fetch-tokens": "ts-node scripts/fetch-token-data.ts"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
