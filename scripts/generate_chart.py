@@ -11,7 +11,7 @@ load_dotenv()
 
 def fetch_ubc_sol_data():
     # Birdeye API endpoint for UBC/SOL pair
-    url = "https://public-api.birdeye.so/defi/history_price"
+    url = "https://public-api.birdeye.so/defi/ohlcv"  # Changed endpoint
     headers = {
         "X-API-KEY": os.getenv('BIRDEYE_API_KEY'),
         "x-chain": "solana",
@@ -19,10 +19,10 @@ def fetch_ubc_sol_data():
     }
     params = {
         "address": "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump",  # UBC token address
-        "timeframe": "1H",  # Changed from type to timeframe
-        "fromTime": int((datetime.now() - timedelta(days=1)).timestamp()),  # Changed parameter name
-        "toTime": int(datetime.now().timestamp()),  # Changed parameter name
-        "vsToken": "So11111111111111111111111111111111111111112"  # Changed to vsToken
+        "type": "1H",  # Hourly candles
+        "currency": "usd",  # Added currency parameter
+        "time_from": int((datetime.now() - timedelta(days=1)).timestamp()),
+        "time_to": int(datetime.now().timestamp())
     }
     
     try:
@@ -50,14 +50,14 @@ def fetch_ubc_sol_data():
         # Convert API data to DataFrame
         df_data = []
         for item in items:
-            date = pd.to_datetime(item['unixTime'], unit='s')
+            date = pd.to_datetime(item['timestamp'], unit='s')  # Changed from unixTime to timestamp
             df_data.append({
                 'Date': date,
-                'Open': float(item.get('price', 0)),  # Changed from open to price
-                'High': float(item.get('high', 0)),
-                'Low': float(item.get('low', 0)),
-                'Close': float(item.get('close', 0)),
-                'Volume': float(item.get('volume', 0))
+                'Open': float(item.get('o', 0)),  # Changed field names to match OHLCV endpoint
+                'High': float(item.get('h', 0)),
+                'Low': float(item.get('l', 0)),
+                'Close': float(item.get('c', 0)),
+                'Volume': float(item.get('v', 0))
             })
         
         # Create DataFrame and set index
