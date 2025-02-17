@@ -1,6 +1,5 @@
 import { Token, getTable } from '../airtable/tables';
 import { getTokenPrice } from '../utils/prices';
-import { getTokenPrice } from '../utils/prices';
 
 interface TokenScore {
   symbol: string;
