@@ -3,153 +3,120 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-interface ChartFlowProps {
-  onComplete?: () => void;
+interface Candle {
+  id: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  color: string;
 }
 
-export function ChartFlow({ onComplete }: ChartFlowProps) {
-  const [currentChart, setCurrentChart] = useState<string | null>(null);
-  const [decision, setDecision] = useState<'BUY' | 'SELL' | null>(null);
-  const [queue, setQueue] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export function ChartFlow() {
+  const [candles, setCandles] = useState<Candle[]>([]);
+  const [lastPrice, setLastPrice] = useState(100); // Starting price
+
+  // Generate a new random candle
+  const generateCandle = (id: number, prevClose: number): Candle => {
+    const change = (Math.random() - 0.5) * 10; // Random price change
+    const close = prevClose + change;
+    const high = Math.max(close, prevClose) + Math.random() * 2;
+    const low = Math.min(close, prevClose) - Math.random() * 2;
+    
+    return {
+      id,
+      open: prevClose,
+      high,
+      low,
+      close,
+      color: close >= prevClose ? '#22c55e' : '#ef4444'
+    };
+  };
 
   useEffect(() => {
-    // Function to get all chart files from public/charts
-    const loadCharts = async () => {
-      setIsLoading(true);
-      try {
-        // In production, we'll need an API endpoint to get the chart list
-        // For now, let's simulate with a few charts
-        const chartList = [
-          '/charts/sol/SOL_15m_candles_trading_view.png',
-          '/charts/ubc/UBC_15m_candles_trading_view.png',
-          '/charts/bonk/BONK_15m_candles_trading_view.png',
-          '/charts/ai/AI_15m_candles_trading_view.png',
-          '/charts/compute/COMPUTE_15m_candles_trading_view.png',
-          '/charts/pyth/PYTH_15m_candles_trading_view.png',
-          '/charts/render/RENDER_15m_candles_trading_view.png',
-          '/charts/ratio/RATIO_15m_candles_trading_view.png'
-        ];
-        setQueue(chartList);
-      } catch (error) {
-        console.error('Error loading charts:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    // Generate initial candles
+    const initialCandles = Array.from({ length: 20 }, (_, i) => {
+      const candle = generateCandle(i, lastPrice);
+      setLastPrice(candle.close);
+      return candle;
+    });
+    setCandles(initialCandles);
 
-    loadCharts();
+    // Add new candles periodically
+    const interval = setInterval(() => {
+      setCandles(prev => {
+        const newCandle = generateCandle(prev[prev.length - 1].id + 1, lastPrice);
+        setLastPrice(newCandle.close);
+        return [...prev.slice(1), newCandle];
+      });
+    }, 1000); // New candle every second
+
+    return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    if (queue.length > 0 && !currentChart) {
-      // Show next chart
-      setCurrentChart(queue[0]);
-      setQueue(prev => prev.slice(1));
-      
-      // Randomly decide BUY or SELL
-      setDecision(Math.random() > 0.5 ? 'BUY' : 'SELL');
-      
-      // Reset for next chart after animation
-      const timer = setTimeout(() => {
-        setCurrentChart(null);
-        setDecision(null);
-      }, 3000); // Slower transitions for better visibility
-      
-      return () => clearTimeout(timer);
-    }
-  }, [queue, currentChart]);
-
-  if (isLoading) {
-    return (
-      <div className="w-full h-[600px] flex items-center justify-center">
-        <span className="text-gold">Loading charts...</span>
-      </div>
-    );
-  }
+  const maxPrice = Math.max(...candles.map(c => c.high));
+  const minPrice = Math.min(...candles.map(c => c.low));
+  const priceRange = maxPrice - minPrice;
 
   return (
-    <div className="relative w-full h-[600px] overflow-hidden bg-black/50">
-      {/* Buy Zone */}
-      <motion.div 
-        className="absolute right-0 top-1/2 -translate-y-1/2 w-32 h-32 bg-green-500/20 rounded-full flex items-center justify-center"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: decision === 'BUY' ? 1 : 0 }}
-      >
-        <span className="text-green-400 font-bold text-xl">BUY</span>
-      </motion.div>
-
-      {/* Sell Zone */}
-      <motion.div 
-        className="absolute left-0 top-1/2 -translate-y-1/2 w-32 h-32 bg-red-500/20 rounded-full flex items-center justify-center"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: decision === 'SELL' ? 1 : 0 }}
-      >
-        <span className="text-red-400 font-bold text-xl">SELL</span>
-      </motion.div>
-
-      {/* Chart Animation */}
-      <AnimatePresence>
-        {currentChart && (
-          <motion.div
-            className="absolute top-1/2 left-1/2 w-96 h-64 perspective-1000"
-            initial={{ 
-              scale: 0.1, 
-              z: -1000,
-              x: '-50%',
-              y: '-50%',
-              rotateX: 45
-            }}
-            animate={[
-              // First grow from distance
-              {
-                scale: 1,
-                z: 0,
-                rotateX: 0,
-                transition: { duration: 0.5 }
-              },
-              // Then move to decision zone
-              {
-                x: decision === 'BUY' ? '100%' : '-150%',
-                opacity: 0,
-                transition: { delay: 0.5, duration: 0.5 }
-              }
-            ]}
-            exit={{ opacity: 0 }}
-          >
-            <img 
-              src={currentChart} 
-              alt="Trading Chart"
-              className="w-full h-full object-cover rounded-lg shadow-lg"
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* AI Analysis Overlay */}
-      <motion.div
-        className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/80 px-4 py-2 rounded-full"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: currentChart ? 1 : 0, y: 0 }}
-      >
-        <span className="text-white font-mono">AI Analyzing Patterns...</span>
-      </motion.div>
-
-      {/* Technical Indicators */}
-      <motion.div
-        className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-4"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: currentChart ? 1 : 0, y: 0 }}
-      >
-        {['RSI', 'MACD', 'VOL', 'MA'].map((indicator) => (
-          <div 
-            key={indicator}
-            className="bg-white/10 px-3 py-1 rounded-full"
-          >
-            <span className="text-sm text-white/80">{indicator}</span>
-          </div>
+    <div className="w-full h-[400px] bg-black/50 rounded-lg p-4 relative">
+      {/* Price Scale */}
+      <div className="absolute left-0 top-0 bottom-0 w-16 flex flex-col justify-between text-sm text-gray-400 py-2">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <span key={i}>
+            ${(maxPrice - (priceRange * (i / 4))).toFixed(2)}
+          </span>
         ))}
-      </motion.div>
+      </div>
+
+      {/* Candles */}
+      <div className="ml-16 h-full flex items-end space-x-2">
+        <AnimatePresence>
+          {candles.map((candle) => {
+            const height = ((candle.high - candle.low) / priceRange) * 100;
+            const bottom = ((candle.low - minPrice) / priceRange) * 100;
+            const bodyHeight = Math.abs(candle.close - candle.open) / priceRange * 100;
+            const bodyBottom = ((Math.min(candle.open, candle.close) - minPrice) / priceRange) * 100;
+
+            return (
+              <motion.div
+                key={candle.id}
+                className="relative w-4"
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -50 }}
+                transition={{ duration: 0.5 }}
+                style={{ height: `${height}%`, marginBottom: `${bottom}%` }}
+              >
+                {/* Wick */}
+                <div
+                  className="absolute w-[1px] left-1/2 transform -translate-x-1/2 bg-gray-400"
+                  style={{ height: '100%' }}
+                />
+                {/* Body */}
+                <motion.div
+                  className="absolute w-full"
+                  style={{
+                    height: `${bodyHeight}%`,
+                    bottom: `${bodyBottom - bottom}%`,
+                    backgroundColor: candle.color
+                  }}
+                  initial={{ scaleY: 0 }}
+                  animate={{ scaleY: 1 }}
+                  transition={{ duration: 0.3 }}
+                />
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      </div>
+
+      {/* Current Price */}
+      <div className="absolute top-2 right-2 text-xl font-bold">
+        <span className={lastPrice >= candles[candles.length - 2]?.close ? 'text-green-500' : 'text-red-500'}>
+          ${lastPrice.toFixed(2)}
+        </span>
+      </div>
     </div>
   );
 }
