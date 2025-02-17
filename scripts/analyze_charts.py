@@ -217,21 +217,21 @@ Based on this analysis, provide:
 4. Detailed reasoning explaining your decision
 
 Format your response as JSON:
-{
+{{
     "signal": "BUY|SELL|HOLD",
-    "confidence": number,
+    "confidence": 0,
     "reasoning": "Detailed multi-paragraph analysis",
-    "key_levels": {
-        "support": [numbers],
-        "resistance": [numbers]
-    },
-    "risk_reward_ratio": number,
-    "reassess_conditions": {
+    "key_levels": {{
+        "support": [0.0, 0.0],
+        "resistance": [0.0, 0.0]
+    }},
+    "risk_reward_ratio": 0.0,
+    "reassess_conditions": {{
         "time": "When to check again (e.g. '2 hours', '4 candles')",
         "price_triggers": ["List of price levels to watch"],
-        "technical_events": ["Specific events to watch for (e.g. 'EMA crossover', 'Break of structure')"]
-    }
-}
+        "technical_events": ["Specific events to watch for"]
+    }}
+}}
 
 Remember:
 - Only give BUY signals at support with bullish confirmation
