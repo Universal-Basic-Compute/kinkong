@@ -258,63 +258,7 @@ export default function Dashboard() {
         {/* Bubble Visualization */}
         <div className="mb-12 relative h-[400px] bg-black/30 rounded-lg border border-gold/20 p-4">
           <div className="absolute inset-0">
-            {trackedTokens.map((token) => {
-              const position = bubblePositions[token.mint] || {
-                x: Math.random() * 500,
-                y: Math.random() * 300
-              };
-              const nodeRef = useRef(null); // Move ref inside map
-
-              return (
-                <Draggable
-                  key={token.mint}
-                  nodeRef={nodeRef}
-                  position={position}
-                  onDrag={(e, data) => handleDrag(token.mint, e, data)}
-                  bounds="parent"
-                >
-                  <div ref={nodeRef} className="relative group cursor-move">
-                  <div 
-                    className={`
-                      rounded-full flex items-center justify-center
-                      transition-all duration-300
-                      ${token.pricePerformance >= 0 ? 'bg-green-900/20' : 'bg-red-900/20'}
-                      hover:z-10
-                    `}
-                    style={{
-                      width: `${calculateBubbleSize(token.marketCap)}px`,
-                      height: `${calculateBubbleSize(token.marketCap)}px`,
-                      boxShadow: `0 0 20px ${token.pricePerformance >= 0 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`,
-                    }}
-                  >
-                    <div className="text-center">
-                      <div className={`text-lg font-bold ${getTokenClass(token.symbol)}`}>
-                        ${token.symbol}
-                      </div>
-                      <div className={`text-sm ${token.pricePerformance >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {token.pricePerformance.toFixed(1)}%
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Enhanced Tooltip */}
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-20">
-                    <div className="bg-black/90 border border-gold/20 rounded-lg p-3 whitespace-nowrap text-sm">
-                      <div className="font-bold mb-1">${token.symbol}</div>
-                      <div className="text-gray-300">Market Cap: ${(token.marketCap || 0).toLocaleString()}</div>
-                      <div className="text-gray-300">Volume: ${token.volume7d.toLocaleString()}</div>
-                      <div className="text-gray-300">Liquidity: ${token.liquidity.toLocaleString()}</div>
-                      <div className={token.volumeGrowth >= 0 ? 'text-green-400' : 'text-red-400'}>
-                        Volume Growth: {token.volumeGrowth.toFixed(1)}%
-                      </div>
-                      <div className={token.pricePerformance >= 0 ? 'text-green-400' : 'text-red-400'}>
-                        Price Change: {token.pricePerformance.toFixed(1)}%
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Draggable>
-            ))}
+            {renderBubbles()}
           </div>
         </div>
 
