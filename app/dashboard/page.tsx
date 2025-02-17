@@ -21,6 +21,22 @@ interface TokenInfo {
   marketCap: number;
 }
 
+function getTokenClass(token: string): string {
+  if (!token) return 'metallic-text-argent'; // Default style if token is undefined
+  
+  const upperToken = token.toUpperCase();
+  switch (upperToken) {
+    case 'UBC':
+      return 'metallic-text-ubc';
+    case 'COMPUTE':
+      return 'metallic-text-compute';
+    case 'SOL':
+      return 'metallic-text-sol';
+    default:
+      return 'metallic-text-argent';
+  }
+}
+
 export default function Dashboard() {
   const { publicKey } = useWallet();
   const [trackedTokens, setTrackedTokens] = useState<TokenInfo[]>([]);
