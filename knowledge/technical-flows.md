@@ -246,22 +246,13 @@ graph TD
 - targetPrice: number
 - stopLoss: number
 - status: string
-- amount: number
-- entryValue: number
-- unrealizedPnl: number
-- realizedPnl: number
-```
-
-### 2. SIGNAL_STATUS_HISTORY Table
-```sql
-- signalId: string
-- status: string
-- timestamp: datetime
+- confidence: LOW/MEDIUM/HIGH
 - reason: string
-- price: number
+- expiryDate: datetime
+- lastUpdateTime: datetime
 ```
 
-### 3. TRADES Table
+### 2. TRADES Table
 ```sql
 - signalId: string
 - timestamp: datetime
@@ -271,4 +262,10 @@ graph TD
 - price: number
 - value: number
 - signature: string
+- executionPrice: number
+- executionTimestamp: datetime
+- transactionSignature: string
+- unrealizedPnl: number
+- realizedPnl: number
+- roi: number
 ```
