@@ -1,6 +1,15 @@
 import { generateTokenChart, getChartData } from '../utils/charts';
 import fs from 'fs';
 
+interface Candlestick {
+    timestamp: number;
+    open: number;
+    high: number;
+    low: number;
+    close: number;
+    volume: number;
+}
+
 async function testChart() {
     try {
         // UBC mint address
@@ -16,9 +25,9 @@ async function testChart() {
         // Also log some chart data
         const data = await getChartData(ubcMint);
         console.log('Latest price:', data.candlesticks[data.candlesticks.length - 1].close);
-        console.log('24h high:', Math.max(...data.candlesticks.map(c => c.high)));
-        console.log('24h low:', Math.min(...data.candlesticks.map(c => c.low)));
-        console.log('24h volume:', data.candlesticks.reduce((sum, c) => sum + c.volume, 0));
+        console.log('24h high:', Math.max(...data.candlesticks.map((c: Candlestick) => c.high)));
+        console.log('24h low:', Math.min(...data.candlesticks.map((c: Candlestick) => c.low)));
+        console.log('24h volume:', data.candlesticks.reduce((sum: number, c: Candlestick) => sum + c.volume, 0));
         
         // Calculate price change
         const firstPrice = data.candlesticks[0].open;
