@@ -122,22 +122,48 @@ def calculate_position_size(analysis, market_data):
     
     return min(position_size, market_data['liquidity'] * 0.01)  # Max 1% of liquidity
 
-def get_dexscreener_data(token_address: str = "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump") -> Optional[Dict]:
+def get_dexscreener_data(token_address: str = None) -> Optional[Dict]:
     """Fetch token data from DexScreener API"""
     try:
-        url = f"https://api.dexscreener.com/latest/dex/tokens/{token_address}"
-        response = requests.get(url)
-        response.raise_for_status()
-        
-        data = response.json()
-        if not data.get('pairs'):
-            print("No pairs found in DexScreener response")
+        if not token_address:
+            print("No token address provided for DexScreener API")
             return None
             
-        # Get the most liquid pair
-        main_pair = max(data['pairs'], key=lambda x: float(x.get('liquidity', {}).get('usd', 0)))
+        print(f"Fetching DexScreener data for token: {token_address}")
+        url = f"https://api.dexscreener.com/latest/dex/tokens/{token_address}"
         
-        return {
+        # Add headers to avoid rate limiting
+        headers = {
+            'User-Agent': 'Mozilla/5.0',
+            'Accept': 'application/json'
+        }
+        
+        response = requests.get(url, headers=headers)
+        print(f"DexScreener response status: {response.status_code}")
+        
+        if not response.ok:
+            print(f"DexScreener API error: {response.status_code}")
+            return None
+            
+        data = response.json()
+        
+        # Debug print the response
+        print("DexScreener response:", json.dumps(data, indent=2)[:200] + "...")
+        
+        if not data.get('pairs'):
+            print(f"No pairs found in DexScreener response for {token_address}")
+            print("Full response:", json.dumps(data, indent=2))
+            return None
+            
+        # Get the most liquid Solana pair
+        sol_pairs = [p for p in data['pairs'] if p.get('chainId') == 'solana']
+        if not sol_pairs:
+            print("No Solana pairs found")
+            return None
+            
+        main_pair = max(sol_pairs, key=lambda x: float(x.get('liquidity', {}).get('usd', 0)))
+        
+        result = {
             'price': float(main_pair.get('priceUsd', 0)),
             'price_change_24h': float(main_pair.get('priceChange', {}).get('h24', 0)),
             'volume_24h': float(main_pair.get('volume', {}).get('h24', 0)),
@@ -145,6 +171,9 @@ def get_dexscreener_data(token_address: str = "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXr
             'fdv': float(main_pair.get('fdv', 0)),
             'market_cap': float(main_pair.get('marketCap', 0))
         }
+        
+        print("Processed market data:", result)
+        return result
     except Exception as e:
         print(f"Error fetching DexScreener data: {e}")
         return None

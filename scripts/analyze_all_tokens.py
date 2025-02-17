@@ -123,7 +123,14 @@ async def analyze_token(token):
                 
             # Analyze charts
             print(f"\nAnalyzing charts for {token['symbol']}...")
-            analyses = analyze_charts_with_claude(chart_paths)
+            print(f"Token mint address: {token['mint']}")  # Add debug line
+            analyses = analyze_charts_with_claude(
+                chart_paths,
+                token_info={
+                    'symbol': token['symbol'],
+                    'mint': token['mint']
+                }
+            )
             
             if analyses:
                 # Generate signal
