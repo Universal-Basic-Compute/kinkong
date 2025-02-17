@@ -492,10 +492,7 @@ def create_airtable_signal(analysis, timeframe, token_info):
                 'stopLoss': stop_price,
                 'confidence': confidence_level,
                 'wallet': os.getenv('STRATEGY_WALLET', ''),
-                'reason': (f"{analysis.get('reasoning', '')}\n\n"
-                          f"Support Levels: {', '.join(map(str, support_levels))}\n"
-                          f"Resistance Levels: {', '.join(map(str, resistance_levels))}\n"
-                          f"R/R Ratio: {analysis.get('risk_reward_ratio', 'N/A')}")
+                'reason': json.dumps(analysis, indent=2)  # Include the full analysis JSON
             }
 
             # Validate signal before creating
