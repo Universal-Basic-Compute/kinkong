@@ -12,8 +12,8 @@ export async function GET() {
 
     const records = await table
       .select({
-        filterByFormula: `IS_AFTER({timestamp}, '${sevenDaysAgo.toISOString()}')`,
-        sort: [{ field: 'timestamp', direction: 'desc' }]
+        filterByFormula: `IS_AFTER({createdAt}, '${sevenDaysAgo.toISOString()}')`,
+        sort: [{ field: 'createdAt', direction: 'desc' }]
       })
       .all();
 
@@ -32,7 +32,7 @@ export async function GET() {
 
     // Calculate 24h change
     const oneDayRecord = records.find(r => 
-      new Date(r.get('timestamp') as string) <= oneDayAgo
+      new Date(r.get('createdAt') as string) <= oneDayAgo
     );
     const change24h = oneDayRecord 
       ? ((totalValue - (oneDayRecord.get('totalValue') as number)) / (oneDayRecord.get('totalValue') as number)) * 100
@@ -40,7 +40,7 @@ export async function GET() {
 
     // Calculate 7d change
     const sevenDayRecord = records.find(r => 
-      new Date(r.get('timestamp') as string) <= sevenDaysAgo
+      new Date(r.get('createdAt') as string) <= sevenDaysAgo
     );
     const change7d = sevenDayRecord
       ? ((totalValue - (sevenDayRecord.get('totalValue') as number)) / (sevenDayRecord.get('totalValue') as number)) * 100
@@ -48,7 +48,7 @@ export async function GET() {
 
     // Format historical data
     const history = records.map(record => ({
-      timestamp: record.get('timestamp') as string,
+      timestamp: record.get('createdAt') as string,
       value: record.get('totalValue') as number
     }));
 
