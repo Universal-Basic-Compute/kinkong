@@ -29,14 +29,13 @@ export function ChartFlow() {
   };
 
   useEffect(() => {
-    // Initialiser avec un prix de départ
     const initialCandles = [];
     let currentPrice = lastPrice;
     
     for (let i = 0; i < 20; i++) {
       const candle = generateCandle(i, currentPrice);
       initialCandles.push(candle);
-      currentPrice = candle.close; // Utiliser le close comme prix pour la prochaine bougie
+      currentPrice = candle.close;
     }
 
     setCandles(initialCandles);
@@ -52,42 +51,23 @@ export function ChartFlow() {
     return () => clearInterval(interval);
   }, []);
 
-  const maxPrice = Math.max(...candles.map(c => Math.max(c.open, c.close)));
-  const minPrice = Math.min(...candles.map(c => Math.min(c.open, c.close)));
-  const priceRange = maxPrice - minPrice;
-
   return (
     <div className="w-full h-[400px] bg-black/50 rounded-lg p-4">
       <div className="h-full flex items-end space-x-2">
         <AnimatePresence>
-          {candles.map((candle) => {
-            const bodyHeight = Math.abs(candle.close - candle.open) / priceRange * 100;
-            const bodyBottom = ((Math.min(candle.open, candle.close) - minPrice) / priceRange) * 100;
-
-            return (
-              <motion.div
-                key={candle.id}
-                className="relative w-4"
-                initial={{ opacity: 0, x: 50 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -50 }}
-                transition={{ duration: 0.5 }}
-              >
-                {/* Corps uniquement */}
-                <motion.div
-                  className="absolute w-full"
-                  style={{
-                    height: `${bodyHeight}%`,
-                    bottom: `${bodyBottom}%`,
-                    backgroundColor: candle.color
-                  }}
-                  initial={{ scaleY: 0 }}
-                  animate={{ scaleY: 1 }}
-                  transition={{ duration: 0.3 }}
-                />
-              </motion.div>
-            );
-          })}
+          {candles.map((candle) => (
+            <motion.div
+              key={candle.id}
+              className="relative w-4 h-20"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              transition={{ duration: 0.5 }}
+              style={{
+                backgroundColor: candle.color
+              }}
+            />
+          ))}
         </AnimatePresence>
       </div>
     </div>
