@@ -236,41 +236,56 @@ def generate_chart(df, config, support_levels=None):
     )
     
     # Adjust title spacing and add components
+    # Create more detailed title components using raw strings
+    main_title = r"{}".format(config['title'])
+    price_stats = (
+        r"Current: ${:.4f} ({:+.2f}%) | "
+        r"ATH: ${:.4f} | ATL: ${:.4f} | "
+        r"Avg: ${:.4f}"
+    ).format(current_price, price_change, ath, atl, avg_price)
+    
+    volume_stats = r"Avg Vol: ${:,.2f} | {} candles".format(avg_volume, len(df))
+    
+    # Add text without math parameter
     fig.text(0.5, 0.97, main_title,
              horizontalalignment='center',
              color='white',
              fontsize=14,
-             fontweight='bold',
-             math=False)
+             fontweight='bold')
     
     fig.text(0.5, 0.94, price_stats,
              horizontalalignment='center',
-             color='#ffd700',  # Gold color for price stats
-             fontsize=11,
-             math=False)
+             color='#ffd700',
+             fontsize=11)
     
     fig.text(0.5, 0.92, volume_stats,
              horizontalalignment='center',
-             color='#c0c0c0',  # Silver color for volume stats
-             fontsize=10,
-             math=False)
+             color='#c0c0c0',
+             fontsize=10)
+
+    # Update technical info
+    technical_info = (
+        r"EMA(20) & EMA(50) | "
+        r"Period: {} → {} UTC"
+    ).format(
+        df.index[0].strftime('%Y-%m-%d %H:%M'),
+        df.index[-1].strftime('%Y-%m-%d %H:%M')
+    )
     
     fig.text(0.5, 0.90, technical_info,
              horizontalalignment='center',
-             color='#808080',  # Gray color for technical info
-             fontsize=9,
-             math=False)
+             color='#808080',
+             fontsize=9)
     
     # Add support/resistance levels info if present
     if support_levels:
-        support_text = "Support Levels: " + " | ".join([f"{price:.4f}" for _, price in support_levels if _=='support'])
-        resistance_text = "Resistance Levels: " + " | ".join([f"{price:.4f}" for _, price in support_levels if _=='resistance'])
+        support_text = r"Support Levels: " + " | ".join([r"${:.4f}".format(price) for _, price in support_levels if _=='support'])
+        resistance_text = r"Resistance Levels: " + " | ".join([r"${:.4f}".format(price) for _, price in support_levels if _=='resistance'])
         
         fig.text(0.5, 0.88, support_text + "\n" + resistance_text,
                 horizontalalignment='center',
                 color='#a0a0a0',
-                fontsize=9,
-                math=False)
+                fontsize=9)
 
     # Adjust main chart position to account for title space
     plt.subplots_adjust(top=0.85)
@@ -315,14 +330,14 @@ def generate_chart(df, config, support_levels=None):
     ax_main.grid(axis='x', color='gray', alpha=0.2, linestyle='--')
     
     # Add price range label
-    price_range = rf"Range: ${df['Low'].min():.4f} - ${df['High'].max():.4f}"
+    price_range = r"Range: ${:.4f} - ${:.4f}".format(df['Low'].min(), df['High'].max())
     ax_main.text(0.02, 0.95, price_range,
                 transform=ax_main.transAxes,
                 color='white',
                 fontsize=10)
     
     # Add volume range label
-    volume_range = rf"Vol Range: ${df['Volume'].min():,.0f} - ${df['Volume'].max():,.0f}"
+    volume_range = r"Vol Range: ${:,.0f} - ${:,.0f}".format(df['Volume'].min(), df['Volume'].max())
     ax_volume.text(0.02, 0.95, volume_range,
                   transform=ax_volume.transAxes,
                   color='white',
