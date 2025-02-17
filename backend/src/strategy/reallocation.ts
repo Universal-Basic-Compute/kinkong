@@ -143,7 +143,7 @@ async function recordReallocation(data: {
     fields: {
       timestamp: data.timestamp.toISOString(),
       token: data.token,
-      action: data.action,
+      type: data.action,
       amount: data.amount,
       reason: data.reason
     }
@@ -169,7 +169,7 @@ export async function executeReallocation() {
       .all();
 
     const tokens: Token[] = tokenRecords.map(record => ({
-      symbol: record.get('symbol') as string,
+      symbol: record.get('symbol') as string || record.get('name') as string,
       mint: record.get('mint') as string,
       isActive: true,
       volume7d: record.get('volume7d') as number,
