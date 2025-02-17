@@ -403,28 +403,22 @@ def generate_chart(df, config, support_levels=None):
         edgecolor='none'
     )
     
-        # Explicitly close the figure
-        plt.close(fig)
-        
-        print(f"Successfully saved chart to {output_path}")
-        
-        # Print statistics for verification
-        print(f"\nChart Statistics for {config['title']}:")
-        print(f"Current Price: ${current_price:.4f}")
-        print(f"ATH: ${ath:.4f}")
-        print(f"ATL: ${atl:.4f}")
-        print(f"Average Price: ${avg_price:.4f}")
-        print(f"Price Change: {price_change:+.2f}%")
-        print(f"Average Volume: ${avg_volume:,.2f}")
-        
-        return True
+    # Explicitly close the figure
+    plt.close(fig)
+    
+    print(f"Successfully saved chart to {output_path}")
+    
+    # Print statistics for verification
+    print(f"\nChart Statistics for {config['title']}:")
+    print(f"Current Price: ${current_price:.4f}")
+    print(f"ATH: ${ath:.4f}")
+    print(f"ATL: ${atl:.4f}")
+    print(f"Average Price: ${avg_price:.4f}")
+    print(f"Price Change: {price_change:+.2f}%")
+    print(f"Average Volume: ${avg_volume:,.2f}")
+    
+    return True
 
-    except Exception as e:
-        print(f"Error generating chart: {str(e)}")
-        # Ensure figure is closed even if there's an error
-        if 'fig' in locals():
-            plt.close(fig)
-        return False
 
 def generate_all_charts():
     print("Starting chart generation process...")
