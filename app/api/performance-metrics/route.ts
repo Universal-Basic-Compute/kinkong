@@ -1,5 +1,12 @@
 import { NextResponse } from 'next/server';
 import { getTable } from '@/backend/src/airtable/tables';
+import type { Record, FieldSet } from 'airtable';
+
+interface TradeRecord extends FieldSet {
+  returnPercent: number;
+  timestamp: string;
+  value: number;
+}
 
 export async function GET() {
   try {
@@ -17,7 +24,7 @@ export async function GET() {
     let currentDrawdown = 0;
     let peakValue = 0;
 
-    trades.forEach(trade => {
+    trades.forEach((trade: Record<TradeRecord>) => {
       const returnPct = trade.get('returnPercent') as number;
       if (returnPct > 0) winningTrades++;
       totalReturn += returnPct;
