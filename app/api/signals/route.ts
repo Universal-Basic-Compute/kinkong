@@ -28,9 +28,14 @@ export async function GET() {
         timestamp: parseAndFormatDate(record.get('timestamp')),
         token: record.get('token'),
         type: record.get('type'),
+        timeframe: record.get('timeframe'),
+        entryPrice: record.get('entryPrice') || undefined,
+        targetPrice: record.get('targetPrice') || undefined,
+        stopLoss: record.get('stopLoss') || undefined,
+        confidence: record.get('confidence'),
         wallet: record.get('wallet'),
         reason: record.get('reason'),
-        url: record.get('url'),
+        url: record.get('url') || undefined,
       }));
 
       console.log('Formatted first signal:', signals[0]); // Debug log
