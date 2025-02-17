@@ -12,8 +12,8 @@ interface Candlestick {
 
 async function testChart() {
     try {
-        // UBC mint address
-        const ubcMint = 'UFBt9b3jqXfpVB3q6dDYgTPsWjcRGCWuWVNj5hB5pKnS';
+        // Correct UBC mint address
+        const ubcMint = '9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump';
         
         console.log('Generating chart for UBC...');
         const chartBuffer = await generateTokenChart(ubcMint);
