@@ -163,30 +163,31 @@ def clean_json_string(json_str):
 
 def analyze_charts_with_claude(chart_paths):
     """Analyze multiple timeframe charts together using Claude 3"""
-    api_key = os.getenv('ANTHROPIC_API_KEY')
-    if not api_key:
-        raise ValueError("ANTHROPIC_API_KEY not found in environment variables")
-    
-    print(f"API Key from .env: {api_key[:8]}...{api_key[-4:]}")
-    
-    client = anthropic.Client(
-        api_key=api_key,
-    )
-    
-    # Get market data and context
-    market_data = get_dexscreener_data()
-    market_context = get_market_context()
+    try:
+        api_key = os.getenv('ANTHROPIC_API_KEY')
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY not found in environment variables")
+        
+        print(f"API Key from .env: {api_key[:8]}...{api_key[-4:]}")
+        
+        client = anthropic.Client(
+            api_key=api_key,
+        )
+        
+        # Get market data and context
+        market_data = get_dexscreener_data()
+        market_context = get_market_context()
 
-    # Prepare all chart images
-    chart_contents = []
-    for chart_path in chart_paths:
-        with open(chart_path, "rb") as image_file:
-            image_data = base64.b64encode(image_file.read()).decode('utf-8')
-            timeframe = '15m' if '15m' in chart_path else '2h' if '2h' in chart_path else '8h'
-            chart_contents.append({
-                "timeframe": timeframe,
-                "data": image_data
-            })
+        # Prepare all chart images
+        chart_contents = []
+        for chart_path in chart_paths:
+            with open(chart_path, "rb") as image_file:
+                image_data = base64.b64encode(image_file.read()).decode('utf-8')
+                timeframe = '15m' if '15m' in chart_path else '2h' if '2h' in chart_path else '8h'
+                chart_contents.append({
+                    "timeframe": timeframe,
+                    "data": image_data
+                })
     
     # Format market data for prompt
     market_data_str = ""
@@ -254,59 +255,66 @@ Format your response as JSON:
     }}
 }}"""
 
-    try:
-        message = client.messages.create(
-            model="claude-3-5-sonnet-20241022",
-            max_tokens=4096,  # Increased for multiple charts
-            messages=[{
-                "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": prompt
-                    },
-                    *[{
-                        "type": "image",
-                        "source": {
-                            "type": "base64",
-                            "media_type": "image/png",
-                            "data": chart["data"]
-                        }
-                    } for chart in chart_contents]
-                ]
-            }]
-        )
-        
-        # Clean and parse response
-        cleaned_response = clean_json_string(message.content[0].text)
-        
         try:
-            analysis = json.loads(cleaned_response)
+            message = client.messages.create(
+                model="claude-3-5-sonnet-20241022",
+                max_tokens=4096,  # Increased for multiple charts
+                messages=[{
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": prompt
+                        },
+                        *[{
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": "image/png",
+                                "data": chart["data"]
+                            }
+                        } for chart in chart_contents]
+                    ]
+                }]
+            )
             
-            # Convert to ChartAnalysis objects
-            analyses = {
-                timeframe: ChartAnalysis(
-                    timeframe=timeframe,
-                    signal=data["signal"],
-                    confidence=data["confidence"],
-                    reasoning=data["reasoning"],
-                    key_levels=data["key_levels"],
-                    risk_reward_ratio=data.get("risk_reward_ratio"),
-                    reassess_conditions=None  # Could add this to the schema if needed
-                )
-                for timeframe, data in analysis["timeframes"].items()
-            }
+            # Clean and parse response
+            cleaned_response = clean_json_string(message.content[0].text)
             
-            # Add overall analysis
-            analyses["overall"] = analysis["overall_analysis"]
+            try:
+                analysis = json.loads(cleaned_response)
+                
+                # Convert to ChartAnalysis objects
+                analyses = {
+                    timeframe: ChartAnalysis(
+                        timeframe=timeframe,
+                        signal=data["signal"],
+                        confidence=data["confidence"],
+                        reasoning=data["reasoning"],
+                        key_levels=data["key_levels"],
+                        risk_reward_ratio=data.get("risk_reward_ratio"),
+                        reassess_conditions=None  # Could add this to the schema if needed
+                    )
+                    for timeframe, data in analysis["timeframes"].items()
+                }
+                
+                # Add overall analysis
+                analyses["overall"] = analysis["overall_analysis"]
+                
+                return analyses
+                
+            except Exception as e:
+                print(f"Failed to parse analysis: {e}")
+                print("Response content:")
+                print(cleaned_response)
+                raise
+                
+        except Exception as e:
+            print(f"Failed to get Claude response: {e}")
+            raise
             
-            return analyses
-        
     except Exception as e:
-        print(f"Failed to analyze chart {filename}: {e}")
-        print("Full response content:")
-        if 'message' in locals():
-            print(message.content[0].text)
+        print(f"Failed to analyze charts: {e}")
         raise
 
 def create_airtable_signal(analysis, timeframe):
