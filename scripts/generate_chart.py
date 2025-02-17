@@ -10,25 +10,26 @@ import os
 load_dotenv()
 
 def fetch_ubc_sol_data():
-    # Birdeye API endpoint for UBC/SOL pair
-    url = "https://public-api.birdeye.so/defi/ohlcv"  # Changed endpoint
+    url = "https://public-api.birdeye.so/defi/ohlcv"
     headers = {
         "X-API-KEY": os.getenv('BIRDEYE_API_KEY'),
         "x-chain": "solana",
         "accept": "application/json"
     }
+    
+    # Get current time and 30 hours ago
+    now = datetime.now()
+    thirty_hours_ago = now - timedelta(hours=30)
+    
     params = {
         "address": "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump",  # UBC token address
-        "type": "1H",  # Hourly candles
-        "currency": "usd",  # Added currency parameter
-        "time_from": int((datetime.now() - timedelta(days=1)).timestamp()),
-        "time_to": int(datetime.now().timestamp())
+        "type": "1H",  # 1 hour candles
+        "currency": "usd",
+        "time_from": int(thirty_hours_ago.timestamp()),
+        "time_to": int(now.timestamp())
     }
     
     try:
-        if not os.getenv('BIRDEYE_API_KEY'):
-            raise ValueError("BIRDEYE_API_KEY not found in environment variables")
-            
         print("Requesting URL:", url)
         print("With params:", params)
         
@@ -37,8 +38,6 @@ def fetch_ubc_sol_data():
         
         response.raise_for_status()
         data = response.json()
-        
-        print("Response data:", data)  # Debug log
         
         if not data.get('success'):
             raise ValueError(f"API request failed: {data.get('message')}")
@@ -50,30 +49,22 @@ def fetch_ubc_sol_data():
         # Convert API data to DataFrame
         df_data = []
         for item in items:
-            date = pd.to_datetime(item['timestamp'], unit='s')  # Changed from unixTime to timestamp
+            date = pd.to_datetime(item['timestamp'], unit='s')
             df_data.append({
                 'Date': date,
-                'Open': float(item.get('o', 0)),  # Changed field names to match OHLCV endpoint
-                'High': float(item.get('h', 0)),
-                'Low': float(item.get('l', 0)),
-                'Close': float(item.get('c', 0)),
-                'Volume': float(item.get('v', 0))
+                'Open': float(item['o']),
+                'High': float(item['h']),
+                'Low': float(item['l']),
+                'Close': float(item['c']),
+                'Volume': float(item['v'])
             })
         
         # Create DataFrame and set index
         df = pd.DataFrame(df_data)
         df.set_index('Date', inplace=True)
-        
-        # Sort index to ensure chronological order
         df = df.sort_index()
         
-        # Filter out zero values
-        df = df[(df != 0).all(axis=1)]
-        
-        if df.empty:
-            raise ValueError("No valid price data after filtering zeros")
-        
-        print(f"Fetched {len(df)} candles for UBC/SOL")
+        print(f"\nFetched {len(df)} candles for UBC/SOL")
         print("\nDataFrame head:")
         print(df.head())
         
