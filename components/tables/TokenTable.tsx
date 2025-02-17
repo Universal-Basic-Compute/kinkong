@@ -81,9 +81,12 @@ export const TokenTable = () => {
                   href={`https://solscan.io/token/${token.mint}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`${getTokenClass(token.symbol || token.mint)} hover:opacity-80`}
+                  className={`${getTokenClass(token.symbol || '')} hover:opacity-80`}
                 >
-                  {formatTokenSymbol(token.symbol || token.mint.slice(0, 4))}
+                  {token.symbol 
+                    ? formatTokenSymbol(token.symbol)
+                    : `${token.mint.slice(0, 4)}...${token.mint.slice(-4)}`
+                  }
                 </a>
               </td>
               <td className="text-right px-4 py-2 text-gray-300">
