@@ -1,4 +1,3 @@
-import { ForceGraph } from '@/components/dashboard/ForceGraph';
 import { TokenInfoTable } from '@/components/dashboard/TokenInfoTable';
 
 interface TokenInfo {
@@ -38,10 +37,8 @@ export function TrackedTokensSection({ tokens, isLoading, error }: TrackedTokens
       ) : error ? (
         <div className="text-red-400">Error: {error}</div>
       ) : (
-        <ForceGraph tokens={tokens} />
+        <TokenInfoTable tokens={tokens} isLoading={isLoading} error={error} />
       )}
-
-      <TokenInfoTable tokens={tokens} isLoading={isLoading} error={error} />
     </section>
   );
 }
