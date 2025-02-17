@@ -54,28 +54,23 @@ export async function getTokenPrice(mint: string): Promise<number | null> {
     if (mint === 'So11111111111111111111111111111111111111112') {
       console.log('Fetching SOL price from DexScreener (with retries)...');
       const response = await fetchWithRetry(
-        'https://api.dexscreener.com/latest/dex/tokens/solana/So11111111111111111111111111111111111111112'
+        'https://api.dexscreener.com/latest/dex/pairs/solana/HyZzKxEQ7GqHF8upZNQHV5CTd1TZx6CvPxHkRVTtRxaD'  // Using a known SOL/USDC pair
       );
 
       const data: DexScreenerResponse = await response.json();
-      const solPair = data.pairs?.find(p => 
-        ['USDC', 'USDT'].includes(p.quoteToken.symbol) &&
-        p.baseToken.symbol === 'SOL'
-      );
-      
-      if (!solPair) {
+      if (!data.pairs?.[0]) {
         throw new Error('Could not find valid SOL/USDC pair');
       }
 
-      const price = parseFloat(solPair.priceUsd);
+      const price = parseFloat(data.pairs[0].priceUsd);
       console.log(`Found SOL price: $${price}`);
       return price;
     }
     
-    // For other tokens, get token/SOL price and calculate USD value
+    // For other tokens, search by pairs
     console.log(`Fetching price from DexScreener for mint: ${mint} (with retries)...`);
     const response = await fetchWithRetry(
-      `https://api.dexscreener.com/latest/dex/tokens/solana/${mint}`
+      `https://api.dexscreener.com/latest/dex/search?q=${mint}`  // Using search endpoint instead
     );
 
     const data: DexScreenerResponse = await response.json();
@@ -85,22 +80,29 @@ export async function getTokenPrice(mint: string): Promise<number | null> {
       return null;
     }
 
+    // Filter for Solana pairs only
+    const solanaPairs = data.pairs.filter(p => p.chainId === 'solana');
+    if (!solanaPairs.length) {
+      console.warn(`No Solana pairs found for mint ${mint}`);
+      return null;
+    }
+
     // Try to find the best pair in this order: USDC > USDT > SOL
-    let pair = data.pairs.find(p => p.quoteToken.symbol === 'USDC');
+    let pair = solanaPairs.find(p => p.quoteToken.symbol === 'USDC');
     if (pair) {
       const price = parseFloat(pair.priceUsd);
       console.log(`Found USDC pair price for ${mint}: $${price}`);
       return price;
     }
 
-    pair = data.pairs.find(p => p.quoteToken.symbol === 'USDT');
+    pair = solanaPairs.find(p => p.quoteToken.symbol === 'USDT');
     if (pair) {
       const price = parseFloat(pair.priceUsd);
       console.log(`Found USDT pair price for ${mint}: $${price}`);
       return price;
     }
 
-    pair = data.pairs.find(p => p.quoteToken.symbol === 'SOL');
+    pair = solanaPairs.find(p => p.quoteToken.symbol === 'SOL');
     if (pair) {
       const solPrice = await getTokenPrice('So11111111111111111111111111111111111111112');
       if (!solPrice) {
