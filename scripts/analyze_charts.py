@@ -484,45 +484,25 @@ def generate_signal(analyses, token_info):  # Add token_info parameter
         'long_term': timeframe_analyses.get('8h')
     }
     
-    # Apply confidence adjustment
-    for timeframe in signals:
-        if signals[timeframe]:
-            signals[timeframe].confidence = min(
-                signals[timeframe].confidence + confidence_boost, 
-                100
-            )
     
     # Create signals in Airtable only for high confidence signals
     high_confidence_signals = []
     for timeframe, analysis in timeframe_analyses.items():
-        if analysis and analysis.signal != 'HOLD' and analysis.confidence >= 60:
+        if analysis and analysis.get('signal') != 'HOLD' and analysis.get('confidence', 0) >= 60:
             # Create unique signal identifier
-            signal_id = f"{token_info['symbol']}_{timeframe}_{analysis.signal}_{datetime.now().strftime('%Y%m%d')}"
+            signal_id = f"{token_info['symbol']}_{timeframe}_{analysis['signal']}_{datetime.now().strftime('%Y%m%d')}"
             
             if signal_id not in processed_signals:
                 result = create_airtable_signal(analysis, timeframe, token_info)
                 if result:
                     high_confidence_signals.append({
                         'timeframe': timeframe,
-                        'signal': analysis.signal,
-                        'confidence': analysis.confidence
+                        'signal': analysis['signal'],
+                        'confidence': analysis['confidence']
                     })
                     processed_signals.add(signal_id)
 
     # Create detailed message
-    def format_reassessment(analysis):
-        if not analysis or not analysis.reassess_conditions:
-            return ""
-        
-        conditions = analysis.reassess_conditions
-        return f"""
-Reassessment Conditions:
-⏰ Time: {conditions['time']}
-📊 Price Triggers: {', '.join(conditions['price_triggers'])}
-📈 Technical Events: {', '.join(conditions['technical_events'])}
-"""
-
-    # Overall analysis from Claude
     overall = analyses.get('overall', {})
     
     message = f"""🔄 {token_info['symbol']} Technical Analysis Update
@@ -548,8 +528,8 @@ Best Timeframe: {overall.get('best_timeframe', 'N/A')}
     ]:
         if analysis:
             message += f"{timeframe}:\n"
-            message += f"Signal: {analysis.signal} ({analysis.confidence}% confidence)\n"
-            message += f"{analysis.reasoning}\n\n"
+            message += f"Signal: {analysis['signal']} ({analysis['confidence']}% confidence)\n"
+            message += f"{analysis['reasoning']}\n\n"
 
     message += "Key Observations:\n"
     message += "\n".join(f"• {obs}" for obs in overall.get('key_observations', ['No observations']))
