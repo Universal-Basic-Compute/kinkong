@@ -11,6 +11,7 @@ import pandas as pd
 from collections import defaultdict
 import statistics
 from airtable import Airtable
+from validate_signal import validate_signal
 
 # Load environment variables
 load_dotenv()
