@@ -153,6 +153,23 @@ def generate_chart(df, config, support_levels=None):
         print("No data available for chart generation")
         return
     
+    # Calculate key statistics
+    current_price = df['Close'].iloc[-1]
+    ath = df['High'].max()
+    atl = df['Low'].min()
+    avg_price = df['Close'].mean()
+    avg_volume = df['Volume'].mean()
+    price_change = ((df['Close'].iloc[-1] - df['Close'].iloc[0]) / df['Close'].iloc[0]) * 100
+    
+    # Create statistics text
+    stats_text = (
+        f"Current: ${current_price:.4f} | "
+        f"ATH: ${ath:.4f} | "
+        f"ATL: ${atl:.4f} | "
+        f"Avg: ${avg_price:.4f} | "
+        f"Change: {price_change:+.2f}%"
+    )
+    
     # Style configuration
     style = mpf.make_mpf_style(
         base_mpf_style='charles',
@@ -174,8 +191,8 @@ def generate_chart(df, config, support_levels=None):
     ema50 = df['Close'].ewm(span=50, adjust=False).mean()
     
     apds = [
-        mpf.make_addplot(ema20, color='yellow', width=0.8),
-        mpf.make_addplot(ema50, color='blue', width=0.8)
+        mpf.make_addplot(ema20, color='yellow', width=0.8, label='EMA20'),
+        mpf.make_addplot(ema50, color='blue', width=0.8, label='EMA50')
     ]
     
     # Add support/resistance lines if provided
@@ -186,27 +203,66 @@ def generate_chart(df, config, support_levels=None):
                 mpf.make_addplot([price] * len(df), color=color, linestyle='--')
             )
     
-    # Create the plot
-    mpf.plot(
+    # Create figure and axes
+    fig, axes = mpf.plot(
         df,
         type='candle',
         style=style,
-        title=config['title'],
+        title=f'{config["title"]}\n{stats_text}',
         volume=True,
         figsize=(12, 8),
         panel_ratios=(2, 1),  # Ratio between price and volume panels
         addplot=apds,
-        savefig=dict(
-            fname=config['filename'],
-            dpi=100,
-            bbox_inches='tight'
-        ),
-        tight_layout=True,
-        scale_padding={'left': 0.5, 'right': 1.5, 'top': 0.5, 'bottom': 0.5}
+        returnfig=True  # Return figure and axes
+    )
+    
+    # Add subtitle with timeframe info
+    fig.text(0.5, 0.95, config['subtitle'], 
+             horizontalalignment='center',
+             color='white',
+             fontsize=10)
+    
+    # Add volume statistics
+    volume_stats = f"Avg Volume: ${avg_volume:,.0f}"
+    axes[2].text(0.02, 0.95, volume_stats,
+                 transform=axes[2].transAxes,
+                 color='white',
+                 fontsize=8)
+    
+    # Add legend for EMAs
+    axes[0].legend(['EMA20', 'EMA50'], 
+                  loc='upper left',
+                  facecolor='black',
+                  edgecolor='white',
+                  fontsize=8)
+    
+    # Add timestamp
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M UTC')
+    fig.text(0.98, 0.02, f'Generated: {timestamp}',
+             horizontalalignment='right',
+             color='gray',
+             fontsize=8)
+    
+    # Save the chart
+    plt.savefig(
+        config['filename'],
+        dpi=100,
+        bbox_inches='tight',
+        facecolor='black',
+        edgecolor='none'
     )
     
     # Close any open figures to free memory
-    plt.close('all')
+    plt.close(fig)
+    
+    # Print statistics for verification
+    print(f"\nChart Statistics for {config['title']}:")
+    print(f"Current Price: ${current_price:.4f}")
+    print(f"ATH: ${ath:.4f}")
+    print(f"ATL: ${atl:.4f}")
+    print(f"Average Price: ${avg_price:.4f}")
+    print(f"Price Change: {price_change:+.2f}%")
+    print(f"Average Volume: ${avg_volume:,.2f}")
 
 def generate_all_charts():
     for config in CHART_CONFIGS:
