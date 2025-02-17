@@ -17,22 +17,22 @@ export function ChartFlow() {
   const [lastPrice, setLastPrice] = useState(100);
 
   const generateCandle = (id: number, prevClose: number): Candle => {
-    const maxMove = prevClose * 0.02; // 2% max movement
+    const maxMove = prevClose * 0.03; // Augmenté à 3% pour plus de volatilité
     const moveAmount = Math.random() * maxMove;
     
-    // If previous candle was bullish (close higher than open)
-    // then next candle has higher chance of being bearish
     const direction = prevClose > lastPrice ? 
-      (Math.random() > 0.8 ? 1 : -1) : // 20% chance to continue up
-      (Math.random() > 0.2 ? 1 : -1);  // 80% chance to go up
+      (Math.random() > 0.8 ? 1 : -1) : 
+      (Math.random() > 0.2 ? 1 : -1);  
       
     const close = prevClose + (direction * moveAmount);
     
-    // Generate wicks
+    // Mèches plus aléatoires
     const bodyRange = Math.abs(close - prevClose);
-    const wickSize = bodyRange * 0.5;
-    const high = Math.max(prevClose, close) + (Math.random() * wickSize);
-    const low = Math.min(prevClose, close) - (Math.random() * wickSize);
+    const upperWickSize = bodyRange * (0.3 + Math.random() * 1.2); // Entre 30% et 150% du corps
+    const lowerWickSize = bodyRange * (0.3 + Math.random() * 1.2);
+    
+    const high = Math.max(prevClose, close) + upperWickSize;
+    const low = Math.min(prevClose, close) - lowerWickSize;
 
     setLastPrice(prevClose); // Keep track of last price for trend
 
@@ -64,7 +64,7 @@ export function ChartFlow() {
         const newCandle = generateCandle(prev[prev.length - 1].id + 1, prev[prev.length - 1].close);
         return [...prev.slice(1), newCandle];
       });
-    }, 1000);
+    }, 666); // 1000ms / 1.5 = ~666ms pour speed x1.5
 
     return () => clearInterval(interval);
   }, []);
