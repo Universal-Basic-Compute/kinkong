@@ -199,8 +199,8 @@ async function analyzeMarketSentiment(): Promise<WeeklyAnalysis> {
     const solSnapshots = tokenSnapshots['SOL'] || [];
     const solPerformance = solSnapshots.length > 0 ? solSnapshots[0].priceChange24h : 0;
     
-    // Calculate AI token average performance
-    const aiPerformance = tokens
+    // Calculate AI token average performance (SINGLE calculation used throughout)
+    const aiTokenPerformance = tokens
       .filter(t => t !== 'SOL')
       .reduce((sum, token) => {
         const snapshots = tokenSnapshots[token];
@@ -289,7 +289,7 @@ async function analyzeMarketSentiment(): Promise<WeeklyAnalysis> {
         percentAboveAvg,
         volumeGrowth,
         percentVolumeOnUpDays,
-        aiVsSolPerformance: aiPerformance - solPerformance,
+        aiVsSolPerformance: aiTokenPerformance - solPerformance,
         tokensAnalyzed: tokens.length,
         totalVolume: totalVolumeThisWeek,
         upDayVolume: volumeOnUpDays
