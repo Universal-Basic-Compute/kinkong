@@ -4,9 +4,9 @@ import pandas as pd
 from datetime import datetime, timedelta
 import requests
 
-def fetch_ubc_data():
-    # DexScreener API endpoint for UBC/USDC pair on Raydium
-    url = "https://api.dexscreener.com/latest/dex/pairs/solana/HZRCwxP2Vq9PCpPXooayhJ2bxTpo5xfpQrwB1svh332p"
+def fetch_ubc_sol_data():
+    # DexScreener API endpoint for UBC/SOL pair
+    url = "https://api.dexscreener.com/latest/dex/pairs/solana/hbjg1zpronbeiv86qdt1wzwgymts1ppxjcfoz819cbjd"
     
     try:
         response = requests.get(url)
@@ -34,14 +34,14 @@ def fetch_ubc_data():
         df = pd.DataFrame(df_data)
         df.set_index('Date', inplace=True)
         
-        print(f"Fetched {len(df)} candles for UBC")
-        print(f"Latest price: ${float(pair['priceUsd']):.4f}")
-        print(f"24h volume: ${float(pair['volume']['h24']):.2f}")
+        print(f"Fetched {len(df)} candles for UBC/SOL")
+        print(f"Latest price: {float(pair['priceNative']):.8f} SOL")
+        print(f"24h volume: {float(pair['volume']['h24']):.2f} USD")
         
         return df
         
     except Exception as e:
-        print(f"Error fetching UBC data: {e}")
+        print(f"Error fetching UBC/SOL data: {e}")
         return None
 
 def create_sample_data():
@@ -72,8 +72,8 @@ def create_sample_data():
     return df
 
 def generate_chart():
-    # Get UBC data
-    df = fetch_ubc_data()
+    # Get UBC/SOL data
+    df = fetch_ubc_sol_data()
     
     if df is None:
         print("Using sample data as fallback...")
@@ -105,8 +105,8 @@ def generate_chart():
         type='candle',
         volume=True,
         style=style,
-        title='UBC/USDC 24H Chart',
-        ylabel='Price (USDC)',
+        title='UBC/SOL 24H Chart',
+        ylabel='Price (SOL)',
         ylabel_lower='Volume',
         returnfig=True,
         figsize=(12, 8),
