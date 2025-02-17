@@ -179,19 +179,39 @@ export async function executeReallocation() {
       ])
     );
 
-    // Get current prices for all tokens
+    // Get current prices for all tokens using mints
     const tokenPrices = new Map<string, number>();
     for (const [token] of currentPortfolio) {
-      if (['USDC', 'USDT'].includes(token.trim())) {
+      const cleanToken = token.trim();
+      
+      if (['USDC', 'USDT'].includes(cleanToken)) {
         tokenPrices.set(token, 1); // Stablecoins are always $1
-      } else {
-        const price = await getTokenPrice(token.trim());
-        if (price) {
-          tokenPrices.set(token, price);
-          console.log(`Price for ${token}: $${price}`);
+        continue;
+      }
+
+      // Get mint for the token
+      const tokenRecord = await tokensTable
+        .select({
+          filterByFormula: `{symbol} = '${cleanToken}'`
+        })
+        .firstPage();
+
+      if (tokenRecord.length > 0) {
+        const mint = tokenRecord[0].get('mint') as string;
+        if (mint) {
+          console.log(`Getting price for ${cleanToken} using mint: ${mint}`);
+          const price = await getTokenPrice(mint);
+          if (price) {
+            tokenPrices.set(token, price);
+            console.log(`Found price for ${cleanToken} (${mint}): $${price}`);
+          } else {
+            console.warn(`Could not get price for ${cleanToken} mint: ${mint}`);
+          }
         } else {
-          console.warn(`Could not get price for ${token}`);
+          console.warn(`No mint found for token ${cleanToken}`);
         }
+      } else {
+        console.warn(`No token record found for ${cleanToken}`);
       }
     }
 

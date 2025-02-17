@@ -12,15 +12,17 @@ interface DexScreenerResponse {
   pairs?: DexScreenerPair[];
 }
 
-export async function getTokenPrice(symbol: string): Promise<number | null> {
+export async function getTokenPrice(mint: string): Promise<number | null> {
   try {
     // Skip price fetch for stables
-    if (['USDC', 'USDT'].includes(symbol)) {
+    if (mint === 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v' || // USDC
+        mint === 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB') { // USDT
       return 1;
     }
     
+    console.log(`Fetching price from DexScreener for mint: ${mint}`);
     const response = await fetch(
-      `https://api.dexscreener.com/latest/dex/search?q=${symbol}`
+      `https://api.dexscreener.com/latest/dex/tokens/${mint}`
     );
     
     if (!response.ok) {
@@ -31,13 +33,16 @@ export async function getTokenPrice(symbol: string): Promise<number | null> {
     
     // Get the first pair with USDC or USDT
     const pair = data.pairs?.find((p: DexScreenerPair) => 
-      p.baseToken.symbol.toUpperCase() === symbol.toUpperCase() &&
       ['USDC', 'USDT'].includes(p.quoteToken.symbol)
     );
 
+    if (pair) {
+      console.log(`Found price for mint ${mint}: ${pair.priceUsd}`);
+    }
+
     return pair ? parseFloat(pair.priceUsd) : null;
   } catch (error) {
-    console.error(`Failed to fetch price for ${symbol}:`, error);
+    console.error(`Failed to fetch price for mint ${mint}:`, error);
     return null;
   }
 }
