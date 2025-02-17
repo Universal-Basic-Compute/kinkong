@@ -1,7 +1,7 @@
 'use client';
 import { AllocationChart } from '@/components/dashboard/AllocationChart'
-import { TradeHistory } from '@/components/tables/TradeHistory'
 import { TokenTable } from '@/components/tables/TokenTable'
+import { SignalHistory } from '@/components/signals/SignalHistory'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useState, useEffect } from 'react'
 
@@ -103,7 +103,7 @@ export default function Dashboard() {
 
       <section className="mt-8">
         <h2 className="text-2xl font-bold mb-4">Recent Signals</h2>
-        <TradeHistory userOnly={true} />
+        <SignalHistory />
       </section>
     </main>
   )
