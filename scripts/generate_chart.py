@@ -161,14 +161,14 @@ def generate_chart(df, config, support_levels=None):
     avg_volume = df['Volume'].mean()
     price_change = ((df['Close'].iloc[-1] - df['Close'].iloc[0]) / df['Close'].iloc[0]) * 100
     
-    # Create more detailed title components with dollar signs
+    # Create more detailed title components
     main_title = config['title']
     price_stats = (
-        rf"Current: ${current_price:.4f} ({price_change:+.2f}%) | "
-        rf"ATH: ${ath:.4f} | ATL: ${atl:.4f} | "
-        rf"Avg: ${avg_price:.4f}"
+        f"Current: {current_price:.4f} ({price_change:+.2f}%) | "
+        f"ATH: {ath:.4f} | ATL: {atl:.4f} | "
+        f"Avg: {avg_price:.4f}"
     )
-    volume_stats = rf"Avg Vol: ${avg_volume:,.2f} | {len(df)} candles"
+    volume_stats = f"Avg Vol: {avg_volume:,.2f} | {len(df)} candles"
     
     # Enhanced subtitle with more technical info
     technical_info = (
@@ -208,6 +208,13 @@ def generate_chart(df, config, support_levels=None):
             apds.append(
                 mpf.make_addplot([price] * len(df), color=color, linestyle='--')
             )
+            
+    # Define formatters for currency and volume
+    def currency_formatter(x, p):
+        return f'${x:,.4f}'
+
+    def volume_formatter(x, p):
+        return f'${x:,.0f}'
     
     # Create figure with adjusted layout and log scale
     fig, axes = mpf.plot(
@@ -233,32 +240,37 @@ def generate_chart(df, config, support_levels=None):
              horizontalalignment='center',
              color='white',
              fontsize=14,
-             fontweight='bold')
+             fontweight='bold',
+             math=False)
     
     fig.text(0.5, 0.94, price_stats,
              horizontalalignment='center',
              color='#ffd700',  # Gold color for price stats
-             fontsize=11)
+             fontsize=11,
+             math=False)
     
     fig.text(0.5, 0.92, volume_stats,
              horizontalalignment='center',
              color='#c0c0c0',  # Silver color for volume stats
-             fontsize=10)
+             fontsize=10,
+             math=False)
     
     fig.text(0.5, 0.90, technical_info,
              horizontalalignment='center',
              color='#808080',  # Gray color for technical info
-             fontsize=9)
+             fontsize=9,
+             math=False)
     
     # Add support/resistance levels info if present
     if support_levels:
-        support_text = "Support Levels: " + " | ".join([rf"${price:.4f}" for _, price in support_levels if _=='support'])
-        resistance_text = "Resistance Levels: " + " | ".join([rf"${price:.4f}" for _, price in support_levels if _=='resistance'])
+        support_text = "Support Levels: " + " | ".join([f"{price:.4f}" for _, price in support_levels if _=='support'])
+        resistance_text = "Resistance Levels: " + " | ".join([f"{price:.4f}" for _, price in support_levels if _=='resistance'])
         
         fig.text(0.5, 0.88, support_text + "\n" + resistance_text,
                 horizontalalignment='center',
                 color='#a0a0a0',
-                fontsize=9)
+                fontsize=9,
+                math=False)
 
     # Adjust main chart position to account for title space
     plt.subplots_adjust(top=0.85)
@@ -268,7 +280,7 @@ def generate_chart(df, config, support_levels=None):
     ax_volume = axes[2]
     
     # Format price axis (y-axis) with log scale
-    ax_main.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.4f}'))
+    ax_main.yaxis.set_major_formatter(plt.FuncFormatter(currency_formatter))
     ax_main.yaxis.label.set_color('white')
     ax_main.yaxis.set_label_position('right')
     ax_main.tick_params(axis='y', colors='white', labelsize=10)
@@ -290,7 +302,7 @@ def generate_chart(df, config, support_levels=None):
                     color='gray', va='center', fontsize=8)
     
     # Format volume axis
-    ax_volume.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.0f}'))
+    ax_volume.yaxis.set_major_formatter(plt.FuncFormatter(volume_formatter))
     ax_volume.yaxis.label.set_color('white')
     ax_volume.yaxis.set_label_position('right')
     ax_volume.tick_params(axis='y', colors='white', labelsize=10)
