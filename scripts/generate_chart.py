@@ -219,7 +219,7 @@ def generate_chart(df, config, support_levels=None):
         
         if df is None or df.empty:
             print("No data available for chart generation")
-            return
+            return False
         
         # Calculate key statistics
         print("Calculating statistics...")
@@ -349,15 +349,34 @@ def generate_chart(df, config, support_levels=None):
                 color='#808080',
                 fontsize=9)
     
-    # Add support/resistance levels info if present
-    if support_levels:
-        support_text = "Support Levels: " + " | ".join([f"{format_price(price)}" for _, price in support_levels if _=='support'])
-        resistance_text = "Resistance Levels: " + " | ".join([f"{format_price(price)}" for _, price in support_levels if _=='resistance'])
+        # Add support/resistance levels info if present
+        if support_levels:
+            support_text = "Support Levels: " + " | ".join([f"{format_price(price)}" for _, price in support_levels if _=='support'])
+            resistance_text = "Resistance Levels: " + " | ".join([f"{format_price(price)}" for _, price in support_levels if _=='resistance'])
+            
+            fig.text(0.5, 0.88, support_text + "\n" + resistance_text,
+                    horizontalalignment='center',
+                    color='#a0a0a0',
+                    fontsize=9)
+
+        # Save figure
+        plt.savefig(
+            output_path,
+            dpi=150,
+            bbox_inches='tight',
+            facecolor='black',
+            edgecolor='none'
+        )
         
-        fig.text(0.5, 0.88, support_text + "\n" + resistance_text,
-                horizontalalignment='center',
-                color='#a0a0a0',
-                fontsize=9)
+        # Explicitly close the figure
+        plt.close(fig)
+        
+        print(f"Successfully saved chart to {output_path}")
+        return True
+        
+    except Exception as e:
+        print(f"Error generating chart: {str(e)}")
+        return False
 
     # Adjust main chart position to account for title space
     plt.subplots_adjust(top=0.85)
