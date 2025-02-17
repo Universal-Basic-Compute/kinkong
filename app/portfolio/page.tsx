@@ -4,6 +4,21 @@ import { TokenTable } from '@/components/tables/TokenTable'
 import { useState, useEffect } from 'react'
 import { PerformanceChart } from '@/components/charts/PerformanceChart'
 
+const STRATEGY_INFO = {
+  performance: `Historical portfolio performance tracking:
+• Daily value snapshots
+• Realized & unrealized gains
+• Risk-adjusted returns
+• Drawdown analysis
+• Position-level P&L tracking
+• Volume-weighted performance metrics`,
+  allocation: `KinKong's allocation strategy:
+• Dynamic position sizing based on market conditions
+• Risk-weighted exposure across AI tokens
+• Regular rebalancing to maintain optimal ratios
+• Liquidity-aware position management`
+};
+
 interface TokenInfo {
   symbol: string;
   name: string;
@@ -101,11 +116,7 @@ export default function Portfolio() {
                 i
               </div>
               <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-80 p-2 bg-black/90 border border-gold/20 rounded-lg text-xs text-gray-300 z-10 whitespace-pre-line">
-                KinKong's allocation strategy:
-                • Dynamic position sizing based on market conditions
-                • Risk-weighted exposure across AI tokens
-                • Regular rebalancing to maintain optimal ratios
-                • Liquidity-aware position management
+                {STRATEGY_INFO.allocation}
               </div>
             </div>
           </div>
