@@ -19,11 +19,19 @@ def fetch_ubc_sol_data():
         pair = data['pairs'][0]
         candles = pair.get('priceData', {}).get('h1', [])  # Get hourly candles
 
+        if not candles:
+            raise ValueError("No candle data available")
+
+        # Debug print to see the data structure
+        print("First candle data:", candles[0] if candles else "No candles")
+        
         # Convert API data to DataFrame
         df_data = []
         for candle in candles[-24:]:  # Get last 24 hours
+            # Convert timestamp from milliseconds to datetime
+            date = pd.to_datetime(candle['timestamp'], unit='s')
             df_data.append({
-                'Date': datetime.fromtimestamp(candle['timestamp']),
+                'Date': date,
                 'Open': float(candle['open']),
                 'High': float(candle['high']),
                 'Low': float(candle['low']),
@@ -31,17 +39,27 @@ def fetch_ubc_sol_data():
                 'Volume': float(candle['volume'])
             })
         
+        # Create DataFrame and set index
         df = pd.DataFrame(df_data)
         df.set_index('Date', inplace=True)
+        
+        # Sort index to ensure chronological order
+        df = df.sort_index()
         
         print(f"Fetched {len(df)} candles for UBC/SOL")
         print(f"Latest price: {float(pair['priceNative']):.8f} SOL")
         print(f"24h volume: {float(pair['volume']['h24']):.2f} USD")
         
+        # Debug print DataFrame
+        print("\nDataFrame head:")
+        print(df.head())
+        
         return df
         
     except Exception as e:
         print(f"Error fetching UBC/SOL data: {e}")
+        if 'response' in locals():
+            print("API Response:", response.text)
         return None
 
 def create_sample_data():
