@@ -20,7 +20,7 @@ def fetch_ubc_sol_data():
     params = {
         "address": "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump",  # UBC token address
         "address_type": "token",  # Added required parameter
-        "type": "15m",  # Changed from 1H to 15m as per API docs
+        "type": "1H",  # Back to 1H for hourly candles
         "time_from": int((datetime.now() - timedelta(days=1)).timestamp()),
         "time_to": int(datetime.now().timestamp())
     }
