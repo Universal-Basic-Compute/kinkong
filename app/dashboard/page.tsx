@@ -102,6 +102,7 @@ export default function Dashboard() {
   const [trackedTokens, setTrackedTokens] = useState<TokenInfo[]>([]);
   const [isTrackedTokensLoading, setIsTrackedTokensLoading] = useState(true);
   const [trackedTokensError, setTrackedTokensError] = useState<string | null>(null);
+  const [isTableVisible, setIsTableVisible] = useState(false);
 
   useEffect(() => {
     async function fetchTrackedTokens() {
@@ -128,6 +129,8 @@ export default function Dashboard() {
         <div className="stat-card">
           <h3>Signal Success Rate</h3>
           <p className="text-2xl">XX%</p>
+            </div>
+          )}
         </div>
         <div className="stat-card">
           <h3>Pending Profits</h3>
@@ -210,8 +213,22 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Table View */}
-        <div className="bg-black/30 p-8 rounded-lg border border-gold/20">
+        {/* Collapsible Table Section */}
+        <div className="mt-8">
+          <button 
+            onClick={() => setIsTableVisible(!isTableVisible)}
+            className="w-full flex items-center justify-between p-4 bg-black/30 border border-gold/20 rounded-lg hover:bg-gold/5 transition-colors"
+          >
+            <span className="text-lg font-medium">More Information</span>
+            {isTableVisible ? (
+              <ChevronUpIcon className="w-5 h-5 text-gold" />
+            ) : (
+              <ChevronDownIcon className="w-5 h-5 text-gold" />
+            )}
+          </button>
+          
+          {isTableVisible && (
+            <div className="mt-4 bg-black/30 p-8 rounded-lg border border-gold/20">
           {isTrackedTokensLoading ? (
             <div className="text-center py-4">Loading tokens...</div>
           ) : trackedTokensError ? (
