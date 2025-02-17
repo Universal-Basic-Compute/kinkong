@@ -1,14 +1,5 @@
 import { createCanvas } from 'canvas';
-import { 
-    createChart,
-    ISeriesApi,
-    SeriesOptionsMap,
-    CandlestickData,
-    LineData,
-    HistogramData,
-    ColorType,
-    Time
-} from 'lightweight-charts';
+import { Chart, ChartConfiguration, ChartData } from 'chart.js/auto';
 
 interface Candlestick {
     timestamp: number;
@@ -27,90 +18,116 @@ interface ChartData {
 }
 
 export async function generateTokenChart(token: string): Promise<Buffer> {
-    const width = 800;
-    const height = 400;
+    // Get data
+    const data = await getChartData(token);
     
     // Create canvas
-    const canvas = createCanvas(width, height);
+    const canvas = createCanvas(800, 400);
     const ctx = canvas.getContext('2d');
     
     // Create chart
-    const chart = createChart(canvas as any, {
-        width: width,
-        height: height,
-        layout: {
-            background: { type: ColorType.Solid, color: '#000000' },
-            textColor: '#d1d4dc',
+    new Chart(ctx, {
+        type: 'candlestick',
+        data: {
+            datasets: [
+                // Candlestick dataset
+                {
+                    label: token,
+                    data: data.candlesticks.map(candle => ({
+                        x: new Date(candle.timestamp * 1000),
+                        o: candle.open,
+                        h: candle.high,
+                        l: candle.low,
+                        c: candle.close
+                    })),
+                    color: {
+                        up: 'rgba(75, 192, 75, 1)',
+                        down: 'rgba(192, 75, 75, 1)',
+                        unchanged: 'rgba(192, 192, 192, 1)',
+                    }
+                },
+                // EMA 20 line
+                {
+                    type: 'line',
+                    label: 'EMA 20',
+                    data: data.ema20.map(point => ({
+                        x: new Date(point.time * 1000),
+                        y: point.value
+                    })),
+                    borderColor: 'rgba(255, 215, 0, 0.8)',
+                    borderWidth: 1,
+                    pointRadius: 0,
+                },
+                // EMA 50 line
+                {
+                    type: 'line',
+                    label: 'EMA 50',
+                    data: data.ema50.map(point => ({
+                        x: new Date(point.time * 1000),
+                        y: point.value
+                    })),
+                    borderColor: 'rgba(75, 192, 192, 0.8)',
+                    borderWidth: 1,
+                    pointRadius: 0,
+                },
+                // Volume bars
+                {
+                    type: 'bar',
+                    label: 'Volume',
+                    data: data.volume.map(v => ({
+                        x: new Date(v.time * 1000),
+                        y: v.value
+                    })),
+                    backgroundColor: 'rgba(128, 128, 128, 0.2)',
+                    yAxisID: 'volume'
+                }
+            ]
         },
-        grid: {
-            vertLines: { color: 'rgba(255, 215, 0, 0.1)' },
-            horzLines: { color: 'rgba(255, 215, 0, 0.1)' },
-        },
+        options: {
+            responsive: false,
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'hour'
+                    },
+                    grid: {
+                        color: 'rgba(255, 215, 0, 0.1)'
+                    },
+                    ticks: {
+                        color: '#d1d4dc'
+                    }
+                },
+                y: {
+                    position: 'right',
+                    grid: {
+                        color: 'rgba(255, 215, 0, 0.1)'
+                    },
+                    ticks: {
+                        color: '#d1d4dc'
+                    }
+                },
+                volume: {
+                    position: 'left',
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#d1d4dc'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    labels: {
+                        color: '#d1d4dc'
+                    }
+                }
+            },
+            backgroundColor: 'black'
+        }
     });
-    
-    // Get historical data
-    const data = await getChartData(token);
-    
-    // Add candlestick series
-    const candlestickSeries = chart.addCandlestickSeries({
-        upColor: 'rgba(75, 192, 75, 1)',
-        downColor: 'rgba(192, 75, 75, 1)',
-        wickUpColor: 'rgba(75, 192, 75, 1)',
-        wickDownColor: 'rgba(192, 75, 75, 1)',
-    });
-    
-    // Format data for lightweight-charts
-    const candleData: CandlestickData[] = data.candlesticks.map(candle => ({
-        time: new Date(candle.timestamp * 1000).toISOString().split('T')[0] as Time,
-        open: candle.open,
-        high: candle.high,
-        low: candle.low,
-        close: candle.close,
-    }));
-    
-    candlestickSeries.setData(candleData);
-    
-    // Add EMA lines
-    const ema20Series = chart.addLineSeries({
-        color: 'rgba(255, 215, 0, 0.8)',
-        lineWidth: 1,
-        lineType: 0,
-    });
-    
-    const ema50Series = chart.addLineSeries({
-        color: 'rgba(75, 192, 192, 0.8)',
-        lineWidth: 1,
-        lineType: 0,
-    });
-    
-    const ema20Data: LineData[] = data.ema20.map(point => ({
-        time: new Date(point.time * 1000).toISOString().split('T')[0] as Time,
-        value: point.value,
-    }));
-    
-    const ema50Data: LineData[] = data.ema50.map(point => ({
-        time: new Date(point.time * 1000).toISOString().split('T')[0] as Time,
-        value: point.value,
-    }));
-    
-    ema20Series.setData(ema20Data);
-    ema50Series.setData(ema50Data);
-    
-    // Add volume
-    const volumeSeries = chart.addHistogramSeries({
-        color: 'rgba(128, 128, 128, 0.2)',
-        priceScaleId: '',
-    });
-    
-    const volumeData: HistogramData[] = data.volume.map(v => ({
-        time: new Date(v.time * 1000).toISOString().split('T')[0] as Time,
-        value: v.value,
-    }));
-    
-    volumeSeries.setData(volumeData);
-    
-    // Fit content
-    chart.timeScale().fitContent();
     
     // Convert to buffer
     const buffer = canvas.toBuffer('image/png');
