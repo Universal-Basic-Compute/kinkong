@@ -54,7 +54,10 @@ async function getWeeklyMetrics(): Promise<{ [key: string]: TokenMetrics[] }> {
     
     console.log('🔍 Querying tokens since:', sevenDaysAgo.toISOString());
     const records = await tokensTable.select({
-      filterByFormula: `IS_AFTER({createdAt}, '${sevenDaysAgo.toISOString()}')`,
+      filterByFormula: `AND(
+        IS_AFTER({createdAt}, '${sevenDaysAgo.toISOString()}'),
+        NOT({name} = '')
+      )`,
       sort: [{ field: 'createdAt', direction: 'desc' }]
     }).all();
 
@@ -64,9 +67,13 @@ async function getWeeklyMetrics(): Promise<{ [key: string]: TokenMetrics[] }> {
     const tokenSnapshots: { [key: string]: TokenMetrics[] } = {};
     
     records.forEach(record => {
-      const token = record.get('symbol') as string;
+      // Use 'name' field instead of 'symbol'
+      const token = record.get('name') as string;
       if (!token) {
-        console.log('Warning: Record missing symbol:', record.id);
+        console.log('Warning: Record missing name:', {
+          id: record.id,
+          fields: record.fields
+        });
         return;
       }
 
@@ -74,6 +81,15 @@ async function getWeeklyMetrics(): Promise<{ [key: string]: TokenMetrics[] }> {
         tokenSnapshots[token] = [];
       }
       
+      // Add more detailed logging for each record
+      console.log(`Processing record for ${token}:`, {
+        price: record.get('price'),
+        price7dAvg: record.get('price7dAvg'),
+        volume7d: record.get('volume7d'),
+        volumeOnUpDay: record.get('volumeOnUpDay'),
+        priceChange24h: record.get('priceChange24h')
+      });
+
       tokenSnapshots[token].push({
         symbol: token,
         price: record.get('price') as number || 0,
@@ -94,6 +110,10 @@ async function getWeeklyMetrics(): Promise<{ [key: string]: TokenMetrics[] }> {
         has7dAvg: snapshots[0]?.price7dAvg > 0
       });
     });
+
+    if (Object.keys(tokenSnapshots).length === 0) {
+      throw new Error('No valid token data found in snapshots');
+    }
 
     return tokenSnapshots;
   } catch (error) {
