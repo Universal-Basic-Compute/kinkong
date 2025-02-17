@@ -7,19 +7,23 @@ import { FieldSet } from 'airtable';
 import fetch from 'node-fetch';
 import { Response } from 'node-fetch';
 
-interface BirdeyeResponse {
-  volume24h?: number;
-  volumeChange24h?: number;
-  priceChange24h?: number;
-  holder?: number;
-}
-
-interface JupiterResponse {
-  data?: {
-    [key: string]: {
-      liquidity?: number;
+interface DexScreenerResponse {
+  pairs?: Array<{
+    baseToken?: {
+      address: string;
+      symbol: string;
     };
-  };
+    priceUsd?: string;
+    liquidity?: {
+      usd: number;
+    };
+    volume?: {
+      h24: number;
+    };
+    priceChange?: {
+      h24: number;
+    };
+  }>;
 }
 
 // Add debug logging BEFORE config
@@ -121,49 +125,21 @@ interface TokenData extends FieldSet {
   holderCount: number;
 }
 
-async function getBirdeyeData(mint: string): Promise<BirdeyeResponse> {
-  try {
-    const response = await fetch(`https://public-api.birdeye.so/public/token_list/token_meta?address=${mint}`, {
-      headers: {
-        'X-API-KEY': BIRDEYE_API_KEY!
-      }
-    });
-    const data = await response.json() as BirdeyeResponse;
-    return data;
-  } catch (error) {
-    console.warn(`Warning: Failed to fetch Birdeye data for ${mint}:`, error);
-    return {};
-  }
-}
-
-async function getJupiterData(mint: string, retries = 3): Promise<JupiterResponse> {
+async function getDexScreenerData(mint: string, retries = 3): Promise<DexScreenerResponse> {
+  const DEXSCREENER_API = 'https://api.dexscreener.com/latest/dex/tokens';
+  
   for (let i = 0; i < retries; i++) {
     try {
-      console.log(`Attempting to fetch Jupiter data for ${mint} (attempt ${i + 1}/${retries})...`);
+      console.log(`Attempting to fetch DexScreener data for ${mint} (attempt ${i + 1}/${retries})...`);
       
-      // Use timeout promise instead of AbortController
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout')), 5000)
-      );
-      
-      const fetchPromise = fetch(
-        `https://price.jup.ag/v4/price?ids=${mint}`,
-        {
-          headers: {
-            'Accept': 'application/json'
-          }
-        }
-      );
-
-      // Race between fetch and timeout
-      const response = await Promise.race([fetchPromise, timeoutPromise]) as Response;
+      const response = await fetch(`${DEXSCREENER_API}/${mint}`);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json() as JupiterResponse;
-      console.log(`Successfully fetched Jupiter data for ${mint}`);
+      const data = await response.json() as DexScreenerResponse;
+      console.log(`Successfully fetched DexScreener data for ${mint}`);
       return data;
 
     } catch (error) {
@@ -188,17 +164,15 @@ async function fetchTokenData(): Promise<TokenData[]> {
     try {
       console.log(`Processing ${token.symbol}...`);
       
-      // Get Birdeye data
-      const birdeyeData = await getBirdeyeData(token.mint);
+      // Get DexScreener data
+      const dexScreenerData = await getDexScreenerData(token.mint);
+      const pair = dexScreenerData.pairs?.[0]; // Use first pair found
       
-      // Get Jupiter data
-      const jupiterData = await getJupiterData(token.mint);
-
       // Use existing data from initial-tokens.csv as fallback
-      const volume7d = 30000000; // Default high volume
-      const liquidity = 8000000;  // Default good liquidity
+      const volume7d = (pair?.volume?.h24 || 0) * 7 || 30000000; // Default high volume
+      const liquidity = pair?.liquidity?.usd || 8000000;  // Default good liquidity
       const volumeGrowth = 25;    // Default positive growth
-      const pricePerformance = 25; // Default positive performance
+      const pricePerformance = pair?.priceChange?.h24 || 25; // Default positive performance
       const holderCount = 3000;    // Default holder count
 
       tokenData.push({
@@ -206,11 +180,11 @@ async function fetchTokenData(): Promise<TokenData[]> {
         description: token.description,
         mint: token.mint,
         isActive: true,
-        volume7d: (birdeyeData.volume24h ?? 0) * 7 || volume7d,
-        liquidity: jupiterData.data?.[token.mint]?.liquidity ?? liquidity,
-        volumeGrowth: birdeyeData.volumeChange24h ?? volumeGrowth,
-        pricePerformance: birdeyeData.priceChange24h ?? pricePerformance,
-        holderCount: birdeyeData.holder ?? holderCount
+        volume7d,
+        liquidity,
+        volumeGrowth,
+        pricePerformance,
+        holderCount
       });
 
       // Add delay between requests
