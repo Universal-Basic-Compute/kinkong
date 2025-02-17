@@ -496,12 +496,9 @@ Best Timeframe: {overall.get('best_timeframe', 'N/A')}
             message += f"Signal: {analysis.signal} ({analysis.confidence}% confidence)\n"
             message += f"{analysis.reasoning}\n\n"
 
-Key Observations:
-{chr(10).join(f"• {obs}" for obs in overall.get('key_observations', ['No observations']))}
-
-Recommended Action:
-{overall.get('recommended_action', {}).get('reasoning', 'No recommendation')}
-"""
+    message += "Key Observations:\n"
+    message += "\n".join(f"• {obs}" for obs in overall.get('key_observations', ['No observations']))
+    message += f"\n\nRecommended Action:\n{overall.get('recommended_action', {}).get('reasoning', 'No recommendation')}"
 
     # Only send to Telegram if there are high confidence signals
     if high_confidence_signals:
