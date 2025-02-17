@@ -241,22 +241,22 @@ def generate_chart(df, config, support_levels=None):
         volume_yscale='linear'  # Keep volume linear
     )
     
-    # Adjust title spacing and add components
-    # Format text without using $ signs directly
-    def format_price(price):
-        return f"{price:.4f}"
+        # Adjust title spacing and add components
+        # Format text without using $ signs directly
+        def format_price(price):
+            return f"{price:.4f}"
 
-    def format_volume(vol):
-        return f"{vol:,.2f}"
+        def format_volume(vol):
+            return f"{vol:,.2f}"
 
-    # Create title components
-    main_title = config['title']
-    price_stats = (
-        f"Current: {format_price(current_price)} ({price_change:+.2f}%) | "
-        f"ATH: {format_price(ath)} | ATL: {format_price(atl)} | "
-        f"Avg: {format_price(avg_price)}"
-    )
-    volume_stats = f"Avg Vol: {format_volume(avg_volume)} | {len(df)} candles"
+        # Create title components
+        main_title = config['title']
+        price_stats = (
+            f"Current: {format_price(current_price)} ({price_change:+.2f}%) | "
+            f"ATH: {format_price(ath)} | ATL: {format_price(atl)} | "
+            f"Avg: {format_price(avg_price)}"
+        )
+        volume_stats = f"Avg Vol: {format_volume(avg_volume)} | {len(df)} candles"
     
     # Add text without math parameter
     fig.text(0.5, 0.97, main_title,
