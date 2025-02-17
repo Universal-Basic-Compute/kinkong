@@ -1,5 +1,6 @@
 import { Token, getTable } from '../airtable/tables';
 import { getTokenPrice } from '../utils/prices';
+import { getTokenPrice } from '../utils/prices';
 
 interface TokenScore {
   symbol: string;
@@ -187,16 +188,36 @@ export async function executeReallocation() {
     // 4. Generate trade orders
     const orders: TradeOrder[] = [];
     
+    // Get current portfolio value
+    let totalPortfolioValue = 0;
+    const tokenValues = new Map<string, number>();
+
+    // Calculate total portfolio value
+    for (const score of tokenScores) {
+      const price = await getTokenPrice(score.symbol);
+      if (price) {
+        const value = score.currentAllocation * price;
+        tokenValues.set(score.symbol, value);
+        totalPortfolioValue += value;
+      }
+    }
+
     // Calculate required trades to reach target allocations
     for (const score of tokenScores) {
-      const difference = score.targetAllocation - score.currentAllocation;
+      const currentValue = tokenValues.get(score.symbol) || 0;
+      const currentPercentage = (currentValue / totalPortfolioValue) * 100;
+      const targetValue = (score.targetAllocation / 100) * totalPortfolioValue;
+      const difference = targetValue - currentValue;
       
       // Only trade if adjustment > 3%
-      if (Math.abs(difference) > 3) {
+      if (Math.abs(difference) / totalPortfolioValue * 100 > 3) {
+        const price = await getTokenPrice(score.symbol);
+        if (!price) continue;
+
         orders.push({
           token: score.symbol,
           action: difference > 0 ? 'BUY' : 'SELL',
-          amount: Math.abs(difference),
+          amount: Math.abs(difference) / price, // Convert USD amount to token amount
           reason: `Reallocation: ${score.finalScore.toFixed(2)} score, ${difference > 0 ? 'increasing' : 'decreasing'} allocation`
         });
       }
