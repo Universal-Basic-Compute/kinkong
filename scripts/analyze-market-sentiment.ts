@@ -64,27 +64,35 @@ async function getWeeklyMetrics(): Promise<{ [key: string]: TokenMetrics[] }> {
     const tokenSnapshots: { [key: string]: TokenMetrics[] } = {};
     
     records.forEach(record => {
-      const token = record.get('token') as string;
+      const token = record.get('symbol') as string;
+      if (!token) {
+        console.log('Warning: Record missing symbol:', record.id);
+        return;
+      }
+
       if (!tokenSnapshots[token]) {
         tokenSnapshots[token] = [];
       }
       
       tokenSnapshots[token].push({
         symbol: token,
-        price: record.get('price') as number,
-        price7dAvg: record.get('price7dAvg') as number,
-        volume24h: record.get('volume24h') as number,
-        volumeOnUpDay: record.get('volumeOnUpDay') as boolean,
-        priceChange24h: record.get('priceChange24h') as number
+        price: record.get('price') as number || 0,
+        price7dAvg: record.get('price7dAvg') as number || 0,
+        volume24h: record.get('volume7d') as number / 7 || 0,
+        volumeOnUpDay: record.get('volumeOnUpDay') as boolean || false,
+        priceChange24h: record.get('priceChange24h') as number || 0
       });
     });
 
-    const tokenCount = Object.keys(tokenSnapshots).length;
-    console.log(`✅ Processed snapshots for ${tokenCount} tokens`);
-    
-    // Validate data quality
+    // Log data quality for each token
     Object.entries(tokenSnapshots).forEach(([token, snapshots]) => {
-      console.log(`📈 ${token}: ${snapshots.length} snapshots, Latest price: $${snapshots[0]?.price.toFixed(4)}`);
+      console.log(`📈 ${token}:`, {
+        snapshots: snapshots.length,
+        latestPrice: snapshots[0]?.price.toFixed(4),
+        latestChange: snapshots[0]?.priceChange24h.toFixed(2) + '%',
+        hasVolume: snapshots[0]?.volume24h > 0,
+        has7dAvg: snapshots[0]?.price7dAvg > 0
+      });
     });
 
     return tokenSnapshots;
@@ -176,6 +184,10 @@ async function analyzeMarketSentiment(): Promise<WeeklyAnalysis> {
     const tokenSnapshots = await getWeeklyMetrics();
     const tokens = Object.keys(tokenSnapshots);
     
+    if (tokens.length === 0) {
+      throw new Error('No token data available for analysis');
+    }
+    
     // Initialize counters
     let tokensAboveAvg = 0;
     let volumeOnUpDays = 0;
@@ -186,32 +198,31 @@ async function analyzeMarketSentiment(): Promise<WeeklyAnalysis> {
     // Get SOL performance for comparison
     const solSnapshots = tokenSnapshots['SOL'] || [];
     const solPerformance = solSnapshots.length > 0 ? solSnapshots[0].priceChange24h : 0;
-    console.log(`📊 SOL Performance: ${solPerformance.toFixed(2)}%`);
     
-    // Analyze each token
-    console.log('\n🔍 Analyzing individual tokens:');
+    // Calculate AI token average performance
+    const aiPerformance = tokens
+      .filter(t => t !== 'SOL')
+      .reduce((sum, token) => {
+        const snapshots = tokenSnapshots[token];
+        return snapshots.length > 0 ? sum + snapshots[0].priceChange24h : sum;
+      }, 0) / (tokens.length - 1);
+
+    // Process each token's data
     tokens.forEach(token => {
       const snapshots = tokenSnapshots[token];
-      if (snapshots.length === 0) {
-        console.log(`⚠️ No snapshots found for ${token}`);
-        return;
-      }
+      if (snapshots.length === 0) return;
+
+      const latestSnapshot = snapshots[0];
       
       // Check if above 7-day average
-      const latestSnapshot = snapshots[0];
-      const isAboveAvg = latestSnapshot.price > latestSnapshot.price7dAvg;
-      if (isAboveAvg) {
+      if (latestSnapshot.price > latestSnapshot.price7dAvg) {
         tokensAboveAvg++;
       }
-      
+
       // Process volume data
-      const tokenUpDays = snapshots.filter(s => s.volumeOnUpDay).length;
-      volumeOnUpDays += tokenUpDays;
+      volumeOnUpDays += snapshots.filter(s => s.volumeOnUpDay).length;
       totalVolumeDays += snapshots.length;
-      
-      // Calculate weekly volumes
-      const thisWeekVolume = snapshots.reduce((sum, s) => sum + s.volume24h, 0);
-      totalVolumeThisWeek += thisWeekVolume;
+      totalVolumeThisWeek += snapshots.reduce((sum, s) => sum + s.volume24h, 0);
       
       if (snapshots.length > 7) {
         const prevWeekVolume = snapshots.slice(7).reduce((sum, s) => sum + s.volume24h, 0);
