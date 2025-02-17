@@ -13,6 +13,7 @@ export async function GET() {
 
     const tokens = records.map(record => ({
       symbol: record.get('symbol'),
+      name: record.get('name'),
       mint: record.get('mint'),
       volume7d: record.get('volume7d'),
       liquidity: record.get('liquidity'),
