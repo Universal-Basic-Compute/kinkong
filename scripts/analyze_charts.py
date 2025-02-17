@@ -380,7 +380,7 @@ Analyze each timeframe in sequence, considering how they relate to each other:
         raise
 
 def create_airtable_signal(analysis, timeframe, token_info):
-    """Create a signal record in Airtable"""
+    """Create a signal record in Airtable and check for immediate execution"""
     try:
         # Initialize Airtable
         base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
@@ -476,26 +476,75 @@ def create_airtable_signal(analysis, timeframe, token_info):
                 market_data=get_dexscreener_data(token_info['mint'])
             )
 
-            if not validation_result['valid']:
+            if validation_result['valid']:
+                # Get current market price
+                market_data = get_dexscreener_data(token_info['mint'])
+                market_price = market_data['price'] if market_data else None
+                
+                if not market_price:
+                    print("Could not get current price for immediate execution check")
+                    return None
+
+                # Check if price is already at entry level
+                entry_price = float(signal_data['entryPrice'])
+                price_threshold = 0.01  # 1% threshold
+                ready_to_execute = False
+
+                if signal_data['type'] == 'BUY':
+                    ready_to_execute = market_price <= entry_price * (1 + price_threshold)
+                else:  # SELL
+                    ready_to_execute = market_price >= entry_price * (1 - price_threshold)
+
+                # Add validation results to signal data
+                signal_data.update({
+                    'expectedProfit': validation_result['expected_profit'],
+                    'tradingCosts': validation_result['costs'],
+                    'riskRewardRatio': validation_result['risk_reward']
+                })
+                
+                print("\nSending to Airtable:", json.dumps(signal_data, indent=2))
+                
+                # Create record and get response
+                response = airtable.insert(signal_data)
+                signal_id = response['id']
+
+                if ready_to_execute:
+                    print(f"Signal {signal_id} ready for immediate execution")
+                    try:
+                        # Calculate position size
+                        position_size = calculate_position_size(signal_data, market_data)
+                        
+                        if position_size:
+                            # Update signal with position size and activate it
+                            airtable.update(signal_id, {
+                                'status': 'ACTIVE',
+                                'amount': position_size,
+                                'entryValue': position_size * market_price,
+                                'activationTime': datetime.now(timezone.utc).isoformat(),
+                                'lastUpdateTime': datetime.now(timezone.utc).isoformat()
+                            })
+                            
+                            # Record status change
+                            status_table = Airtable(base_id, 'SIGNAL_STATUS_HISTORY', api_key)
+                            status_table.insert({
+                                'signalId': signal_id,
+                                'status': 'ACTIVE',
+                                'timestamp': datetime.now(timezone.utc).isoformat(),
+                                'reason': f'Immediate execution at {market_price:.4f} with position size {position_size:.4f}'
+                            })
+                            
+                            print(f"Activated signal {signal_id} with position size {position_size:.4f}")
+                        else:
+                            print(f"Could not calculate position size for signal {signal_id}")
+                    except Exception as e:
+                        print(f"Failed to activate signal {signal_id}: {e}")
+                else:
+                    print(f"Signal {signal_id} created but not ready for immediate execution")
+
+                return response
+            else:
                 print(f"Signal validation failed: {validation_result['reason']}")
                 return None
-
-            # Add validation results to signal data
-            signal_data.update({
-                'expectedProfit': validation_result['expected_profit'],
-                'tradingCosts': validation_result['costs'],
-                'riskRewardRatio': validation_result['risk_reward']
-            })
-            
-            print("\nSending to Airtable:", json.dumps(signal_data, indent=2))
-            
-            # Create record and get response
-            response = airtable.insert(signal_data)
-            
-            print(f"\nAirtable response: {json.dumps(response, indent=2)}")
-            print(f"Created {signal_type} signal in Airtable for {timeframe} timeframe")
-            
-            return response
         else:
             print(f"Skipping signal creation for HOLD signal on {timeframe} timeframe")
             return None
