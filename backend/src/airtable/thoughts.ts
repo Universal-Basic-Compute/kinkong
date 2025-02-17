@@ -25,7 +25,7 @@ export async function createThought(params: CreateThoughtParams): Promise<void> 
   }).base(process.env.KINOS_AIRTABLE_BASE_ID);
 
   try {
-    const table = kinosBase('THOUGHTS');
+    const table = kinosBase.table('THOUGHTS');
     await table.create({
       thoughtId: `trade-${Date.now()}`,
       swarmId: 'kinkong',
@@ -51,7 +51,7 @@ export async function getLastThoughts(count: number = 50): Promise<Thought[]> {
   }).base(process.env.KINOS_AIRTABLE_BASE_ID);
 
   try {
-    const table = kinosBase('THOUGHTS');
+    const table = kinosBase.table('THOUGHTS');
     
     const records = await table
       .select({
