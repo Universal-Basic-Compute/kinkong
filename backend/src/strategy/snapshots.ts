@@ -247,7 +247,7 @@ export async function recordPortfolioSnapshot() {
     const classification = classifyMarket(notificationMetrics);
 
     // Send notifications
-    await sendNotifications(notificationMetrics.metrics, classification);
+    await sendNotifications(notificationMetrics, classification);
 
     return { totalValue, snapshots };
 
