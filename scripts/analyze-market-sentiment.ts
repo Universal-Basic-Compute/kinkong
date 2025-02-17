@@ -214,8 +214,11 @@ async function analyzeMarketSentiment(): Promise<WeeklyAnalysis> {
 
       const latestSnapshot = snapshots[0];
       
+      const isAboveAvg = latestSnapshot.price > latestSnapshot.price7dAvg;
+      const tokenUpDays = snapshots.filter(s => s.volumeOnUpDay).length;
+      
       // Check if above 7-day average
-      if (latestSnapshot.price > latestSnapshot.price7dAvg) {
+      if (isAboveAvg) {
         tokensAboveAvg++;
       }
 
@@ -231,8 +234,7 @@ async function analyzeMarketSentiment(): Promise<WeeklyAnalysis> {
 
       console.log(`${token}:
         Price: $${latestSnapshot.price.toFixed(4)}
-        Above 7d Avg: ${isAboveAvg ? '✅' : '❌'}
-        Up Days: ${tokenUpDays}/${snapshots.length}
+        Above 7d Avg: ${latestSnapshot.price > latestSnapshot.price7dAvg ? '✅' : '❌'}
         24h Change: ${latestSnapshot.priceChange24h.toFixed(2)}%
       `.replace(/^\s+/gm, ''));
     });
