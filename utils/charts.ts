@@ -51,7 +51,8 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     const data = await getChartData(token);
     
     // Add candlestick series
-    const candlestickSeries = chart.addSeries('Candlestick', {
+    const candlestickSeries = chart.addSeries({
+        type: 'Candlestick',
         upColor: 'rgba(75, 192, 75, 1)',
         downColor: 'rgba(192, 75, 75, 1)',
         borderVisible: false,
@@ -71,12 +72,14 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     candlestickSeries.setData(candleData);
     
     // Add EMA lines
-    const ema20Series = chart.addSeries('Line', {
+    const ema20Series = chart.addSeries({
+        type: 'Line',
         color: 'rgba(255, 215, 0, 0.8)',
         lineWidth: 1,
     });
     
-    const ema50Series = chart.addSeries('Line', {
+    const ema50Series = chart.addSeries({
+        type: 'Line',
         color: 'rgba(75, 192, 192, 0.8)',
         lineWidth: 1,
     });
@@ -95,7 +98,8 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     ema50Series.setData(ema50Data);
     
     // Add volume
-    const volumeSeries = chart.addSeries('Histogram', {
+    const volumeSeries = chart.addSeries({
+        type: 'Histogram',
         color: 'rgba(128, 128, 128, 0.2)',
         priceFormat: {
             type: 'volume',
