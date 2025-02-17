@@ -456,6 +456,9 @@ def generate_signal(analyses, token_info):  # Add token_info parameter
     # Extract timeframe analyses (excluding 'overall' key)
     timeframe_analyses = {k: v for k, v in analyses.items() if k != 'overall'}
     
+    # Track which signals we've already sent to avoid duplicates
+    processed_signals = set()
+    
     # Check timeframe alignment
     signals_aligned = all(
         analyses[tf].signal == list(timeframe_analyses.values())[0].signal 
