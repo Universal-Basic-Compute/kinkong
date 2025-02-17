@@ -182,9 +182,11 @@ export async function executeReallocation() {
       ])
     );
 
-    // Calculate total USD value first
+    // Calculate total USD value first - this is the ACTUAL total value from wallet
     const totalValue = Array.from(currentPortfolio.values())
       .reduce((sum, holding) => sum + (holding.usdValue || 0), 0);
+
+    console.log('Actual portfolio total value:', totalValue.toFixed(2));
 
     // Get current prices for all tokens using mints
     const tokenPrices = new Map<string, number>();
@@ -289,10 +291,16 @@ export async function executeReallocation() {
     for (const score of tokenScores) {
       const currentValue = currentPortfolio.get(score.symbol)?.usdValue || 0;
       const currentPercentage = (currentValue / totalValue) * 100;
-      const targetValue = (score.targetAllocation / 100) * totalValue;
+      
+      // Calculate target value based on actual portfolio value
+      const targetValue = Math.min(
+        (score.targetAllocation / 100) * totalValue,
+        currentValue + 5000 // Never increase by more than $5000
+      );
+      
       const difference = targetValue - currentValue;
       
-      // Only trade if adjustment > 3%
+      // Only trade if adjustment > 3% and we have enough funds
       if (Math.abs(difference) / totalValue * 100 > 3) {
         const price = await getTokenPrice(score.symbol);
         if (!price) {
@@ -300,7 +308,7 @@ export async function executeReallocation() {
           continue;
         }
 
-        console.log(`${score.symbol}: Current: ${currentPercentage.toFixed(2)}%, Target: ${score.targetAllocation}%, Difference: $${difference.toFixed(2)}`);
+        console.log(`${score.symbol}: Current: ${currentPercentage.toFixed(2)}%, Target: ${(targetValue/totalValue*100).toFixed(2)}%, Difference: $${difference.toFixed(2)}`);
 
         const tokenAmount = Math.abs(difference) / price;
         potentialOrders.push({
