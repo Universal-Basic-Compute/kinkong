@@ -400,40 +400,42 @@ def create_airtable_signal(analysis, timeframe, token_info):
         }
         
         # Map confidence to LOW/MEDIUM/HIGH
-        confidence_level = 'LOW' if analysis.confidence < 40 else 'HIGH' if analysis.confidence > 75 else 'MEDIUM'
+        confidence = analysis.get('confidence', 0)  # Get confidence from dict
+        confidence_level = 'LOW' if confidence < 40 else 'HIGH' if confidence > 75 else 'MEDIUM'
 
         # Extract price levels from analysis
-        support_levels = analysis.key_levels.get('support', [])
-        resistance_levels = analysis.key_levels.get('resistance', [])
+        key_levels = analysis.get('key_levels', {})
+        support_levels = key_levels.get('support', [])
+        resistance_levels = key_levels.get('resistance', [])
         
         # Calculate entry, target and stop prices
-        current_price = support_levels[0] if analysis.signal == 'BUY' else resistance_levels[0] if resistance_levels else None
-        target_price = resistance_levels[0] if analysis.signal == 'BUY' else support_levels[0] if support_levels else None
-        stop_price = support_levels[1] if analysis.signal == 'BUY' else resistance_levels[1] if len(resistance_levels) > 1 else None
+        current_price = support_levels[0] if analysis.get('signal') == 'BUY' else resistance_levels[0] if resistance_levels else None
+        target_price = resistance_levels[0] if analysis.get('signal') == 'BUY' else support_levels[0] if support_levels else None
+        stop_price = support_levels[1] if analysis.get('signal') == 'BUY' else resistance_levels[1] if len(resistance_levels) > 1 else None
 
         # Print debug info
         print(f"\nCreating signal with parameters:")
         print(f"Timeframe: {timeframe} -> {timeframe_mapping.get(timeframe)}")
-        print(f"Signal: {analysis.signal}")
-        print(f"Confidence: {analysis.confidence} -> {confidence_level}")
+        print(f"Signal: {analysis.get('signal')}")
+        print(f"Confidence: {confidence} -> {confidence_level}")
         print(f"Prices - Entry: {current_price}, Target: {target_price}, Stop: {stop_price}")
         
         # Create signal record
-        if analysis.signal in ['BUY', 'SELL']:
+        if analysis.get('signal') in ['BUY', 'SELL']:
             signal_data = {
                 'timestamp': datetime.now(timezone.utc).isoformat(),
-                'token': token_info['symbol'],  # Use the actual token symbol
-                'type': analysis.signal,
+                'token': token_info['symbol'],
+                'type': analysis.get('signal'),
                 'timeframe': timeframe_mapping.get(timeframe, 'INTRADAY'),
                 'entryPrice': current_price,
                 'targetPrice': target_price,
                 'stopLoss': stop_price,
                 'confidence': confidence_level,
                 'wallet': os.getenv('STRATEGY_WALLET', ''),
-                'reason': (f"{analysis.reasoning}\n\n"
+                'reason': (f"{analysis.get('reasoning', '')}\n\n"
                           f"Support Levels: {', '.join(map(str, support_levels))}\n"
                           f"Resistance Levels: {', '.join(map(str, resistance_levels))}\n"
-                          f"R/R Ratio: {analysis.risk_reward_ratio if analysis.risk_reward_ratio else 'N/A'}")
+                          f"R/R Ratio: {analysis.get('risk_reward_ratio', 'N/A')}")
             }
             
             print("\nSending to Airtable:", json.dumps(signal_data, indent=2))
