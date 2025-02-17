@@ -9,6 +9,7 @@ interface PortfolioMetrics {
 }
 
 export function MetricsDisplay() {
+  console.log('🚨 METRICS DISPLAY COMPONENT MOUNTED 🚨');
   const [metrics, setMetrics] = useState<PortfolioMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
