@@ -12,19 +12,30 @@ export async function recordPortfolioSnapshot() {
       return sum + (holding.allocation * price);
     }, 0);
 
+    // Format holdings as a string for Airtable
+    const holdingsString = JSON.stringify(portfolio.map(holding => ({
+      token: holding.token,
+      amount: holding.allocation,
+      price: prices[holding.token] || 0,
+      value: holding.allocation * (prices[holding.token] || 0)
+    })));
+
     const snapshot = {
       timestamp: new Date().toISOString(),
       totalValue,
-      holdings: portfolio.map(holding => ({
-        token: holding.token,
-        amount: holding.allocation,
-        price: prices[holding.token] || 0,
-        value: holding.allocation * (prices[holding.token] || 0)
-      }))
+      holdingsJson: holdingsString // Store as JSON string in Airtable
     };
 
     const table = getTable('PORTFOLIO_SNAPSHOTS');
-    await table.create([{ fields: snapshot }]);
+    await table.create([
+      {
+        fields: {
+          timestamp: snapshot.timestamp,
+          totalValue: snapshot.totalValue,
+          holdingsJson: snapshot.holdingsJson
+        }
+      }
+    ]);
 
     return snapshot;
   } catch (error) {
