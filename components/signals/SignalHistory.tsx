@@ -225,8 +225,10 @@ export function SignalHistory() {
                   {signal.wallet.slice(0, 4)}...{signal.wallet.slice(-4)}
                 </a>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                {signal.reason || '-'}
+              <td className="px-6 py-4">
+                <p className="text-xs text-gray-300 line-clamp-2 max-h-12 overflow-hidden">
+                  {signal.reason || '-'}
+                </p>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">
                 {signal.url ? (
