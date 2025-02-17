@@ -20,8 +20,6 @@ interface TokenInfo {
   marketCap: number;
 }
 
-import { InvestmentCard } from '@/components/dashboard/InvestmentCard';
-
 export default function Dashboard() {
   const { publicKey } = useWallet();
   const [trackedTokens, setTrackedTokens] = useState<TokenInfo[]>([]);
