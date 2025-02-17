@@ -11,16 +11,25 @@ interface PortfolioMetrics {
 export function MetricsDisplay() {
   const [metrics, setMetrics] = useState<PortfolioMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
+        console.log('Fetching metrics...');
         const response = await fetch('/api/portfolio-metrics');
-        if (!response.ok) throw new Error('Failed to fetch portfolio metrics');
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch metrics: ${response.status}`);
+        }
+        
         const data = await response.json();
+        console.log('Received metrics data:', data);
         setMetrics(data);
       } catch (error) {
-        console.error('Error fetching portfolio metrics:', error);
+        console.error('Error fetching metrics:', error);
+        setError(error instanceof Error ? error.message : 'Unknown error');
       } finally {
         setIsLoading(false);
       }
@@ -28,6 +37,8 @@ export function MetricsDisplay() {
 
     fetchMetrics();
   }, []);
+
+  console.log('Current state:', { metrics, isLoading, error });
 
   const metricsData = [
     { 
@@ -48,6 +59,10 @@ export function MetricsDisplay() {
       unit: "Weekly Return" 
     }
   ];
+
+  if (error) {
+    return <div className="text-red-500">Error loading metrics: {error}</div>;
+  }
 
   return (
     <>
