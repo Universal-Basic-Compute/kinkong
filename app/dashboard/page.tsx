@@ -1,6 +1,7 @@
 import { AllocationChart } from '@/components/dashboard/AllocationChart'
 import { SignalForm } from '@/components/signals/SignalForm'
 import { TradeHistory } from '@/components/tables/TradeHistory'
+import { TokenTable } from '@/components/tables/TokenTable'
 
 export default function Dashboard() {
   return (
