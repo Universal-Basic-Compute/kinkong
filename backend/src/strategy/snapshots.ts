@@ -4,6 +4,71 @@ import { getTokenPrices } from '../utils/jupiter';
 import fetch from 'node-fetch';
 import Airtable from 'airtable';
 
+function classifyMarket(metrics: WeeklyAnalysis['metrics']): MarketClassification {
+  let bullishPoints = 0;
+  let bearishPoints = 0;
+  const reasons: string[] = [];
+
+  // Analyze percent above average
+  if (metrics.percentAboveAvg > 60) {
+    bullishPoints += 2;
+    reasons.push(`${metrics.percentAboveAvg.toFixed(1)}% of tokens above 7d average`);
+  } else if (metrics.percentAboveAvg < 40) {
+    bearishPoints += 2;
+    reasons.push(`Only ${metrics.percentAboveAvg.toFixed(1)}% of tokens above 7d average`);
+  }
+
+  // Analyze volume growth
+  if (metrics.volumeGrowth > 10) {
+    bullishPoints += 2;
+    reasons.push(`Volume up ${metrics.volumeGrowth.toFixed(1)}% from last week`);
+  } else if (metrics.volumeGrowth < -10) {
+    bearishPoints += 2;
+    reasons.push(`Volume down ${Math.abs(metrics.volumeGrowth).toFixed(1)}% from last week`);
+  }
+
+  // Analyze volume on up days
+  if (metrics.percentVolumeOnUpDays > 60) {
+    bullishPoints += 1;
+    reasons.push(`${metrics.percentVolumeOnUpDays.toFixed(1)}% of volume on up days`);
+  } else if (metrics.percentVolumeOnUpDays < 40) {
+    bearishPoints += 1;
+    reasons.push(`Only ${metrics.percentVolumeOnUpDays.toFixed(1)}% of volume on up days`);
+  }
+
+  // Analyze AI vs SOL performance
+  if (metrics.aiVsSolPerformance > 5) {
+    bullishPoints += 1;
+    reasons.push(`AI tokens outperforming SOL by ${metrics.aiVsSolPerformance.toFixed(1)}%`);
+  } else if (metrics.aiVsSolPerformance < -5) {
+    bearishPoints += 1;
+    reasons.push(`AI tokens underperforming SOL by ${Math.abs(metrics.aiVsSolPerformance).toFixed(1)}%`);
+  }
+
+  // Calculate total points and confidence
+  const totalPoints = bullishPoints + bearishPoints;
+  let confidence = 0;
+  let sentiment: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+
+  if (bullishPoints > bearishPoints) {
+    sentiment = 'BULLISH';
+    confidence = (bullishPoints / totalPoints) * 100;
+  } else if (bearishPoints > bullishPoints) {
+    sentiment = 'BEARISH';
+    confidence = (bearishPoints / totalPoints) * 100;
+  } else {
+    sentiment = 'NEUTRAL';
+    confidence = 50;
+    reasons.push('Mixed signals with no clear direction');
+  }
+
+  return {
+    sentiment,
+    confidence,
+    reasons
+  };
+}
+
 interface WeeklyAnalysis {
   metrics: {
     percentAboveAvg: number;
