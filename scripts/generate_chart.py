@@ -215,12 +215,12 @@ def generate_chart(df, config, support_levels=None):
                     mpf.make_addplot([price] * len(df), color=color, linestyle='--')
                 )
             
-    # Define formatters for currency and volume
-    def currency_formatter(x, p):
-        return f'${x:,.4f}'
+        # Define formatters for currency and volume
+        def currency_formatter(x, p):
+            return f'${x:,.4f}'
 
-    def volume_formatter(x, p):
-        return f'${x:,.0f}'
+        def volume_formatter(x, p):
+            return f'${x:,.0f}'
     
     # Create figure with adjusted layout and log scale
     fig, axes = mpf.plot(
