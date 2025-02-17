@@ -1,3 +1,5 @@
+import { getTable } from '../airtable/tables';
+
 const DEXSCREENER_API = 'https://api.dexscreener.com/latest/dex';
 
 interface DexScreenerPair {
