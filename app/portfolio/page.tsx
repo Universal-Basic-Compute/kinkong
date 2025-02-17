@@ -3,24 +3,10 @@ import { AllocationChart } from '@/components/dashboard/AllocationChart'
 import { TokenTable } from '@/components/tables/TokenTable'
 import { useState, useEffect } from 'react'
 
-const [isLoading, setIsLoading] = useState(true);
-const [error, setError] = useState<string | null>(null);
-const [metrics, setMetrics] = useState<{
-  totalValue: number;
-  change24h: number;
-  change7d: number;
-  history: Array<{timestamp: string; value: number}>;
-} | null>(null);
-
-function getChangeClass(value: number | undefined) {
-  if (!value) return '';
-  return value >= 0 ? 'text-green-400' : 'text-red-400';
-}
-
-function formatChange(value: number | undefined) {
-  if (!value) return '0.00';
-  return value.toFixed(2);
-}
+'use client';
+import { AllocationChart } from '@/components/dashboard/AllocationChart'
+import { TokenTable } from '@/components/tables/TokenTable'
+import { useState, useEffect } from 'react'
 
 interface TokenInfo {
   symbol: string;
