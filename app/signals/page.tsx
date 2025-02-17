@@ -16,6 +16,8 @@ interface TokenInfo {
 }
 
 function getTokenClass(token: string): string {
+  if (!token) return 'metallic-text-argent'; // Default style if token is undefined
+  
   const upperToken = token.toUpperCase();
   switch (upperToken) {
     case 'UBC':
