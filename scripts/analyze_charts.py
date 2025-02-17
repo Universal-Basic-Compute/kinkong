@@ -469,21 +469,27 @@ def create_airtable_signal(analysis, timeframe):
 
 def generate_signal(analyses):
     """Generate combined signal from multiple timeframe analyses"""
+    # Extract timeframe analyses (excluding 'overall' key)
+    timeframe_analyses = {k: v for k, v in analyses.items() if k != 'overall'}
+    
     # Check timeframe alignment
-    signals_aligned = all(a.signal == analyses[0].signal for a in analyses)
+    signals_aligned = all(
+        analyses[tf].signal == list(timeframe_analyses.values())[0].signal 
+        for tf in timeframe_analyses.keys()
+    )
     
     if signals_aligned:
-        base_confidence = max(a.confidence for a in analyses)
+        base_confidence = max(a.confidence for a in timeframe_analyses.values())
         confidence_boost = 20  # Boost confidence when all timeframes align
     else:
-        base_confidence = statistics.mean(a.confidence for a in analyses)
+        base_confidence = statistics.mean(a.confidence for a in timeframe_analyses.values())
         confidence_boost = 0
     
     # Group analyses by timeframe
     signals = {
-        'short_term': next((a for a in analyses if a.timeframe == '15m'), None),
-        'medium_term': next((a for a in analyses if a.timeframe == '2h'), None),
-        'long_term': next((a for a in analyses if a.timeframe == '8h'), None)
+        'short_term': timeframe_analyses.get('15m'),
+        'medium_term': timeframe_analyses.get('2h'),
+        'long_term': timeframe_analyses.get('8h')
     }
     
     # Apply confidence adjustment
@@ -495,13 +501,13 @@ def generate_signal(analyses):
             )
     
     # Create signals in Airtable
-    for timeframe, analysis in signals.items():
+    for timeframe, analysis in timeframe_analyses.items():
         if analysis and analysis.signal != 'HOLD':  # Only create signals for BUY/SELL
-            create_airtable_signal(analysis, analysis.timeframe)
+            create_airtable_signal(analysis, timeframe)
 
     # Create detailed message
     def format_reassessment(analysis):
-        if not analysis.reassess_conditions:
+        if not analysis or not analysis.reassess_conditions:
             return ""
         
         conditions = analysis.reassess_conditions
@@ -512,26 +518,35 @@ Reassessment Conditions:
 📈 Technical Events: {', '.join(conditions['technical_events'])}
 """
 
+    # Overall analysis from Claude
+    overall = analyses.get('overall', {})
+    
     message = f"""🔄 UBC Technical Analysis Update
 
+Primary Trend: {overall.get('primary_trend', 'N/A')}
+Timeframe Alignment: {overall.get('timeframe_alignment', 'N/A')}
+Best Timeframe: {overall.get('best_timeframe', 'N/A')}
+
 Short-term (15m):
-Signal: {signals['short_term'].signal} ({signals['short_term'].confidence}% confidence)
-{signals['short_term'].reasoning}
-{format_reassessment(signals['short_term']) if signals['short_term'].signal == 'HOLD' else ''}
+Signal: {signals['short_term'].signal if signals['short_term'] else 'N/A'} ({signals['short_term'].confidence if signals['short_term'] else 'N/A'}% confidence)
+{signals['short_term'].reasoning if signals['short_term'] else 'No analysis'}
+{format_reassessment(signals['short_term']) if signals['short_term'] and signals['short_term'].signal == 'HOLD' else ''}
 
 Medium-term (2h):
-Signal: {signals['medium_term'].signal} ({signals['medium_term'].confidence}% confidence)
-{signals['medium_term'].reasoning}
-{format_reassessment(signals['medium_term']) if signals['medium_term'].signal == 'HOLD' else ''}
+Signal: {signals['medium_term'].signal if signals['medium_term'] else 'N/A'} ({signals['medium_term'].confidence if signals['medium_term'] else 'N/A'}% confidence)
+{signals['medium_term'].reasoning if signals['medium_term'] else 'No analysis'}
+{format_reassessment(signals['medium_term']) if signals['medium_term'] and signals['medium_term'].signal == 'HOLD' else ''}
 
 Long-term (8h):
-Signal: {signals['long_term'].signal} ({signals['long_term'].confidence}% confidence)
-{signals['long_term'].reasoning}
-{format_reassessment(signals['long_term']) if signals['long_term'].signal == 'HOLD' else ''}
+Signal: {signals['long_term'].signal if signals['long_term'] else 'N/A'} ({signals['long_term'].confidence if signals['long_term'] else 'N/A'}% confidence)
+{signals['long_term'].reasoning if signals['long_term'] else 'No analysis'}
+{format_reassessment(signals['long_term']) if signals['long_term'] and signals['long_term'].signal == 'HOLD' else ''}
 
-Key Levels:
-Support: {', '.join(map(str, signals['medium_term'].key_levels['support']))}
-Resistance: {', '.join(map(str, signals['medium_term'].key_levels['resistance']))}
+Key Observations:
+{chr(10).join(f"• {obs}" for obs in overall.get('key_observations', ['No observations']))}
+
+Recommended Action:
+{overall.get('recommended_action', {}).get('reasoning', 'No recommendation')}
 """
 
     # Send to Telegram
