@@ -231,9 +231,9 @@ def generate_chart(df, config, support_levels=None):
         if timeframe == '15m':
             candle_width = 0.008  # Good for short term
         elif timeframe == '2H':
-            candle_width = 0.04   # Increased from 0.03 for better medium term visibility
+            candle_width = 0.04   # Good for medium term
         elif timeframe == '8H':
-            candle_width = 0.06   # Increased from 0.045 for better long term visibility
+            candle_width = 0.12   # Increased from 0.08 for much better long term visibility
         else:
             candle_width = 0.02   # Default width
         
