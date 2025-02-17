@@ -1,6 +1,12 @@
 'use client';
 import { useEffect, useState } from 'react';
 
+interface TokenMetadata {
+  name: string;
+  symbol: string;
+  image?: string;
+}
+
 interface TokenBalance {
   mint: string;
   amount: number;
@@ -9,6 +15,19 @@ interface TokenBalance {
   symbol?: string;
   usdValue?: number;
 }
+
+const TOKEN_METADATA: Record<string, TokenMetadata> = {
+  'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v': {
+    name: 'USD Coin',
+    symbol: 'USDC',
+    image: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/logo.png'
+  },
+  'B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo': {
+    name: 'Compute',
+    symbol: 'COMPUTE',
+    image: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo/logo.png'
+  }
+};
 
 function getTokenClass(token: string): string {
   const upperToken = token.toUpperCase();
@@ -77,6 +96,10 @@ export const TokenTable = () => {
           {tokens.map(token => {
             const usdValue = token.usdValue || 0;
             const percentage = totalValue > 0 ? (usdValue / totalValue * 100) : 0;
+            const metadata = TOKEN_METADATA[token.mint] || {
+              name: token.symbol || token.mint.slice(0, 4),
+              symbol: token.symbol || token.mint.slice(0, 4),
+            };
 
             return (
               <tr key={token.mint} className="border-t border-gold/10">
@@ -85,12 +108,21 @@ export const TokenTable = () => {
                     href={`https://solscan.io/token/${token.mint}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`${getTokenClass(token.symbol || '')} hover:opacity-80`}
+                    className="flex items-center gap-2 hover:opacity-80"
                   >
-                    {token.symbol 
-                      ? formatTokenSymbol(token.symbol)
-                      : `${token.mint.slice(0, 4)}...${token.mint.slice(-4)}`
-                    }
+                    {metadata.image && (
+                      <img 
+                        src={metadata.image} 
+                        alt={metadata.symbol}
+                        className="w-6 h-6 rounded-full"
+                      />
+                    )}
+                    <div>
+                      <div className={getTokenClass(metadata.symbol)}>
+                        {formatTokenSymbol(metadata.symbol)}
+                      </div>
+                      <div className="text-xs text-gray-400">{metadata.name}</div>
+                    </div>
                   </a>
                 </td>
                 <td className="text-right px-4 py-2 text-gray-300">
