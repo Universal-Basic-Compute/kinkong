@@ -69,10 +69,9 @@ export default function Home() {
       <section className="metrics py-20 px-4 bg-gradient-to-b from-black to-darkred/20">
         <h2 className="text-4xl font-bold text-center mb-12 text-gold electric-text">Real Performance Metrics</h2>
         <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Render three instances of MetricsDisplay to fill the grid */}
+          <div className="text-white text-xl">Before MetricsDisplay</div>
           <MetricsDisplay />
-          <MetricsDisplay />
-          <MetricsDisplay />
+          <div className="text-white text-xl">After MetricsDisplay</div>
         </div>
       </section>
 
