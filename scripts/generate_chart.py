@@ -114,14 +114,33 @@ def fetch_ubc_sol_data(timeframe='1h', hours=24):
 def calculate_support_levels(df, window=20):
     """Calculate support and resistance levels using local min/max"""
     levels = []
+    price_threshold = 0.02  # 2% minimum distance between levels
     
     for i in range(window, len(df) - window):
+        # Check for support
         if all(df['Low'].iloc[i] <= df['Low'].iloc[i-window:i+window]):
-            levels.append(('support', df['Low'].iloc[i]))
+            price = df['Low'].iloc[i]
+            # Check if we already have a similar price level
+            if not any(abs(price - existing_price) / price < price_threshold 
+                      for _, existing_price in levels):
+                levels.append(('support', price))
+        
+        # Check for resistance
         if all(df['High'].iloc[i] >= df['High'].iloc[i-window:i+window]):
-            levels.append(('resistance', df['High'].iloc[i]))
+            price = df['High'].iloc[i]
+            # Check if we already have a similar price level
+            if not any(abs(price - existing_price) / price < price_threshold 
+                      for _, existing_price in levels):
+                levels.append(('resistance', price))
     
-    return levels
+    # Sort levels by price
+    levels.sort(key=lambda x: x[1])
+    
+    # Limit to most significant levels (e.g., top 5 of each)
+    support_levels = [l for l in levels if l[0] == 'support'][-5:]
+    resistance_levels = [l for l in levels if l[0] == 'resistance'][:5]
+    
+    return support_levels + resistance_levels
 
 
 def create_sample_data():
@@ -494,6 +513,52 @@ def generate_chart(df, config, support_levels=None):
     # Create charts directory if it doesn't exist
     charts_dir = os.path.join('public', 'charts')
     os.makedirs(charts_dir, exist_ok=True)
+
+    # Add support/resistance levels as horizontal lines
+    if support_levels:
+        # Sort levels by price
+        support_prices = [price for level_type, price in support_levels if level_type == 'support']
+        resistance_prices = [price for level_type, price in support_levels if level_type == 'resistance']
+            
+        # Plot support levels
+        for price in support_prices:
+            ax_main.axhline(
+                y=price,
+                color='#22c55e',  # Green color
+                linestyle='--',
+                alpha=0.3,
+                linewidth=1
+            )
+            # Add price label
+            ax_main.text(
+                df.index[-1],
+                price,
+                f' S: ${price:.4f}',
+                color='#22c55e',
+                alpha=0.8,
+                fontsize=8,
+                va='center'
+            )
+
+        # Plot resistance levels
+        for price in resistance_prices:
+            ax_main.axhline(
+                y=price,
+                color='#ef4444',  # Red color
+                linestyle='--',
+                alpha=0.3,
+                linewidth=1
+            )
+            # Add price label
+            ax_main.text(
+                df.index[-1],
+                price,
+                f' R: ${price:.4f}',
+                color='#ef4444',
+                alpha=0.8,
+                fontsize=8,
+                va='center'
+            )
 
     # Save figure
     output_path = os.path.join(charts_dir, config['filename'])
