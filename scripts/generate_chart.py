@@ -219,7 +219,7 @@ def generate_chart(df, config, support_levels=None):
         ]
 
         # Fixed candle width for ~135 candles
-        candle_width = 0.006  # Fixed width that works well for 135 candles
+        candle_width = 0.02  # Increased from 0.006 to 0.02 for thicker candles
         
         # Create figure with fixed candle width
         fig, axes = mpf.plot(
