@@ -129,6 +129,21 @@ const TOKENS = [
     symbol: 'AKA',
     description: 'She Rises',
     mint: 'SOL'
+  },
+  {
+    symbol: 'USDT',
+    description: 'Tether USD',
+    mint: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'
+  },
+  {
+    symbol: 'UBC',
+    description: 'UBC',
+    mint: '9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump'
+  },
+  {
+    symbol: 'COMPUTE',
+    description: 'Compute',
+    mint: 'B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo'
   }
 ];
 
