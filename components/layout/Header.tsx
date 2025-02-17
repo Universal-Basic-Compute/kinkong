@@ -22,7 +22,7 @@ export default function Header() {
         <div className="flex items-center justify-between p-4">
           <Link 
             href="/" 
-            className="text-gold font-bold text-2xl tracking-tight hover:text-gold/80 transition-colors flex items-center"
+            className="electric-title text-2xl tracking-tight flex items-center"
           >
             🦍 KinKong
             <span className="text-sm text-gray-500 ml-1">(alpha)</span>
