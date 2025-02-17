@@ -176,9 +176,7 @@ def generate_chart(df, config, support_levels=None):
         type='candle',
         volume=True,
         style=style,
-        title=dict(title=config['title'], 
-                  subtitle=config['subtitle'],
-                  style={'color': 'white'}),
+        title=config['title'],  # Just use the main title here
         ylabel='Price (USD)',
         ylabel_lower='Volume',
         returnfig=True,
@@ -186,6 +184,12 @@ def generate_chart(df, config, support_levels=None):
         panel_ratios=(3, 1),
         mav=(20, 50)  # Add 20 and 50 period moving averages
     )
+    
+    # Add subtitle manually
+    plt.figtext(0.5, 0.95, config['subtitle'],
+                ha='center', va='top',
+                color='white', alpha=0.8,
+                fontsize=10)
     
     # Add timestamp to the bottom right
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M UTC')
