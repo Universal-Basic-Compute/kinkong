@@ -772,25 +772,58 @@ Best Timeframe: {overall.get('best_timeframe', 'N/A')}
 
 def main():
     try:
-        # Get all chart files
-        charts_dir = Path('public/charts')
-        chart_files = list(charts_dir.glob('*.png'))
+        print("\n🔄 Starting chart analysis...")
         
-        if not chart_files:
-            raise Exception("No chart files found")
+        # Get token info from Airtable
+        tokens_table = getTable('TOKENS')
+        tokens = tokens_table.select(filterByFormula='{isActive} = 1').all()
+        
+        all_analyses = []
+        
+        for i, token_record in enumerate(tokens, 1):
+            token_info = {
+                'symbol': token_record.get('symbol'),
+                'name': token_record.get('name'),
+                'mint': token_record.get('mint')
+            }
             
-        print(f"Found {len(chart_files)} charts to analyze")
+            print(f"\n📊 Processing token {i}/{len(tokens)}: {token_info['symbol']}")
+            
+            # Get chart paths for this token
+            chart_paths = [
+                Path('public/charts') / token_info['symbol'].lower() / f"{token_info['symbol']}_{tf}_candles_trading_view.png"
+                for tf in ['15m', '2h', '8h']
+            ]
+            
+            # Filter to only existing charts
+            existing_charts = [p for p in chart_paths if p.exists()]
+            
+            if not existing_charts:
+                print(f"❌ No charts found for {token_info['symbol']}")
+                continue
+                
+            try:
+                # Analyze charts
+                analyses = analyze_charts_with_claude(existing_charts, token_info)
+                print(f"\n✅ Analysis completed for {token_info['symbol']}")
+                
+                # Add to batch for processing
+                all_analyses.append((token_info, analyses))
+                
+            except Exception as e:
+                print(f"❌ Error analyzing {token_info['symbol']}: {e}")
+                continue
         
-        # Analyze all charts together
-        analyses = analyze_charts_with_claude(chart_files)
-        
-        # Generate and send signal using all timeframe analyses
-        signal = generate_signal(analyses)
-        
-        print("\nAnalysis completed successfully")
-        
+        # Process all analyses in batch
+        if all_analyses:
+            print(f"\n🔄 Processing {len(all_analyses)} token analyses...")
+            results = process_signals_batch(all_analyses)
+            print(f"\n✅ Generated {len(results)} signals")
+        else:
+            print("\n❌ No analyses to process")
+            
     except Exception as e:
-        print(f"Analysis failed: {e}")
+        print(f"\n❌ Analysis failed: {e}")
         raise
 
 if __name__ == "__main__":
