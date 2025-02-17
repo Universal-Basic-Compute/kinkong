@@ -4,6 +4,8 @@ import pandas as pd
 import mplfinance as mpf
 from dotenv import load_dotenv
 import requests
+import numpy as np
+import matplotlib.pyplot as plt
 
 # Load environment variables
 load_dotenv()
@@ -111,79 +113,6 @@ def calculate_support_levels(df, window=20):
     
     return levels
 
-def generate_chart(df, config, support_levels=None):
-    url = "https://public-api.birdeye.so/defi/ohlcv"
-    headers = {
-        "X-API-KEY": os.getenv('BIRDEYE_API_KEY'),
-        "x-chain": "solana",
-        "accept": "application/json"
-    }
-    
-    # Calculate time range
-    now = int(datetime.now().timestamp())
-    start_time = now - (hours * 60 * 60)
-    
-    params = {
-        "address": "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump",  # UBC token address
-        "type": timeframe,
-        "currency": "usd",
-        "time_from": start_time,
-        "time_to": now
-    }
-    
-    try:
-        print("Requesting URL:", url)
-        print("With params:", params)
-        
-        response = requests.get(url, headers=headers, params=params)
-        print("Response status:", response.status_code)
-        
-        response.raise_for_status()
-        data = response.json()
-        
-        if not data.get('success'):
-            raise ValueError(f"API request failed: {data.get('message')}")
-
-        items = data.get('data', {}).get('items', [])
-        if not items:
-            raise ValueError("No data items returned from Birdeye API")
-
-        # Convert API data to DataFrame
-        df_data = []
-        for item in items:
-            date = pd.to_datetime(item['unixTime'], unit='s')
-            df_data.append({
-                'Date': date,
-                'Open': float(item['o']),
-                'High': float(item['h']),
-                'Low': float(item['l']),
-                'Close': float(item['c']),
-                'Volume': float(item['v'])
-            })
-        
-        # Create DataFrame and set index
-        df = pd.DataFrame(df_data)
-        df.set_index('Date', inplace=True)
-        
-        # Ensure all numeric columns are float type
-        for col in ['Open', 'High', 'Low', 'Close', 'Volume']:
-            df[col] = df[col].astype(float)
-        
-        # Sort index and remove any duplicates
-        df = df.sort_index()
-        df = df[~df.index.duplicated(keep='first')]
-        
-        print(f"\nFetched {len(df)} candles for UBC/SOL")
-        print("\nDataFrame head:")
-        print(df.head())
-        
-        return df
-        
-    except Exception as e:
-        print(f"Error fetching UBC/SOL data: {e}")
-        if 'response' in locals():
-            print("API Response:", response.text)
-        return None
 
 def create_sample_data():
     # Create dates for the last 24 hours with hourly intervals
@@ -213,6 +142,12 @@ def create_sample_data():
     return df
 
 def generate_chart(df, config, support_levels=None):
+    # Create charts directory if it doesn't exist
+    charts_dir = os.path.join('public', 'charts')
+    os.makedirs(charts_dir, exist_ok=True)
+    
+    # Set output path
+    output_path = os.path.join(charts_dir, config['filename'])
     try:
         print(f"Starting chart generation for {config['title']}")
         print(f"Data shape: {df.shape}")
