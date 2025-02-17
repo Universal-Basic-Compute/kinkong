@@ -53,14 +53,13 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     const data = await getChartData(token);
     
     // Add candlestick series
-    const candlestickSeries = chart.addSeries({
-        type: 'Candlestick',
+    const candlestickSeries = chart.addSeries('candlestick', {
         upColor: 'rgba(75, 192, 75, 1)',
         downColor: 'rgba(192, 75, 75, 1)',
         borderVisible: false,
         wickUpColor: 'rgba(75, 192, 75, 1)',
         wickDownColor: 'rgba(192, 75, 75, 1)',
-    });
+    } as CandlestickSeriesOptions);
     
     // Format data for lightweight-charts
     const candleData: CandlestickData[] = data.candlesticks.map(candle => ({
@@ -74,17 +73,15 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     candlestickSeries.setData(candleData);
     
     // Add EMA lines
-    const ema20Series = chart.addSeries({
-        type: 'Line',
+    const ema20Series = chart.addSeries('line', {
         color: 'rgba(255, 215, 0, 0.8)',
         lineWidth: 1,
-    });
+    } as LineSeriesOptions);
     
-    const ema50Series = chart.addSeries({
-        type: 'Line',
+    const ema50Series = chart.addSeries('line', {
         color: 'rgba(75, 192, 192, 0.8)',
         lineWidth: 1,
-    });
+    } as LineSeriesOptions);
     
     const ema20Data: LineData[] = data.ema20.map(point => ({
         time: new Date(point.time * 1000).toISOString().split('T')[0] as Time,
@@ -100,14 +97,13 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     ema50Series.setData(ema50Data);
     
     // Add volume
-    const volumeSeries = chart.addSeries({
-        type: 'Histogram',
+    const volumeSeries = chart.addSeries('histogram', {
         color: 'rgba(128, 128, 128, 0.2)',
         priceFormat: {
             type: 'volume',
         },
         priceScaleId: '',
-    });
+    } as HistogramSeriesOptions);
     
     const volumeData: HistogramData[] = data.volume.map(v => ({
         time: new Date(v.time * 1000).toISOString().split('T')[0] as Time,
