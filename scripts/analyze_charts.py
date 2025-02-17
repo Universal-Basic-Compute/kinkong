@@ -458,7 +458,7 @@ def create_airtable_signal(analysis, timeframe, token_info):
             print(f"Error attributes: {e.__dict__}")
         return None
 
-def generate_signal(analyses, token_info):  # Add token_info parameter
+def generate_signal(analyses, token_info):
     """Generate combined signal from serialized analyses"""
     # Extract timeframe analyses (excluding 'overall' key)
     timeframe_analyses = {k: v for k, v in analyses.items() if k != 'overall'}
@@ -468,46 +468,45 @@ def generate_signal(analyses, token_info):  # Add token_info parameter
     
     # Check timeframe alignment
     signals_aligned = all(
-        analyses[tf]['signal'] == list(timeframe_analyses.values())[0]['signal']
+        analyses[tf].get('signal') == list(timeframe_analyses.values())[0].get('signal')
         for tf in timeframe_analyses.keys()
     )
     
     if signals_aligned:
-        base_confidence = max(a['confidence'] for a in timeframe_analyses.values())
+        base_confidence = max(a.get('confidence', 0) for a in timeframe_analyses.values())
         confidence_boost = 20  # Boost confidence when all timeframes align
     else:
-        base_confidence = statistics.mean(a['confidence'] for a in timeframe_analyses.values())
+        base_confidence = statistics.mean(a.get('confidence', 0) for a in timeframe_analyses.values())
         confidence_boost = 0
     
     # Group analyses by timeframe
     signals = {
-        'short_term': timeframe_analyses.get('15m'),
-        'medium_term': timeframe_analyses.get('2h'),
-        'long_term': timeframe_analyses.get('8h')
+        'short_term': timeframe_analyses.get('15m', {}),
+        'medium_term': timeframe_analyses.get('2h', {}),
+        'long_term': timeframe_analyses.get('8h', {})
     }
-    
     
     # Create signals in Airtable only for high confidence signals
     high_confidence_signals = []
     for timeframe, analysis in timeframe_analyses.items():
         if analysis and analysis.get('signal') != 'HOLD' and analysis.get('confidence', 0) >= 60:
             # Create unique signal identifier
-            signal_id = f"{token_info['symbol']}_{timeframe}_{analysis['signal']}_{datetime.now().strftime('%Y%m%d')}"
+            signal_id = f"{token_info.get('symbol')}_{timeframe}_{analysis.get('signal')}_{datetime.now().strftime('%Y%m%d')}"
             
             if signal_id not in processed_signals:
                 result = create_airtable_signal(analysis, timeframe, token_info)
                 if result:
                     high_confidence_signals.append({
                         'timeframe': timeframe,
-                        'signal': analysis['signal'],
-                        'confidence': analysis['confidence']
+                        'signal': analysis.get('signal'),
+                        'confidence': analysis.get('confidence', 0)
                     })
                     processed_signals.add(signal_id)
 
     # Create detailed message
     overall = analyses.get('overall', {})
     
-    message = f"""🔄 {token_info['symbol']} Technical Analysis Update
+    message = f"""🔄 {token_info.get('symbol')} Technical Analysis Update
 
 Primary Trend: {overall.get('primary_trend', 'N/A')}
 Timeframe Alignment: {overall.get('timeframe_alignment', 'N/A')}
@@ -519,19 +518,19 @@ Best Timeframe: {overall.get('best_timeframe', 'N/A')}
     if high_confidence_signals:
         message += "🎯 High Confidence Signals:\n"
         for signal in high_confidence_signals:
-            message += f"{signal['timeframe']}: {signal['signal']} ({signal['confidence']}% confidence)\n"
+            message += f"{signal.get('timeframe')}: {signal.get('signal')} ({signal.get('confidence')}% confidence)\n"
         message += "\n"
 
     # Add detailed timeframe analysis
     for timeframe, analysis in [
-        ('Short-term (15m)', signals['short_term']),
-        ('Medium-term (2h)', signals['medium_term']),
-        ('Long-term (8h)', signals['long_term'])
+        ('Short-term (15m)', signals.get('short_term', {})),
+        ('Medium-term (2h)', signals.get('medium_term', {})),
+        ('Long-term (8h)', signals.get('long_term', {}))
     ]:
         if analysis:
             message += f"{timeframe}:\n"
-            message += f"Signal: {analysis['signal']} ({analysis['confidence']}% confidence)\n"
-            message += f"{analysis['reasoning']}\n\n"
+            message += f"Signal: {analysis.get('signal')} ({analysis.get('confidence')}% confidence)\n"
+            message += f"{analysis.get('reasoning', 'No reasoning provided')}\n\n"
 
     message += "Key Observations:\n"
     message += "\n".join(f"• {obs}" for obs in overall.get('key_observations', ['No observations']))
