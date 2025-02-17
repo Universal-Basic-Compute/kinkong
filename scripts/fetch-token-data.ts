@@ -3,9 +3,12 @@ import fs from 'fs';
 import path from 'path';
 import { getTable } from '../backend/src/airtable/tables';
 import { FieldSet } from 'airtable';
-
 import fetch from 'node-fetch';
 import { Response } from 'node-fetch';
+
+// Add debug logging BEFORE config
+console.log('Current working directory:', process.cwd());
+console.log('.env path:', path.resolve(process.cwd(), '.env'));
 
 interface DexScreenerResponse {
   pairs?: Array<{
@@ -32,6 +35,22 @@ console.log('.env path:', path.resolve(process.cwd(), '.env'));
 
 // Load .env file
 const result = dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+console.log('dotenv result:', result);
+
+// Check if variables are loaded
+console.log('Environment variables after dotenv:', {
+  KINKONG_AIRTABLE_API_KEY: process.env.KINKONG_AIRTABLE_API_KEY?.slice(0, 10) + '...',
+  KINKONG_AIRTABLE_BASE_ID: process.env.KINKONG_AIRTABLE_BASE_ID,
+});
+
+// Additional environment checks
+console.log('Environment check:', {
+  cwd: process.cwd(),
+  hasAirtableKey: !!process.env.KINKONG_AIRTABLE_API_KEY,
+  hasAirtableBase: !!process.env.KINKONG_AIRTABLE_BASE_ID,
+  hasBirdeyeKey: !!process.env.BIRDEYE_API_KEY,
+  envKeys: Object.keys(process.env).filter(key => key.includes('KINKONG'))
+});
 console.log('dotenv result:', result);
 
 // Check if variables are loaded
@@ -207,7 +226,7 @@ async function updateAirtable(tokenData: TokenData[]) {
     try {
       // Check if token exists
       const records = await table.select({
-        filterByFormula: `{mint} = '${token.mint}'`
+        filterByFormula: `{symbol} = '${token.symbol}'`
       }).firstPage();
 
       if (records.length > 0) {
@@ -246,6 +265,12 @@ async function updateAirtable(tokenData: TokenData[]) {
       }
     } catch (error) {
       console.warn(`Warning: Failed to update Airtable for ${token.symbol}:`, error);
+      // Log more details about the error
+      console.warn('Error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
       // Continue with next token
       continue;
     }
