@@ -63,7 +63,15 @@ export async function GET() {
       const balancesWithUSD = nonZeroBalances.map(balance => {
         // Check if we have price data for this token
         const tokenPriceData = pricesData.data[balance.mint];
-        const price = tokenPriceData ? tokenPriceData.price : 1; // Default to 1 for testing
+        if (!tokenPriceData || !tokenPriceData.price) {
+          console.warn(`No price data found for token ${balance.symbol || balance.mint}`);
+          return {
+            ...balance,
+            usdValue: 0 // Set to 0 if no price data available
+          };
+        }
+
+        const price = tokenPriceData.price;
         const usdValue = balance.uiAmount * price;
         
         console.log(`Token ${balance.symbol || balance.mint}:`, {
@@ -81,11 +89,7 @@ export async function GET() {
       return NextResponse.json(balancesWithUSD);
     } catch (priceError) {
       console.error('Error fetching prices:', priceError);
-      // If price fetching fails, return balances with default values
-      return NextResponse.json(nonZeroBalances.map(balance => ({
-        ...balance,
-        usdValue: balance.uiAmount // Default 1:1 for testing
-      })));
+      throw priceError; // Let the error propagate to show there was a problem
     }
   } catch (error) {
     console.error('Failed to fetch portfolio:', error);
