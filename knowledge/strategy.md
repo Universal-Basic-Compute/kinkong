@@ -232,6 +232,75 @@ Note: Market condition (bull/bear) determined by weekly sentiment analysis
    - Record execution costs
    - Compare actual vs target allocations
 
+### Chart Analysis Integration
+
+#### Purpose
+- Validate quantitative signals with technical analysis
+- Optimize trade execution timing
+- Identify key price levels
+- Reduce adverse execution timing
+
+#### Process (Each 6-Hour Trading Window)
+
+1. Chart Generation
+   - Timeframes analyzed:
+     - 1-hour candles (last 24 hours)
+     - Include EMA20, EMA50, Volume
+   - Generated just before trade execution
+   - One chart per active token
+
+2. LLM Vision Analysis
+   Primary Focus:
+   - Support/resistance levels
+   - Clear chart patterns
+   - Volume profile
+   - Immediate trend direction
+
+   Output Structure:
+   ```json
+   {
+     "sentiment": "BULLISH | BEARISH | NEUTRAL",
+     "confidence": "0-100",
+     "keyLevels": {
+       "support": ["price levels"],
+       "resistance": ["price levels"]
+     },
+     "patterns": ["identified patterns"],
+     "tradingRecommendation": {
+       "action": "EXECUTE | DELAY | SKIP",
+       "reason": "explanation"
+     }
+   }
+   ```
+
+3. Integration Rules
+   - Chart analysis cannot override risk management rules
+   - Used to optimize rather than determine trades
+   - Maximum 15-minute delay for analysis
+   - Trades proceed without chart analysis if LLM unavailable
+
+4. Execution Modifications
+   - EXECUTE: Proceed with planned trade
+   - DELAY: Wait up to 30 minutes for better level
+   - SKIP: Cancel trade if technical picture highly unfavorable
+
+5. Entry Price Optimization
+   - Buying: Target prices closer to support
+   - Selling: Target prices closer to resistance
+   - Maximum 1% adjustment from original target
+
+6. Risk Controls
+   - Timeout if analysis takes >1 minute
+   - Fallback to pure quantitative if chart analysis fails
+   - Never exceed original position size
+   - Maintain original slippage limits
+
+#### Performance Tracking
+- Record chart analysis accuracy
+- Track execution price improvements
+- Monitor analysis latency
+- Compare performance with/without chart analysis
+
 ### UBC Shareholder Intelligence Integration
 
 #### Shareholder Input System
