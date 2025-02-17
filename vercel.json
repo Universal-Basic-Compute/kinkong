@@ -10,8 +10,20 @@
   "framework": "nextjs",
   "crons": [
     {
-      "path": "/api/cron/reallocation",
-      "schedule": "0 0,6,12,18 * * *"
+      "path": "/api/cron/fetch-tokens",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/record-snapshot",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/analyze-sentiment",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/execute-trades",
+      "schedule": "*/15 * * * *"
     }
   ]
 }
