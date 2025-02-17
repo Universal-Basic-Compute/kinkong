@@ -4,6 +4,30 @@ import { TokenTable } from '@/components/tables/TokenTable'
 import { PerformanceChart } from '@/components/charts/PerformanceChart'
 import { useState, useEffect } from 'react'
 
+interface TokenInfo {
+  symbol: string;
+  name: string;
+  mint: string;
+  volume7d: number;
+  liquidity: number;
+  volumeGrowth: number;
+  pricePerformance: number;
+}
+
+function getTokenClass(token: string): string {
+  const upperToken = token.toUpperCase();
+  switch (upperToken) {
+    case 'UBC':
+      return 'metallic-text-ubc';
+    case 'COMPUTE':
+      return 'metallic-text-compute';
+    case 'SOL':
+      return 'metallic-text-sol';
+    default:
+      return 'metallic-text-argent';
+  }
+}
+
 const STRATEGY_INFO = {
   allocation: `KinKong's allocation strategy:
 • Dynamic position sizing based on market conditions
@@ -37,6 +61,9 @@ export default function Portfolio() {
   const [metrics, setMetrics] = useState<PortfolioMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [tokens, setTokens] = useState<TokenInfo[]>([]);
+  const [isTokensLoading, setIsTokensLoading] = useState(true);
+  const [tokenError, setTokenError] = useState<string | null>(null);
 
   const getChangeClass = (change: number | undefined) => {
     if (change === undefined) return '';
@@ -66,6 +93,23 @@ export default function Portfolio() {
     // Refresh every 5 minutes
     const interval = setInterval(fetchMetrics, 5 * 60 * 1000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    async function fetchTokens() {
+      try {
+        const response = await fetch('/api/tokens');
+        if (!response.ok) throw new Error('Failed to fetch tokens');
+        const data = await response.json();
+        setTokens(data);
+      } catch (err) {
+        setTokenError(err instanceof Error ? err.message : 'Failed to load tokens');
+      } finally {
+        setIsTokensLoading(false);
+      }
+    }
+
+    fetchTokens();
   }, []);
 
   return (
