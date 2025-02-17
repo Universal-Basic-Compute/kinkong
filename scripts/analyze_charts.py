@@ -8,7 +8,6 @@ if str(project_root) not in sys.path:
 
 # Now we can import backend modules
 from backend.src.airtable.tables import getTable
-from dotenv import load_dotenv
 import anthropic
 import os
 import base64
