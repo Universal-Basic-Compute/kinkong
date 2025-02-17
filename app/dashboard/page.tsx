@@ -49,6 +49,7 @@ function getTokenClass(token: string | undefined): string {
   }
 }
 
+// Investment Card component
 function InvestmentCard() {
   const { publicKey } = useWallet();
   const [investment, setInvestment] = useState<{
