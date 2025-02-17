@@ -11,14 +11,17 @@ load_dotenv()
 
 def fetch_ubc_sol_data():
     # Birdeye API endpoint for UBC/SOL pair
-    url = "https://public-api.birdeye.so/public/history_price"
+    url = "https://public-api.birdeye.so/defi/history_price"  # Updated endpoint
     headers = {
-        "X-API-KEY": os.getenv('BIRDEYE_API_KEY')
+        "X-API-KEY": os.getenv('BIRDEYE_API_KEY'),
+        "x-chain": "solana",
+        "accept": "application/json"
     }
     params = {
         "address": "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump",  # UBC token address
-        "type": "1H",  # 1 hour intervals
-        "time_from": int((datetime.now() - timedelta(days=1)).timestamp()),  # 24 hours ago
+        "address_type": "token",  # Added required parameter
+        "type": "15m",  # Changed from 1H to 15m as per API docs
+        "time_from": int((datetime.now() - timedelta(days=1)).timestamp()),
         "time_to": int(datetime.now().timestamp())
     }
     
@@ -30,10 +33,12 @@ def fetch_ubc_sol_data():
         response.raise_for_status()
         data = response.json()
         
-        if not data or 'data' not in data or not data['data'].get('items'):
-            raise ValueError("No data returned from Birdeye API")
+        if not data.get('success'):
+            raise ValueError(f"API request failed: {data.get('message')}")
 
-        items = data['data']['items']
+        items = data.get('data', {}).get('items', [])
+        if not items:
+            raise ValueError("No data items returned from Birdeye API")
 
         # Convert API data to DataFrame
         df_data = []
@@ -41,11 +46,11 @@ def fetch_ubc_sol_data():
             date = pd.to_datetime(item['unixTime'], unit='s')
             df_data.append({
                 'Date': date,
-                'Open': float(item['price']),
-                'High': float(item['high']),
-                'Low': float(item['low']),
-                'Close': float(item['close']),
-                'Volume': float(item['volume'])
+                'Open': float(item.get('price', 0)),
+                'High': float(item.get('high', 0)),
+                'Low': float(item.get('low', 0)),
+                'Close': float(item.get('close', 0)),
+                'Volume': float(item.get('volume', 0))
             })
         
         # Create DataFrame and set index
