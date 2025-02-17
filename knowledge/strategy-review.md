@@ -38,6 +38,31 @@ Every Friday, we conduct a comprehensive review of KinKong's trading strategy pe
 - Missed volatility opportunities
 - Time window adjustment needs
 
+### Chart Analysis Performance
+- Analysis accuracy rate
+  - Support/resistance level hits
+  - Pattern completion rate
+  - Sentiment prediction accuracy
+  - Trading recommendation success rate
+
+- Execution Impact
+  - Price improvement from level awareness
+  - Avoided losses from SKIP recommendations
+  - Opportunity cost of DELAY actions
+  - Failed analysis timeout frequency
+
+- Technical Performance
+  - Average analysis latency
+  - LLM availability rate
+  - Chart generation reliability
+  - Error recovery effectiveness
+
+- Cost Analysis
+  - LLM API costs per trade
+  - Cost vs price improvement ratio
+  - Comparison with pure quantitative approach
+  - Infrastructure overhead
+
 ### Shareholder Input
 - Signal accuracy by holder
 - New token suggestion success rate
@@ -52,6 +77,11 @@ Every Friday, we conduct a comprehensive review of KinKong's trading strategy pe
    - Rebalancing thresholds
    - Emergency triggers
    - Time windows
+   - Chart Analysis Settings:
+     - Analysis timeout threshold
+     - Maximum price adjustment
+     - Delay window duration
+     - Required confidence levels
 
 2. Test proposed changes:
    - Backtest with recent data
@@ -93,6 +123,10 @@ Every Friday, we conduct a comprehensive review of KinKong's trading strategy pe
 - [ ] Prepare community update
 - [ ] Implement approved changes
 - [ ] Set monitoring priorities
+- [ ] Review chart analysis metrics
+- [ ] Evaluate LLM performance
+- [ ] Adjust technical parameters
+- [ ] Update pattern recognition rules
 
 ### Timeline
 - Data collection: Friday 08:00 UTC
@@ -109,6 +143,11 @@ Every Friday, we conduct a comprehensive review of KinKong's trading strategy pe
    - Key statistics (win rate, drawdown)
    - Notable trades/opportunities
    - Risk metrics
+   - Technical Analysis Impact
+     - Price improvements achieved
+     - Successful pattern predictions
+     - Risk avoidance examples
+     - System reliability metrics
 
 2. Portfolio Status
    - Current allocation breakdown
