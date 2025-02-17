@@ -429,7 +429,7 @@ async function analyzeMarketSentiment(): Promise<WeeklyAnalysis> {
     console.log(`• Tokens above 7d avg: ${percentAboveAvg.toFixed(1)}%`);
     console.log(`• Volume growth: ${volumeGrowth.toFixed(1)}%`);
     console.log(`• Volume on up days: ${percentVolumeOnUpDays.toFixed(1)}%`);
-    console.log(`• AI vs SOL performance: ${metrics.aiVsSolPerformance.toFixed(1)}%`);
+    console.log(`• AI vs SOL performance: ${notificationMetrics.aiVsSolPerformance.toFixed(1)}%`);
 
     // Save to Airtable with enhanced notes
     const sentimentTable = getTable('MARKET_SENTIMENT');
