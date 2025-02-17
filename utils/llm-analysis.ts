@@ -163,7 +163,46 @@ async function submitToLLM(prompt: string) {
 }
 
 function validateAndParseResponse(response: any): LLMResponse {
-  // Implementation to validate and parse LLM response
+  // Validate response has required fields
+  if (!response?.setup || !response?.reasoning || !response?.tradingPlan || !response?.metrics) {
+    throw new Error('Invalid response structure');
+  }
+
+  // Return validated response
+  return {
+    setup: response.setup,
+    reasoning: {
+      marketStructure: response.reasoning.marketStructure || '',
+      volumeAnalysis: response.reasoning.volumeAnalysis || '',
+      technicalLevels: response.reasoning.technicalLevels || '',
+      keyRisks: response.reasoning.keyRisks || []
+    },
+    tradingPlan: {
+      entryReasoning: response.tradingPlan.entryReasoning || '',
+      targetReasoning: response.tradingPlan.targetReasoning || '',
+      stopLossReasoning: response.tradingPlan.stopLossReasoning || ''
+    },
+    metrics: {
+      volume: {
+        amount24h: response.metrics.volume.amount24h || 0,
+        previousDay: response.metrics.volume.previousDay || 0,
+        buyVsSell: response.metrics.volume.buyVsSell || 0
+      },
+      price: {
+        current: response.metrics.price.current || 0,
+        high24h: response.metrics.price.high24h || 0,
+        low24h: response.metrics.price.low24h || 0,
+        change24h: response.metrics.price.change24h || 0
+      },
+      liquidity: {
+        current: response.metrics.liquidity.current || 0,
+        depth: {
+          buy2percent: response.metrics.liquidity.depth.buy2percent || 0,
+          sell2percent: response.metrics.liquidity.depth.sell2percent || 0
+        }
+      }
+    }
+  };
 }
 
 export function calculateSetupScore(setup: LLMResponse): number {
