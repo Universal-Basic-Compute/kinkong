@@ -1,3 +1,5 @@
+'use client';
+
 import { AllocationChart } from '@/components/dashboard/AllocationChart';
 import { TokenTable } from '@/components/tables/TokenTable';
 

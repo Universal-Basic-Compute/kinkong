@@ -1,6 +1,5 @@
 'use client';
-import { AllocationChart } from '@/components/dashboard/AllocationChart'
-import { TokenTable } from '@/components/tables/TokenTable'
+import { PortfolioSection } from '@/components/dashboard/PortfolioSection';
 import { useState, useEffect } from 'react'
 import { PerformanceChart } from '@/components/charts/PerformanceChart'
 
