@@ -2,17 +2,19 @@ import sys
 from pathlib import Path
 import os
 
+# Get absolute path to project root
+project_root = str(Path(__file__).parent.parent.absolute())
+
+# Add to Python path if not already there
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
 # Debug prints
-project_root = Path(__file__).parent.parent
 print(f"Project root: {project_root}")
 print(f"Current working directory: {os.getcwd()}")
 print(f"Python path: {sys.path}")
-print(f"Looking for backend at: {project_root / 'backend'}")
+print(f"Looking for backend at: {project_root}/backend")
 print(f"Directory contents: {os.listdir(project_root)}")
-
-# Add project root to path
-if str(project_root) not in sys.path:
-    sys.path.append(str(project_root))
 
 from dotenv import load_dotenv
 import os
