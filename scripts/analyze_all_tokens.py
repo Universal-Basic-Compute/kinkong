@@ -123,35 +123,72 @@ async def analyze_token(token):
                 
             # Do analysis only once
             print(f"\nAnalyzing charts for {token['symbol']}...")
-            analyses = analyze_charts_with_claude(
-                chart_paths,
-                token_info={
-                    'symbol': token['symbol'],
-                    'mint': token['mint']
-                }
-            )
+            try:
+                analyses = analyze_charts_with_claude(
+                    chart_paths,
+                    token_info={
+                        'symbol': token['symbol'],
+                        'mint': token['mint']
+                    }
+                )
+                
+                print("Analysis result type:", type(analyses))
+                print("Analysis keys:", analyses.keys() if analyses else None)
+                
+            except Exception as analysis_error:
+                print(f"Error during chart analysis: {analysis_error}")
+                print("Analysis error type:", type(analysis_error))
+                if hasattr(analysis_error, '__dict__'):
+                    print("Analysis error attributes:", analysis_error.__dict__)
+                raise
             
             if not analyses:
                 print(f"No analysis generated for {token['symbol']}")
                 return
 
             # Convert ChartAnalysis objects to dictionaries for JSON serialization
-            serializable_analyses = {}
-            for timeframe, analysis in analyses.items():
-                if timeframe == 'overall':
-                    serializable_analyses[timeframe] = analysis  # Overall is already a dict
-                else:
-                    serializable_analyses[timeframe] = analysis.to_dict()  # Use the to_dict method
+            try:
+                serializable_analyses = {}
+                for timeframe, analysis in analyses.items():
+                    print(f"Processing timeframe {timeframe}, analysis type: {type(analysis)}")
+                    if timeframe == 'overall':
+                        serializable_analyses[timeframe] = analysis
+                    else:
+                        if hasattr(analysis, 'to_dict'):
+                            serializable_analyses[timeframe] = analysis.to_dict()
+                        else:
+                            print(f"Warning: analysis for {timeframe} has no to_dict method")
+                            serializable_analyses[timeframe] = analysis
+
+                # Try to serialize to verify it works
+                print("Testing JSON serialization...")
+                json_test = json.dumps(serializable_analyses)
+                print("JSON serialization successful")
+
+            except Exception as serialize_error:
+                print(f"Error during serialization: {serialize_error}")
+                print("Serialization error type:", type(serialize_error))
+                if hasattr(serialize_error, '__dict__'):
+                    print("Serialization error attributes:", serialize_error.__dict__)
+                raise
 
             # Save analysis to file
-            analysis_path = token_dir / 'analysis.json'
-            with open(analysis_path, 'w') as f:
-                json.dump({
-                    'timestamp': datetime.now().isoformat(),
-                    'token': token['symbol'],
-                    'analyses': serializable_analyses
-                }, f, indent=2)
-            print(f"Saved analysis to {analysis_path}")
+            try:
+                analysis_path = token_dir / 'analysis.json'
+                with open(analysis_path, 'w') as f:
+                    json.dump({
+                        'timestamp': datetime.now().isoformat(),
+                        'token': token['symbol'],
+                        'analyses': serializable_analyses
+                    }, f, indent=2)
+                print(f"Saved analysis to {analysis_path}")
+            
+            except Exception as save_error:
+                print(f"Error saving analysis file: {save_error}")
+                print("Save error type:", type(save_error))
+                if hasattr(save_error, '__dict__'):
+                    print("Save error attributes:", save_error.__dict__)
+                raise
             
             # Generate signal using the already-performed analysis
             signal_message = generate_signal(serializable_analyses, {
@@ -166,6 +203,9 @@ async def analyze_token(token):
         except Exception as e:
             if attempt == retries - 1:
                 print(f"Failed all retries for {token['symbol']}: {e}")
+                print("Final error type:", type(e))
+                if hasattr(e, '__dict__'):
+                    print("Final error attributes:", e.__dict__)
                 return
             print(f"Attempt {attempt + 1} failed, retrying in 10s...")
             await asyncio.sleep(10)
