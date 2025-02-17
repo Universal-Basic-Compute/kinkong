@@ -45,13 +45,40 @@ export async function GET() {
 
     // Get prices for all tokens
     const mints = nonZeroBalances.map(b => b.mint);
-    const prices = await getTokenPrices(mints);
+    
+    // Log the mints we're fetching prices for
+    console.log('Fetching prices for mints:', mints);
+
+    // Fetch prices using Jupiter API directly
+    const pricesResponse = await fetch('https://price.jup.ag/v4/price', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        ids: mints,
+        vsToken: 'USDC'
+      })
+    });
+
+    if (!pricesResponse.ok) {
+      throw new Error('Failed to fetch token prices');
+    }
+
+    const pricesData = await pricesResponse.json();
+    console.log('Received price data:', pricesData);
 
     // Add USD values
-    const balancesWithUSD = nonZeroBalances.map(balance => ({
-      ...balance,
-      usdValue: prices[balance.mint] ? balance.uiAmount * prices[balance.mint] : undefined
-    }));
+    const balancesWithUSD = nonZeroBalances.map(balance => {
+      const price = pricesData.data[balance.mint]?.price || 0;
+      const usdValue = balance.uiAmount * price;
+      console.log(`Token ${balance.symbol || balance.mint}: Price=${price}, USD Value=${usdValue}`);
+      
+      return {
+        ...balance,
+        usdValue
+      };
+    });
 
     return NextResponse.json(balancesWithUSD);
   } catch (error) {

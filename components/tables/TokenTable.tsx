@@ -74,37 +74,42 @@ export const TokenTable = () => {
           </tr>
         </thead>
         <tbody>
-          {tokens.map(token => (
-            <tr key={token.mint} className="border-t border-gold/10">
-              <td className="px-4 py-2">
-                <a 
-                  href={`https://solscan.io/token/${token.mint}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`${getTokenClass(token.symbol || '')} hover:opacity-80`}
-                >
-                  {token.symbol 
-                    ? formatTokenSymbol(token.symbol)
-                    : `${token.mint.slice(0, 4)}...${token.mint.slice(-4)}`
-                  }
-                </a>
-              </td>
-              <td className="text-right px-4 py-2 text-gray-300">
-                {Number(token.uiAmount).toLocaleString(undefined, {
-                  maximumFractionDigits: 0
-                })}
-              </td>
-              <td className="text-right px-4 py-2 text-gray-300">
-                ${Number(token.usdValue || 0).toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2
-                })}
-              </td>
-              <td className="text-right px-4 py-2 text-gray-300">
-                {((token.usdValue || 0) / totalValue * 100).toFixed(1)}%
-              </td>
-            </tr>
-          ))}
+          {tokens.map(token => {
+            const usdValue = token.usdValue || 0;
+            const percentage = totalValue > 0 ? (usdValue / totalValue * 100) : 0;
+
+            return (
+              <tr key={token.mint} className="border-t border-gold/10">
+                <td className="px-4 py-2">
+                  <a 
+                    href={`https://solscan.io/token/${token.mint}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`${getTokenClass(token.symbol || '')} hover:opacity-80`}
+                  >
+                    {token.symbol 
+                      ? formatTokenSymbol(token.symbol)
+                      : `${token.mint.slice(0, 4)}...${token.mint.slice(-4)}`
+                    }
+                  </a>
+                </td>
+                <td className="text-right px-4 py-2 text-gray-300">
+                  {Number(token.uiAmount).toLocaleString(undefined, {
+                    maximumFractionDigits: 0
+                  })}
+                </td>
+                <td className="text-right px-4 py-2 text-gray-300">
+                  ${usdValue.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                  })}
+                </td>
+                <td className="text-right px-4 py-2 text-gray-300">
+                  {percentage.toFixed(1)}%
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
         <tfoot>
           <tr className="border-t border-gold/20">
