@@ -116,7 +116,74 @@ def activate_signal(signal_id: str) -> bool:
         print(f"Failed to activate signal: {e}")
         return False
 
-def update_signal_status(signal_id: str, new_status: str, reason: str = None):
+def calculate_pnl(signal_data: dict, current_price: float = None) -> dict:
+    """
+    Calculate P&L for a signal
+    Returns dict with:
+    - unrealized_pnl: Current P&L if position is still open
+    - realized_pnl: Final P&L if position is closed
+    - pnl_percentage: P&L as percentage of initial investment
+    - roi: Return on investment considering trading costs
+    """
+    try:
+        entry_value = float(signal_data.get('entryValue', 0))
+        amount = float(signal_data.get('amount', 0))
+        trading_costs = float(signal_data.get('tradingCosts', 0))
+        
+        if not all([entry_value, amount]):
+            return {
+                'unrealized_pnl': 0,
+                'realized_pnl': 0,
+                'pnl_percentage': 0,
+                'roi': 0
+            }
+
+        # For active positions, calculate unrealized P&L
+        if signal_data.get('status') == 'ACTIVE' and current_price:
+            current_value = amount * current_price
+            unrealized_pnl = current_value - entry_value
+            pnl_percentage = (unrealized_pnl / entry_value) * 100
+            roi = ((current_value - entry_value - trading_costs) / entry_value) * 100
+            
+            return {
+                'unrealized_pnl': unrealized_pnl,
+                'realized_pnl': None,
+                'pnl_percentage': pnl_percentage,
+                'roi': roi
+            }
+            
+        # For closed positions (COMPLETED or STOPPED), calculate realized P&L
+        elif signal_data.get('status') in ['COMPLETED', 'STOPPED']:
+            exit_price = float(signal_data.get('exitPrice', 0))
+            exit_value = amount * exit_price
+            realized_pnl = exit_value - entry_value
+            pnl_percentage = (realized_pnl / entry_value) * 100
+            roi = ((exit_value - entry_value - trading_costs) / entry_value) * 100
+            
+            return {
+                'unrealized_pnl': None,
+                'realized_pnl': realized_pnl,
+                'pnl_percentage': pnl_percentage,
+                'roi': roi
+            }
+            
+        return {
+            'unrealized_pnl': 0,
+            'realized_pnl': 0,
+            'pnl_percentage': 0,
+            'roi': 0
+        }
+        
+    except Exception as e:
+        print(f"Failed to calculate P&L: {e}")
+        return {
+            'unrealized_pnl': 0,
+            'realized_pnl': 0,
+            'pnl_percentage': 0,
+            'roi': 0
+        }
+
+def update_signal_status(signal_id: str, new_status: str, reason: str = None, exit_price: float = None):
     """Update the status of a signal and add a status change record"""
     try:
         load_dotenv()
@@ -126,19 +193,43 @@ def update_signal_status(signal_id: str, new_status: str, reason: str = None):
         signals_table = Airtable(base_id, 'SIGNALS', api_key)
         status_table = Airtable(base_id, 'SIGNAL_STATUS_HISTORY', api_key)
         
-        # Update signal
-        signals_table.update(signal_id, {
+        # Get current signal data
+        signal = signals_table.get(signal_id)
+        if not signal:
+            return
+            
+        update_data = {
             'status': new_status,
             'lastUpdateTime': datetime.now(timezone.utc).isoformat()
-        })
+        }
         
-        # Record status change
-        status_table.insert({
+        # If position is being closed, add exit information
+        if new_status in ['COMPLETED', 'STOPPED'] and exit_price:
+            update_data['exitPrice'] = exit_price
+            # Calculate final P&L
+            pnl = calculate_pnl(signal['fields'], exit_price)
+            update_data.update({
+                'realizedPnl': pnl['realized_pnl'],
+                'pnlPercentage': pnl['pnl_percentage'],
+                'roi': pnl['roi']
+            })
+        
+        # Update signal
+        signals_table.update(signal_id, update_data)
+        
+        # Record status change with P&L if available
+        status_record = {
             'signalId': signal_id,
             'status': new_status,
             'timestamp': datetime.now(timezone.utc).isoformat(),
             'reason': reason or f"Status changed to {new_status}"
-        })
+        }
+        
+        if exit_price:
+            status_record['exitPrice'] = exit_price
+            status_record['pnl'] = pnl['realized_pnl']
+            
+        status_table.insert(status_record)
         
     except Exception as e:
         print(f"Failed to update signal status: {e}")
@@ -181,7 +272,7 @@ def check_pending_signals():
         print(f"Failed to check pending signals: {e}")
 
 def check_signal_conditions():
-    """Check all active signals for status changes"""
+    """Check all active signals for status changes and update P&L"""
     try:
         load_dotenv()
         base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
@@ -202,17 +293,29 @@ def check_signal_conditions():
             if not current_price:
                 continue
                 
+            # Calculate current P&L
+            pnl = calculate_pnl(fields, current_price)
+            
+            # Update unrealized P&L
+            signals_table.update(signal_id, {
+                'currentPrice': current_price,
+                'unrealizedPnl': pnl['unrealized_pnl'],
+                'pnlPercentage': pnl['pnl_percentage'],
+                'roi': pnl['roi'],
+                'lastUpdateTime': datetime.now(timezone.utc).isoformat()
+            })
+                
             # Check conditions
             if fields['type'] == 'BUY':
                 if current_price >= float(fields['targetPrice']):
-                    update_signal_status(signal_id, 'COMPLETED', 'Take profit reached')
+                    update_signal_status(signal_id, 'COMPLETED', 'Take profit reached', current_price)
                 elif current_price <= float(fields['stopLoss']):
-                    update_signal_status(signal_id, 'STOPPED', 'Stop loss hit')
+                    update_signal_status(signal_id, 'STOPPED', 'Stop loss hit', current_price)
             else:  # SELL
                 if current_price <= float(fields['targetPrice']):
-                    update_signal_status(signal_id, 'COMPLETED', 'Take profit reached')
+                    update_signal_status(signal_id, 'COMPLETED', 'Take profit reached', current_price)
                 elif current_price >= float(fields['stopLoss']):
-                    update_signal_status(signal_id, 'STOPPED', 'Stop loss hit')
+                    update_signal_status(signal_id, 'STOPPED', 'Stop loss hit', current_price)
         
         # Check for expired signals
         expired_signals = signals_table.get_all(
@@ -220,7 +323,13 @@ def check_signal_conditions():
         )
         
         for signal in expired_signals:
-            update_signal_status(signal['id'], 'EXPIRED', 'Signal duration expired')
+            current_price = get_token_price(signal['fields']['token'])
+            update_signal_status(
+                signal['id'], 
+                'EXPIRED', 
+                'Signal duration expired',
+                current_price
+            )
             
     except Exception as e:
         print(f"Failed to check signal conditions: {e}")
