@@ -588,31 +588,43 @@ def process_signals_batch(token_analyses):
     print("\nProcessing signals batch...")
     pending_signals = []
     
-    # Define valid timeframe mappings
+    # Update timeframe mappings to include 15m
     VALID_TIMEFRAMES = {
-        '8h': 'SWING',
+        '15m': 'SCALP',    # Add 15m mapping
         '2h': 'INTRADAY',
-        '45D': 'POSITION'  # Add mapping for 45D timeframe
+        '8h': 'SWING',
+        '45D': 'POSITION'
     }
     
     for token_info, analyses in token_analyses:
         print(f"\n🔄 Processing {token_info['symbol']}...")
         
-        # Filter only valid timeframes
+        # Filter only valid timeframes and exclude 'overall'
         timeframe_analyses = {
             tf: analysis for tf, analysis in analyses.items() 
             if tf in VALID_TIMEFRAMES and tf != 'overall'
         }
         
+        print(f"Found {len(timeframe_analyses)} valid timeframe analyses")
+        
         for timeframe, analysis in timeframe_analyses.items():
-            print(f"\nTimeframe {timeframe}:")
+            print(f"\nTimeframe {timeframe} -> {VALID_TIMEFRAMES[timeframe]}:")
             
-            # Extract signal details
-            signal_type = analysis.signal if isinstance(analysis, ChartAnalysis) else analysis.get('signal')
-            confidence = analysis.confidence if isinstance(analysis, ChartAnalysis) else analysis.get('confidence', 0)
+            # Extract signal details with better type handling
+            if isinstance(analysis, ChartAnalysis):
+                signal_type = analysis.signal
+                confidence = analysis.confidence
+                reasoning = analysis.reasoning
+                key_levels = analysis.key_levels
+            else:
+                signal_type = analysis.get('signal')
+                confidence = analysis.get('confidence', 0)
+                reasoning = analysis.get('reasoning', '')
+                key_levels = analysis.get('key_levels', {})
             
             print(f"Signal: {signal_type}")
             print(f"Confidence: {confidence}")
+            print(f"Key Levels: {key_levels}")
             
             if signal_type and signal_type != 'HOLD' and confidence >= 60:
                 print("✅ Signal meets initial criteria")
@@ -621,11 +633,13 @@ def process_signals_batch(token_analyses):
                 strategy_timeframe = VALID_TIMEFRAMES[timeframe]
                 print(f"Mapped timeframe: {timeframe} -> {strategy_timeframe}")
                 
-                # Create signal data
+                # Create signal data with key levels
                 signal_data = {
                     'timeframe': strategy_timeframe,
                     'signal': signal_type,
                     'confidence': confidence,
+                    'reasoning': reasoning,
+                    'key_levels': key_levels,
                     'token_info': token_info
                 }
                 
