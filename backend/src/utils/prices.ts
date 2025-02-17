@@ -12,6 +12,36 @@ interface DexScreenerResponse {
   pairs?: DexScreenerPair[];
 }
 
+async function fetchWithRetry(url: string, retries = 3, delay = 1000): Promise<Response> {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'KinKong Portfolio Manager'
+        }
+      });
+      
+      if (response.ok) {
+        return response;
+      }
+      
+      console.warn(`Attempt ${i + 1}/${retries} failed with status ${response.status}`);
+      
+      if (i < retries - 1) {
+        await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+      }
+    } catch (error) {
+      console.warn(`Attempt ${i + 1}/${retries} failed:`, error);
+      if (i < retries - 1) {
+        await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+      }
+    }
+  }
+  
+  throw new Error(`Failed to fetch after ${retries} attempts`);
+}
+
 export async function getTokenPrice(mint: string): Promise<number | null> {
   try {
     // Skip price fetch for stables
@@ -22,55 +52,67 @@ export async function getTokenPrice(mint: string): Promise<number | null> {
 
     // If it's SOL, get SOL/USDC price directly
     if (mint === 'So11111111111111111111111111111111111111112') {
-      console.log('Fetching SOL price from DexScreener');
-      const response = await fetch(
+      console.log('Fetching SOL price from DexScreener (with retries)...');
+      const response = await fetchWithRetry(
         'https://api.dexscreener.com/latest/dex/tokens/solana/So11111111111111111111111111111111111111112'
       );
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch SOL price from DexScreener');
-      }
 
       const data: DexScreenerResponse = await response.json();
-      const solPair = data.pairs?.find(p => ['USDC', 'USDT'].includes(p.quoteToken.symbol));
+      const solPair = data.pairs?.find(p => 
+        ['USDC', 'USDT'].includes(p.quoteToken.symbol) &&
+        p.baseToken.symbol === 'SOL'
+      );
+      
       if (!solPair) {
-        throw new Error('Could not find SOL/USDC pair');
+        throw new Error('Could not find valid SOL/USDC pair');
       }
 
-      return parseFloat(solPair.priceUsd);
+      const price = parseFloat(solPair.priceUsd);
+      console.log(`Found SOL price: $${price}`);
+      return price;
     }
     
     // For other tokens, get token/SOL price and calculate USD value
-    console.log(`Fetching price from DexScreener for mint: ${mint}`);
-    const response = await fetch(
+    console.log(`Fetching price from DexScreener for mint: ${mint} (with retries)...`);
+    const response = await fetchWithRetry(
       `https://api.dexscreener.com/latest/dex/tokens/solana/${mint}`
     );
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch price from DexScreener');
-    }
 
     const data: DexScreenerResponse = await response.json();
     
-    // Get the SOL pair
-    const pair = data.pairs?.find((p: DexScreenerPair) => 
-      p.quoteToken.symbol === 'SOL'
-    );
+    if (!data.pairs?.length) {
+      console.warn(`No pairs found for mint ${mint}`);
+      return null;
+    }
 
+    // Try to find the best pair in this order: USDC > USDT > SOL
+    let pair = data.pairs.find(p => p.quoteToken.symbol === 'USDC');
     if (pair) {
-      // Get SOL price
+      const price = parseFloat(pair.priceUsd);
+      console.log(`Found USDC pair price for ${mint}: $${price}`);
+      return price;
+    }
+
+    pair = data.pairs.find(p => p.quoteToken.symbol === 'USDT');
+    if (pair) {
+      const price = parseFloat(pair.priceUsd);
+      console.log(`Found USDT pair price for ${mint}: $${price}`);
+      return price;
+    }
+
+    pair = data.pairs.find(p => p.quoteToken.symbol === 'SOL');
+    if (pair) {
       const solPrice = await getTokenPrice('So11111111111111111111111111111111111111112');
       if (!solPrice) {
         throw new Error('Could not get SOL price for conversion');
       }
 
-      // Calculate USD price: tokenPrice (in SOL) * SOL price (in USD)
-      const usdPrice = parseFloat(pair.priceUsd) * solPrice;
-      console.log(`Found price for mint ${mint}: ${usdPrice} USD (${pair.priceUsd} SOL * ${solPrice} USD/SOL)`);
-      return usdPrice;
+      const price = parseFloat(pair.priceUsd) * solPrice;
+      console.log(`Found SOL pair price for ${mint}: ${pair.priceUsd} SOL * $${solPrice} = $${price}`);
+      return price;
     }
 
-    console.warn(`No SOL pair found for mint ${mint}`);
+    console.warn(`No suitable pairs found for mint ${mint}`);
     return null;
   } catch (error) {
     console.error(`Failed to fetch price for mint ${mint}:`, error);
