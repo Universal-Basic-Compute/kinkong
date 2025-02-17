@@ -10,6 +10,24 @@ interface TokenBalance {
   usdValue?: number;
 }
 
+function getTokenClass(token: string): string {
+  const upperToken = token.toUpperCase();
+  switch (upperToken) {
+    case 'UBC':
+      return 'metallic-text-ubc';
+    case 'COMPUTE':
+      return 'metallic-text-compute';
+    case 'SOL':
+      return 'metallic-text-sol';
+    default:
+      return 'metallic-text-argent';
+  }
+}
+
+function formatTokenSymbol(token: string): string {
+  return token.startsWith('$') ? token : `$${token}`;
+}
+
 export const TokenTable = () => {
   const [tokens, setTokens] = useState<TokenBalance[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -63,17 +81,17 @@ export const TokenTable = () => {
                   href={`https://solscan.io/token/${token.mint}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-gold hover:text-gold/80"
+                  className={`${getTokenClass(token.symbol || token.mint)} hover:opacity-80`}
                 >
-                  {token.symbol || token.mint.slice(0, 4)}...
+                  {formatTokenSymbol(token.symbol || token.mint.slice(0, 4))}
                 </a>
               </td>
-              <td className="text-right px-4 py-2">
+              <td className="text-right px-4 py-2 text-gray-300">
                 {token.uiAmount.toLocaleString(undefined, {
                   maximumFractionDigits: 4
                 })}
               </td>
-              <td className="text-right px-4 py-2">
+              <td className="text-right px-4 py-2 text-gray-300">
                 {token.usdValue 
                   ? `$${token.usdValue.toLocaleString(undefined, {
                       maximumFractionDigits: 2
@@ -81,7 +99,7 @@ export const TokenTable = () => {
                   : '-'
                 }
               </td>
-              <td className="text-right px-4 py-2">
+              <td className="text-right px-4 py-2 text-gray-300">
                 {token.usdValue && totalValue > 0
                   ? `${((token.usdValue / totalValue) * 100).toFixed(1)}%`
                   : '-'
@@ -92,14 +110,14 @@ export const TokenTable = () => {
         </tbody>
         <tfoot>
           <tr className="border-t border-gold/20">
-            <td className="px-4 py-2 font-bold">Total</td>
+            <td className="px-4 py-2 font-bold text-gold">Total</td>
             <td></td>
-            <td className="text-right px-4 py-2 font-bold">
+            <td className="text-right px-4 py-2 font-bold text-gold">
               ${totalValue.toLocaleString(undefined, {
                 maximumFractionDigits: 2
               })}
             </td>
-            <td className="text-right px-4 py-2 font-bold">100%</td>
+            <td className="text-right px-4 py-2 font-bold text-gold">100%</td>
           </tr>
         </tfoot>
       </table>
