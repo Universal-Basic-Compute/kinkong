@@ -115,7 +115,7 @@ def fetch_ubc_sol_data(timeframe='1H', hours=24):
 def create_sample_data():
     # Create dates for the last 24 hours with hourly intervals
     base = datetime.now()
-    dates = [base - timedelta(hours=x) for x in range(23, -1, -1)]
+    dates = pd.date_range(end=base, periods=24, freq='h')
     
     # Sample OHLCV data
     data = {
