@@ -112,17 +112,42 @@ def validate_signal(
         # Calculate risk/reward ratio
         risk_reward = potential_profit_pct / potential_loss_pct if potential_loss_pct != 0 else 0
 
-        # Validation checks
-        validations = [
-            (expected_profit >= reqs.min_target, 
-             f"Expected profit ({expected_profit:.1%}) below minimum target ({reqs.min_target:.1%})"),
+        # Different validation rules for BUY vs SELL
+        if signal_data.get('signal') == 'BUY':
+            # Strict validation for BUY signals
+            validations = [
+                (expected_profit >= reqs.min_target, 
+                 f"Expected profit ({expected_profit:.1%}) below minimum target ({reqs.min_target:.1%})"),
+                
+                (potential_loss_pct <= reqs.stop_loss,
+                 f"Stop loss ({potential_loss_pct:.1%}) exceeds maximum ({reqs.stop_loss:.1%})"),
+                
+                (risk_reward >= 1.5,
+                 f"Risk/Reward ratio ({risk_reward:.2f}) below minimum (1.5)"),
+            ]
+        else:  # SELL signal
+            # More lenient validation for SELL signals
+            # Allow selling at smaller profits if price is dropping
+            price_change_24h = market_data.get('price_change_24h', 0) if market_data else 0
             
-            (potential_loss_pct <= reqs.stop_loss,
-             f"Stop loss ({potential_loss_pct:.1%}) exceeds maximum ({reqs.stop_loss:.1%})"),
-            
-            (risk_reward >= 1.5,
-             f"Risk/Reward ratio ({risk_reward:.2f}) below minimum (1.5)"),
-        ]
+            # If price is dropping significantly (>5%), allow immediate sells
+            if price_change_24h < -5:
+                validations = [
+                    (potential_loss_pct <= reqs.stop_loss * 1.5,  # 50% more flexible stop loss
+                     f"Stop loss ({potential_loss_pct:.1%}) exceeds emergency maximum ({reqs.stop_loss * 1.5:.1%})"),
+                ]
+            else:
+                # Normal market conditions - still more lenient than BUY
+                validations = [
+                    (expected_profit >= reqs.min_target * 0.5,  # Half the usual profit requirement
+                     f"Expected profit ({expected_profit:.1%}) below minimum target ({reqs.min_target * 0.5:.1%})"),
+                    
+                    (potential_loss_pct <= reqs.stop_loss * 1.2,  # 20% more flexible stop loss
+                     f"Stop loss ({potential_loss_pct:.1%}) exceeds maximum ({reqs.stop_loss * 1.2:.1%})"),
+                    
+                    (risk_reward >= 1.0,  # Lower R/R requirement for sells
+                     f"Risk/Reward ratio ({risk_reward:.2f}) below minimum (1.0)"),
+                ]
 
         # Add liquidity check if market data available
         if market_data and market_data.get('liquidity'):
