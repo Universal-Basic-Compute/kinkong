@@ -25,6 +25,18 @@ class ChartAnalysis:
         self.risk_reward_ratio = risk_reward_ratio
         self.reassess_conditions = reassess_conditions
 
+    def to_dict(self):
+        """Convert ChartAnalysis object to dictionary"""
+        return {
+            'timeframe': self.timeframe,
+            'signal': self.signal,
+            'confidence': self.confidence,
+            'reasoning': self.reasoning,
+            'key_levels': self.key_levels,
+            'risk_reward_ratio': self.risk_reward_ratio,
+            'reassess_conditions': self.reassess_conditions
+        }
+
 def send_telegram_message(message):
     """Send message to Telegram channel"""
     token = os.getenv('TELEGRAM_BOT_TOKEN')

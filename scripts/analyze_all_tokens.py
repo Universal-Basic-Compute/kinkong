@@ -141,15 +141,7 @@ async def analyze_token(token):
                 if timeframe == 'overall':
                     serializable_analyses[timeframe] = analysis  # Overall is already a dict
                 else:
-                    serializable_analyses[timeframe] = {
-                        'timeframe': analysis.timeframe,
-                        'signal': analysis.signal,
-                        'confidence': analysis.confidence,
-                        'reasoning': analysis.reasoning,
-                        'key_levels': analysis.key_levels,
-                        'risk_reward_ratio': analysis.risk_reward_ratio,
-                        'reassess_conditions': analysis.reassess_conditions
-                    }
+                    serializable_analyses[timeframe] = analysis.to_dict()  # Use the to_dict method
 
             # Save analysis to file
             analysis_path = token_dir / 'analysis.json'
