@@ -157,6 +157,10 @@ interface TokenData extends FieldSet {
   volumeGrowth: number;
   pricePerformance: number;
   holderCount: number;
+  price: number;
+  price7dAvg: number;
+  volumeOnUpDay: boolean;
+  priceChange24h: number;
 }
 
 async function getDexScreenerData(mint: string, retries = 3): Promise<DexScreenerResponse> {
@@ -202,17 +206,39 @@ async function fetchTokenData(): Promise<TokenData[]> {
       const dexScreenerData = await getDexScreenerData(token.mint);
       const pair = dexScreenerData.pairs?.[0];
       
-      // Only use actual data from DexScreener, no defaults
+      if (!pair) {
+        console.warn(`No pair data found for ${token.symbol}`);
+        continue;
+      }
+
+      // Calculate if volume is on up day based on price change
+      const volumeOnUpDay = (pair.priceChange?.h24 || 0) > 0;
+
+      // Extract current price and calculate 7d average (if available)
+      const currentPrice = Number(pair.priceUsd || 0);
+      const price7dAvg = currentPrice * (1 - (pair.priceChange?.h24 || 0) / 100); // Approximate 7d avg using 24h change
+
       tokenData.push({
-        symbol: token.symbol,        // This will go in 'symbol' field
-        name: token.name,           // This will go in 'name' field
-        mint: token.mint,           // Actual mint address
+        symbol: token.symbol,
+        name: token.name,
+        mint: token.mint,
         isActive: true,
-        volume7d: pair?.volume?.h24 ? pair.volume.h24 * 7 : 0,
-        liquidity: pair?.liquidity?.usd || 0,
-        volumeGrowth: pair?.priceChange?.h24 || 0,
-        pricePerformance: pair?.priceChange?.h24 || 0,
-        holderCount: 0  // Don't set a default
+        volume7d: pair.volume?.h24 ? pair.volume.h24 * 7 : 0,
+        liquidity: pair.liquidity?.usd || 0,
+        volumeGrowth: pair.priceChange?.h24 || 0,
+        pricePerformance: pair.priceChange?.h24 || 0,
+        holderCount: 0,  // Keep as is
+        price: currentPrice,
+        price7dAvg: price7dAvg,
+        volumeOnUpDay: volumeOnUpDay,
+        priceChange24h: pair.priceChange?.h24 || 0
+      });
+
+      console.log(`Processed ${token.symbol}:`, {
+        price: currentPrice,
+        price7dAvg: price7dAvg,
+        volumeOnUpDay: volumeOnUpDay,
+        priceChange24h: pair.priceChange?.h24
       });
 
       // Add delay between requests
@@ -247,15 +273,22 @@ async function updateAirtable(tokenData: TokenData[]) {
         volumeGrowth: token.volumeGrowth,
         pricePerformance: token.pricePerformance,
         holderCount: token.holderCount,
-        createdAt: createdAt          // Changed from timestamp to createdAt
+        price: token.price,
+        price7dAvg: token.price7dAvg,
+        volumeOnUpDay: token.volumeOnUpDay,
+        priceChange24h: token.priceChange24h,
+        createdAt: createdAt
       };
 
       // Create new record
       await table.create([{ fields }]);
       console.log(`✅ Created new snapshot for ${token.symbol}`);
+      console.log(`   Price: $${token.price.toFixed(4)}`);
+      console.log(`   7d Avg: $${token.price7dAvg.toFixed(4)}`);
+      console.log(`   24h Change: ${token.priceChange24h.toFixed(2)}%`);
       console.log(`   Volume 7d: $${token.volume7d.toLocaleString()}`);
       console.log(`   Liquidity: $${token.liquidity.toLocaleString()}`);
-      console.log(`   Performance: ${token.pricePerformance.toFixed(2)}%`);
+      console.log(`   Volume on Up Day: ${token.volumeOnUpDay ? 'Yes' : 'No'}`);
 
     } catch (error) {
       console.error(`❌ Failed to create snapshot for ${token.symbol}:`, error);
