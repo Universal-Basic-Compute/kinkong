@@ -17,9 +17,12 @@ export async function GET() {
     let currentDrawdown = 0;
     let peakValue = 0;
 
+    // Debug log
+    console.log('First trade data:', trades[0]?.fields);
+
     trades.forEach(trade => {
-      const roi = trade.get('roi') as number;
-      const realizedPnl = trade.get('realizedPnl') as number;
+      const roi = parseFloat(trade.get('roi') as string) || 0;
+      const realizedPnl = parseFloat(trade.get('realizedPnl') as string) || 0;
 
       if (roi > 0) winningTrades++;
       totalReturn += realizedPnl;
@@ -35,24 +38,54 @@ export async function GET() {
       }
     });
 
-    // Calculate Sharpe Ratio (assuming risk-free rate of 0 for simplicity)
-    const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
-    const stdDev = Math.sqrt(
-      returns.reduce((a, b) => a + Math.pow(b - avgReturn, 2), 0) / returns.length
-    );
-    const sharpeRatio = avgReturn / stdDev;
+    // Calculate Sharpe Ratio (avoiding division by zero)
+    let sharpeRatio = 0;
+    if (returns.length > 0) {
+      const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
+      const stdDev = Math.sqrt(
+        returns.reduce((a, b) => a + Math.pow(b - avgReturn, 2), 0) / returns.length
+      ) || 1; // Use 1 if stdDev is 0 to avoid division by zero
+      sharpeRatio = avgReturn / stdDev;
+    }
 
     // Get performance history (daily points)
     const history = trades.reduce((acc, trade) => {
-      const date = new Date(trade.get('timestamp') as string).toISOString().split('T')[0];
-      const value = trade.get('value') as number;
-      
-      if (!acc[date]) {
-        acc[date] = { timestamp: date, value: 0 };
+      try {
+        // Safely parse the timestamp
+        const timestamp = trade.get('timestamp');
+        if (!timestamp) return acc;
+
+        let date;
+        try {
+          // Try parsing as ISO string
+          date = new Date(timestamp).toISOString().split('T')[0];
+        } catch (e) {
+          console.warn('Invalid date format:', timestamp);
+          return acc;
+        }
+
+        const value = parseFloat(trade.get('value') as string) || 0;
+        
+        if (!acc[date]) {
+          acc[date] = { timestamp: date, value: 0 };
+        }
+        acc[date].value += value;
+        return acc;
+      } catch (e) {
+        console.error('Error processing trade:', e);
+        return acc;
       }
-      acc[date].value += value;
-      return acc;
-    }, {});
+    }, {} as Record<string, { timestamp: string; value: number }>);
+
+    // Debug logs
+    console.log('Metrics calculated:', {
+      totalTrades,
+      winningTrades,
+      totalReturn,
+      maxDrawdown,
+      sharpeRatio
+    });
+    console.log('History points:', Object.keys(history).length);
 
     return NextResponse.json({
       metrics: {
@@ -67,6 +100,14 @@ export async function GET() {
 
   } catch (error) {
     console.error('Failed to fetch performance metrics:', error);
+    // Log more details about the error
+    if (error instanceof Error) {
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+    }
     return NextResponse.json(
       { error: 'Failed to fetch performance metrics' },
       { status: 500 }
