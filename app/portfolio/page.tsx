@@ -34,9 +34,27 @@ function getTokenClass(token: string): string {
 
 
 export default function Portfolio() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [metrics, setMetrics] = useState<{
+    totalValue: number;
+    change24h: number;
+    change7d: number;
+    history: Array<{timestamp: string; value: number}>;
+  } | null>(null);
   const [tokens, setTokens] = useState<TokenInfo[]>([]);
   const [isTokensLoading, setIsTokensLoading] = useState(true);
   const [tokenError, setTokenError] = useState<string | null>(null);
+
+  function getChangeClass(value: number | undefined) {
+    if (!value) return '';
+    return value >= 0 ? 'text-green-400' : 'text-red-400';
+  }
+
+  function formatChange(value: number | undefined) {
+    if (!value) return '0.00';
+    return value.toFixed(2);
+  }
 
 
   useEffect(() => {
