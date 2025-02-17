@@ -1,5 +1,7 @@
-import { Chart, ChartConfiguration, ChartTypeRegistry } from 'chart.js/auto';
+import { Chart, ChartConfiguration } from 'chart.js/auto';
+import 'chartjs-adapter-date-fns';
 import { createCanvas } from 'canvas';
+import { enUS } from 'date-fns/locale';
 
 interface Candlestick {
     timestamp: number;
@@ -32,6 +34,8 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     // Create canvas
     const canvas = createCanvas(800, 400);
     const ctx = canvas.getContext('2d');
+    
+    Chart.defaults.locale = enUS;
     
     const config: ChartConfiguration = {
         type: 'bar',
@@ -85,8 +89,16 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
             scales: {
                 x: {
                     type: 'time',
+                    adapters: {
+                        date: {
+                            locale: enUS
+                        }
+                    },
                     time: {
-                        unit: 'hour'
+                        unit: 'hour',
+                        displayFormats: {
+                            hour: 'HH:mm'
+                        }
                     },
                     grid: {
                         color: 'rgba(255, 215, 0, 0.1)'
