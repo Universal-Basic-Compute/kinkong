@@ -1,8 +1,10 @@
 # KinKong Technical Flows Documentation
 
-## Trade Lifecycle Overview
+## System Architecture
 
-### 1. Signal Generation Flow
+The system is split into two separate processes:
+
+### 1. Signal Generation Process (6-hour intervals)
 ```mermaid
 graph TD
     A[analyze_all_tokens.py] --> B[Generate Charts]
@@ -10,40 +12,33 @@ graph TD
     C --> D[Claude Analysis]
     D --> E[Signal Validation]
     E --> F{Valid Signal?}
-    F -->|Yes| G[Create in Airtable]
+    F -->|Yes| G[Create PENDING in Airtable]
     F -->|No| H[Log Rejection]
-    G --> I{Price at Entry?}
-    I -->|Yes| J[Immediate Execution]
-    I -->|No| K[PENDING Status]
 ```
 
-### 2. Trade Execution Paths
+### 2. Trade Execution Process (Continuous)
+```mermaid
+graph TD
+    A[monitor_trades.py] --> B[Check PENDING Signals]
+    B --> C[Rate Limited Price Checks]
+    C --> D{Price at Entry?}
+    D -->|Yes| E[Batch Trade Queue]
+    D -->|No| F[Continue Monitoring]
+    E --> G[Execute Trade Batch]
+    G --> H[Update to ACTIVE]
+    
+    I[Active Trade Monitor] --> J[Check Stop/Target]
+    J --> K{Exit Condition Met?}
+    K -->|Yes| L[Batch Exit Queue]
+    K -->|No| M[Update PnL]
+    L --> N[Execute Exit Batch]
+```
 
-#### A. Immediate Execution Path
-1. `analyze_charts.py`
-   - Validates signal
-   - Checks current price
-   - If price at entry (±1%):
-     ```python
-     create_airtable_signal()
-       → calculate_position_size()
-       → execute_trade_with_phantom()
-       → update_signal_status('ACTIVE')
-     ```
-
-#### B. Pending Signal Activation Path
-1. `manage_signals.py::check_pending_signals()`
-   - Runs every minute
-   - Checks all PENDING signals
-   - For each signal:
-     ```python
-     get_token_price()
-     if price_at_entry():
-         activate_signal()
-           → calculate_position_size()
-           → execute_trade_with_phantom()
-           → update_signal_status('ACTIVE')
-     ```
+Key Features:
+- Rate limited price checks (5 per second)
+- Batched trade execution (every 5 minutes)
+- Continuous monitoring of active positions
+- Batched exit execution
 
 ### 3. Active Trade Management
 
