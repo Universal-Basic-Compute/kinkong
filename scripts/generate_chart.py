@@ -203,7 +203,7 @@ def generate_chart(df, config, support_levels=None):
                 mpf.make_addplot([price] * len(df), color=color, linestyle='--')
             )
     
-    # Create figure and axes
+    # Create figure and axes with larger size
     fig, axes = mpf.plot(
         df,
         type='candle',
@@ -211,10 +211,64 @@ def generate_chart(df, config, support_levels=None):
         title=f'{config["title"]}\n{stats_text}',
         volume=True,
         figsize=(16, 10),
-        panel_ratios=(3, 1),  # Increased price panel ratio
+        panel_ratios=(3, 1),
         addplot=apds,
-        returnfig=True  # Return figure and axes
+        returnfig=True,
+        ylabel='Price (USD)',
+        ylabel_lower='Volume (USD)',
+        xrotation=25,  # Rotate x-axis dates for better readability
+        datetime_format='%Y-%m-%d %H:%M',  # Full date-time format
     )
+    
+    # Get the main price axis and volume axis
+    ax_main = axes[0]
+    ax_volume = axes[2]
+    
+    # Format price axis (y-axis)
+    ax_main.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.4f}'))
+    ax_main.yaxis.label.set_color('white')
+    ax_main.yaxis.set_label_position('right')
+    ax_main.tick_params(axis='y', colors='white', labelsize=10)
+    
+    # Add price grid lines
+    ax_main.grid(axis='y', color='gray', alpha=0.2, linestyle='--')
+    
+    # Format volume axis
+    ax_volume.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.0f}'))
+    ax_volume.yaxis.label.set_color('white')
+    ax_volume.yaxis.set_label_position('right')
+    ax_volume.tick_params(axis='y', colors='white', labelsize=10)
+    
+    # Format date axis (x-axis)
+    ax_main.tick_params(axis='x', colors='white', labelsize=10)
+    ax_volume.tick_params(axis='x', colors='white', labelsize=10)
+    
+    # Add date grid lines
+    ax_main.grid(axis='x', color='gray', alpha=0.2, linestyle='--')
+    
+    # Add price range label
+    price_range = f"Range: ${df['Low'].min():.4f} - ${df['High'].max():.4f}"
+    ax_main.text(0.02, 0.95, price_range,
+                transform=ax_main.transAxes,
+                color='white',
+                fontsize=10)
+    
+    # Add volume range label
+    volume_range = f"Vol Range: ${df['Volume'].min():,.0f} - ${df['Volume'].max():,.0f}"
+    ax_volume.text(0.02, 0.95, volume_range,
+                  transform=ax_volume.transAxes,
+                  color='white',
+                  fontsize=10)
+    
+    # Add timeframe info
+    timeframe_info = (
+        f"From: {df.index[0].strftime('%Y-%m-%d %H:%M')}\n"
+        f"To: {df.index[-1].strftime('%Y-%m-%d %H:%M')}"
+    )
+    fig.text(0.02, 0.02, timeframe_info,
+             color='gray',
+             fontsize=10,
+             va='bottom')
     
     # Add subtitle with timeframe info
     fig.text(0.5, 0.95, config['subtitle'], 
@@ -222,15 +276,8 @@ def generate_chart(df, config, support_levels=None):
              color='white',
              fontsize=12)
     
-    # Add volume statistics
-    volume_stats = f"Avg Volume: ${avg_volume:,.0f}"
-    axes[2].text(0.02, 0.95, volume_stats,
-                 transform=axes[2].transAxes,
-                 color='white',
-                 fontsize=10)
-    
     # Add legend for EMAs
-    axes[0].legend(['EMA20', 'EMA50'], 
+    ax_main.legend(['EMA20', 'EMA50'], 
                   loc='upper left',
                   facecolor='black',
                   edgecolor='white',
@@ -243,7 +290,7 @@ def generate_chart(df, config, support_levels=None):
              color='gray',
              fontsize=10)
     
-    # Save the chart
+    # Save with higher DPI
     plt.savefig(
         config['filename'],
         dpi=150,
