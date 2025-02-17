@@ -205,43 +205,37 @@ export async function executeReallocation() {
     }
 
     // 6. Generate trade orders
-    const orders: TradeOrder[] = [];
-    
-    // Calculate total portfolio value
+    // Calculate total portfolio value and print current allocations
     const totalValue = Array.from(currentPortfolio.values())
       .reduce((sum, holding) => sum + (holding.usdValue || 0), 0);
 
-    // Get USDC balance
-    const usdcBalance = currentPortfolio.get('USDC')?.usdValue || 0;
-    console.log('Available USDC balance:', usdcBalance);
+    console.log('Current portfolio value:', totalValue);
+    console.log('Current allocations:', Object.fromEntries(
+      Array.from(currentPortfolio.entries())
+        .map(([token, data]) => [token, (data.usdValue / totalValue * 100).toFixed(2) + '%'])
+    ));
 
-    // Calculate required trades
+    // First calculate all needed trades
+    const potentialOrders: TradeOrder[] = [];
+
     for (const score of tokenScores) {
       const currentValue = currentPortfolio.get(score.symbol)?.usdValue || 0;
       const currentPercentage = (currentValue / totalValue) * 100;
       const targetValue = (score.targetAllocation / 100) * totalValue;
-      let difference = targetValue - currentValue;
+      const difference = targetValue - currentValue;
       
-      // Scale down trades if they exceed USDC balance
-      if (difference > 0) { // Only for buys
-        const totalBuyAmount = orders.reduce((sum, order) => 
-          order.action === 'BUY' ? sum + order.amount : sum, 0);
-        
-        if (totalBuyAmount + difference > usdcBalance) {
-          // Scale down the difference to fit within remaining USDC
-          difference = Math.min(difference, usdcBalance - totalBuyAmount);
-        }
-      }
-      
-      // Only trade if adjustment > 3% and amount is significant
-      if (Math.abs(difference) / totalValue * 100 > 3 && Math.abs(difference) > 1) {
+      // Only trade if adjustment > 3%
+      if (Math.abs(difference) / totalValue * 100 > 3) {
         const price = await getTokenPrice(score.symbol);
-        if (!price) continue;
+        if (!price) {
+          console.log(`Skipping ${score.symbol} - no price available`);
+          continue;
+        }
+
+        console.log(`${score.symbol}: Current: ${currentPercentage.toFixed(2)}%, Target: ${score.targetAllocation}%, Difference: $${difference.toFixed(2)}`);
 
         const tokenAmount = Math.abs(difference) / price;
-        console.log(`Calculated trade: ${score.symbol} ${difference > 0 ? 'BUY' : 'SELL'} $${Math.abs(difference).toFixed(2)} (${tokenAmount.toFixed(4)} tokens @ $${price})`);
-
-        orders.push({
+        potentialOrders.push({
           token: score.symbol,
           action: difference > 0 ? 'BUY' : 'SELL',
           amount: tokenAmount,
@@ -249,6 +243,17 @@ export async function executeReallocation() {
         });
       }
     }
+
+    // Sort orders: execute sells first to generate USDC for buys
+    const orders = [
+      ...potentialOrders.filter(o => o.action === 'SELL'),
+      ...potentialOrders.filter(o => o.action === 'BUY')
+    ];
+
+    console.log('\nPlanned trades:');
+    orders.forEach(order => {
+      console.log(`${order.action} ${order.amount.toFixed(4)} ${order.token} - ${order.reason}`);
+    });
 
     // 5. Execute trades
     for (const order of orders) {
