@@ -240,6 +240,20 @@ def generate_chart(df, config, support_levels=None):
         ax_main = axes[0]
         ax_volume = axes[2]
 
+        # Set log scale for price axis
+        ax_main.set_yscale('log')
+        
+        # Add minor grid lines for log scale
+        ax_main.grid(which='minor', axis='y', color='#FFD70020', alpha=0.1, linestyle='--')
+        ax_main.grid(which='major', axis='y', color='#FFD70020', alpha=0.2, linestyle='--')
+
+        # Format price axis with log scale
+        def price_formatter(x, p):
+            if x > 0:
+                return f'${x:,.4f}'
+            return ''
+        ax_main.yaxis.set_major_formatter(ticker.FuncFormatter(price_formatter))
+
         # Set axis labels
         ax_main.set_xlabel('Date', color='white', fontsize=12)
         ax_main.set_ylabel('Price (USD)', color='white', fontsize=12)
