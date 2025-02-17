@@ -1,6 +1,8 @@
 import { getTable } from '../backend/src/airtable/tables';
 import dotenv from 'dotenv';
 import path from 'path';
+import Airtable from 'airtable';
+import fetch from 'node-fetch';
 
 interface MarketClassification {
   sentiment: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
