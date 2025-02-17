@@ -126,7 +126,8 @@ async function getBirdeyeData(mint: string): Promise<BirdeyeResponse> {
         'X-API-KEY': BIRDEYE_API_KEY!
       }
     });
-    return await response.json();
+    const data = await response.json() as BirdeyeResponse;
+    return data;
   } catch (error) {
     console.warn(`Warning: Failed to fetch Birdeye data for ${mint}:`, error);
     return {};
@@ -157,7 +158,7 @@ async function getJupiterData(mint: string, retries = 3): Promise<JupiterRespons
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data = await response.json() as JupiterResponse;
       console.log(`Successfully fetched Jupiter data for ${mint}`);
       return data;
 
@@ -201,11 +202,11 @@ async function fetchTokenData(): Promise<TokenData[]> {
         description: token.description,
         mint: token.mint,
         isActive: true,
-        volume7d: birdeyeData?.volume24h * 7 || volume7d,
-        liquidity: jupiterData?.data?.[token.mint]?.liquidity || liquidity,
-        volumeGrowth: birdeyeData?.volumeChange24h || volumeGrowth,
-        pricePerformance: birdeyeData?.priceChange24h || pricePerformance,
-        holderCount: birdeyeData?.holder || holderCount
+        volume7d: (birdeyeData.volume24h ?? 0) * 7 || volume7d,
+        liquidity: jupiterData.data?.[token.mint]?.liquidity ?? liquidity,
+        volumeGrowth: birdeyeData.volumeChange24h ?? volumeGrowth,
+        pricePerformance: birdeyeData.priceChange24h ?? pricePerformance,
+        holderCount: birdeyeData.holder ?? holderCount
       });
 
       // Add delay between requests
