@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { MetricsDisplay } from '@/components/home/MetricsDisplay';
 
 export default function Home() {
   console.log('🏠 Home page rendered');
@@ -66,12 +65,6 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="metrics py-20 px-4 bg-gradient-to-b from-black to-darkred/20">
-        <h2 className="text-4xl font-bold text-center mb-12 text-gold electric-text">Real Performance Metrics</h2>
-        <div className="max-w-4xl mx-auto">
-          <MetricsDisplay />
-        </div>
-      </section>
 
       <section className="how-it-works py-20 px-4">
         <h2 className="text-4xl font-bold text-center mb-12 text-gold">How It Works</h2>
