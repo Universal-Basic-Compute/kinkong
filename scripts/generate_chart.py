@@ -258,33 +258,33 @@ def generate_chart(df, config, support_levels=None):
         )
         volume_stats = f"Avg Vol: {format_volume(avg_volume)} | {len(df)} candles"
     
-    # Add text without math parameter
-    fig.text(0.5, 0.97, main_title,
-             horizontalalignment='center',
-             color='white',
-             fontsize=14,
-             fontweight='bold')
-    
-    fig.text(0.5, 0.94, price_stats,
-             horizontalalignment='center',
-             color='#ffd700',
-             fontsize=11)
-    
-    fig.text(0.5, 0.92, volume_stats,
-             horizontalalignment='center',
-             color='#c0c0c0',
-             fontsize=10)
+        # Add text without math parameter
+        fig.text(0.5, 0.97, main_title,
+                horizontalalignment='center',
+                color='white',
+                fontsize=14,
+                fontweight='bold')
+        
+        fig.text(0.5, 0.94, price_stats,
+                horizontalalignment='center',
+                color='#ffd700',
+                fontsize=11)
+        
+        fig.text(0.5, 0.92, volume_stats,
+                horizontalalignment='center',
+                color='#c0c0c0',
+                fontsize=10)
 
-    # Update technical info
-    technical_info = (
-        f"EMA(20) & EMA(50) | "
-        f"Period: {df.index[0].strftime('%Y-%m-%d %H:%M')} → {df.index[-1].strftime('%Y-%m-%d %H:%M')} UTC"
-    )
-    
-    fig.text(0.5, 0.90, technical_info,
-             horizontalalignment='center',
-             color='#808080',
-             fontsize=9)
+        # Update technical info
+        technical_info = (
+            f"EMA(20) & EMA(50) | "
+            f"Period: {df.index[0].strftime('%Y-%m-%d %H:%M')} → {df.index[-1].strftime('%Y-%m-%d %H:%M')} UTC"
+        )
+        
+        fig.text(0.5, 0.90, technical_info,
+                horizontalalignment='center',
+                color='#808080',
+                fontsize=9)
     
     # Add support/resistance levels info if present
     if support_levels:
