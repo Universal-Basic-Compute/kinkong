@@ -1,4 +1,5 @@
 'use client';
+
 import { AllocationChart } from '@/components/dashboard/AllocationChart'
 import { TokenTable } from '@/components/tables/TokenTable'
 import { SignalHistory } from '@/components/signals/SignalHistory'
@@ -8,6 +9,7 @@ import type { DraggableData, DraggableEvent } from 'react-draggable'
 import Draggable from 'react-draggable';
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
 
+// Move interfaces outside the component
 interface TokenInfo {
   symbol: string;
   name: string;
@@ -24,6 +26,7 @@ interface BubblePosition {
   y: number;
 }
 
+// Move helper functions outside the component
 function calculateBubbleSize(marketCap: number): number {
   const baseSize = 60;
   const scale = Math.log10(marketCap + 1) / Math.log10(1e9);
