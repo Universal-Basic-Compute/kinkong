@@ -10,32 +10,62 @@ const TOKENS = [
   {
     symbol: 'VIRTUAL',
     description: 'Virtual Protocol',
-    mint: '0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b'
+    mint: 'NETH'
   },
   {
     symbol: 'AI16Z',
     description: 'ai16z',
-    mint: 'HeLp6NuQkmYB4pYWo2zYs22mESHXPQYzXbB8n4V98jwC'
+    mint: 'SOL'
+  },
+  {
+    symbol: 'FARTCOIN',
+    description: 'Fartcoin',
+    mint: 'SOL'
   },
   {
     symbol: 'AIXBT',
     description: 'aixbt by Virtuals',
-    mint: '0x4F9Fd6Be4a90f2620860d680c0d4d5Fb53d1A825'
+    mint: 'USDC'
   },
   {
     symbol: 'GRIFFAIN',
     description: 'test griffain.com',
-    mint: 'KENJSUYLASHUMfHyy5o4Hp2FdNqZg1AsUPhfH2kYvEP'
+    mint: 'SOL'
   },
   {
     symbol: 'GOAT',
     description: 'Goatseus Maximus',
-    mint: 'CzLSujWBLFsSjncfkh59rUFqvafWcY5tzedWJSuypump'
+    mint: 'SOL'
+  },
+  {
+    symbol: 'ARC',
+    description: 'AI Rig Complex',
+    mint: 'SOL'
   },
   {
     symbol: 'ZEREBRO',
     description: 'zerebro',
-    mint: '8x5VqbHA8D7NkD52uNuS5nnt3PwA8pLD34ymskeSo2Wn'
+    mint: 'SOL'
+  },
+  {
+    symbol: 'GAME',
+    description: 'GAME by Virtuals',
+    mint: 'VIRTUAL'
+  },
+  {
+    symbol: 'ALCH',
+    description: 'Alchemist AI',
+    mint: 'SOL'
+  },
+  {
+    symbol: 'HAT',
+    description: 'TOP HAT',
+    mint: 'SOL'
+  },
+  {
+    symbol: 'AKA',
+    description: 'She Rises',
+    mint: 'SOL'
   }
 ];
 
