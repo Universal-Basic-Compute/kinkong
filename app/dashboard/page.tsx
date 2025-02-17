@@ -7,6 +7,7 @@ import { StatsCards } from '@/components/dashboard/StatsCards';
 import { PortfolioSection } from '@/components/dashboard/PortfolioSection';
 import { TrackedTokensSection } from '@/components/dashboard/TrackedTokensSection';
 import { InvestmentCard } from '@/components/dashboard/InvestmentCard';
+import { BubbleChart } from '@/components/dashboard/BubbleChart';
 import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 
 interface TokenInfo {
