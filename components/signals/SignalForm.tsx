@@ -138,10 +138,10 @@ export function SignalForm() {
         <label className="block mb-2 font-medium">Timeframe</label>
         <div className="grid grid-cols-4 gap-2">
           {[
-            { value: 'SCALP', label: 'Scalp', desc: 'Minutes to hours' },
-            { value: 'INTRADAY', label: 'Intraday', desc: 'Hours to 1 day' },
-            { value: 'SWING', label: 'Swing', desc: 'Days to weeks' },
-            { value: 'POSITION', label: 'Position', desc: 'Weeks to months' }
+            { value: 'SCALP', label: 'Scalp', desc: 'Minutes to hours', emoji: '⚡' },
+            { value: 'INTRADAY', label: 'Intraday', desc: 'Hours to 1 day', emoji: '📅' },
+            { value: 'SWING', label: 'Swing', desc: 'Days to weeks', emoji: '🌊' },
+            { value: 'POSITION', label: 'Position', desc: 'Weeks to months', emoji: '🎯' }
           ].map((option) => (
             <button
               key={option.value}
@@ -153,7 +153,9 @@ export function SignalForm() {
                   : 'border-gold/20 hover:border-gold/40'
               }`}
             >
-              <div className="font-medium">{option.label}</div>
+              <div className="font-medium">
+                {option.emoji} {option.label}
+              </div>
               <div className="text-xs text-gray-400">{option.desc}</div>
             </button>
           ))}
