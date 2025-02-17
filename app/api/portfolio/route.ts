@@ -3,7 +3,7 @@ import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { NextResponse } from 'next/server';
 import { getTokenPrices } from '@/backend/src/utils/jupiter';
 
-import { getTable } from '../airtable/tables';
+import { getTable } from '@/backend/src/airtable/tables';
 
 const DEXSCREENER_API = 'https://api.dexscreener.com/latest/dex/tokens';
 
