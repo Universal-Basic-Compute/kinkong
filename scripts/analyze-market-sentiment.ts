@@ -51,11 +51,10 @@ ${classification.reasons.map(r => '• ' + r).join('\n')}`;
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chat_id: process.env.TELEGRAM_CHAT_ID,
-          text: formattedMessage,
-          parse_mode: 'MarkdownV2'
+          text: message
         })
       });
-        
+      
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(`Telegram API error: ${response.status} - ${JSON.stringify(errorData)}`);
