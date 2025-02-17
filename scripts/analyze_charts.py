@@ -606,82 +606,70 @@ def create_airtable_signal(analysis, timeframe, token_info):
         return None
 
 def process_signals_batch(token_analyses):
-    print("\n🔄 Processing signals batch...")
+    print("\n🔄 Starting signals batch processing...")
+    print(f"Received {len(token_analyses)} token analyses to process")
+    
     pending_signals = []
     
-    # Add debug counter
-    total_tokens = len(token_analyses)
-    processed_count = 0
-    
-    # Update timeframe mappings to include 15m
-    VALID_TIMEFRAMES = {
-        '15m': 'SCALP',    # Add 15m mapping
-        '2h': 'INTRADAY',
-        '8h': 'SWING',
-        '45D': 'POSITION'
-    }
-    
     for token_info, analyses in token_analyses:
-        processed_count += 1
-        print(f"\n[{processed_count}/{total_tokens}] Processing {token_info['symbol']}...")
+        print(f"\n📊 Processing signals for {token_info['symbol']}...")
+        print(f"Analysis structure: {type(analyses)}")
+        print(f"Available timeframes: {list(analyses.keys())}")
         
-        # Debug print the analyses structure
-        print(f"Analysis keys: {analyses.keys()}")
-        for tf, analysis in analyses.items():
-            print(f"Timeframe {tf} analysis type: {type(analysis)}")
-            if hasattr(analysis, 'signal'):
-                print(f"Signal: {analysis.signal}")
-                print(f"Confidence: {analysis.confidence}")
-            elif isinstance(analysis, dict):
-                print(f"Dict analysis: {analysis.get('signal')}, {analysis.get('confidence')}")
+        # Debug print each analysis
+        for timeframe, analysis in analyses.items():
+            if timeframe != 'overall':
+                print(f"\nTimeframe {timeframe}:")
+                print(f"Analysis type: {type(analysis)}")
+                if isinstance(analysis, ChartAnalysis):
+                    print(f"Signal: {analysis.signal}")
+                    print(f"Confidence: {analysis.confidence}")
+                    print(f"Key levels: {analysis.key_levels}")
+                elif isinstance(analysis, dict):
+                    print(f"Signal: {analysis.get('signal')}")
+                    print(f"Confidence: {analysis.get('confidence')}")
+                    print(f"Key levels: {analysis.get('key_levels')}")
         
-        # Filter only valid timeframes and exclude 'overall'
-        timeframe_analyses = {
-            tf: analysis for tf, analysis in analyses.items() 
-            if tf in VALID_TIMEFRAMES and tf != 'overall'
+        # Filter valid timeframes
+        valid_timeframes = {
+            tf: analysis for tf, analysis in analyses.items()
+            if tf in ['15m', '2h', '8h']  # Explicit timeframe list
         }
         
-        print(f"Found {len(timeframe_analyses)} valid timeframe analyses")
+        print(f"\nFound {len(valid_timeframes)} valid timeframe analyses")
         
-        for timeframe, analysis in timeframe_analyses.items():
-            print(f"\nTimeframe {timeframe} -> {VALID_TIMEFRAMES[timeframe]}:")
+        for timeframe, analysis in valid_timeframes.items():
+            print(f"\n⏰ Processing {timeframe} timeframe...")
             
-            # Extract signal details with better type handling
+            # Extract signal details
+            signal_type = None
+            confidence = 0
+            
             if isinstance(analysis, ChartAnalysis):
                 signal_type = analysis.signal
                 confidence = analysis.confidence
-                reasoning = analysis.reasoning
-                key_levels = analysis.key_levels
-            else:
+            elif isinstance(analysis, dict):
                 signal_type = analysis.get('signal')
                 confidence = analysis.get('confidence', 0)
-                reasoning = analysis.get('reasoning', '')
-                key_levels = analysis.get('key_levels', {})
             
-            print(f"Signal: {signal_type}")
+            print(f"Signal type: {signal_type}")
             print(f"Confidence: {confidence}")
-            print(f"Key Levels: {key_levels}")
             
             if signal_type and signal_type != 'HOLD' and confidence >= 60:
-                print("✅ Signal meets initial criteria")
+                print("✅ Signal meets criteria for creation")
                 
-                # Map timeframe to strategy timeframe
-                strategy_timeframe = VALID_TIMEFRAMES[timeframe]
-                print(f"Mapped timeframe: {timeframe} -> {strategy_timeframe}")
-                
-                # Create signal data with key levels
+                # Create signal data
                 signal_data = {
-                    'timeframe': strategy_timeframe,
+                    'timeframe': timeframe,
                     'signal': signal_type,
                     'confidence': confidence,
-                    'reasoning': reasoning,
-                    'key_levels': key_levels,
                     'token_info': token_info
                 }
                 
                 # Validate signal
+                print("Validating signal...")
                 validation_result = validate_signal(
-                    timeframe=strategy_timeframe,
+                    timeframe=timeframe,
                     signal_data=signal_data,
                     token_info=token_info,
                     market_data=get_dexscreener_data(token_info['mint'])
@@ -690,10 +678,10 @@ def process_signals_batch(token_analyses):
                 print(f"Validation result: {validation_result}")
                 
                 if validation_result['valid']:
-                    print("✅ Validation passed, adding to pending signals")
+                    print("✅ Signal validated, adding to pending signals")
                     pending_signals.append(signal_data)
                 else:
-                    print(f"❌ Validation failed: {validation_result['reason']}")
+                    print(f"❌ Signal validation failed: {validation_result['reason']}")
             else:
                 print("❌ Signal did not meet criteria:")
                 if not signal_type:
@@ -702,9 +690,17 @@ def process_signals_batch(token_analyses):
                     print("- HOLD signal")
                 if confidence < 60:
                     print(f"- Low confidence ({confidence})")
-
-    print(f"\nCollected {len(pending_signals)} valid signals for processing")
-    return process_valid_signals(pending_signals)
+    
+    print(f"\n📝 Collected {len(pending_signals)} valid signals")
+    
+    if pending_signals:
+        print("\n🚀 Processing valid signals...")
+        results = process_valid_signals(pending_signals)
+        print(f"✅ Created {len(results)} signals")
+        return results
+    else:
+        print("\n⚠️ No valid signals to process")
+        return []
 
 def generate_signal(analyses, token_info):
     """Generate combined signal from serialized analyses"""
