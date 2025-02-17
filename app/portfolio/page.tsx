@@ -2,6 +2,8 @@
 import { PortfolioSection } from '@/components/dashboard/PortfolioSection';
 import { useState, useEffect } from 'react'
 import { PerformanceChart } from '@/components/charts/PerformanceChart'
+import { AllocationChart } from '@/components/dashboard/AllocationChart';
+import { TokenTable } from '@/components/tables/TokenTable';
 
 const STRATEGY_INFO = {
   performance: `Historical portfolio performance tracking:
