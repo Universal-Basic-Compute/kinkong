@@ -1,6 +1,7 @@
-import { Chart } from 'chart.js/auto';
+import { Chart, ChartConfiguration } from 'chart.js/auto';
 import { createCanvas } from 'canvas';
 import { enUS } from 'date-fns/locale';
+import 'chartjs-adapter-date-fns';
 
 interface Candlestick {
     timestamp: number;
@@ -34,10 +35,7 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     const canvas = createCanvas(800, 400);
     const ctx = canvas.getContext('2d');
     
-    // Load the adapter dynamically
-    await import('chartjs-adapter-date-fns');
-    
-    const config = {
+    const config: ChartConfiguration = {
         type: 'bar',
         data: {
             datasets: [
