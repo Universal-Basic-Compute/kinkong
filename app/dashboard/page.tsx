@@ -3,7 +3,8 @@ import { AllocationChart } from '@/components/dashboard/AllocationChart'
 import { TokenTable } from '@/components/tables/TokenTable'
 import { SignalHistory } from '@/components/signals/SignalHistory'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import type { DraggableData, DraggableEvent } from 'react-draggable'
 import Draggable from 'react-draggable';
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
 
@@ -16,6 +17,11 @@ interface TokenInfo {
   volumeGrowth: number;
   pricePerformance: number;
   marketCap: number;
+}
+
+interface BubblePosition {
+  x: number;
+  y: number;
 }
 
 function calculateBubbleSize(marketCap: number): number {
@@ -111,6 +117,14 @@ export default function Dashboard() {
   const [trackedTokens, setTrackedTokens] = useState<TokenInfo[]>([]);
   const [isTrackedTokensLoading, setIsTrackedTokensLoading] = useState(true);
   const [trackedTokensError, setTrackedTokensError] = useState<string | null>(null);
+  const [bubblePositions, setBubblePositions] = useState<Record<string, BubblePosition>>({});
+
+  const handleDrag = (mint: string, e: DraggableEvent, data: DraggableData) => {
+    setBubblePositions(prev => ({
+      ...prev,
+      [mint]: { x: data.x, y: data.y }
+    }));
+  };
   const [isTableVisible, setIsTableVisible] = useState(false);
 
   useEffect(() => {
@@ -179,13 +193,22 @@ export default function Dashboard() {
         {/* Bubble Visualization */}
         <div className="mb-12 relative h-[400px] bg-black/30 rounded-lg border border-gold/20 p-4">
           <div className="absolute inset-0">
-            {trackedTokens.map((token) => (
-              <Draggable
-                key={token.mint}
-                defaultPosition={{x: Math.random() * 500, y: Math.random() * 300}}
-                bounds="parent"
-              >
-                <div className="relative group cursor-move">
+            {trackedTokens.map((token) => {
+              const nodeRef = useRef(null);
+              const position = bubblePositions[token.mint] || {
+                x: Math.random() * 500,
+                y: Math.random() * 300
+              };
+
+              return (
+                <Draggable
+                  key={token.mint}
+                  nodeRef={nodeRef}
+                  position={position}
+                  onDrag={(e, data) => handleDrag(token.mint, e, data)}
+                  bounds="parent"
+                >
+                  <div ref={nodeRef} className="relative group cursor-move">
                   <div 
                     className={`
                       rounded-full flex items-center justify-center
