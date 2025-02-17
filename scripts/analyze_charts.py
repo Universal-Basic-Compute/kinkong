@@ -178,12 +178,12 @@ def analyze_charts_with_claude(chart_paths):
     client = anthropic.Client(
         api_key=api_key,
     )
-        
-        # Get market data and context
-        market_data = get_dexscreener_data()
-        market_context = get_market_context()
+    
+    # Get market data and context
+    market_data = get_dexscreener_data()
+    market_context = get_market_context()
 
-        # Prepare all chart images
+    # Prepare all chart images
         chart_contents = []
         for chart_path in chart_paths:
             # Convert WindowsPath to string
