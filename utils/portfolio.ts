@@ -1,5 +1,5 @@
 import { Connection, PublicKey, TOKEN_PROGRAM_ID } from '@solana/web3.js';
-import { getTokenPrice } from './prices';
+import { getTokenPrice } from '@/backend/src/utils/prices';
 
 export interface TokenPosition {
   mint: string;
