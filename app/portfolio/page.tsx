@@ -2,11 +2,7 @@
 import { AllocationChart } from '@/components/dashboard/AllocationChart'
 import { TokenTable } from '@/components/tables/TokenTable'
 import { useState, useEffect } from 'react'
-
-'use client';
-import { AllocationChart } from '@/components/dashboard/AllocationChart'
-import { TokenTable } from '@/components/tables/TokenTable'
-import { useState, useEffect } from 'react'
+import { PerformanceChart } from '@/components/charts/PerformanceChart'
 
 interface TokenInfo {
   symbol: string;
