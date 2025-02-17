@@ -2,11 +2,13 @@ import { createCanvas } from 'canvas';
 import { 
     createChart, 
     ColorType,
-    SeriesType,
     Time,
     CandlestickData,
     LineData,
-    HistogramData
+    HistogramData,
+    CandlestickSeriesOptions,
+    LineSeriesOptions,
+    HistogramSeriesOptions
 } from 'lightweight-charts';
 
 interface Candlestick {
