@@ -54,13 +54,18 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     
     // Add candlestick series
     const candlestickSeries = chart.addSeries({
-        type: 'Candlestick' as const,
+        type: 'Candlestick',
         upColor: 'rgba(75, 192, 75, 1)',
         downColor: 'rgba(192, 75, 75, 1)',
         borderVisible: false,
         wickUpColor: 'rgba(75, 192, 75, 1)',
         wickDownColor: 'rgba(192, 75, 75, 1)',
-    } as CandlestickSeriesOptions);
+        borderColor: 'rgba(75, 192, 75, 1)',
+        borderUpColor: 'rgba(75, 192, 75, 1)',
+        borderDownColor: 'rgba(192, 75, 75, 1)',
+        wickColor: 'rgba(75, 192, 75, 1)',
+        wickVisible: true
+    });
     
     // Format data for lightweight-charts
     const candleData: CandlestickData[] = data.candlesticks.map(candle => ({
@@ -75,16 +80,26 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     
     // Add EMA lines
     const ema20Series = chart.addSeries({
-        type: 'Line' as const,
+        type: 'Line',
         color: 'rgba(255, 215, 0, 0.8)',
         lineWidth: 1,
-    } as LineSeriesOptions);
+        lineStyle: 0,
+        lineType: 0,
+        lineVisible: true,
+        pointMarkersVisible: false,
+        lastPriceAnimation: 0
+    });
     
     const ema50Series = chart.addSeries({
-        type: 'Line' as const,
+        type: 'Line',
         color: 'rgba(75, 192, 192, 0.8)',
         lineWidth: 1,
-    } as LineSeriesOptions);
+        lineStyle: 0,
+        lineType: 0,
+        lineVisible: true,
+        pointMarkersVisible: false,
+        lastPriceAnimation: 0
+    });
     
     const ema20Data: LineData[] = data.ema20.map(point => ({
         time: new Date(point.time * 1000).toISOString().split('T')[0] as Time,
@@ -101,13 +116,14 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     
     // Add volume
     const volumeSeries = chart.addSeries({
-        type: 'Histogram' as const,
+        type: 'Histogram',
         color: 'rgba(128, 128, 128, 0.2)',
         priceFormat: {
             type: 'volume',
         },
         priceScaleId: '',
-    } as HistogramSeriesOptions);
+        base: 0
+    });
     
     const volumeData: HistogramData[] = data.volume.map(v => ({
         time: new Date(v.time * 1000).toISOString().split('T')[0] as Time,
