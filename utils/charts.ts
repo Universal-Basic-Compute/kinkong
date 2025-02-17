@@ -33,8 +33,8 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     const canvas = createCanvas(800, 400);
     const ctx = canvas.getContext('2d');
     
-    // Create chart configuration
-    const config: ChartConfiguration = {
+    // Create chart
+    new Chart(ctx as any, config);
         type: 'bar', // We'll use bar as base type and customize it
         data: {
             datasets: [
