@@ -1,5 +1,5 @@
 import { createCanvas } from 'canvas';
-import { createChart, ColorType, IChartApi, ISeriesApi, CandlestickData } from 'lightweight-charts';
+import { createChart, ColorType } from 'lightweight-charts';
 
 interface Candlestick {
     timestamp: number;
@@ -43,7 +43,7 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     const data = await getChartData(token);
     
     // Add candlestick series
-    const candlestickSeries = chart.addCandlestickSeries({
+    const candlestickSeries = chart.addSeries('candlestick', {
         upColor: 'rgba(75, 192, 75, 1)',
         downColor: 'rgba(192, 75, 75, 1)',
         borderVisible: false,
@@ -63,12 +63,12 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     candlestickSeries.setData(candleData);
     
     // Add EMA lines
-    const ema20Series = chart.addLineSeries({
+    const ema20Series = chart.addSeries('line', {
         color: 'rgba(255, 215, 0, 0.8)',
         lineWidth: 1,
     });
     
-    const ema50Series = chart.addLineSeries({
+    const ema50Series = chart.addSeries('line', {
         color: 'rgba(75, 192, 192, 0.8)',
         lineWidth: 1,
     });
@@ -84,7 +84,7 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     })));
     
     // Add volume
-    const volumeSeries = chart.addHistogramSeries({
+    const volumeSeries = chart.addSeries('histogram', {
         color: 'rgba(128, 128, 128, 0.2)',
         priceFormat: {
             type: 'volume',
@@ -142,16 +142,16 @@ export async function getChartData(mintAddress: string): Promise<ChartData> {
     return {
       candlesticks,
       volume: candlesticks.map(c => ({
-        x: c.timestamp,
-        y: c.volume
+        time: c.timestamp,
+        value: c.volume
       })),
-      ema20: candlesticks.map((c: Candlestick, i: number) => ({
-        x: c.timestamp,
-        y: ema20[i]
+      ema20: candlesticks.map((c, i) => ({
+        time: c.timestamp,
+        value: ema20[i]
       })),
-      ema50: candlesticks.map((c: Candlestick, i: number) => ({
-        x: c.timestamp,
-        y: ema50[i]
+      ema50: candlesticks.map((c, i) => ({
+        time: c.timestamp,
+        value: ema50[i]
       }))
     };
   } catch (error) {
