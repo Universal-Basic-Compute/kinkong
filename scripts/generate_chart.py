@@ -3,40 +3,49 @@ import mplfinance as mpf
 import pandas as pd
 from datetime import datetime, timedelta
 import requests
+from dotenv import load_dotenv
+import os
+
+# Load environment variables
+load_dotenv()
 
 def fetch_ubc_sol_data():
-    # DexScreener API endpoint for UBC/SOL pair
-    url = "https://api.dexscreener.com/latest/dex/pairs/solana/hbjg1zpronbeiv86qdt1wzwgymts1ppxjcfoz819cbjd"
+    # Birdeye API endpoint for UBC/SOL pair
+    url = "https://public-api.birdeye.so/public/history_price"
+    headers = {
+        "X-API-KEY": os.getenv('BIRDEYE_API_KEY')
+    }
+    params = {
+        "address": "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump",  # UBC token address
+        "type": "1H",  # 1 hour intervals
+        "time_from": int((datetime.now() - timedelta(days=1)).timestamp()),  # 24 hours ago
+        "time_to": int(datetime.now().timestamp())
+    }
     
     try:
-        response = requests.get(url)
+        if not os.getenv('BIRDEYE_API_KEY'):
+            raise ValueError("BIRDEYE_API_KEY not found in environment variables")
+            
+        response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
         data = response.json()
         
-        if not data or 'pairs' not in data or not data['pairs']:
-            raise ValueError("No data returned from DexScreener API")
+        if not data or 'data' not in data or not data['data'].get('items'):
+            raise ValueError("No data returned from Birdeye API")
 
-        pair = data['pairs'][0]
-        candles = pair.get('priceData', {}).get('h1', [])  # Get hourly candles
+        items = data['data']['items']
 
-        if not candles:
-            raise ValueError("No candle data available")
-
-        # Debug print to see the data structure
-        print("First candle data:", candles[0] if candles else "No candles")
-        
         # Convert API data to DataFrame
         df_data = []
-        for candle in candles[-24:]:  # Get last 24 hours
-            # Convert timestamp from milliseconds to datetime
-            date = pd.to_datetime(candle['timestamp'], unit='s')
+        for item in items:
+            date = pd.to_datetime(item['unixTime'], unit='s')
             df_data.append({
                 'Date': date,
-                'Open': float(candle['open']),
-                'High': float(candle['high']),
-                'Low': float(candle['low']),
-                'Close': float(candle['close']),
-                'Volume': float(candle['volume'])
+                'Open': float(item['price']),
+                'High': float(item['high']),
+                'Low': float(item['low']),
+                'Close': float(item['close']),
+                'Volume': float(item['volume'])
             })
         
         # Create DataFrame and set index
@@ -47,10 +56,6 @@ def fetch_ubc_sol_data():
         df = df.sort_index()
         
         print(f"Fetched {len(df)} candles for UBC/SOL")
-        print(f"Latest price: {float(pair['priceNative']):.8f} SOL")
-        print(f"24h volume: {float(pair['volume']['h24']):.2f} USD")
-        
-        # Debug print DataFrame
         print("\nDataFrame head:")
         print(df.head())
         
