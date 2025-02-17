@@ -1,10 +1,11 @@
 import anthropic
 import os
 import base64
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 from pathlib import Path
 import requests
+from airtable import Airtable
 
 class ChartAnalysis:
     def __init__(self, timeframe, signal, confidence, reasoning, key_levels, risk_reward_ratio=None):
@@ -110,6 +111,64 @@ Format your response as JSON with the following structure:
         print(f"Failed to analyze chart {filename}: {e}")
         raise
 
+def create_airtable_signal(analysis, timeframe):
+    """Create a signal record in Airtable"""
+    try:
+        # Initialize Airtable
+        base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
+        api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
+        
+        if not base_id or not api_key:
+            print("Airtable configuration missing")
+            return
+            
+        airtable = Airtable(base_id, 'SIGNALS', api_key)
+        
+        # Map timeframe to signal type
+        timeframe_mapping = {
+            '15m': 'SCALP',
+            '2h': 'INTRADAY',
+            '8h': 'SWING'
+        }
+        
+        # Map confidence to LOW/MEDIUM/HIGH
+        confidence_mapping = {
+            range(0, 40): 'LOW',
+            range(40, 75): 'MEDIUM',
+            range(75, 101): 'HIGH'
+        }
+        
+        confidence_level = next(
+            (level for range_, level in confidence_mapping.items() 
+             if int(analysis.confidence) in range_),
+            'MEDIUM'
+        )
+        
+        # Create signal record
+        signal_data = {
+            'timestamp': datetime.now(timezone.utc).isoformat(),
+            'token': 'UBC',
+            'type': analysis.signal,  # BUY/SELL/HOLD
+            'timeframe': timeframe_mapping.get(timeframe, 'INTRADAY'),
+            'confidence': confidence_level,
+            'reason': analysis.reasoning,
+            'keyLevels': {
+                'support': analysis.key_levels['support'],
+                'resistance': analysis.key_levels['resistance']
+            }
+        }
+        
+        # Add risk/reward ratio if available
+        if analysis.risk_reward_ratio:
+            signal_data['riskRewardRatio'] = analysis.risk_reward_ratio
+            
+        # Create record in Airtable
+        airtable.insert(signal_data)
+        print(f"Created signal in Airtable for {timeframe} timeframe")
+        
+    except Exception as e:
+        print(f"Failed to create Airtable signal: {e}")
+
 def generate_signal(analyses):
     """Generate combined signal from multiple timeframe analyses"""
     # Group analyses by timeframe
@@ -119,6 +178,11 @@ def generate_signal(analyses):
         'long_term': next((a for a in analyses if a.timeframe == '8h'), None)
     }
     
+    # Create signals in Airtable
+    for timeframe, analysis in signals.items():
+        if analysis and analysis.signal != 'HOLD':  # Only create signals for BUY/SELL
+            create_airtable_signal(analysis, analysis.timeframe)
+
     # Create detailed message
     message = f"""🔄 UBC Technical Analysis Update
 
