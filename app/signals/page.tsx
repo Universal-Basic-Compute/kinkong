@@ -58,51 +58,53 @@ export default function Signals() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
           <div className="bg-black/30 border border-gold/20 rounded-lg p-4">
             <h3 className="text-lg font-bold text-gold mb-2">Technical Analysis</h3>
-            <p className="text-sm text-gray-300 leading-relaxed">
-              Effective technical analysis combines multiple indicators:
-              • Volume & liquidity trends to confirm moves
-              • Price action patterns (breakouts, reversals)
-              • Key support/resistance levels
-              • Momentum indicators (RSI, MACD)
-              • Multiple timeframe analysis (1H, 4H, 1D)
-              • Risk/reward ratio assessment
+            <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-line">
+              {`Effective technical analysis combines multiple indicators:
+
+• Volume & liquidity trends to confirm moves
+• Price action patterns (breakouts, reversals)
+• Key support/resistance levels
+• Momentum indicators (RSI, MACD)
+• Multiple timeframe analysis (1H, 4H, 1D)
+• Risk/reward ratio assessment`}
             </p>
           </div>
 
           <div className="bg-black/30 border border-gold/20 rounded-lg p-4">
             <h3 className="text-lg font-bold text-gold mb-2">Fundamental Analysis</h3>
-            <p className="text-sm text-gray-300 leading-relaxed">
-              Key fundamental factors to consider:
-              • Development activity & GitHub metrics
-              • Team updates & partnerships
-              • Community growth & engagement
-              • Token utility & tokenomics
-              • Market positioning vs competitors
-              • Upcoming catalysts & roadmap
+            <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-line">
+              {`Key fundamental factors to consider:
+
+• Development activity & GitHub metrics
+• Team updates & partnerships
+• Community growth & engagement
+• Token utility & tokenomics
+• Market positioning vs competitors
+• Upcoming catalysts & roadmap`}
             </p>
           </div>
 
           <div className="bg-black/30 border border-gold/20 rounded-lg p-4 space-y-4">
             <div>
               <h3 className="text-lg font-bold text-gold mb-2">Using Signals</h3>
-              <p className="text-sm text-gray-300 leading-relaxed">
-                • Check signal source credibility
-                • Verify analysis with your research
-                • Monitor signal updates & changes
-                • Consider position sizing
-                • Set clear entry/exit points
-                • Use stop losses for risk management
+              <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-line">
+                {`• Check signal source credibility
+• Verify analysis with your research
+• Monitor signal updates & changes
+• Consider position sizing
+• Set clear entry/exit points
+• Use stop losses for risk management`}
               </p>
             </div>
             <div>
               <h3 className="text-lg font-bold text-gold mb-2">Creating Quality Signals</h3>
-              <p className="text-sm text-gray-300 leading-relaxed">
-                • Provide clear token symbol & direction
-                • Include specific entry/exit prices
-                • Back analysis with multiple indicators
-                • Add reference links & charts
-                • Update signal as conditions change
-                • Consider market correlation
+              <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-line">
+                {`• Provide clear token symbol & direction
+• Include specific entry/exit prices
+• Back analysis with multiple indicators
+• Add reference links & charts
+• Update signal as conditions change
+• Consider market correlation`}
               </p>
             </div>
           </div>
