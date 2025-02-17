@@ -10,6 +10,8 @@ import Draggable from 'react-draggable'
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
 
 // Move interfaces outside the component
+import { BubbleChart } from '@/components/dashboard/BubbleChart';
+
 interface TokenInfo {
   symbol: string;
   name: string;
@@ -19,34 +21,6 @@ interface TokenInfo {
   volumeGrowth: number;
   pricePerformance: number;
   marketCap: number;
-}
-
-interface BubblePosition {
-  x: number;
-  y: number;
-}
-
-// Move helper functions outside the component
-function calculateBubbleSize(marketCap: number): number {
-  const baseSize = 60;
-  const scale = Math.log10(marketCap + 1) / Math.log10(1e9);
-  return baseSize + (scale * 60);
-}
-
-function getTokenClass(token: string | undefined): string {
-  if (!token) return 'metallic-text-argent';
-  
-  const upperToken = token.toUpperCase();
-  switch (upperToken) {
-    case 'UBC':
-      return 'metallic-text-ubc';
-    case 'COMPUTE':
-      return 'metallic-text-compute';
-    case 'SOL':
-      return 'metallic-text-sol';
-    default:
-      return 'metallic-text-argent';
-  }
 }
 
 // Investment Card component
@@ -122,15 +96,7 @@ export default function Dashboard() {
   const [trackedTokens, setTrackedTokens] = useState<TokenInfo[]>([]);
   const [isTrackedTokensLoading, setIsTrackedTokensLoading] = useState(true);
   const [trackedTokensError, setTrackedTokensError] = useState<string | null>(null);
-  const [bubblePositions, setBubblePositions] = useState<Record<string, BubblePosition>>({});
   const [isTableVisible, setIsTableVisible] = useState(false);
-
-  const handleDrag = (mint: string, e: DraggableEvent, data: DraggableData) => {
-    setBubblePositions(prev => ({
-      ...prev,
-      [mint]: { x: data.x, y: data.y }
-    }));
-  };
 
   useEffect(() => {
     async function fetchTrackedTokens() {
@@ -255,12 +221,13 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Bubble Visualization */}
-        <div className="mb-12 relative h-[400px] bg-black/30 rounded-lg border border-gold/20 p-4">
-          <div className="absolute inset-0">
-            {renderBubbles()}
-          </div>
-        </div>
+        {isTrackedTokensLoading ? (
+          <div>Loading...</div>
+        ) : trackedTokensError ? (
+          <div className="text-red-400">Error: {trackedTokensError}</div>
+        ) : (
+          <BubbleChart tokens={trackedTokens} />
+        )}
 
         {/* Collapsible Table Section */}
         <div className="mt-8">
