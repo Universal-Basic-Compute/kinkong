@@ -37,18 +37,28 @@ ${classification.reasons.map(r => '• ' + r).join('\n')}`;
     if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID) {
       console.log('📱 Sending Telegram notification...');
       const telegramUrl = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
+        
+      // Format message with proper escaping
+      const formattedMessage = message
+        .replace(/[<>]/g, '') // Remove HTML tags
+        .replace(/[&]/g, '&amp;')
+        .replace(/[-]/g, '\\-')
+        .replace(/[.]/g, '\\.')
+        .replace(/[!]/g, '\\!');
+
       const response = await fetch(telegramUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chat_id: process.env.TELEGRAM_CHAT_ID,
-          text: message,
-          parse_mode: 'HTML'
+          text: formattedMessage,
+          parse_mode: 'MarkdownV2'
         })
       });
-      
+        
       if (!response.ok) {
-        throw new Error(`Telegram API error: ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(`Telegram API error: ${response.status} - ${JSON.stringify(errorData)}`);
       }
       console.log('✅ Telegram notification sent');
     } else {
