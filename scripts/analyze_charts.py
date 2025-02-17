@@ -161,6 +161,50 @@ def clean_json_string(json_str):
     
     return json_str.strip()
 
+SYSTEM_PROMPT = """You are an expert cryptocurrency technical analyst specializing in UBC/USD market analysis.
+
+For each timeframe, provide:
+1. Signal (BUY/SELL/HOLD)
+2. Confidence level (0-100%)
+3. Key support and resistance levels
+4. Detailed reasoning
+5. Risk/reward ratio if applicable
+
+Consider:
+- How the different timeframes confirm or conflict with each other
+- Whether price action shows alignment across timeframes
+- Volume patterns across different time periods
+- Key technical levels visible in multiple timeframes
+
+Format your response as JSON:
+{
+    "timeframes": {
+        "8h": {
+            "signal": "BUY|SELL|HOLD",
+            "confidence": 0,
+            "reasoning": "Detailed analysis",
+            "key_levels": {
+                "support": [0.0, 0.0],
+                "resistance": [0.0, 0.0]
+            },
+            "risk_reward_ratio": 0.0
+        },
+        "2h": { ... },
+        "15m": { ... }
+    },
+    "overall_analysis": {
+        "primary_trend": "BULLISH|BEARISH|NEUTRAL",
+        "timeframe_alignment": "ALIGNED|MIXED|CONFLICTING",
+        "best_timeframe": "8h|2h|15m",
+        "key_observations": ["List of important points"],
+        "recommended_action": {
+            "signal": "BUY|SELL|HOLD",
+            "timeframe": "8h|2h|15m",
+            "reasoning": "Why this is the best action"
+        }
+    }
+}"""
+
 def analyze_charts_with_claude(chart_paths):
     """Analyze multiple timeframe charts together using Claude 3"""
     try:
@@ -209,9 +253,8 @@ Current Market Data:
 • FDV: ${market_data['fdv']:,.2f}
 • Market Cap: ${market_data['market_cap']:,.2f}
 """
-        
-        prompt = f"""You are an expert cryptocurrency technical analyst specializing in UBC/USD market analysis.
-I'm providing you with three timeframe charts (15m, 2h, and 8h) for a complete multi-timeframe analysis.
+
+        user_prompt = f"""I'm providing you with three timeframe charts (15m, 2h, and 8h) for a complete multi-timeframe analysis.
 
 {market_data_str}
 
@@ -219,60 +262,19 @@ Analyze each timeframe in sequence, considering how they relate to each other:
 
 1. First analyze the 8h chart for overall trend and market structure
 2. Then analyze the 2h chart for medium-term movements and setups
-3. Finally analyze the 15m chart for immediate price action and potential entries
-
-For each timeframe, provide:
-1. Signal (BUY/SELL/HOLD)
-2. Confidence level (0-100%)
-3. Key support and resistance levels
-4. Detailed reasoning
-5. Risk/reward ratio if applicable
-
-Consider:
-- How the different timeframes confirm or conflict with each other
-- Whether price action shows alignment across timeframes
-- Volume patterns across different time periods
-- Key technical levels visible in multiple timeframes
-
-Format your response as JSON:
-{{
-    "timeframes": {{
-        "8h": {{
-            "signal": "BUY|SELL|HOLD",
-            "confidence": 0,
-            "reasoning": "Detailed analysis",
-            "key_levels": {{
-                "support": [0.0, 0.0],
-                "resistance": [0.0, 0.0]
-            }},
-            "risk_reward_ratio": 0.0
-        }},
-        "2h": {{ ... }},
-        "15m": {{ ... }}
-    }},
-    "overall_analysis": {{
-        "primary_trend": "BULLISH|BEARISH|NEUTRAL",
-        "timeframe_alignment": "ALIGNED|MIXED|CONFLICTING",
-        "best_timeframe": "8h|2h|15m",
-        "key_observations": ["List of important points"],
-        "recommended_action": {{
-            "signal": "BUY|SELL|HOLD",
-            "timeframe": "8h|2h|15m",
-            "reasoning": "Why this is the best action"
-        }}
-    }}
-}}"""
+3. Finally analyze the 15m chart for immediate price action and potential entries"""
 
         try:
             message = client.messages.create(
                 model="claude-3-5-sonnet-20241022",
-                max_tokens=4096,  # Increased for multiple charts
+                max_tokens=4096,
+                system=SYSTEM_PROMPT,
                 messages=[{
                     "role": "user",
                     "content": [
                         {
                             "type": "text",
-                            "text": prompt
+                            "text": user_prompt
                         },
                         *[{
                             "type": "image",
