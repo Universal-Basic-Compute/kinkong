@@ -492,7 +492,6 @@ def create_airtable_signal(analysis, timeframe, token_info):
                 'stopLoss': stop_price,
                 'confidence': confidence_level,
                 'wallet': os.getenv('STRATEGY_WALLET', ''),
-                'status': 'PENDING',
                 'amount': None,  # Will be set when activated
                 'entryValue': None,  # Will be set when activated
                 'activationTime': None,  # Will be set when activated
@@ -560,22 +559,12 @@ def create_airtable_signal(analysis, timeframe, token_info):
                         position_size = calculate_position_size(signal_data, market_data)
                         
                         if position_size:
-                            # Update signal with position size and activate it
+                            # Update signal with position size
                             airtable.update(signal_id, {
-                                'status': 'ACTIVE',
                                 'amount': position_size,
                                 'entryValue': position_size * market_price,
                                 'activationTime': datetime.now(timezone.utc).isoformat(),
                                 'lastUpdateTime': datetime.now(timezone.utc).isoformat()
-                            })
-                            
-                            # Record status change
-                            status_table = Airtable(base_id, 'SIGNAL_STATUS_HISTORY', api_key)
-                            status_table.insert({
-                                'signalId': signal_id,
-                                'status': 'ACTIVE',
-                                'timestamp': datetime.now(timezone.utc).isoformat(),
-                                'reason': f'Immediate execution at {market_price:.4f} with position size {position_size:.4f}'
                             })
                             
                             print(f"Activated signal {signal_id} with position size {position_size:.4f}")
