@@ -215,22 +215,7 @@ def generate_chart(df, config, support_levels=None):
                 volume_width=0.8,
                 volume_linewidth=1.0
             ),
-            style=mpf.make_mpf_style(
-                base_mpf_style='charles',
-                gridstyle=':',
-                gridcolor='rgba(255, 215, 0, 0.1)',
-                facecolor='black',
-                edgecolor='white',
-                figcolor='black',
-                y_on_right=True,
-                gridaxis='both',
-                rc={
-                    'axes.labelcolor': 'white',
-                    'axes.edgecolor': 'white',
-                    'xtick.color': 'white',
-                    'ytick.color': 'white'
-                }
-            )
+            style=style
         )
 
         # Get the main price axis and volume axis
@@ -300,7 +285,7 @@ def generate_chart(df, config, support_levels=None):
         # Date axis formatting (bottom)
         for ax in [ax_main, ax_volume]:
             ax.tick_params(axis='x', colors='white', labelsize=10, rotation=25, length=5)
-            ax.grid(axis='x', color='rgba(255, 215, 0, 0.1)', linestyle=':')
+            ax.grid(axis='x', color='#FFD70020', linestyle=':')
 
         # Adjust layout to prevent label cutoff
         plt.subplots_adjust(
