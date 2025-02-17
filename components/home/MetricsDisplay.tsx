@@ -12,6 +12,7 @@ export function MetricsDisplay() {
   const [metrics, setMetrics] = useState<PortfolioMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [rawResponse, setRawResponse] = useState<string>('No data yet');
 
   useEffect(() => {
     const fetchMetrics = async () => {
@@ -20,11 +21,12 @@ export function MetricsDisplay() {
         const response = await fetch('/api/portfolio-metrics');
         console.log('📡 API Response status:', response.status);
         
-        if (!response.ok) {
-          throw new Error(`Failed to fetch metrics: ${response.status}`);
-        }
+        // Get the raw response text
+        const rawText = await response.text();
+        setRawResponse(rawText);
         
-        const data = await response.json();
+        // Parse the JSON after getting raw text
+        const data = JSON.parse(rawText);
         console.log('📊 Metrics data:', data);
         setMetrics(data);
       } catch (error) {
@@ -40,43 +42,12 @@ export function MetricsDisplay() {
     fetchMetrics();
   }, []);
 
-  if (isLoading) {
-    return <div className="text-center py-4">Loading metrics...</div>;
-  }
-
-  if (error) {
-    return <div className="text-center py-4 text-red-500">Error: {error}</div>;
-  }
-
-  const metricsData = [
-    { 
-      label: "Portfolio Value", 
-      value: metrics ? `$${metrics.totalValue.toLocaleString(undefined, {
-        maximumFractionDigits: 2
-      })}` : "$0.00",
-      unit: "Total Assets" 
-    },
-    { 
-      label: "24h Change", 
-      value: metrics ? `${metrics.change24h >= 0 ? '+' : ''}${metrics.change24h.toFixed(2)}%` : "+0.00%", 
-      unit: "Daily Performance" 
-    },
-    { 
-      label: "7d Performance", 
-      value: metrics ? `${metrics.change7d >= 0 ? '+' : ''}${metrics.change7d.toFixed(2)}%` : "+0.00%", 
-      unit: "Weekly Return" 
-    }
-  ];
-
   return (
-    <>
-      {metricsData.map((metric, i) => (
-        <div key={i} className="metric p-6 rounded-lg metallic-surface border border-gold/10 text-center transition-all hover-effect">
-          <h4 className="text-gray-300 mb-2">{metric.label}</h4>
-          <p className="text-4xl font-bold text-gold mb-1">{metric.value}</p>
-          <p className="text-sm text-gray-400">{metric.unit}</p>
-        </div>
-      ))}
-    </>
+    <div className="w-full">
+      <h3 className="text-xl font-bold mb-4">Raw Response:</h3>
+      <pre className="bg-black/30 p-4 rounded-lg overflow-x-auto whitespace-pre-wrap">
+        {rawResponse}
+      </pre>
+    </div>
   );
 }
