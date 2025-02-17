@@ -171,17 +171,20 @@ export async function executeReallocation() {
 
     // 4. Get current portfolio
     const portfolioRecords = await portfolioTable.select().all();
-    
+
     const currentPortfolio = new Map(
       portfolioRecords.map(record => [
         record.get('token') as string,
         {
-          allocation: record.get('allocation') as number, // Keep as whole number percentage
-          amount: 0, // Will be calculated once we have prices
+          amount: record.get('amount') as number,
           usdValue: record.get('usdValue') as number
         }
       ])
     );
+
+    // Calculate total USD value first
+    const totalValue = Array.from(currentPortfolio.values())
+      .reduce((sum, holding) => sum + (holding.usdValue || 0), 0);
 
     // Get current prices for all tokens using mints
     const tokenPrices = new Map<string, number>();
@@ -219,23 +222,16 @@ export async function executeReallocation() {
       }
     }
 
-    // Calculate total USD value first
-    const totalValue = Array.from(currentPortfolio.values())
-      .reduce((sum, holding) => sum + (holding.usdValue || 0), 0);
-
-    // Then calculate actual token amounts based on allocations
+    // Then calculate percentages based on actual USD values
     const updatedPortfolio = new Map(
       Array.from(currentPortfolio.entries()).map(([token, data]) => {
         const price = tokenPrices.get(token) || 0;
-        if (price === 0) {
-          console.warn(`No price available for ${token}, cannot calculate amount`);
-          return [token, data];
-        }
+        const currentPercentage = (data.usdValue / totalValue) * 100;
         
         return [token, {
           ...data,
-          amount: data.usdValue / price,
-          percentage: data.allocation // Keep original allocation percentage
+          price,
+          currentPercentage
         }];
       })
     );
@@ -246,11 +242,10 @@ export async function executeReallocation() {
         .map(([token, data]) => [
           token, 
           {
-            percentage: data.allocation.toFixed(2) + '%',
             amount: data.amount?.toFixed(4),
-            price: tokenPrices.get(token),
+            price: data.price,
             usdValue: data.usdValue?.toFixed(2),
-            currentPercentage: ((data.usdValue || 0) / totalValue * 100).toFixed(2) + '%'
+            currentPercentage: data.currentPercentage.toFixed(1) + '%'
           }
         ])
     ));
