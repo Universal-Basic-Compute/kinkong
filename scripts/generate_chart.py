@@ -150,17 +150,22 @@ def create_sample_data():
     return df
 
 def generate_chart(df, config, support_levels=None):
-    if df is None or df.empty:
-        print("No data available for chart generation")
-        return
-    
-    # Calculate key statistics
-    current_price = df['Close'].iloc[-1]
-    ath = df['High'].max()
-    atl = df['Low'].min()
-    avg_price = df['Close'].mean()
-    avg_volume = df['Volume'].mean()
-    price_change = ((df['Close'].iloc[-1] - df['Close'].iloc[0]) / df['Close'].iloc[0]) * 100
+    try:
+        print(f"Starting chart generation for {config['title']}")
+        print(f"Data shape: {df.shape}")
+        
+        if df is None or df.empty:
+            print("No data available for chart generation")
+            return
+        
+        # Calculate key statistics
+        print("Calculating statistics...")
+        current_price = df['Close'].iloc[-1]
+        ath = df['High'].max()
+        atl = df['Low'].min()
+        avg_price = df['Close'].mean()
+        avg_volume = df['Volume'].mean()
+        price_change = ((df['Close'].iloc[-1] - df['Close'].iloc[0]) / df['Close'].iloc[0]) * 100
     
     # Create more detailed title components
     main_title = config['title']
@@ -384,7 +389,12 @@ def generate_chart(df, config, support_levels=None):
     # Update filename to save in public/charts
     output_path = os.path.join(charts_dir, config['filename'])
     
-    # Save with higher DPI
+    # Create charts directory if it doesn't exist
+    charts_dir = os.path.join('public', 'charts')
+    os.makedirs(charts_dir, exist_ok=True)
+
+    # Save figure
+    output_path = os.path.join(charts_dir, config['filename'])
     plt.savefig(
         output_path,
         dpi=150,
@@ -393,10 +403,18 @@ def generate_chart(df, config, support_levels=None):
         edgecolor='none'
     )
     
-    # Close any open figures to free memory
+    # Explicitly close the figure
     plt.close(fig)
     
-    print(f"\nSaved chart to: {output_path}")
+    print(f"Successfully saved chart to {output_path}")
+    return True
+
+except Exception as e:
+    print(f"Error generating chart: {str(e)}")
+    # Ensure figure is closed even if there's an error
+    if 'fig' in locals():
+        plt.close(fig)
+    return False
     
     # Print statistics for verification
     print(f"\nChart Statistics for {config['title']}:")
@@ -408,30 +426,41 @@ def generate_chart(df, config, support_levels=None):
     print(f"Average Volume: ${avg_volume:,.2f}")
 
 def generate_all_charts():
+    print("Starting chart generation process...")
+    
     for config in CHART_CONFIGS:
-        print(f"\nGenerating {config['title']}...")
-        df = fetch_ubc_sol_data(
-            timeframe=config['timeframe'],
-            hours=config['duration_hours']
-        )
-        
-        if df is not None and not df.empty:
-            print("Data shape:", df.shape)
-            print("Columns:", df.columns)
-            print("Data types:", df.dtypes)
-            print("Sample data:")
-            print(df.head())
+        try:
+            print(f"\nProcessing {config['title']}...")
             
-            support_levels = calculate_support_levels(df)
-            generate_chart(
-                df,
-                config,
-                support_levels
+            # Fetch data
+            df = fetch_ubc_sol_data(
+                timeframe=config['timeframe'],
+                hours=config['duration_hours']
             )
-            print(f"Generated {config['filename']}")
-        else:
-            print(f"Failed to generate {config['filename']} - no data available")
+            
+            if df is None or df.empty:
+                print(f"No data available for {config['title']}")
+                continue
+                
+            # Calculate support levels
+            support_levels = calculate_support_levels(df)
+            
+            # Generate chart
+            success = generate_chart(df, config, support_levels)
+            
+            if success:
+                print(f"Successfully generated {config['filename']}")
+            else:
+                print(f"Failed to generate {config['filename']}")
+                
+        except Exception as e:
+            print(f"Error processing {config['title']}: {str(e)}")
+            continue
+            
+    print("\nChart generation process completed")
 
 if __name__ == "__main__":
-    generate_all_charts()
-    print("Charts generated successfully")
+    try:
+        generate_all_charts()
+    except Exception as e:
+        print(f"Fatal error in chart generation: {str(e)}")
