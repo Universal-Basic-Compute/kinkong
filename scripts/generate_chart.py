@@ -222,23 +222,26 @@ def generate_chart(df, config, support_levels=None):
         timeframe = config['timeframe']
         num_candles = len(df)
         
-        # Base width calculation on number of candles
-        base_width = 0.85 / num_candles  # This makes width relative to chart size
+        # Base width calculation - scales inversely with number of candles
+        base_width = 0.7 / num_candles  # Reduced from 0.85 to start smaller
         
-        # Adjust based on timeframe
+        # Timeframe-specific scaling factors
         if timeframe == '15m':
-            candle_width = base_width * 0.6  # Smaller for shorter timeframes
+            width_scale = 15  # More aggressive scaling for short timeframe
         elif timeframe == '2H':
-            candle_width = base_width * 0.8
+            width_scale = 25  # Medium scaling
         elif timeframe == '8H':
-            candle_width = base_width * 1.0  # Larger for longer timeframes
+            width_scale = 35  # Less aggressive scaling for long timeframe
         else:
-            candle_width = base_width * 0.8  # default width
+            width_scale = 25  # Default scaling
+            
+        # Calculate final width with scaling
+        candle_width = base_width * width_scale
+        
+        # Apply min/max bounds to ensure reasonable sizes
+        candle_width = min(max(candle_width, 0.001), 0.02)  # Tighter bounds
 
-        # Ensure width stays within reasonable bounds
-        candle_width = min(max(candle_width, 0.1), 0.4)  # Min 0.1, Max 0.4
-
-        # Create figure with adjusted candle width
+        # Create figure with dynamically calculated width
         fig, axes = mpf.plot(
             df,
             type='candle',
