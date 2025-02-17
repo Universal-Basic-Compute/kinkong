@@ -386,6 +386,15 @@ def create_airtable_signal(analysis, timeframe, token_info):
         base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
         api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
         
+        # Calculate expiry date based on timeframe
+        now = datetime.now(timezone.utc)
+        expiry_mapping = {
+            'SCALP': timedelta(hours=6),
+            'INTRADAY': timedelta(days=1),
+            'SWING': timedelta(days=7),
+            'POSITION': timedelta(days=30)
+        }
+        
         if not base_id or not api_key:
             print("Airtable configuration missing")
             return
@@ -424,16 +433,22 @@ def create_airtable_signal(analysis, timeframe, token_info):
         # Create signal record
         signal_type = analysis.get('signal')
         if signal_type in ['BUY', 'SELL']:
+            strategy_timeframe = timeframe_mapping.get(timeframe, 'INTRADAY')
+            expiry_delta = expiry_mapping.get(strategy_timeframe)
+            expiry_date = now + expiry_delta
+
             signal_data = {
-                'timestamp': datetime.now(timezone.utc).isoformat(),
+                'timestamp': now.isoformat(),
                 'token': token_info['symbol'],
                 'type': signal_type,
-                'timeframe': timeframe_mapping.get(timeframe, 'INTRADAY'),
+                'timeframe': strategy_timeframe,
                 'entryPrice': current_price,
                 'targetPrice': target_price,
                 'stopLoss': stop_price,
                 'confidence': confidence_level,
                 'wallet': os.getenv('STRATEGY_WALLET', ''),
+                'status': 'PENDING',  # Initial status
+                'expiryDate': expiry_date.isoformat(),  # Add expiry date
                 'reason': (f"{analysis.get('reasoning', '')}\n\n"
                           f"Support Levels: {', '.join(map(str, support_levels))}\n"
                           f"Resistance Levels: {', '.join(map(str, resistance_levels))}\n"
