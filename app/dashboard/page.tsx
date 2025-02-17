@@ -241,7 +241,7 @@ export default function Dashboard() {
         
         <div className="mb-8">
           <div className="flex flex-wrap gap-4 justify-center">
-            {tokens.map((token) => (
+            {trackedTokens.map((token) => (
               <div 
                 key={token.mint}
                 className="relative group"
