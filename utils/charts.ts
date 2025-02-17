@@ -121,10 +121,9 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
                         color: '#d1d4dc'
                     }
                 }
-            },
-            backgroundColor: 'black'
+            }
         }
-    });
+    } as ChartConfiguration;
     
     // Create chart
     new Chart(ctx as any, config);
