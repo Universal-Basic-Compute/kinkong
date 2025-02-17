@@ -247,7 +247,7 @@ export async function recordPortfolioSnapshot() {
     const classification = classifyMarket(notificationMetrics);
 
     // Send notifications
-    await sendNotifications(notificationMetrics, classification);
+    await sendNotifications(notificationMetrics.metrics, classification);
 
     return { totalValue, snapshots };
 
@@ -286,7 +286,7 @@ function calculatePriceAverage(prices: number[]): number {
   return prices.reduce((sum, price) => sum + price, 0) / prices.length;
 }
 
-async function sendNotifications(analysis: WeeklyAnalysis, classification: MarketClassification) {
+async function sendNotifications(metrics: WeeklyAnalysis['metrics'], classification: MarketClassification) {
   try {
     // Format message
     const message = `🤖 KinKong Market Sentiment Update
@@ -294,10 +294,10 @@ async function sendNotifications(analysis: WeeklyAnalysis, classification: Marke
 Classification: ${classification.sentiment} (${classification.confidence.toFixed(1)}% confidence)
 
 Key Metrics:
-• Tokens above 7d avg: ${analysis.metrics.percentAboveAvg.toFixed(1)}%
-• Volume growth: ${analysis.metrics.volumeGrowth.toFixed(1)}%
-• Volume on up days: ${analysis.metrics.percentVolumeOnUpDays.toFixed(1)}%
-• AI vs SOL: ${analysis.metrics.aiVsSolPerformance > 0 ? '+' : ''}${analysis.metrics.aiVsSolPerformance.toFixed(1)}%
+• Tokens above 7d avg: ${metrics.percentAboveAvg.toFixed(1)}%
+• Volume growth: ${metrics.volumeGrowth.toFixed(1)}%
+• Volume on up days: ${metrics.percentVolumeOnUpDays.toFixed(1)}%
+• AI vs SOL: ${metrics.aiVsSolPerformance > 0 ? '+' : ''}${metrics.aiVsSolPerformance.toFixed(1)}%
 
 Reasons:
 ${classification.reasons.map(r => '• ' + r).join('\n')}`;
