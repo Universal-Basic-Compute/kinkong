@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import { WalletConnect } from '@/components/wallet/WalletConnect';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { 
