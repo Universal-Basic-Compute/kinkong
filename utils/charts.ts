@@ -1,4 +1,4 @@
-import { Chart, ChartConfiguration } from 'chart.js/auto';
+import { Chart, ChartConfiguration, ChartTypeRegistry } from 'chart.js/auto';
 import { createCanvas } from 'canvas';
 
 interface Candlestick {
@@ -42,7 +42,8 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
                     type: 'bar',
                     label: token,
                     data: data.candlesticks.map((candle: Candlestick) => ({
-                        x: new Date(candle.timestamp * 1000),
+                        x: candle.timestamp * 1000,
+                        y: candle.close,
                         o: candle.open,
                         h: candle.high,
                         l: candle.low,
@@ -53,8 +54,8 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
                 {
                     type: 'line',
                     label: 'EMA 20',
-                    data: data.ema20.map((point: {time: number, value: number}) => ({
-                        x: new Date(point.time * 1000),
+                    data: data.ema20.map((point) => ({
+                        x: point.time * 1000,
                         y: point.value
                     })),
                     borderColor: 'rgba(255, 215, 0, 0.8)',
@@ -64,8 +65,8 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
                 {
                     type: 'line',
                     label: 'EMA 50',
-                    data: data.ema50.map((point: {time: number, value: number}) => ({
-                        x: new Date(point.time * 1000),
+                    data: data.ema50.map((point) => ({
+                        x: point.time * 1000,
                         y: point.value
                     })),
                     borderColor: 'rgba(75, 192, 192, 0.8)',
@@ -75,8 +76,8 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
                 {
                     type: 'bar',
                     label: 'Volume',
-                    data: data.volume.map((v: {time: number, value: number}) => ({
-                        x: new Date(v.time * 1000),
+                    data: data.volume.map((v) => ({
+                        x: v.time * 1000,
                         y: v.value
                     })),
                     backgroundColor: 'rgba(128, 128, 128, 0.2)',
