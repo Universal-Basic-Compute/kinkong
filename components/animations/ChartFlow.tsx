@@ -16,17 +16,16 @@ export function ChartFlow() {
   const [candles, setCandles] = useState<Candle[]>([]);
   const [lastPrice, setLastPrice] = useState(100);
 
-  // Generate a new candle based on previous close
   const generateCandle = (id: number, prevClose: number): Candle => {
-    // Calculate realistic price change (max 2% movement)
     const maxMove = prevClose * 0.02;
     const priceChange = (Math.random() - 0.5) * maxMove;
     const close = prevClose + priceChange;
+    const open = prevClose;
     
-    // Generate open/high/low coherently
-    const open = prevClose; // Open at previous close
-    const high = Math.max(open, close) + Math.random() * maxMove * 0.5;
-    const low = Math.min(open, close) - Math.random() * maxMove * 0.5;
+    // Générer les mèches proportionnellement au corps
+    const bodyRange = Math.abs(close - open);
+    const high = Math.max(open, close) + (bodyRange * Math.random() * 0.5);
+    const low = Math.min(open, close) - (bodyRange * Math.random() * 0.5);
 
     return {
       id,
@@ -39,7 +38,6 @@ export function ChartFlow() {
   };
 
   useEffect(() => {
-    // Generate initial candles
     const initialCandles = [];
     let currentPrice = lastPrice;
     
@@ -52,7 +50,6 @@ export function ChartFlow() {
     setCandles(initialCandles);
     setLastPrice(currentPrice);
 
-    // Add new candle every second
     const interval = setInterval(() => {
       setCandles(prev => {
         const newCandle = generateCandle(prev[prev.length - 1].id + 1, prev[prev.length - 1].close);
@@ -64,29 +61,13 @@ export function ChartFlow() {
     return () => clearInterval(interval);
   }, []);
 
-  // Calculate dynamic price range with padding
-  const maxPrice = Math.max(...candles.map(c => c.high)) * 1.01;
-  const minPrice = Math.min(...candles.map(c => c.low)) * 0.99;
+  const maxPrice = Math.max(...candles.map(c => c.high));
+  const minPrice = Math.min(...candles.map(c => c.low));
   const priceRange = maxPrice - minPrice;
 
-  // Calculate price change percentage
-  const priceChange = candles.length >= 2 
-    ? ((lastPrice - candles[candles.length - 2].close) / candles[candles.length - 2].close) * 100
-    : 0;
-
   return (
-    <div className="w-full h-[400px] bg-black/50 rounded-lg p-4 relative">
-      {/* Price Scale */}
-      <div className="absolute left-0 top-0 bottom-0 w-16 flex flex-col justify-between text-sm text-gray-400 py-2">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <span key={i}>
-            ${(maxPrice - (priceRange * (i / 4))).toFixed(2)}
-          </span>
-        ))}
-      </div>
-
-      {/* Candles */}
-      <div className="ml-16 h-full flex items-end space-x-2">
+    <div className="w-full h-[400px] bg-black/50 rounded-lg p-4">
+      <div className="h-full flex items-end space-x-2">
         <AnimatePresence>
           {candles.map((candle) => {
             const height = ((candle.high - candle.low) / priceRange) * 100;
@@ -104,12 +85,15 @@ export function ChartFlow() {
                 transition={{ duration: 0.5 }}
                 style={{ height: `${height}%`, marginBottom: `${bottom}%` }}
               >
-                {/* Wick */}
+                {/* Mèche avec la même couleur que le corps */}
                 <div
-                  className="absolute w-[1px] left-1/2 transform -translate-x-1/2 bg-gray-400"
-                  style={{ height: '100%' }}
+                  className="absolute w-[1px] left-1/2 transform -translate-x-1/2"
+                  style={{ 
+                    height: '100%',
+                    backgroundColor: candle.color
+                  }}
                 />
-                {/* Body */}
+                {/* Corps */}
                 <motion.div
                   className="absolute w-full"
                   style={{
@@ -125,18 +109,6 @@ export function ChartFlow() {
             );
           })}
         </AnimatePresence>
-      </div>
-
-      {/* Market Info */}
-      <div className="absolute top-2 right-2 text-right">
-        <div className="text-xl font-bold">
-          <span className={priceChange >= 0 ? 'text-green-500' : 'text-red-500'}>
-            ${lastPrice.toFixed(2)}
-          </span>
-        </div>
-        <div className={`text-sm ${priceChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-          {priceChange >= 0 ? '+' : ''}{priceChange.toFixed(2)}%
-        </div>
       </div>
     </div>
   );
