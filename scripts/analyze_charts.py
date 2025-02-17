@@ -376,21 +376,19 @@ def create_airtable_signal(analysis, timeframe):
         # Create signal record
         if analysis.signal in ['BUY', 'SELL']:
             signal_data = {
-                'fields': {
-                    'timestamp': datetime.now(timezone.utc).isoformat(),
-                    'token': 'UBC',
-                    'type': analysis.signal,
-                    'timeframe': timeframe_mapping.get(timeframe, 'INTRADAY'),
-                    'entryPrice': current_price,
-                    'targetPrice': target_price,
-                    'stopLoss': stop_price,
-                    'confidence': confidence_level,
-                    'wallet': os.getenv('STRATEGY_WALLET', ''),
-                    'reason': (f"{analysis.reasoning}\n\n"
-                             f"Support Levels: {', '.join(map(str, support_levels))}\n"
-                             f"Resistance Levels: {', '.join(map(str, resistance_levels))}\n"
-                             f"R/R Ratio: {analysis.risk_reward_ratio if analysis.risk_reward_ratio else 'N/A'}"),
-                }
+                'timestamp': datetime.now(timezone.utc).isoformat(),
+                'token': 'UBC',
+                'type': analysis.signal,
+                'timeframe': timeframe_mapping.get(timeframe, 'INTRADAY'),
+                'entryPrice': current_price,
+                'targetPrice': target_price,
+                'stopLoss': stop_price,
+                'confidence': confidence_level,
+                'wallet': os.getenv('STRATEGY_WALLET', ''),
+                'reason': (f"{analysis.reasoning}\n\n"
+                          f"Support Levels: {', '.join(map(str, support_levels))}\n"
+                          f"Resistance Levels: {', '.join(map(str, resistance_levels))}\n"
+                          f"R/R Ratio: {analysis.risk_reward_ratio if analysis.risk_reward_ratio else 'N/A'}")
             }
             
             print("\nSending to Airtable:", json.dumps(signal_data, indent=2))
