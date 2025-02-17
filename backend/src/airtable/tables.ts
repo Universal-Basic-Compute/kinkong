@@ -8,7 +8,8 @@ export const TABLES = {
   SIGNALS: 'SIGNALS',
   REPORTS: 'REPORTS',
   PORTFOLIO_SNAPSHOTS: 'PORTFOLIO_SNAPSHOTS',
-  INVESTMENTS: 'INVESTMENTS'
+  INVESTMENTS: 'INVESTMENTS',
+  MARKET_SENTIMENT: 'MARKET_SENTIMENT'
 } as const;
 
 // Table interfaces
@@ -58,6 +59,22 @@ export interface Signal {
   wallet: string;
   reason: string;
   url?: string;
+}
+
+export interface MarketSentiment {
+  weekStartDate: string;
+  weekEndDate: string;
+  classification: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+  confidence: number;
+  totalTokens: number;
+  tokensAbove7dAvg: number;
+  weeklyVolume: number;
+  prevWeekVolume: number;
+  upDayVolume: number;
+  totalVolume: number;
+  solPerformance: number;
+  aiTokensPerformance: number;
+  notes: string;
 }
 
 export const getTable = (tableName: string) => {
