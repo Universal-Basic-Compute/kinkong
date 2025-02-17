@@ -225,10 +225,16 @@ export function SignalHistory() {
                   {signal.wallet.slice(0, 4)}...{signal.wallet.slice(-4)}
                 </a>
               </td>
-              <td className="px-6 py-4">
+              <td className="px-6 py-4 relative group">
                 <p className="text-xs text-gray-300 line-clamp-2 max-h-12 overflow-hidden">
                   {signal.reason || '-'}
                 </p>
+                {/* Tooltip */}
+                <div className="hidden group-hover:block absolute left-0 bottom-full mb-2 z-10">
+                  <div className="bg-black/90 border border-gold/20 rounded-lg p-3 max-w-md text-xs text-gray-300 whitespace-pre-line shadow-lg">
+                    {signal.reason || '-'}
+                  </div>
+                </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">
                 {signal.url ? (
