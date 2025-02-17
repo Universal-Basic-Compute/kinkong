@@ -2,6 +2,22 @@ import { Chart, ChartConfiguration } from 'chart.js/auto';
 import { createCanvas } from 'canvas';
 import { enUS } from 'date-fns/locale';
 
+// Handle date adapter loading
+let dateAdapter: any = null;
+
+async function ensureDateAdapter() {
+  if (!dateAdapter) {
+    try {
+      // Use dynamic import with await
+      const adapter = await import('chartjs-adapter-date-fns');
+      dateAdapter = adapter.default || adapter;
+    } catch (error) {
+      console.warn('Failed to load date adapter:', error);
+    }
+  }
+  return dateAdapter;
+}
+
 interface Candlestick {
     timestamp: number;
     open: number;
@@ -27,8 +43,8 @@ type CandlestickData = {
 };
 
 export async function generateTokenChart(token: string): Promise<Buffer> {
-    // Dynamically import the date adapter
-    await import('chartjs-adapter-date-fns');
+    // Ensure date adapter is loaded
+    await ensureDateAdapter();
     
     // Get data
     const data = await getChartData(token);
