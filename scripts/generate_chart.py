@@ -162,78 +162,74 @@ def generate_chart(df, config, support_levels=None):
         )
     )
     
-    # Create figure with extra space for title
+    # Create figure
     fig = mpf.figure(
         figsize=(12, 8),
         facecolor='black',
         style=style
     )
     
-    # Add title axes
-    title_ax = fig.add_axes([0.1, 0.95, 0.8, 0.04])
-    title_ax.set_axis_off()
-    title_ax.text(0.5, 0.5, config['title'],
-                 color='white',
-                 fontsize=14,
-                 fontweight='bold',
-                 ha='center',
-                 va='center')
+    # Calculate panel ratios
+    panel_ratios = (6, 2)  # Main chart : Volume ratio
     
-    # Add subtitle
-    subtitle_ax = fig.add_axes([0.1, 0.92, 0.8, 0.03])
-    subtitle_ax.set_axis_off()
-    subtitle_ax.text(0.5, 0.5, config['subtitle'],
-                    color='white',
-                    alpha=0.8,
-                    fontsize=10,
-                    ha='center',
-                    va='center')
-    
-    # Main chart
-    ax1 = fig.add_axes([0.1, 0.25, 0.8, 0.65])
-    ax2 = fig.add_axes([0.1, 0.1, 0.8, 0.15])
-    
-    # Plot candlestick chart
-    mpf.plot(
+    # Plot candlestick chart with volume
+    ax = mpf.plot(
         df,
         type='candle',
         style=style,
         volume=True,
-        ax=ax1,
-        volume_panel=ax2,
+        figsize=(12, 8),
+        panel_ratios=panel_ratios,
         mav=(20, 50),  # Add 20 and 50 period moving averages
-        show_nontrading=False
+        show_nontrading=False,
+        returnfig=True,
+        title=dict(
+            title=config['title'],
+            color='white',
+            weight='bold',
+            size=14,
+            style='normal',
+            y=0.98
+        )
     )
+    
+    fig = ax[0]  # Get the figure
+    axes = ax[1]  # Get the axes list
+    
+    # Add subtitle
+    fig.text(0.5, 0.95, config['subtitle'],
+             color='white',
+             alpha=0.8,
+             fontsize=10,
+             ha='center',
+             va='center')
     
     # Add support/resistance levels if provided
     if support_levels:
+        main_ax = axes[0]  # Main price chart axis
         for level_type, price in support_levels:
             color = '#22c55e' if level_type == 'support' else '#ef4444'
-            ax1.axhline(y=price, color=color, linestyle='--', alpha=0.5)
+            main_ax.axhline(y=price, color=color, linestyle='--', alpha=0.5)
             
             # Add price label
-            ax1.text(df.index[-1], price, 
-                    f'{level_type.title()}: ${price:.4f}',
-                    color=color, alpha=0.8, 
-                    va='center', ha='left')
+            main_ax.text(df.index[-1], price, 
+                        f'{level_type.title()}: ${price:.4f}',
+                        color=color, alpha=0.8, 
+                        va='center', ha='left')
     
     # Add timestamp
-    timestamp_ax = fig.add_axes([0.1, 0.02, 0.8, 0.03])
-    timestamp_ax.set_axis_off()
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M UTC')
-    timestamp_ax.text(1.0, 0.5, f'Generated: {timestamp}',
-                     color='gray',
-                     fontsize=8,
-                     ha='right',
-                     va='center')
+    fig.text(0.98, 0.02, f'Generated: {timestamp}',
+             color='gray',
+             fontsize=8,
+             ha='right',
+             va='bottom')
     
     # Customize axes colors
-    for ax in [ax1, ax2]:
+    for ax in axes:
         ax.tick_params(colors='white')
-        ax.spines['bottom'].set_color('gray')
-        ax.spines['top'].set_color('gray')
-        ax.spines['left'].set_color('gray')
-        ax.spines['right'].set_color('gray')
+        for spine in ax.spines.values():
+            spine.set_color('gray')
     
     # Save the chart
     plt.savefig(
