@@ -591,14 +591,21 @@ def process_signals_batch(token_analyses):
     Args:
         token_analyses: List of (token_info, analyses) tuples
     """
+    print("\nProcessing signals batch...")
     pending_signals = []
     
     # First collect all potential signals
     for token_info, analyses in token_analyses:
+        print(f"\nAnalyzing {token_info['symbol']}:")
         timeframe_analyses = {k: v for k, v in analyses.items() if k != 'overall'}
         
         for timeframe, analysis in timeframe_analyses.items():
+            print(f"\nTimeframe {timeframe}:")
+            print(f"Signal: {analysis.get('signal')}")
+            print(f"Confidence: {analysis.get('confidence')}")
+            
             if analysis and analysis.get('signal') != 'HOLD' and analysis.get('confidence', 0) >= 60:
+                print("Signal meets initial criteria")
                 # Validate signal before adding to batch
                 validation_result = validate_signal(
                     timeframe=timeframe,
@@ -611,8 +618,10 @@ def process_signals_batch(token_analyses):
                     token_info=token_info,
                     market_data=get_dexscreener_data(token_info['mint'])
                 )
+                print(f"Validation result: {validation_result}")
                 
                 if validation_result['valid']:
+                    print("Validation passed, adding to pending signals")
                     pending_signals.append({
                         'token_info': token_info,
                         'timeframe': timeframe,
@@ -632,6 +641,7 @@ def process_signals_batch(token_analyses):
                 signal['token_info']
             )
             if result:
+                print(f"Successfully processed signal for {signal['token_info']['symbol']}")
                 processed_signals.append({
                     'token': signal['token_info']['symbol'],
                     'timeframe': signal['timeframe'],
