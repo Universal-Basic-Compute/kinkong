@@ -1,7 +1,7 @@
+import { Chart } from 'chart.js/auto';
 import { createCanvas } from 'canvas';
-import { Chart, ChartConfiguration, ChartData } from 'chart.js/auto';
 
-interface Candlestick {
+interface ChartDataPoint {
     timestamp: number;
     open: number;
     high: number;
@@ -10,8 +10,8 @@ interface Candlestick {
     volume: number;
 }
 
-interface ChartData {
-    candlesticks: Candlestick[];
+interface ChartDataSet {
+    candlesticks: ChartDataPoint[];
     volume: Array<{time: number, value: number}>;
     ema20: Array<{time: number, value: number}>;
     ema50: Array<{time: number, value: number}>;
@@ -23,10 +23,10 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     
     // Create canvas
     const canvas = createCanvas(800, 400);
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d') as unknown as CanvasRenderingContext2D;
     
     // Create chart
-    new Chart(ctx, {
+    new Chart(ctx as any, {
         type: 'candlestick',
         data: {
             datasets: [
@@ -130,8 +130,8 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     });
     
     // Convert to buffer
-    const buffer = canvas.toBuffer('image/png');
-    return buffer;
+    // Convert to buffer and return
+    return canvas.toBuffer('image/png');
 }
 
 export async function getChartData(mintAddress: string): Promise<ChartData> {
