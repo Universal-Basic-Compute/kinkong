@@ -219,7 +219,7 @@ def check_pending_signals():
         print(f"Failed to check pending signals: {e}")
 
 def check_signal_conditions():
-    """Check all active signals for status changes and update P&L"""
+    """Check all active signals for status changes, execute trades, and update P&L"""
     try:
         load_dotenv()
         base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
@@ -227,7 +227,57 @@ def check_signal_conditions():
         
         signals_table = Airtable(base_id, 'SIGNALS', api_key)
         
-        # Get all active signals
+        # First check PENDING signals that are ready for execution
+        pending_signals = signals_table.get_all(
+            formula="AND(status='PENDING', expiryDate>=TODAY())"
+        )
+        
+        for signal in pending_signals:
+            signal_id = signal['id']
+            fields = signal['fields']
+            
+            # Get current price
+            current_price = get_token_price(fields['token'])
+            if not current_price:
+                continue
+                
+            # Check if price is at entry level
+            entry_price = float(fields['entryPrice'])
+            price_threshold = 0.01  # 1% threshold
+            
+            if fields['type'] == 'BUY':
+                if current_price <= entry_price * (1 + price_threshold):
+                    # Try to execute trade
+                    success = execute_trade_with_phantom(signal_id)
+                    if success:
+                        update_signal_status(
+                            signal_id, 
+                            'ACTIVE', 
+                            f'Trade executed at {current_price}'
+                        )
+                    else:
+                        update_signal_status(
+                            signal_id,
+                            'FAILED',
+                            'Trade execution failed'
+                        )
+            else:  # SELL
+                if current_price >= entry_price * (1 - price_threshold):
+                    success = execute_trade_with_phantom(signal_id)
+                    if success:
+                        update_signal_status(
+                            signal_id,
+                            'ACTIVE',
+                            f'Trade executed at {current_price}'
+                        )
+                    else:
+                        update_signal_status(
+                            signal_id,
+                            'FAILED',
+                            'Trade execution failed'
+                        )
+        
+        # Then check ACTIVE signals for completion conditions
         active_signals = signals_table.get_all(
             formula="AND(status='ACTIVE', expiryDate>=TODAY())"
         )
@@ -245,38 +295,68 @@ def check_signal_conditions():
             
             # Update unrealized P&L
             signals_table.update(signal_id, {
-                'currentPrice': current_price,
                 'unrealizedPnl': pnl['unrealized_pnl'],
-                'pnlPercentage': pnl['pnl_percentage'],
                 'roi': pnl['roi'],
                 'lastUpdateTime': datetime.now(timezone.utc).isoformat()
             })
                 
-            # Check conditions
+            # Check take profit and stop loss conditions
             if fields['type'] == 'BUY':
                 if current_price >= float(fields['targetPrice']):
-                    update_signal_status(signal_id, 'COMPLETED', 'Take profit reached', current_price)
+                    # Execute closing trade
+                    success = execute_trade_with_phantom(signal_id)
+                    if success:
+                        update_signal_status(
+                            signal_id,
+                            'COMPLETED',
+                            'Take profit reached',
+                            current_price
+                        )
                 elif current_price <= float(fields['stopLoss']):
-                    update_signal_status(signal_id, 'STOPPED', 'Stop loss hit', current_price)
+                    success = execute_trade_with_phantom(signal_id)
+                    if success:
+                        update_signal_status(
+                            signal_id,
+                            'STOPPED',
+                            'Stop loss hit',
+                            current_price
+                        )
             else:  # SELL
                 if current_price <= float(fields['targetPrice']):
-                    update_signal_status(signal_id, 'COMPLETED', 'Take profit reached', current_price)
+                    success = execute_trade_with_phantom(signal_id)
+                    if success:
+                        update_signal_status(
+                            signal_id,
+                            'COMPLETED',
+                            'Take profit reached',
+                            current_price
+                        )
                 elif current_price >= float(fields['stopLoss']):
-                    update_signal_status(signal_id, 'STOPPED', 'Stop loss hit', current_price)
+                    success = execute_trade_with_phantom(signal_id)
+                    if success:
+                        update_signal_status(
+                            signal_id,
+                            'STOPPED',
+                            'Stop loss hit',
+                            current_price
+                        )
         
-        # Check for expired signals
+        # Finally check for expired signals
         expired_signals = signals_table.get_all(
             formula="AND(status='ACTIVE', expiryDate<TODAY())"
         )
         
         for signal in expired_signals:
             current_price = get_token_price(signal['fields']['token'])
-            update_signal_status(
-                signal['id'], 
-                'EXPIRED', 
-                'Signal duration expired',
-                current_price
-            )
+            # Close expired position
+            success = execute_trade_with_phantom(signal['id'])
+            if success:
+                update_signal_status(
+                    signal['id'],
+                    'EXPIRED',
+                    'Signal duration expired',
+                    current_price
+                )
             
     except Exception as e:
         print(f"Failed to check signal conditions: {e}")

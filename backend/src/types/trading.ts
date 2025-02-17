@@ -6,3 +6,4 @@ export type SignalStatus =
   | 'EXPIRED'    // Time expired before TP/SL
   | 'CANCELLED'  // Cancelled before execution
   | 'FAILED'     // Failed to execute
+  | 'FAILED'     // Failed to execute
