@@ -12,6 +12,7 @@ from collections import defaultdict
 import statistics
 from airtable import Airtable
 from validate_signal import validate_signal
+from backend.src.airtable.tables import getTable
 
 # Load environment variables
 load_dotenv()
