@@ -18,15 +18,15 @@ def fetch_ubc_sol_data():
     }
     
     # Get current time and 30 hours ago
-    now = datetime.now()
-    thirty_hours_ago = now - timedelta(hours=30)
+    now = int(datetime.now().timestamp())
+    thirty_hours_ago = now - (30 * 60 * 60)  # 30 hours in seconds
     
     params = {
         "address": "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump",  # UBC token address
         "type": "1H",  # 1 hour candles
         "currency": "usd",
-        "time_from": int(thirty_hours_ago.timestamp()),
-        "time_to": int(now.timestamp())
+        "time_from": thirty_hours_ago,
+        "time_to": now
     }
     
     try:
@@ -49,7 +49,7 @@ def fetch_ubc_sol_data():
         # Convert API data to DataFrame
         df_data = []
         for item in items:
-            date = pd.to_datetime(item['timestamp'], unit='s')
+            date = pd.to_datetime(item['unixTime'], unit='s')
             df_data.append({
                 'Date': date,
                 'Open': float(item['o']),
