@@ -89,58 +89,58 @@ async def analyze_token(token):
                     'subtitle': config['subtitle'].format(symbol=token['symbol']),
                     'filename': config['filename'].format(symbol=token['symbol'])
                 }
-            
-            # Fetch data
-            df = fetch_ubc_sol_data(
-                timeframe=config['timeframe'],
-                hours=config['duration_hours'],
-                token_address=token['mint']
-            )
-            
-            if df is None or df.empty:
-                print(f"No data available for {token['symbol']} - {config['timeframe']}")
-                continue
                 
-            # Calculate support levels
-            support_levels = calculate_support_levels(df)
+                # Fetch data
+                df = fetch_ubc_sol_data(
+                    timeframe=config['timeframe'],
+                    hours=config['duration_hours'],
+                    token_address=token['mint']
+                )
+                
+                if df is None or df.empty:
+                    print(f"No data available for {token['symbol']} - {config['timeframe']}")
+                    continue
+                    
+                # Calculate support levels
+                support_levels = calculate_support_levels(df)
+                
+                # Generate chart
+                chart_path = token_dir / token_config['filename']
+                success = generate_chart(df, token_config, support_levels)
+                
+                if success:
+                    print(f"Generated chart: {chart_path}")
+                    chart_paths.append(chart_path)
+                else:
+                    print(f"Failed to generate chart for {token['symbol']} - {config['timeframe']}")
             
-            # Generate chart
-            chart_path = token_dir / token_config['filename']
-            success = generate_chart(df, token_config, support_levels)
+            if not chart_paths:
+                print(f"No charts generated for {token['symbol']}")
+                return
+                
+            # Analyze charts
+            print(f"\nAnalyzing charts for {token['symbol']}...")
+            analyses = analyze_charts_with_claude(chart_paths)
             
-            if success:
-                print(f"Generated chart: {chart_path}")
-                chart_paths.append(chart_path)
+            if analyses:
+                # Generate signal
+                signal = generate_signal(analyses)
+                print(f"\nCompleted analysis for {token['symbol']}")
+                
+                # Save analysis to file
+                analysis_path = token_dir / 'analysis.json'
+                with open(analysis_path, 'w') as f:
+                    json.dump({
+                        'timestamp': datetime.now().isoformat(),
+                        'token': token['symbol'],
+                        'analyses': analyses,
+                        'signal': signal
+                    }, f, indent=2)
+                    
+                print(f"Saved analysis to {analysis_path}")
+                
             else:
-                print(f"Failed to generate chart for {token['symbol']} - {config['timeframe']}")
-        
-        if not chart_paths:
-            print(f"No charts generated for {token['symbol']}")
-            return
-            
-        # Analyze charts
-        print(f"\nAnalyzing charts for {token['symbol']}...")
-        analyses = analyze_charts_with_claude(chart_paths)
-        
-        if analyses:
-            # Generate signal
-            signal = generate_signal(analyses)
-            print(f"\nCompleted analysis for {token['symbol']}")
-            
-            # Save analysis to file
-            analysis_path = token_dir / 'analysis.json'
-            with open(analysis_path, 'w') as f:
-                json.dump({
-                    'timestamp': datetime.now().isoformat(),
-                    'token': token['symbol'],
-                    'analyses': analyses,
-                    'signal': signal
-                }, f, indent=2)
-                
-            print(f"Saved analysis to {analysis_path}")
-            
-        else:
-            print(f"No analysis generated for {token['symbol']}")
+                print(f"No analysis generated for {token['symbol']}")
             
         except Exception as e:
             if attempt == retries - 1:
