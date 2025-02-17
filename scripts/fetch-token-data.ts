@@ -4,10 +4,21 @@ import path from 'path';
 import { getTable } from '../backend/src/airtable/tables';
 import { FieldSet } from 'airtable';
 
-// Load .env file explicitly with path
-dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+// Add debug logging BEFORE config
+console.log('Current working directory:', process.cwd());
+console.log('.env path:', path.resolve(process.cwd(), '.env'));
 
-// Add debug logging
+// Load .env file
+const result = dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+console.log('dotenv result:', result);
+
+// Check if variables are loaded
+console.log('Environment variables after dotenv:', {
+  KINKONG_AIRTABLE_API_KEY: process.env.KINKONG_AIRTABLE_API_KEY?.slice(0, 10) + '...',
+  KINKONG_AIRTABLE_BASE_ID: process.env.KINKONG_AIRTABLE_BASE_ID,
+});
+
+// Additional environment checks
 console.log('Environment check:', {
   cwd: process.cwd(),
   hasAirtableKey: !!process.env.KINKONG_AIRTABLE_API_KEY,
