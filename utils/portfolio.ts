@@ -33,8 +33,8 @@ export async function getCurrentPortfolio(
       portfolio[mint] = {
         mint,
         balance,
-        price,
-        usdValue: balance * price
+        price: price || 0, // Default to 0 if price is null
+        usdValue: balance * (price || 0) // Use 0 if price is null
       };
     } catch (error) {
       console.error(`Failed to get price for token ${mint}:`, error);
