@@ -1,7 +1,7 @@
-import { Chart } from 'chart.js/auto';
+import { Chart, ChartConfiguration, ChartTypeRegistry } from 'chart.js/auto';
 import { createCanvas } from 'canvas';
 
-interface ChartDataPoint {
+interface Candlestick {
     timestamp: number;
     open: number;
     high: number;
@@ -11,11 +11,19 @@ interface ChartDataPoint {
 }
 
 interface ChartDataSet {
-    candlesticks: ChartDataPoint[];
+    candlesticks: Candlestick[];
     volume: Array<{time: number, value: number}>;
     ema20: Array<{time: number, value: number}>;
     ema50: Array<{time: number, value: number}>;
 }
+
+type CandlestickData = {
+    x: Date;
+    o: number;
+    h: number;
+    l: number;
+    c: number;
+};
 
 export async function generateTokenChart(token: string): Promise<Buffer> {
     // Get data
@@ -23,28 +31,25 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     
     // Create canvas
     const canvas = createCanvas(800, 400);
-    const ctx = canvas.getContext('2d') as unknown as CanvasRenderingContext2D;
+    const ctx = canvas.getContext('2d');
     
-    // Create chart
-    new Chart(ctx as any, {
-        type: 'candlestick',
+    // Create chart configuration
+    const config: ChartConfiguration = {
+        type: 'bar', // We'll use bar as base type and customize it
         data: {
             datasets: [
                 // Candlestick dataset
                 {
+                    type: 'bar',
                     label: token,
-                    data: data.candlesticks.map(candle => ({
+                    data: data.candlesticks.map((candle: Candlestick) => ({
                         x: new Date(candle.timestamp * 1000),
                         o: candle.open,
                         h: candle.high,
                         l: candle.low,
                         c: candle.close
-                    })),
-                    color: {
-                        up: 'rgba(75, 192, 75, 1)',
-                        down: 'rgba(192, 75, 75, 1)',
-                        unchanged: 'rgba(192, 192, 192, 1)',
-                    }
+                    } as CandlestickData)),
+                    backgroundColor: 'rgba(75, 192, 75, 1)',
                 },
                 // EMA 20 line
                 {
@@ -134,7 +139,7 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     return canvas.toBuffer('image/png');
 }
 
-export async function getChartData(mintAddress: string): Promise<ChartData> {
+export async function getChartData(mintAddress: string): Promise<ChartDataSet> {
   try {
     // Get Jupiter API data for last 24 hours
     const endTime = Math.floor(Date.now() / 1000);
