@@ -176,7 +176,7 @@ export async function executeReallocation() {
       portfolioRecords.map(record => [
         record.get('token') as string,
         {
-          percentage: record.get('allocation') as number, // Rename to percentage for clarity
+          percentage: (record.get('allocation') as number) / 100, // Convert allocation to decimal percentage
           amount: 0, // Will be calculated once we have prices
           usdValue: record.get('usdValue') as number
         }
@@ -232,7 +232,7 @@ export async function executeReallocation() {
           return [token, data];
         }
         
-        const targetUsdValue = (data.percentage / 100) * totalValue;
+        const targetUsdValue = data.percentage * totalValue; // Already in decimal form
         const tokenAmount = targetUsdValue / price;
         
         return [token, {
@@ -249,7 +249,7 @@ export async function executeReallocation() {
         .map(([token, data]) => [
           token, 
           {
-            percentage: data.percentage,
+            percentage: (data.percentage * 100).toFixed(2) + '%', // Convert back to percentage for display
             amount: data.amount?.toFixed(4),
             price: tokenPrices.get(token),
             usdValue: data.usdValue?.toFixed(2),
