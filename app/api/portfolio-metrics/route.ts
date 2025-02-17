@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getTable } from '@/backend/src/airtable/tables';
-import type { Record, FieldSet } from 'airtable';
+import type { Record as AirtableRecord, FieldSet } from 'airtable';
+
+// Use a different name for our dictionary type to avoid confusion
+type HistoryDictionary = {
+  [date: string]: { timestamp: string; value: number };
+};
 
 interface TradeRecord extends FieldSet {
   roi: string;
@@ -29,7 +34,7 @@ export async function GET() {
     // Debug log
     console.log('First trade data:', trades[0]?.fields);
 
-    trades.forEach((trade: Record<TradeRecord>) => {
+    trades.forEach((trade: AirtableRecord<TradeRecord>) => {
       const roi = parseFloat(trade.get('roi') as string) || 0;
       const realizedPnl = parseFloat(trade.get('realizedPnl') as string) || 0;
 
@@ -58,7 +63,7 @@ export async function GET() {
     }
 
     // Get performance history (daily points)
-    const history = trades.reduce((acc: Record<string, { timestamp: string; value: number }>, trade: Record<TradeRecord>) => {
+    const history = trades.reduce((acc: HistoryDictionary, trade: AirtableRecord<TradeRecord>) => {
       try {
         // Safely parse the timestamp
         const timestamp = trade.get('timestamp');
