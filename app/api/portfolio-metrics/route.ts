@@ -1,5 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getTable } from '@/backend/src/airtable/tables';
+import type { Record, FieldSet } from 'airtable';
+
+interface TradeRecord extends FieldSet {
+  roi: string;
+  realizedPnl: string;
+  timestamp: string;
+  value: number;
+}
 
 export async function GET() {
   try {
@@ -21,7 +29,7 @@ export async function GET() {
     // Debug log
     console.log('First trade data:', trades[0]?.fields);
 
-    trades.forEach(trade => {
+    trades.forEach((trade: Record<TradeRecord>) => {
       const roi = parseFloat(trade.get('roi') as string) || 0;
       const realizedPnl = parseFloat(trade.get('realizedPnl') as string) || 0;
 
@@ -50,7 +58,7 @@ export async function GET() {
     }
 
     // Get performance history (daily points)
-    const history = trades.reduce((acc, trade) => {
+    const history = trades.reduce((acc: Record<string, { timestamp: string; value: number }>, trade: Record<TradeRecord>) => {
       try {
         // Safely parse the timestamp
         const timestamp = trade.get('timestamp');
