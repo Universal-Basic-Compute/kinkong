@@ -33,7 +33,6 @@ export interface Token {
 
 export interface Signal {
   timestamp: string;
-  holder: string;
   token: string;
   type: 'BUY' | 'SELL';
   timeframe: 'SCALP' | 'INTRADAY' | 'SWING' | 'POSITION';
@@ -41,6 +40,7 @@ export interface Signal {
   targetPrice?: number;
   stopLoss?: number;
   confidence: 'LOW' | 'MEDIUM' | 'HIGH';
+  wallet: string;
   reason: string;
   url?: string;
 }
