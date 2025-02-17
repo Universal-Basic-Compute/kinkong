@@ -26,11 +26,50 @@ For optimal short-term results in the Solana ecosystem, KinKong implements a 4x 
 
 ## Recommended Trading Schedule
 
-KinKong executes trades four times daily within flexible windows:
+### Signal Timeframes and Targets
+
+#### Trade Duration Windows
+- SCALP: 6 hours (one trading window to next)
+  * Minimum profit target: 15%
+  * Typical target: 20-30%
+  * Stop-loss: 10%
+  * Rationale: Accounts for DEX fees (2-5%), gas, slippage
+
+- INTRADAY: 24 hours
+  * Minimum profit target: 20%
+  * Typical target: 25-40%
+  * Stop-loss: 15%
+
+- SWING: 7 days
+  * Minimum profit target: 30%
+  * Typical target: 40-80%
+  * Stop-loss: 20%
+
+- POSITION: 30 days
+  * Minimum profit target: 50%
+  * Typical target: 100%+
+  * Stop-loss: 25%
+
+#### Trading Windows (4x Daily)
 - Asian window: 00:00 UTC ±30min
 - European window: 06:00 UTC ±30min
 - Overlap window: 12:00 UTC ±30min
 - American window: 18:00 UTC ±30min
+
+#### Cost Considerations
+- LP fees: 2-5% per trade
+- Gas fees: ~0.1-0.2%
+- Slippage: ~0.5-1%
+- Total round trip costs: 2.6-6.2%
+
+#### Position Management
+- Check all open positions at each trading window
+- Close positions if:
+  * Take profit hit
+  * Stop loss hit
+  * Timeframe expired
+  * Maximum drawdown exceeded
+  * Higher-confidence opposing signal received
 
 Trades only execute if any position requires >3% adjustment, providing efficient rebalancing while avoiding unnecessary transactions.
 
