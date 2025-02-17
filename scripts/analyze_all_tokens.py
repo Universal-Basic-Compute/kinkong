@@ -17,7 +17,6 @@ print(f"Python path: {sys.path}")
 print(f"Looking for backend at: {project_root}/backend")
 print(f"Directory contents: {os.listdir(project_root)}")
 
-from dotenv import load_dotenv
 import os
 from datetime import datetime
 import asyncio
@@ -32,9 +31,6 @@ from analyze_charts import analyze_charts_with_claude, generate_signal
 @limits(calls=5, period=1)  # 5 calls per second
 def rate_limited_fetch(timeframe, hours, token_address):
     return fetch_token_data(timeframe, hours, token_address)
-
-# Load environment variables
-load_dotenv()
 
 CHART_CONFIGS = [
     {

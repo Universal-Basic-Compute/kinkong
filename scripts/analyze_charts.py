@@ -287,10 +287,7 @@ Format your response as JSON:
 def analyze_charts_with_claude(chart_paths, token_info=None):
     """Analyze multiple timeframe charts together using Claude 3"""
     try:
-        # Force reload environment variables
-        load_dotenv(override=True)
-        
-        # Explicitly get API key from .env
+        # Get API key from environment
         api_key = os.getenv('ANTHROPIC_API_KEY')
         if not api_key:
             raise ValueError("ANTHROPIC_API_KEY not found in .env file")
