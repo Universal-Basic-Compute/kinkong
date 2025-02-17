@@ -18,72 +18,7 @@ interface TokenInfo {
   marketCap: number;
 }
 
-function InvestmentCard() {
-  const { publicKey } = useWallet();
-  const [investment, setInvestment] = useState<{
-    amount: number;
-    date: string;
-    solscanUrl: string;
-  } | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchInvestment() {
-      if (!publicKey) return;
-
-      try {
-        const response = await fetch(`/api/user-investment?wallet=${publicKey.toString()}`);
-        if (!response.ok) throw new Error('Failed to fetch investment');
-        const data = await response.json();
-        setInvestment(data);
-      } catch (error) {
-        console.error('Error fetching investment:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    fetchInvestment();
-  }, [publicKey]);
-
-  if (isLoading) {
-    return (
-      <div className="stat-card">
-        <h3>Your Investment</h3>
-        <p className="text-2xl">Loading...</p>
-      </div>
-    );
-  }
-
-  if (!investment) {
-    return (
-      <div className="stat-card">
-        <h3>Your Investment</h3>
-        <p className="text-2xl">No investment found</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="stat-card">
-      <h3>Your Investment</h3>
-      <p className="text-2xl">
-        {investment.amount.toLocaleString(undefined, {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        })} USDC
-      </p>
-      <a 
-        href={investment.solscanUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-xs text-gold hover:text-gold/80 underline mt-1 block"
-      >
-        View on Solscan
-      </a>
-    </main>
-  );
-}
+import { InvestmentCard } from '@/components/dashboard/InvestmentCard';
 
 export default function Dashboard() {
   const { publicKey } = useWallet();
@@ -114,17 +49,7 @@ export default function Dashboard() {
     <main className="min-h-screen p-8">
       <h1 className="text-4xl font-bold mb-12">Holder Dashboard</h1>
 
-      <div className="grid grid-cols-3 gap-6 mb-16">
-        <InvestmentCard />
-        <div className="stat-card">
-          <h3>Signal Success Rate</h3>
-          <p className="text-2xl">XX%</p>
-        </div>
-        <div className="stat-card">
-          <h3>Pending Profits</h3>
-          <p className="text-2xl">XX SOL</p>
-        </div>
-      </div>
+      <StatsCards investmentComponent={<InvestmentCard />} />
 
       <section className="mb-16">
         <h2 className="text-2xl font-bold mb-8">KinKong's Current Portfolio</h2>
