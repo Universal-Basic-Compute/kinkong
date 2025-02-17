@@ -161,14 +161,14 @@ def generate_chart(df, config, support_levels=None):
     avg_volume = df['Volume'].mean()
     price_change = ((df['Close'].iloc[-1] - df['Close'].iloc[0]) / df['Close'].iloc[0]) * 100
     
-    # Create more detailed title components
+    # Create more detailed title components with escaped dollar signs
     main_title = config['title']
     price_stats = (
-        f"Current: ${current_price:.4f} ({price_change:+.2f}%) | "
-        f"ATH: ${ath:.4f} | ATL: ${atl:.4f} | "
-        f"Avg: ${avg_price:.4f}"
+        f"Current: \${current_price:.4f} ({price_change:+.2f}%) | "
+        f"ATH: \${ath:.4f} | ATL: \${atl:.4f} | "
+        f"Avg: \${avg_price:.4f}"
     )
-    volume_stats = f"Avg Vol: ${avg_volume:,.2f} | {len(df)} candles"
+    volume_stats = f"Avg Vol: \${avg_volume:,.2f} | {len(df)} candles"
     
     # Enhanced subtitle with more technical info
     technical_info = (
@@ -252,8 +252,8 @@ def generate_chart(df, config, support_levels=None):
     
     # Add support/resistance levels info if present
     if support_levels:
-        support_text = "Support Levels: " + " | ".join([f"${price:.4f}" for _, price in support_levels if _=='support'])
-        resistance_text = "Resistance Levels: " + " | ".join([f"${price:.4f}" for _, price in support_levels if _=='resistance'])
+        support_text = "Support Levels: " + " | ".join([f"\${price:.4f}" for _, price in support_levels if _=='support'])
+        resistance_text = "Resistance Levels: " + " | ".join([f"\${price:.4f}" for _, price in support_levels if _=='resistance'])
         
         fig.text(0.5, 0.88, support_text + "\n" + resistance_text,
                 horizontalalignment='center',
@@ -303,14 +303,14 @@ def generate_chart(df, config, support_levels=None):
     ax_main.grid(axis='x', color='gray', alpha=0.2, linestyle='--')
     
     # Add price range label
-    price_range = f"Range: ${df['Low'].min():.4f} - ${df['High'].max():.4f}"
+    price_range = f"Range: \${df['Low'].min():.4f} - \${df['High'].max():.4f}"
     ax_main.text(0.02, 0.95, price_range,
                 transform=ax_main.transAxes,
                 color='white',
                 fontsize=10)
     
     # Add volume range label
-    volume_range = f"Vol Range: ${df['Volume'].min():,.0f} - ${df['Volume'].max():,.0f}"
+    volume_range = f"Vol Range: \${df['Volume'].min():,.0f} - \${df['Volume'].max():,.0f}"
     ax_volume.text(0.02, 0.95, volume_range,
                   transform=ax_volume.transAxes,
                   color='white',
