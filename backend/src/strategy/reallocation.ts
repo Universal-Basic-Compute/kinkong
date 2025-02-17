@@ -195,7 +195,7 @@ export async function executeReallocation() {
       // Get mint for the token
       const tokenRecord = await tokensTable
         .select({
-          filterByFormula: `{symbol} = '${cleanToken}'`
+          filterByFormula: `{name} = '${cleanToken}'`
         })
         .firstPage();
 
