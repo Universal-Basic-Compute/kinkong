@@ -89,5 +89,5 @@ export const getTable = (tableName: string) => {
     throw new Error('Table name is required');
   }
   console.log('Getting table:', tableName);
-  return base(tableName);
+  return base.table(tableName);
 };
