@@ -70,7 +70,7 @@ export async function getTokenPrice(mint: string): Promise<number | null> {
     // For other tokens, search by pairs
     console.log(`Fetching price from DexScreener for mint: ${mint} (with retries)...`);
     const response = await fetchWithRetry(
-      `https://api.dexscreener.com/latest/dex/search?q=${mint}`  // Using search endpoint instead
+      `https://api.dexscreener.com/latest/dex/pairs/solana/${mint}`  // Using Solana-specific endpoint
     );
 
     const data: DexScreenerResponse = await response.json();
@@ -80,15 +80,8 @@ export async function getTokenPrice(mint: string): Promise<number | null> {
       return null;
     }
 
-    // Filter for Solana pairs only
-    const solanaPairs = data.pairs.filter(p => p.chainId === 'solana');
-    if (!solanaPairs.length) {
-      console.warn(`No Solana pairs found for mint ${mint}`);
-      return null;
-    }
-
     // Try to find the best pair in this order: USDC > USDT > SOL
-    let pair = solanaPairs.find(p => p.quoteToken.symbol === 'USDC');
+    let pair = data.pairs.find(p => p.quoteToken.symbol === 'USDC');
     if (pair) {
       const price = parseFloat(pair.priceUsd);
       console.log(`Found USDC pair price for ${mint}: $${price}`);
