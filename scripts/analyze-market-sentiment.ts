@@ -404,16 +404,20 @@ async function analyzeMarketSentiment(): Promise<WeeklyAnalysis> {
         bearish: bearishCriteria
       }
     };
-    
-    // Calculate the classification
-    const metrics = {
+
+    // Calculate metrics for notifications
+    const notificationMetrics = {
       percentAboveAvg,
       volumeGrowth,
       percentVolumeOnUpDays,
       aiVsSolPerformance: aiPerformance - solPerformance
     };
 
-    const classification = classifyMarket(metrics);
+    const classification = classifyMarket(notificationMetrics);
+
+    // Send notifications
+    console.log('📣 Sending notifications...');
+    await sendNotifications(notificationMetrics, classification);
 
     // Enhanced console output
     console.log('\n📊 Market Sentiment Analysis Results:');
