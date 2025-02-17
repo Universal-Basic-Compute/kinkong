@@ -1,6 +1,6 @@
 import { getTable } from '../airtable/tables';
 
-const DEXSCREENER_API = 'https://api.dexscreener.com/latest/dex';
+const DEXSCREENER_API = 'https://api.dexscreener.com/latest/dex/tokens';
 
 interface DexScreenerPair {
   baseToken: {
@@ -12,10 +12,6 @@ interface DexScreenerPair {
   };
   priceUsd: string;
   liquidity?: number;
-}
-
-interface DexScreenerResponse {
-  pairs?: DexScreenerPair[];
 }
 
 export async function getTokenPrice(tokenIdentifier: string): Promise<number | null> {
@@ -47,64 +43,27 @@ export async function getTokenPrice(tokenIdentifier: string): Promise<number | n
 
     console.log(`Fetching prices from DexScreener for mint: ${mint}`);
     
-    // Try up to 3 times with exponential backoff
-    for (let attempt = 1; attempt <= 3; attempt++) {
-      try {
-        const response = await fetch(`${DEXSCREENER_API}/search/tokens?query=${mint}`);
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch token prices: ${response.status}`);
+    const response = await fetch(`${DEXSCREENER_API}/${mint}`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch token prices: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('DexScreener response:', data);
+
+    if (data.pairs) {
+      // Create price map from DexScreener response
+      for (const pair of data.pairs) {
+        if (pair.baseToken && pair.baseToken.address.toLowerCase() === mint.toLowerCase()) {
+          const price = Number(pair.priceUsd) || 0;
+          console.log(`Found price for ${tokenIdentifier}: $${price}`);
+          return price;
         }
-
-        const data = await response.json();
-        console.log('DexScreener response:', data);
-
-        if (data.pairs?.length > 0) {
-          // Filter for Solana pairs only
-          const solanaPairs = data.pairs.filter((p: DexScreenerPair) => 
-            p.baseToken.address.toLowerCase() === mint.toLowerCase()
-          );
-
-          if (solanaPairs.length > 0) {
-            // Try to find the best pair in this order: USDC > USDT > SOL
-            const usdcPair = solanaPairs.find((p: DexScreenerPair) => p.quoteToken.symbol === 'USDC');
-            if (usdcPair) {
-              const price = Number(usdcPair.priceUsd);
-              console.log(`Found USDC pair price for ${tokenIdentifier}: $${price}`);
-              return price;
-            }
-
-            const usdtPair = solanaPairs.find((p: DexScreenerPair) => p.quoteToken.symbol === 'USDT');
-            if (usdtPair) {
-              const price = Number(usdtPair.priceUsd);
-              console.log(`Found USDT pair price for ${tokenIdentifier}: $${price}`);
-              return price;
-            }
-
-            const solPair = solanaPairs.find((p: DexScreenerPair) => p.quoteToken.symbol === 'SOL');
-            if (solPair) {
-              const solPrice = await getTokenPrice('So11111111111111111111111111111111111111112');
-              if (!solPrice) {
-                throw new Error('Could not get SOL price for conversion');
-              }
-              const price = Number(solPair.priceUsd) * solPrice;
-              console.log(`Found SOL pair price for ${tokenIdentifier}: ${solPair.priceUsd} SOL * $${solPrice} = $${price}`);
-              return price;
-            }
-          }
-        }
-
-        console.warn(`No suitable pairs found for ${tokenIdentifier}`);
-        return null;
-
-      } catch (error) {
-        if (attempt === 3) throw error;
-        const delay = Math.pow(2, attempt) * 1000; // Exponential backoff: 2s, 4s, 8s
-        console.log(`Attempt ${attempt} failed, retrying in ${delay/1000}s...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
 
+    console.warn(`No suitable pairs found for ${tokenIdentifier}`);
     return null;
 
   } catch (error) {
