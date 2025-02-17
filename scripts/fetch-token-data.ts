@@ -4,7 +4,17 @@ import path from 'path';
 import { getTable } from '../backend/src/airtable/tables';
 import { FieldSet } from 'airtable';
 
-dotenv.config();
+// Load .env file explicitly with path
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+
+// Add debug logging
+console.log('Environment check:', {
+  cwd: process.cwd(),
+  hasAirtableKey: !!process.env.KINKONG_AIRTABLE_API_KEY,
+  hasAirtableBase: !!process.env.KINKONG_AIRTABLE_BASE_ID,
+  hasBirdeyeKey: !!process.env.BIRDEYE_API_KEY,
+  envKeys: Object.keys(process.env).filter(key => key.includes('KINKONG'))
+});
 
 const BIRDEYE_API_KEY = process.env.BIRDEYE_API_KEY;
 const TOKENS = [
