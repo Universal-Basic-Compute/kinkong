@@ -236,7 +236,10 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
 
     // Cleanup
     return () => {
-      document.body.removeChild(tooltip);
+      // Safely remove tooltip if it exists
+      if (tooltip && document.body.contains(tooltip)) {
+        document.body.removeChild(tooltip);
+      }
     };
   }, [tokens]);
 
