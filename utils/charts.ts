@@ -1,6 +1,5 @@
 import { createCanvas } from 'canvas';
-import { ChartJSNodeCanvas } from 'chartjs-node-canvas';
-import { ChartConfiguration, ChartOptions } from 'chart.js';
+import { createChart, ColorType, IChartApi, ISeriesApi, CandlestickData } from 'lightweight-charts';
 
 interface Candlestick {
     timestamp: number;
@@ -13,100 +12,97 @@ interface Candlestick {
 
 interface ChartData {
     candlesticks: Candlestick[];
-    volume: Array<{x: number, y: number}>;
-    ema20: Array<{x: number, y: number}>;
-    ema50: Array<{x: number, y: number}>;
+    volume: Array<{time: number, value: number}>;
+    ema20: Array<{time: number, value: number}>;
+    ema50: Array<{time: number, value: number}>;
 }
 
 export async function generateTokenChart(token: string): Promise<Buffer> {
-  const width = 800;
-  const height = 400;
-  
-  const chartJSNodeCanvas = new ChartJSNodeCanvas({ width, height });
-  
-  // Get historical data
-  const data = await getChartData(token);
-  
-  // Configure chart
-  const configuration: ChartConfiguration = {
-    type: 'bar', // We'll use bar as base type and customize for candlesticks
-    data: {
-      datasets: [{
-        label: token,
-        data: data.candlesticks.map((c: Candlestick) => ({
-          x: c.timestamp,
-          o: c.open,
-          h: c.high,
-          l: c.low,
-          c: c.close
-        })) as any[],
-        type: 'candlestick' as any, // Custom type
-        color: {
-          up: 'rgba(75, 192, 75, 1)',
-          down: 'rgba(192, 75, 75, 1)',
-          unchanged: 'rgba(75, 75, 192, 1)',
-        }
-      }, {
-        label: 'Volume',
-        data: data.volume,
-        type: 'bar',
-        backgroundColor: 'rgba(128, 128, 128, 0.2)',
-        yAxisID: 'volume'
-      }, {
-        label: 'EMA20',
-        data: data.ema20,
-        type: 'line',
-        borderColor: 'rgba(255, 215, 0, 0.8)',
-        borderWidth: 1,
-        fill: false
-      }, {
-        label: 'EMA50',
-        data: data.ema50,
-        type: 'line',
-        borderColor: 'rgba(75, 192, 192, 0.8)',
-        borderWidth: 1,
-        fill: false
-      }]
-    },
-    options: {
-      responsive: true,
-      scales: {
-        x: {
-          type: 'time',
-          time: {
-            unit: 'hour'
-          },
-          grid: {
-            color: 'rgba(255, 215, 0, 0.1)'
-          }
+    const width = 800;
+    const height = 400;
+    
+    // Create canvas
+    const canvas = createCanvas(width, height);
+    const ctx = canvas.getContext('2d');
+    
+    // Create chart
+    const chart = createChart(canvas as any, {
+        width: width,
+        height: height,
+        layout: {
+            background: { type: ColorType.Solid, color: '#000000' },
+            textColor: '#d1d4dc',
         },
-        y: {
-          type: 'linear',
-          position: 'left',
-          grid: {
-            color: 'rgba(255, 215, 0, 0.1)'
-          }
+        grid: {
+            vertLines: { color: 'rgba(255, 215, 0, 0.1)' },
+            horzLines: { color: 'rgba(255, 215, 0, 0.1)' },
         },
-        volume: {
-          type: 'linear',
-          position: 'right',
-          grid: {
-            display: false
-          }
-        } as ChartOptions
-      },
-      plugins: {
-        legend: {
-          display: true,
-          position: 'top'
-        }
-      }
-    }
-  };
-  
-  // Generate chart image
-  const image = await chartJSNodeCanvas.renderToBuffer(configuration);
-  return image;
+    });
+    
+    // Get historical data
+    const data = await getChartData(token);
+    
+    // Add candlestick series
+    const candlestickSeries = chart.addCandlestickSeries({
+        upColor: 'rgba(75, 192, 75, 1)',
+        downColor: 'rgba(192, 75, 75, 1)',
+        borderVisible: false,
+        wickUpColor: 'rgba(75, 192, 75, 1)',
+        wickDownColor: 'rgba(192, 75, 75, 1)',
+    });
+    
+    // Format data for lightweight-charts
+    const candleData = data.candlesticks.map(candle => ({
+        time: candle.timestamp / 1000, // Convert to seconds
+        open: candle.open,
+        high: candle.high,
+        low: candle.low,
+        close: candle.close,
+    }));
+    
+    candlestickSeries.setData(candleData);
+    
+    // Add EMA lines
+    const ema20Series = chart.addLineSeries({
+        color: 'rgba(255, 215, 0, 0.8)',
+        lineWidth: 1,
+    });
+    
+    const ema50Series = chart.addLineSeries({
+        color: 'rgba(75, 192, 192, 0.8)',
+        lineWidth: 1,
+    });
+    
+    ema20Series.setData(data.ema20.map(point => ({
+        time: point.time / 1000,
+        value: point.value,
+    })));
+    
+    ema50Series.setData(data.ema50.map(point => ({
+        time: point.time / 1000,
+        value: point.value,
+    })));
+    
+    // Add volume
+    const volumeSeries = chart.addHistogramSeries({
+        color: 'rgba(128, 128, 128, 0.2)',
+        priceFormat: {
+            type: 'volume',
+        },
+        priceScaleId: '', // Set to empty to create a new scale
+    });
+    
+    volumeSeries.setData(data.volume.map(v => ({
+        time: v.time / 1000,
+        value: v.value,
+    })));
+    
+    // Fit content
+    chart.timeScale().fitContent();
+    
+    // Convert to buffer
+    const buffer = canvas.toBuffer('image/png');
+    return buffer;
 }
 
 export async function getChartData(mintAddress: string): Promise<ChartData> {
