@@ -512,7 +512,7 @@ Reassessment Conditions:
     # Overall analysis from Claude
     overall = analyses.get('overall', {})
     
-    message = f"""🔄 UBC Technical Analysis Update
+    message = f"""🔄 {token_info['symbol']} Technical Analysis Update
 
 Primary Trend: {overall.get('primary_trend', 'N/A')}
 Timeframe Alignment: {overall.get('timeframe_alignment', 'N/A')}
