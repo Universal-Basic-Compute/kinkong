@@ -1,6 +1,23 @@
 import { getTable } from '../airtable/tables';
 import { getCurrentPortfolio } from './portfolio';
 import { getTokenPrices } from '../utils/jupiter';
+import fetch from 'node-fetch';
+import Airtable from 'airtable';
+
+interface WeeklyAnalysis {
+  metrics: {
+    percentAboveAvg: number;
+    volumeGrowth: number;
+    percentVolumeOnUpDays: number;
+    aiVsSolPerformance: number;
+  };
+}
+
+interface MarketClassification {
+  sentiment: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+  confidence: number;
+  reasons: string[];
+}
 
 interface TokenSnapshot {
   token: string;
@@ -213,6 +230,76 @@ ${classification.reasons.map(r => '• ' + r).join('\n')}`;
     }
   } catch (error) {
     console.error('❌ Error sending notifications:', error);
+  }
+}
+
+async function sendNotifications(analysis: WeeklyAnalysis, classification: MarketClassification) {
+  try {
+    // Format message
+    const message = `🤖 KinKong Market Sentiment Update
+
+Classification: ${classification.sentiment} (${classification.confidence.toFixed(1)}% confidence)
+
+Key Metrics:
+• Tokens above 7d avg: ${analysis.metrics.percentAboveAvg.toFixed(1)}%
+• Volume growth: ${analysis.metrics.volumeGrowth.toFixed(1)}%
+• Volume on up days: ${analysis.metrics.percentVolumeOnUpDays.toFixed(1)}%
+• AI vs SOL: ${analysis.metrics.aiVsSolPerformance > 0 ? '+' : ''}${analysis.metrics.aiVsSolPerformance.toFixed(1)}%
+
+Reasons:
+${classification.reasons.map(r => '• ' + r).join('\n')}`;
+
+    // Send Telegram message
+    if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID) {
+      console.log('📱 Sending Telegram notification...');
+      const telegramUrl = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
+      const response = await fetch(telegramUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: process.env.TELEGRAM_CHAT_ID,
+          text: message,
+          parse_mode: 'HTML'
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Telegram API error: ${response.status}`);
+      }
+      console.log('✅ Telegram notification sent');
+    } else {
+      console.log('⚠️ Missing Telegram credentials');
+    }
+
+    // Record thought in Kinos Airtable
+    if (process.env.KINOS_AIRTABLE_API_KEY && process.env.KINOS_AIRTABLE_BASE_ID) {
+      console.log('💭 Recording thought in Kinos...');
+      const kinosBase = new Airtable({
+        apiKey: process.env.KINOS_AIRTABLE_API_KEY
+      }).base(process.env.KINOS_AIRTABLE_BASE_ID);
+
+      const thoughtsTable = kinosBase('THOUGHTS');
+      await thoughtsTable.create([
+        {
+          fields: {
+            thoughtId: `kinkong-sentiment-${Date.now()}`,
+            swarmId: 'kinkong',
+            content: message,
+            createdAt: new Date().toISOString()
+          }
+        }
+      ]);
+      console.log('✅ Thought recorded in Kinos');
+    } else {
+      console.log('⚠️ Missing Kinos Airtable credentials');
+    }
+  } catch (error) {
+    console.error('❌ Error sending notifications:', error);
+    console.error('Error details:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    });
   }
 }
 
