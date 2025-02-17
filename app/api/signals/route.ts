@@ -1,6 +1,21 @@
 import { getTable, TABLES } from '@/backend/src/airtable/tables';
 import { NextResponse } from 'next/server';
 import { parseAndFormatDate } from '@/backend/src/utils/dates';
+import type { Record, FieldSet } from 'airtable';
+
+interface SignalRecord extends FieldSet {
+  timestamp: string;
+  token: string;
+  type: 'BUY' | 'SELL';
+  timeframe: 'SCALP' | 'INTRADAY' | 'SWING' | 'POSITION';
+  entryPrice?: number;
+  targetPrice?: number;
+  stopLoss?: number;
+  confidence: 'LOW' | 'MEDIUM' | 'HIGH';
+  wallet: string;
+  reason: string;
+  url?: string;
+}
 
 export async function GET() {
   try {
@@ -23,7 +38,7 @@ export async function GET() {
         .all();
       console.log(`Retrieved ${records.length} signals`);
 
-      const signals = records.map(record => ({
+      const signals = records.map((record: Record<SignalRecord>) => ({
         id: record.id,
         timestamp: parseAndFormatDate(record.get('timestamp')),
         token: record.get('token') as string,
