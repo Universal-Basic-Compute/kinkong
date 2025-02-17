@@ -120,10 +120,10 @@ export default function Dashboard() {
     fetchTrackedTokens();
   }, []);
   return (
-    <main className="min-h-screen p-4">
-      <h1 className="text-4xl font-bold mb-8">Holder Dashboard</h1>
+    <main className="min-h-screen p-8">
+      <h1 className="text-4xl font-bold mb-12">Holder Dashboard</h1>
 
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-3 gap-6 mb-16">
         <InvestmentCard />
         <div className="stat-card">
           <h3>Signal Success Rate</h3>
@@ -135,8 +135,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <section className="mb-8">
-        <h2 className="text-2xl font-bold mb-4">KinKong's Current Portfolio</h2>
+      <section className="mb-16">
+        <h2 className="text-2xl font-bold mb-8">KinKong's Current Portfolio</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
             <AllocationChart />
@@ -147,13 +147,13 @@ export default function Dashboard() {
         </div>
       </section>
 
-      <section className="mt-8">
-        <h2 className="text-2xl font-bold mb-4">Recent Signals</h2>
+      <section className="mb-16">
+        <h2 className="text-2xl font-bold mb-8">Recent Signals</h2>
         <SignalHistory />
       </section>
 
-      <section className="mt-8">
-        <div className="flex items-center gap-2 mb-4">
+      <section className="mb-16">
+        <div className="flex items-center gap-2 mb-8">
           <h2 className="text-2xl font-bold">Tracked Tokens</h2>
           <div className="group relative">
             <div className="cursor-help text-gray-400 border border-gray-400 rounded-full w-4 h-4 flex items-center justify-center text-xs">
@@ -166,8 +166,8 @@ export default function Dashboard() {
         </div>
 
         {/* Bubble Visualization */}
-        <div className="mb-8">
-          <div className="flex flex-wrap gap-4 justify-center">
+        <div className="mb-12">
+          <div className="flex flex-wrap gap-6 justify-center">
             {trackedTokens.map((token) => (
               <div 
                 key={token.mint}
@@ -211,7 +211,7 @@ export default function Dashboard() {
         </div>
 
         {/* Table View */}
-        <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
+        <div className="bg-black/30 p-8 rounded-lg border border-gold/20">
           {isTrackedTokensLoading ? (
             <div className="text-center py-4">Loading tokens...</div>
           ) : trackedTokensError ? (
