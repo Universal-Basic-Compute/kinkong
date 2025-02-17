@@ -16,29 +16,27 @@ graph TD
     F -->|No| H[Log Rejection]
 ```
 
-### 2. Trade Execution Process (Continuous)
+### 2. Trade Execution Process (1-minute intervals)
 ```mermaid
 graph TD
-    A[monitor_trades.py] --> B[Check PENDING Signals]
-    B --> C[Rate Limited Price Checks]
+    A[monitor_trades.py] --> B[Check One PENDING Signal]
+    B --> C[Check Current Price]
     C --> D{Price at Entry?}
-    D -->|Yes| E[Batch Trade Queue]
-    D -->|No| F[Continue Monitoring]
-    E --> G[Execute Trade Batch]
-    G --> H[Update to ACTIVE]
+    D -->|Yes| E[Execute Single Trade]
+    D -->|No| F[Skip to Next Check]
+    E --> G[Update to ACTIVE]
     
-    I[Active Trade Monitor] --> J[Check Stop/Target]
-    J --> K{Exit Condition Met?}
-    K -->|Yes| L[Batch Exit Queue]
-    K -->|No| M[Update PnL]
-    L --> N[Execute Exit Batch]
+    H[Active Trade Monitor] --> I[Check One Active Trade]
+    I --> J{Exit Condition Met?}
+    J -->|Yes| K[Execute Exit Trade]
+    J -->|No| L[Update PnL]
 ```
 
 Key Features:
-- Rate limited price checks (5 per second)
-- Batched trade execution (every 5 minutes)
-- Continuous monitoring of active positions
-- Batched exit execution
+- One trade processed per minute
+- Sequential processing (no batching)
+- Simple FIFO order for pending signals
+- One active trade check per cycle
 
 ### 3. Active Trade Management
 
