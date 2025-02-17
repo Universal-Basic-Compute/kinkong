@@ -1,3 +1,5 @@
+import { PublicKey } from '@solana/web3.js';
+
 const JUPITER_PRICE_API = 'https://price.jup.ag/v4/price';
 
 interface JupiterPriceResponse {
