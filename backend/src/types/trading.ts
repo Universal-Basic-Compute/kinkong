@@ -1,3 +1,10 @@
+export interface TradeParams {
+  inputToken: string;
+  outputToken: string;
+  amount: number;
+  slippage?: number;
+}
+
 export type SignalStatus = 
   | 'PENDING'    // Just created, not yet executed
   | 'ACTIVE'     // Trade is open
