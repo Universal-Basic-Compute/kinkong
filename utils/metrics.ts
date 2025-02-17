@@ -51,10 +51,12 @@ export async function getTokenMetrics(token: string): Promise<TokenMetrics> {
   
   // Extract price metrics
   const priceMetrics = {
-    current: currentPrice,
+    current: currentPrice || 0, // Default to 0 if null
     high24h: historicalData.highPrice,
     low24h: historicalData.lowPrice,
-    change24h: ((currentPrice - historicalData.openPrice) / historicalData.openPrice) * 100
+    change24h: currentPrice 
+      ? ((currentPrice - historicalData.openPrice) / historicalData.openPrice) * 100 
+      : 0 // Default to 0 if currentPrice is null
   };
   
   // Get volume data
