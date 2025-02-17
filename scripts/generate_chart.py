@@ -174,13 +174,13 @@ def generate_chart(df, config, support_levels=None):
             f"ATH: {ath:.4f} | ATL: {atl:.4f} | "
             f"Avg: {avg_price:.4f}"
         )
-    volume_stats = f"Avg Vol: {avg_volume:,.2f} | {len(df)} candles"
-    
-    # Enhanced subtitle with more technical info
-    technical_info = (
-        f"EMA(20) & EMA(50) | "
-        f"Period: {df.index[0].strftime('%Y-%m-%d %H:%M')} → {df.index[-1].strftime('%Y-%m-%d %H:%M')} UTC"
-    )
+        volume_stats = f"Avg Vol: {avg_volume:,.2f} | {len(df)} candles"
+        
+        # Enhanced subtitle with more technical info
+        technical_info = (
+            f"EMA(20) & EMA(50) | "
+            f"Period: {df.index[0].strftime('%Y-%m-%d %H:%M')} → {df.index[-1].strftime('%Y-%m-%d %H:%M')} UTC"
+        )
     
     # Style configuration
     style = mpf.make_mpf_style(
