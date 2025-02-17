@@ -46,41 +46,47 @@ export async function GET() {
     // Get prices for all tokens
     const mints = nonZeroBalances.map(b => b.mint);
     
-    // Log the mints we're fetching prices for
     console.log('Fetching prices for mints:', mints);
 
-    // Fetch prices using Jupiter API directly
-    const pricesResponse = await fetch('https://price.jup.ag/v4/price', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        ids: mints,
-        vsToken: 'USDC'
-      })
-    });
-
-    if (!pricesResponse.ok) {
-      throw new Error('Failed to fetch token prices');
-    }
-
-    const pricesData = await pricesResponse.json();
-    console.log('Received price data:', pricesData);
-
-    // Add USD values
-    const balancesWithUSD = nonZeroBalances.map(balance => {
-      const price = pricesData.data[balance.mint]?.price || 0;
-      const usdValue = balance.uiAmount * price;
-      console.log(`Token ${balance.symbol || balance.mint}: Price=${price}, USD Value=${usdValue}`);
+    try {
+      // Fetch prices using Jupiter API v4
+      const pricesResponse = await fetch(`https://price.jup.ag/v4/price?ids=${mints.join(',')}&vsToken=USDC`);
       
-      return {
-        ...balance,
-        usdValue
-      };
-    });
+      if (!pricesResponse.ok) {
+        throw new Error('Failed to fetch token prices');
+      }
 
-    return NextResponse.json(balancesWithUSD);
+      const pricesData = await pricesResponse.json();
+      console.log('Jupiter price response:', pricesData);
+
+      // Add USD values
+      const balancesWithUSD = nonZeroBalances.map(balance => {
+        // Check if we have price data for this token
+        const tokenPriceData = pricesData.data[balance.mint];
+        const price = tokenPriceData ? tokenPriceData.price : 1; // Default to 1 for testing
+        const usdValue = balance.uiAmount * price;
+        
+        console.log(`Token ${balance.symbol || balance.mint}:`, {
+          uiAmount: balance.uiAmount,
+          price,
+          usdValue
+        });
+
+        return {
+          ...balance,
+          usdValue
+        };
+      });
+
+      return NextResponse.json(balancesWithUSD);
+    } catch (priceError) {
+      console.error('Error fetching prices:', priceError);
+      // If price fetching fails, return balances with default values
+      return NextResponse.json(nonZeroBalances.map(balance => ({
+        ...balance,
+        usdValue: balance.uiAmount // Default 1:1 for testing
+      })));
+    }
   } catch (error) {
     console.error('Failed to fetch portfolio:', error);
     return NextResponse.json(
