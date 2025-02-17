@@ -3,8 +3,6 @@ import dotenv from 'dotenv';
 import path from 'path';
 import fetch from 'node-fetch';
 import Airtable from 'airtable';
-import Airtable from 'airtable';
-import fetch from 'node-fetch';
 
 interface MarketClassification {
   sentiment: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
