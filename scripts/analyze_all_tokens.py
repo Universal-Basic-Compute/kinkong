@@ -76,19 +76,19 @@ async def analyze_token(token):
             print(f"\n🔄 Processing {token['symbol']}...")
             
             # Create token-specific directory
-        token_dir = Path('public/charts') / token['symbol'].lower()
-        token_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Generate charts for each timeframe
-        chart_paths = []
-        for config in CHART_CONFIGS:
-            # Format config for this token
-            token_config = {
-                **config,
-                'title': config['title'].format(symbol=token['symbol']),
-                'subtitle': config['subtitle'].format(symbol=token['symbol']),
-                'filename': config['filename'].format(symbol=token['symbol'])
-            }
+            token_dir = Path('public/charts') / token['symbol'].lower()
+            token_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Generate charts for each timeframe
+            chart_paths = []
+            for config in CHART_CONFIGS:
+                # Format config for this token
+                token_config = {
+                    **config,
+                    'title': config['title'].format(symbol=token['symbol']),
+                    'subtitle': config['subtitle'].format(symbol=token['symbol']),
+                    'filename': config['filename'].format(symbol=token['symbol'])
+                }
             
             # Fetch data
             df = fetch_ubc_sol_data(
