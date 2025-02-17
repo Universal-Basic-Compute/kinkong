@@ -122,11 +122,27 @@ export async function recordPortfolioSnapshot() {
   }
 }
 
-// Helper function to get historical prices (implement based on your data source)
 async function getHistoricalPrices(mint: string): Promise<number[]> {
-  // TODO: Implement historical price fetching from your preferred source
-  // This should return an array of prices for the last 7 days
-  return [];
+  try {
+    // Get snapshots from the last 7 days
+    const snapshotsTable = getTable('TOKEN_SNAPSHOTS');
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const records = await snapshotsTable.select({
+      filterByFormula: `AND(
+        {mint} = '${mint}',
+        IS_AFTER({timestamp}, '${sevenDaysAgo.toISOString()}')
+      )`,
+      sort: [{ field: 'timestamp', direction: 'desc' }]
+    }).all();
+
+    // Extract prices from records
+    return records.map(record => record.get('price') as number);
+  } catch (error) {
+    console.error(`Error fetching historical prices for ${mint}:`, error);
+    return [];
+  }
 }
 
 // Helper function to calculate average price
