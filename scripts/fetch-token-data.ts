@@ -185,25 +185,19 @@ async function fetchTokenData(): Promise<TokenData[]> {
       
       // Get DexScreener data
       const dexScreenerData = await getDexScreenerData(token.mint);
-      const pair = dexScreenerData.pairs?.[0]; // Use first pair found
+      const pair = dexScreenerData.pairs?.[0];
       
-      // Use existing data from initial-tokens.csv as fallback
-      const volume7d = (pair?.volume?.h24 || 0) * 7 || 30000000; // Default high volume
-      const liquidity = pair?.liquidity?.usd || 8000000;  // Default good liquidity
-      const volumeGrowth = 25;    // Default positive growth
-      const pricePerformance = pair?.priceChange?.h24 || 25; // Default positive performance
-      const holderCount = 3000;    // Default holder count
-
+      // Only use actual data from DexScreener, no defaults
       tokenData.push({
-        symbol: token.symbol,
-        description: token.description,
-        mint: token.mint,
+        symbol: token.symbol,        // This will go in 'name' field
+        description: token.description, // This will go in 'description' field
+        mint: token.mint,           // Actual mint address
         isActive: true,
-        volume7d,
-        liquidity,
-        volumeGrowth,
-        pricePerformance,
-        holderCount
+        volume7d: pair?.volume?.h24 ? pair.volume.h24 * 7 : 0,
+        liquidity: pair?.liquidity?.usd || 0,
+        volumeGrowth: pair?.priceChange?.h24 || 0,
+        pricePerformance: pair?.priceChange?.h24 || 0,
+        holderCount: 0  // Don't set a default
       });
 
       // Add delay between requests
@@ -224,43 +218,33 @@ async function updateAirtable(tokenData: TokenData[]) {
   
   for (const token of tokenData) {
     try {
-      // Check if token exists - use "name" for primary field (lowercase)
+      // Check if token exists using symbol as the name field
       const records = await table.select({
         filterByFormula: `{name} = '${token.symbol}'`
       }).firstPage();
+
+      const fields = {
+        name: token.symbol,           // Primary field
+        description: token.description,
+        mint: token.mint,
+        isActive: token.isActive,
+        volume7d: token.volume7d,
+        liquidity: token.liquidity,
+        volumeGrowth: token.volumeGrowth,
+        pricePerformance: token.pricePerformance,
+        holderCount: token.holderCount
+      };
 
       if (records.length > 0) {
         // Update existing record
         await table.update([{
           id: records[0].id,
-          fields: {
-            name: token.symbol,
-            description: token.description,
-            mint: token.mint,
-            isActive: token.isActive,
-            volume7d: token.volume7d,
-            liquidity: token.liquidity,
-            volumeGrowth: token.volumeGrowth,
-            pricePerformance: token.pricePerformance,
-            holderCount: token.holderCount
-          }
+          fields
         }]);
         console.log(`Updated ${token.symbol} in Airtable`);
       } else {
         // Create new record
-        await table.create([{
-          fields: {
-            name: token.symbol,
-            description: token.description,
-            mint: token.mint,
-            isActive: token.isActive,
-            volume7d: token.volume7d,
-            liquidity: token.liquidity,
-            volumeGrowth: token.volumeGrowth,
-            pricePerformance: token.pricePerformance,
-            holderCount: token.holderCount
-          }
-        }]);
+        await table.create([{ fields }]);
         console.log(`Created ${token.symbol} in Airtable`);
       }
     } catch (error) {
