@@ -488,13 +488,18 @@ def generate_signal(analyses, token_info):  # Add token_info parameter
     high_confidence_signals = []
     for timeframe, analysis in timeframe_analyses.items():
         if analysis and analysis.signal != 'HOLD' and analysis.confidence >= 60:
-            result = create_airtable_signal(analysis, timeframe, token_info)  # Pass token_info
-            if result:
-                high_confidence_signals.append({
-                    'timeframe': timeframe,
-                    'signal': analysis.signal,
-                    'confidence': analysis.confidence
-                })
+            # Create unique signal identifier
+            signal_id = f"{token_info['symbol']}_{timeframe}_{analysis.signal}_{datetime.now().strftime('%Y%m%d')}"
+            
+            if signal_id not in processed_signals:
+                result = create_airtable_signal(analysis, timeframe, token_info)
+                if result:
+                    high_confidence_signals.append({
+                        'timeframe': timeframe,
+                        'signal': analysis.signal,
+                        'confidence': analysis.confidence
+                    })
+                    processed_signals.add(signal_id)
 
     # Create detailed message
     def format_reassessment(analysis):

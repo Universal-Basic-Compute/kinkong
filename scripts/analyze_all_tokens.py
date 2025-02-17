@@ -123,7 +123,6 @@ async def analyze_token(token):
                 
             # Analyze charts
             print(f"\nAnalyzing charts for {token['symbol']}...")
-            print(f"Token mint address: {token['mint']}")  # Add debug line
             analyses = analyze_charts_with_claude(
                 chart_paths,
                 token_info={
@@ -133,21 +132,21 @@ async def analyze_token(token):
             )
             
             if analyses:
-                # Generate signal
+                # Generate signal only once
                 signal = generate_signal(analyses, {
                     'symbol': token['symbol'],
                     'mint': token['mint']
                 })
                 print(f"\nCompleted analysis for {token['symbol']}")
                 
-                # Save analysis to file
+                # Save analysis to file without generating another signal
                 analysis_path = token_dir / 'analysis.json'
                 with open(analysis_path, 'w') as f:
                     json.dump({
                         'timestamp': datetime.now().isoformat(),
                         'token': token['symbol'],
                         'analyses': analyses,
-                        'signal': signal
+                        'signal_message': signal  # Store the signal message only
                     }, f, indent=2)
                     
                 print(f"Saved analysis to {analysis_path}")
