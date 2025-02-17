@@ -1,0 +1,13 @@
+weekStartDate,weekEndDate,classification,confidence,totalTokens,tokensAbove7dAvg,weeklyVolume,prevWeekVolume,upDayVolume,totalVolume,solPerformance,aiTokensPerformance,notes
+2024-02-16T00:00:00.000Z,2024-02-23T00:00:00.000Z,BULLISH,75,15,12,2500000,2000000,1800000,2500000,5.2,7.8,"• 80% of tokens above 7d average (>60% is bullish)
+• Volume growth is 25% (positive is bullish)
+• 72% of volume on up days (>60% is bullish)
+• AI tokens outperforming SOL by 2.6% (outperformance is bullish)"
+2024-02-09T00:00:00.000Z,2024-02-16T00:00:00.000Z,NEUTRAL,50,15,8,2000000,2100000,1100000,2000000,3.1,2.8,"• Mixed signals: 2 bullish and 2 bearish criteria met
+• Percentages: 53.3% above avg, -4.8% vol growth
+• Volume on up days: 55%
+• AI vs SOL: -0.3%"
+2024-02-02T00:00:00.000Z,2024-02-09T00:00:00.000Z,BEARISH,75,15,5,1800000,2300000,700000,1800000,-2.5,-4.8,"• 33.3% of tokens above 7d average (<40% is bearish)
+• Volume growth is -21.7% (negative is bearish)
+• 38.9% of volume on up days (<40% is bearish)
+• AI tokens underperforming SOL by 2.3% (underperformance is bearish)"
