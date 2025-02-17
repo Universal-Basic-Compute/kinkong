@@ -1,3 +1,4 @@
+from dotenv import load_dotenv
 import anthropic
 import os
 import base64
@@ -10,6 +11,9 @@ import pandas as pd
 from collections import defaultdict
 import statistics
 from airtable import Airtable
+
+# Load environment variables
+load_dotenv()
 
 class ChartAnalysis:
     def __init__(self, timeframe, signal, confidence, reasoning, key_levels, risk_reward_ratio=None, reassess_conditions=None):
@@ -143,8 +147,14 @@ def get_dexscreener_data(token_address: str = "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXr
 
 def analyze_chart_with_claude(chart_path):
     """Analyze a chart using Claude 3"""
+    api_key = os.getenv('ANTHROPIC_API_KEY')
+    if not api_key:
+        raise ValueError("ANTHROPIC_API_KEY not found in environment variables")
+        
+    print("Using API key:", api_key[:6] + "..." + api_key[-4:])  # Log partial key for debugging
+    
     client = anthropic.Client(
-        api_key=os.getenv('ANTHROPIC_API_KEY')
+        api_key=api_key
     )
     
     # Get market data and context
