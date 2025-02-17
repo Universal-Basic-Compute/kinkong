@@ -184,61 +184,59 @@ body {
 @keyframes electricArc {
   0% {
     text-shadow: 
-      0 0 4px rgba(255, 215, 0, 0.3),
-      0 0 8px rgba(255, 215, 0, 0.2),
-      0 0 12px rgba(255, 215, 0, 0.1);
+      0 0 4px rgba(255, 255, 255, 0.4),
+      0 0 8px rgba(255, 255, 255, 0.3),
+      0 0 12px rgba(255, 215, 0, 0.2);
   }
   25% {
     text-shadow: 
-      0 0 8px rgba(255, 215, 0, 0.5),
-      0 0 16px rgba(255, 215, 0, 0.4),
-      0 0 24px rgba(255, 215, 0, 0.2),
-      0 0 1px #FFD700;
+      0 0 12px rgba(255, 255, 255, 0.6),
+      0 0 20px rgba(255, 255, 255, 0.5),
+      0 0 30px rgba(255, 215, 0, 0.3),
+      0 0 2px #FFFFFF;
   }
   30% {
-    text-shadow: none;
+    text-shadow: 
+      0 0 4px rgba(255, 255, 255, 0.4),
+      0 0 8px rgba(255, 255, 255, 0.3);
   }
   35% {
     text-shadow: 
-      0 0 4px rgba(255, 215, 0, 0.3),
-      0 0 8px rgba(255, 215, 0, 0.2),
-      0 0 12px rgba(255, 215, 0, 0.1);
+      0 0 8px rgba(255, 255, 255, 0.5),
+      0 0 15px rgba(255, 255, 255, 0.4),
+      0 0 20px rgba(255, 215, 0, 0.2);
   }
   70% {
     text-shadow: 
-      0 0 6px rgba(255, 215, 0, 0.4),
-      0 0 12px rgba(255, 215, 0, 0.3),
-      0 0 18px rgba(255, 215, 0, 0.2),
-      0 0 1px #FFD700;
+      0 0 15px rgba(255, 255, 255, 0.6),
+      0 0 25px rgba(255, 255, 255, 0.5),
+      0 0 35px rgba(255, 215, 0, 0.3),
+      0 0 2px #FFFFFF;
   }
   75% {
-    text-shadow: none;
-  }
-  80% {
     text-shadow: 
-      0 0 4px rgba(255, 215, 0, 0.3),
-      0 0 8px rgba(255, 215, 0, 0.2),
-      0 0 12px rgba(255, 215, 0, 0.1);
+      0 0 8px rgba(255, 255, 255, 0.5),
+      0 0 15px rgba(255, 255, 255, 0.4);
   }
   100% {
     text-shadow: 
-      0 0 4px rgba(255, 215, 0, 0.3),
-      0 0 8px rgba(255, 215, 0, 0.2),
-      0 0 12px rgba(255, 215, 0, 0.1);
+      0 0 4px rgba(255, 255, 255, 0.4),
+      0 0 8k rgba(255, 255, 255, 0.3),
+      0 0 12k rgba(255, 215, 0, 0.2);
   }
 }
 
 .electric-title {
   position: relative;
-  color: #FFD700;
+  color: #FFFFFF;
   font-weight: bold;
   animation: electricArc 5s infinite;
   background: linear-gradient(
     to right,
-    #FFD700 20%,
+    #FFFFFF 20%,
     #FFF5B8 40%,
     #FFF5B8 60%,
-    #FFD700 80%
+    #FFFFFF 80%
   );
   background-size: 200% auto;
   background-clip: text;
