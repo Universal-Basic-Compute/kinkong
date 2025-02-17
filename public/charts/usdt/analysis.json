@@ -1,0 +1,76 @@
+{
+  "timestamp": "2025-02-17T19:55:14.625967",
+  "token": "USDT",
+  "analyses": {
+    "14D": {
+      "timeframe": "14D",
+      "signal": "HOLD",
+      "confidence": 90,
+      "reasoning": "Long-term chart shows extremely stable price action around $1.00 with minimal volatility. EMA20 and EMA50 are flat and tightly compressed, indicating strong price stability.",
+      "key_levels": {
+        "support": [
+          0.9935,
+          0.995
+        ],
+        "resistance": [
+          1.0057,
+          1.0025
+        ]
+      },
+      "risk_reward_ratio": null,
+      "reassess_conditions": null
+    },
+    "48H": {
+      "timeframe": "48H",
+      "signal": "BUY",
+      "confidence": 65,
+      "reasoning": "Price showing slight downward pressure but maintaining critical $0.9998 level. Volume increasing on recent dips suggesting accumulation. EMAs beginning to show potential bullish crossover.",
+      "key_levels": {
+        "support": [
+          0.9998,
+          0.9995
+        ],
+        "resistance": [
+          1.0002,
+          1.0005
+        ]
+      },
+      "risk_reward_ratio": 2.5,
+      "reassess_conditions": null
+    },
+    "12H": {
+      "timeframe": "12H",
+      "signal": "BUY",
+      "confidence": 75,
+      "reasoning": "Recent bounce from $0.9998 support with increasing volume. Short-term momentum turning positive with EMAs starting to curl upward.",
+      "key_levels": {
+        "support": [
+          0.9998,
+          0.9997
+        ],
+        "resistance": [
+          1.0001,
+          1.0003
+        ]
+      },
+      "risk_reward_ratio": 3.0,
+      "reassess_conditions": null
+    },
+    "overall": {
+      "primary_trend": "NEUTRAL",
+      "timeframe_alignment": "ALIGNED",
+      "best_timeframe": "12H",
+      "key_observations": [
+        "Extremely tight price range characteristic of stablecoin",
+        "Strong support at $0.9998 level across timeframes",
+        "Increasing volume on dips suggests strong buying pressure",
+        "EMAs showing potential bullish convergence on shorter timeframes"
+      ],
+      "recommended_action": {
+        "signal": "BUY",
+        "timeframe": "12H",
+        "reasoning": "Short-term bullish momentum building with strong support at $0.9998, while longer timeframes confirm overall stability. Risk is minimal with tight stops possible below $0.9997."
+      }
+    }
+  }
+}

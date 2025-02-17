@@ -1,0 +1,77 @@
+{
+  "timestamp": "2025-02-17T19:55:52.593797",
+  "token": "SOL",
+  "analyses": {
+    "14D": {
+      "timeframe": "14D",
+      "signal": "SELL",
+      "confidence": 85,
+      "reasoning": "Strong bearish trend confirmed by death cross (EMA20 below EMA50), consistent red candles, and declining volume. Price has broken major support levels with accelerating downward momentum.",
+      "key_levels": {
+        "support": [
+          175.23,
+          170.0
+        ],
+        "resistance": [
+          186.93,
+          196.24
+        ]
+      },
+      "risk_reward_ratio": 1.5,
+      "reassess_conditions": null
+    },
+    "48H": {
+      "timeframe": "48H",
+      "signal": "SELL",
+      "confidence": 80,
+      "reasoning": "Sharp bearish momentum with increased selling volume. EMAs showing strong bearish divergence with price consistently making lower lows and lower highs.",
+      "key_levels": {
+        "support": [
+          175.23,
+          172.5
+        ],
+        "resistance": [
+          182.3,
+          185.5
+        ]
+      },
+      "risk_reward_ratio": 1.8,
+      "reassess_conditions": null
+    },
+    "12H": {
+      "timeframe": "12H",
+      "signal": "SELL",
+      "confidence": 75,
+      "reasoning": "Immediate downtrend continuation with bearish EMA cross. High volume selling pressure and no significant signs of reversal.",
+      "key_levels": {
+        "support": [
+          175.23,
+          174.0
+        ],
+        "resistance": [
+          178.5,
+          180.0
+        ]
+      },
+      "risk_reward_ratio": 2.0,
+      "reassess_conditions": null
+    },
+    "overall": {
+      "primary_trend": "BEARISH",
+      "timeframe_alignment": "ALIGNED",
+      "best_timeframe": "14D",
+      "key_observations": [
+        "All timeframes show strong bearish momentum",
+        "Volume increasing on downward moves",
+        "EMA death cross visible across all timeframes",
+        "No significant support until 175.23",
+        "Consistent lower highs and lower lows pattern"
+      ],
+      "recommended_action": {
+        "signal": "SELL",
+        "timeframe": "14D",
+        "reasoning": "Strong bearish alignment across all timeframes with increasing selling pressure and technical breakdown below key support levels. No signs of reversal or bullish divergence."
+      }
+    }
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "timestamp": "2025-02-17T19:57:05.823315",
+  "token": "FARTCOIN",
+  "analyses": {
+    "8h": {
+      "timeframe": "8h",
+      "signal": "SELL",
+      "confidence": 85,
+      "reasoning": "Strong bearish momentum with price below both EMA20 and EMA50, showing clear downtrend. High volume selling pressure and consecutive red candles indicate sustained bearish pressure.",
+      "key_levels": {
+        "support": [
+          0.3562,
+          0.35
+        ],
+        "resistance": [
+          0.4,
+          0.4253
+        ]
+      },
+      "risk_reward_ratio": 1.5,
+      "reassess_conditions": null
+    },
+    "2h": {
+      "timeframe": "2h",
+      "signal": "SELL",
+      "confidence": 90,
+      "reasoning": "Steep price decline with increasing volume, death cross formation between EMA20 and EMA50, and no signs of reversal yet. Strong bearish continuation pattern.",
+      "key_levels": {
+        "support": [
+          0.3562,
+          0.345
+        ],
+        "resistance": [
+          0.38,
+          0.4
+        ]
+      },
+      "risk_reward_ratio": 2.0,
+      "reassess_conditions": null
+    },
+    "15m": {
+      "timeframe": "15m",
+      "signal": "HOLD",
+      "confidence": 70,
+      "reasoning": "Extremely oversold conditions on shorter timeframe, but momentum still strongly bearish. Potential for short-term bounce, but overall trend remains down.",
+      "key_levels": {
+        "support": [
+          0.3562,
+          0.36
+        ],
+        "resistance": [
+          0.37,
+          0.38
+        ]
+      },
+      "risk_reward_ratio": 1.2,
+      "reassess_conditions": null
+    },
+    "overall": {
+      "primary_trend": "BEARISH",
+      "timeframe_alignment": "ALIGNED",
+      "best_timeframe": "2h",
+      "key_observations": [
+        "All timeframes showing strong bearish momentum",
+        "Significant increase in selling volume",
+        "Price trading below all major EMAs",
+        "No significant support levels holding",
+        "49.26% decline from ATH indicates severe downtrend"
+      ],
+      "recommended_action": {
+        "signal": "SELL",
+        "timeframe": "2h",
+        "reasoning": "Strong bearish alignment across all timeframes with high volume confirms downtrend. Best to wait for clear reversal signals before considering long positions."
+      }
+    }
+  }
+}

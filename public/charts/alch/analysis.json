@@ -1,0 +1,77 @@
+{
+  "timestamp": "2025-02-17T19:54:34.398873",
+  "token": "ALCH",
+  "analyses": {
+    "14D": {
+      "timeframe": "14D",
+      "signal": "SELL",
+      "confidence": 85,
+      "reasoning": "Strong downtrend evident with consistently lower highs and lower lows. EMAs showing bearish cross and significant downward slope. Price down over 50% from ATH with sustained selling pressure.",
+      "key_levels": {
+        "support": [
+          0.0162,
+          0.015
+        ],
+        "resistance": [
+          0.0186,
+          0.0197
+        ]
+      },
+      "risk_reward_ratio": 0.5,
+      "reassess_conditions": null
+    },
+    "48H": {
+      "timeframe": "48H",
+      "signal": "SELL",
+      "confidence": 75,
+      "reasoning": "Recent sharp decline with increasing volume. EMA20 crossed below EMA50, indicating strengthening bearish momentum. Multiple failed attempts to hold support levels.",
+      "key_levels": {
+        "support": [
+          0.0162,
+          0.0165
+        ],
+        "resistance": [
+          0.018,
+          0.019
+        ]
+      },
+      "risk_reward_ratio": 1.2,
+      "reassess_conditions": null
+    },
+    "12H": {
+      "timeframe": "12H",
+      "signal": "SELL",
+      "confidence": 80,
+      "reasoning": "Immediate bearish trend with increasing selling volume. Price below both EMAs with bearish crossover. Recent attempts at recovery quickly rejected.",
+      "key_levels": {
+        "support": [
+          0.0165,
+          0.0162
+        ],
+        "resistance": [
+          0.0177,
+          0.018
+        ]
+      },
+      "risk_reward_ratio": 1.5,
+      "reassess_conditions": null
+    },
+    "overall": {
+      "primary_trend": "BEARISH",
+      "timeframe_alignment": "ALIGNED",
+      "best_timeframe": "14D",
+      "key_observations": [
+        "All timeframes showing strong bearish alignment",
+        "Significant volume increase during recent selloffs",
+        "Multiple failed support levels across timeframes",
+        "EMAs bearishly aligned on all timeframes",
+        "No significant bullish divergences visible"
+      ],
+      "recommended_action": {
+        "signal": "SELL",
+        "timeframe": "14D",
+        "reasoning": "Strong bearish momentum across all timeframes with no signs of reversal. High volume selloff suggests continued downside pressure. Risk management crucial given market conditions."
+      }
+    }
+  }
+}

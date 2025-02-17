@@ -1,0 +1,77 @@
+{
+  "timestamp": "2025-02-17T19:57:21.341343",
+  "token": "AI16Z",
+  "analyses": {
+    "8h": {
+      "timeframe": "8h",
+      "signal": "SELL",
+      "confidence": 85,
+      "reasoning": "Strong bearish momentum with price below both EMA20 and EMA50, Death Cross formation visible, consecutive red candles showing sustained selling pressure",
+      "key_levels": {
+        "support": [
+          0.3491,
+          0.34
+        ],
+        "resistance": [
+          0.3825,
+          0.4
+        ]
+      },
+      "risk_reward_ratio": 2.5,
+      "reassess_conditions": null
+    },
+    "2h": {
+      "timeframe": "2h",
+      "signal": "SELL",
+      "confidence": 90,
+      "reasoning": "Sharp downward trend with increasing volume, price well below declining EMAs, no signs of reversal yet",
+      "key_levels": {
+        "support": [
+          0.345,
+          0.335
+        ],
+        "resistance": [
+          0.37,
+          0.385
+        ]
+      },
+      "risk_reward_ratio": 3.0,
+      "reassess_conditions": null
+    },
+    "15m": {
+      "timeframe": "15m",
+      "signal": "HOLD",
+      "confidence": 65,
+      "reasoning": "Extremely oversold on short timeframe, might see temporary bounce, but overall trend remains bearish",
+      "key_levels": {
+        "support": [
+          0.35,
+          0.345
+        ],
+        "resistance": [
+          0.36,
+          0.365
+        ]
+      },
+      "risk_reward_ratio": 1.5,
+      "reassess_conditions": null
+    },
+    "overall": {
+      "primary_trend": "BEARISH",
+      "timeframe_alignment": "ALIGNED",
+      "best_timeframe": "2h",
+      "key_observations": [
+        "All timeframes showing strong bearish momentum",
+        "High volume selling pressure",
+        "EMAs trending down across all timeframes",
+        "No significant support levels holding",
+        "10% drop in 24 hours indicates strong selling pressure"
+      ],
+      "recommended_action": {
+        "signal": "SELL",
+        "timeframe": "2h",
+        "reasoning": "Strong bearish alignment across all timeframes with high volume confirmation and clear downtrend structure"
+      }
+    }
+  }
+}

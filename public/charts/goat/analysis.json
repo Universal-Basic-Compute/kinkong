@@ -1,0 +1,77 @@
+{
+  "timestamp": "2025-02-17T19:56:52.158629",
+  "token": "GOAT",
+  "analyses": {
+    "14D": {
+      "timeframe": "14D",
+      "signal": "SELL",
+      "confidence": 85,
+      "reasoning": "Clear downtrend since Feb 3rd, price below both EMA20 and EMA50, consistently lower highs and lower lows, declining volume profile",
+      "key_levels": {
+        "support": [
+          0.0942,
+          0.09
+        ],
+        "resistance": [
+          0.11,
+          0.12
+        ]
+      },
+      "risk_reward_ratio": 0.5,
+      "reassess_conditions": null
+    },
+    "48H": {
+      "timeframe": "48H",
+      "signal": "SELL",
+      "confidence": 80,
+      "reasoning": "Strong bearish momentum, EMA cross to downside, increased selling volume, price making new local lows",
+      "key_levels": {
+        "support": [
+          0.0942,
+          0.092
+        ],
+        "resistance": [
+          0.105,
+          0.1084
+        ]
+      },
+      "risk_reward_ratio": 0.7,
+      "reassess_conditions": null
+    },
+    "12H": {
+      "timeframe": "12H",
+      "signal": "SELL",
+      "confidence": 90,
+      "reasoning": "Sharp bearish price action, high volume selloff, EMAs crossed bearish, no signs of reversal yet",
+      "key_levels": {
+        "support": [
+          0.0942,
+          0.093
+        ],
+        "resistance": [
+          0.1,
+          0.1025
+        ]
+      },
+      "risk_reward_ratio": 0.8,
+      "reassess_conditions": null
+    },
+    "overall": {
+      "primary_trend": "BEARISH",
+      "timeframe_alignment": "ALIGNED",
+      "best_timeframe": "12H",
+      "key_observations": [
+        "All timeframes showing strong bearish momentum",
+        "Volume increasing on downside moves",
+        "No significant support until 0.0942",
+        "EMAs bearishly aligned across all timeframes",
+        "Significant market cap and liquidity decrease"
+      ],
+      "recommended_action": {
+        "signal": "SELL",
+        "timeframe": "12H",
+        "reasoning": "Strong bearish alignment across all timeframes with increasing selling pressure and no clear reversal signals"
+      }
+    }
+  }
+}

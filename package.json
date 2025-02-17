@@ -12,6 +12,7 @@
     "reallocation": "ts-node scripts/execute-reallocation.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.36.3",
     "@heroicons/react": "^2.2.0",
     "@solana/spl-token": "0.3.11",
     "@solana/wallet-adapter-base": "0.9.23",

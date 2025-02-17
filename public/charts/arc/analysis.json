@@ -1,0 +1,77 @@
+{
+  "timestamp": "2025-02-17T19:55:34.288997",
+  "token": "ARC",
+  "analyses": {
+    "8h": {
+      "timeframe": "8h",
+      "signal": "SELL",
+      "confidence": 85,
+      "reasoning": "Strong bearish momentum with price below both EMA20 and EMA50, accelerating downtrend with increasing volume, and clear lower lows and lower highs pattern",
+      "key_levels": {
+        "support": [
+          0.1905,
+          0.185
+        ],
+        "resistance": [
+          0.2501,
+          0.23
+        ]
+      },
+      "risk_reward_ratio": 1.5,
+      "reassess_conditions": null
+    },
+    "2h": {
+      "timeframe": "2h",
+      "signal": "SELL",
+      "confidence": 90,
+      "reasoning": "Sharp bearish breakdown with high volume spike, price significantly below moving averages, and steep downward momentum",
+      "key_levels": {
+        "support": [
+          0.1905,
+          0.18
+        ],
+        "resistance": [
+          0.22,
+          0.2422
+        ]
+      },
+      "risk_reward_ratio": 2.0,
+      "reassess_conditions": null
+    },
+    "15m": {
+      "timeframe": "15m",
+      "signal": "SELL",
+      "confidence": 75,
+      "reasoning": "Immediate bearish trend with minimal retracement, high selling pressure indicated by volume profile",
+      "key_levels": {
+        "support": [
+          0.19,
+          0.185
+        ],
+        "resistance": [
+          0.2,
+          0.21
+        ]
+      },
+      "risk_reward_ratio": 1.8,
+      "reassess_conditions": null
+    },
+    "overall": {
+      "primary_trend": "BEARISH",
+      "timeframe_alignment": "ALIGNED",
+      "best_timeframe": "2h",
+      "key_observations": [
+        "All timeframes showing strong bearish momentum",
+        "Significant volume increase during selloff",
+        "Price trading well below all major EMAs",
+        "Clear market structure breakdown",
+        "-22.75% daily change indicating strong selling pressure"
+      ],
+      "recommended_action": {
+        "signal": "SELL",
+        "timeframe": "2h",
+        "reasoning": "Strong bearish alignment across all timeframes with high volume confirmation and clear breakdown of support levels"
+      }
+    }
+  }
+}

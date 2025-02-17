@@ -1,0 +1,77 @@
+{
+  "timestamp": "2025-02-17T19:53:51.635381",
+  "token": "ZEREBRO",
+  "analyses": {
+    "14D": {
+      "timeframe": "14D",
+      "signal": "SELL",
+      "confidence": 85,
+      "reasoning": "Strong downtrend visible with consistently lower highs and lower lows. Both EMA20 and EMA50 are sloping downward with price trading well below both moving averages. Volume profile shows sustained selling pressure.",
+      "key_levels": {
+        "support": [
+          0.03,
+          0.028
+        ],
+        "resistance": [
+          0.0358,
+          0.04
+        ]
+      },
+      "risk_reward_ratio": 0.5,
+      "reassess_conditions": null
+    },
+    "48H": {
+      "timeframe": "48H",
+      "signal": "SELL",
+      "confidence": 80,
+      "reasoning": "Price has broken below key support levels with increasing volume. EMAs show bearish crossover and continuing downward momentum. Recent price action shows accelerated downside movement.",
+      "key_levels": {
+        "support": [
+          0.03,
+          0.029
+        ],
+        "resistance": [
+          0.034,
+          0.036
+        ]
+      },
+      "risk_reward_ratio": 0.7,
+      "reassess_conditions": null
+    },
+    "12H": {
+      "timeframe": "12H",
+      "signal": "SELL",
+      "confidence": 90,
+      "reasoning": "Sharp bearish price action with strong selling volume. Price is making new lows with minimal rebounds. EMAs are in clear bearish alignment with steep negative slopes.",
+      "key_levels": {
+        "support": [
+          0.03,
+          0.029
+        ],
+        "resistance": [
+          0.0337,
+          0.0358
+        ]
+      },
+      "risk_reward_ratio": 0.8,
+      "reassess_conditions": null
+    },
+    "overall": {
+      "primary_trend": "BEARISH",
+      "timeframe_alignment": "ALIGNED",
+      "best_timeframe": "12H",
+      "key_observations": [
+        "All timeframes show strong bearish momentum",
+        "Volume profile supports downward movement",
+        "No significant support levels being respected",
+        "EMAs aligned bearishly across all timeframes",
+        "Price trading well below key moving averages"
+      ],
+      "recommended_action": {
+        "signal": "SELL",
+        "timeframe": "12H",
+        "reasoning": "Strong bearish alignment across all timeframes with increasing selling pressure and broken support levels suggests continued downside momentum"
+      }
+    }
+  }
+}

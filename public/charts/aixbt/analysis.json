@@ -1,0 +1,77 @@
+{
+  "timestamp": "2025-02-17T19:56:39.431970",
+  "token": "AIXBT",
+  "analyses": {
+    "8h": {
+      "timeframe": "8h",
+      "signal": "SELL",
+      "confidence": 85,
+      "reasoning": "Strong bearish momentum with price below both EMA20 and EMA50, showing clear downward trajectory. High volume selling pressure and consecutive red candles indicate sustained bearish pressure.",
+      "key_levels": {
+        "support": [
+          0.1921,
+          0.19
+        ],
+        "resistance": [
+          0.21,
+          0.22
+        ]
+      },
+      "risk_reward_ratio": 1.5,
+      "reassess_conditions": null
+    },
+    "2h": {
+      "timeframe": "2h",
+      "signal": "SELL",
+      "confidence": 80,
+      "reasoning": "Price has broken below key support levels with increasing volume. EMA crossover to the downside and bearish price action suggest continued downward movement.",
+      "key_levels": {
+        "support": [
+          0.1921,
+          0.19
+        ],
+        "resistance": [
+          0.2145,
+          0.2308
+        ]
+      },
+      "risk_reward_ratio": 1.8,
+      "reassess_conditions": null
+    },
+    "15m": {
+      "timeframe": "15m",
+      "signal": "HOLD",
+      "confidence": 60,
+      "reasoning": "Extremely oversold conditions on shorter timeframe might suggest a brief consolidation or minor bounce, though overall trend remains bearish.",
+      "key_levels": {
+        "support": [
+          0.1921,
+          0.19
+        ],
+        "resistance": [
+          0.2,
+          0.205
+        ]
+      },
+      "risk_reward_ratio": 1.2,
+      "reassess_conditions": null
+    },
+    "overall": {
+      "primary_trend": "BEARISH",
+      "timeframe_alignment": "ALIGNED",
+      "best_timeframe": "8h",
+      "key_observations": [
+        "All timeframes show strong bearish momentum",
+        "Increasing volume on downward moves",
+        "Price trading below all major EMAs",
+        "Clear lower highs and lower lows pattern",
+        "Significant support break at $0.2000"
+      ],
+      "recommended_action": {
+        "signal": "SELL",
+        "timeframe": "8h",
+        "reasoning": "Strong bearish alignment across all timeframes with increasing selling pressure and volume confirmation suggests continued downward movement. The 8h timeframe provides the clearest picture of the overall trend and optimal entry points for short positions."
+      }
+    }
+  }
+}

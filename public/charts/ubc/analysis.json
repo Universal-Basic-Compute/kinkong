@@ -1,0 +1,77 @@
+{
+  "timestamp": "2025-02-17T19:57:35.953654",
+  "token": "UBC",
+  "analyses": {
+    "8h": {
+      "timeframe": "8h",
+      "signal": "SELL",
+      "confidence": 85,
+      "reasoning": "Strong bearish momentum with price below both EMA20 and EMA50, clear downward trend with increasing selling volume. Recent price action shows consecutive red candles with little buying pressure.",
+      "key_levels": {
+        "support": [
+          0.0013,
+          0.00125
+        ],
+        "resistance": [
+          0.0014,
+          0.00145
+        ]
+      },
+      "risk_reward_ratio": 1.5,
+      "reassess_conditions": null
+    },
+    "2h": {
+      "timeframe": "2h",
+      "signal": "SELL",
+      "confidence": 90,
+      "reasoning": "Sharp bearish movement with high volume selloff, price significantly below moving averages. Death cross formation between EMA20 and EMA50 confirms bearish trend.",
+      "key_levels": {
+        "support": [
+          0.00125,
+          0.0012
+        ],
+        "resistance": [
+          0.00135,
+          0.0014
+        ]
+      },
+      "risk_reward_ratio": 2.0,
+      "reassess_conditions": null
+    },
+    "15m": {
+      "timeframe": "15m",
+      "signal": "HOLD",
+      "confidence": 65,
+      "reasoning": "Extremely oversold conditions on shorter timeframe suggest potential for temporary bounce, but overall trend remains bearish. Wait for consolidation before new positions.",
+      "key_levels": {
+        "support": [
+          0.00128,
+          0.00125
+        ],
+        "resistance": [
+          0.00132,
+          0.00135
+        ]
+      },
+      "risk_reward_ratio": 1.2,
+      "reassess_conditions": null
+    },
+    "overall": {
+      "primary_trend": "BEARISH",
+      "timeframe_alignment": "ALIGNED",
+      "best_timeframe": "2h",
+      "key_observations": [
+        "All timeframes show strong bearish momentum",
+        "High volume selling pressure across timeframes",
+        "Price trading below all major EMAs",
+        "Significant market structure breakdown",
+        "-65.71% decline from ATH indicates sustained downtrend"
+      ],
+      "recommended_action": {
+        "signal": "SELL",
+        "timeframe": "2h",
+        "reasoning": "Strong bearish alignment across all timeframes with high volume confirmation suggests continued downside. Best to wait for small bounces to establish short positions or stay out of the market until clear reversal signals emerge."
+      }
+    }
+  }
+}

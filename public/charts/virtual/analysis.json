@@ -1,0 +1,77 @@
+{
+  "timestamp": "2025-02-17T19:56:23.673685",
+  "token": "VIRTUAL",
+  "analyses": {
+    "14D": {
+      "timeframe": "14D",
+      "signal": "SELL",
+      "confidence": 75,
+      "reasoning": "Clear downtrend on EMA crossover, price below both EMAs, sustained selling pressure with declining volume profile",
+      "key_levels": {
+        "support": [
+          1.1,
+          0.6226
+        ],
+        "resistance": [
+          1.328,
+          1.5
+        ]
+      },
+      "risk_reward_ratio": 2.5,
+      "reassess_conditions": null
+    },
+    "48H": {
+      "timeframe": "48H",
+      "signal": "SELL",
+      "confidence": 85,
+      "reasoning": "Strong bearish momentum, accelerating downtrend, EMAs in bearish configuration with increasing spread",
+      "key_levels": {
+        "support": [
+          1.1227,
+          1.1
+        ],
+        "resistance": [
+          1.2494,
+          1.3
+        ]
+      },
+      "risk_reward_ratio": 3.0,
+      "reassess_conditions": null
+    },
+    "12H": {
+      "timeframe": "12H",
+      "signal": "SELL",
+      "confidence": 90,
+      "reasoning": "Immediate sharp decline with increasing volume, bearish EMA cross, no signs of reversal",
+      "key_levels": {
+        "support": [
+          1.12,
+          1.1
+        ],
+        "resistance": [
+          1.2409,
+          1.1976
+        ]
+      },
+      "risk_reward_ratio": 2.0,
+      "reassess_conditions": null
+    },
+    "overall": {
+      "primary_trend": "BEARISH",
+      "timeframe_alignment": "ALIGNED",
+      "best_timeframe": "12H",
+      "key_observations": [
+        "All timeframes show strong bearish momentum",
+        "Increasing volume on downward moves",
+        "EMAs in bearish configuration across all timeframes",
+        "No significant support until 1.1000",
+        "Sharp acceleration in selling pressure"
+      ],
+      "recommended_action": {
+        "signal": "SELL",
+        "timeframe": "12H",
+        "reasoning": "Strong bearish alignment across all timeframes with increasing momentum and volume support for downward movement. Best to execute on 12H timeframe for optimal entry with tight stops."
+      }
+    }
+  }
+}
