@@ -230,13 +230,13 @@ async function fetchTokenData(): Promise<TokenData[]> {
 
 async function updateAirtable(tokenData: TokenData[]) {
   const table = getTable('TOKENS');
-  const timestamp = new Date().toISOString();
+  const createdAt = new Date().toISOString();
   
   console.log('\n📝 Creating new token snapshots...');
   
   for (const token of tokenData) {
     try {
-      // Always create a new record with timestamp
+      // Always create a new record with createdAt
       const fields = {
         name: token.symbol,           // Primary field
         description: token.name,
@@ -247,7 +247,7 @@ async function updateAirtable(tokenData: TokenData[]) {
         volumeGrowth: token.volumeGrowth,
         pricePerformance: token.pricePerformance,
         holderCount: token.holderCount,
-        timestamp: timestamp          // Add timestamp to each record
+        createdAt: createdAt          // Changed from timestamp to createdAt
       };
 
       // Create new record
@@ -270,7 +270,7 @@ async function updateAirtable(tokenData: TokenData[]) {
     }
   }
 
-  console.log(`\n✨ Created ${tokenData.length} new token snapshots at ${timestamp}`);
+  console.log(`\n✨ Created ${tokenData.length} new token snapshots at ${createdAt}`);
 }
 
 async function main() {
