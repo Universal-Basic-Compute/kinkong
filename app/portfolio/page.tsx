@@ -3,6 +3,25 @@ import { AllocationChart } from '@/components/dashboard/AllocationChart'
 import { TokenTable } from '@/components/tables/TokenTable'
 import { useState, useEffect } from 'react'
 
+const [isLoading, setIsLoading] = useState(true);
+const [error, setError] = useState<string | null>(null);
+const [metrics, setMetrics] = useState<{
+  totalValue: number;
+  change24h: number;
+  change7d: number;
+  history: Array<{timestamp: string; value: number}>;
+} | null>(null);
+
+function getChangeClass(value: number | undefined) {
+  if (!value) return '';
+  return value >= 0 ? 'text-green-400' : 'text-red-400';
+}
+
+function formatChange(value: number | undefined) {
+  if (!value) return '0.00';
+  return value.toFixed(2);
+}
+
 interface TokenInfo {
   symbol: string;
   name: string;
@@ -33,6 +52,23 @@ export default function Portfolio() {
   const [isTokensLoading, setIsTokensLoading] = useState(true);
   const [tokenError, setTokenError] = useState<string | null>(null);
 
+
+  useEffect(() => {
+    async function fetchMetrics() {
+      try {
+        const response = await fetch('/api/portfolio-metrics');
+        if (!response.ok) throw new Error('Failed to fetch metrics');
+        const data = await response.json();
+        setMetrics(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load metrics');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchMetrics();
+  }, []);
 
   useEffect(() => {
     async function fetchTokens() {
