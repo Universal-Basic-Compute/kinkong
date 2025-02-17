@@ -4,6 +4,28 @@ import { TokenTable } from '@/components/tables/TokenTable'
 import { PerformanceChart } from '@/components/charts/PerformanceChart'
 import { useState, useEffect } from 'react'
 
+const STRATEGY_INFO = {
+  allocation: `KinKong's allocation strategy:
+• Dynamic position sizing based on market conditions
+• Risk-weighted exposure across AI tokens
+• Regular rebalancing to maintain optimal ratios
+• Liquidity-aware position management
+• Counter-trading capability during volatility`,
+  
+  metrics: `Key portfolio metrics explained:
+• Total Value: Sum of all positions in USD
+• 24h Change: Net portfolio movement in last day
+• 7d Performance: Weekly return profile
+• Automated daily tracking and reporting`,
+  
+  performance: `Performance tracking methodology:
+• Historical value snapshots every 15 minutes
+• Profit/loss calculation including fees
+• Risk-adjusted return metrics
+• Drawdown monitoring and management
+• Automated portfolio rebalancing triggers`
+};
+
 interface PortfolioMetrics {
   totalValue: number;
   change24h: number;
@@ -53,7 +75,17 @@ export default function Portfolio() {
       <div className="grid grid-cols-1 gap-8">
         {/* Current Allocation */}
         <section>
-          <h2 className="text-2xl font-bold mb-4">Current Allocation</h2>
+          <div className="flex items-center gap-2 mb-4">
+            <h2 className="text-2xl font-bold">Current Allocation</h2>
+            <div className="group relative">
+              <div className="cursor-help text-gray-400 border border-gray-400 rounded-full w-4 h-4 flex items-center justify-center text-xs">
+                i
+              </div>
+              <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-80 p-2 bg-black/90 border border-gold/20 rounded-lg text-xs text-gray-300 z-10 whitespace-pre-line">
+                {STRATEGY_INFO.allocation}
+              </div>
+            </div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
               <AllocationChart />
@@ -66,7 +98,17 @@ export default function Portfolio() {
 
         {/* Portfolio Stats */}
         <section>
-          <h2 className="text-2xl font-bold mb-4">Portfolio Metrics</h2>
+          <div className="flex items-center gap-2 mb-4">
+            <h2 className="text-2xl font-bold">Portfolio Metrics</h2>
+            <div className="group relative">
+              <div className="cursor-help text-gray-400 border border-gray-400 rounded-full w-4 h-4 flex items-center justify-center text-xs">
+                i
+              </div>
+              <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-80 p-2 bg-black/90 border border-gold/20 rounded-lg text-xs text-gray-300 z-10 whitespace-pre-line">
+                {STRATEGY_INFO.metrics}
+              </div>
+            </div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="stat-card">
               <h3>Total Value</h3>
@@ -112,7 +154,17 @@ export default function Portfolio() {
 
         {/* Performance Chart */}
         <section>
-          <h2 className="text-2xl font-bold mb-4">Portfolio Performance</h2>
+          <div className="flex items-center gap-2 mb-4">
+            <h2 className="text-2xl font-bold">Portfolio Performance</h2>
+            <div className="group relative">
+              <div className="cursor-help text-gray-400 border border-gray-400 rounded-full w-4 h-4 flex items-center justify-center text-xs">
+                i
+              </div>
+              <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-80 p-2 bg-black/90 border border-gold/20 rounded-lg text-xs text-gray-300 z-10 whitespace-pre-line">
+                {STRATEGY_INFO.performance}
+              </div>
+            </div>
+          </div>
           <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
             {isLoading ? (
               <div className="text-center py-8">Loading chart data...</div>
