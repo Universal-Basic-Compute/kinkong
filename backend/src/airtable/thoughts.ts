@@ -26,14 +26,16 @@ export async function createThought(params: CreateThoughtParams): Promise<void> 
 
   try {
     const table = kinosBase.table('THOUGHTS');
-    await table.create({
-      thoughtId: `trade-${Date.now()}`,
-      swarmId: 'kinkong',
-      content: params.content,
-      type: params.type,
-      context: typeof params.context === 'string' ? params.context : JSON.stringify(params.context),
-      createdAt: new Date().toISOString()
-    });
+    await table.create([{
+      fields: {
+        thoughtId: `trade-${Date.now()}`,
+        swarmId: 'kinkong',
+        content: params.content,
+        type: params.type,
+        context: typeof params.context === 'string' ? params.context : JSON.stringify(params.context),
+        createdAt: new Date().toISOString()
+      }
+    }]);
   } catch (error) {
     console.error('Error creating thought in Kinos Airtable:', error);
     throw error;
