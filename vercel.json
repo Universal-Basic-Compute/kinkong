@@ -7,5 +7,11 @@
   ],
   "buildCommand": "next build",
   "devCommand": "next dev",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/cron/reallocation",
+      "schedule": "0 0,6,12,18 * * *"
+    }
+  ]
 }
