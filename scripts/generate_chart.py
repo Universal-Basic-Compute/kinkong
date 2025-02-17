@@ -237,15 +237,21 @@ def generate_chart(df, config, support_levels=None):
     )
     
     # Adjust title spacing and add components
-    # Create more detailed title components using raw strings
-    main_title = r"{}".format(config['title'])
+    # Format text without using $ signs directly
+    def format_price(price):
+        return f"{price:.4f}"
+
+    def format_volume(vol):
+        return f"{vol:,.2f}"
+
+    # Create title components
+    main_title = config['title']
     price_stats = (
-        r"Current: ${:.4f} ({:+.2f}%) | "
-        r"ATH: ${:.4f} | ATL: ${:.4f} | "
-        r"Avg: ${:.4f}"
-    ).format(current_price, price_change, ath, atl, avg_price)
-    
-    volume_stats = r"Avg Vol: ${:,.2f} | {} candles".format(avg_volume, len(df))
+        f"Current: {format_price(current_price)} ({price_change:+.2f}%) | "
+        f"ATH: {format_price(ath)} | ATL: {format_price(atl)} | "
+        f"Avg: {format_price(avg_price)}"
+    )
+    volume_stats = f"Avg Vol: {format_volume(avg_volume)} | {len(df)} candles"
     
     # Add text without math parameter
     fig.text(0.5, 0.97, main_title,
@@ -266,11 +272,8 @@ def generate_chart(df, config, support_levels=None):
 
     # Update technical info
     technical_info = (
-        r"EMA(20) & EMA(50) | "
-        r"Period: {} → {} UTC"
-    ).format(
-        df.index[0].strftime('%Y-%m-%d %H:%M'),
-        df.index[-1].strftime('%Y-%m-%d %H:%M')
+        f"EMA(20) & EMA(50) | "
+        f"Period: {df.index[0].strftime('%Y-%m-%d %H:%M')} → {df.index[-1].strftime('%Y-%m-%d %H:%M')} UTC"
     )
     
     fig.text(0.5, 0.90, technical_info,
@@ -280,8 +283,8 @@ def generate_chart(df, config, support_levels=None):
     
     # Add support/resistance levels info if present
     if support_levels:
-        support_text = r"Support Levels: " + " | ".join([r"${:.4f}".format(price) for _, price in support_levels if _=='support'])
-        resistance_text = r"Resistance Levels: " + " | ".join([r"${:.4f}".format(price) for _, price in support_levels if _=='resistance'])
+        support_text = "Support Levels: " + " | ".join([f"{format_price(price)}" for _, price in support_levels if _=='support'])
+        resistance_text = "Resistance Levels: " + " | ".join([f"{format_price(price)}" for _, price in support_levels if _=='resistance'])
         
         fig.text(0.5, 0.88, support_text + "\n" + resistance_text,
                 horizontalalignment='center',
@@ -331,14 +334,14 @@ def generate_chart(df, config, support_levels=None):
     ax_main.grid(axis='x', color='gray', alpha=0.2, linestyle='--')
     
     # Add price range label
-    price_range = r"Range: ${:.4f} - ${:.4f}".format(df['Low'].min(), df['High'].max())
+    price_range = f"Range: {format_price(df['Low'].min())} - {format_price(df['High'].max())}"
     ax_main.text(0.02, 0.95, price_range,
                 transform=ax_main.transAxes,
                 color='white',
                 fontsize=10)
     
     # Add volume range label
-    volume_range = r"Vol Range: ${:,.0f} - ${:,.0f}".format(df['Volume'].min(), df['Volume'].max())
+    volume_range = f"Vol Range: {format_volume(df['Volume'].min())} - {format_volume(df['Volume'].max())}"
     ax_volume.text(0.02, 0.95, volume_range,
                   transform=ax_volume.transAxes,
                   color='white',
