@@ -442,10 +442,17 @@ def generate_signal(analyses):
                 100
             )
     
-    # Create signals in Airtable
+    # Create signals in Airtable only for high confidence signals
+    high_confidence_signals = []
     for timeframe, analysis in timeframe_analyses.items():
-        if analysis and analysis.signal != 'HOLD':  # Only create signals for BUY/SELL
-            create_airtable_signal(analysis, timeframe)
+        if analysis and analysis.signal != 'HOLD' and analysis.confidence >= 60:
+            result = create_airtable_signal(analysis, timeframe)
+            if result:
+                high_confidence_signals.append({
+                    'timeframe': timeframe,
+                    'signal': analysis.signal,
+                    'confidence': analysis.confidence
+                })
 
     # Create detailed message
     def format_reassessment(analysis):
@@ -469,20 +476,25 @@ Primary Trend: {overall.get('primary_trend', 'N/A')}
 Timeframe Alignment: {overall.get('timeframe_alignment', 'N/A')}
 Best Timeframe: {overall.get('best_timeframe', 'N/A')}
 
-Short-term (15m):
-Signal: {signals['short_term'].signal if signals['short_term'] else 'N/A'} ({signals['short_term'].confidence if signals['short_term'] else 'N/A'}% confidence)
-{signals['short_term'].reasoning if signals['short_term'] else 'No analysis'}
-{format_reassessment(signals['short_term']) if signals['short_term'] and signals['short_term'].signal == 'HOLD' else ''}
+"""
 
-Medium-term (2h):
-Signal: {signals['medium_term'].signal if signals['medium_term'] else 'N/A'} ({signals['medium_term'].confidence if signals['medium_term'] else 'N/A'}% confidence)
-{signals['medium_term'].reasoning if signals['medium_term'] else 'No analysis'}
-{format_reassessment(signals['medium_term']) if signals['medium_term'] and signals['medium_term'].signal == 'HOLD' else ''}
+    # Add high confidence signals to message
+    if high_confidence_signals:
+        message += "🎯 High Confidence Signals:\n"
+        for signal in high_confidence_signals:
+            message += f"{signal['timeframe']}: {signal['signal']} ({signal['confidence']}% confidence)\n"
+        message += "\n"
 
-Long-term (8h):
-Signal: {signals['long_term'].signal if signals['long_term'] else 'N/A'} ({signals['long_term'].confidence if signals['long_term'] else 'N/A'}% confidence)
-{signals['long_term'].reasoning if signals['long_term'] else 'No analysis'}
-{format_reassessment(signals['long_term']) if signals['long_term'] and signals['long_term'].signal == 'HOLD' else ''}
+    # Add detailed timeframe analysis
+    for timeframe, analysis in [
+        ('Short-term (15m)', signals['short_term']),
+        ('Medium-term (2h)', signals['medium_term']),
+        ('Long-term (8h)', signals['long_term'])
+    ]:
+        if analysis:
+            message += f"{timeframe}:\n"
+            message += f"Signal: {analysis.signal} ({analysis.confidence}% confidence)\n"
+            message += f"{analysis.reasoning}\n\n"
 
 Key Observations:
 {chr(10).join(f"• {obs}" for obs in overall.get('key_observations', ['No observations']))}
@@ -491,8 +503,12 @@ Recommended Action:
 {overall.get('recommended_action', {}).get('reasoning', 'No recommendation')}
 """
 
-    # Send to Telegram
-    send_telegram_message(message)
+    # Only send to Telegram if there are high confidence signals
+    if high_confidence_signals:
+        send_telegram_message(message)
+        print("\nSent high confidence signals to Telegram")
+    else:
+        print("\nNo high confidence signals to send")
     
     # Log analysis
     print("\nAnalysis completed:")
