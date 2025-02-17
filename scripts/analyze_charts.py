@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import requests
 import numpy as np
+import pandas as pd
 from collections import defaultdict
 import statistics
 from airtable import Airtable
