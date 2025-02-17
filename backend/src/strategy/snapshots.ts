@@ -132,20 +132,20 @@ export async function recordPortfolioSnapshot() {
 
     console.log('Successfully recorded all snapshots');
 
-    // Calculate the classification
-    const metrics = {
+    // Calculate metrics for notifications
+    const notificationMetrics = {
       percentAboveAvg: (tokensAboveAvg / tokens.length) * 100,
       volumeGrowth: totalVolumePrevWeek > 0 
         ? ((totalVolumeThisWeek - totalVolumePrevWeek) / totalVolumePrevWeek) * 100 
         : 0,
       percentVolumeOnUpDays: (volumeOnUpDays / totalVolumeDays) * 100,
-      aiVsSolPerformance: aiTokenPerformance - solPerformance
+      aiVsSolPerformance: aiPerformance - solPerformance
     };
 
-    const classification = classifyMarket(metrics);
+    const classification = classifyMarket(notificationMetrics);
 
     // Send notifications
-    await sendNotifications(analysis, classification);
+    await sendNotifications(notificationMetrics, classification);
 
     return { totalValue, snapshots };
 
