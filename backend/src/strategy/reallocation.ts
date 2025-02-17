@@ -179,6 +179,50 @@ export async function executeReallocation() {
       ])
     );
 
+    // Get current prices for all tokens
+    const tokenPrices = new Map<string, number>();
+    for (const [token] of currentPortfolio) {
+      if (['USDC', 'USDT'].includes(token.trim())) {
+        tokenPrices.set(token, 1); // Stablecoins are always $1
+      } else {
+        const price = await getTokenPrice(token.trim());
+        if (price) {
+          tokenPrices.set(token, price);
+          console.log(`Price for ${token}: $${price}`);
+        } else {
+          console.warn(`Could not get price for ${token}`);
+        }
+      }
+    }
+
+    // Recalculate USD values
+    const updatedPortfolio = new Map(
+      Array.from(currentPortfolio.entries()).map(([token, data]) => {
+        const price = tokenPrices.get(token) || 0;
+        const amount = data.allocation; // This should be the token amount, not percentage
+        const usdValue = amount * price;
+        return [token, { ...data, usdValue }];
+      })
+    );
+
+    // Calculate total portfolio value with current prices
+    const totalValue = Array.from(updatedPortfolio.values())
+      .reduce((sum, holding) => sum + (holding.usdValue || 0), 0);
+
+    console.log('Current portfolio value:', totalValue);
+    console.log('Current allocations:', Object.fromEntries(
+      Array.from(updatedPortfolio.entries())
+        .map(([token, data]) => [
+          token, 
+          {
+            amount: data.allocation,
+            price: tokenPrices.get(token),
+            usdValue: data.usdValue,
+            percentage: (data.usdValue / totalValue * 100).toFixed(2) + '%'
+          }
+        ])
+    ));
+
     // 4. Get current tokens and calculate scores
     const tokensTable = getTable('TOKENS');
     const tokenRecords = await tokensTable
@@ -206,14 +250,7 @@ export async function executeReallocation() {
 
     // 6. Generate trade orders
     // Calculate total portfolio value and print current allocations
-    const totalValue = Array.from(currentPortfolio.values())
-      .reduce((sum, holding) => sum + (holding.usdValue || 0), 0);
-
-    console.log('Current portfolio value:', totalValue);
-    console.log('Current allocations:', Object.fromEntries(
-      Array.from(currentPortfolio.entries())
-        .map(([token, data]) => [token, (data.usdValue / totalValue * 100).toFixed(2) + '%'])
-    ));
+    // Use the previously calculated totalValue and updatedPortfolio
 
     // First calculate all needed trades
     const potentialOrders: TradeOrder[] = [];
