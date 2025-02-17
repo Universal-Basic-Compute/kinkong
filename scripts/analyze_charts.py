@@ -150,21 +150,6 @@ def analyze_chart_with_claude(chart_path):
     # Get market data and context
     market_data = get_dexscreener_data()
     market_context = get_market_context()
-    
-    # Get chart data for technical calculations
-    df = pd.read_csv(chart_path)  # Assuming chart data is saved alongside image
-    volatility = calculate_volatility(df)
-    volume_nodes = analyze_volume_profile(df)
-    
-    additional_context = f"""
-Market Context:
-• SOL 24h Change: {market_context['sol_price_change']:.2f}%
-• BTC 24h Change: {market_context['btc_price_change']:.2f}%
-• Historical Volatility: {volatility.iloc[-1]:.2f}
-• Key Volume Nodes: {', '.join([f'${price:.4f}' for price, _ in volume_nodes])}
-"""
-    
-    # Read image file as base64
     with open(chart_path, "rb") as image_file:
         image_data = base64.b64encode(image_file.read()).decode('utf-8')
     
@@ -173,9 +158,9 @@ Market Context:
     timeframe = '15m' if '15m' in filename else '2h' if '2h' in filename else '8h'
     
     # Format market data for prompt
-    market_context = ""
+    market_data_str = ""
     if market_data:
-        market_context = f"""
+        market_data_str = f"""
 Current Market Data:
 • Price: ${market_data['price']:.4f}
 • 24h Change: {market_data['price_change_24h']:.2f}%
