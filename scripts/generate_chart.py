@@ -171,7 +171,7 @@ def generate_chart(df, config, support_levels=None):
         style = mpf.make_mpf_style(
             base_mpf_style='charles',
             gridstyle=':',
-            gridcolor='#FFD70020',  # Gold color with transparency
+            gridcolor='#FFD70020',  # Hex with alpha
             facecolor='black',
             edgecolor='white',
             figcolor='black',
@@ -180,8 +180,14 @@ def generate_chart(df, config, support_levels=None):
                 down='#ef4444',
                 edge='inherit',
                 wick='inherit',
-                volume='gray'
-            )
+                volume='#808080'
+            ),
+            rc={
+                'axes.labelcolor': 'white',
+                'axes.edgecolor': 'white',
+                'xtick.color': 'white',
+                'ytick.color': 'white'
+            }
         )
 
         # Calculate EMAs
