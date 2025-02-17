@@ -104,13 +104,16 @@ async def analyze_token(token):
                 # Calculate support levels
                 support_levels = calculate_support_levels(df)
                 
-                # Generate chart
-                chart_path = token_dir / token_config['filename']
+                # Generate chart and get the actual saved path
                 success = generate_chart(df, token_config, support_levels)
-                
                 if success:
-                    print(f"Generated chart: {chart_path}")
-                    chart_paths.append(chart_path)
+                    # Use the correct path where the file was actually saved
+                    chart_path = token_dir / token_config['filename']
+                    if chart_path.exists():  # Verify file exists
+                        print(f"Generated chart: {chart_path}")
+                        chart_paths.append(str(chart_path))  # Convert Path to string
+                    else:
+                        print(f"Chart file not found at {chart_path}")
                 else:
                     print(f"Failed to generate chart for {token['symbol']} - {config['timeframe']}")
             

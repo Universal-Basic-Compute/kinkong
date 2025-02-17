@@ -230,6 +230,17 @@ def analyze_charts_with_claude(chart_paths, token_info=None):
         
         # Get market data and context
         market_data = get_dexscreener_data(token_info['mint'] if token_info else None)
+        if not market_data:
+            print(f"Warning: No DexScreener data available for {token_info['symbol'] if token_info else 'token'}")
+            # Continue with analysis but without market data
+            market_data = {
+                'price': 0,
+                'price_change_24h': 0,
+                'volume_24h': 0,
+                'liquidity': 0,
+                'fdv': 0,
+                'market_cap': 0
+            }
         market_context = get_market_context()
 
         # Prepare all chart images

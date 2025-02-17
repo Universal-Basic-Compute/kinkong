@@ -413,9 +413,12 @@ def generate_chart(df, config, support_levels=None):
                 color='#808080',
                 fontsize=8)
 
-        # Save chart
-        charts_dir = os.path.join('public', 'charts')
+        # Create token-specific directory from the symbol in config title
+        symbol = config['title'].split('/')[0].strip()
+        charts_dir = os.path.join('public', 'charts', symbol.lower())
         os.makedirs(charts_dir, exist_ok=True)
+        
+        # Save in token-specific directory
         output_path = os.path.join(charts_dir, config['filename'])
         
         plt.savefig(
