@@ -54,7 +54,10 @@ export async function GET() {
       try {
         // Safely parse the timestamp
         const timestamp = trade.get('timestamp');
-        if (!timestamp) return acc;
+        if (!timestamp || typeof timestamp !== 'string') {
+          console.warn('Invalid timestamp format:', timestamp);
+          return acc;
+        }
 
         let date;
         try {
