@@ -4,6 +4,7 @@ import { TokenTable } from '@/components/tables/TokenTable'
 import { SignalHistory } from '@/components/signals/SignalHistory'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useState, useEffect } from 'react'
+import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
 
 interface TokenInfo {
   symbol: string;
@@ -120,6 +121,7 @@ export default function Dashboard() {
 
     fetchTrackedTokens();
   }, []);
+
   return (
     <main className="min-h-screen p-8">
       <h1 className="text-4xl font-bold mb-12">Holder Dashboard</h1>
@@ -227,66 +229,67 @@ export default function Dashboard() {
           
           {isTableVisible && (
             <div className="mt-4 bg-black/30 p-8 rounded-lg border border-gold/20">
-          {isTrackedTokensLoading ? (
-            <div className="text-center py-4">Loading tokens...</div>
-          ) : trackedTokensError ? (
-            <div className="text-center py-4 text-red-400">Error: {trackedTokensError}</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full">
-                <thead>
-                  <tr className="border-b border-gold/20">
-                    <th className="px-4 py-2 text-left text-gold">Token</th>
-                    <th className="px-4 py-2 text-left text-gold">Name</th>
-                    <th className="px-4 py-2 text-right text-gold">7d Volume</th>
-                    <th className="px-4 py-2 text-right text-gold">Liquidity</th>
-                    <th className="px-4 py-2 text-right text-gold">Volume Growth</th>
-                    <th className="px-4 py-2 text-right text-gold">Price Change</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {trackedTokens.map((token) => (
-                    <tr key={token.mint} className="border-b border-gold/10 hover:bg-gold/5">
-                      <td className="px-4 py-2">
-                        <a 
-                          href={`https://solscan.io/token/${token.mint}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`font-medium ${getTokenClass(token.symbol)}`}
-                        >
-                          ${token.symbol}
-                        </a>
-                      </td>
-                      <td className="px-4 py-2 text-gray-300">{token.name}</td>
-                      <td className="px-4 py-2 text-right text-gray-300">
-                        ${token.volume7d.toLocaleString(undefined, {
-                          maximumFractionDigits: 0
-                        })}
-                      </td>
-                      <td className="px-4 py-2 text-right text-gray-300">
-                        ${token.liquidity.toLocaleString(undefined, {
-                          maximumFractionDigits: 0
-                        })}
-                      </td>
-                      <td className="px-4 py-2 text-right">
-                        <span className={token.volumeGrowth >= 0 ? 'text-green-400' : 'text-red-400'}>
-                          {token.volumeGrowth.toFixed(2)}%
-                        </span>
-                      </td>
-                      <td className="px-4 py-2 text-right">
-                        <span className={token.pricePerformance >= 0 ? 'text-green-400' : 'text-red-400'}>
-                          {token.pricePerformance.toFixed(2)}%
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              {isTrackedTokensLoading ? (
+                <div className="text-center py-4">Loading tokens...</div>
+              ) : trackedTokensError ? (
+                <div className="text-center py-4 text-red-400">Error: {trackedTokensError}</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full">
+                    <thead>
+                      <tr className="border-b border-gold/20">
+                        <th className="px-4 py-2 text-left text-gold">Token</th>
+                        <th className="px-4 py-2 text-left text-gold">Name</th>
+                        <th className="px-4 py-2 text-right text-gold">7d Volume</th>
+                        <th className="px-4 py-2 text-right text-gold">Liquidity</th>
+                        <th className="px-4 py-2 text-right text-gold">Volume Growth</th>
+                        <th className="px-4 py-2 text-right text-gold">Price Change</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {trackedTokens.map((token) => (
+                        <tr key={token.mint} className="border-b border-gold/10 hover:bg-gold/5">
+                          <td className="px-4 py-2">
+                            <a 
+                              href={`https://solscan.io/token/${token.mint}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`font-medium ${getTokenClass(token.symbol)}`}
+                            >
+                              ${token.symbol}
+                            </a>
+                          </td>
+                          <td className="px-4 py-2 text-gray-300">{token.name}</td>
+                          <td className="px-4 py-2 text-right text-gray-300">
+                            ${token.volume7d.toLocaleString(undefined, {
+                              maximumFractionDigits: 0
+                            })}
+                          </td>
+                          <td className="px-4 py-2 text-right text-gray-300">
+                            ${token.liquidity.toLocaleString(undefined, {
+                              maximumFractionDigits: 0
+                            })}
+                          </td>
+                          <td className="px-4 py-2 text-right">
+                            <span className={token.volumeGrowth >= 0 ? 'text-green-400' : 'text-red-400'}>
+                              {token.volumeGrowth.toFixed(2)}%
+                            </span>
+                          </td>
+                          <td className="px-4 py-2 text-right">
+                            <span className={token.pricePerformance >= 0 ? 'text-green-400' : 'text-red-400'}>
+                              {token.pricePerformance.toFixed(2)}%
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
         </div>
       </section>
-
     </main>
-  )
+  );
 }
