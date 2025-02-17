@@ -1,17 +1,7 @@
-import matplotlib.pyplot as plt
-import mplfinance as mpf
-import pandas as pd
-import numpy as np
-from datetime import datetime, timedelta
-import requests
-from dotenv import load_dotenv
-import os
-import os
+from chart_generation.main import generate_all_charts
 
-# Load environment variables
-load_dotenv()
-
-CHART_CONFIGS = [
+if __name__ == "__main__":
+    generate_all_charts()
     {
         'timeframe': '15m',
         'duration_hours': 34,
