@@ -10,6 +10,53 @@ interface JupiterPriceResponse {
   }
 }
 
+interface JupiterQuoteParams {
+  inputMint: string;
+  outputMint: string;
+  amount: number;
+  slippageBps: number;
+}
+
+export async function getJupiterQuote(params: JupiterQuoteParams) {
+  try {
+    const response = await fetch(`https://quote-api.jup.ag/v4/quote?inputMint=${params.inputMint}&outputMint=${params.outputMint}&amount=${params.amount}&slippageBps=${params.slippageBps}`);
+    if (!response.ok) {
+      throw new Error('Failed to get Jupiter quote');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to get Jupiter quote:', error);
+    return null;
+  }
+}
+
+interface JupiterTransactionParams {
+  route: any; // Replace with proper type from Jupiter API
+  userPublicKey: PublicKey;
+}
+
+export async function postJupiterTransaction(params: JupiterTransactionParams) {
+  try {
+    const response = await fetch('https://quote-api.jup.ag/v4/swap', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        route: params.route,
+        userPublicKey: params.userPublicKey.toString()
+      })
+    });
+    if (!response.ok) {
+      throw new Error('Failed to create Jupiter transaction');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to create Jupiter transaction:', error);
+    throw error;
+  }
+}
+
 export async function getTokenPrice(mint: string): Promise<number | null> {
   try {
     const response = await fetch(`${JUPITER_PRICE_API}?ids=${mint}&vsToken=USDC`);

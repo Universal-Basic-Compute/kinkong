@@ -59,10 +59,15 @@ export async function GET() {
           return acc;
         }
 
-        let date;
+        let dateStr: string;
         try {
           // Try parsing as ISO string
-          date = new Date(timestamp).toISOString().split('T')[0];
+          const date = new Date(timestamp);
+          if (isNaN(date.getTime())) {
+            console.warn('Invalid date value:', timestamp);
+            return acc;
+          }
+          dateStr = date.toISOString().split('T')[0];
         } catch (e) {
           console.warn('Invalid date format:', timestamp);
           return acc;
@@ -70,10 +75,10 @@ export async function GET() {
 
         const value = parseFloat(trade.get('value') as string) || 0;
         
-        if (!acc[date]) {
-          acc[date] = { timestamp: date, value: 0 };
+        if (!acc[dateStr]) {
+          acc[dateStr] = { timestamp: dateStr, value: 0 };
         }
-        acc[date].value += value;
+        acc[dateStr].value += value;
         return acc;
       } catch (e) {
         console.error('Error processing trade:', e);
