@@ -39,11 +39,44 @@ def send_telegram_message(message):
     except Exception as e:
         print(f"Failed to send Telegram message: {e}")
 
+import requests
+from typing import Dict, Optional
+
+def get_dexscreener_data(token_address: str = "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump") -> Optional[Dict]:
+    """Fetch token data from DexScreener API"""
+    try:
+        url = f"https://api.dexscreener.com/latest/dex/tokens/{token_address}"
+        response = requests.get(url)
+        response.raise_for_status()
+        
+        data = response.json()
+        if not data.get('pairs'):
+            print("No pairs found in DexScreener response")
+            return None
+            
+        # Get the most liquid pair
+        main_pair = max(data['pairs'], key=lambda x: float(x.get('liquidity', {}).get('usd', 0)))
+        
+        return {
+            'price': float(main_pair.get('priceUsd', 0)),
+            'price_change_24h': float(main_pair.get('priceChange', {}).get('h24', 0)),
+            'volume_24h': float(main_pair.get('volume', {}).get('h24', 0)),
+            'liquidity': float(main_pair.get('liquidity', {}).get('usd', 0)),
+            'fdv': float(main_pair.get('fdv', 0)),
+            'market_cap': float(main_pair.get('marketCap', 0))
+        }
+    except Exception as e:
+        print(f"Error fetching DexScreener data: {e}")
+        return None
+
 def analyze_chart_with_claude(chart_path):
     """Analyze a chart using Claude 3.5"""
     client = anthropic.Anthropic(
         api_key=os.getenv('ANTHROPIC_API_KEY')
     )
+    
+    # Get market data
+    market_data = get_dexscreener_data()
     
     # Read image file as base64
     with open(chart_path, "rb") as image_file:
@@ -53,7 +86,22 @@ def analyze_chart_with_claude(chart_path):
     filename = Path(chart_path).name
     timeframe = '15m' if '15m' in filename else '2h' if '2h' in filename else '8h'
     
-    prompt = """You are an expert cryptocurrency technical analyst specializing in UBC/USD market analysis.
+    # Format market data for prompt
+    market_context = ""
+    if market_data:
+        market_context = f"""
+Current Market Data:
+• Price: ${market_data['price']:.4f}
+• 24h Change: {market_data['price_change_24h']:.2f}%
+• 24h Volume: ${market_data['volume_24h']:,.2f}
+• Liquidity: ${market_data['liquidity']:,.2f}
+• FDV: ${market_data['fdv']:,.2f}
+• Market Cap: ${market_data['market_cap']:,.2f}
+"""
+    
+    prompt = f"""You are an expert cryptocurrency technical analyst specializing in UBC/USD market analysis.
+
+{market_context}
 
 Study this chart carefully and follow these steps:
 
@@ -62,32 +110,37 @@ Study this chart carefully and follow these steps:
 - Locate key swing highs and lows
 - Note any significant chart patterns
 - Identify key support and resistance levels
+- Consider current price in relation to liquidity levels
 
 2. VOLUME ANALYSIS
-- Compare current volume to average
+- Compare current volume (${market_data['volume_24h']:,.2f}) to recent activity
 - Note any volume spikes or divergences
 - Check if volume confirms price movement
+- Consider liquidity depth (${market_data['liquidity']:,.2f})
 
 3. TECHNICAL INDICATORS
 - Study the EMA20 and EMA50 relationship
 - Note any crossovers or divergences
 - Check price position relative to EMAs
+- Consider momentum in relation to 24h change ({market_data['price_change_24h']:.2f}%)
 
 4. MARKET STRUCTURE
 - Identify higher highs/lows or lower highs/lows
 - Note any break of structure
 - Evaluate current market phase
+- Consider market cap (${market_data['market_cap']:,.2f}) and FDV (${market_data['fdv']:,.2f})
 
 5. RISK ASSESSMENT
 - Calculate potential risk/reward ratio
 - Identify clear invalidation points
 - Consider current volatility
+- Factor in current liquidity conditions
 
 Based on this analysis, provide:
 1. A clear BUY/SELL/HOLD signal
 2. Confidence level (0-100%)
 3. Key price levels for:
-   - Entry (current price area)
+   - Entry (current price area: ${market_data['price']:.4f})
    - Target (next significant resistance/support)
    - Stop loss (structure invalidation point)
 4. Detailed reasoning explaining your decision
@@ -121,9 +174,9 @@ Remember:
 - Include at least 2 levels each for support and resistance
 
 For HOLD signals, be specific about:
-1. Price action events to watch (e.g. "Break above $1.25 resistance")
+1. Price action events to watch (e.g. "Break above ${market_data['price']:.4f}")
 2. Technical indicator developments (e.g. "EMA20 crossing above EMA50")
-3. Volume triggers (e.g. "Volume spike above 2x average")
+3. Volume triggers (e.g. "Volume spike above ${market_data['volume_24h']*2:,.2f}")
 4. Time-based reassessment (e.g. "After next 4-hour candle close")"""
 
     try:
