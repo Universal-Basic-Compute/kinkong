@@ -1,7 +1,6 @@
 'use client';
 import { AllocationChart } from '@/components/dashboard/AllocationChart'
 import { TokenTable } from '@/components/tables/TokenTable'
-import { PerformanceChart } from '@/components/charts/PerformanceChart'
 import { useState, useEffect } from 'react'
 
 interface TokenInfo {
@@ -28,72 +27,12 @@ function getTokenClass(token: string): string {
   }
 }
 
-const STRATEGY_INFO = {
-  allocation: `KinKong's allocation strategy:
-• Dynamic position sizing based on market conditions
-• Risk-weighted exposure across AI tokens
-• Regular rebalancing to maintain optimal ratios
-• Liquidity-aware position management
-• Counter-trading capability during volatility`,
-  
-  metrics: `Key portfolio metrics explained:
-• Total Value: Sum of all positions in USD
-• 24h Change: Net portfolio movement in last day
-• 7d Performance: Weekly return profile
-• Automated daily tracking and reporting`,
-  
-  performance: `Performance tracking methodology:
-• Historical value snapshots every 15 minutes
-• Profit/loss calculation including fees
-• Risk-adjusted return metrics
-• Drawdown monitoring and management
-• Automated portfolio rebalancing triggers`
-};
-
-interface PortfolioMetrics {
-  totalValue: number;
-  change24h: number;
-  change7d: number;
-  history: Array<{timestamp: string; value: number}>;
-}
 
 export default function Portfolio() {
-  const [metrics, setMetrics] = useState<PortfolioMetrics | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [tokens, setTokens] = useState<TokenInfo[]>([]);
   const [isTokensLoading, setIsTokensLoading] = useState(true);
   const [tokenError, setTokenError] = useState<string | null>(null);
 
-  const getChangeClass = (change: number | undefined) => {
-    if (change === undefined) return '';
-    return change >= 0 ? 'text-green-400' : 'text-red-400';
-  };
-
-  const formatChange = (change: number | undefined) => {
-    if (change === undefined) return '0.00';
-    return `${change >= 0 ? '+' : ''}${change.toFixed(2)}`;
-  };
-
-  useEffect(() => {
-    async function fetchMetrics() {
-      try {
-        const response = await fetch('/api/portfolio-metrics');
-        if (!response.ok) throw new Error('Failed to fetch metrics');
-        const data = await response.json();
-        setMetrics(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load metrics');
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    fetchMetrics();
-    // Refresh every 5 minutes
-    const interval = setInterval(fetchMetrics, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     async function fetchTokens() {
@@ -126,7 +65,11 @@ export default function Portfolio() {
                 i
               </div>
               <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-80 p-2 bg-black/90 border border-gold/20 rounded-lg text-xs text-gray-300 z-10 whitespace-pre-line">
-                {STRATEGY_INFO.allocation}
+                KinKong's allocation strategy:
+                • Dynamic position sizing based on market conditions
+                • Risk-weighted exposure across AI tokens
+                • Regular rebalancing to maintain optimal ratios
+                • Liquidity-aware position management
               </div>
             </div>
           </div>
