@@ -7,7 +7,7 @@ export default function Home() {
     <main className="min-h-screen bg-black text-white">
       <section className="hero px-4 py-20 text-center bg-gradient-to-b from-black via-darkred/10 to-black">
         <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-darkred to-gold bg-clip-text text-transparent">
-          24/7 Superhuman Trading Intelligence
+          Superhuman Trading Intelligence
         </h1>
         <p className="text-xl mb-8 text-gray-300 max-w-3xl mx-auto">
           Get 75% of trading profits every week from our superhuman AI traders working round-the-clock.<br/>
