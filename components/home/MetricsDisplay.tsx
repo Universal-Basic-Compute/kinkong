@@ -61,9 +61,11 @@ export function MetricsDisplay() {
   ];
 
   if (error) {
+    console.error('❌ Rendering error state:', error);
     return <div className="text-red-500">Error loading metrics: {error}</div>;
   }
 
+  console.log('🎨 Rendering metrics:', metricsData);
   return (
     <>
       {metricsData.map((metric, i) => (
