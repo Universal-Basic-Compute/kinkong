@@ -1,5 +1,17 @@
 import { getTable } from '@/backend/src/airtable/tables';
 import { NextResponse } from 'next/server';
+import type { Record, FieldSet } from 'airtable';
+
+interface TokenRecord extends FieldSet {
+  symbol: string;
+  name: string;
+  mint: string;
+  volume7d: number;
+  liquidity: number;
+  volumeGrowth: number;
+  pricePerformance: number;
+  holderCount: number;
+}
 
 export async function GET() {
   try {
@@ -11,7 +23,7 @@ export async function GET() {
       })
       .all();
 
-    const tokens = records.map(record => ({
+    const tokens = records.map((record: Record<TokenRecord>) => ({
       symbol: record.get('symbol'),
       name: record.get('name'),
       mint: record.get('mint'),
