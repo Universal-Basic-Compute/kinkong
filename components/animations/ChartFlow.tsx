@@ -17,9 +17,15 @@ export function ChartFlow() {
   const [lastPrice, setLastPrice] = useState(100);
 
   const generateCandle = (id: number, prevClose: number): Candle => {
-    const maxMove = prevClose * 0.02;
+    const maxMove = prevClose * 0.02; // 2% max movement
     const moveAmount = Math.random() * maxMove;
-    const direction = Math.random() > 0.5 ? 1 : -1;
+    
+    // If previous candle was bullish (close higher than open)
+    // then next candle has higher chance of being bearish
+    const direction = prevClose > lastPrice ? 
+      (Math.random() > 0.8 ? 1 : -1) : // 20% chance to continue up
+      (Math.random() > 0.2 ? 1 : -1);  // 80% chance to go up
+      
     const close = prevClose + (direction * moveAmount);
     
     // Generate wicks
@@ -27,6 +33,8 @@ export function ChartFlow() {
     const wickSize = bodyRange * 0.5;
     const high = Math.max(prevClose, close) + (Math.random() * wickSize);
     const low = Math.min(prevClose, close) - (Math.random() * wickSize);
+
+    lastPrice = prevClose; // Keep track of last price for trend
 
     return {
       id,
