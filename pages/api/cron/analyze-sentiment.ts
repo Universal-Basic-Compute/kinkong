@@ -1,31 +1,34 @@
 import { NextResponse } from 'next/server';
 import { getTable } from '@/backend/src/airtable/tables';
-import type { MarketClassification, WeeklyAnalysis } from '@/scripts/analyze-market-sentiment';
+import { Connection, PublicKey } from '@solana/web3.js';
+import { getCurrentPortfolio, calculateCurrentAllocations } from '@/utils/portfolio';
+import type { MarketClassification } from '@/scripts/analyze-market-sentiment';
 
 export async function GET() {
   try {
     console.log('Starting market sentiment analysis...');
     
-    // Get token data from last week
-    const tokensTable = getTable('TOKENS');
-    const snapshotsTable = getTable('TOKEN_SNAPSHOTS');
+    // Get actual portfolio data
+    const connection = new Connection(process.env.SOLANA_RPC_URL!);
+    const walletPubkey = new PublicKey(process.env.STRATEGY_WALLET!);
     
-    // Calculate metrics
+    const portfolio = await getCurrentPortfolio(connection, walletPubkey);
+    const allocations = calculateCurrentAllocations(portfolio);
+    
+    console.log('Current Portfolio:', allocations);
+    
+    // Calculate metrics using real data
     const metrics = {
-      percentAboveAvg: 0,
-      volumeGrowth: 0,
-      percentVolumeOnUpDays: 0,
-      aiVsSolPerformance: 0
+      percentAboveAvg: calculatePercentAboveAverage(allocations),
+      volumeGrowth: await calculateVolumeGrowth(allocations),
+      percentVolumeOnUpDays: await calculateUpDayVolume(allocations),
+      aiVsSolPerformance: await calculateRelativePerformance(allocations)
     };
     
-    // Analyze sentiment
-    const classification = {
-      sentiment: 'NEUTRAL' as const,
-      confidence: 50,
-      reasons: ['Initial analysis']
-    };
+    // Analyze sentiment with real data
+    const classification = analyzeMarketSentiment(metrics, allocations);
     
-    // Save to Airtable
+    // Save to Airtable with portfolio snapshot
     const sentimentTable = getTable('MARKET_SENTIMENT');
     await sentimentTable.create([
       {
@@ -34,6 +37,7 @@ export async function GET() {
           classification: classification.sentiment,
           confidence: classification.confidence,
           reasons: classification.reasons.join('\n'),
+          portfolioSnapshot: JSON.stringify(allocations),
           ...metrics
         }
       }
@@ -42,7 +46,8 @@ export async function GET() {
     return NextResponse.json({ 
       success: true,
       classification,
-      metrics 
+      metrics,
+      currentPortfolio: allocations
     });
   } catch (error) {
     console.error('Failed to analyze market sentiment:', error);
