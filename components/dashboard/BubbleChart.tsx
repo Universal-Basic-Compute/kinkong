@@ -26,7 +26,7 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
     const container = containerRef.current;
     const width = container.clientWidth;
     const height = 400;
-    const padding = 60; // Increased padding for labels
+    const padding = 60;
 
     // Clear previous content
     container.innerHTML = '';
@@ -56,50 +56,71 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
     };
 
     const scaleRadius = (liquidity: number) => {
-      const minRadius = 20;
-      const maxRadius = 50;
+      const minRadius = 10; // Reduced from 20
+      const maxRadius = 25; // Reduced from 50
       const scale = (liquidity - minLiquidity) / (maxLiquidity - minLiquidity);
       return minRadius + scale * (maxRadius - minRadius);
     };
 
-    // Calculate volume/liquidity ratio for color intensity
+    // Color gradient based on volume/liquidity ratio
     const getColor = (volume: number, liquidity: number) => {
       const ratio = volume / liquidity;
-      const intensity = Math.min(0.8, Math.max(0.2, ratio / 2)); // Normalize between 0.2 and 0.8
+      const normalized = Math.min(1, Math.max(0, ratio / 2));
+      
+      // Define gradient colors
+      const colors = {
+        fill: {
+          low: [39, 65, 86],    // Dark blue
+          high: [217, 72, 15]   // Bright orange
+        },
+        stroke: {
+          low: [54, 90, 119],   // Lighter blue
+          high: [255, 85, 18]   // Brighter orange
+        }
+      };
+
+      // Interpolate between colors
+      const interpolate = (start: number[], end: number[], factor: number) => {
+        return start.map((c, i) => Math.round(c + (end[i] - c) * factor));
+      };
+
+      const fillColor = interpolate(colors.fill.low, colors.fill.high, normalized);
+      const strokeColor = interpolate(colors.stroke.low, colors.stroke.high, normalized);
+
       return {
-        fill: `rgba(255, 215, 0, ${intensity * 0.3})`,
-        stroke: `rgba(255, 215, 0, ${intensity})`
+        fill: `rgba(${fillColor.join(',')}, 0.3)`,
+        stroke: `rgb(${strokeColor.join(',')})`
       };
     };
 
     // Draw grid lines
     const drawGrid = () => {
-      // Vertical grid lines
       for (let i = 0; i <= 4; i++) {
         const x = padding + (i * (width - 2 * padding) / 4);
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', x.toString());
-        line.setAttribute('y1', padding.toString());
-        line.setAttribute('x2', x.toString());
-        line.setAttribute('y2', (height - padding).toString());
-        line.setAttribute('stroke', 'rgba(255, 215, 0, 0.1)');
-        line.setAttribute('stroke-width', '1');
-        svg.appendChild(line);
-      }
-
-      // Horizontal grid lines
-      for (let i = 0; i <= 4; i++) {
         const y = padding + (i * (height - 2 * padding) / 4);
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', padding.toString());
-        line.setAttribute('y1', y.toString());
-        line.setAttribute('x2', (width - padding).toString());
-        line.setAttribute('y2', y.toString());
-        line.setAttribute('stroke', 'rgba(255, 215, 0, 0.1)');
-        line.setAttribute('stroke-width', '1');
-        svg.appendChild(line);
+        
+        // Vertical lines
+        svg.appendChild(createLine(x, padding, x, height - padding));
+        // Horizontal lines
+        svg.appendChild(createLine(padding, y, width - padding, y));
       }
     };
+
+    const createLine = (x1: number, y1: number, x2: number, y2: number) => {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', x1.toString());
+      line.setAttribute('y1', y1.toString());
+      line.setAttribute('x2', x2.toString());
+      line.setAttribute('y2', y2.toString());
+      line.setAttribute('stroke', 'rgba(255, 215, 0, 0.1)');
+      line.setAttribute('stroke-width', '1');
+      return line;
+    };
+
+    // Create tooltip div
+    const tooltip = document.createElement('div');
+    tooltip.className = 'fixed hidden bg-black/90 border border-gold/20 rounded-lg p-3 text-sm z-50';
+    document.body.appendChild(tooltip);
 
     // Draw grid
     drawGrid();
@@ -108,13 +129,13 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
     tokens.forEach(token => {
       const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
       
-      // Create bubble
-      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
       const x = scaleX(token.volumeGrowth);
       const y = scaleY(token.pricePerformance);
       const radius = scaleRadius(token.liquidity);
       const colors = getColor(token.volume7d, token.liquidity);
 
+      // Create bubble
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
       circle.setAttribute('cx', x.toString());
       circle.setAttribute('cy', y.toString());
       circle.setAttribute('r', radius.toString());
@@ -129,14 +150,10 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
       text.setAttribute('text-anchor', 'middle');
       text.setAttribute('dominant-baseline', 'middle');
       text.setAttribute('fill', 'white');
-      text.setAttribute('font-size', '12');
+      text.setAttribute('font-size', '10');
       text.textContent = token.symbol;
 
-      // Add hover effects and tooltip
-      const tooltip = document.createElement('div');
-      tooltip.className = 'absolute hidden bg-black/90 border border-gold/20 rounded-lg p-3 text-sm z-50';
-      container.appendChild(tooltip);
-
+      // Hover effects
       group.addEventListener('mouseenter', (e) => {
         circle.setAttribute('stroke-width', '3');
         tooltip.innerHTML = `
@@ -147,13 +164,14 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
           <div>7d Volume: $${token.volume7d.toLocaleString()}</div>
         `;
         tooltip.style.display = 'block';
-        tooltip.style.left = `${e.pageX + 10}px`;
-        tooltip.style.top = `${e.pageY + 10}px`;
-      });
-
-      group.addEventListener('mousemove', (e) => {
-        tooltip.style.left = `${e.pageX + 10}px`;
-        tooltip.style.top = `${e.pageY + 10}px`;
+        
+        // Get container's position relative to viewport
+        const rect = container.getBoundingClientRect();
+        const tooltipX = rect.left + x + window.scrollX;
+        const tooltipY = rect.top + y + window.scrollY;
+        
+        tooltip.style.left = `${tooltipX + 20}px`;
+        tooltip.style.top = `${tooltipY - 20}px`;
       });
 
       group.addEventListener('mouseleave', () => {
@@ -166,23 +184,11 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
       svg.appendChild(group);
     });
 
-    // Add axes
-    const xAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    xAxis.setAttribute('x1', padding.toString());
-    xAxis.setAttribute('y1', (height - padding).toString());
-    xAxis.setAttribute('x2', (width - padding).toString());
-    xAxis.setAttribute('y2', (height - padding).toString());
+    // Add axes and labels
+    const xAxis = createLine(padding, height - padding, width - padding, height - padding);
+    const yAxis = createLine(padding, padding, padding, height - padding);
     xAxis.setAttribute('stroke', 'rgba(255, 215, 0, 0.5)');
-    xAxis.setAttribute('stroke-width', '1');
-
-    const yAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    yAxis.setAttribute('x1', padding.toString());
-    yAxis.setAttribute('y1', padding.toString());
-    yAxis.setAttribute('x2', padding.toString());
-    yAxis.setAttribute('y2', (height - padding).toString());
     yAxis.setAttribute('stroke', 'rgba(255, 215, 0, 0.5)');
-    yAxis.setAttribute('stroke-width', '1');
-
     svg.appendChild(xAxis);
     svg.appendChild(yAxis);
 
@@ -205,6 +211,10 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
     svg.appendChild(xLabel);
     svg.appendChild(yLabel);
 
+    // Cleanup
+    return () => {
+      document.body.removeChild(tooltip);
+    };
   }, [tokens]);
 
   return (
