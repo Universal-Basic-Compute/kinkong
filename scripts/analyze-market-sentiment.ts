@@ -2,6 +2,12 @@ import { getTable } from '../backend/src/airtable/tables';
 import dotenv from 'dotenv';
 import path from 'path';
 
+interface MarketClassification {
+  sentiment: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+  confidence: number;
+  reasons: string[];
+}
+
 // Load environment variables
 console.log('🔧 Initializing environment...');
 const envPath = path.resolve(process.cwd(), '.env');
@@ -86,6 +92,81 @@ async function getWeeklyMetrics(): Promise<{ [key: string]: TokenMetrics[] }> {
     console.error('❌ Error fetching weekly metrics:', error);
     throw new Error(`Failed to fetch weekly metrics: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
+}
+
+function classifyMarket(metrics: {
+  percentAboveAvg: number;
+  volumeGrowth: number;
+  percentVolumeOnUpDays: number;
+  aiVsSolPerformance: number;
+}): MarketClassification {
+  const reasons: string[] = [];
+  
+  // Check bullish criteria
+  const bullishCriteria = [
+    { 
+      condition: metrics.percentAboveAvg > 60,
+      reason: `${metrics.percentAboveAvg.toFixed(1)}% of tokens above 7d average (>60% is bullish)`
+    },
+    {
+      condition: metrics.volumeGrowth > 0,
+      reason: `Volume growth is ${metrics.volumeGrowth.toFixed(1)}% (positive is bullish)`
+    },
+    {
+      condition: metrics.percentVolumeOnUpDays > 60,
+      reason: `${metrics.percentVolumeOnUpDays.toFixed(1)}% of volume on up days (>60% is bullish)`
+    },
+    {
+      condition: metrics.aiVsSolPerformance > 0,
+      reason: `AI tokens outperforming SOL by ${metrics.aiVsSolPerformance.toFixed(1)}% (outperformance is bullish)`
+    }
+  ];
+
+  // Check bearish criteria
+  const bearishCriteria = [
+    {
+      condition: metrics.percentAboveAvg < 40,
+      reason: `${metrics.percentAboveAvg.toFixed(1)}% of tokens above 7d average (<40% is bearish)`
+    },
+    {
+      condition: metrics.volumeGrowth < 0,
+      reason: `Volume growth is ${metrics.volumeGrowth.toFixed(1)}% (negative is bearish)`
+    },
+    {
+      condition: metrics.percentVolumeOnUpDays < 40,
+      reason: `${metrics.percentVolumeOnUpDays.toFixed(1)}% of volume on up days (<40% is bearish)`
+    },
+    {
+      condition: metrics.aiVsSolPerformance < 0,
+      reason: `AI tokens underperforming SOL by ${Math.abs(metrics.aiVsSolPerformance).toFixed(1)}% (underperformance is bearish)`
+    }
+  ];
+
+  const bullishCount = bullishCriteria.filter(c => c.condition).length;
+  const bearishCount = bearishCriteria.filter(c => c.condition).length;
+
+  // Add relevant reasons to the output
+  if (bullishCount >= 3) {
+    reasons.push(...bullishCriteria.filter(c => c.condition).map(c => c.reason));
+  } else if (bearishCount >= 3) {
+    reasons.push(...bearishCriteria.filter(c => c.condition).map(c => c.reason));
+  } else {
+    reasons.push(
+      `Mixed signals: ${bullishCount} bullish and ${bearishCount} bearish criteria met`,
+      `Percentages: ${metrics.percentAboveAvg.toFixed(1)}% above avg, ${metrics.volumeGrowth.toFixed(1)}% vol growth`,
+      `Volume on up days: ${metrics.percentVolumeOnUpDays.toFixed(1)}%`,
+      `AI vs SOL: ${metrics.aiVsSolPerformance > 0 ? '+' : ''}${metrics.aiVsSolPerformance.toFixed(1)}%`
+    );
+  }
+
+  // Calculate confidence based on criteria strength
+  const confidence = Math.max(bullishCount, bearishCount) / 4 * 100;
+
+  return {
+    sentiment: bullishCount >= 3 ? 'BULLISH' : bearishCount >= 3 ? 'BEARISH' : 'NEUTRAL',
+    confidence,
+    reasons
+  };
 }
 
 async function analyzeMarketSentiment(): Promise<WeeklyAnalysis> {
@@ -206,13 +287,36 @@ async function analyzeMarketSentiment(): Promise<WeeklyAnalysis> {
       }
     };
     
-    // Save to Airtable
-    console.log('\n💾 Saving analysis to Airtable...');
+    // Calculate the classification
+    const metrics = {
+      percentAboveAvg,
+      volumeGrowth,
+      percentVolumeOnUpDays,
+      aiVsSolPerformance: aiPerformance - solPerformance
+    };
+
+    const classification = classifyMarket(metrics);
+
+    // Enhanced console output
+    console.log('\n📊 Market Sentiment Analysis Results:');
+    console.log('=====================================');
+    console.log(`Classification: ${classification.sentiment} (${classification.confidence.toFixed(1)}% confidence)`);
+    console.log('\nReasons:');
+    classification.reasons.forEach(reason => console.log(`• ${reason}`));
+    console.log('\nDetailed Metrics:');
+    console.log(`• Tokens above 7d avg: ${percentAboveAvg.toFixed(1)}%`);
+    console.log(`• Volume growth: ${volumeGrowth.toFixed(1)}%`);
+    console.log(`• Volume on up days: ${percentVolumeOnUpDays.toFixed(1)}%`);
+    console.log(`• AI vs SOL performance: ${metrics.aiVsSolPerformance.toFixed(1)}%`);
+
+    // Save to Airtable with enhanced notes
     const sentimentTable = getTable('MARKET_SENTIMENT');
     await sentimentTable.create([{
       fields: {
         weekStartDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
         weekEndDate: new Date().toISOString(),
+        classification: classification.sentiment,
+        confidence: classification.confidence,
         totalTokens: tokens.length,
         tokensAbove7dAvg: tokensAboveAvg,
         weeklyVolume: totalVolumeThisWeek,
@@ -221,24 +325,7 @@ async function analyzeMarketSentiment(): Promise<WeeklyAnalysis> {
         totalVolume: totalVolumeDays,
         solPerformance,
         aiTokensPerformance: aiPerformance,
-        classification: sentiment,
-        notes: `
-          🎯 Analysis Summary:
-          
-          Bullish criteria met: ${bullishCount}/4
-          Bearish criteria met: ${bearishCount}/4
-          
-          📊 Key Metrics:
-          - ${percentAboveAvg.toFixed(1)}% tokens above 7d avg
-          - ${volumeGrowth.toFixed(1)}% volume growth
-          - ${percentVolumeOnUpDays.toFixed(1)}% volume on up days
-          - AI tokens ${aiPerformance > solPerformance ? 'outperforming' : 'underperforming'} SOL by ${Math.abs(aiPerformance - solPerformance).toFixed(1)}%
-          
-          📈 Volume Analysis:
-          - This week: $${(totalVolumeThisWeek).toLocaleString()}
-          - Previous week: $${(totalVolumePrevWeek).toLocaleString()}
-          - Up days: ${volumeOnUpDays}/${totalVolumeDays}
-        `.trim()
+        notes: classification.reasons.join('\n')
       }
     }]);
     
