@@ -48,14 +48,14 @@ interface WeeklyAnalysis {
 async function getWeeklyMetrics(): Promise<{ [key: string]: TokenMetrics[] }> {
   console.log('📊 Fetching weekly metrics...');
   try {
-    const snapshotsTable = getTable('TOKEN_SNAPSHOTS');
+    const tokensTable = getTable('TOKENS');
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     
-    console.log('🔍 Querying snapshots since:', sevenDaysAgo.toISOString());
-    const records = await snapshotsTable.select({
-      filterByFormula: `IS_AFTER({timestamp}, '${sevenDaysAgo.toISOString()}')`,
-      sort: [{ field: 'timestamp', direction: 'desc' }]
+    console.log('🔍 Querying tokens since:', sevenDaysAgo.toISOString());
+    const records = await tokensTable.select({
+      filterByFormula: `IS_AFTER({createdAt}, '${sevenDaysAgo.toISOString()}')`,
+      sort: [{ field: 'createdAt', direction: 'desc' }]
     }).all();
 
     console.log(`📝 Found ${records.length} snapshots`);
