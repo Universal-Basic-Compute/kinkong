@@ -224,9 +224,9 @@ async function updateAirtable(tokenData: TokenData[]) {
   
   for (const token of tokenData) {
     try {
-      // Check if token exists - use "Name" for primary field
+      // Check if token exists - use "name" for primary field (lowercase)
       const records = await table.select({
-        filterByFormula: `{Name} = '${token.symbol}'`
+        filterByFormula: `{name} = '${token.symbol}'`
       }).firstPage();
 
       if (records.length > 0) {
@@ -234,7 +234,7 @@ async function updateAirtable(tokenData: TokenData[]) {
         await table.update([{
           id: records[0].id,
           fields: {
-            Name: token.symbol,
+            name: token.symbol,
             description: token.description,
             mint: token.mint,
             isActive: token.isActive,
@@ -250,7 +250,7 @@ async function updateAirtable(tokenData: TokenData[]) {
         // Create new record
         await table.create([{
           fields: {
-            Name: token.symbol,
+            name: token.symbol,
             description: token.description,
             mint: token.mint,
             isActive: token.isActive,
