@@ -97,6 +97,49 @@ async def analyze_token(token):
             token_dir = Path('public/charts') / token['symbol'].lower()
             token_dir.mkdir(parents=True, exist_ok=True)
             
+            # Check for recent analysis
+            analysis_path = token_dir / 'analysis.json'
+            if analysis_path.exists():
+                try:
+                    with open(analysis_path, 'r') as f:
+                        saved_analysis = json.load(f)
+                        
+                    # Parse the timestamp from saved analysis
+                    analysis_time = datetime.fromisoformat(saved_analysis['timestamp'])
+                    time_diff = datetime.now() - analysis_time
+                    
+                    # If analysis is less than 10 minutes old
+                    if time_diff < timedelta(minutes=10):
+                        print(f"Using recent analysis from {time_diff.seconds // 60} minutes ago")
+                        
+                        # Verify all chart files exist
+                        chart_paths = []
+                        all_charts_exist = True
+                        
+                        for config in CHART_CONFIGS:
+                            chart_filename = config['filename'].format(symbol=token['symbol'])
+                            chart_path = token_dir / chart_filename
+                            if chart_path.exists():
+                                chart_paths.append(str(chart_path))
+                            else:
+                                all_charts_exist = False
+                                break
+                        
+                        if all_charts_exist:
+                            print("All chart files present, using cached analysis")
+                            return {
+                                'token_info': {
+                                    'symbol': token['symbol'],
+                                    'mint': token['mint']
+                                },
+                                'analyses': saved_analysis['analyses']
+                            }
+                        else:
+                            print("Some chart files missing, regenerating analysis")
+                except Exception as e:
+                    print(f"Error reading cached analysis: {e}")
+                    # Continue with new analysis if there's any error reading cache
+            
             # Generate charts for each timeframe
             chart_paths = []
             for config in CHART_CONFIGS:
