@@ -1,9 +1,13 @@
 import sys
 from pathlib import Path
-project_root = str(Path(__file__).parent.parent)
-if project_root not in sys.path:
-    sys.path.append(project_root)
 
+# Get the project root (parent of scripts directory)
+project_root = Path(__file__).parent.parent
+if str(project_root) not in sys.path:
+    sys.path.append(str(project_root))
+
+# Now we can import backend modules
+from backend.src.airtable.tables import getTable
 from dotenv import load_dotenv
 import anthropic
 import os
@@ -18,7 +22,6 @@ from collections import defaultdict
 import statistics
 from airtable import Airtable
 from validate_signal import validate_signal
-from backend.src.airtable.tables import getTable
 
 # Load environment variables
 load_dotenv()
