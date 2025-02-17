@@ -30,24 +30,24 @@ For optimal short-term results in the Solana ecosystem, KinKong implements a 4x 
 
 #### Trade Duration Windows
 - SCALP: 6 hours (one trading window to next)
-  * Minimum profit target: 15%
-  * Typical target: 20-30%
+  * Minimum profit target: 8%
+  * Typical target: 10-20%
   * Stop-loss: 10%
   * Rationale: Accounts for DEX fees (2-5%), gas, slippage
 
 - INTRADAY: 24 hours
-  * Minimum profit target: 20%
-  * Typical target: 25-40%
+  * Minimum profit target: 12%
+  * Typical target: 15-30%
   * Stop-loss: 15%
 
 - SWING: 7 days
-  * Minimum profit target: 30%
-  * Typical target: 40-80%
+  * Minimum profit target: 20%
+  * Typical target: 25-50%
   * Stop-loss: 20%
 
 - POSITION: 30 days
-  * Minimum profit target: 50%
-  * Typical target: 100%+
+  * Minimum profit target: 30%
+  * Typical target: 40-80%
   * Stop-loss: 25%
 
 #### Trading Windows (4x Daily)
