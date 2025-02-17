@@ -166,9 +166,9 @@ def generate_chart(df, config, support_levels=None):
         avg_price = df['Close'].mean()
         avg_volume = df['Volume'].mean()
         price_change = ((df['Close'].iloc[-1] - df['Close'].iloc[0]) / df['Close'].iloc[0]) * 100
-    
-    # Create more detailed title components
-    main_title = config['title']
+
+        # Create more detailed title components
+        main_title = config['title']
     price_stats = (
         f"Current: {current_price:.4f} ({price_change:+.2f}%) | "
         f"ATH: {ath:.4f} | ATL: {atl:.4f} | "
