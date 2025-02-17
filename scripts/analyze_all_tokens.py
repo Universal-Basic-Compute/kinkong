@@ -190,15 +190,14 @@ async def analyze_token(token):
                     print("Save error attributes:", save_error.__dict__)
                 raise
             
-            # Generate signal using the already-performed analysis
-            signal_message = generate_signal(serializable_analyses, {
-                'symbol': token['symbol'],
-                'mint': token['mint']
-            })
-            print(f"\nCompleted analysis and signal generation for {token['symbol']}")
-            
-            # If we get here, processing was successful
-            break
+            # Store analysis for batch processing
+            return {
+                'token_info': {
+                    'symbol': token['symbol'],
+                    'mint': token['mint']
+                },
+                'analyses': serializable_analyses
+            }
             
         except Exception as e:
             if attempt == retries - 1:
@@ -221,13 +220,28 @@ async def main():
             print("No active tokens found")
             return
             
-        # Process tokens sequentially to avoid rate limits
+        # Collect analyses for all tokens
+        analyses = []
         total = len(tokens)
+        
         for i, token in enumerate(tokens, 1):
             print(f"\nProcessing token {i}/{total}: {token['symbol']}")
-            await analyze_token(token)
+            result = await analyze_token(token)
+            if result:
+                analyses.append(result)
             # Add delay between tokens
             await asyncio.sleep(5)
+        
+        # Process all signals in batch
+        if analyses:
+            print(f"\nProcessing {len(analyses)} token analyses in batch...")
+            from analyze_charts import process_signals_batch
+            signals = process_signals_batch([
+                (a['token_info'], a['analyses']) for a in analyses
+            ])
+            print(f"Processed {len(signals)} signals")
+        else:
+            print("\nNo analyses to process")
             
         print("\n✅ Token analysis completed")
         

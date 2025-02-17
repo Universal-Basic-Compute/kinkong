@@ -556,6 +556,79 @@ def create_airtable_signal(analysis, timeframe, token_info):
             print(f"Error attributes: {e.__dict__}")
         return None
 
+def process_signals_batch(token_analyses):
+    """
+    Process multiple token analyses in batch
+    
+    Args:
+        token_analyses: List of (token_info, analyses) tuples
+    """
+    pending_signals = []
+    
+    # First collect all potential signals
+    for token_info, analyses in token_analyses:
+        timeframe_analyses = {k: v for k, v in analyses.items() if k != 'overall'}
+        
+        for timeframe, analysis in timeframe_analyses.items():
+            if analysis and analysis.get('signal') != 'HOLD' and analysis.get('confidence', 0) >= 60:
+                # Validate signal before adding to batch
+                validation_result = validate_signal(
+                    timeframe=timeframe,
+                    signal_data={
+                        'signal': analysis.get('signal'),
+                        'entryPrice': analysis.get('key_levels', {}).get('support', [0])[0],
+                        'targetPrice': analysis.get('key_levels', {}).get('resistance', [0])[0],
+                        'stopLoss': analysis.get('key_levels', {}).get('support', [0, 0])[1]
+                    },
+                    token_info=token_info,
+                    market_data=get_dexscreener_data(token_info['mint'])
+                )
+                
+                if validation_result['valid']:
+                    pending_signals.append({
+                        'token_info': token_info,
+                        'timeframe': timeframe,
+                        'analysis': analysis,
+                        'validation': validation_result
+                    })
+    
+    print(f"\nCollected {len(pending_signals)} valid signals for batch processing")
+    
+    # Then process all signals in batch
+    processed_signals = []
+    for signal in pending_signals:
+        try:
+            result = create_airtable_signal(
+                signal['analysis'],
+                signal['timeframe'],
+                signal['token_info']
+            )
+            if result:
+                processed_signals.append({
+                    'token': signal['token_info']['symbol'],
+                    'timeframe': signal['timeframe'],
+                    'signal': signal['analysis'].get('signal'),
+                    'confidence': signal['analysis'].get('confidence')
+                })
+        except Exception as e:
+            print(f"Failed to process signal for {signal['token_info']['symbol']}: {e}")
+            continue
+    
+    # Generate and send combined message for all processed signals
+    if processed_signals:
+        message = "🔄 Batch Signal Update\n\n"
+        
+        for signal in processed_signals:
+            message += f"${signal['token']} {signal['timeframe']}: {signal['signal']} "
+            message += f"({signal['confidence']}% confidence)\n"
+        
+        send_telegram_message(message)
+        print("\nSent batch signals to Telegram")
+    else:
+        print("\nNo signals processed in batch")
+    
+    return processed_signals
+
 def generate_signal(analyses, token_info):
     """Generate combined signal from serialized analyses"""
     # Extract timeframe analyses (excluding 'overall' key)
