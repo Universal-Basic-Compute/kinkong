@@ -1,3 +1,19 @@
+import sys
+from pathlib import Path
+import os
+
+# Debug prints
+project_root = Path(__file__).parent.parent
+print(f"Project root: {project_root}")
+print(f"Current working directory: {os.getcwd()}")
+print(f"Python path: {sys.path}")
+print(f"Looking for backend at: {project_root / 'backend'}")
+print(f"Directory contents: {os.listdir(project_root)}")
+
+# Add project root to path
+if str(project_root) not in sys.path:
+    sys.path.append(str(project_root))
+
 from dotenv import load_dotenv
 import os
 from datetime import datetime
