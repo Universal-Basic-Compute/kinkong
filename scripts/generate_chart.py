@@ -198,22 +198,22 @@ def generate_chart(df, config, support_levels=None):
             )
         )
     
-    # Prepare additional plots (moving averages)
-    ema20 = df['Close'].ewm(span=20, adjust=False).mean()
-    ema50 = df['Close'].ewm(span=50, adjust=False).mean()
-    
-    apds = [
-        mpf.make_addplot(ema20, color='yellow', width=0.8, label='EMA20'),
-        mpf.make_addplot(ema50, color='blue', width=0.8, label='EMA50')
-    ]
-    
-    # Add support/resistance lines if provided
-    if support_levels:
-        for level_type, price in support_levels:
-            color = '#22c55e' if level_type == 'support' else '#ef4444'
-            apds.append(
-                mpf.make_addplot([price] * len(df), color=color, linestyle='--')
-            )
+        # Prepare additional plots (moving averages)
+        ema20 = df['Close'].ewm(span=20, adjust=False).mean()
+        ema50 = df['Close'].ewm(span=50, adjust=False).mean()
+        
+        apds = [
+            mpf.make_addplot(ema20, color='yellow', width=0.8, label='EMA20'),
+            mpf.make_addplot(ema50, color='blue', width=0.8, label='EMA50')
+        ]
+        
+        # Add support/resistance lines if provided
+        if support_levels:
+            for level_type, price in support_levels:
+                color = '#22c55e' if level_type == 'support' else '#ef4444'
+                apds.append(
+                    mpf.make_addplot([price] * len(df), color=color, linestyle='--')
+                )
             
     # Define formatters for currency and volume
     def currency_formatter(x, p):
