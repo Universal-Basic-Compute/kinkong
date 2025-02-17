@@ -4,9 +4,8 @@ import path from 'path';
 import { getTable } from '../backend/src/airtable/tables';
 import { FieldSet } from 'airtable';
 
-declare global {
-  var fetch: typeof fetch;
-}
+import fetch from 'node-fetch';
+import { Response } from 'node-fetch';
 
 interface BirdeyeResponse {
   volume24h?: number;
