@@ -585,87 +585,76 @@ def create_airtable_signal(analysis, timeframe, token_info):
         return None
 
 def process_signals_batch(token_analyses):
-    """
-    Process multiple token analyses in batch
-    
-    Args:
-        token_analyses: List of (token_info, analyses) tuples
-    """
     print("\nProcessing signals batch...")
     pending_signals = []
     
-    # First collect all potential signals
+    # Define valid timeframe mappings
+    VALID_TIMEFRAMES = {
+        '8h': 'SWING',
+        '2h': 'INTRADAY',
+        '45D': 'POSITION'  # Add mapping for 45D timeframe
+    }
+    
     for token_info, analyses in token_analyses:
-        print(f"\nAnalyzing {token_info['symbol']}:")
-        timeframe_analyses = {k: v for k, v in analyses.items() if k != 'overall'}
+        print(f"\n🔄 Processing {token_info['symbol']}...")
+        
+        # Filter only valid timeframes
+        timeframe_analyses = {
+            tf: analysis for tf, analysis in analyses.items() 
+            if tf in VALID_TIMEFRAMES and tf != 'overall'
+        }
         
         for timeframe, analysis in timeframe_analyses.items():
             print(f"\nTimeframe {timeframe}:")
-            print(f"Signal: {analysis.get('signal')}")
-            print(f"Confidence: {analysis.get('confidence')}")
             
-            if analysis and analysis.get('signal') != 'HOLD' and analysis.get('confidence', 0) >= 60:
-                print("Signal meets initial criteria")
-                # Validate signal before adding to batch
+            # Extract signal details
+            signal_type = analysis.signal if isinstance(analysis, ChartAnalysis) else analysis.get('signal')
+            confidence = analysis.confidence if isinstance(analysis, ChartAnalysis) else analysis.get('confidence', 0)
+            
+            print(f"Signal: {signal_type}")
+            print(f"Confidence: {confidence}")
+            
+            if signal_type and signal_type != 'HOLD' and confidence >= 60:
+                print("✅ Signal meets initial criteria")
+                
+                # Map timeframe to strategy timeframe
+                strategy_timeframe = VALID_TIMEFRAMES[timeframe]
+                print(f"Mapped timeframe: {timeframe} -> {strategy_timeframe}")
+                
+                # Create signal data
+                signal_data = {
+                    'timeframe': strategy_timeframe,
+                    'signal': signal_type,
+                    'confidence': confidence,
+                    'token_info': token_info
+                }
+                
+                # Validate signal
                 validation_result = validate_signal(
-                    timeframe=timeframe,
-                    signal_data={
-                        'signal': analysis.get('signal'),
-                        'entryPrice': analysis.get('key_levels', {}).get('support', [0])[0],
-                        'targetPrice': analysis.get('key_levels', {}).get('resistance', [0])[0],
-                        'stopLoss': analysis.get('key_levels', {}).get('support', [0, 0])[1]
-                    },
+                    timeframe=strategy_timeframe,
+                    signal_data=signal_data,
                     token_info=token_info,
                     market_data=get_dexscreener_data(token_info['mint'])
                 )
+                
                 print(f"Validation result: {validation_result}")
                 
                 if validation_result['valid']:
-                    print("Validation passed, adding to pending signals")
-                    pending_signals.append({
-                        'token_info': token_info,
-                        'timeframe': timeframe,
-                        'analysis': analysis,
-                        'validation': validation_result
-                    })
-    
-    print(f"\nCollected {len(pending_signals)} valid signals for batch processing")
-    
-    # Then process all signals in batch
-    processed_signals = []
-    for signal in pending_signals:
-        try:
-            result = create_airtable_signal(
-                signal['analysis'],
-                signal['timeframe'],
-                signal['token_info']
-            )
-            if result:
-                print(f"Successfully processed signal for {signal['token_info']['symbol']}")
-                processed_signals.append({
-                    'token': signal['token_info']['symbol'],
-                    'timeframe': signal['timeframe'],
-                    'signal': signal['analysis'].get('signal'),
-                    'confidence': signal['analysis'].get('confidence')
-                })
-        except Exception as e:
-            print(f"Failed to process signal for {signal['token_info']['symbol']}: {e}")
-            continue
-    
-    # Generate and send combined message for all processed signals
-    if processed_signals:
-        message = "🔄 Batch Signal Update\n\n"
-        
-        for signal in processed_signals:
-            message += f"${signal['token']} {signal['timeframe']}: {signal['signal']} "
-            message += f"({signal['confidence']}% confidence)\n"
-        
-        send_telegram_message(message)
-        print("\nSent batch signals to Telegram")
-    else:
-        print("\nNo signals processed in batch")
-    
-    return processed_signals
+                    print("✅ Validation passed, adding to pending signals")
+                    pending_signals.append(signal_data)
+                else:
+                    print(f"❌ Validation failed: {validation_result['reason']}")
+            else:
+                print("❌ Signal did not meet criteria:")
+                if not signal_type:
+                    print("- No signal type")
+                if signal_type == 'HOLD':
+                    print("- HOLD signal")
+                if confidence < 60:
+                    print(f"- Low confidence ({confidence})")
+
+    print(f"\nCollected {len(pending_signals)} valid signals for processing")
+    return process_valid_signals(pending_signals)
 
 def generate_signal(analyses, token_info):
     """Generate combined signal from serialized analyses"""
@@ -792,3 +781,44 @@ def main():
 
 if __name__ == "__main__":
     main()
+def process_valid_signals(pending_signals):
+    """Process signals that have passed validation"""
+    processed_signals = []
+    
+    for signal in pending_signals:
+        try:
+            print(f"\nCreating signal for {signal['token_info']['symbol']}...")
+            result = create_airtable_signal(
+                signal,
+                signal['timeframe'],
+                signal['token_info']
+            )
+            
+            if result:
+                print("✅ Signal created successfully")
+                processed_signals.append({
+                    'token': signal['token_info']['symbol'],
+                    'timeframe': signal['timeframe'],
+                    'signal': signal['signal'],
+                    'confidence': signal['confidence']
+                })
+            else:
+                print("❌ Failed to create signal")
+                
+        except Exception as e:
+            print(f"❌ Error processing signal: {e}")
+            continue
+    
+    # Send batch notification if any signals were processed
+    if processed_signals:
+        message = "🤖 New Trading Signals\n\n"
+        for signal in processed_signals:
+            message += f"${signal['token']} {signal['timeframe']}: {signal['signal']} "
+            message += f"({signal['confidence']}% confidence)\n"
+        
+        send_telegram_message(message)
+        print("\n✅ Sent batch signals to Telegram")
+    else:
+        print("\n⚠️ No signals to process")
+    
+    return processed_signals
