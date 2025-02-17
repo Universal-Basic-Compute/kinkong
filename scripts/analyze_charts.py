@@ -641,8 +641,27 @@ def process_signals_batch(token_analyses):
             print(f"Confidence: {confidence}")
             print(f"Key levels: {key_levels}")
             
-            if signal_type and signal_type != 'HOLD' and confidence >= 60 and key_levels:
+            if signal_type and signal_type != 'HOLD' and confidence >= 60:
                 print("✅ Signal meets criteria for creation")
+                
+                # Safely get support and resistance levels
+                support_levels = key_levels.get('support', []) if key_levels else []
+                resistance_levels = key_levels.get('resistance', []) if key_levels else []
+                
+                # Only proceed if we have at least one level for each
+                if not support_levels or not resistance_levels:
+                    print("❌ Insufficient price levels")
+                    continue
+                
+                # For stop loss, use second level if available, otherwise calculate from first level
+                if signal_type == 'SELL':
+                    entry_price = resistance_levels[0]
+                    target_price = support_levels[0]
+                    stop_loss = support_levels[1] if len(support_levels) > 1 else support_levels[0] * 1.05  # 5% above support
+                else:  # BUY
+                    entry_price = support_levels[0]
+                    target_price = resistance_levels[0]
+                    stop_loss = resistance_levels[1] if len(resistance_levels) > 1 else resistance_levels[0] * 0.95  # 5% below resistance
                 
                 # Create signal data with key levels
                 signal_data = {
@@ -650,10 +669,10 @@ def process_signals_batch(token_analyses):
                     'signal': signal_type,
                     'confidence': confidence,
                     'token_info': token_info,
-                    'key_levels': key_levels,  # Add key levels to signal data
-                    'entryPrice': key_levels['resistance'][0] if signal_type == 'SELL' else key_levels['support'][0],
-                    'targetPrice': key_levels['support'][0] if signal_type == 'SELL' else key_levels['resistance'][0],
-                    'stopLoss': key_levels['support'][1] if signal_type == 'SELL' else key_levels['resistance'][1]
+                    'key_levels': key_levels,
+                    'entryPrice': entry_price,
+                    'targetPrice': target_price,
+                    'stopLoss': stop_loss
                 }
                 
                 # Validate signal
