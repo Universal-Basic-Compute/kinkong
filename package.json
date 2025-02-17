@@ -22,7 +22,7 @@
     "@types/dotenv": "^8.2.3",
     "@types/node-fetch": "2.6.12",
     "airtable": "^0.12.2",
-    "d3-force-graph": "^0.4.3",
+    "force-graph": "^1.43.4",
     "dotenv": "^16.4.7",
     "framer-motion": "^11.0.3",
     "next": "14.0.0",

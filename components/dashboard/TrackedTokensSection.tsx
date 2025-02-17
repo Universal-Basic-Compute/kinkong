@@ -1,4 +1,4 @@
-import { BubbleChart } from '@/components/dashboard/BubbleChart';
+import { ForceGraph } from '@/components/dashboard/ForceGraph';
 import { TokenInfoTable } from '@/components/dashboard/TokenInfoTable';
 
 interface TokenInfo {
@@ -9,6 +9,7 @@ interface TokenInfo {
   liquidity: number;
   volumeGrowth: number;
   pricePerformance: number;
+  marketCap: number;
 }
 
 interface TrackedTokensSectionProps {
@@ -37,7 +38,7 @@ export function TrackedTokensSection({ tokens, isLoading, error }: TrackedTokens
       ) : error ? (
         <div className="text-red-400">Error: {error}</div>
       ) : (
-        <BubbleChart tokens={tokens} />
+        <ForceGraph tokens={tokens} />
       )}
 
       <TokenInfoTable tokens={tokens} isLoading={isLoading} error={error} />
