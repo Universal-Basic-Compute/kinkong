@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { MetricsDisplay } from '@/components/home/MetricsDisplay';
 
 export default function Home() {
   return (
@@ -67,17 +68,7 @@ export default function Home() {
       <section className="metrics py-20 px-4 bg-gradient-to-b from-black to-darkred/20">
         <h2 className="text-4xl font-bold text-center mb-12 text-gold electric-text">Real Performance Metrics</h2>
         <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-          {[
-            { label: "Weekly Revenue", value: "1.76M", unit: "$COMPUTE" },
-            { label: "Profit Share", value: "75%", unit: "Weekly Distribution" },
-            { label: "Trading Volume", value: "14.16M", unit: "$COMPUTE Total" }
-          ].map((metric, i) => (
-            <div key={i} className="metric p-6 rounded-lg metallic-surface border border-gold/10 text-center transition-all hover-effect">
-              <h4 className="text-gray-300 mb-2">{metric.label}</h4>
-              <p className="text-4xl font-bold text-gold mb-1">{metric.value}</p>
-              <p className="text-sm text-gray-400">{metric.unit}</p>
-            </div>
-          ))}
+          <MetricsDisplay />
         </div>
       </section>
 
