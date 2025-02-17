@@ -26,27 +26,27 @@ class TimeframeRequirements:
 TIMEFRAME_REQS = {
     'SCALP': TimeframeRequirements(
         timeframe='SCALP',
-        min_target=0.15,      # 15%
-        typical_target=(0.20, 0.30),  # 20-30%
-        stop_loss=0.10        # 10%
+        min_target=0.08,      # Reduced from 0.15 (15%) to 8%
+        typical_target=(0.10, 0.20),  # Reduced from (20-30%) to 10-20%
+        stop_loss=0.10        # Keep same stop loss
     ),
     'INTRADAY': TimeframeRequirements(
         timeframe='INTRADAY',
-        min_target=0.20,      # 20%
-        typical_target=(0.25, 0.40),  # 25-40%
-        stop_loss=0.15        # 15%
+        min_target=0.12,      # Reduced from 0.20 (20%) to 12%
+        typical_target=(0.15, 0.30),  # Reduced from (25-40%) to 15-30%
+        stop_loss=0.15        # Keep same stop loss
     ),
     'SWING': TimeframeRequirements(
         timeframe='SWING',
-        min_target=0.30,      # 30%
-        typical_target=(0.40, 0.80),  # 40-80%
-        stop_loss=0.20        # 20%
+        min_target=0.20,      # Reduced from 0.30 (30%) to 20%
+        typical_target=(0.25, 0.50),  # Reduced from (40-80%) to 25-50%
+        stop_loss=0.20        # Keep same stop loss
     ),
     'POSITION': TimeframeRequirements(
         timeframe='POSITION',
-        min_target=0.50,      # 50%
-        typical_target=(1.0, 2.0),    # 100%+
-        stop_loss=0.25        # 25%
+        min_target=0.30,      # Reduced from 0.50 (50%) to 30%
+        typical_target=(0.40, 0.80),  # Reduced from (100%+) to 40-80%
+        stop_loss=0.25        # Keep same stop loss
     )
 }
 
