@@ -284,10 +284,10 @@ export default function Dashboard() {
         </div>
 
         <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
-          {isTokensLoading ? (
+          {isTrackedTokensLoading ? (
             <div className="text-center py-4">Loading tokens...</div>
-          ) : tokenError ? (
-            <div className="text-center py-4 text-red-400">Error: {tokenError}</div>
+          ) : trackedTokensError ? (
+            <div className="text-center py-4 text-red-400">Error: {trackedTokensError}</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full">
@@ -302,7 +302,7 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {tokens.map((token) => (
+                  {trackedTokens.map((token) => (
                     <tr key={token.mint} className="border-b border-gold/10 hover:bg-gold/5">
                       <td className="px-4 py-2">
                         <a 
