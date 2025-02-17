@@ -7,6 +7,7 @@ import requests
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+import matplotlib.dates as mdates
 
 # Force reload environment variables
 load_dotenv(override=True)
@@ -196,7 +197,6 @@ def generate_chart(df, config, support_levels=None):
         fig, axes = mpf.plot(
             df,
             type='candle',
-            style=style,
             volume=True,
             figsize=(16, 10),
             panel_ratios=(3, 1),
@@ -214,6 +214,22 @@ def generate_chart(df, config, support_levels=None):
                 candle_width=0.8,
                 volume_width=0.8,
                 volume_linewidth=1.0
+            ),
+            style=mpf.make_mpf_style(
+                base_mpf_style='charles',
+                gridstyle=':',
+                gridcolor='rgba(255, 215, 0, 0.1)',
+                facecolor='black',
+                edgecolor='white',
+                figcolor='black',
+                y_on_right=True,
+                gridaxis='both',
+                rc={
+                    'axes.labelcolor': 'white',
+                    'axes.edgecolor': 'white',
+                    'xtick.color': 'white',
+                    'ytick.color': 'white'
+                }
             )
         )
 
@@ -221,9 +237,39 @@ def generate_chart(df, config, support_levels=None):
         ax_main = axes[0]
         ax_volume = axes[2]
 
-        # Enhance grid
-        ax_main.grid(True, linestyle=':', color='rgba(255, 215, 0, 0.1)', alpha=0.3)
-        ax_main.set_axisbelow(True)
+        # Set axis labels
+        ax_main.set_xlabel('Date', color='white', fontsize=12)
+        ax_main.set_ylabel('Price (USD)', color='white', fontsize=12)
+        ax_volume.set_ylabel('Volume', color='white', fontsize=12)
+
+        # Format all axes
+        for ax in [ax_main, ax_volume]:
+            # Show frame
+            ax.spines['top'].set_visible(True)
+            ax.spines['right'].set_visible(True)
+            ax.spines['bottom'].set_visible(True)
+            ax.spines['left'].set_visible(True)
+            
+            # Set spine colors
+            for spine in ax.spines.values():
+                spine.set_color('white')
+            
+            # Format ticks
+            ax.tick_params(axis='both', colors='white', labelsize=10)
+            
+            # Show grid
+            ax.grid(True, linestyle=':', color='rgba(255, 215, 0, 0.1)', alpha=0.3)
+            ax.set_axisbelow(True)
+
+        # Format price axis
+        ax_main.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, p: f'${x:,.4f}'))
+        
+        # Format volume axis
+        ax_volume.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, p: f'${x:,.0f}'))
+        
+        # Format date axis
+        ax_main.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
+        ax_volume.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
 
         # Explicitly set axes visibility
         for ax in [ax_main, ax_volume]:
