@@ -6,8 +6,9 @@ import {
     CandlestickData,
     LineData,
     HistogramData,
-    SeriesOptionsMap,
-    IChartApi,
+    CandlestickSeriesOptions,
+    LineSeriesOptions,
+    HistogramSeriesOptions,
     SeriesType
 } from 'lightweight-charts';
 
@@ -53,19 +54,13 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     const data = await getChartData(token);
     
     // Add candlestick series
-    const candlestickSeries = chart.addSeries<'Candlestick'>({
-        type: 'Candlestick',
+    const candlestickSeries = chart.addSeries<SeriesType.Candlestick>({
+        priceFormat: { type: 'price' },
         upColor: 'rgba(75, 192, 75, 1)',
         downColor: 'rgba(192, 75, 75, 1)',
-        borderVisible: false,
         wickUpColor: 'rgba(75, 192, 75, 1)',
         wickDownColor: 'rgba(192, 75, 75, 1)',
-        borderColor: 'rgba(75, 192, 75, 1)',
-        borderUpColor: 'rgba(75, 192, 75, 1)',
-        borderDownColor: 'rgba(192, 75, 75, 1)',
-        wickColor: 'rgba(75, 192, 75, 1)',
-        wickVisible: true
-    });
+    } as CandlestickSeriesOptions);
     
     // Format data for lightweight-charts
     const candleData: CandlestickData[] = data.candlesticks.map(candle => ({
@@ -79,27 +74,19 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     candlestickSeries.setData(candleData);
     
     // Add EMA lines
-    const ema20Series = chart.addSeries<'Line'>({
-        type: 'Line',
+    const ema20Series = chart.addSeries<SeriesType.Line>({
+        priceFormat: { type: 'price' },
         color: 'rgba(255, 215, 0, 0.8)',
         lineWidth: 1,
-        lineStyle: 0,
         lineType: 0,
-        lineVisible: true,
-        pointMarkersVisible: false,
-        lastPriceAnimation: 0
-    });
+    } as LineSeriesOptions);
     
-    const ema50Series = chart.addSeries<'Line'>({
-        type: 'Line',
+    const ema50Series = chart.addSeries<SeriesType.Line>({
+        priceFormat: { type: 'price' },
         color: 'rgba(75, 192, 192, 0.8)',
         lineWidth: 1,
-        lineStyle: 0,
         lineType: 0,
-        lineVisible: true,
-        pointMarkersVisible: false,
-        lastPriceAnimation: 0
-    });
+    } as LineSeriesOptions);
     
     const ema20Data: LineData[] = data.ema20.map(point => ({
         time: new Date(point.time * 1000).toISOString().split('T')[0] as Time,
@@ -115,15 +102,11 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     ema50Series.setData(ema50Data);
     
     // Add volume
-    const volumeSeries = chart.addSeries<'Histogram'>({
-        type: 'Histogram',
+    const volumeSeries = chart.addSeries<SeriesType.Histogram>({
+        priceFormat: { type: 'volume' },
         color: 'rgba(128, 128, 128, 0.2)',
-        priceFormat: {
-            type: 'volume',
-        },
         priceScaleId: '',
-        base: 0
-    });
+    } as HistogramSeriesOptions);
     
     const volumeData: HistogramData[] = data.volume.map(v => ({
         time: new Date(v.time * 1000).toISOString().split('T')[0] as Time,
