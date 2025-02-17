@@ -18,7 +18,7 @@ export function MetricsDisplay() {
       console.log('🔍 Starting metrics fetch...');
       try {
         const response = await fetch('/api/portfolio-metrics');
-        console.log('📡 API Response:', response.status);
+        console.log('📡 API Response status:', response.status);
         
         if (!response.ok) {
           throw new Error(`Failed to fetch metrics: ${response.status}`);
@@ -28,13 +28,15 @@ export function MetricsDisplay() {
         console.log('📊 Metrics data:', data);
         setMetrics(data);
       } catch (error) {
-        console.error('Error fetching metrics:', error);
+        console.error('❌ Error fetching metrics:', error);
         setError(error instanceof Error ? error.message : 'Unknown error');
       } finally {
         setIsLoading(false);
+        console.log('✅ Metrics fetch complete');
       }
     };
 
+    console.log('🏁 Initializing metrics component');
     fetchMetrics();
   }, []);
 
