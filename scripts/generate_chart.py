@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import requests
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 
 # Force reload environment variables
 load_dotenv(override=True)
@@ -224,33 +225,44 @@ def generate_chart(df, config, support_levels=None):
         ax_main.grid(True, linestyle=':', color='rgba(255, 215, 0, 0.1)', alpha=0.3)
         ax_main.set_axisbelow(True)
 
-        # Format price axis
-        ax_main.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.4f}'))
+        # Explicitly set axes visibility
+        for ax in [ax_main, ax_volume]:
+            # Show all spines
+            for spine in ax.spines.values():
+                spine.set_visible(True)
+                spine.set_color('white')
+                spine.set_linewidth(1.0)
+            
+            # Show grid
+            ax.grid(True, linestyle=':', color='rgba(255, 215, 0, 0.1)', alpha=0.3)
+            ax.set_axisbelow(True)
+
+        # Price axis formatting (right side)
+        ax_main.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, p: f'${x:,.4f}'))
         ax_main.yaxis.set_label_position('right')
         ax_main.yaxis.tick_right()
-        ax_main.tick_params(axis='y', colors='white', labelsize=10)
-        ax_main.spines['left'].set_visible(True)
-        ax_main.spines['right'].set_visible(True)
-        ax_main.spines['top'].set_visible(True)
-        ax_main.spines['bottom'].set_visible(True)
+        ax_main.tick_params(axis='y', colors='white', labelsize=10, length=5)
+        ax_main.set_ylabel('Price (USD)', color='white', fontsize=12)
 
-        # Format volume axis
-        ax_volume.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.0f}'))
+        # Volume axis formatting (right side)
+        ax_volume.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, p: f'${x:,.0f}'))
         ax_volume.yaxis.set_label_position('right')
         ax_volume.yaxis.tick_right()
-        ax_volume.tick_params(axis='y', colors='white', labelsize=10)
-        ax_volume.spines['left'].set_visible(True)
-        ax_volume.spines['right'].set_visible(True)
-        ax_volume.spines['top'].set_visible(True)
-        ax_volume.spines['bottom'].set_visible(True)
+        ax_volume.tick_params(axis='y', colors='white', labelsize=10, length=5)
+        ax_volume.set_ylabel('Volume', color='white', fontsize=12)
 
-        # Format x-axis (dates)
+        # Date axis formatting (bottom)
         for ax in [ax_main, ax_volume]:
-            ax.tick_params(axis='x', colors='white', labelsize=10)
+            ax.tick_params(axis='x', colors='white', labelsize=10, rotation=25, length=5)
             ax.grid(axis='x', color='rgba(255, 215, 0, 0.1)', linestyle=':')
 
-        # Add titles with improved spacing
-        plt.subplots_adjust(top=0.90, right=0.95, left=0.05)
+        # Adjust layout to prevent label cutoff
+        plt.subplots_adjust(
+            top=0.90,    # Top margin
+            right=0.95,  # Right margin
+            left=0.10,   # Left margin
+            bottom=0.15  # Bottom margin for date labels
+        )
 
         # Main title
         fig.text(0.5, 0.96, config['title'],
