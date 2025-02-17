@@ -28,7 +28,7 @@ export async function getTokenPrice(tokenIdentifier: string): Promise<number | n
       const tokensTable = getTable('TOKENS');
       const records = await tokensTable
         .select({
-          filterByFormula: `{symbol} = '${tokenIdentifier}'`
+          filterByFormula: `{name} = '${tokenIdentifier}'`
         })
         .firstPage();
 
