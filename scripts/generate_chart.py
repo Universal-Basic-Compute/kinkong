@@ -110,11 +110,11 @@ def fetch_token_data(timeframe='1h', hours=24, token_address=None):
         df = df.sort_index()
         df = df[~df.index.duplicated(keep='first')]
         
-        print(f"\nFetched {len(df)} candles for UBC/SOL")
+        print(f"\nFetched {len(df)} candles for token {token_address}")  # Updated print statement
         return df
         
     except Exception as e:
-        print(f"Error fetching UBC/SOL data: {e}")
+        print(f"Error fetching data for token {token_address}: {e}")  # Updated error message
         if 'response' in locals():
             print("API Response:", response.text)
         return None
