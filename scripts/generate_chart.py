@@ -160,8 +160,8 @@ def generate_chart(df, config, support_levels=None):
         # Enhanced style with grid
         style = mpf.make_mpf_style(
             base_mpf_style='charles',
-            gridstyle=':',  # Dotted grid
-            gridcolor='rgba(255, 215, 0, 0.1)',  # Gold color with low opacity
+            gridstyle=':',
+            gridcolor='rgba(255, 215, 0, 0.1)',
             facecolor='black',
             edgecolor='white',
             figcolor='black',
@@ -190,15 +190,22 @@ def generate_chart(df, config, support_levels=None):
             style=style,
             volume=True,
             figsize=(16, 10),
-            panel_ratios=(3, 1),  # Price to volume ratio
+            panel_ratios=(3, 1),
             addplot=apds,
             returnfig=True,
-            title='\n\n\n\n',  # Extra space for titles
+            title='\n\n\n\n',
             ylabel='Price (USD)',
             ylabel_lower='Volume',
             datetime_format='%Y-%m-%d %H:%M',
-            xrotation=25,  # Angle date labels for better readability
-            tight_layout=False  # Allow manual layout adjustment
+            xrotation=25,
+            tight_layout=False,
+            show_nontrading=True,
+            update_width_config=dict(
+                candle_linewidth=1.0,
+                candle_width=0.8,
+                volume_width=0.8,
+                volume_linewidth=1.0
+            )
         )
 
         # Get the main price axis and volume axis
@@ -207,20 +214,35 @@ def generate_chart(df, config, support_levels=None):
 
         # Enhance grid
         ax_main.grid(True, linestyle=':', color='rgba(255, 215, 0, 0.1)', alpha=0.3)
-        ax_main.set_axisbelow(True)  # Put grid behind other elements
+        ax_main.set_axisbelow(True)
 
         # Format price axis
         ax_main.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.4f}'))
         ax_main.yaxis.set_label_position('right')
-        ax_main.yaxis.tick_right()  # Move price ticks to right side
+        ax_main.yaxis.tick_right()
+        ax_main.tick_params(axis='y', colors='white', labelsize=10)
+        ax_main.spines['left'].set_visible(True)
+        ax_main.spines['right'].set_visible(True)
+        ax_main.spines['top'].set_visible(True)
+        ax_main.spines['bottom'].set_visible(True)
 
         # Format volume axis
         ax_volume.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.0f}'))
         ax_volume.yaxis.set_label_position('right')
         ax_volume.yaxis.tick_right()
+        ax_volume.tick_params(axis='y', colors='white', labelsize=10)
+        ax_volume.spines['left'].set_visible(True)
+        ax_volume.spines['right'].set_visible(True)
+        ax_volume.spines['top'].set_visible(True)
+        ax_volume.spines['bottom'].set_visible(True)
+
+        # Format x-axis (dates)
+        for ax in [ax_main, ax_volume]:
+            ax.tick_params(axis='x', colors='white', labelsize=10)
+            ax.grid(axis='x', color='rgba(255, 215, 0, 0.1)', linestyle=':')
 
         # Add titles with improved spacing
-        plt.subplots_adjust(top=0.90)  # Adjust top margin for titles
+        plt.subplots_adjust(top=0.90, right=0.95, left=0.05)
 
         # Main title
         fig.text(0.5, 0.96, config['title'],
@@ -263,6 +285,14 @@ def generate_chart(df, config, support_levels=None):
                     color='#a0a0a0',
                     fontsize=9)
 
+        # Add legend
+        ax_main.legend(loc='upper left', 
+                      bbox_to_anchor=(0.05, 0.95),
+                      facecolor='black',
+                      edgecolor='white',
+                      fontsize=10,
+                      labelcolor='white')
+
         # Add timestamp
         fig.text(0.98, 0.02,
                 f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M UTC')}",
@@ -270,7 +300,7 @@ def generate_chart(df, config, support_levels=None):
                 color='#808080',
                 fontsize=8)
 
-        # Save chart with high quality
+        # Save chart
         charts_dir = os.path.join('public', 'charts')
         os.makedirs(charts_dir, exist_ok=True)
         output_path = os.path.join(charts_dir, config['filename'])
