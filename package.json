@@ -24,6 +24,7 @@
     "airtable": "^0.12.2",
     "dotenv": "^16.4.7",
     "force-graph": "^1.43.4",
+    "force-graph": "^1.43.4",
     "framer-motion": "^11.0.3",
     "next": "14.0.0",
     "node-fetch": "^2.7.0",
