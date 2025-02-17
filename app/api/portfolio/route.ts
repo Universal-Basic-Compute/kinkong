@@ -63,7 +63,6 @@ export async function GET() {
       }
 
       const pricesData = await pricesResponse.json();
-      console.log('DexScreener response:', pricesData);
 
       // Create price map from DexScreener response
       const priceMap: Record<string, number> = {};

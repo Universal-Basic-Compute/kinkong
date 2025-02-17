@@ -50,7 +50,6 @@ export async function getTokenPrice(tokenIdentifier: string): Promise<number | n
     }
 
     const data = await response.json();
-    console.log('DexScreener response:', data);
 
     if (data.pairs) {
       // Create price map from DexScreener response
