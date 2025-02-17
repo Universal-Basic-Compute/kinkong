@@ -46,14 +46,16 @@ export async function updateTradeHistory(results: any[]) {
   
   for (const result of results) {
     if (result.success) {
-      await table.create({
-        timestamp: new Date().toISOString(),
-        token: result.token,
-        action: result.action,
-        amount: result.amount,
-        price: result.price,
-        txId: result.txId
-      });
+      await table.create([{
+        fields: {
+          timestamp: new Date().toISOString(),
+          token: result.token,
+          action: result.action,
+          amount: result.amount,
+          price: result.price,
+          txId: result.txId
+        }
+      }]);
     }
   }
 }
