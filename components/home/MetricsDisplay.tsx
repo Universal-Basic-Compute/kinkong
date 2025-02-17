@@ -1,52 +1,44 @@
 'use client';
 import { useEffect, useState } from 'react';
 
-interface PortfolioMetrics {
-  totalValue: number;
-  change24h: number;
-  change7d: number;
-  history: Array<{timestamp: string; value: number}>;
-}
-
 export function MetricsDisplay() {
-  const [metrics, setMetrics] = useState<PortfolioMetrics | null>(null);
+  const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [rawResponse, setRawResponse] = useState<string>('No data yet');
 
   useEffect(() => {
-    const fetchMetrics = async () => {
-      console.log('🔍 Starting metrics fetch...');
+    async function fetchData() {
       try {
+        console.log('Fetching metrics data...');
         const response = await fetch('/api/portfolio-metrics');
-        console.log('📡 API Response status:', response.status);
+        console.log('Response status:', response.status);
         
-        // Get the raw response text
-        const rawText = await response.text();
-        setRawResponse(rawText);
-        
-        // Parse the JSON after getting raw text
-        const data = JSON.parse(rawText);
-        console.log('📊 Metrics data:', data);
-        setMetrics(data);
+        const text = await response.text();
+        console.log('Raw response:', text);
+
+        if (text) {
+          const json = JSON.parse(text);
+          console.log('Parsed data:', json);
+          setData(json);
+        }
       } catch (error) {
-        console.error('❌ Error fetching metrics:', error);
-        setError(error instanceof Error ? error.message : 'Unknown error');
+        console.error('Error fetching metrics:', error);
       } finally {
         setIsLoading(false);
-        console.log('✅ Metrics fetch complete');
       }
-    };
+    }
 
-    console.log('🏁 Initializing metrics component');
-    fetchMetrics();
+    fetchData();
   }, []);
 
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <div className="w-full">
-      <h3 className="text-xl font-bold mb-4">Raw Response:</h3>
-      <pre className="bg-black/30 p-4 rounded-lg overflow-x-auto whitespace-pre-wrap">
-        {rawResponse}
+    <div className="w-full p-4 bg-black/30 rounded-lg">
+      <h2 className="text-xl mb-4">Portfolio Metrics</h2>
+      <pre className="overflow-auto">
+        {JSON.stringify(data, null, 2)}
       </pre>
     </div>
   );
