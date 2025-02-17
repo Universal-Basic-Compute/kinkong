@@ -74,26 +74,6 @@ const TOKEN_METADATA: Record<string, TokenMetadata> = {
   }
 };
 
-function getTokenClass(token: string): string {
-  const upperToken = token.toUpperCase();
-  switch (upperToken) {
-    case 'UBC':
-      return 'metallic-text-ubc';
-    case 'COMPUTE':
-      return 'metallic-text-compute';
-    case 'SOL':
-      return 'metallic-text-sol';
-    case 'VIRTUAL':
-    case 'AI16Z':
-    case 'AIXBT':
-    case 'GRIFFAIN':
-    case 'GOAT':
-    case 'ZEREBRO':
-      return 'metallic-text-argent';
-    default:
-      return 'metallic-text-argent';
-  }
-}
 
 function formatTokenSymbol(token: string): string {
   return token.startsWith('$') ? token : `$${token}`;

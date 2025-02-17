@@ -5,16 +5,6 @@ import { SignalHistory } from '@/components/signals/SignalHistory'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useState, useEffect } from 'react'
 
-interface TokenInfo {
-  symbol: string;
-  name: string;
-  mint: string;
-  volume7d: number;
-  liquidity: number;
-  volumeGrowth: number;
-  pricePerformance: number;
-}
-
 function InvestmentCard() {
   const { publicKey } = useWallet();
   const [investment, setInvestment] = useState<{
@@ -23,26 +13,6 @@ function InvestmentCard() {
     solscanUrl: string;
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [tokens, setTokens] = useState<TokenInfo[]>([]);
-  const [isTokensLoading, setIsTokensLoading] = useState(true);
-  const [tokenError, setTokenError] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function fetchTokens() {
-      try {
-        const response = await fetch('/api/tokens');
-        if (!response.ok) throw new Error('Failed to fetch tokens');
-        const data = await response.json();
-        setTokens(data);
-      } catch (err) {
-        setTokenError(err instanceof Error ? err.message : 'Failed to load tokens');
-      } finally {
-        setIsTokensLoading(false);
-      }
-    }
-
-    fetchTokens();
-  }, []);
 
   useEffect(() => {
     async function fetchInvestment() {
