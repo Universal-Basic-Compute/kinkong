@@ -183,20 +183,20 @@ def generate_chart(df, config, support_levels=None):
         )
 
         # Style configuration
-    style = mpf.make_mpf_style(
-        base_mpf_style='charles',
-        gridstyle='',
-        facecolor='black',
-        edgecolor='white',
-        figcolor='black',
-        marketcolors=mpf.make_marketcolors(
-            up='#22c55e',
-            down='#ef4444',
-            edge='inherit',
-            wick='inherit',
-            volume='gray'
+        style = mpf.make_mpf_style(
+            base_mpf_style='charles',
+            gridstyle='',
+            facecolor='black',
+            edgecolor='white',
+            figcolor='black',
+            marketcolors=mpf.make_marketcolors(
+                up='#22c55e',
+                down='#ef4444',
+                edge='inherit',
+                wick='inherit',
+                volume='gray'
+            )
         )
-    )
     
     # Prepare additional plots (moving averages)
     ema20 = df['Close'].ewm(span=20, adjust=False).mean()
