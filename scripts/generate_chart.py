@@ -53,7 +53,7 @@ CHART_CONFIGS = [
     }
 ]
 
-def fetch_ubc_sol_data(timeframe='1h', hours=24, token_address="9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump"):
+def fetch_token_data(timeframe='1h', hours=24, token_address=None):
     url = "https://public-api.birdeye.so/defi/ohlcv"
     headers = {
         "X-API-KEY": os.getenv('BIRDEYE_API_KEY'),

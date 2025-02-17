@@ -209,7 +209,7 @@ Format your response as JSON:
     }
 }"""
 
-def analyze_charts_with_claude(chart_paths):
+def analyze_charts_with_claude(chart_paths, token_info=None):
     """Analyze multiple timeframe charts together using Claude 3"""
     try:
         # Force reload environment variables
@@ -229,7 +229,7 @@ def analyze_charts_with_claude(chart_paths):
         )
         
         # Get market data and context
-        market_data = get_dexscreener_data()
+        market_data = get_dexscreener_data(token_info['mint'] if token_info else None)
         market_context = get_market_context()
 
         # Prepare all chart images
@@ -258,7 +258,7 @@ Current Market Data:
 • Market Cap: ${market_data['market_cap']:,.2f}
 """
 
-        user_prompt = f"""I'm providing you with three timeframe charts (15m, 2h, and 8h) for a complete multi-timeframe analysis.
+        user_prompt = f"""I'm providing you with three timeframe charts for {token_info['symbol'] if token_info else 'UBC'}/USD for a complete multi-timeframe analysis.
 
 {market_data_str}
 
@@ -333,7 +333,7 @@ Analyze each timeframe in sequence, considering how they relate to each other:
         print(f"Failed to analyze charts: {e}")
         raise
 
-def create_airtable_signal(analysis, timeframe):
+def create_airtable_signal(analysis, timeframe, token_symbol='UBC'):
     """Create a signal record in Airtable"""
     try:
         # Initialize Airtable
@@ -377,7 +377,7 @@ def create_airtable_signal(analysis, timeframe):
         if analysis.signal in ['BUY', 'SELL']:
             signal_data = {
                 'timestamp': datetime.now(timezone.utc).isoformat(),
-                'token': 'UBC',
+                'token': token_symbol,
                 'type': analysis.signal,
                 'timeframe': timeframe_mapping.get(timeframe, 'INTRADAY'),
                 'entryPrice': current_price,

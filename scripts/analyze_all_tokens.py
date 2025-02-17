@@ -3,6 +3,12 @@ import os
 from datetime import datetime
 import asyncio
 from airtable import Airtable
+from ratelimit import limits, sleep_and_retry
+
+@sleep_and_retry
+@limits(calls=5, period=1)  # 5 calls per second
+def rate_limited_fetch(timeframe, hours, token_address):
+    return fetch_token_data(timeframe, hours, token_address)
 import json
 from pathlib import Path
 from generate_chart import generate_chart, fetch_ubc_sol_data, calculate_support_levels
@@ -64,7 +70,9 @@ async def get_active_tokens():
 
 async def analyze_token(token):
     """Generate and analyze charts for a single token"""
-    try:
+    retries = 3
+    for attempt in range(retries):
+        try:
         print(f"\n🔄 Processing {token['symbol']}...")
         
         # Create token-specific directory
@@ -134,8 +142,12 @@ async def analyze_token(token):
         else:
             print(f"No analysis generated for {token['symbol']}")
             
-    except Exception as e:
-        print(f"Error processing {token['symbol']}: {e}")
+        except Exception as e:
+            if attempt == retries - 1:
+                print(f"Failed all retries for {token['symbol']}: {e}")
+                return
+            print(f"Attempt {attempt + 1} failed, retrying in 10s...")
+            await asyncio.sleep(10)
 
 async def main():
     try:
@@ -149,7 +161,9 @@ async def main():
             return
             
         # Process tokens sequentially to avoid rate limits
-        for token in tokens:
+        total = len(tokens)
+        for i, token in enumerate(tokens, 1):
+            print(f"\nProcessing token {i}/{total}: {token['symbol']}")
             await analyze_token(token)
             # Add delay between tokens
             await asyncio.sleep(5)
