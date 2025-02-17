@@ -28,15 +28,14 @@ class ChartAnalysis:
 def send_telegram_message(message):
     """Send message to Telegram channel"""
     token = os.getenv('TELEGRAM_BOT_TOKEN')
-    chat_id = os.getenv('TELEGRAM_CHAT_ID')
     
-    if not token or not chat_id:
-        print("Telegram configuration missing")
+    if not token:
+        print("Telegram bot token missing")
         return
         
     url = f"https://api.telegram.org/bot{token}/sendMessage"
     data = {
-        "chat_id": chat_id,
+        "chat_id": -1002276145657,  # Hardcoded chat ID
         "text": message,
         "parse_mode": "HTML"
     }

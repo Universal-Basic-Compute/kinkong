@@ -1,6 +1,6 @@
 export async function sendTelegramMessage(message: string) {
-  if (!process.env.TELEGRAM_BOT_TOKEN || !process.env.TELEGRAM_CHAT_ID) {
-    console.warn('Telegram configuration missing');
+  if (!process.env.TELEGRAM_BOT_TOKEN) {
+    console.warn('Telegram bot token missing');
     return;
   }
 
@@ -13,7 +13,7 @@ export async function sendTelegramMessage(message: string) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          chat_id: process.env.TELEGRAM_CHAT_ID,
+          chat_id: -1002276145657, // Hardcoded chat ID
           text: message,
           parse_mode: 'HTML',
         }),
