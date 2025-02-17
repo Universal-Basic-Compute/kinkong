@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { executeTrade } from '@/utils/jupiter_trade';
+import { executeTrade } from '@/backend/src/utils/jupiter_trade';
 
 export async function POST(request: Request) {
   try {
