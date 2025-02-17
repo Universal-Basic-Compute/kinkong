@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 
 // Add debug logging
-console.log('Initializing Airtable client...', {
+console.log('⚙️ Initializing Airtable client...', {
   hasApiKey: !!process.env.KINKONG_AIRTABLE_API_KEY,
   hasBaseId: !!process.env.KINKONG_AIRTABLE_BASE_ID,
   nodeEnv: process.env.NODE_ENV,

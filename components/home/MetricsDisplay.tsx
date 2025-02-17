@@ -15,17 +15,17 @@ export function MetricsDisplay() {
 
   useEffect(() => {
     const fetchMetrics = async () => {
+      console.log('🔍 Starting metrics fetch...');
       try {
-        console.log('Fetching metrics...');
         const response = await fetch('/api/portfolio-metrics');
-        console.log('Response status:', response.status);
+        console.log('📡 API Response:', response.status);
         
         if (!response.ok) {
           throw new Error(`Failed to fetch metrics: ${response.status}`);
         }
         
         const data = await response.json();
-        console.log('Received metrics data:', data);
+        console.log('📊 Metrics data:', data);
         setMetrics(data);
       } catch (error) {
         console.error('Error fetching metrics:', error);

@@ -2,9 +2,16 @@ import { NextResponse } from 'next/server';
 import { getTable } from '@/backend/src/airtable/tables';
 
 export async function GET() {
+  console.log('🎯 API route handler started');
   try {
-    console.log('Starting portfolio metrics fetch...');
     const table = getTable('PORTFOLIO_SNAPSHOTS');
+    console.log('📋 Got Airtable table reference');
+
+    // Log environment variables (without exposing values)
+    console.log('🔑 Environment check:', {
+      hasApiKey: !!process.env.KINKONG_AIRTABLE_API_KEY,
+      hasBaseId: !!process.env.KINKONG_AIRTABLE_BASE_ID
+    });
     
     // Get current snapshot and historical snapshots
     const now = new Date();
