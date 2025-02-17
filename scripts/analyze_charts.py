@@ -420,9 +420,20 @@ Analyze each timeframe in sequence, considering how they relate to each other:
 def create_airtable_signal(analysis, timeframe, token_info):
     """Create a signal record in Airtable and check for immediate execution"""
     try:
+        print(f"\nCreating Airtable signal for {token_info['symbol']}...")
+        print(f"Analysis type: {type(analysis)}")
+        print(f"Analysis content: {analysis}")
+        
         # Initialize Airtable
         base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
         api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
+        
+        if not base_id or not api_key:
+            print("❌ Airtable configuration missing")
+            return
+            
+        print("✅ Airtable configuration found")
+        airtable = Airtable(base_id, 'SIGNALS', api_key)
         
         # Calculate expiry date based on timeframe
         now = datetime.now(timezone.utc)
@@ -595,8 +606,12 @@ def create_airtable_signal(analysis, timeframe, token_info):
         return None
 
 def process_signals_batch(token_analyses):
-    print("\nProcessing signals batch...")
+    print("\n🔄 Processing signals batch...")
     pending_signals = []
+    
+    # Add debug counter
+    total_tokens = len(token_analyses)
+    processed_count = 0
     
     # Update timeframe mappings to include 15m
     VALID_TIMEFRAMES = {
@@ -607,7 +622,18 @@ def process_signals_batch(token_analyses):
     }
     
     for token_info, analyses in token_analyses:
-        print(f"\n🔄 Processing {token_info['symbol']}...")
+        processed_count += 1
+        print(f"\n[{processed_count}/{total_tokens}] Processing {token_info['symbol']}...")
+        
+        # Debug print the analyses structure
+        print(f"Analysis keys: {analyses.keys()}")
+        for tf, analysis in analyses.items():
+            print(f"Timeframe {tf} analysis type: {type(analysis)}")
+            if hasattr(analysis, 'signal'):
+                print(f"Signal: {analysis.signal}")
+                print(f"Confidence: {analysis.confidence}")
+            elif isinstance(analysis, dict):
+                print(f"Dict analysis: {analysis.get('signal')}, {analysis.get('confidence')}")
         
         # Filter only valid timeframes and exclude 'overall'
         timeframe_analyses = {
