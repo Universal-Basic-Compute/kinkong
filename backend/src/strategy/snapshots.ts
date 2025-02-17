@@ -132,6 +132,43 @@ export async function recordPortfolioSnapshot() {
 
     console.log('Successfully recorded all snapshots');
 
+    // Calculate metrics from snapshots
+    let tokensAboveAvg = 0;
+    let totalVolumeThisWeek = 0;
+    let totalVolumePrevWeek = 0;
+    let volumeOnUpDays = 0;
+    let totalVolumeDays = 0;
+    let aiPerformance = 0;
+    let solPerformance = 0;
+
+    // Calculate metrics from snapshots
+    for (const snapshot of snapshots) {
+      // Count tokens above 7d average
+      if (snapshot.price > snapshot.price7dAvg) {
+        tokensAboveAvg++;
+      }
+
+      // Add to volume totals
+      totalVolumeThisWeek += snapshot.volume24h;
+      if (snapshot.volumeOnUpDay) {
+        volumeOnUpDays++;
+      }
+      totalVolumeDays++;
+
+      // Calculate performance (simplified - you may want to adjust this)
+      if (snapshot.token === 'SOL') {
+        solPerformance = snapshot.priceChange24h;
+      } else {
+        aiPerformance += snapshot.priceChange24h;
+      }
+    }
+
+    // Average AI token performance
+    aiPerformance = aiPerformance / (snapshots.length - 1); // Subtract 1 for SOL
+
+    // Get previous week's volume (you may want to fetch this from historical data)
+    totalVolumePrevWeek = totalVolumeThisWeek * 0.9; // Placeholder calculation
+
     // Calculate metrics for notifications
     const notificationMetrics = {
       percentAboveAvg: (tokensAboveAvg / tokens.length) * 100,
