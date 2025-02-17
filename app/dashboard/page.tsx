@@ -129,8 +129,6 @@ export default function Dashboard() {
         <div className="stat-card">
           <h3>Signal Success Rate</h3>
           <p className="text-2xl">XX%</p>
-            </div>
-          )}
         </div>
         <div className="stat-card">
           <h3>Pending Profits</h3>
