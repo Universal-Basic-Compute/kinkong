@@ -176,7 +176,7 @@ export async function executeReallocation() {
       portfolioRecords.map(record => [
         record.get('token') as string,
         {
-          percentage: (record.get('allocation') as number) / 100, // Convert allocation to decimal percentage
+          allocation: record.get('allocation') as number, // Keep as whole number percentage
           amount: 0, // Will be calculated once we have prices
           usdValue: record.get('usdValue') as number
         }
@@ -223,7 +223,7 @@ export async function executeReallocation() {
     const totalValue = Array.from(currentPortfolio.values())
       .reduce((sum, holding) => sum + (holding.usdValue || 0), 0);
 
-    // Then calculate actual token amounts based on percentages
+    // Then calculate actual token amounts based on allocations
     const updatedPortfolio = new Map(
       Array.from(currentPortfolio.entries()).map(([token, data]) => {
         const price = tokenPrices.get(token) || 0;
@@ -232,24 +232,21 @@ export async function executeReallocation() {
           return [token, data];
         }
         
-        const targetUsdValue = data.percentage * totalValue; // Already in decimal form
-        const tokenAmount = targetUsdValue / price;
-        
         return [token, {
           ...data,
-          amount: tokenAmount,
-          usdValue: targetUsdValue
+          amount: data.usdValue / price,
+          percentage: data.allocation // Keep original allocation percentage
         }];
       })
     );
 
-    console.log('Current portfolio value:', totalValue);
+    console.log('Current portfolio value:', totalValue.toFixed(2));
     console.log('Current allocations:', Object.fromEntries(
       Array.from(updatedPortfolio.entries())
         .map(([token, data]) => [
           token, 
           {
-            percentage: (data.percentage * 100).toFixed(2) + '%', // Convert back to percentage for display
+            percentage: data.percentage.toFixed(2) + '%',
             amount: data.amount?.toFixed(4),
             price: tokenPrices.get(token),
             usdValue: data.usdValue?.toFixed(2),
