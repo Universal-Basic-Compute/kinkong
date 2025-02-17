@@ -39,7 +39,7 @@ console.log('Airtable client configured successfully');
 // Add a test function to verify the client
 export const testConnection = async () => {
   try {
-    const table = base('Investments');
+    const table = base.table('Investments');
     await table.select().firstPage();
     console.log('Airtable connection test successful');
     return true;
@@ -51,7 +51,7 @@ export const testConnection = async () => {
 
 export const getTable = (tableName: string) => {
   console.log('Getting table:', tableName);
-  return base(tableName);
+  return base.table(tableName);
 };
 
 export default base;
