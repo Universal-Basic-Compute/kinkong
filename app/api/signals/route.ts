@@ -26,16 +26,16 @@ export async function GET() {
       const signals = records.map(record => ({
         id: record.id,
         timestamp: parseAndFormatDate(record.get('timestamp')),
-        token: record.get('token'),
-        type: record.get('type'),
-        timeframe: record.get('timeframe'),
-        entryPrice: record.get('entryPrice') || undefined,
-        targetPrice: record.get('targetPrice') || undefined,
-        stopLoss: record.get('stopLoss') || undefined,
-        confidence: record.get('confidence'),
-        wallet: record.get('wallet'),
-        reason: record.get('reason'),
-        url: record.get('url') || undefined,
+        token: record.get('token') as string,
+        type: record.get('type') as 'BUY' | 'SELL',
+        timeframe: record.get('timeframe') as 'SCALP' | 'INTRADAY' | 'SWING' | 'POSITION' || 'INTRADAY', // Default to INTRADAY if missing
+        entryPrice: record.get('entryPrice') ? Number(record.get('entryPrice')) : undefined,
+        targetPrice: record.get('targetPrice') ? Number(record.get('targetPrice')) : undefined,
+        stopLoss: record.get('stopLoss') ? Number(record.get('stopLoss')) : undefined,
+        confidence: record.get('confidence') as 'LOW' | 'MEDIUM' | 'HIGH' || 'MEDIUM', // Default to MEDIUM if missing
+        wallet: record.get('wallet') as string,
+        reason: record.get('reason') as string || '',
+        url: record.get('url') as string || undefined,
       }));
 
       console.log('Formatted first signal:', signals[0]); // Debug log
