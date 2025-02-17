@@ -271,7 +271,12 @@ export async function executeReallocation() {
     // 5. Update current allocations from portfolio
     for (const score of tokenScores) {
       const portfolio = currentPortfolio.get(score.symbol);
-      score.currentAllocation = portfolio?.allocation || 0;
+      if (portfolio) {
+        // Calculate allocation percentage from USD value
+        score.currentAllocation = (portfolio.usdValue / totalValue) * 100;
+      } else {
+        score.currentAllocation = 0;
+      }
     }
 
     // 6. Generate trade orders
