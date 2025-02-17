@@ -161,19 +161,14 @@ def clean_json_string(json_str):
     
     return json_str.strip()
 
-def analyze_chart_with_claude(chart_path):
-    """Analyze a chart using Claude 3"""
-    # Force reload environment variables
-    load_dotenv(override=True)
-    
+def analyze_charts_with_claude(chart_paths):
+    """Analyze multiple timeframe charts together using Claude 3"""
     api_key = os.getenv('ANTHROPIC_API_KEY')
     if not api_key:
         raise ValueError("ANTHROPIC_API_KEY not found in environment variables")
     
-    # Debug print to verify the key being used (safely)
     print(f"API Key from .env: {api_key[:8]}...{api_key[-4:]}")
     
-    # Create client with explicit API key
     client = anthropic.Client(
         api_key=api_key,
     )
@@ -181,12 +176,17 @@ def analyze_chart_with_claude(chart_path):
     # Get market data and context
     market_data = get_dexscreener_data()
     market_context = get_market_context()
-    with open(chart_path, "rb") as image_file:
-        image_data = base64.b64encode(image_file.read()).decode('utf-8')
-    
-    # Extract timeframe from filename
-    filename = Path(chart_path).name
-    timeframe = '15m' if '15m' in filename else '2h' if '2h' in filename else '8h'
+
+    # Prepare all chart images
+    chart_contents = []
+    for chart_path in chart_paths:
+        with open(chart_path, "rb") as image_file:
+            image_data = base64.b64encode(image_file.read()).decode('utf-8')
+            timeframe = '15m' if '15m' in chart_path else '2h' if '2h' in chart_path else '8h'
+            chart_contents.append({
+                "timeframe": timeframe,
+                "data": image_data
+            })
     
     # Format market data for prompt
     market_data_str = ""
@@ -284,7 +284,7 @@ For HOLD signals, be specific about:
     try:
         message = client.messages.create(
             model="claude-3-5-sonnet-20241022",
-            max_tokens=1024,
+            max_tokens=4096,  # Increased for multiple charts
             messages=[{
                 "role": "user",
                 "content": [
@@ -292,42 +292,42 @@ For HOLD signals, be specific about:
                         "type": "text",
                         "text": prompt
                     },
-                    {
+                    *[{
                         "type": "image",
                         "source": {
                             "type": "base64",
                             "media_type": "image/png",
-                            "data": image_data
+                            "data": chart["data"]
                         }
-                    }
+                    } for chart in chart_contents]
                 ]
             }]
         )
         
-        # Print raw response for debugging
-        print("\nRaw response from Claude:")
-        print(message.content[0].text[:200] + "...") # Print first 200 chars
-        
-        # Clean and parse JSON response
+        # Clean and parse response
         cleaned_response = clean_json_string(message.content[0].text)
         
         try:
             analysis = json.loads(cleaned_response)
-        except json.JSONDecodeError as e:
-            print(f"JSON parsing error: {e}")
-            print("Cleaned response:")
-            print(cleaned_response)
-            raise
-        
-        return ChartAnalysis(
-            timeframe=timeframe,
-            signal=analysis['signal'],
-            confidence=analysis['confidence'],
-            reasoning=analysis['reasoning'],
-            key_levels=analysis['key_levels'],
-            risk_reward_ratio=analysis.get('risk_reward_ratio'),
-            reassess_conditions=analysis.get('reassess_conditions')
-        )
+            
+            # Convert to ChartAnalysis objects
+            analyses = {
+                timeframe: ChartAnalysis(
+                    timeframe=timeframe,
+                    signal=data["signal"],
+                    confidence=data["confidence"],
+                    reasoning=data["reasoning"],
+                    key_levels=data["key_levels"],
+                    risk_reward_ratio=data.get("risk_reward_ratio"),
+                    reassess_conditions=None  # Could add this to the schema if needed
+                )
+                for timeframe, data in analysis["timeframes"].items()
+            }
+            
+            # Add overall analysis
+            analyses["overall"] = analysis["overall_analysis"]
+            
+            return analyses
         
     except Exception as e:
         print(f"Failed to analyze chart {filename}: {e}")
@@ -484,7 +484,7 @@ Resistance: {', '.join(map(str, signals['medium_term'].key_levels['resistance'])
 
 def main():
     try:
-        # 1. Generate charts (assuming charts are already generated)
+        # Get all chart files
         charts_dir = Path('public/charts')
         chart_files = list(charts_dir.glob('*.png'))
         
@@ -493,14 +493,10 @@ def main():
             
         print(f"Found {len(chart_files)} charts to analyze")
         
-        # 2. Analyze each chart
-        analyses = []
-        for chart_path in chart_files:
-            print(f"\nAnalyzing {chart_path.name}...")
-            analysis = analyze_chart_with_claude(chart_path)
-            analyses.append(analysis)
-            
-        # 3. Generate and send signal
+        # Analyze all charts together
+        analyses = analyze_charts_with_claude(chart_files)
+        
+        # Generate and send signal using all timeframe analyses
         signal = generate_signal(analyses)
         
         print("\nAnalysis completed successfully")
