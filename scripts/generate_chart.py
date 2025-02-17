@@ -199,7 +199,18 @@ def generate_chart(df, config, support_levels=None):
             mpf.make_addplot(ema50, color='blue', width=0.8, label='EMA50')
         ]
 
-        # Create figure with adjusted layout
+        # Calculate appropriate candle width based on timeframe
+        timeframe = config['timeframe']
+        if timeframe == '15m':
+            candle_width = 0.2
+        elif timeframe == '2H':
+            candle_width = 0.4
+        elif timeframe == '8H':
+            candle_width = 0.6
+        else:
+            candle_width = 0.4  # default width
+
+        # Create figure with timeframe-adjusted candle width
         fig, axes = mpf.plot(
             df,
             type='candle',
@@ -215,13 +226,14 @@ def generate_chart(df, config, support_levels=None):
             xrotation=25,
             tight_layout=False,
             show_nontrading=True,
+            style=style,
+            # Scale width parameters based on timeframe
             update_width_config=dict(
-                candle_linewidth=1.0,
-                candle_width=0.8,
-                volume_width=0.8,
-                volume_linewidth=1.0
-            ),
-            style=style
+                candle_linewidth=candle_width * 1.5,  # Slightly thicker than candle width
+                candle_width=candle_width,
+                volume_width=candle_width,
+                volume_linewidth=candle_width * 1.5
+            )
         )
 
         # Get the main price axis and volume axis
