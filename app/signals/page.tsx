@@ -212,7 +212,7 @@ Regular updates to your active signals help maintain signal quality and improve 
                           rel="noopener noreferrer"
                           className={`font-medium ${getTokenClass(token.symbol)}`}
                         >
-                          ${token.symbol}
+                          {token.symbol}
                         </a>
                       </td>
                       <td className="px-4 py-2 text-gray-300">{token.name}</td>
