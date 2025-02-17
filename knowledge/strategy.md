@@ -57,10 +57,10 @@ For optimal short-term results in the Solana ecosystem, KinKong implements a 4x 
 - American window: 18:00 UTC ±30min
 
 #### Cost Considerations
-- LP fees: 2-5% per trade
+- LP fees: 0.8-5% per trade (varies by pool)
 - Gas fees: ~0.1-0.2%
 - Slippage: ~0.5-1%
-- Total round trip costs: 2.6-6.2%
+- Total round trip costs: 1.4-6.2%
 
 #### Position Management
 - Check all open positions at each trading window
