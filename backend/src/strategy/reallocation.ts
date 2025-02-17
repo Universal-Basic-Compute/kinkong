@@ -167,7 +167,7 @@ export async function executeReallocation() {
 
     // 3. Get table references first
     const portfolioTable = getTable('PORTFOLIO');
-    const tokensTable = getTable('TOKENS');  // Move this up here
+    const tokensTable = getTable('TOKENS');  // Single declaration here
 
     // 4. Get current portfolio
     const portfolioRecords = await portfolioTable.select().all();
@@ -247,7 +247,6 @@ export async function executeReallocation() {
     ));
 
     // 4. Get current tokens and calculate scores
-    const tokensTable = getTable('TOKENS');
     const tokenRecords = await tokensTable
       .select({
         filterByFormula: '{isActive} = 1'
