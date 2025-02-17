@@ -42,9 +42,13 @@ def generate_chart():
         facecolor='black',
         edgecolor='white',
         figcolor='black',
-        volcolor='gray',
-        candle_up_color='#22c55e',  # Green
-        candle_down_color='#ef4444',  # Red
+        marketcolors=mpf.make_marketcolors(
+            up='#22c55e',
+            down='#ef4444',
+            edge='inherit',
+            wick='inherit',
+            volume='gray'
+        ),
         rc={'axes.labelcolor': 'white',
             'axes.edgecolor': 'gray',
             'xtick.color': 'white',
