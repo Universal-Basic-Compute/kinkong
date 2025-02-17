@@ -329,7 +329,7 @@ ${classification.reasons.map(r => '• ' + r).join('\n')}`;
         apiKey: process.env.KINOS_AIRTABLE_API_KEY
       }).base(process.env.KINOS_AIRTABLE_BASE_ID);
 
-      const thoughtsTable = kinosBase('THOUGHTS');
+      const thoughtsTable = kinosBase.table('THOUGHTS');
       await thoughtsTable.create([
         {
           fields: {
