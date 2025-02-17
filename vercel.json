@@ -19,11 +19,11 @@
     },
     {
       "path": "/api/cron/analyze-sentiment",
-      "schedule": "0 0 * * *"
+      "schedule": "0 */4 * * *"
     },
     {
       "path": "/api/cron/execute-trades",
-      "schedule": "*/15 * * * *"
+      "schedule": "0 * * * *"
     }
   ]
 }
