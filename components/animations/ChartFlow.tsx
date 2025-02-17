@@ -11,10 +11,12 @@ export function ChartFlow({ onComplete }: ChartFlowProps) {
   const [currentChart, setCurrentChart] = useState<string | null>(null);
   const [decision, setDecision] = useState<'BUY' | 'SELL' | null>(null);
   const [queue, setQueue] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Function to get all chart files from public/charts
     const loadCharts = async () => {
+      setIsLoading(true);
       try {
         // In production, we'll need an API endpoint to get the chart list
         // For now, let's simulate with a few charts
@@ -22,11 +24,17 @@ export function ChartFlow({ onComplete }: ChartFlowProps) {
           '/charts/sol/SOL_15m_candles_trading_view.png',
           '/charts/ubc/UBC_15m_candles_trading_view.png',
           '/charts/bonk/BONK_15m_candles_trading_view.png',
-          // Add more chart paths
+          '/charts/ai/AI_15m_candles_trading_view.png',
+          '/charts/compute/COMPUTE_15m_candles_trading_view.png',
+          '/charts/pyth/PYTH_15m_candles_trading_view.png',
+          '/charts/render/RENDER_15m_candles_trading_view.png',
+          '/charts/ratio/RATIO_15m_candles_trading_view.png'
         ];
         setQueue(chartList);
       } catch (error) {
         console.error('Error loading charts:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -46,11 +54,19 @@ export function ChartFlow({ onComplete }: ChartFlowProps) {
       const timer = setTimeout(() => {
         setCurrentChart(null);
         setDecision(null);
-      }, 2000); // Adjust timing as needed
+      }, 3000); // Slower transitions for better visibility
       
       return () => clearTimeout(timer);
     }
   }, [queue, currentChart]);
+
+  if (isLoading) {
+    return (
+      <div className="w-full h-[600px] flex items-center justify-center">
+        <span className="text-gold">Loading charts...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full h-[600px] overflow-hidden bg-black/50">
