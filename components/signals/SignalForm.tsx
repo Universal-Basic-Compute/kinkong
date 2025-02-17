@@ -81,6 +81,11 @@ export function SignalForm() {
       setFormData({
         token: '',
         direction: 'BUY',
+        timeframe: 'INTRADAY',
+        entryPrice: '',
+        targetPrice: '',
+        stopLoss: '',
+        confidence: 'MEDIUM',
         reason: '',
         url: ''
       })
