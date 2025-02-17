@@ -171,7 +171,7 @@ def generate_chart(df, config, support_levels=None):
         style = mpf.make_mpf_style(
             base_mpf_style='charles',
             gridstyle=':',
-            gridcolor='rgba(255, 215, 0, 0.1)',
+            gridcolor='#FFD70020',  # Gold color with transparency
             facecolor='black',
             edgecolor='white',
             figcolor='black',
@@ -257,8 +257,8 @@ def generate_chart(df, config, support_levels=None):
             # Format ticks
             ax.tick_params(axis='both', colors='white', labelsize=10)
             
-            # Show grid
-            ax.grid(True, linestyle=':', color='rgba(255, 215, 0, 0.1)', alpha=0.3)
+            # Show grid with hex color
+            ax.grid(True, linestyle=':', color='#FFD70020', alpha=0.3)
             ax.set_axisbelow(True)
 
         # Format price axis
@@ -280,7 +280,7 @@ def generate_chart(df, config, support_levels=None):
                 spine.set_linewidth(1.0)
             
             # Show grid
-            ax.grid(True, linestyle=':', color='rgba(255, 215, 0, 0.1)', alpha=0.3)
+            ax.grid(True, linestyle=':', color='#FFD70020', alpha=0.3)
             ax.set_axisbelow(True)
 
         # Price axis formatting (right side)
