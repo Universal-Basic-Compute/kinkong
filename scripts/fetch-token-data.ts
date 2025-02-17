@@ -230,42 +230,37 @@ async function fetchTokenData(): Promise<TokenData[]> {
 
 async function updateAirtable(tokenData: TokenData[]) {
   const table = getTable('TOKENS');
+  const timestamp = new Date().toISOString();
+  
+  console.log('\n📝 Creating new token snapshots...');
   
   for (const token of tokenData) {
     try {
-      // Check if token exists using symbol as the name field
-      const records = await table.select({
-        filterByFormula: `{name} = '${token.symbol}'`
-      }).firstPage();
-
+      // Always create a new record with timestamp
       const fields = {
         name: token.symbol,           // Primary field
-        description: token.description,
+        description: token.name,
         mint: token.mint,
         isActive: token.isActive,
         volume7d: token.volume7d,
         liquidity: token.liquidity,
         volumeGrowth: token.volumeGrowth,
         pricePerformance: token.pricePerformance,
-        holderCount: token.holderCount
+        holderCount: token.holderCount,
+        timestamp: timestamp          // Add timestamp to each record
       };
 
-      if (records.length > 0) {
-        // Update existing record
-        await table.update([{
-          id: records[0].id,
-          fields
-        }]);
-        console.log(`Updated ${token.symbol} in Airtable`);
-      } else {
-        // Create new record
-        await table.create([{ fields }]);
-        console.log(`Created ${token.symbol} in Airtable`);
-      }
+      // Create new record
+      await table.create([{ fields }]);
+      console.log(`✅ Created new snapshot for ${token.symbol}`);
+      console.log(`   Volume 7d: $${token.volume7d.toLocaleString()}`);
+      console.log(`   Liquidity: $${token.liquidity.toLocaleString()}`);
+      console.log(`   Performance: ${token.pricePerformance.toFixed(2)}%`);
+
     } catch (error) {
-      console.warn(`Warning: Failed to update Airtable for ${token.symbol}:`, error);
+      console.error(`❌ Failed to create snapshot for ${token.symbol}:`, error);
       // Log more details about the error
-      console.warn('Error details:', {
+      console.error('Error details:', {
         name: error instanceof Error ? error.name : 'Unknown',
         message: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined
@@ -274,6 +269,8 @@ async function updateAirtable(tokenData: TokenData[]) {
       continue;
     }
   }
+
+  console.log(`\n✨ Created ${tokenData.length} new token snapshots at ${timestamp}`);
 }
 
 async function main() {
