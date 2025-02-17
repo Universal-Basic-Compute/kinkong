@@ -602,7 +602,7 @@ def generate_all_charts():
             print(f"\nProcessing {config['title']}...")
             
             # Fetch data
-            df = fetch_ubc_sol_data(
+            df = fetch_token_data(
                 timeframe=config['timeframe'],
                 hours=config['duration_hours']
             )

@@ -73,9 +73,9 @@ async def analyze_token(token):
     retries = 3
     for attempt in range(retries):
         try:
-        print(f"\n🔄 Processing {token['symbol']}...")
-        
-        # Create token-specific directory
+            print(f"\n🔄 Processing {token['symbol']}...")
+            
+            # Create token-specific directory
         token_dir = Path('public/charts') / token['symbol'].lower()
         token_dir.mkdir(parents=True, exist_ok=True)
         
