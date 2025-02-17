@@ -21,7 +21,7 @@ export async function recordPortfolioSnapshot() {
     })));
 
     const snapshot = {
-      timestamp: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
       totalValue,
       holdingsJson: holdingsString // Store as JSON string in Airtable
     };
@@ -30,7 +30,7 @@ export async function recordPortfolioSnapshot() {
     await table.create([
       {
         fields: {
-          timestamp: snapshot.timestamp,
+          createdAt: snapshot.createdAt,
           totalValue: snapshot.totalValue,
           holdingsJson: snapshot.holdingsJson
         }

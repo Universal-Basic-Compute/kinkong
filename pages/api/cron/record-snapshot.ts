@@ -1,15 +1,26 @@
 import { recordPortfolioSnapshot } from '@/backend/src/strategy/snapshots';
 
-export default async function handler(req: any, res: any) {
-  // Verify cron secret if needed
-  if (req.headers['x-cron-secret'] !== process.env.CRON_SECRET) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-
+export async function GET(req: Request) {
   try {
-    await recordPortfolioSnapshot();
-    res.status(200).json({ success: true });
+    // Add logging for debugging
+    console.log('Starting portfolio snapshot recording...');
+    
+    const snapshot = await recordPortfolioSnapshot();
+    
+    console.log('Successfully recorded snapshot:', snapshot);
+    
+    return NextResponse.json({ 
+      success: true, 
+      snapshot 
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to record snapshot' });
+    console.error('Failed to record snapshot:', error);
+    return NextResponse.json(
+      { 
+        error: 'Failed to record snapshot',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      }, 
+      { status: 500 }
+    );
   }
 }
