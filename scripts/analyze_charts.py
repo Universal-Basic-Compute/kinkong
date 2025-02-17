@@ -145,6 +145,22 @@ def get_dexscreener_data(token_address: str = "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXr
         print(f"Error fetching DexScreener data: {e}")
         return None
 
+def clean_json_string(json_str):
+    """Clean and validate JSON string"""
+    # Remove control characters
+    import re
+    json_str = re.sub(r'[\x00-\x1F\x7F-\x9F]', '', json_str)
+    
+    # Fix common JSON formatting issues
+    json_str = json_str.replace('\n', ' ')
+    json_str = json_str.replace('\\', '\\\\')
+    
+    # Remove any markdown code block indicators
+    json_str = json_str.replace('```json', '')
+    json_str = json_str.replace('```', '')
+    
+    return json_str.strip()
+
 def analyze_chart_with_claude(chart_path):
     """Analyze a chart using Claude 3"""
     # Force reload environment variables
@@ -288,8 +304,20 @@ For HOLD signals, be specific about:
             }]
         )
         
-        # Parse JSON response
-        analysis = json.loads(message.content[0].text)
+        # Print raw response for debugging
+        print("\nRaw response from Claude:")
+        print(message.content[0].text[:200] + "...") # Print first 200 chars
+        
+        # Clean and parse JSON response
+        cleaned_response = clean_json_string(message.content[0].text)
+        
+        try:
+            analysis = json.loads(cleaned_response)
+        except json.JSONDecodeError as e:
+            print(f"JSON parsing error: {e}")
+            print("Cleaned response:")
+            print(cleaned_response)
+            raise
         
         return ChartAnalysis(
             timeframe=timeframe,
@@ -297,11 +325,15 @@ For HOLD signals, be specific about:
             confidence=analysis['confidence'],
             reasoning=analysis['reasoning'],
             key_levels=analysis['key_levels'],
-            risk_reward_ratio=analysis.get('risk_reward_ratio')
+            risk_reward_ratio=analysis.get('risk_reward_ratio'),
+            reassess_conditions=analysis.get('reassess_conditions')
         )
         
     except Exception as e:
         print(f"Failed to analyze chart {filename}: {e}")
+        print("Full response content:")
+        if 'message' in locals():
+            print(message.content[0].text)
         raise
 
 def create_airtable_signal(analysis, timeframe):
