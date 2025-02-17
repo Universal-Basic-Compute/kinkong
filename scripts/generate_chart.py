@@ -11,7 +11,7 @@ load_dotenv()
 
 def fetch_ubc_sol_data():
     # Birdeye API endpoint for UBC/SOL pair
-    url = "https://public-api.birdeye.so/defi/history_price"  # Updated endpoint
+    url = "https://public-api.birdeye.so/defi/history_price"
     headers = {
         "X-API-KEY": os.getenv('BIRDEYE_API_KEY'),
         "x-chain": "solana",
@@ -19,19 +19,26 @@ def fetch_ubc_sol_data():
     }
     params = {
         "address": "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump",  # UBC token address
-        "address_type": "token",  # Added required parameter
-        "type": "1H",  # Back to 1H for hourly candles
-        "time_from": int((datetime.now() - timedelta(days=1)).timestamp()),
-        "time_to": int(datetime.now().timestamp())
+        "timeframe": "1H",  # Changed from type to timeframe
+        "fromTime": int((datetime.now() - timedelta(days=1)).timestamp()),  # Changed parameter name
+        "toTime": int(datetime.now().timestamp()),  # Changed parameter name
+        "vsToken": "So11111111111111111111111111111111111111112"  # Changed to vsToken
     }
     
     try:
         if not os.getenv('BIRDEYE_API_KEY'):
             raise ValueError("BIRDEYE_API_KEY not found in environment variables")
             
+        print("Requesting URL:", url)
+        print("With params:", params)
+        
         response = requests.get(url, headers=headers, params=params)
+        print("Response status:", response.status_code)
+        
         response.raise_for_status()
         data = response.json()
+        
+        print("Response data:", data)  # Debug log
         
         if not data.get('success'):
             raise ValueError(f"API request failed: {data.get('message')}")
@@ -46,7 +53,7 @@ def fetch_ubc_sol_data():
             date = pd.to_datetime(item['unixTime'], unit='s')
             df_data.append({
                 'Date': date,
-                'Open': float(item.get('price', 0)),
+                'Open': float(item.get('price', 0)),  # Changed from open to price
                 'High': float(item.get('high', 0)),
                 'Low': float(item.get('low', 0)),
                 'Close': float(item.get('close', 0)),
@@ -59,6 +66,12 @@ def fetch_ubc_sol_data():
         
         # Sort index to ensure chronological order
         df = df.sort_index()
+        
+        # Filter out zero values
+        df = df[(df != 0).all(axis=1)]
+        
+        if df.empty:
+            raise ValueError("No valid price data after filtering zeros")
         
         print(f"Fetched {len(df)} candles for UBC/SOL")
         print("\nDataFrame head:")
