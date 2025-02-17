@@ -205,7 +205,7 @@ async def analyze_token(token):
 
 async def main():
     try:
-        print("🚀 Starting token analysis...")
+        print("\n🚀 Starting token analysis...")
         
         # Get active tokens
         tokens = await get_active_tokens()
@@ -219,31 +219,38 @@ async def main():
         total = len(tokens)
         
         for i, token in enumerate(tokens, 1):
-            print(f"\nProcessing token {i}/{total}: {token['symbol']}")
-            result = await analyze_token(token)
-            if result:
-                print(f"✅ Analysis completed for {token['symbol']}")
-                analyses.append(result)
-            else:
-                print(f"❌ No valid analysis for {token['symbol']}")
-            # Add delay between tokens
-            await asyncio.sleep(5)
+            print(f"\n=== Processing token {i}/{total}: {token['symbol']} ===")
+            try:
+                result = await analyze_token(token)
+                if result:
+                    print(f"\n✅ Analysis completed for {token['symbol']}")
+                    print("Analysis structure:", type(result))
+                    print("Analysis keys:", result.keys() if result else None)
+                    analyses.append(result)
+                else:
+                    print(f"\n❌ No valid analysis for {token['symbol']}")
+            except Exception as e:
+                print(f"\n❌ Error analyzing {token['symbol']}: {str(e)}")
+                continue
+                
+            print("\n" + "="*50)  # Visual separator between tokens
         
-        # Process all signals in batch
+        # Process all analyses in batch
         if analyses:
-            print(f"\nProcessing {len(analyses)} token analyses in batch...")
+            print(f"\n🔄 Processing {len(analyses)} token analyses in batch...")
             from analyze_charts import process_signals_batch
+            print("\nAnalyses to process:", [a['token_info']['symbol'] for a in analyses])
             signals = process_signals_batch([
                 (a['token_info'], a['analyses']) for a in analyses
             ])
-            print(f"Processed {len(signals)} signals")
+            print(f"\n✅ Generated {len(signals)} signals")
         else:
-            print("\nNo analyses to process")
+            print("\n❌ No analyses to process")
             
         print("\n✅ Token analysis completed")
         
     except Exception as e:
-        print(f"❌ Fatal error: {e}")
+        print(f"\n❌ Fatal error: {e}")
         raise
 
 if __name__ == "__main__":
