@@ -38,29 +38,57 @@ class ChartAnalysis:
             'reassess_conditions': self.reassess_conditions
         }
 
-def send_telegram_message(message):
-    """Send message to Telegram channel"""
+def send_telegram_message(message, chart_paths=None):
+    """Send message and optional charts to Telegram channel"""
     token = os.getenv('TELEGRAM_BOT_TOKEN')
     
     if not token:
         print("Telegram bot token missing")
         return
         
-    url = f"https://api.telegram.org/bot{token}/sendMessage"
-    data = {
-        "chat_id": -1002276145657,  # Hardcoded chat ID
-        "text": message,
-        "parse_mode": "HTML"
-    }
+    base_url = f"https://api.telegram.org/bot{token}"
     
     try:
-        print("\nSending Telegram message...")
-        response = requests.post(url, json=data)
-        response.raise_for_status()
-        print("Telegram message sent successfully")
+        if chart_paths:
+            # First send the text message
+            text_response = requests.post(
+                f"{base_url}/sendMessage",
+                json={
+                    "chat_id": -1002276145657,
+                    "text": message,
+                    "parse_mode": "HTML"
+                }
+            )
+            text_response.raise_for_status()
+            
+            # Then send each chart as a photo
+            for chart_path in chart_paths:
+                with open(chart_path, 'rb') as photo:
+                    files = {'photo': photo}
+                    photo_response = requests.post(
+                        f"{base_url}/sendPhoto",
+                        data={"chat_id": -1002276145657},
+                        files=files
+                    )
+                    photo_response.raise_for_status()
+            
+            print("Telegram message and charts sent successfully")
+        else:
+            # Just send the text message if no charts
+            response = requests.post(
+                f"{base_url}/sendMessage",
+                json={
+                    "chat_id": -1002276145657,
+                    "text": message,
+                    "parse_mode": "HTML"
+                }
+            )
+            response.raise_for_status()
+            print("Telegram message sent successfully")
+            
     except Exception as e:
         print(f"Failed to send Telegram message: {e}")
-        if hasattr(response, 'text'):
+        if 'response' in locals():
             print(f"Telegram API response: {response.text}")
 
 import requests
@@ -709,8 +737,17 @@ Best Timeframe: {overall.get('best_timeframe', 'N/A')}
 
     # Only send to Telegram if there are high confidence signals
     if high_confidence_signals:
-        send_telegram_message(message)
-        print("\nSent high confidence signals to Telegram")
+        # Get paths to the three timeframe charts
+        chart_paths = [
+            Path('public/charts') / token_info['symbol'].lower() / f"{token_info['symbol']}_{timeframe}_candles_trading_view.png"
+            for timeframe in ['15m', '2h', '8h']
+        ]
+        
+        # Filter to only existing chart files
+        existing_charts = [str(path) for path in chart_paths if path.exists()]
+        
+        send_telegram_message(message, existing_charts)
+        print("\nSent high confidence signals and charts to Telegram")
     else:
         print("\nNo high confidence signals to send")
     
