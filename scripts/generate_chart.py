@@ -12,25 +12,25 @@ load_dotenv()
 
 CHART_CONFIGS = [
     {
-        'timeframe': '15m',  # Changed from 5m to 15m
-        'duration_hours': 34,  # ~136 candles (34 hours * 4 candles per hour)
+        'timeframe': '15m',
+        'duration_hours': 34,
         'title': 'UBC/USD Short-term Analysis (34H)',
         'subtitle': '15-minute candles - Trading Setup View',
-        'filename': 'ubc-chart-short.png'
+        'filename': 'ubc_34h_short_term_15m_candles_trading_view.png'
     },
     {
-        'timeframe': '2H',   # Changed from 1H to 2H
-        'duration_hours': 270,  # ~135 candles (270 hours / 2 hours per candle)
+        'timeframe': '2H',
+        'duration_hours': 270,
         'title': 'UBC/USD Medium-term Analysis (11D)',
         'subtitle': '2-hour candles - Swing Trading View',
-        'filename': 'ubc-chart-medium.png'
+        'filename': 'ubc_11d_medium_term_2h_candles_swing_view.png'
     },
     {
-        'timeframe': '8H',   # Changed from 4H to 8H
-        'duration_hours': 1080,  # ~135 candles (1080 hours / 8 hours per candle)
+        'timeframe': '8H',
+        'duration_hours': 1080,
         'title': 'UBC/USD Long-term Analysis (45D)',
         'subtitle': '8-hour candles - Trend Analysis View',
-        'filename': 'ubc-chart-long.png'
+        'filename': 'ubc_45d_long_term_8h_candles_trend_view.png'
     }
 ]
 
@@ -210,8 +210,8 @@ def generate_chart(df, config, support_levels=None):
         style=style,
         title=f'{config["title"]}\n{stats_text}',
         volume=True,
-        figsize=(12, 8),
-        panel_ratios=(2, 1),  # Ratio between price and volume panels
+        figsize=(16, 10),
+        panel_ratios=(3, 1),  # Increased price panel ratio
         addplot=apds,
         returnfig=True  # Return figure and axes
     )
@@ -220,33 +220,33 @@ def generate_chart(df, config, support_levels=None):
     fig.text(0.5, 0.95, config['subtitle'], 
              horizontalalignment='center',
              color='white',
-             fontsize=10)
+             fontsize=12)
     
     # Add volume statistics
     volume_stats = f"Avg Volume: ${avg_volume:,.0f}"
     axes[2].text(0.02, 0.95, volume_stats,
                  transform=axes[2].transAxes,
                  color='white',
-                 fontsize=8)
+                 fontsize=10)
     
     # Add legend for EMAs
     axes[0].legend(['EMA20', 'EMA50'], 
                   loc='upper left',
                   facecolor='black',
                   edgecolor='white',
-                  fontsize=8)
+                  fontsize=10)
     
     # Add timestamp
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M UTC')
     fig.text(0.98, 0.02, f'Generated: {timestamp}',
              horizontalalignment='right',
              color='gray',
-             fontsize=8)
+             fontsize=10)
     
     # Save the chart
     plt.savefig(
         config['filename'],
-        dpi=100,
+        dpi=150,
         bbox_inches='tight',
         facecolor='black',
         edgecolor='none'
