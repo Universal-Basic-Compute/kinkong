@@ -1,5 +1,6 @@
 import { createCanvas } from 'canvas';
 import { ChartJSNodeCanvas } from 'chartjs-node-canvas';
+import { ChartConfiguration, ChartOptions } from 'chart.js';
 
 interface Candlestick {
     timestamp: number;
@@ -27,18 +28,19 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
   const data = await getChartData(token);
   
   // Configure chart
-  const configuration = {
-    type: 'candlestick',
+  const configuration: ChartConfiguration = {
+    type: 'bar', // We'll use bar as base type and customize for candlesticks
     data: {
       datasets: [{
         label: token,
-        data: data.candlesticks.map(c => ({
+        data: data.candlesticks.map((c: Candlestick) => ({
           x: c.timestamp,
           o: c.open,
           h: c.high,
           l: c.low,
           c: c.close
-        })),
+        })) as any[],
+        type: 'candlestick' as any, // Custom type
         color: {
           up: 'rgba(75, 192, 75, 1)',
           down: 'rgba(192, 75, 75, 1)',
@@ -91,7 +93,7 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
           grid: {
             display: false
           }
-        }
+        } as ChartOptions
       },
       plugins: {
         legend: {
