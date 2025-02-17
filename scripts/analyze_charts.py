@@ -202,84 +202,57 @@ Current Market Data:
 """
     
     prompt = f"""You are an expert cryptocurrency technical analyst specializing in UBC/USD market analysis.
+I'm providing you with three timeframe charts (15m, 2h, and 8h) for a complete multi-timeframe analysis.
 
-{market_context}
+{market_data_str}
 
-Study this chart carefully and follow these steps:
+Analyze each timeframe in sequence, considering how they relate to each other:
 
-1. PRICE ACTION ANALYSIS
-- Identify the current trend (bullish, bearish, or ranging)
-- Locate key swing highs and lows
-- Note any significant chart patterns
-- Identify key support and resistance levels
-- Consider current price in relation to liquidity levels
+1. First analyze the 8h chart for overall trend and market structure
+2. Then analyze the 2h chart for medium-term movements and setups
+3. Finally analyze the 15m chart for immediate price action and potential entries
 
-2. VOLUME ANALYSIS
-- Compare current volume (${market_data['volume_24h']:,.2f}) to recent activity
-- Note any volume spikes or divergences
-- Check if volume confirms price movement
-- Consider liquidity depth (${market_data['liquidity']:,.2f})
-
-3. TECHNICAL INDICATORS
-- Study the EMA20 and EMA50 relationship
-- Note any crossovers or divergences
-- Check price position relative to EMAs
-- Consider momentum in relation to 24h change ({market_data['price_change_24h']:.2f}%)
-
-4. MARKET STRUCTURE
-- Identify higher highs/lows or lower highs/lows
-- Note any break of structure
-- Evaluate current market phase
-- Consider market cap (${market_data['market_cap']:,.2f}) and FDV (${market_data['fdv']:,.2f})
-
-5. RISK ASSESSMENT
-- Calculate potential risk/reward ratio
-- Identify clear invalidation points
-- Consider current volatility
-- Factor in current liquidity conditions
-
-Based on this analysis, provide:
-1. A clear BUY/SELL/HOLD signal
+For each timeframe, provide:
+1. Signal (BUY/SELL/HOLD)
 2. Confidence level (0-100%)
-3. Key price levels for:
-   - Entry (current price area: ${market_data['price']:.4f})
-   - Target (next significant resistance/support)
-   - Stop loss (structure invalidation point)
-4. Detailed reasoning explaining your decision
+3. Key support and resistance levels
+4. Detailed reasoning
+5. Risk/reward ratio if applicable
+
+Consider:
+- How the different timeframes confirm or conflict with each other
+- Whether price action shows alignment across timeframes
+- Volume patterns across different time periods
+- Key technical levels visible in multiple timeframes
 
 Format your response as JSON:
 {{
-    "signal": "BUY|SELL|HOLD",
-    "confidence": 0,
-    "reasoning": "Detailed multi-paragraph analysis",
-    "key_levels": {{
-        "support": [0.0, 0.0],
-        "resistance": [0.0, 0.0]
+    "timeframes": {{
+        "8h": {{
+            "signal": "BUY|SELL|HOLD",
+            "confidence": 0,
+            "reasoning": "Detailed analysis",
+            "key_levels": {{
+                "support": [0.0, 0.0],
+                "resistance": [0.0, 0.0]
+            }},
+            "risk_reward_ratio": 0.0
+        }},
+        "2h": {{ ... }},
+        "15m": {{ ... }}
     }},
-    "risk_reward_ratio": 0.0,
-    "reassess_conditions": {{
-        "time": "When to check again (e.g. '2 hours', '4 candles')",
-        "price_triggers": ["List of price levels to watch"],
-        "technical_events": ["Specific events to watch for"]
+    "overall_analysis": {{
+        "primary_trend": "BULLISH|BEARISH|NEUTRAL",
+        "timeframe_alignment": "ALIGNED|MIXED|CONFLICTING",
+        "best_timeframe": "8h|2h|15m",
+        "key_observations": ["List of important points"],
+        "recommended_action": {{
+            "signal": "BUY|SELL|HOLD",
+            "timeframe": "8h|2h|15m",
+            "reasoning": "Why this is the best action"
+        }}
     }}
-}}
-
-Remember:
-- Only give BUY signals at support with bullish confirmation
-- Only give SELL signals at resistance with bearish confirmation
-- For HOLD signals:
-  * Specify exact conditions that would trigger reassessment
-  * Include price levels that would change the analysis
-  * List technical events that could create opportunities
-  * Give a clear timeframe for next review
-- Confidence should reflect the quality of the setup
-- Include at least 2 levels each for support and resistance
-
-For HOLD signals, be specific about:
-1. Price action events to watch (e.g. "Break above ${market_data['price']:.4f}")
-2. Technical indicator developments (e.g. "EMA20 crossing above EMA50")
-3. Volume triggers (e.g. "Volume spike above ${market_data['volume_24h']*2:,.2f}")
-4. Time-based reassessment (e.g. "After next 4-hour candle close")"""
+}}"""
 
     try:
         message = client.messages.create(
