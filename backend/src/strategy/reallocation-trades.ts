@@ -2,6 +2,18 @@ import { getTable } from '../airtable/tables';
 import type { MarketSentiment, Portfolio } from '../airtable/tables';
 import { getTokenPrices } from '../utils/jupiter';
 
+interface TokenAllocation {
+  aiTokens: number;
+  sol: number;
+  stables: number;
+}
+
+const ALLOCATIONS: Record<'BULLISH' | 'BEARISH' | 'NEUTRAL', TokenAllocation> = {
+  BULLISH: { aiTokens: 70, sol: 20, stables: 10 },
+  BEARISH: { aiTokens: 40, sol: 20, stables: 40 },
+  NEUTRAL: { aiTokens: 50, sol: 30, stables: 20 }
+};
+
 export interface ReallocationTrade {
   token: string;
   action: 'BUY' | 'SELL';
@@ -22,11 +34,69 @@ export async function calculateReallocationTrades(): Promise<ReallocationTrade[]
     })
     .firstPage();
 
+  if (!latestSentiment) {
+    throw new Error('No market sentiment data found');
+  }
+
+  const sentiment = latestSentiment.get('classification') as keyof typeof ALLOCATIONS;
+  const targetAllocations = ALLOCATIONS[sentiment];
+
   // Get current portfolio
   const portfolioTable = getTable('PORTFOLIO');
-  const portfolio = await portfolioTable.select().all();
+  const portfolioRecords = await portfolioTable.select().all();
   
-  // TODO: Implement reallocation logic based on market sentiment
+  // Calculate current allocations
+  const portfolio = portfolioRecords.map(record => ({
+    token: record.get('token') as string,
+    allocation: record.get('allocation') as number,
+    usdValue: record.get('usdValue') as number
+  }));
+
+  const totalValue = portfolio.reduce((sum, holding) => sum + (holding.usdValue || 0), 0);
+
+  // Group tokens by type
+  const currentAllocations = {
+    aiTokens: portfolio
+      .filter(p => !['SOL', 'USDC', 'USDT'].includes(p.token))
+      .reduce((sum, p) => sum + ((p.usdValue || 0) / totalValue * 100), 0),
+    sol: portfolio
+      .filter(p => p.token === 'SOL')
+      .reduce((sum, p) => sum + ((p.usdValue || 0) / totalValue * 100), 0),
+    stables: portfolio
+      .filter(p => ['USDC', 'USDT'].includes(p.token))
+      .reduce((sum, p) => sum + ((p.usdValue || 0) / totalValue * 100), 0)
+  };
+
+  // Generate trades based on differences
+  if (Math.abs(currentAllocations.aiTokens - targetAllocations.aiTokens) > 5) {
+    trades.push({
+      token: 'AI_TOKENS',
+      action: currentAllocations.aiTokens < targetAllocations.aiTokens ? 'BUY' : 'SELL',
+      targetPercentage: targetAllocations.aiTokens,
+      currentPercentage: currentAllocations.aiTokens,
+      reason: `Adjusting AI tokens allocation for ${sentiment} market`
+    });
+  }
+
+  if (Math.abs(currentAllocations.sol - targetAllocations.sol) > 5) {
+    trades.push({
+      token: 'SOL',
+      action: currentAllocations.sol < targetAllocations.sol ? 'BUY' : 'SELL',
+      targetPercentage: targetAllocations.sol,
+      currentPercentage: currentAllocations.sol,
+      reason: `Adjusting SOL allocation for ${sentiment} market`
+    });
+  }
+
+  if (Math.abs(currentAllocations.stables - targetAllocations.stables) > 5) {
+    trades.push({
+      token: 'USDC',
+      action: currentAllocations.stables < targetAllocations.stables ? 'BUY' : 'SELL',
+      targetPercentage: targetAllocations.stables,
+      currentPercentage: currentAllocations.stables,
+      reason: `Adjusting stables allocation for ${sentiment} market`
+    });
+  }
   
   return trades;
 }
