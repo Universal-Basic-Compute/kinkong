@@ -1,7 +1,10 @@
 import { Chart, ChartConfiguration } from 'chart.js/auto';
-import 'chartjs-adapter-date-fns';
 import { createCanvas } from 'canvas';
 import { enUS } from 'date-fns/locale';
+
+import('chartjs-adapter-date-fns').catch(err => {
+    console.warn('Failed to load date adapter:', err);
+});
 
 interface Candlestick {
     timestamp: number;
@@ -42,8 +45,8 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
                 {
                     type: 'bar',
                     label: token,
-                    data: data.candlesticks.map((candle: Candlestick) => ({
-                        x: candle.timestamp * 1000,
+                    data: data.candlesticks.map((candle) => ({
+                        x: new Date(candle.timestamp * 1000).toISOString(),
                         y: candle.close
                     })),
                     backgroundColor: 'rgba(75, 192, 75, 1)'
@@ -52,7 +55,7 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
                     type: 'line',
                     label: 'EMA 20',
                     data: data.ema20.map((point) => ({
-                        x: point.time * 1000,
+                        x: new Date(point.time * 1000).toISOString(),
                         y: point.value
                     })),
                     borderColor: 'rgba(255, 215, 0, 0.8)',
@@ -63,7 +66,7 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
                     type: 'line',
                     label: 'EMA 50',
                     data: data.ema50.map((point) => ({
-                        x: point.time * 1000,
+                        x: new Date(point.time * 1000).toISOString(),
                         y: point.value
                     })),
                     borderColor: 'rgba(75, 192, 192, 0.8)',
@@ -74,7 +77,7 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
                     type: 'bar',
                     label: 'Volume',
                     data: data.volume.map((v) => ({
-                        x: v.time * 1000,
+                        x: new Date(v.time * 1000).toISOString(),
                         y: v.value
                     })),
                     backgroundColor: 'rgba(128, 128, 128, 0.2)',
