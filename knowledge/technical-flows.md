@@ -1,230 +1,76 @@
 # KinKong Technical Flows Documentation
 
-## System Architecture
+## Timing Specifications
 
-The system is split into two separate processes:
+### Signal Generation (analyze_all_tokens.py)
+- Runs every 6 hours
+- Processes all tokens sequentially
+- Generates charts for 3 timeframes (15m, 2h, 8h)
+- Creates PENDING signals in Airtable
 
-### 1. Signal Generation Process (6-hour intervals)
-```mermaid
-graph TD
-    A[analyze_all_tokens.py] --> B[Generate Charts]
-    B --> C[analyze_charts.py]
-    C --> D[Claude Analysis]
-    D --> E[Signal Validation]
-    E --> F{Valid Signal?}
-    F -->|Yes| G[Create PENDING in Airtable]
-    F -->|No| H[Log Rejection]
-```
+### Trade Execution (monitor_trades.py)
+- Runs every 1 minute
+- Processes one PENDING signal per cycle
+- Checks one ACTIVE trade per cycle
+- Order: First check PENDING, then check ACTIVE
 
-### 2. Trade Execution Process (1-minute intervals)
-```mermaid
-graph TD
-    A[monitor_trades.py] --> B[Check One PENDING Signal]
-    B --> C[Check Current Price]
-    C --> D{Price at Entry?}
-    D -->|Yes| E[Execute Single Trade]
-    D -->|No| F[Skip to Next Check]
-    E --> G[Update to ACTIVE]
-    
-    H[Active Trade Monitor] --> I[Check One Active Trade]
-    I --> J{Exit Condition Met?}
-    J -->|Yes| K[Execute Exit Trade]
-    J -->|No| L[Update PnL]
-```
+## Process Details
 
-Key Features:
-- One trade processed per minute
-- Sequential processing (no batching)
-- Simple FIFO order for pending signals
-- One active trade check per cycle
+### Signal Generation Steps
+1. Get active tokens from Airtable
+2. For each token:
+   - Generate charts for all timeframes
+   - Get Claude analysis
+   - Validate signal requirements
+   - Create PENDING signal if valid
 
-### 3. Active Trade Management
+### Trade Execution Steps
+1. Check one PENDING signal:
+   - Get current price
+   - If price at entry (±1%), execute trade
+   - Update to ACTIVE if successful
 
-#### A. Regular Monitoring (`monitor_trades.py`)
-Runs continuously with 60-second intervals:
-```python
-while True:
-    monitor_active_trades()
-        → get_token_price()
-        → update_unrealized_pnl()
-        → check_exit_conditions()
-        → execute_exits_if_needed()
-    sleep(60)
-```
+2. Check one ACTIVE trade:
+   - Update unrealized P&L
+   - Check take profit
+   - Check stop loss
+   - Check expiry
+   - Execute exit if conditions met
 
-#### B. Exit Conditions
-1. Take Profit Hit:
-   ```python
-   if current_price >= target_price:
-       execute_trade_with_phantom()
-       update_signal_status('COMPLETED')
-   ```
+## Error Handling
 
-2. Stop Loss Hit:
-   ```python
-   if current_price <= stop_loss:
-       execute_trade_with_phantom()
-       update_signal_status('STOPPED')
-   ```
+### Signal Generation
+- Retry chart generation up to 3 times
+- Skip token if analysis fails
+- Continue to next token on error
+- Log all failures for review
 
-3. Time Expiry:
-   ```python
-   if current_time >= expiry_date:
-       execute_trade_with_phantom()
-       update_signal_status('EXPIRED')
-   ```
+### Trade Execution
+- Skip to next cycle if price feed fails
+- Log failed executions
+- No automatic retries (wait for next cycle)
+- Maintain trade state on failure
 
-### 4. Trade Status Flow
-```mermaid
-stateDiagram-v2
-    [*] --> PENDING
-    PENDING --> ACTIVE: Price reaches entry
-    PENDING --> FAILED: Execution fails
-    ACTIVE --> COMPLETED: Take profit hit
-    ACTIVE --> STOPPED: Stop loss hit
-    ACTIVE --> EXPIRED: Time expires
-    COMPLETED --> [*]
-    STOPPED --> [*]
-    EXPIRED --> [*]
-    FAILED --> [*]
-```
+## Monitoring
 
-## Detailed Script Functions
+### Key Metrics
+1. Signal Generation
+   - Number of signals generated per cycle
+   - Analysis success rate
+   - Claude API response time
+   - Chart generation success rate
 
-### 1. `analyze_all_tokens.py`
-- Entry point for analysis
-- Generates charts for all timeframes
-- Calls Claude for analysis
-- Validates and creates signals
+2. Trade Execution
+   - Execution success rate
+   - Price feed reliability
+   - Time between signal and execution
+   - P&L update success rate
 
-```python
-main()
-    → get_active_tokens()
-    → for each token:
-        → analyze_token()
-            → generate_charts()
-            → analyze_charts_with_claude()
-            → generate_signal()
-```
-
-### 2. `analyze_charts.py`
-- Handles chart analysis
-- Signal validation
-- Initial trade creation
-
-```python
-analyze_charts_with_claude()
-    → get_market_data()
-    → prepare_charts()
-    → get_claude_analysis()
-    → return analyses
-
-create_airtable_signal()
-    → validate_signal()
-    → calculate_position_size()
-    → create_record()
-    → check_immediate_execution()
-```
-
-### 3. `manage_signals.py`
-- Manages signal lifecycle
-- Handles activation and updates
-
-```python
-check_signal_conditions()
-    → check_pending_signals()
-    → check_active_signals()
-    → update_expired_signals()
-
-activate_signal()
-    → calculate_position_size()
-    → execute_trade()
-    → update_status()
-```
-
-### 4. `monitor_trades.py`
-- Continuous trade monitoring
-- Exit execution
-- P&L tracking
-
-```python
-monitor_active_trades()
-    → get_active_trades()
-    → for each trade:
-        → check_price()
-        → update_pnl()
-        → check_exits()
-        → execute_if_needed()
-```
-
-### 5. `execute_trade.py`
-- Handles trade execution
-- Interfaces with Phantom wallet
-
-```python
-execute_trade_with_phantom()
-    → get_trade_details()
-    → prepare_transaction()
-    → execute_via_jupiter()
-    → update_records()
-```
-
-## Error Handling and Recovery
-
-### 1. Failed Trade Execution
-```mermaid
-graph TD
-    A[Execute Trade] -->|Fail| B{Retry?}
-    B -->|Yes| C[Wait 60s]
-    C --> A
-    B -->|No| D[Update Status: FAILED]
-    D --> E[Log Error]
-```
-
-### 2. Price Feed Issues
-- Fallback to secondary price sources
-- Skip update if no reliable price
-- Continue monitoring next cycle
-
-### 3. Network Issues
-- Automatic retry with exponential backoff
-- Log failures for manual review
-- Maintain last known good state
-
-## Monitoring and Logging
-
-### 1. Trade Status Updates
-- Every status change logged to `SIGNAL_STATUS_HISTORY`
-- Includes timestamp, reason, price
-
-### 2. Performance Tracking
-- P&L calculations updated every minute
-- ROI tracking including costs
-- Trade execution quality metrics
-
-### 3. System Health
-- Script uptime monitoring
-- Error rate tracking
-- API call success rates
-
-## Configuration Parameters
-
-### 1. Time Windows
-- Signal expiry times by type:
-  * SCALP: 6 hours
-  * INTRADAY: 24 hours
-  * SWING: 7 days
-  * POSITION: 30 days
-
-### 2. Price Thresholds
-- Entry price threshold: ±1%
-- Slippage tolerance: 1%
-- Minimum price movement: 0.1%
-
-### 3. Position Sizing
-- Maximum risk per trade: 2%
-- Maximum position size: 20% of portfolio
-- Minimum trade size: $10
+### Logging
+- All status changes logged with timestamps
+- Execution attempts logged
+- Price checks logged
+- Error conditions logged with context
 
 ## Database Schema
 
