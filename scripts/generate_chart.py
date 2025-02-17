@@ -308,18 +308,22 @@ def generate_chart(df, config, support_levels=None):
                 fontsize=14,
                 fontweight='bold')
 
-        # Price statistics
+        # Price statistics - Remove the $ symbol from the string formatting
+        stats_text = (
+            f"Current: {current_price:.4f} ({price_change:+.2f}%) | "
+            f"ATH: {ath:.4f} | ATL: {atl:.4f} | "
+            f"Avg: {avg_price:.4f}"
+        )
         fig.text(0.5, 0.93,
-                f"Current: ${current_price:.4f} ({price_change:+.2f}%) | "
-                f"ATH: ${ath:.4f} | ATL: ${atl:.4f} | "
-                f"Avg: ${avg_price:.4f}",
+                stats_text,
                 horizontalalignment='center',
                 color='#ffd700',
                 fontsize=11)
 
-        # Volume statistics
+        # Volume statistics - Format the number without $ symbol
+        volume_text = f"Avg Volume: {avg_volume:,.2f} | Candles: {len(df)}"
         fig.text(0.5, 0.90,
-                f"Avg Volume: ${avg_volume:,.2f} | Candles: {len(df)}",
+                volume_text,
                 horizontalalignment='center',
                 color='#c0c0c0',
                 fontsize=10)
@@ -334,8 +338,8 @@ def generate_chart(df, config, support_levels=None):
 
         # Add support/resistance levels if present
         if support_levels:
-            support_text = "Support: " + " | ".join([f"${price:.4f}" for _, price in support_levels if _=='support'])
-            resistance_text = "Resistance: " + " | ".join([f"${price:.4f}" for _, price in support_levels if _=='resistance'])
+            support_text = "Support: " + " | ".join([f"{price:.4f}" for _, price in support_levels if _=='support'])
+            resistance_text = "Resistance: " + " | ".join([f"{price:.4f}" for _, price in support_levels if _=='resistance'])
             
             fig.text(0.5, 0.84, support_text + "\n" + resistance_text,
                     horizontalalignment='center',
