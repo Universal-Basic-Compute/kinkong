@@ -54,13 +54,14 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     const data = await getChartData(token);
     
     // Add candlestick series
-    const candlestickSeries = chart.addSeries<SeriesType.Candlestick>({
+    const candlestickSeries = chart.addSeries({
+        type: 'Candlestick',
         priceFormat: { type: 'price' },
         upColor: 'rgba(75, 192, 75, 1)',
-        downColor: 'rgba(192, 75, 75, 1)',
+        downColor: 'rgba(192, 75, 1)',
         wickUpColor: 'rgba(75, 192, 75, 1)',
         wickDownColor: 'rgba(192, 75, 75, 1)',
-    } as CandlestickSeriesOptions);
+    });
     
     // Format data for lightweight-charts
     const candleData: CandlestickData[] = data.candlesticks.map(candle => ({
@@ -74,19 +75,21 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     candlestickSeries.setData(candleData);
     
     // Add EMA lines
-    const ema20Series = chart.addSeries<SeriesType.Line>({
+    const ema20Series = chart.addSeries({
+        type: 'Line',
         priceFormat: { type: 'price' },
         color: 'rgba(255, 215, 0, 0.8)',
         lineWidth: 1,
         lineType: 0,
-    } as LineSeriesOptions);
+    });
     
-    const ema50Series = chart.addSeries<SeriesType.Line>({
+    const ema50Series = chart.addSeries({
+        type: 'Line',
         priceFormat: { type: 'price' },
         color: 'rgba(75, 192, 192, 0.8)',
         lineWidth: 1,
         lineType: 0,
-    } as LineSeriesOptions);
+    });
     
     const ema20Data: LineData[] = data.ema20.map(point => ({
         time: new Date(point.time * 1000).toISOString().split('T')[0] as Time,
@@ -102,11 +105,12 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     ema50Series.setData(ema50Data);
     
     // Add volume
-    const volumeSeries = chart.addSeries<SeriesType.Histogram>({
+    const volumeSeries = chart.addSeries({
+        type: 'Histogram',
         priceFormat: { type: 'volume' },
         color: 'rgba(128, 128, 128, 0.2)',
         priceScaleId: '',
-    } as HistogramSeriesOptions);
+    });
     
     const volumeData: HistogramData[] = data.volume.map(v => ({
         time: new Date(v.time * 1000).toISOString().split('T')[0] as Time,
