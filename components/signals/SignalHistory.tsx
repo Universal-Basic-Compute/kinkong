@@ -21,6 +21,21 @@ function formatTokenSymbol(token: string): string {
   return token.startsWith('$') ? token : `$${token}`;
 }
 
+function getTimeframeEmoji(timeframe: Signal['timeframe']): string {
+  switch (timeframe) {
+    case 'SCALP':
+      return '⚡'; // Lightning bolt for quick trades
+    case 'INTRADAY':
+      return '📅'; // Calendar for day trading
+    case 'SWING':
+      return '🌊'; // Wave for swing trading
+    case 'POSITION':
+      return '🎯'; // Target for long-term positions
+    default:
+      return '📊'; // Chart as fallback
+  }
+}
+
 function getTokenClass(token: string): string {
   const upperToken = token.toUpperCase();
   switch (upperToken) {
@@ -174,7 +189,9 @@ export function SignalHistory() {
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">
-                <span className="text-gray-300">{signal.timeframe}</span>
+                <span className="text-gray-300">
+                  {getTimeframeEmoji(signal.timeframe)} {signal.timeframe}
+                </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">
                 <div className="text-xs space-y-1">
@@ -195,13 +212,18 @@ export function SignalHistory() {
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">
-                <span className={`text-sm ${
-                  signal.wallet === 'KinKong' 
-                    ? 'text-gold font-semibold' 
-                    : 'text-gray-300'
-                }`}>
+                <a 
+                  href={`https://solscan.io/account/${signal.wallet}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`text-sm hover:underline ${
+                    signal.wallet === 'KinKong' 
+                      ? 'text-gold font-semibold' 
+                      : 'text-gray-300'
+                  }`}
+                >
                   {signal.wallet.slice(0, 4)}...{signal.wallet.slice(-4)}
-                </span>
+                </a>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                 {signal.reason || '-'}
