@@ -83,7 +83,7 @@ const TOKENS = [
   {
     symbol: 'FARTCOIN',
     description: 'Fartcoin',
-    mint: 'SOL'  // Placeholder - needs actual mint address
+    mint: 'SOL'  // Still needs mint address
   },
   {
     symbol: 'AIXBT',
@@ -103,7 +103,7 @@ const TOKENS = [
   {
     symbol: 'ARC',
     description: 'AI Rig Complex',
-    mint: 'SOL'  // Placeholder - needs actual mint address
+    mint: '61V8vBaqAGMpgDQi4JcAwo1dmBGHsyhzodcPqnEVpump'
   },
   {
     symbol: 'ZEREBRO',
@@ -113,22 +113,22 @@ const TOKENS = [
   {
     symbol: 'GAME',
     description: 'GAME by Virtuals',
-    mint: 'VIRTUAL'  // Placeholder - needs actual mint address
+    mint: '0x1C4CcA7C5DB003824208aDDA61Bd749e55F463a3'
   },
   {
     symbol: 'ALCH',
     description: 'Alchemist AI',
-    mint: 'SOL'  // Placeholder - needs actual mint address
+    mint: 'HNg5PYJmtqcmzXrv6S9zP1CDKk5BgDuyFBxbvNApump'
   },
   {
     symbol: 'HAT',
     description: 'TOP HAT',
-    mint: 'SOL'  // Placeholder - needs actual mint address
+    mint: 'AxGAbdFtdbj2oNXa4dKqFvwHzgFtW9mFHWmd7vQfpump'
   },
   {
     symbol: 'AKA',
     description: 'She Rises',
-    mint: 'SOL'  // Placeholder - needs actual mint address
+    mint: '4TwC4AiF1uUSHES2eBftGqemp6TqjEnKghqiH6dFpump'
   },
   {
     symbol: 'USDT',
