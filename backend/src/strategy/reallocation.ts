@@ -211,22 +211,40 @@ export async function executeReallocation() {
     const totalValue = Array.from(currentPortfolio.values())
       .reduce((sum, holding) => sum + (holding.usdValue || 0), 0);
 
+    // Get USDC balance
+    const usdcBalance = currentPortfolio.get('USDC')?.usdValue || 0;
+    console.log('Available USDC balance:', usdcBalance);
+
     // Calculate required trades
     for (const score of tokenScores) {
       const currentValue = currentPortfolio.get(score.symbol)?.usdValue || 0;
       const currentPercentage = (currentValue / totalValue) * 100;
       const targetValue = (score.targetAllocation / 100) * totalValue;
-      const difference = targetValue - currentValue;
+      let difference = targetValue - currentValue;
       
-      // Only trade if adjustment > 3%
-      if (Math.abs(difference) / totalValue * 100 > 3) {
+      // Scale down trades if they exceed USDC balance
+      if (difference > 0) { // Only for buys
+        const totalBuyAmount = orders.reduce((sum, order) => 
+          order.action === 'BUY' ? sum + order.amount : sum, 0);
+        
+        if (totalBuyAmount + difference > usdcBalance) {
+          // Scale down the difference to fit within remaining USDC
+          difference = Math.min(difference, usdcBalance - totalBuyAmount);
+        }
+      }
+      
+      // Only trade if adjustment > 3% and amount is significant
+      if (Math.abs(difference) / totalValue * 100 > 3 && Math.abs(difference) > 1) {
         const price = await getTokenPrice(score.symbol);
         if (!price) continue;
+
+        const tokenAmount = Math.abs(difference) / price;
+        console.log(`Calculated trade: ${score.symbol} ${difference > 0 ? 'BUY' : 'SELL'} $${Math.abs(difference).toFixed(2)} (${tokenAmount.toFixed(4)} tokens @ $${price})`);
 
         orders.push({
           token: score.symbol,
           action: difference > 0 ? 'BUY' : 'SELL',
-          amount: Math.abs(difference) / price, // Convert USD amount to token amount
+          amount: tokenAmount,
           reason: `Reallocation: ${score.finalScore.toFixed(2)} score, ${difference > 0 ? 'increasing' : 'decreasing'} allocation`
         });
       }
