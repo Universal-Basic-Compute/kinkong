@@ -307,30 +307,30 @@ Analyze each timeframe in sequence, considering how they relate to each other:
 2. Then analyze the 2h chart for medium-term movements and setups
 3. Finally analyze the 15m chart for immediate price action and potential entries"""
 
+        message = client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=4096,
+            system=SYSTEM_PROMPT,
+            messages=[{
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": user_prompt
+                    },
+                    *[{
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": "image/png",
+                            "data": chart["data"]
+                        }
+                    } for chart in chart_contents]
+                ]
+            }]
+        )
+        
         try:
-            message = client.messages.create(
-                model="claude-3-5-sonnet-20241022",
-                max_tokens=4096,
-                system=SYSTEM_PROMPT,
-                messages=[{
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": user_prompt
-                        },
-                        *[{
-                            "type": "image",
-                            "source": {
-                                "type": "base64",
-                                "media_type": "image/png",
-                                "data": chart["data"]
-                            }
-                        } for chart in chart_contents]
-                    ]
-                }]
-            )
-            
             # Clean and parse response
             cleaned_response = clean_json_string(message.content[0].text)
             analysis = json.loads(cleaned_response)
@@ -353,15 +353,11 @@ Analyze each timeframe in sequence, considering how they relate to each other:
             analyses["overall"] = analysis["overall_analysis"]
             
             return analyses
-                
-            except Exception as e:
-                print(f"Failed to parse analysis: {e}")
-                print("Response content:")
-                print(cleaned_response)
-                raise
-                
+            
         except Exception as e:
-            print(f"Failed to get Claude response: {e}")
+            print(f"Failed to parse analysis: {e}")
+            print("Response content:")
+            print(cleaned_response)
             raise
             
 
