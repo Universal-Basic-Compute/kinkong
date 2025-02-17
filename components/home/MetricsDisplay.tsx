@@ -1,58 +1,57 @@
 'use client';
 import { useEffect, useState } from 'react';
 
-interface TokenBalance {
-  mint: string;
-  uiAmount: number;
-  usdValue?: number;
+interface PortfolioMetrics {
+  totalValue: number;
+  change24h: number;
+  change7d: number;
+  history: Array<{timestamp: string; value: number}>;
 }
 
 export function MetricsDisplay() {
-  const [totalValue, setTotalValue] = useState<number>(0);
+  const [metrics, setMetrics] = useState<PortfolioMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchPortfolio = async () => {
+    const fetchMetrics = async () => {
       try {
-        const response = await fetch('/api/portfolio');
-        if (!response.ok) throw new Error('Failed to fetch portfolio data');
-        const data: TokenBalance[] = await response.json();
-        
-        const total = data.reduce((sum, token) => sum + (token.usdValue || 0), 0);
-        setTotalValue(total);
+        const response = await fetch('/api/portfolio-metrics');
+        if (!response.ok) throw new Error('Failed to fetch portfolio metrics');
+        const data = await response.json();
+        setMetrics(data);
       } catch (error) {
-        console.error('Error fetching portfolio:', error);
+        console.error('Error fetching portfolio metrics:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchPortfolio();
+    fetchMetrics();
   }, []);
 
-  const metrics = [
+  const metricsData = [
     { 
       label: "Portfolio Value", 
-      value: isLoading ? "Loading..." : `$${totalValue.toLocaleString(undefined, {
+      value: isLoading ? "Loading..." : metrics ? `$${metrics.totalValue.toLocaleString(undefined, {
         maximumFractionDigits: 2
-      })}`,
+      })}` : "$0.00",
       unit: "Total Assets" 
     },
     { 
-      label: "Profit Share", 
-      value: "75%", 
-      unit: "Weekly Distribution" 
+      label: "24h Change", 
+      value: metrics ? `${metrics.change24h >= 0 ? '+' : ''}${metrics.change24h.toFixed(2)}%` : "+0.00%", 
+      unit: "Daily Performance" 
     },
     { 
-      label: "Min Investment", 
-      value: "500", 
-      unit: "USDC" 
+      label: "7d Performance", 
+      value: metrics ? `${metrics.change7d >= 0 ? '+' : ''}${metrics.change7d.toFixed(2)}%` : "+0.00%", 
+      unit: "Weekly Return" 
     }
   ];
 
   return (
     <>
-      {metrics.map((metric, i) => (
+      {metricsData.map((metric, i) => (
         <div key={i} className="metric p-6 rounded-lg metallic-surface border border-gold/10 text-center transition-all hover-effect">
           <h4 className="text-gray-300 mb-2">{metric.label}</h4>
           <p className="text-4xl font-bold text-gold mb-1">{metric.value}</p>
