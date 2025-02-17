@@ -100,7 +100,7 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
   return image;
 }
 
-async function getChartData(token: string) {
+export async function getChartData(mintAddress: string) {
   try {
     // Get Jupiter API data for last 24 hours
     const endTime = Math.floor(Date.now() / 1000);
@@ -108,7 +108,7 @@ async function getChartData(token: string) {
     
     const response = await fetch(
       `https://price.jup.ag/v4/price/history?` +
-      `id=${token}&` +
+      `id=${mintAddress}&` +
       `startTime=${startTime}&` +
       `endTime=${endTime}&` +
       `interval=1H`
