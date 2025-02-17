@@ -110,7 +110,7 @@ def fetch_token_data(timeframe='1h', hours=24, token_address=None):
         df = df.sort_index()
         df = df[~df.index.duplicated(keep='first')]
         
-        print(f"\nFetched {len(df)} candles for token {token_address}")  # Updated print statement
+        print(f"\nFetched {len(df)} candles for token address: {token_address}")
         return df
         
     except Exception as e:
