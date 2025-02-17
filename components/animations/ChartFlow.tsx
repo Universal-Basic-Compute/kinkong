@@ -17,21 +17,32 @@ export function ChartFlow() {
   const [lastPrice, setLastPrice] = useState(100);
 
   const generateCandle = (id: number, prevClose: number): Candle => {
+    // Mouvement maximum de 2% par rapport au prix précédent
     const maxMove = prevClose * 0.02;
-    const priceChange = (Math.random() - 0.5) * maxMove;
-    const close = prevClose + priceChange;
-    const open = prevClose;
+    
+    // Générer open et close de manière cohérente
+    const direction = Math.random() > 0.5 ? 1 : -1;
+    const moveAmount = Math.random() * maxMove;
+    
+    // Si direction positive: open = prevClose, close plus haut
+    // Si direction négative: close = prevClose, open plus haut  
+    const open = direction > 0 ? prevClose : prevClose + moveAmount;
+    const close = direction > 0 ? prevClose + moveAmount : prevClose;
     
     // Générer les mèches proportionnellement au corps
     const bodyRange = Math.abs(close - open);
-    const high = Math.max(open, close) + (bodyRange * Math.random() * 0.5);
-    const low = Math.min(open, close) - (bodyRange * Math.random() * 0.5);
+    const wickSize = bodyRange * 0.5;
+    
+    // Mèche haute au-dessus du plus haut entre open et close
+    const high = Math.max(open, close) + (Math.random() * wickSize);
+    // Mèche basse en-dessous du plus bas entre open et close 
+    const low = Math.min(open, close) - (Math.random() * wickSize);
 
     return {
       id,
       open,
       high,
-      low,
+      low, 
       close,
       color: close >= open ? '#22c55e' : '#ef4444'
     };
