@@ -228,7 +228,7 @@ export function SignalHistory() {
                 </a>
               </td>
               <td className="px-6 py-4 relative group">
-                <p className="text-sm text-gray-300 line-clamp-2 max-h-12 overflow-hidden">
+                <p className="text-xs text-gray-300 line-clamp-3 max-h-[4.5rem] overflow-hidden">
                   {signal.reason || '-'}
                 </p>
                 {/* Tooltip below */}
