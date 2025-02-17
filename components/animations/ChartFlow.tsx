@@ -20,14 +20,13 @@ export function ChartFlow() {
     // Mouvement maximum de 2% par rapport au prix précédent
     const maxMove = prevClose * 0.02;
     
-    // Générer open et close de manière cohérente
-    const direction = Math.random() > 0.5 ? 1 : -1;
-    const moveAmount = Math.random() * maxMove;
+    // Le open est TOUJOURS égal au close précédent
+    const open = prevClose;
     
-    // Si direction positive: open = prevClose, close plus haut
-    // Si direction négative: close = prevClose, open plus haut  
-    const open = direction > 0 ? prevClose : prevClose + moveAmount;
-    const close = direction > 0 ? prevClose + moveAmount : prevClose;
+    // Générer le close avec un mouvement aléatoire
+    const moveAmount = Math.random() * maxMove;
+    const direction = Math.random() > 0.5 ? 1 : -1;
+    const close = open + (direction * moveAmount);
     
     // Générer les mèches proportionnellement au corps
     const bodyRange = Math.abs(close - open);
@@ -35,7 +34,7 @@ export function ChartFlow() {
     
     // Mèche haute au-dessus du plus haut entre open et close
     const high = Math.max(open, close) + (Math.random() * wickSize);
-    // Mèche basse en-dessous du plus bas entre open et close 
+    // Mèche basse en-dessous du plus bas entre open et close
     const low = Math.min(open, close) - (Math.random() * wickSize);
 
     return {
