@@ -62,28 +62,33 @@ function formatTokenSymbol(token: string): string {
   return token.startsWith('$') ? token : `$${token}`;
 }
 
-export const TokenTable = () => {
+interface TokenTableProps {
+  showAllTokens?: boolean;
+}
+
+export const TokenTable = ({ showAllTokens = false }: TokenTableProps) => {
   const [tokens, setTokens] = useState<TokenBalance[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchPortfolio = async () => {
+    const fetchTokens = async () => {
       try {
-        const response = await fetch('/api/portfolio');
+        const endpoint = showAllTokens ? '/api/tokens' : '/api/portfolio';
+        const response = await fetch(endpoint);
         if (!response.ok) {
-          throw new Error('Failed to fetch portfolio data');
+          throw new Error('Failed to fetch token data');
         }
         const data = await response.json();
         setTokens(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load portfolio');
+        setError(err instanceof Error ? err.message : 'Failed to load tokens');
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchPortfolio();
+    fetchTokens();
   }, []);
 
   if (isLoading) {
