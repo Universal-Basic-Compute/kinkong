@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import mplfinance as mpf
 import pandas as pd
+import numpy as np
 from datetime import datetime, timedelta
 import requests
 from dotenv import load_dotenv
@@ -9,7 +10,41 @@ import os
 # Load environment variables
 load_dotenv()
 
-def fetch_ubc_sol_data():
+CHART_CONFIGS = [
+    {
+        'timeframe': '5m',
+        'duration_hours': 24,
+        'title': '24H Short-term View',
+        'filename': 'ubc-chart-short.png'
+    },
+    {
+        'timeframe': '1H',
+        'duration_hours': 168,  # 7 days
+        'title': '7D Medium-term View',
+        'filename': 'ubc-chart-medium.png'
+    },
+    {
+        'timeframe': '4H',
+        'duration_hours': 720,  # 30 days
+        'title': '30D Long-term View',
+        'filename': 'ubc-chart-long.png'
+    }
+]
+
+def calculate_support_levels(df, window=20):
+    """Calculate support and resistance levels using local min/max"""
+    levels = []
+    
+    # Find local minima and maxima
+    for i in range(window, len(df) - window):
+        if all(df['Low'].iloc[i] <= df['Low'].iloc[i-window:i+window]):
+            levels.append(('support', df['Low'].iloc[i]))
+        if all(df['High'].iloc[i] >= df['High'].iloc[i-window:i+window]):
+            levels.append(('resistance', df['High'].iloc[i]))
+    
+    return levels
+
+def fetch_ubc_sol_data(timeframe='1H', hours=24):
     url = "https://public-api.birdeye.so/defi/ohlcv"
     headers = {
         "X-API-KEY": os.getenv('BIRDEYE_API_KEY'),
@@ -17,15 +52,15 @@ def fetch_ubc_sol_data():
         "accept": "application/json"
     }
     
-    # Get current time and 30 hours ago
+    # Calculate time range
     now = int(datetime.now().timestamp())
-    thirty_hours_ago = now - (30 * 60 * 60)  # 30 hours in seconds
+    start_time = now - (hours * 60 * 60)
     
     params = {
         "address": "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump",  # UBC token address
-        "type": "1H",  # 1 hour candles
+        "type": timeframe,
         "currency": "usd",
-        "time_from": thirty_hours_ago,
+        "time_from": start_time,
         "time_to": now
     }
     
@@ -103,9 +138,7 @@ def create_sample_data():
     
     return df
 
-def generate_chart():
-    # Get UBC/SOL data
-    df = fetch_ubc_sol_data()
+def generate_chart(df, title, filename, support_levels=None):
     
     if df is None:
         print("Using sample data as fallback...")
@@ -137,7 +170,7 @@ def generate_chart():
         type='candle',
         volume=True,
         style=style,
-        title='UBC/SOL 24H Chart',
+        title=title,
         ylabel='Price (SOL)',
         ylabel_lower='Volume',
         returnfig=True,
@@ -150,13 +183,40 @@ def generate_chart():
     fig.patch.set_facecolor('black')
     
     # Save the chart
-    plt.savefig('ubc-chart.png', 
+    # Add support/resistance levels if provided
+    if support_levels:
+        ax = axes[0]
+        for level_type, price in support_levels:
+            color = '#22c55e' if level_type == 'support' else '#ef4444'
+            ax.axhline(y=price, color=color, linestyle='--', alpha=0.5)
+    
+    plt.savefig(filename, 
                 dpi=100, 
                 bbox_inches='tight', 
                 facecolor='black',
                 edgecolor='none')
     plt.close()
 
+def generate_all_charts():
+    for config in CHART_CONFIGS:
+        print(f"\nGenerating {config['title']}...")
+        df = fetch_ubc_sol_data(
+            timeframe=config['timeframe'],
+            hours=config['duration_hours']
+        )
+        
+        if df is not None:
+            support_levels = calculate_support_levels(df)
+            generate_chart(
+                df,
+                config['title'],
+                config['filename'],
+                support_levels
+            )
+            print(f"Generated {config['filename']}")
+        else:
+            print(f"Failed to generate {config['filename']}")
+
 if __name__ == "__main__":
-    generate_chart()
-    print("Chart generated as ubc-chart.png")
+    generate_all_charts()
+    print("Charts generated successfully")
