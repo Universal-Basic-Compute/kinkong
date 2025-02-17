@@ -1,4 +1,4 @@
-import { Chart, ChartConfiguration, ChartTypeRegistry } from 'chart.js/auto';
+import { Chart, ChartConfiguration } from 'chart.js/auto';
 import { createCanvas } from 'canvas';
 
 interface Candlestick {
@@ -33,12 +33,11 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     const canvas = createCanvas(800, 400);
     const ctx = canvas.getContext('2d');
     
-    // Create chart
-    new Chart(ctx as any, config);
-        type: 'bar', // We'll use bar as base type and customize it
+    // Create chart configuration
+    const config: ChartConfiguration = {
+        type: 'bar',
         data: {
             datasets: [
-                // Candlestick dataset
                 {
                     type: 'bar',
                     label: token,
@@ -48,38 +47,35 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
                         h: candle.high,
                         l: candle.low,
                         c: candle.close
-                    } as CandlestickData)),
-                    backgroundColor: 'rgba(75, 192, 75, 1)',
+                    })),
+                    backgroundColor: 'rgba(75, 192, 75, 1)'
                 },
-                // EMA 20 line
                 {
                     type: 'line',
                     label: 'EMA 20',
-                    data: data.ema20.map(point => ({
+                    data: data.ema20.map((point: {time: number, value: number}) => ({
                         x: new Date(point.time * 1000),
                         y: point.value
                     })),
                     borderColor: 'rgba(255, 215, 0, 0.8)',
                     borderWidth: 1,
-                    pointRadius: 0,
+                    pointRadius: 0
                 },
-                // EMA 50 line
                 {
                     type: 'line',
                     label: 'EMA 50',
-                    data: data.ema50.map(point => ({
+                    data: data.ema50.map((point: {time: number, value: number}) => ({
                         x: new Date(point.time * 1000),
                         y: point.value
                     })),
                     borderColor: 'rgba(75, 192, 192, 0.8)',
                     borderWidth: 1,
-                    pointRadius: 0,
+                    pointRadius: 0
                 },
-                // Volume bars
                 {
                     type: 'bar',
                     label: 'Volume',
-                    data: data.volume.map(v => ({
+                    data: data.volume.map((v: {time: number, value: number}) => ({
                         x: new Date(v.time * 1000),
                         y: v.value
                     })),
@@ -134,7 +130,9 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
         }
     });
     
-    // Convert to buffer
+    // Create chart
+    new Chart(ctx as any, config);
+    
     // Convert to buffer and return
     return canvas.toBuffer('image/png');
 }
