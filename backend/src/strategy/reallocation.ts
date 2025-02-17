@@ -1,4 +1,5 @@
 import { Token, getTable } from '../airtable/tables';
+import { getTokenPrice } from '../utils/prices';
 
 interface TokenScore {
   symbol: string;
@@ -138,13 +139,17 @@ async function recordReallocation(data: {
   amount: number;
   reason: string;
 }) {
+  // Get token price from DexScreener
+  const price = await getTokenPrice(data.token);
+  
   const table = getTable('TRADES');
   await table.create([{
     fields: {
       timestamp: data.timestamp.toISOString(),
       token: data.token,
-      type: data.action,
+      action: data.action,
       amount: data.amount,
+      price: price || 0,
       reason: data.reason
     }
   }]);
