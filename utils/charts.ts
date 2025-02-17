@@ -1,15 +1,13 @@
 import { createCanvas } from 'canvas';
 import { 
-    createChart, 
-    ColorType,
-    Time,
+    createChart,
+    ISeriesApi,
+    SeriesOptionsMap,
     CandlestickData,
     LineData,
     HistogramData,
-    CandlestickSeriesOptions,
-    LineSeriesOptions,
-    HistogramSeriesOptions,
-    SeriesType
+    ColorType,
+    Time
 } from 'lightweight-charts';
 
 interface Candlestick {
@@ -54,11 +52,9 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     const data = await getChartData(token);
     
     // Add candlestick series
-    const candlestickSeries = chart.addSeries({
-        type: 'Candlestick',
-        priceFormat: { type: 'price' },
+    const candlestickSeries = chart.addCandlestickSeries({
         upColor: 'rgba(75, 192, 75, 1)',
-        downColor: 'rgba(192, 75, 1)',
+        downColor: 'rgba(192, 75, 75, 1)',
         wickUpColor: 'rgba(75, 192, 75, 1)',
         wickDownColor: 'rgba(192, 75, 75, 1)',
     });
@@ -75,17 +71,13 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     candlestickSeries.setData(candleData);
     
     // Add EMA lines
-    const ema20Series = chart.addSeries({
-        type: 'Line',
-        priceFormat: { type: 'price' },
+    const ema20Series = chart.addLineSeries({
         color: 'rgba(255, 215, 0, 0.8)',
         lineWidth: 1,
         lineType: 0,
     });
     
-    const ema50Series = chart.addSeries({
-        type: 'Line',
-        priceFormat: { type: 'price' },
+    const ema50Series = chart.addLineSeries({
         color: 'rgba(75, 192, 192, 0.8)',
         lineWidth: 1,
         lineType: 0,
@@ -105,9 +97,7 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     ema50Series.setData(ema50Data);
     
     // Add volume
-    const volumeSeries = chart.addSeries({
-        type: 'Histogram',
-        priceFormat: { type: 'volume' },
+    const volumeSeries = chart.addHistogramSeries({
         color: 'rgba(128, 128, 128, 0.2)',
         priceScaleId: '',
     });
