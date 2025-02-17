@@ -3,6 +3,8 @@ import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { NextResponse } from 'next/server';
 import { getTokenPrices } from '@/backend/src/utils/jupiter';
 
+const JUPITER_PRICE_API = 'https://price.jup.ag/v4/price';
+
 const TREASURY_WALLET = new PublicKey('FnWyN4t1aoZWFjEEBxopMaAgk5hjL5P3K65oc2T9FBJY');
 
 interface TokenBalance {
@@ -49,11 +51,20 @@ export async function GET() {
     console.log('Fetching prices for mints:', mints);
 
     try {
-      // Fetch prices using Jupiter API v4
-      const pricesResponse = await fetch(`https://price.jup.ag/v4/price?ids=${mints.join(',')}&vsToken=USDC`);
+      // Fetch prices using Jupiter API v4 with explicit HTTPS
+      const pricesUrl = `${JUPITER_PRICE_API}?ids=${mints.join(',')}&vsToken=USDC`;
+      console.log('Fetching prices from:', pricesUrl);
+      
+      const pricesResponse = await fetch(pricesUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+      });
       
       if (!pricesResponse.ok) {
-        throw new Error('Failed to fetch token prices');
+        throw new Error(`Failed to fetch token prices: ${pricesResponse.status}`);
       }
 
       const pricesData = await pricesResponse.json();
@@ -61,35 +72,47 @@ export async function GET() {
 
       // Add USD values
       const balancesWithUSD = nonZeroBalances.map(balance => {
-        // Check if we have price data for this token
-        const tokenPriceData = pricesData.data[balance.mint];
-        if (!tokenPriceData || !tokenPriceData.price) {
-          console.warn(`No price data found for token ${balance.symbol || balance.mint}`);
+        try {
+          // Check if we have price data for this token
+          const tokenPriceData = pricesData.data[balance.mint];
+          if (!tokenPriceData || !tokenPriceData.price) {
+            console.warn(`No price data found for token ${balance.symbol || balance.mint}`);
+            return {
+              ...balance,
+              usdValue: 0
+            };
+          }
+
+          const price = tokenPriceData.price;
+          const usdValue = balance.uiAmount * price;
+          
+          console.log(`Token ${balance.symbol || balance.mint}:`, {
+            uiAmount: balance.uiAmount,
+            price,
+            usdValue
+          });
+
           return {
             ...balance,
-            usdValue: 0 // Set to 0 if no price data available
+            usdValue
+          };
+        } catch (err) {
+          console.error(`Error processing token ${balance.symbol || balance.mint}:`, err);
+          return {
+            ...balance,
+            usdValue: 0
           };
         }
-
-        const price = tokenPriceData.price;
-        const usdValue = balance.uiAmount * price;
-        
-        console.log(`Token ${balance.symbol || balance.mint}:`, {
-          uiAmount: balance.uiAmount,
-          price,
-          usdValue
-        });
-
-        return {
-          ...balance,
-          usdValue
-        };
       });
 
       return NextResponse.json(balancesWithUSD);
     } catch (priceError) {
       console.error('Error fetching prices:', priceError);
-      throw priceError; // Let the error propagate to show there was a problem
+      // Return the balances without USD values instead of throwing
+      return NextResponse.json(nonZeroBalances.map(balance => ({
+        ...balance,
+        usdValue: 0
+      })));
     }
   } catch (error) {
     console.error('Failed to fetch portfolio:', error);
