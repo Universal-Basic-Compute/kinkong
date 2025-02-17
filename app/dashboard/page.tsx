@@ -4,6 +4,7 @@ import { TokenTable } from '@/components/tables/TokenTable'
 import { SignalHistory } from '@/components/signals/SignalHistory'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useState, useEffect } from 'react'
+import Draggable from 'react-draggable';
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
 
 interface TokenInfo {
@@ -14,6 +15,13 @@ interface TokenInfo {
   liquidity: number;
   volumeGrowth: number;
   pricePerformance: number;
+  marketCap: number;
+}
+
+function calculateBubbleSize(marketCap: number): number {
+  const baseSize = 60;
+  const scale = Math.log10(marketCap + 1) / Math.log10(1e9);
+  return baseSize + (scale * 60);
 }
 
 function getTokenClass(token: string | undefined): string {
@@ -169,46 +177,55 @@ export default function Dashboard() {
         </div>
 
         {/* Bubble Visualization */}
-        <div className="mb-12">
-          <div className="flex flex-wrap gap-6 justify-center">
+        <div className="mb-12 relative h-[400px] bg-black/30 rounded-lg border border-gold/20 p-4">
+          <div className="absolute inset-0">
             {trackedTokens.map((token) => (
-              <div 
+              <Draggable
                 key={token.mint}
-                className="relative group"
+                defaultPosition={{x: Math.random() * 500, y: Math.random() * 300}}
+                bounds="parent"
               >
-                <div 
-                  className={`
-                    w-24 h-24 rounded-full flex items-center justify-center
-                    transition-all duration-300 cursor-pointer
-                    ${token.pricePerformance >= 0 ? 'bg-green-900/20' : 'bg-red-900/20'}
-                    hover:scale-110
-                  `}
-                  style={{
-                    boxShadow: `0 0 20px ${token.pricePerformance >= 0 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`,
-                    transform: `scale(${Math.min(1 + Math.abs(token.volumeGrowth) / 1000, 1.5)})`
-                  }}
-                >
-                  <div className="text-center">
-                    <div className={`text-lg font-bold ${getTokenClass(token.symbol)}`}>
-                      ${token.symbol}
-                    </div>
-                    <div className={`text-sm ${token.pricePerformance >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {token.pricePerformance.toFixed(1)}%
+                <div className="relative group cursor-move">
+                  <div 
+                    className={`
+                      rounded-full flex items-center justify-center
+                      transition-all duration-300
+                      ${token.pricePerformance >= 0 ? 'bg-green-900/20' : 'bg-red-900/20'}
+                      hover:z-10
+                    `}
+                    style={{
+                      width: `${calculateBubbleSize(token.marketCap)}px`,
+                      height: `${calculateBubbleSize(token.marketCap)}px`,
+                      boxShadow: `0 0 20px ${token.pricePerformance >= 0 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`,
+                    }}
+                  >
+                    <div className="text-center">
+                      <div className={`text-lg font-bold ${getTokenClass(token.symbol)}`}>
+                        ${token.symbol}
+                      </div>
+                      <div className={`text-sm ${token.pricePerformance >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {token.pricePerformance.toFixed(1)}%
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Tooltip */}
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block">
-                  <div className="bg-black/90 border border-gold/20 rounded-lg p-3 whitespace-nowrap text-sm">
-                    <div className="text-gray-300">Volume: ${token.volume7d.toLocaleString()}</div>
-                    <div className="text-gray-300">Liquidity: ${token.liquidity.toLocaleString()}</div>
-                    <div className={token.volumeGrowth >= 0 ? 'text-green-400' : 'text-red-400'}>
-                      Volume Growth: {token.volumeGrowth.toFixed(1)}%
+                  {/* Enhanced Tooltip */}
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-20">
+                    <div className="bg-black/90 border border-gold/20 rounded-lg p-3 whitespace-nowrap text-sm">
+                      <div className="font-bold mb-1">${token.symbol}</div>
+                      <div className="text-gray-300">Market Cap: ${(token.marketCap || 0).toLocaleString()}</div>
+                      <div className="text-gray-300">Volume: ${token.volume7d.toLocaleString()}</div>
+                      <div className="text-gray-300">Liquidity: ${token.liquidity.toLocaleString()}</div>
+                      <div className={token.volumeGrowth >= 0 ? 'text-green-400' : 'text-red-400'}>
+                        Volume Growth: {token.volumeGrowth.toFixed(1)}%
+                      </div>
+                      <div className={token.pricePerformance >= 0 ? 'text-green-400' : 'text-red-400'}>
+                        Price Change: {token.pricePerformance.toFixed(1)}%
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              </Draggable>
             ))}
           </div>
         </div>
