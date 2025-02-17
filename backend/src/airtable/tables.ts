@@ -78,6 +78,12 @@ export interface MarketSentiment {
   notes: string;
 }
 
+export interface Thought {
+  type: 'TECHNICAL_ANALYSIS' | 'REALLOCATION' | 'SIGNAL';
+  content: string;
+  context: Record<string, any>;
+}
+
 export const getTable = (tableName: string) => {
   if (!tableName) {
     throw new Error('Table name is required');
