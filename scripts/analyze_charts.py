@@ -191,8 +191,8 @@ def analyze_charts_with_claude(chart_paths):
         
         # Format market data for prompt
         market_data_str = ""
-    if market_data:
-        market_data_str = f"""
+        if market_data:
+            market_data_str = f"""
 Current Market Data:
 • Price: ${market_data['price']:.4f}
 • 24h Change: {market_data['price_change_24h']:.2f}%
