@@ -16,6 +16,16 @@ export default function Portfolio() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const getChangeClass = (change: number | undefined) => {
+    if (change === undefined) return '';
+    return change >= 0 ? 'text-green-400' : 'text-red-400';
+  };
+
+  const formatChange = (change: number | undefined) => {
+    if (change === undefined) return '0.00';
+    return `${change >= 0 ? '+' : ''}${change.toFixed(2)}`;
+  };
+
   useEffect(() => {
     async function fetchMetrics() {
       try {
@@ -66,7 +76,7 @@ export default function Portfolio() {
                 <p className="text-2xl text-red-400">Error loading data</p>
               ) : (
                 <p className="text-2xl">
-                  ${metrics?.totalValue.toLocaleString(undefined, {
+                  ${(metrics?.totalValue || 0).toLocaleString(undefined, {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2
                   })}
@@ -80,8 +90,8 @@ export default function Portfolio() {
               ) : error ? (
                 <p className="text-2xl text-red-400">Error loading data</p>
               ) : (
-                <p className={`text-2xl ${metrics?.change24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {metrics?.change24h >= 0 ? '+' : ''}{metrics?.change24h.toFixed(2)}%
+                <p className={`text-2xl ${getChangeClass(metrics?.change24h)}`}>
+                  {formatChange(metrics?.change24h)}%
                 </p>
               )}
             </div>
@@ -92,8 +102,8 @@ export default function Portfolio() {
               ) : error ? (
                 <p className="text-2xl text-red-400">Error loading data</p>
               ) : (
-                <p className={`text-2xl ${metrics?.change7d >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {metrics?.change7d >= 0 ? '+' : ''}{metrics?.change7d.toFixed(2)}%
+                <p className={`text-2xl ${getChangeClass(metrics?.change7d)}`}>
+                  {formatChange(metrics?.change7d)}%
                 </p>
               )}
             </div>
