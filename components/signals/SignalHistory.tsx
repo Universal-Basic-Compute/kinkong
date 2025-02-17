@@ -195,6 +195,27 @@ export function SignalHistory() {
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">
+                <span className="text-gray-300">{signal.timeframe}</span>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm">
+                <div className="text-xs space-y-1">
+                  {signal.entryPrice && (
+                    <div>Entry: <span className="text-gray-300">${signal.entryPrice}</span></div>
+                  )}
+                  {signal.targetPrice && (
+                    <div>Target: <span className="text-green-400">${signal.targetPrice}</span></div>
+                  )}
+                  {signal.stopLoss && (
+                    <div>Stop: <span className="text-red-400">${signal.stopLoss}</span></div>
+                  )}
+                </div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm">
+                <span className={`px-2 py-1 rounded-full text-xs ${getConfidenceClass(signal.confidence)}`}>
+                  {signal.confidence}
+                </span>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm">
                 <span className={`text-sm ${
                   signal.wallet === 'KinKong' 
                     ? 'text-gold font-semibold' 
