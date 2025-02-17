@@ -45,6 +45,26 @@ interface LLMResponse {
     targetReasoning: string;
     stopLossReasoning: string;
   };
+  metrics: {
+    volume: {
+      amount24h: number;
+      previousDay: number;
+      buyVsSell: number;
+    };
+    price: {
+      current: number;
+      high24h: number;
+      low24h: number;
+      change24h: number;
+    };
+    liquidity: {
+      current: number;
+      depth: {
+        buy2percent: number;
+        sell2percent: number;
+      };
+    };
+  };
 }
 
 export async function analyzeTradingOpportunity(data: TokenData): Promise<LLMResponse> {
