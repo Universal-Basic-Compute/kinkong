@@ -75,6 +75,11 @@ console.log('Environment check:', {
 const BIRDEYE_API_KEY = process.env.BIRDEYE_API_KEY;
 const TOKENS = [
   {
+    symbol: 'SOL',
+    name: 'Solana',
+    mint: 'So11111111111111111111111111111111111111112'
+  },
+  {
     symbol: 'VIRTUAL',
     name: 'Virtual Protocol',
     mint: '0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b'
@@ -206,12 +211,74 @@ async function fetchTokenData(): Promise<TokenData[]> {
     try {
       console.log(`Processing ${token.symbol}...`);
       
-      // Get DexScreener data
-      const dexScreenerData = await getDexScreenerData(token.mint);
-      
-      if (!dexScreenerData.pairs || dexScreenerData.pairs.length === 0) {
-        console.warn(`No pairs found for ${token.symbol}`);
-        continue;
+      // Special handling for SOL
+      if (token.symbol === 'SOL') {
+        // Get SOL/USDC pair data
+        const dexScreenerData = await getDexScreenerData('So11111111111111111111111111111111111111112');
+        
+        if (!dexScreenerData.pairs || dexScreenerData.pairs.length === 0) {
+          console.warn('No pairs found for SOL');
+          continue;
+        }
+
+        // Find the USDC pair with highest liquidity
+        const mainPair = dexScreenerData.pairs?.reduce((best, current) => {
+          const isUSDCPair = current.quoteToken?.symbol === 'USDC';
+          if (!isUSDCPair) return best;
+          return (!best || (current.liquidity?.usd || 0) > (best.liquidity?.usd || 0)) 
+            ? current 
+            : best;
+        }, null as any);
+
+        if (!mainPair) {
+          console.warn('No valid USDC pair found for SOL');
+          continue;
+        }
+
+        // Calculate metrics for SOL
+        const total24hVolume = dexScreenerData.pairs.reduce((sum, pair) => 
+          sum + (pair.volume?.h24 || 0), 0);
+
+        const volumeOnUpDay = (mainPair.priceChange?.h24 || 0) > 0;
+        const currentPrice = Number(mainPair.priceUsd || 0);
+        const price24hChange = mainPair.priceChange?.h24 || 0;
+        const price7dAvg = currentPrice * (1 - price24hChange / 100);
+
+        const totalLiquidity = dexScreenerData.pairs.reduce((sum, pair) => 
+          sum + (pair.liquidity?.usd || 0), 0);
+
+        tokenData.push({
+          symbol: 'SOL',
+          name: 'Solana',
+          mint: token.mint,
+          isActive: true,
+          volume7d: total24hVolume * 7,
+          liquidity: totalLiquidity,
+          volumeGrowth: price24hChange,
+          pricePerformance: price24hChange,
+          holderCount: 0,
+          price: currentPrice,
+          price7dAvg: price7dAvg,
+          volumeOnUpDay: volumeOnUpDay,
+          priceChange24h: price24hChange
+        });
+
+        console.log(`Processed SOL:`, {
+          price: currentPrice,
+          price7dAvg: price7dAvg,
+          volumeOnUpDay: volumeOnUpDay,
+          priceChange24h: price24hChange,
+          totalVolume: total24hVolume,
+          totalLiquidity: totalLiquidity
+        });
+      } else {
+        // Get DexScreener data for non-SOL tokens
+        const dexScreenerData = await getDexScreenerData(token.mint);
+        
+        if (!dexScreenerData.pairs || dexScreenerData.pairs.length === 0) {
+          console.warn(`No pairs found for ${token.symbol}`);
+          continue;
+        }
       }
 
       // Find the main USDC or SOL pair with highest liquidity
