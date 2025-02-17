@@ -8,13 +8,14 @@ import requests
 from airtable import Airtable
 
 class ChartAnalysis:
-    def __init__(self, timeframe, signal, confidence, reasoning, key_levels, risk_reward_ratio=None):
+    def __init__(self, timeframe, signal, confidence, reasoning, key_levels, risk_reward_ratio=None, reassess_conditions=None):
         self.timeframe = timeframe
         self.signal = signal
         self.confidence = confidence
         self.reasoning = reasoning
         self.key_levels = key_levels
         self.risk_reward_ratio = risk_reward_ratio
+        self.reassess_conditions = reassess_conditions
 
 def send_telegram_message(message):
     """Send message to Telegram channel"""
@@ -100,15 +101,30 @@ Format your response as JSON:
         "support": [numbers],
         "resistance": [numbers]
     },
-    "risk_reward_ratio": number
+    "risk_reward_ratio": number,
+    "reassess_conditions": {
+        "time": "When to check again (e.g. '2 hours', '4 candles')",
+        "price_triggers": ["List of price levels to watch"],
+        "technical_events": ["Specific events to watch for (e.g. 'EMA crossover', 'Break of structure')"]
+    }
 }
 
 Remember:
 - Only give BUY signals at support with bullish confirmation
 - Only give SELL signals at resistance with bearish confirmation
-- Give HOLD signals when the setup is unclear
+- For HOLD signals:
+  * Specify exact conditions that would trigger reassessment
+  * Include price levels that would change the analysis
+  * List technical events that could create opportunities
+  * Give a clear timeframe for next review
 - Confidence should reflect the quality of the setup
-- Include at least 2 levels each for support and resistance"""
+- Include at least 2 levels each for support and resistance
+
+For HOLD signals, be specific about:
+1. Price action events to watch (e.g. "Break above $1.25 resistance")
+2. Technical indicator developments (e.g. "EMA20 crossing above EMA50")
+3. Volume triggers (e.g. "Volume spike above 2x average")
+4. Time-based reassessment (e.g. "After next 4-hour candle close")"""
 
     try:
         message = client.messages.create(
@@ -234,19 +250,34 @@ def generate_signal(analyses):
             create_airtable_signal(analysis, analysis.timeframe)
 
     # Create detailed message
+    def format_reassessment(analysis):
+        if not analysis.reassess_conditions:
+            return ""
+        
+        conditions = analysis.reassess_conditions
+        return f"""
+Reassessment Conditions:
+⏰ Time: {conditions['time']}
+📊 Price Triggers: {', '.join(conditions['price_triggers'])}
+📈 Technical Events: {', '.join(conditions['technical_events'])}
+"""
+
     message = f"""🔄 UBC Technical Analysis Update
 
 Short-term (15m):
 Signal: {signals['short_term'].signal} ({signals['short_term'].confidence}% confidence)
 {signals['short_term'].reasoning}
+{format_reassessment(signals['short_term']) if signals['short_term'].signal == 'HOLD' else ''}
 
 Medium-term (2h):
 Signal: {signals['medium_term'].signal} ({signals['medium_term'].confidence}% confidence)
 {signals['medium_term'].reasoning}
+{format_reassessment(signals['medium_term']) if signals['medium_term'].signal == 'HOLD' else ''}
 
 Long-term (8h):
 Signal: {signals['long_term'].signal} ({signals['long_term'].confidence}% confidence)
 {signals['long_term'].reasoning}
+{format_reassessment(signals['long_term']) if signals['long_term'].signal == 'HOLD' else ''}
 
 Key Levels:
 Support: {', '.join(map(str, signals['medium_term'].key_levels['support']))}
