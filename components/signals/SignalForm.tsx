@@ -4,6 +4,24 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import { WalletConnect } from '@/components/wallet/WalletConnect'
 import { signalEvents } from './SignalHistory'
 
+function calculateRiskReward(data: typeof formData): string {
+  if (!data.entryPrice || !data.targetPrice || !data.stopLoss) return 'N/A';
+  
+  const entry = Number(data.entryPrice);
+  const target = Number(data.targetPrice);
+  const stop = Number(data.stopLoss);
+  
+  if (isNaN(entry) || isNaN(target) || isNaN(stop)) return 'N/A';
+  
+  const reward = Math.abs(target - entry);
+  const risk = Math.abs(entry - stop);
+  
+  if (risk === 0) return 'N/A';
+  
+  const ratio = (reward / risk).toFixed(2);
+  return `${ratio}:1`;
+}
+
 export function SignalForm() {
   const { connected, publicKey } = useWallet()
   const [formData, setFormData] = useState({
@@ -115,71 +133,100 @@ export function SignalForm() {
         </select>
       </div>
 
-      <div>
-        <label className="block mb-2">Timeframe</label>
-        <select
-          value={formData.timeframe}
-          onChange={e => setFormData({...formData, timeframe: e.target.value as typeof formData.timeframe})}
-          className="input-field"
-          required
-        >
-          <option value="SCALP">Scalp (minutes to hours)</option>
-          <option value="INTRADAY">Intraday (hours to 1 day)</option>
-          <option value="SWING">Swing (days to weeks)</option>
-          <option value="POSITION">Position (weeks to months)</option>
-        </select>
-      </div>
-
-      <div className="grid grid-cols-3 gap-4">
-        <div>
-          <label className="block mb-2">Entry Price</label>
-          <input
-            type="number"
-            step="any"
-            value={formData.entryPrice}
-            onChange={e => setFormData({...formData, entryPrice: e.target.value})}
-            className="input-field"
-            placeholder="Current/Expected"
-          />
-        </div>
-
-        <div>
-          <label className="block mb-2">Target Price</label>
-          <input
-            type="number"
-            step="any"
-            value={formData.targetPrice}
-            onChange={e => setFormData({...formData, targetPrice: e.target.value})}
-            className="input-field"
-            placeholder="Take profit"
-          />
-        </div>
-
-        <div>
-          <label className="block mb-2">Stop Loss</label>
-          <input
-            type="number"
-            step="any"
-            value={formData.stopLoss}
-            onChange={e => setFormData({...formData, stopLoss: e.target.value})}
-            className="input-field"
-            placeholder="Stop loss"
-          />
+      {/* Timeframe Selection */}
+      <div className="mb-6">
+        <label className="block mb-2 font-medium">Timeframe</label>
+        <div className="grid grid-cols-4 gap-2">
+          {[
+            { value: 'SCALP', label: 'Scalp', desc: 'Minutes to hours' },
+            { value: 'INTRADAY', label: 'Intraday', desc: 'Hours to 1 day' },
+            { value: 'SWING', label: 'Swing', desc: 'Days to weeks' },
+            { value: 'POSITION', label: 'Position', desc: 'Weeks to months' }
+          ].map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => setFormData({...formData, timeframe: option.value as typeof formData.timeframe})}
+              className={`p-3 rounded-lg border ${
+                formData.timeframe === option.value
+                  ? 'border-gold bg-gold/10 text-gold'
+                  : 'border-gold/20 hover:border-gold/40'
+              }`}
+            >
+              <div className="font-medium">{option.label}</div>
+              <div className="text-xs text-gray-400">{option.desc}</div>
+            </button>
+          ))}
         </div>
       </div>
 
-      <div>
-        <label className="block mb-2">Confidence Level</label>
-        <select
-          value={formData.confidence}
-          onChange={e => setFormData({...formData, confidence: e.target.value as typeof formData.confidence})}
-          className="input-field"
-          required
-        >
-          <option value="LOW">Low (Speculative)</option>
-          <option value="MEDIUM">Medium (Good Setup)</option>
-          <option value="HIGH">High (Strong Conviction)</option>
-        </select>
+      {/* Price Inputs */}
+      <div className="mb-6">
+        <label className="block mb-2 font-medium">Price Levels</label>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="price-input-group">
+            <label className="block text-sm text-gray-400 mb-1">Entry Price</label>
+            <input
+              type="number"
+              step="any"
+              value={formData.entryPrice}
+              onChange={e => setFormData({...formData, entryPrice: e.target.value})}
+              className="input-field"
+              placeholder="Current/Expected"
+            />
+          </div>
+          <div className="price-input-group">
+            <label className="block text-sm text-gray-400 mb-1">Target Price</label>
+            <input
+              type="number"
+              step="any"
+              value={formData.targetPrice}
+              onChange={e => setFormData({...formData, targetPrice: e.target.value})}
+              className="input-field"
+              placeholder="Take Profit"
+            />
+          </div>
+          <div className="price-input-group">
+            <label className="block text-sm text-gray-400 mb-1">Stop Loss</label>
+            <input
+              type="number"
+              step="any"
+              value={formData.stopLoss}
+              onChange={e => setFormData({...formData, stopLoss: e.target.value})}
+              className="input-field"
+              placeholder="Stop Loss"
+            />
+          </div>
+        </div>
+        <div className="mt-2 text-xs text-gray-400">
+          Risk/Reward Ratio: {calculateRiskReward(formData)}
+        </div>
+      </div>
+
+      {/* Confidence Level */}
+      <div className="mb-6">
+        <label className="block mb-2 font-medium">Confidence Level</label>
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { value: 'LOW', label: 'Low', desc: 'Speculative', color: 'red' },
+            { value: 'MEDIUM', label: 'Medium', desc: 'Good Setup', color: 'yellow' },
+            { value: 'HIGH', label: 'High', desc: 'Strong Conviction', color: 'green' }
+          ].map((level) => (
+            <button
+              key={level.value}
+              type="button"
+              onClick={() => setFormData({...formData, confidence: level.value as typeof formData.confidence})}
+              className={`p-3 rounded-lg border ${
+                formData.confidence === level.value
+                  ? `bg-${level.color}-900/50 border-${level.color}-400 text-${level.color}-400`
+                  : 'border-gold/20 hover:border-gold/40'
+              }`}
+            >
+              <div className="font-medium">{level.label}</div>
+              <div className="text-xs text-gray-400">{level.desc}</div>
+            </button>
+          ))}
+        </div>
       </div>
 
       <div>
