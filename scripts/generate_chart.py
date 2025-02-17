@@ -181,8 +181,8 @@ def generate_chart(df, config, support_levels=None):
             f"EMA(20) & EMA(50) | "
             f"Period: {df.index[0].strftime('%Y-%m-%d %H:%M')} → {df.index[-1].strftime('%Y-%m-%d %H:%M')} UTC"
         )
-    
-    # Style configuration
+
+        # Style configuration
     style = mpf.make_mpf_style(
         base_mpf_style='charles',
         gridstyle='',
@@ -416,14 +416,14 @@ except Exception as e:
         plt.close(fig)
     return False
     
-    # Print statistics for verification
-    print(f"\nChart Statistics for {config['title']}:")
-    print(f"Current Price: ${current_price:.4f}")
-    print(f"ATH: ${ath:.4f}")
-    print(f"ATL: ${atl:.4f}")
-    print(f"Average Price: ${avg_price:.4f}")
-    print(f"Price Change: {price_change:+.2f}%")
-    print(f"Average Volume: ${avg_volume:,.2f}")
+        # Print statistics for verification
+        print(f"\nChart Statistics for {config['title']}:")
+        print(f"Current Price: ${current_price:.4f}")
+        print(f"ATH: ${ath:.4f}")
+        print(f"ATL: ${atl:.4f}")
+        print(f"Average Price: ${avg_price:.4f}")
+        print(f"Price Change: {price_change:+.2f}%")
+        print(f"Average Volume: ${avg_volume:,.2f}")
 
 def generate_all_charts():
     print("Starting chart generation process...")
