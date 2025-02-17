@@ -31,7 +31,7 @@ function calculateBubbleSize(marketCap: number): number {
 }
 
 function getTokenClass(token: string | undefined): string {
-  if (!token) return 'metallic-text-argent'; // Default style if token is undefined
+  if (!token) return 'metallic-text-argent';
   
   const upperToken = token.toUpperCase();
   switch (upperToken) {
@@ -114,10 +114,12 @@ function InvestmentCard() {
 }
 
 export default function Dashboard() {
+  const { publicKey } = useWallet();
   const [trackedTokens, setTrackedTokens] = useState<TokenInfo[]>([]);
   const [isTrackedTokensLoading, setIsTrackedTokensLoading] = useState(true);
   const [trackedTokensError, setTrackedTokensError] = useState<string | null>(null);
   const [bubblePositions, setBubblePositions] = useState<Record<string, BubblePosition>>({});
+  const [isTableVisible, setIsTableVisible] = useState(false);
 
   const handleDrag = (mint: string, e: DraggableEvent, data: DraggableData) => {
     setBubblePositions(prev => ({
@@ -125,7 +127,6 @@ export default function Dashboard() {
       [mint]: { x: data.x, y: data.y }
     }));
   };
-  const [isTableVisible, setIsTableVisible] = useState(false);
 
   useEffect(() => {
     async function fetchTrackedTokens() {
