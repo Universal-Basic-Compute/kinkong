@@ -36,21 +36,21 @@ export async function getTokenPrice(mint: string): Promise<number | null> {
 
     if (data.pairs) {
       // Try to find the best pair in this order: USDC > USDT > SOL
-      const usdcPair = data.pairs.find(p => p.quoteToken.symbol === 'USDC');
+      const usdcPair = data.pairs.find((p: DexScreenerPair) => p.quoteToken.symbol === 'USDC');
       if (usdcPair) {
         const price = Number(usdcPair.priceUsd);
         console.log(`Found USDC pair price: $${price}`);
         return price;
       }
 
-      const usdtPair = data.pairs.find(p => p.quoteToken.symbol === 'USDT');
+      const usdtPair = data.pairs.find((p: DexScreenerPair) => p.quoteToken.symbol === 'USDT');
       if (usdtPair) {
         const price = Number(usdtPair.priceUsd);
         console.log(`Found USDT pair price: $${price}`);
         return price;
       }
 
-      const solPair = data.pairs.find(p => p.quoteToken.symbol === 'SOL');
+      const solPair = data.pairs.find((p: DexScreenerPair) => p.quoteToken.symbol === 'SOL');
       if (solPair) {
         // Get SOL price first
         const solPrice = await getTokenPrice('So11111111111111111111111111111111111111112');
