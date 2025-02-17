@@ -22,7 +22,7 @@ export async function getTokenPrice(mint: string): Promise<number | null> {
     
     console.log(`Fetching price from DexScreener for mint: ${mint}`);
     const response = await fetch(
-      `https://api.dexscreener.com/latest/dex/tokens/${mint}`
+      `https://api.dexscreener.com/latest/dex/tokens/solana/${mint}`
     );
     
     if (!response.ok) {
