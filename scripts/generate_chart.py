@@ -200,110 +200,98 @@ def generate_chart(df, config, support_levels=None):
             xrotation=25,  # Angle date labels for better readability
             tight_layout=False  # Allow manual layout adjustment
         )
-    
-            # Get the main price axis and volume axis
-            ax_main = axes[0]
-            ax_volume = axes[2]
 
-            # Enhance grid
-            ax_main.grid(True, linestyle=':', color='rgba(255, 215, 0, 0.1)', alpha=0.3)
-            ax_main.set_axisbelow(True)  # Put grid behind other elements
+        # Get the main price axis and volume axis
+        ax_main = axes[0]
+        ax_volume = axes[2]
 
-            # Format price axis
-            ax_main.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.4f}'))
-            ax_main.yaxis.set_label_position('right')
-            ax_main.yaxis.tick_right()  # Move price ticks to right side
+        # Enhance grid
+        ax_main.grid(True, linestyle=':', color='rgba(255, 215, 0, 0.1)', alpha=0.3)
+        ax_main.set_axisbelow(True)  # Put grid behind other elements
 
-            # Format volume axis
-            ax_volume.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.0f}'))
-            ax_volume.yaxis.set_label_position('right')
-            ax_volume.yaxis.tick_right()
+        # Format price axis
+        ax_main.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.4f}'))
+        ax_main.yaxis.set_label_position('right')
+        ax_main.yaxis.tick_right()  # Move price ticks to right side
 
-            # Add titles with improved spacing
-            plt.subplots_adjust(top=0.90)  # Adjust top margin for titles
+        # Format volume axis
+        ax_volume.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.0f}'))
+        ax_volume.yaxis.set_label_position('right')
+        ax_volume.yaxis.tick_right()
 
-            # Main title
-            fig.text(0.5, 0.96, config['title'],
-                    horizontalalignment='center',
-                    color='white',
-                    fontsize=14,
-                    fontweight='bold')
+        # Add titles with improved spacing
+        plt.subplots_adjust(top=0.90)  # Adjust top margin for titles
 
-            # Price statistics
-            fig.text(0.5, 0.93,
-                    f"Current: ${current_price:.4f} ({price_change:+.2f}%) | "
-                    f"ATH: ${ath:.4f} | ATL: ${atl:.4f} | "
-                    f"Avg: ${avg_price:.4f}",
-                    horizontalalignment='center',
-                    color='#ffd700',
-                    fontsize=11)
+        # Main title
+        fig.text(0.5, 0.96, config['title'],
+                horizontalalignment='center',
+                color='white',
+                fontsize=14,
+                fontweight='bold')
 
-            # Volume statistics
-            fig.text(0.5, 0.90,
-                    f"Avg Volume: ${avg_volume:,.2f} | Candles: {len(df)}",
-                    horizontalalignment='center',
-                    color='#c0c0c0',
-                    fontsize=10)
+        # Price statistics
+        fig.text(0.5, 0.93,
+                f"Current: ${current_price:.4f} ({price_change:+.2f}%) | "
+                f"ATH: ${ath:.4f} | ATL: ${atl:.4f} | "
+                f"Avg: ${avg_price:.4f}",
+                horizontalalignment='center',
+                color='#ffd700',
+                fontsize=11)
 
-            # Timeframe info
-            fig.text(0.5, 0.87,
-                    f"Period: {df.index[0].strftime('%Y-%m-%d %H:%M')} → "
-                    f"{df.index[-1].strftime('%Y-%m-%d %H:%M')} UTC",
-                    horizontalalignment='center',
-                    color='#808080',
-                    fontsize=9)
-    
-            # Add support/resistance levels if present
-            if support_levels:
-                support_text = "Support: " + " | ".join([f"${price:.4f}" for _, price in support_levels if _=='support'])
-                resistance_text = "Resistance: " + " | ".join([f"${price:.4f}" for _, price in support_levels if _=='resistance'])
+        # Volume statistics
+        fig.text(0.5, 0.90,
+                f"Avg Volume: ${avg_volume:,.2f} | Candles: {len(df)}",
+                horizontalalignment='center',
+                color='#c0c0c0',
+                fontsize=10)
+
+        # Timeframe info
+        fig.text(0.5, 0.87,
+                f"Period: {df.index[0].strftime('%Y-%m-%d %H:%M')} → "
+                f"{df.index[-1].strftime('%Y-%m-%d %H:%M')} UTC",
+                horizontalalignment='center',
+                color='#808080',
+                fontsize=9)
+
+        # Add support/resistance levels if present
+        if support_levels:
+            support_text = "Support: " + " | ".join([f"${price:.4f}" for _, price in support_levels if _=='support'])
+            resistance_text = "Resistance: " + " | ".join([f"${price:.4f}" for _, price in support_levels if _=='resistance'])
             
-                fig.text(0.5, 0.84, support_text + "\n" + resistance_text,
-                        horizontalalignment='center',
-                        color='#a0a0a0',
-                        fontsize=9)
+            fig.text(0.5, 0.84, support_text + "\n" + resistance_text,
+                    horizontalalignment='center',
+                    color='#a0a0a0',
+                    fontsize=9)
 
-            # Add timestamp
-            fig.text(0.98, 0.02,
-                    f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M UTC')}",
-                    horizontalalignment='right',
-                    color='#808080',
-                    fontsize=8)
+        # Add timestamp
+        fig.text(0.98, 0.02,
+                f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M UTC')}",
+                horizontalalignment='right',
+                color='#808080',
+                fontsize=8)
 
-            # Save chart with high quality
-            charts_dir = os.path.join('public', 'charts')
-            os.makedirs(charts_dir, exist_ok=True)
-            output_path = os.path.join(charts_dir, config['filename'])
+        # Save chart with high quality
+        charts_dir = os.path.join('public', 'charts')
+        os.makedirs(charts_dir, exist_ok=True)
+        output_path = os.path.join(charts_dir, config['filename'])
         
-            plt.savefig(
-                output_path,
-                dpi=150,
-                bbox_inches='tight',
-                facecolor='black',
-                edgecolor='none'
-            )
+        plt.savefig(
+            output_path,
+            dpi=150,
+            bbox_inches='tight',
+            facecolor='black',
+            edgecolor='none'
+        )
         
+        plt.close(fig)
+        print(f"Successfully saved chart to {output_path}")
+        return True
+
+    except Exception as e:
+        print(f"Error generating chart: {str(e)}")
+        if 'fig' in locals():
             plt.close(fig)
-            print(f"Successfully saved chart to {output_path}")
-            return True
-
-        except Exception as e:
-            print(f"Error generating chart: {str(e)}")
-            if 'fig' in locals():
-                plt.close(fig)
-            return False
-
-    # Adjust main chart position to account for title space
-    plt.subplots_adjust(top=0.85)
-    
-    # Get the main price axis and volume axis
-    ax_main = axes[0]
-    ax_volume = axes[2]
-    
-    # Format price axis (y-axis) with log scale
-    ax_main.yaxis.set_major_formatter(plt.FuncFormatter(currency_formatter))
-    ax_main.yaxis.label.set_color('white')
-    ax_main.yaxis.set_label_position('right')
+        return False
     ax_main.tick_params(axis='y', colors='white', labelsize=10)
     ax_main.set_yscale('log')  # Ensure log scale is applied
     
