@@ -1,3 +1,5 @@
+'use client';
+
 import { SignalForm } from '@/components/signals/SignalForm'
 import { SignalHistory } from '@/components/signals/SignalHistory'
 import { WalletConnect } from '@/components/wallet/WalletConnect'
