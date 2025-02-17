@@ -24,7 +24,7 @@ export default function Header() {
             href="/" 
             className="text-gold font-bold text-2xl tracking-tight hover:text-gold/80 transition-colors flex items-center"
           >
-            KinKong
+            🦍 KinKong
             <span className="text-sm text-gray-500 ml-1">(alpha)</span>
           </Link>
 
