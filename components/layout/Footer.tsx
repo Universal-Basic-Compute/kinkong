@@ -27,8 +27,26 @@ export default function Footer() {
             <h3 className="text-gold font-bold text-lg mb-4">Resources</h3>
             <ul className="space-y-2">
               <li><a href="/strategy" className="text-gray-400 hover:text-gold text-sm">Strategy</a></li>
-              <li><a href="https://twitter.com/kinkong_ai" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gold text-sm">Twitter</a></li>
-              <li><a href="https://discord.gg/kinkong" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gold text-sm">Discord</a></li>
+              <li>
+                <a 
+                  href="https://x.com/kinkong_ubc" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-gray-400 hover:text-gold text-sm"
+                >
+                  Twitter
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="https://t.me/kinkong_ubc" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-gray-400 hover:text-gold text-sm"
+                >
+                  Telegram
+                </a>
+              </li>
             </ul>
           </div>
 
