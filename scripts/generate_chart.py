@@ -311,7 +311,7 @@ def generate_chart(df, config, support_levels=None):
                     color='gray', va='center', fontsize=8)
     
     # Format volume axis
-    ax_volume.yaxis.set_major_formatter(plt.FuncFormatter(volume_formatter))
+    ax_volume.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.0f}'))
     ax_volume.yaxis.label.set_color('white')
     ax_volume.yaxis.set_label_position('right')
     ax_volume.tick_params(axis='y', colors='white', labelsize=10)
@@ -324,14 +324,14 @@ def generate_chart(df, config, support_levels=None):
     ax_main.grid(axis='x', color='gray', alpha=0.2, linestyle='--')
     
     # Add price range label
-    price_range = f"Range: {format_price(df['Low'].min())} - {format_price(df['High'].max())}"
+    price_range = f"Range: ${df['Low'].min():.4f} - ${df['High'].max():.4f}"
     ax_main.text(0.02, 0.95, price_range,
                 transform=ax_main.transAxes,
                 color='white',
                 fontsize=10)
     
     # Add volume range label
-    volume_range = f"Vol Range: {format_volume(df['Volume'].min())} - {format_volume(df['Volume'].max())}"
+    volume_range = f"Vol Range: ${df['Volume'].min():,.0f} - ${df['Volume'].max():,.0f}"
     ax_volume.text(0.02, 0.95, volume_range,
                   transform=ax_volume.transAxes,
                   color='white',
