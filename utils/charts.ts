@@ -35,8 +35,6 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     const canvas = createCanvas(800, 400);
     const ctx = canvas.getContext('2d');
     
-    Chart.defaults.locale = enUS;
-    
     const config: ChartConfiguration = {
         type: 'bar',
         data: {
