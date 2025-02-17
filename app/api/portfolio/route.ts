@@ -3,7 +3,7 @@ import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { NextResponse } from 'next/server';
 import { getTokenPrices } from '@/backend/src/utils/jupiter';
 
-const JUPITER_PRICE_API = 'https://price.jup.ag/v4/price';
+const DEXSCREENER_API = 'https://api.dexscreener.com/latest/dex/tokens';
 
 const TREASURY_WALLET = new PublicKey('FnWyN4t1aoZWFjEEBxopMaAgk5hjL5P3K65oc2T9FBJY');
 
@@ -51,58 +51,43 @@ export async function GET() {
     console.log('Fetching prices for mints:', mints);
 
     try {
-      // Fetch prices using Jupiter API v4 with explicit HTTPS
-      const pricesUrl = `${JUPITER_PRICE_API}?ids=${mints.join(',')}&vsToken=USDC`;
-      console.log('Fetching prices from:', pricesUrl);
-      
-      const pricesResponse = await fetch(pricesUrl, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-      });
-      
+      // Fetch prices using DexScreener API
+      console.log('Fetching prices from DexScreener for mints:', mints);
+        
+      const pricesResponse = await fetch(`${DEXSCREENER_API}/${mints.join(',')}`);
+        
       if (!pricesResponse.ok) {
         throw new Error(`Failed to fetch token prices: ${pricesResponse.status}`);
       }
 
       const pricesData = await pricesResponse.json();
-      console.log('Jupiter price response:', pricesData);
+      console.log('DexScreener response:', pricesData);
+
+      // Create price map from DexScreener response
+      const priceMap: Record<string, number> = {};
+      if (pricesData.pairs) {
+        for (const pair of pricesData.pairs) {
+          if (pair.baseToken) {
+            priceMap[pair.baseToken.address] = Number(pair.priceUsd) || 0;
+          }
+        }
+      }
 
       // Add USD values
       const balancesWithUSD = nonZeroBalances.map(balance => {
-        try {
-          // Check if we have price data for this token
-          const tokenPriceData = pricesData.data[balance.mint];
-          if (!tokenPriceData || !tokenPriceData.price) {
-            console.warn(`No price data found for token ${balance.symbol || balance.mint}`);
-            return {
-              ...balance,
-              usdValue: 0
-            };
-          }
-
-          const price = tokenPriceData.price;
-          const usdValue = balance.uiAmount * price;
+        const price = priceMap[balance.mint] || 0;
+        const usdValue = balance.uiAmount * price;
           
-          console.log(`Token ${balance.symbol || balance.mint}:`, {
-            uiAmount: balance.uiAmount,
-            price,
-            usdValue
-          });
+        console.log(`Token ${balance.symbol || balance.mint}:`, {
+          uiAmount: balance.uiAmount,
+          price,
+          usdValue
+        });
 
-          return {
-            ...balance,
-            usdValue
-          };
-        } catch (err) {
-          console.error(`Error processing token ${balance.symbol || balance.mint}:`, err);
-          return {
-            ...balance,
-            usdValue: 0
-          };
-        }
+        return {
+          ...balance,
+          usdValue
+        };
       });
 
       return NextResponse.json(balancesWithUSD);
