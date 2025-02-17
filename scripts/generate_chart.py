@@ -53,7 +53,7 @@ CHART_CONFIGS = [
     }
 ]
 
-def fetch_ubc_sol_data(timeframe='1h', hours=24):
+def fetch_ubc_sol_data(timeframe='1h', hours=24, token_address="9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump"):
     url = "https://public-api.birdeye.so/defi/ohlcv"
     headers = {
         "X-API-KEY": os.getenv('BIRDEYE_API_KEY'),
@@ -65,7 +65,7 @@ def fetch_ubc_sol_data(timeframe='1h', hours=24):
     start_time = now - (hours * 60 * 60)
     
     params = {
-        "address": "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump",
+        "address": token_address,
         "type": timeframe,
         "currency": "usd",
         "time_from": start_time,
