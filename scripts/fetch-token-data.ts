@@ -73,62 +73,62 @@ const TOKENS = [
   {
     symbol: 'VIRTUAL',
     description: 'Virtual Protocol',
-    mint: 'NETH'
+    mint: '0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b'
   },
   {
     symbol: 'AI16Z',
     description: 'ai16z',
-    mint: 'SOL'
+    mint: 'HeLp6NuQkmYB4pYWo2zYs22mESHXPQYzXbB8n4V98jwC'
   },
   {
     symbol: 'FARTCOIN',
     description: 'Fartcoin',
-    mint: 'SOL'
+    mint: 'SOL'  // Placeholder - needs actual mint address
   },
   {
     symbol: 'AIXBT',
     description: 'aixbt by Virtuals',
-    mint: 'USDC'
+    mint: '0x4F9Fd6Be4a90f2620860d680c0d4d5Fb53d1A825'
   },
   {
     symbol: 'GRIFFAIN',
     description: 'test griffain.com',
-    mint: 'SOL'
+    mint: 'KENJSUYLASHUMfHyy5o4Hp2FdNqZg1AsUPhfH2kYvEP'
   },
   {
     symbol: 'GOAT',
     description: 'Goatseus Maximus',
-    mint: 'SOL'
+    mint: 'CzLSujWBLFsSjncfkh59rUFqvafWcY5tzedWJSuypump'
   },
   {
     symbol: 'ARC',
     description: 'AI Rig Complex',
-    mint: 'SOL'
+    mint: 'SOL'  // Placeholder - needs actual mint address
   },
   {
     symbol: 'ZEREBRO',
     description: 'zerebro',
-    mint: 'SOL'
+    mint: '8x5VqbHA8D7NkD52uNuS5nnt3PwA8pLD34ymskeSo2Wn'
   },
   {
     symbol: 'GAME',
     description: 'GAME by Virtuals',
-    mint: 'VIRTUAL'
+    mint: 'VIRTUAL'  // Placeholder - needs actual mint address
   },
   {
     symbol: 'ALCH',
     description: 'Alchemist AI',
-    mint: 'SOL'
+    mint: 'SOL'  // Placeholder - needs actual mint address
   },
   {
     symbol: 'HAT',
     description: 'TOP HAT',
-    mint: 'SOL'
+    mint: 'SOL'  // Placeholder - needs actual mint address
   },
   {
     symbol: 'AKA',
     description: 'She Rises',
-    mint: 'SOL'
+    mint: 'SOL'  // Placeholder - needs actual mint address
   },
   {
     symbol: 'USDT',
