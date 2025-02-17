@@ -169,6 +169,14 @@ export async function GET() {
 
   } catch (error) {
     console.error('Failed to fetch performance metrics:', error);
+    // Log more details about the error
+    if (error instanceof Error) {
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+    }
     return NextResponse.json(
       { error: 'Failed to fetch performance metrics' },
       { status: 500 }
