@@ -1,20 +1,32 @@
 import { getTable } from '../airtable/tables';
-import { jupiterTrade } from '../collectors/jupiter';
 import type { Trade } from '../airtable/tables';
+import { executeJupiterTrade, type TradeParams } from '../utils/trading';
 
 export async function executeTrades(trades: Trade[]) {
   const results = [];
   
   for (const trade of trades) {
     try {
-      const result = await jupiterTrade(trade);
-      results.push(result);
+      const params: TradeParams = {
+        inputToken: trade.action === 'SELL' ? trade.token : 'USDC',
+        outputToken: trade.action === 'BUY' ? trade.token : 'USDC',
+        amount: trade.amount
+      };
+      
+      const result = await executeJupiterTrade(params);
+      results.push({
+        ...trade,
+        success: result.success,
+        txId: result.txId,
+        error: result.error
+      });
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error(`Trade failed: ${error.message}`);
-      } else {
-        console.error('Trade failed with unknown error');
-      }
+      console.error(`Trade failed:`, error);
+      results.push({
+        ...trade,
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   }
   
@@ -23,5 +35,17 @@ export async function executeTrades(trades: Trade[]) {
 
 export async function updateTradeHistory(results: any[]) {
   const table = getTable('TRADES');
-  // TODO: Implement trade history updates
+  
+  for (const result of results) {
+    if (result.success) {
+      await table.create({
+        timestamp: new Date().toISOString(),
+        token: result.token,
+        action: result.action,
+        amount: result.amount,
+        price: result.price,
+        txId: result.txId
+      });
+    }
+  }
 }
