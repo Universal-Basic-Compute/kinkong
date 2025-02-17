@@ -1,3 +1,9 @@
+import sys
+from pathlib import Path
+project_root = str(Path(__file__).parent.parent)
+if project_root not in sys.path:
+    sys.path.append(project_root)
+
 from dotenv import load_dotenv
 import anthropic
 import os
@@ -11,7 +17,7 @@ import pandas as pd
 from collections import defaultdict
 import statistics
 from airtable import Airtable
-from validate_signal import validate_signal
+from .validate_signal import validate_signal
 from backend.src.airtable.tables import getTable
 
 # Load environment variables
