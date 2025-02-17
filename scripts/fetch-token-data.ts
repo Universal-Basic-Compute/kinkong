@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import { getTable } from '../backend/src/airtable/tables';
+import { FieldSet } from 'airtable';
 
 dotenv.config();
 
@@ -69,7 +70,7 @@ const TOKENS = [
   }
 ];
 
-interface TokenData {
+interface TokenData extends FieldSet {
   symbol: string;
   description: string;
   mint: string;
@@ -164,13 +165,33 @@ async function updateAirtable(tokenData: TokenData[]) {
         // Update existing record
         await table.update([{
           id: records[0].id,
-          fields: token
+          fields: {
+            symbol: token.symbol,
+            description: token.description,
+            mint: token.mint,
+            isActive: token.isActive,
+            volume7d: token.volume7d,
+            liquidity: token.liquidity,
+            volumeGrowth: token.volumeGrowth,
+            pricePerformance: token.pricePerformance,
+            holderCount: token.holderCount
+          }
         }]);
         console.log(`Updated ${token.symbol} in Airtable`);
       } else {
         // Create new record
         await table.create([{
-          fields: token
+          fields: {
+            symbol: token.symbol,
+            description: token.description,
+            mint: token.mint,
+            isActive: token.isActive,
+            volume7d: token.volume7d,
+            liquidity: token.liquidity,
+            volumeGrowth: token.volumeGrowth,
+            pricePerformance: token.pricePerformance,
+            holderCount: token.holderCount
+          }
         }]);
         console.log(`Created ${token.symbol} in Airtable`);
       }
