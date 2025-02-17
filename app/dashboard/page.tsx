@@ -1,14 +1,11 @@
 'use client';
 
-import { AllocationChart } from '@/components/dashboard/AllocationChart'
-import { TokenTable } from '@/components/tables/TokenTable'
-import { SignalHistory } from '@/components/signals/SignalHistory'
-import { useWallet } from '@solana/wallet-adapter-react'
-import { useState, useEffect } from 'react'
-import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
-
-// Move interfaces outside the component
-import { BubbleChart } from '@/components/dashboard/BubbleChart';
+import { useState, useEffect } from 'react';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { SignalHistory } from '@/components/signals/SignalHistory';
+import { StatsCards } from '@/components/dashboard/StatsCards';
+import { PortfolioSection } from '@/components/dashboard/PortfolioSection';
+import { TrackedTokensSection } from '@/components/dashboard/TrackedTokensSection';
 
 interface TokenInfo {
   symbol: string;
@@ -21,7 +18,6 @@ interface TokenInfo {
   marketCap: number;
 }
 
-// Investment Card component
 function InvestmentCard() {
   const { publicKey } = useWallet();
   const [investment, setInvestment] = useState<{
