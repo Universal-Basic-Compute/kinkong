@@ -2,8 +2,48 @@ import matplotlib.pyplot as plt
 import mplfinance as mpf
 import pandas as pd
 from datetime import datetime, timedelta
+import requests
 
-# Create sample data
+def fetch_ubc_data():
+    # DexScreener API endpoint for UBC/USDC pair on Raydium
+    url = "https://api.dexscreener.com/latest/dex/pairs/solana/HZRCwxP2Vq9PCpPXooayhJ2bxTpo5xfpQrwB1svh332p"
+    
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+        
+        if not data or 'pairs' not in data or not data['pairs']:
+            raise ValueError("No data returned from DexScreener API")
+
+        pair = data['pairs'][0]
+        candles = pair.get('priceData', {}).get('h1', [])  # Get hourly candles
+
+        # Convert API data to DataFrame
+        df_data = []
+        for candle in candles[-24:]:  # Get last 24 hours
+            df_data.append({
+                'Date': datetime.fromtimestamp(candle['timestamp']),
+                'Open': float(candle['open']),
+                'High': float(candle['high']),
+                'Low': float(candle['low']),
+                'Close': float(candle['close']),
+                'Volume': float(candle['volume'])
+            })
+        
+        df = pd.DataFrame(df_data)
+        df.set_index('Date', inplace=True)
+        
+        print(f"Fetched {len(df)} candles for UBC")
+        print(f"Latest price: ${float(pair['priceUsd']):.4f}")
+        print(f"24h volume: ${float(pair['volume']['h24']):.2f}")
+        
+        return df
+        
+    except Exception as e:
+        print(f"Error fetching UBC data: {e}")
+        return None
+
 def create_sample_data():
     # Create dates for the last 24 hours with hourly intervals
     base = datetime.now()
@@ -32,8 +72,12 @@ def create_sample_data():
     return df
 
 def generate_chart():
-    # Get sample data
-    df = create_sample_data()
+    # Get UBC data
+    df = fetch_ubc_data()
+    
+    if df is None:
+        print("Using sample data as fallback...")
+        df = create_sample_data()
     
     # Style configuration
     style = mpf.make_mpf_style(
