@@ -132,6 +132,18 @@ export async function recordPortfolioSnapshot() {
 
     console.log('Successfully recorded all snapshots');
 
+    // Calculate the classification
+    const metrics = {
+      percentAboveAvg: (tokensAboveAvg / tokens.length) * 100,
+      volumeGrowth: totalVolumePrevWeek > 0 
+        ? ((totalVolumeThisWeek - totalVolumePrevWeek) / totalVolumePrevWeek) * 100 
+        : 0,
+      percentVolumeOnUpDays: (volumeOnUpDays / totalVolumeDays) * 100,
+      aiVsSolPerformance: aiTokenPerformance - solPerformance
+    };
+
+    const classification = classifyMarket(metrics);
+
     // Send notifications
     await sendNotifications(analysis, classification);
 
