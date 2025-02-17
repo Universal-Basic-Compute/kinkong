@@ -165,8 +165,11 @@ export async function executeReallocation() {
       ? { aiTokens: 40, sol: 20, stables: 40 }
       : { aiTokens: 70, sol: 20, stables: 10 };
 
-    // 3. Get current portfolio
+    // 3. Get table references first
     const portfolioTable = getTable('PORTFOLIO');
+    const tokensTable = getTable('TOKENS');  // Move this up here
+
+    // 4. Get current portfolio
     const portfolioRecords = await portfolioTable.select().all();
     
     const currentPortfolio = new Map(
