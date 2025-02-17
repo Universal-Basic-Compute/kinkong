@@ -25,7 +25,12 @@ const TOKEN_METADATA: Record<string, TokenMetadata> = {
   'B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo': {
     name: 'Compute',
     symbol: 'COMPUTE',
-    image: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo/logo.png'
+    image: 'https://dd.dexscreener.com/ds-data/tokens/solana/B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo.png?size=lg&key=521a23'
+  },
+  '9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump': {
+    name: 'UBC',
+    symbol: 'UBC',
+    image: 'https://dd.dexscreener.com/ds-data/tokens/solana/9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump.png?size=lg&key=2155bb'
   }
 };
 
