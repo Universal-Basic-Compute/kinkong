@@ -1,13 +1,20 @@
 import { createCanvas } from 'canvas';
 import { ChartJSNodeCanvas } from 'chartjs-node-canvas';
 
-interface CandlestickData {
-  timestamp: number;
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-  volume: number;
+interface Candlestick {
+    timestamp: number;
+    open: number;
+    high: number;
+    low: number;
+    close: number;
+    volume: number;
+}
+
+interface ChartData {
+    candlesticks: Candlestick[];
+    volume: Array<{x: number, y: number}>;
+    ema20: Array<{x: number, y: number}>;
+    ema50: Array<{x: number, y: number}>;
 }
 
 export async function generateTokenChart(token: string): Promise<Buffer> {
@@ -100,7 +107,7 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
   return image;
 }
 
-export async function getChartData(mintAddress: string) {
+export async function getChartData(mintAddress: string): Promise<ChartData> {
   try {
     // Get Jupiter API data for last 24 hours
     const endTime = Math.floor(Date.now() / 1000);
@@ -121,7 +128,7 @@ export async function getChartData(mintAddress: string) {
     const data = await response.json();
     
     // Transform data into candlestick format
-    const candlesticks = data.data.map((item: any) => ({
+    const candlesticks: Candlestick[] = data.data.map((item: any) => ({
       timestamp: item.time,
       open: item.open,
       high: item.high,
@@ -131,8 +138,8 @@ export async function getChartData(mintAddress: string) {
     }));
 
     // Calculate EMAs
-    const ema20 = calculateEMA(candlesticks.map(c => c.close), 20);
-    const ema50 = calculateEMA(candlesticks.map(c => c.close), 50);
+    const ema20 = calculateEMA(candlesticks.map((c: Candlestick) => c.close), 20);
+    const ema50 = calculateEMA(candlesticks.map((c: Candlestick) => c.close), 50);
 
     return {
       candlesticks,
@@ -140,11 +147,11 @@ export async function getChartData(mintAddress: string) {
         x: c.timestamp,
         y: c.volume
       })),
-      ema20: candlesticks.map((c, i) => ({
+      ema20: candlesticks.map((c: Candlestick, i: number) => ({
         x: c.timestamp,
         y: ema20[i]
       })),
-      ema50: candlesticks.map((c, i) => ({
+      ema50: candlesticks.map((c: Candlestick, i: number) => ({
         x: c.timestamp,
         y: ema50[i]
       }))
