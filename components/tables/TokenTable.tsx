@@ -1,6 +1,6 @@
 'use client';
 
-export function TokenTable() {
+export const TokenTable = () => {
   // Mock data - will be replaced with real API data
   const tokens = [
     { symbol: 'TOKEN1', allocation: 10, performance24h: 5.2 },
