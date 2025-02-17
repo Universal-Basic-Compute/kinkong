@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import requests
 from dotenv import load_dotenv
 import os
+import os
 
 # Load environment variables
 load_dotenv()
@@ -373,9 +374,16 @@ def generate_chart(df, config, support_levels=None):
              color='gray',
              fontsize=10)
     
+    # Create public/charts directory if it doesn't exist
+    charts_dir = os.path.join('public', 'charts')
+    os.makedirs(charts_dir, exist_ok=True)
+
+    # Update filename to save in public/charts
+    output_path = os.path.join(charts_dir, config['filename'])
+    
     # Save with higher DPI
     plt.savefig(
-        config['filename'],
+        output_path,
         dpi=150,
         bbox_inches='tight',
         facecolor='black',
@@ -384,6 +392,8 @@ def generate_chart(df, config, support_levels=None):
     
     # Close any open figures to free memory
     plt.close(fig)
+    
+    print(f"\nSaved chart to: {output_path}")
     
     # Print statistics for verification
     print(f"\nChart Statistics for {config['title']}:")
