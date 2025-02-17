@@ -72,84 +72,84 @@ const BIRDEYE_API_KEY = process.env.BIRDEYE_API_KEY;
 const TOKENS = [
   {
     symbol: 'VIRTUAL',
-    description: 'Virtual Protocol',
+    name: 'Virtual Protocol',
     mint: '0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b'
   },
   {
     symbol: 'AI16Z',
-    description: 'ai16z',
+    name: 'ai16z',
     mint: 'HeLp6NuQkmYB4pYWo2zYs22mESHXPQYzXbB8n4V98jwC'
   },
   {
     symbol: 'FARTCOIN',
-    description: 'Fartcoin',
-    mint: 'SOL'  // Still needs mint address
+    name: 'Fartcoin',
+    mint: '9BB6NFEcjBCtnNLFko2FqVQBq8HHM13kCyYcdQbgpump'
   },
   {
     symbol: 'AIXBT',
-    description: 'aixbt by Virtuals',
+    name: 'aixbt by Virtuals',
     mint: '0x4F9Fd6Be4a90f2620860d680c0d4d5Fb53d1A825'
   },
   {
     symbol: 'GRIFFAIN',
-    description: 'test griffain.com',
+    name: 'test griffain.com',
     mint: 'KENJSUYLASHUMfHyy5o4Hp2FdNqZg1AsUPhfH2kYvEP'
   },
   {
     symbol: 'GOAT',
-    description: 'Goatseus Maximus',
+    name: 'Goatseus Maximus',
     mint: 'CzLSujWBLFsSjncfkh59rUFqvafWcY5tzedWJSuypump'
   },
   {
     symbol: 'ARC',
-    description: 'AI Rig Complex',
+    name: 'AI Rig Complex',
     mint: '61V8vBaqAGMpgDQi4JcAwo1dmBGHsyhzodcPqnEVpump'
   },
   {
     symbol: 'ZEREBRO',
-    description: 'zerebro',
+    name: 'zerebro',
     mint: '8x5VqbHA8D7NkD52uNuS5nnt3PwA8pLD34ymskeSo2Wn'
   },
   {
     symbol: 'GAME',
-    description: 'GAME by Virtuals',
+    name: 'GAME by Virtuals',
     mint: '0x1C4CcA7C5DB003824208aDDA61Bd749e55F463a3'
   },
   {
     symbol: 'ALCH',
-    description: 'Alchemist AI',
+    name: 'Alchemist AI',
     mint: 'HNg5PYJmtqcmzXrv6S9zP1CDKk5BgDuyFBxbvNApump'
   },
   {
     symbol: 'HAT',
-    description: 'TOP HAT',
+    name: 'TOP HAT',
     mint: 'AxGAbdFtdbj2oNXa4dKqFvwHzgFtW9mFHWmd7vQfpump'
   },
   {
     symbol: 'AKA',
-    description: 'She Rises',
+    name: 'She Rises',
     mint: '4TwC4AiF1uUSHES2eBftGqemp6TqjEnKghqiH6dFpump'
   },
   {
     symbol: 'USDT',
-    description: 'Tether USD',
+    name: 'Tether USD',
     mint: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'
   },
   {
     symbol: 'UBC',
-    description: 'UBC',
+    name: 'UBC',
     mint: '9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump'
   },
   {
     symbol: 'COMPUTE',
-    description: 'Compute',
+    name: 'Compute',
     mint: 'B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo'
   }
 ];
 
 interface TokenData extends FieldSet {
   symbol: string;
-  description: string;
+  name: string;
   mint: string;
   isActive: boolean;
   volume7d: number;
@@ -204,8 +204,8 @@ async function fetchTokenData(): Promise<TokenData[]> {
       
       // Only use actual data from DexScreener, no defaults
       tokenData.push({
-        symbol: token.symbol,        // This will go in 'name' field
-        description: token.description, // This will go in 'description' field
+        symbol: token.symbol,        // This will go in 'symbol' field
+        name: token.name,           // This will go in 'name' field
         mint: token.mint,           // Actual mint address
         isActive: true,
         volume7d: pair?.volume?.h24 ? pair.volume.h24 * 7 : 0,
