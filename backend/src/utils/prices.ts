@@ -88,14 +88,14 @@ export async function getTokenPrice(mint: string): Promise<number | null> {
       return price;
     }
 
-    pair = solanaPairs.find(p => p.quoteToken.symbol === 'USDT');
+    pair = data.pairs.find(p => p.quoteToken.symbol === 'USDT');
     if (pair) {
       const price = parseFloat(pair.priceUsd);
       console.log(`Found USDT pair price for ${mint}: $${price}`);
       return price;
     }
 
-    pair = solanaPairs.find(p => p.quoteToken.symbol === 'SOL');
+    pair = data.pairs.find(p => p.quoteToken.symbol === 'SOL');
     if (pair) {
       const solPrice = await getTokenPrice('So11111111111111111111111111111111111111112');
       if (!solPrice) {
