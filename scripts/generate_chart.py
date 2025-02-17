@@ -7,6 +7,14 @@ import requests
 import numpy as np
 import matplotlib.pyplot as plt
 
+# Force reload environment variables
+load_dotenv(override=True)
+
+# Debug print to verify environment loading
+print("Environment check:")
+print(f"ANTHROPIC_API_KEY present: {bool(os.getenv('ANTHROPIC_API_KEY'))}")
+print(f"ANTHROPIC_API_KEY starts with: {os.getenv('ANTHROPIC_API_KEY', '')[:8]}...")
+
 # Load environment variables
 load_dotenv()
 

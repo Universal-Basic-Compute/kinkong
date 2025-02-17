@@ -147,14 +147,19 @@ def get_dexscreener_data(token_address: str = "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXr
 
 def analyze_chart_with_claude(chart_path):
     """Analyze a chart using Claude 3"""
+    # Force reload environment variables
+    load_dotenv(override=True)
+    
     api_key = os.getenv('ANTHROPIC_API_KEY')
     if not api_key:
         raise ValueError("ANTHROPIC_API_KEY not found in environment variables")
-        
-    print("Using API key:", api_key[:6] + "..." + api_key[-4:])  # Log partial key for debugging
     
+    # Debug print to verify the key being used (safely)
+    print(f"API Key from .env: {api_key[:8]}...{api_key[-4:]}")
+    
+    # Create client with explicit API key
     client = anthropic.Client(
-        api_key=api_key
+        api_key=api_key,
     )
     
     # Get market data and context
