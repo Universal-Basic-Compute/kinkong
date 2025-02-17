@@ -5,6 +5,9 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 import requests
+import numpy as np
+from collections import defaultdict
+import statistics
 from airtable import Airtable
 
 class ChartAnalysis:
@@ -42,6 +45,74 @@ def send_telegram_message(message):
 import requests
 from typing import Dict, Optional
 
+def get_market_context():
+    """Get broader market context (SOL, BTC trends)"""
+    try:
+        # Get SOL data
+        sol_data = get_dexscreener_data("So11111111111111111111111111111111111111112")
+        # Get BTC price data
+        btc_response = requests.get("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true")
+        btc_data = btc_response.json()
+        
+        return {
+            'sol_price_change': sol_data['price_change_24h'] if sol_data else 0,
+            'btc_price_change': btc_data['bitcoin']['usd_24h_change'] if btc_data else 0
+        }
+    except Exception as e:
+        print(f"Error getting market context: {e}")
+        return None
+
+def calculate_volatility(price_data, window=24):
+    """Calculate historical volatility"""
+    returns = np.log(price_data['Close'] / price_data['Close'].shift(1))
+    return returns.rolling(window=window).std() * np.sqrt(window)
+
+def analyze_volume_profile(df):
+    """Analyze volume distribution at price levels"""
+    price_volume = defaultdict(float)
+    for idx, row in df.iterrows():
+        price_level = round(row['Close'], 4)
+        price_volume[price_level] += row['Volume']
+    
+    # Find high volume nodes
+    sorted_levels = sorted(price_volume.items(), key=lambda x: x[1], reverse=True)
+    return sorted_levels[:5]  # Return top 5 volume nodes
+
+def validate_trade_setup(analysis, market_data):
+    """Validate trade setup quality"""
+    if analysis.signal == 'BUY':
+        # Check if buying at support
+        current_price = market_data['price']
+        nearest_support = min(analysis.key_levels['support'], 
+                            key=lambda x: abs(x - current_price))
+        
+        if current_price < nearest_support * 1.02:  # Within 2% of support
+            analysis.confidence = min(analysis.confidence * 1.2, 100)  # Boost confidence
+        else:
+            analysis.confidence *= 0.8  # Reduce confidence
+
+def get_optimal_timeframe(volatility):
+    """Suggest optimal trading timeframe based on volatility"""
+    if volatility > 0.5:  # High volatility
+        return "Consider shorter timeframes (15m-1h) due to high volatility"
+    elif volatility < 0.2:  # Low volatility
+        return "Consider longer timeframes (4h-1d) in low volatility"
+    return "Current volatility supports medium timeframes (1h-4h)"
+
+def calculate_position_size(analysis, market_data):
+    """Calculate suggested position size based on risk"""
+    if not analysis.key_levels.get('stopLoss'):
+        return None
+        
+    risk_percent = 2  # 2% account risk per trade
+    entry = market_data['price']
+    stop = analysis.key_levels['stopLoss']
+    
+    risk_per_token = abs(entry - stop)
+    position_size = (market_data['liquidity'] * risk_percent) / risk_per_token
+    
+    return min(position_size, market_data['liquidity'] * 0.01)  # Max 1% of liquidity
+
 def get_dexscreener_data(token_address: str = "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump") -> Optional[Dict]:
     """Fetch token data from DexScreener API"""
     try:
@@ -75,8 +146,22 @@ def analyze_chart_with_claude(chart_path):
         api_key=os.getenv('ANTHROPIC_API_KEY')
     )
     
-    # Get market data
+    # Get market data and context
     market_data = get_dexscreener_data()
+    market_context = get_market_context()
+    
+    # Get chart data for technical calculations
+    df = pd.read_csv(chart_path)  # Assuming chart data is saved alongside image
+    volatility = calculate_volatility(df)
+    volume_nodes = analyze_volume_profile(df)
+    
+    additional_context = f"""
+Market Context:
+• SOL 24h Change: {market_context['sol_price_change']:.2f}%
+• BTC 24h Change: {market_context['btc_price_change']:.2f}%
+• Historical Volatility: {volatility.iloc[-1]:.2f}
+• Key Volume Nodes: {', '.join([f'${price:.4f}' for price, _ in volume_nodes])}
+"""
     
     # Read image file as base64
     with open(chart_path, "rb") as image_file:
@@ -290,12 +375,30 @@ def create_airtable_signal(analysis, timeframe):
 
 def generate_signal(analyses):
     """Generate combined signal from multiple timeframe analyses"""
+    # Check timeframe alignment
+    signals_aligned = all(a.signal == analyses[0].signal for a in analyses)
+    
+    if signals_aligned:
+        base_confidence = max(a.confidence for a in analyses)
+        confidence_boost = 20  # Boost confidence when all timeframes align
+    else:
+        base_confidence = statistics.mean(a.confidence for a in analyses)
+        confidence_boost = 0
+    
     # Group analyses by timeframe
     signals = {
         'short_term': next((a for a in analyses if a.timeframe == '15m'), None),
         'medium_term': next((a for a in analyses if a.timeframe == '2h'), None),
         'long_term': next((a for a in analyses if a.timeframe == '8h'), None)
     }
+    
+    # Apply confidence adjustment
+    for timeframe in signals:
+        if signals[timeframe]:
+            signals[timeframe].confidence = min(
+                signals[timeframe].confidence + confidence_boost, 
+                100
+            )
     
     # Create signals in Airtable
     for timeframe, analysis in signals.items():
