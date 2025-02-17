@@ -7,6 +7,7 @@ interface TokenBalance {
   decimals: number;
   uiAmount: number;
   symbol?: string;
+  usdValue?: number;
 }
 
 export const TokenTable = () => {
@@ -41,39 +42,67 @@ export const TokenTable = () => {
     return <div className="text-center py-4 text-red-400">Error: {error}</div>;
   }
 
+  const totalValue = tokens.reduce((sum, token) => sum + (token.usdValue || 0), 0);
+
   return (
-    <table className="min-w-full">
-      <thead>
-        <tr>
-          <th className="text-left px-4 py-2 text-gold">Token</th>
-          <th className="text-right px-4 py-2 text-gold">Balance</th>
-          <th className="text-right px-4 py-2 text-gold">Value (USD)</th>
-        </tr>
-      </thead>
-      <tbody>
-        {tokens.map(token => (
-          <tr key={token.mint} className="border-t border-gold/10">
-            <td className="px-4 py-2">
-              <a 
-                href={`https://solscan.io/token/${token.mint}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gold hover:text-gold/80"
-              >
-                {token.symbol || token.mint.slice(0, 4)}...
-              </a>
-            </td>
-            <td className="text-right px-4 py-2">
-              {token.uiAmount.toLocaleString(undefined, {
-                maximumFractionDigits: 4
+    <div>
+      <table className="min-w-full">
+        <thead>
+          <tr>
+            <th className="text-left px-4 py-2 text-gold">Token</th>
+            <th className="text-right px-4 py-2 text-gold">Balance</th>
+            <th className="text-right px-4 py-2 text-gold">Value (USD)</th>
+            <th className="text-right px-4 py-2 text-gold">% of Portfolio</th>
+          </tr>
+        </thead>
+        <tbody>
+          {tokens.map(token => (
+            <tr key={token.mint} className="border-t border-gold/10">
+              <td className="px-4 py-2">
+                <a 
+                  href={`https://solscan.io/token/${token.mint}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gold hover:text-gold/80"
+                >
+                  {token.symbol || token.mint.slice(0, 4)}...
+                </a>
+              </td>
+              <td className="text-right px-4 py-2">
+                {token.uiAmount.toLocaleString(undefined, {
+                  maximumFractionDigits: 4
+                })}
+              </td>
+              <td className="text-right px-4 py-2">
+                {token.usdValue 
+                  ? `$${token.usdValue.toLocaleString(undefined, {
+                      maximumFractionDigits: 2
+                    })}` 
+                  : '-'
+                }
+              </td>
+              <td className="text-right px-4 py-2">
+                {token.usdValue && totalValue > 0
+                  ? `${((token.usdValue / totalValue) * 100).toFixed(1)}%`
+                  : '-'
+                }
+              </td>
+            </tr>
+          ))}
+        </tbody>
+        <tfoot>
+          <tr className="border-t border-gold/20">
+            <td className="px-4 py-2 font-bold">Total</td>
+            <td></td>
+            <td className="text-right px-4 py-2 font-bold">
+              ${totalValue.toLocaleString(undefined, {
+                maximumFractionDigits: 2
               })}
             </td>
-            <td className="text-right px-4 py-2">
-              Coming soon
-            </td>
+            <td className="text-right px-4 py-2 font-bold">100%</td>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </tfoot>
+      </table>
+    </div>
   );
 };

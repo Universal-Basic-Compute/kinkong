@@ -1,6 +1,7 @@
 import { Connection, PublicKey } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { NextResponse } from 'next/server';
+import { getTokenPrices } from '@/backend/src/utils/jupiter';
 
 const TREASURY_WALLET = new PublicKey('FnWyN4t1aoZWFjEEBxopMaAgk5hjL5P3K65oc2T9FBJY');
 
@@ -10,6 +11,7 @@ interface TokenBalance {
   decimals: number;
   uiAmount: number;
   symbol?: string;
+  usdValue?: number;
 }
 
 export async function GET() {
@@ -20,15 +22,13 @@ export async function GET() {
 
     const connection = new Connection(process.env.NEXT_PUBLIC_HELIUS_RPC_URL);
 
-    // Get all token accounts for the treasury
+    // Get all token accounts
     const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
       TREASURY_WALLET,
-      {
-        programId: TOKEN_PROGRAM_ID,
-      }
+      { programId: TOKEN_PROGRAM_ID }
     );
 
-    // Format the token balances
+    // Format balances
     const balances: TokenBalance[] = tokenAccounts.value.map(account => {
       const parsedInfo = account.account.data.parsed.info;
       return {
@@ -40,10 +40,20 @@ export async function GET() {
       };
     });
 
-    // Filter out zero balances
+    // Filter non-zero balances
     const nonZeroBalances = balances.filter(b => b.uiAmount > 0);
 
-    return NextResponse.json(nonZeroBalances);
+    // Get prices for all tokens
+    const mints = nonZeroBalances.map(b => b.mint);
+    const prices = await getTokenPrices(mints);
+
+    // Add USD values
+    const balancesWithUSD = nonZeroBalances.map(balance => ({
+      ...balance,
+      usdValue: prices[balance.mint] ? balance.uiAmount * prices[balance.mint] : undefined
+    }));
+
+    return NextResponse.json(balancesWithUSD);
   } catch (error) {
     console.error('Failed to fetch portfolio:', error);
     return NextResponse.json(
