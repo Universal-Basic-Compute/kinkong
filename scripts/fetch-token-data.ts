@@ -16,6 +16,10 @@ interface DexScreenerResponse {
       address: string;
       symbol: string;
     };
+    quoteToken?: {
+      address: string;
+      symbol: string;
+    };
     priceUsd?: string;
     liquidity?: {
       usd: number;
@@ -211,7 +215,7 @@ async function fetchTokenData(): Promise<TokenData[]> {
       }
 
       // Find the main USDC or SOL pair with highest liquidity
-      const mainPair = dexScreenerData.pairs.reduce((best, current) => {
+      const mainPair = dexScreenerData.pairs?.reduce((best, current) => {
         const isValidQuote = current.quoteToken?.symbol === 'USDC' || 
                             current.quoteToken?.symbol === 'SOL';
         if (!isValidQuote) return best;
@@ -258,7 +262,7 @@ async function fetchTokenData(): Promise<TokenData[]> {
       });
 
       console.log(`Processed ${token.symbol}:`, {
-        mainPair: mainPair.quoteToken?.symbol,
+        mainPair: mainPair?.quoteToken?.symbol,
         price: currentPrice,
         price7dAvg: price7dAvg,
         volumeOnUpDay: volumeOnUpDay,
