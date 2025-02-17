@@ -14,6 +14,7 @@ export interface Portfolio {
   token: string;
   allocation: number;
   lastUpdate: string;
+  usdValue?: number; // Add this field
 }
 
 export interface Trade {
