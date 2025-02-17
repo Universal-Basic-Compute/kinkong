@@ -5,6 +5,21 @@ import fetch from 'node-fetch';
 import { getTable } from '../backend/src/airtable/tables';
 import { FieldSet } from 'airtable';
 
+interface BirdeyeResponse {
+  volume24h?: number;
+  volumeChange24h?: number;
+  priceChange24h?: number;
+  holder?: number;
+}
+
+interface JupiterResponse {
+  data?: {
+    [key: string]: {
+      liquidity?: number;
+    };
+  };
+}
+
 // Add debug logging BEFORE config
 console.log('Current working directory:', process.cwd());
 console.log('.env path:', path.resolve(process.cwd(), '.env'));
@@ -104,7 +119,7 @@ interface TokenData extends FieldSet {
   holderCount: number;
 }
 
-async function getBirdeyeData(mint: string) {
+async function getBirdeyeData(mint: string): Promise<BirdeyeResponse> {
   try {
     const response = await fetch(`https://public-api.birdeye.so/public/token_list/token_meta?address=${mint}`, {
       headers: {
@@ -114,26 +129,29 @@ async function getBirdeyeData(mint: string) {
     return await response.json();
   } catch (error) {
     console.warn(`Warning: Failed to fetch Birdeye data for ${mint}:`, error);
-    return null;
+    return {};
   }
 }
 
-async function getJupiterData(mint: string, retries = 3) {
-  const timeout = 5000; // 5 seconds timeout
-  
+async function getJupiterData(mint: string, retries = 3): Promise<JupiterResponse> {
   for (let i = 0; i < retries; i++) {
     try {
       console.log(`Attempting to fetch Jupiter data for ${mint} (attempt ${i + 1}/${retries})...`);
       
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
       const response = await fetch(
         `https://price.jup.ag/v4/price?ids=${mint}`,
         {
-          timeout,
+          signal: controller.signal,
           headers: {
             'Accept': 'application/json'
           }
         }
       );
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -148,15 +166,14 @@ async function getJupiterData(mint: string, retries = 3) {
       
       if (i === retries - 1) {
         console.warn(`All ${retries} attempts failed for ${mint}`);
-        return null;
+        return {};
       }
       
-      // Wait before retry (exponential backoff)
       await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
     }
   }
   
-  return null;
+  return {};
 }
 
 async function fetchTokenData(): Promise<TokenData[]> {
