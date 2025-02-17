@@ -438,6 +438,30 @@ def create_airtable_signal(analysis, timeframe, token_info):
                           f"Resistance Levels: {', '.join(map(str, resistance_levels))}\n"
                           f"R/R Ratio: {analysis.get('risk_reward_ratio', 'N/A')}")
             }
+
+            # Validate signal before creating
+            validation_result = validate_signal(
+                timeframe=timeframe,
+                signal_data={
+                    'signal': signal_type,
+                    'entryPrice': current_price,
+                    'targetPrice': target_price,
+                    'stopLoss': stop_price
+                },
+                token_info=token_info,
+                market_data=get_dexscreener_data(token_info['mint'])
+            )
+
+            if not validation_result['valid']:
+                print(f"Signal validation failed: {validation_result['reason']}")
+                return None
+
+            # Add validation results to signal data
+            signal_data.update({
+                'expectedProfit': validation_result['expected_profit'],
+                'tradingCosts': validation_result['costs'],
+                'riskRewardRatio': validation_result['risk_reward']
+            })
             
             print("\nSending to Airtable:", json.dumps(signal_data, indent=2))
             
