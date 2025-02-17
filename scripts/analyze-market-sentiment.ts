@@ -3,7 +3,15 @@ import dotenv from 'dotenv';
 import path from 'path';
 
 // Load environment variables
-dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+console.log('🔧 Initializing environment...');
+const envPath = path.resolve(process.cwd(), '.env');
+const result = dotenv.config({ path: envPath });
+console.log('📁 Environment path:', envPath);
+console.log('✅ Environment loaded:', {
+  hasError: result.error ? true : false,
+  hasAirtableKey: !!process.env.KINKONG_AIRTABLE_API_KEY,
+  hasAirtableBase: !!process.env.KINKONG_AIRTABLE_BASE_ID
+});
 
 interface TokenMetrics {
   symbol: string;
@@ -14,17 +22,37 @@ interface TokenMetrics {
   priceChange24h: number;
 }
 
-async function getWeeklyMetrics() {
+interface WeeklyAnalysis {
+  sentiment: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+  metrics: {
+    percentAboveAvg: number;
+    volumeGrowth: number;
+    percentVolumeOnUpDays: number;
+    aiVsSolPerformance: number;
+    tokensAnalyzed: number;
+    totalVolume: number;
+    upDayVolume: number;
+  };
+  criteria: {
+    bullish: boolean[];
+    bearish: boolean[];
+  };
+}
+
+async function getWeeklyMetrics(): Promise<{ [key: string]: TokenMetrics[] }> {
+  console.log('📊 Fetching weekly metrics...');
   try {
-    // Get snapshots from the last 7 days
     const snapshotsTable = getTable('TOKEN_SNAPSHOTS');
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     
+    console.log('🔍 Querying snapshots since:', sevenDaysAgo.toISOString());
     const records = await snapshotsTable.select({
       filterByFormula: `IS_AFTER({timestamp}, '${sevenDaysAgo.toISOString()}')`,
       sort: [{ field: 'timestamp', direction: 'desc' }]
     }).all();
+
+    console.log(`📝 Found ${records.length} snapshots`);
 
     // Group snapshots by token
     const tokenSnapshots: { [key: string]: TokenMetrics[] } = {};
@@ -45,17 +73,25 @@ async function getWeeklyMetrics() {
       });
     });
 
+    const tokenCount = Object.keys(tokenSnapshots).length;
+    console.log(`✅ Processed snapshots for ${tokenCount} tokens`);
+    
+    // Validate data quality
+    Object.entries(tokenSnapshots).forEach(([token, snapshots]) => {
+      console.log(`📈 ${token}: ${snapshots.length} snapshots, Latest price: $${snapshots[0]?.price.toFixed(4)}`);
+    });
+
     return tokenSnapshots;
   } catch (error) {
-    console.error('Error fetching weekly metrics:', error);
-    throw error;
+    console.error('❌ Error fetching weekly metrics:', error);
+    throw new Error(`Failed to fetch weekly metrics: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
-async function analyzeMarketSentiment() {
+async function analyzeMarketSentiment(): Promise<WeeklyAnalysis> {
+  console.log('\n🔄 Starting market sentiment analysis...');
+  
   try {
-    console.log('Starting market sentiment analysis...');
-    
     const tokenSnapshots = await getWeeklyMetrics();
     const tokens = Object.keys(tokenSnapshots);
     
@@ -69,35 +105,44 @@ async function analyzeMarketSentiment() {
     // Get SOL performance for comparison
     const solSnapshots = tokenSnapshots['SOL'] || [];
     const solPerformance = solSnapshots.length > 0 ? solSnapshots[0].priceChange24h : 0;
+    console.log(`📊 SOL Performance: ${solPerformance.toFixed(2)}%`);
     
     // Analyze each token
+    console.log('\n🔍 Analyzing individual tokens:');
     tokens.forEach(token => {
       const snapshots = tokenSnapshots[token];
-      if (snapshots.length === 0) return;
+      if (snapshots.length === 0) {
+        console.log(`⚠️ No snapshots found for ${token}`);
+        return;
+      }
       
       // Check if above 7-day average
       const latestSnapshot = snapshots[0];
-      if (latestSnapshot.price > latestSnapshot.price7dAvg) {
+      const isAboveAvg = latestSnapshot.price > latestSnapshot.price7dAvg;
+      if (isAboveAvg) {
         tokensAboveAvg++;
       }
       
-      // Count volume on up/down days
-      snapshots.forEach(snapshot => {
-        if (snapshot.volumeOnUpDay) {
-          volumeOnUpDays++;
-        }
-        totalVolumeDays++;
-      });
+      // Process volume data
+      const tokenUpDays = snapshots.filter(s => s.volumeOnUpDay).length;
+      volumeOnUpDays += tokenUpDays;
+      totalVolumeDays += snapshots.length;
       
       // Calculate weekly volumes
       const thisWeekVolume = snapshots.reduce((sum, s) => sum + s.volume24h, 0);
       totalVolumeThisWeek += thisWeekVolume;
       
-      // Previous week volume (if available)
       if (snapshots.length > 7) {
         const prevWeekVolume = snapshots.slice(7).reduce((sum, s) => sum + s.volume24h, 0);
         totalVolumePrevWeek += prevWeekVolume;
       }
+
+      console.log(`${token}:
+        Price: $${latestSnapshot.price.toFixed(4)}
+        Above 7d Avg: ${isAboveAvg ? '✅' : '❌'}
+        Up Days: ${tokenUpDays}/${snapshots.length}
+        24h Change: ${latestSnapshot.priceChange24h.toFixed(2)}%
+      `.replace(/^\s+/gm, ''));
     });
     
     // Calculate percentages
@@ -107,15 +152,15 @@ async function analyzeMarketSentiment() {
       ? ((totalVolumeThisWeek - totalVolumePrevWeek) / totalVolumePrevWeek) * 100 
       : 0;
     
-    // Average AI token performance
+    // Calculate AI performance
     const aiPerformance = tokens
       .filter(t => t !== 'SOL')
       .reduce((sum, token) => {
         const snapshots = tokenSnapshots[token];
         return sum + (snapshots[0]?.priceChange24h || 0);
-      }, 0) / (tokens.length - 1); // Exclude SOL from average
+      }, 0) / (tokens.length - 1);
     
-    // Check bullish criteria
+    // Check criteria
     const bullishCriteria = [
       percentAboveAvg > 60,
       volumeGrowth > 0,
@@ -123,7 +168,6 @@ async function analyzeMarketSentiment() {
       aiPerformance > solPerformance
     ];
     
-    // Check bearish criteria
     const bearishCriteria = [
       percentAboveAvg < 40,
       volumeGrowth < 0,
@@ -134,8 +178,8 @@ async function analyzeMarketSentiment() {
     const bullishCount = bullishCriteria.filter(Boolean).length;
     const bearishCount = bearishCriteria.filter(Boolean).length;
     
-    // Determine market sentiment
-    let sentiment;
+    // Determine sentiment
+    let sentiment: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
     if (bullishCount >= 3) {
       sentiment = 'BULLISH';
     } else if (bearishCount >= 3) {
@@ -144,11 +188,30 @@ async function analyzeMarketSentiment() {
       sentiment = 'NEUTRAL';
     }
     
-    // Save results to MARKET_SENTIMENT table
+    // Prepare analysis results
+    const analysis: WeeklyAnalysis = {
+      sentiment,
+      metrics: {
+        percentAboveAvg,
+        volumeGrowth,
+        percentVolumeOnUpDays,
+        aiVsSolPerformance: aiPerformance - solPerformance,
+        tokensAnalyzed: tokens.length,
+        totalVolume: totalVolumeThisWeek,
+        upDayVolume: volumeOnUpDays
+      },
+      criteria: {
+        bullish: bullishCriteria,
+        bearish: bearishCriteria
+      }
+    };
+    
+    // Save to Airtable
+    console.log('\n💾 Saving analysis to Airtable...');
     const sentimentTable = getTable('MARKET_SENTIMENT');
     await sentimentTable.create([{
       fields: {
-        weekStartDate: sevenDaysAgo.toISOString(),
+        weekStartDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
         weekEndDate: new Date().toISOString(),
         totalTokens: tokens.length,
         tokensAbove7dAvg: tokensAboveAvg,
@@ -160,38 +223,51 @@ async function analyzeMarketSentiment() {
         aiTokensPerformance: aiPerformance,
         classification: sentiment,
         notes: `
+          🎯 Analysis Summary:
+          
           Bullish criteria met: ${bullishCount}/4
           Bearish criteria met: ${bearishCount}/4
           
-          Details:
+          📊 Key Metrics:
           - ${percentAboveAvg.toFixed(1)}% tokens above 7d avg
           - ${volumeGrowth.toFixed(1)}% volume growth
           - ${percentVolumeOnUpDays.toFixed(1)}% volume on up days
-          - AI tokens ${aiPerformance > solPerformance ? 'outperforming' : 'underperforming'} SOL
+          - AI tokens ${aiPerformance > solPerformance ? 'outperforming' : 'underperforming'} SOL by ${Math.abs(aiPerformance - solPerformance).toFixed(1)}%
+          
+          📈 Volume Analysis:
+          - This week: $${(totalVolumeThisWeek).toLocaleString()}
+          - Previous week: $${(totalVolumePrevWeek).toLocaleString()}
+          - Up days: ${volumeOnUpDays}/${totalVolumeDays}
         `.trim()
       }
     }]);
     
-    console.log('\nMarket Sentiment Analysis Results:');
-    console.log('----------------------------------');
-    console.log(`Classification: ${sentiment}`);
+    // Print summary
+    console.log('\n📊 Market Sentiment Analysis Results:');
+    console.log('=====================================');
+    console.log(`Classification: ${sentiment} ${sentiment === 'BULLISH' ? '🚀' : sentiment === 'BEARISH' ? '🐻' : '😐'}`);
     console.log(`Tokens above 7d avg: ${percentAboveAvg.toFixed(1)}%`);
     console.log(`Volume growth: ${volumeGrowth.toFixed(1)}%`);
     console.log(`Volume on up days: ${percentVolumeOnUpDays.toFixed(1)}%`);
     console.log(`AI vs SOL performance: ${(aiPerformance - solPerformance).toFixed(1)}%`);
     
-    return sentiment;
+    return analysis;
     
   } catch (error) {
-    console.error('Error analyzing market sentiment:', error);
-    throw error;
+    console.error('❌ Error analyzing market sentiment:', error);
+    throw new Error(`Market sentiment analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
-// Run the analysis
+// Run the analysis with proper error handling
+console.log('🚀 Starting market sentiment analysis script...');
 analyzeMarketSentiment()
-  .then(() => process.exit(0))
+  .then((analysis) => {
+    console.log('\n✅ Analysis completed successfully!');
+    console.log('Final sentiment:', analysis.sentiment);
+    process.exit(0);
+  })
   .catch(error => {
-    console.error('Script failed:', error);
+    console.error('\n❌ Script failed:', error);
     process.exit(1);
   });
