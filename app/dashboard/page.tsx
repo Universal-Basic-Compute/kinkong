@@ -149,8 +149,7 @@ export default function Dashboard() {
     fetchTrackedTokens();
   }, []);
 
-  const renderContent = () => {
-    return (
+  return (
     <main className="min-h-screen p-8">
       <h1 className="text-4xl font-bold mb-12">Holder Dashboard</h1>
 
@@ -337,8 +336,6 @@ export default function Dashboard() {
         </div>
       </section>
     </main>
-    );
-  };
-
-  return renderContent();
+    </main>
+  );
 }
