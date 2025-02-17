@@ -10,83 +10,53 @@ interface Candle {
   low: number;
   close: number;
   color: string;
-  trend: number; // Trend strength and direction
-  volatility: number;
 }
 
 export function ChartFlow() {
   const [candles, setCandles] = useState<Candle[]>([]);
   const [lastPrice, setLastPrice] = useState(100);
-  const [trend, setTrend] = useState(0); // Current market trend
-  const [volatility, setVolatility] = useState(0.5); // Current market volatility
 
-  // Generate a new random candle
-  const generateCandle = (id: number, prevClose: number, prevTrend: number, prevVolatility: number): Candle => {
-    // Update trend with mean reversion
-    const newTrend = prevTrend * 0.95 + (Math.random() - 0.5) * 0.3;
+  // Generate a new candle based on previous close
+  const generateCandle = (id: number, prevClose: number): Candle => {
+    // Calculate realistic price change (max 2% movement)
+    const maxMove = prevClose * 0.02;
+    const priceChange = (Math.random() - 0.5) * maxMove;
+    const close = prevClose + priceChange;
     
-    // Update volatility with mean reversion
-    const newVolatility = prevVolatility * 0.95 + Math.random() * 0.1;
-    
-    // Calculate price change based on trend and volatility
-    const trendChange = newTrend * 2; // Trend influence
-    const randomChange = (Math.random() - 0.5) * newVolatility * 10; // Random noise
-    const totalChange = trendChange + randomChange;
-    
-    const close = prevClose * (1 + totalChange / 100);
-    
-    // Generate realistic high/low based on volatility
-    const wickRange = prevClose * (newVolatility / 10);
-    const high = Math.max(close, prevClose) + (Math.random() * wickRange);
-    const low = Math.min(close, prevClose) - (Math.random() * wickRange);
+    // Generate open/high/low coherently
+    const open = prevClose; // Open at previous close
+    const high = Math.max(open, close) + Math.random() * maxMove * 0.5;
+    const low = Math.min(open, close) - Math.random() * maxMove * 0.5;
 
     return {
       id,
-      open: prevClose,
+      open,
       high,
       low,
       close,
-      color: close >= prevClose ? '#22c55e' : '#ef4444',
-      trend: newTrend,
-      volatility: newVolatility
+      color: close >= open ? '#22c55e' : '#ef4444'
     };
   };
 
   useEffect(() => {
-    // Generate initial candles with trending behavior
+    // Generate initial candles
     const initialCandles = [];
     let currentPrice = lastPrice;
-    let currentTrend = trend;
-    let currentVolatility = volatility;
-
+    
     for (let i = 0; i < 20; i++) {
-      const candle = generateCandle(i, currentPrice, currentTrend, currentVolatility);
+      const candle = generateCandle(i, currentPrice);
       initialCandles.push(candle);
       currentPrice = candle.close;
-      currentTrend = candle.trend;
-      currentVolatility = candle.volatility;
     }
 
     setCandles(initialCandles);
     setLastPrice(currentPrice);
-    setTrend(currentTrend);
-    setVolatility(currentVolatility);
 
-    // Periodically add new candles
+    // Add new candle every second
     const interval = setInterval(() => {
       setCandles(prev => {
-        const lastCandle = prev[prev.length - 1];
-        const newCandle = generateCandle(
-          lastCandle.id + 1,
-          lastCandle.close,
-          lastCandle.trend,
-          lastCandle.volatility
-        );
-        
+        const newCandle = generateCandle(prev[prev.length - 1].id + 1, prev[prev.length - 1].close);
         setLastPrice(newCandle.close);
-        setTrend(newCandle.trend);
-        setVolatility(newCandle.volatility);
-        
         return [...prev.slice(1), newCandle];
       });
     }, 1000);
