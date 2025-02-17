@@ -22,6 +22,33 @@ export default function Dashboard() {
         </div>
       </div>
 
+      <section className="mb-8">
+        <h2 className="text-2xl font-bold mb-4">KinKong's Current Portfolio</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <AllocationChart />
+          </div>
+          <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
+            <TokenTable />
+          </div>
+        </div>
+      </section>
+
+      <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="stat-card">
+          <h3>Your Investment</h3>
+          <p className="text-2xl">XX,XXX COMPUTE</p>
+        </div>
+        <div className="stat-card">
+          <h3>Signal Success Rate</h3>
+          <p className="text-2xl">XX%</p>
+        </div>
+        <div className="stat-card">
+          <h3>Pending Profits</h3>
+          <p className="text-2xl">XX SOL</p>
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 gap-8">
         <section>
           <h2 className="text-2xl font-bold mb-4">Current Allocation</h2>

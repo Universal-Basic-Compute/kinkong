@@ -9,6 +9,7 @@ export default function Header() {
 
   const navItems = [
     { label: 'Dashboard', href: '/dashboard' },
+    { label: 'Portfolio', href: '/portfolio' },
     { label: 'Invest', href: '/invest' },
     { label: 'Performance', href: '/performance' },
     { label: 'Signals', href: '/signals' },
