@@ -6,7 +6,8 @@ export const TABLES = {
   TRADES: 'Trades', 
   TOKENS: 'Tokens',
   SIGNALS: 'Signals',
-  REPORTS: 'Reports'
+  REPORTS: 'Reports',
+  PORTFOLIO_SNAPSHOTS: 'PortfolioSnapshots'
 } as const;
 
 // Table interfaces
@@ -15,6 +16,17 @@ export interface Portfolio {
   allocation: number;
   lastUpdate: string;
   usdValue?: number; // Add this field
+}
+
+export interface PortfolioSnapshot {
+  timestamp: string;
+  totalValue: number;
+  holdings: {
+    token: string;
+    amount: number;
+    price: number;
+    value: number;
+  }[];
 }
 
 export interface Trade {
