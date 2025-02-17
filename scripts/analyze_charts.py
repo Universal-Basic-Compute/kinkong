@@ -197,12 +197,8 @@ def get_dexscreener_data(token_address: str = None) -> Optional[Dict]:
             
         data = response.json()
         
-        # Debug print the response
-        print("DexScreener response:", json.dumps(data, indent=2)[:200] + "...")
-        
         if not data.get('pairs'):
             print(f"No pairs found in DexScreener response for {token_address}")
-            print("Full response:", json.dumps(data, indent=2))
             return None
             
         # Get the most liquid Solana pair
