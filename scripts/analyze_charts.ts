@@ -80,8 +80,13 @@ Format your response as JSON matching the ChartAnalysis interface.`;
       }]
     });
 
+    // Handle different content block types
+    const contentText = message.content[0].type === 'text' 
+      ? (message.content[0] as { type: 'text', text: string }).text
+      : '';
+
     // Parse and validate Claude's response
-    const analysis = JSON.parse(message.content[0].text) as ChartAnalysis;
+    const analysis = JSON.parse(contentText) as ChartAnalysis;
     analysis.timeframe = timeframe;
     return analysis;
   } catch (error) {
