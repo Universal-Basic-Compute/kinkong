@@ -1,6 +1,8 @@
 import { getTable } from '../airtable/tables';
 import type { MarketSentiment, Portfolio } from '../airtable/tables';
 import { getTokenPrices } from '../utils/jupiter';
+import { sendTelegramMessage } from '../utils/telegram';
+import { createThought } from '../airtable/thoughts';
 
 interface TokenAllocation {
   aiTokens: number;
@@ -98,5 +100,30 @@ export async function calculateReallocationTrades(): Promise<ReallocationTrade[]
     });
   }
   
+  if (trades.length > 0) {
+    // Create telegram message
+    const message = `🔄 Portfolio Reallocation Needed\n\n` +
+      `Market Sentiment: ${sentiment}\n\n` +
+      `Required Changes:\n` +
+      trades.map(t => `- ${t.action} ${t.token}: ${t.currentPercentage.toFixed(1)}% → ${t.targetPercentage.toFixed(1)}%`).join('\n') +
+      `\n\nReason: Adjusting allocations for ${sentiment.toLowerCase()} market conditions`;
+
+    // Send telegram notification
+    await sendTelegramMessage(message);
+
+    // Create Kinos thought
+    await createThought({
+      type: 'REALLOCATION',
+      content: `Portfolio reallocation required for ${sentiment} market. ` +
+        `${trades.length} trades needed to adjust allocations.`,
+      context: {
+        trades,
+        sentiment,
+        currentAllocations,
+        targetAllocations
+      }
+    });
+  }
+
   return trades;
 }

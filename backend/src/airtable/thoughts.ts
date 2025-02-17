@@ -5,6 +5,39 @@ export interface Thought {
   swarmId: string;
   content: string;
   createdAt: string;
+  type?: string;
+  context?: string;
+}
+
+export interface CreateThoughtParams {
+  type: string;
+  content: string;
+  context?: any;
+}
+
+export async function createThought(params: CreateThoughtParams): Promise<void> {
+  if (!process.env.KINOS_AIRTABLE_API_KEY || !process.env.KINOS_AIRTABLE_BASE_ID) {
+    throw new Error('Kinos Airtable configuration is missing');
+  }
+
+  const kinosBase = new Airtable({
+    apiKey: process.env.KINOS_AIRTABLE_API_KEY
+  }).base(process.env.KINOS_AIRTABLE_BASE_ID);
+
+  try {
+    const table = kinosBase('THOUGHTS');
+    await table.create({
+      thoughtId: `trade-${Date.now()}`,
+      swarmId: 'kinkong',
+      content: params.content,
+      type: params.type,
+      context: typeof params.context === 'string' ? params.context : JSON.stringify(params.context),
+      createdAt: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error creating thought in Kinos Airtable:', error);
+    throw error;
+  }
 }
 
 export async function getLastThoughts(count: number = 50): Promise<Thought[]> {
