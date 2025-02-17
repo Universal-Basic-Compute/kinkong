@@ -201,8 +201,8 @@ Current Market Data:
 • FDV: ${market_data['fdv']:,.2f}
 • Market Cap: ${market_data['market_cap']:,.2f}
 """
-    
-    prompt = f"""You are an expert cryptocurrency technical analyst specializing in UBC/USD market analysis.
+        
+        prompt = f"""You are an expert cryptocurrency technical analyst specializing in UBC/USD market analysis.
 I'm providing you with three timeframe charts (15m, 2h, and 8h) for a complete multi-timeframe analysis.
 
 {market_data_str}
