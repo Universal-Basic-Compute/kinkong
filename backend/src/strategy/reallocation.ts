@@ -165,7 +165,21 @@ export async function executeReallocation() {
       ? { aiTokens: 40, sol: 20, stables: 40 }
       : { aiTokens: 70, sol: 20, stables: 10 };
 
-    // 3. Get current tokens and calculate scores
+    // 3. Get current portfolio
+    const portfolioTable = getTable('PORTFOLIO');
+    const portfolioRecords = await portfolioTable.select().all();
+    
+    const currentPortfolio = new Map(
+      portfolioRecords.map(record => [
+        record.get('token') as string,
+        {
+          allocation: record.get('allocation') as number,
+          usdValue: record.get('usdValue') as number
+        }
+      ])
+    );
+
+    // 4. Get current tokens and calculate scores
     const tokensTable = getTable('TOKENS');
     const tokenRecords = await tokensTable
       .select({
@@ -184,28 +198,24 @@ export async function executeReallocation() {
 
     const tokenScores = await calculateTokenScores(tokens);
 
-    // 4. Generate trade orders
-    const orders: TradeOrder[] = [];
-    
-    // Get current portfolio value
-    let totalPortfolioValue = 0;
-    const tokenValues = new Map<string, number>();
-
-    // Calculate total portfolio value
+    // 5. Update current allocations from portfolio
     for (const score of tokenScores) {
-      const price = await getTokenPrice(score.symbol);
-      if (price) {
-        const value = score.currentAllocation * price;
-        tokenValues.set(score.symbol, value);
-        totalPortfolioValue += value;
-      }
+      const portfolio = currentPortfolio.get(score.symbol);
+      score.currentAllocation = portfolio?.allocation || 0;
     }
 
-    // Calculate required trades to reach target allocations
+    // 6. Generate trade orders
+    const orders: TradeOrder[] = [];
+    
+    // Calculate total portfolio value
+    const totalValue = Array.from(currentPortfolio.values())
+      .reduce((sum, holding) => sum + (holding.usdValue || 0), 0);
+
+    // Calculate required trades
     for (const score of tokenScores) {
-      const currentValue = tokenValues.get(score.symbol) || 0;
-      const currentPercentage = (currentValue / totalPortfolioValue) * 100;
-      const targetValue = (score.targetAllocation / 100) * totalPortfolioValue;
+      const currentValue = currentPortfolio.get(score.symbol)?.usdValue || 0;
+      const currentPercentage = (currentValue / totalValue) * 100;
+      const targetValue = (score.targetAllocation / 100) * totalValue;
       const difference = targetValue - currentValue;
       
       // Only trade if adjustment > 3%
