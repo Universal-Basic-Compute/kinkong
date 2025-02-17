@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { ChartFlow } from '@/components/animations/ChartFlow';
 
 export default function Home() {
   console.log('🏠 Home page rendered');
@@ -19,6 +20,19 @@ export default function Home() {
         >
           Start Earning With Our AI Traders
         </Link>
+      </section>
+
+      {/* Add ChartFlow Section */}
+      <section className="py-16 px-4 bg-black/50 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-8 electric-title">
+            AI-Powered Trading Decisions
+          </h2>
+          <p className="text-gray-300 text-center mb-12 max-w-2xl mx-auto">
+            Watch KinKong analyze market patterns in real-time, making intelligent trading decisions through advanced AI algorithms.
+          </p>
+          <ChartFlow />
+        </div>
       </section>
 
       <section className="benefits py-20 px-4">
