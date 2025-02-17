@@ -188,9 +188,9 @@ def analyze_charts_with_claude(chart_paths):
                     "timeframe": timeframe,
                     "data": image_data
                 })
-    
-    # Format market data for prompt
-    market_data_str = ""
+        
+        # Format market data for prompt
+        market_data_str = ""
     if market_data:
         market_data_str = f"""
 Current Market Data:
