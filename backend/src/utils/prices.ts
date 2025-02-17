@@ -1,3 +1,17 @@
+interface DexScreenerPair {
+  baseToken: {
+    symbol: string;
+  };
+  quoteToken: {
+    symbol: string;
+  };
+  priceUsd: string;
+}
+
+interface DexScreenerResponse {
+  pairs?: DexScreenerPair[];
+}
+
 export async function getTokenPrice(symbol: string): Promise<number | null> {
   try {
     // Skip price fetch for stables
@@ -13,10 +27,10 @@ export async function getTokenPrice(symbol: string): Promise<number | null> {
       throw new Error('Failed to fetch price from DexScreener');
     }
 
-    const data = await response.json();
+    const data: DexScreenerResponse = await response.json();
     
     // Get the first pair with USDC or USDT
-    const pair = data.pairs?.find(p => 
+    const pair = data.pairs?.find((p: DexScreenerPair) => 
       p.baseToken.symbol.toUpperCase() === symbol.toUpperCase() &&
       ['USDC', 'USDT'].includes(p.quoteToken.symbol)
     );
