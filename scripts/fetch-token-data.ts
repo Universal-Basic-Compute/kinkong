@@ -1,9 +1,12 @@
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
-import fetch from 'node-fetch';
 import { getTable } from '../backend/src/airtable/tables';
 import { FieldSet } from 'airtable';
+
+declare global {
+  var fetch: typeof fetch;
+}
 
 interface BirdeyeResponse {
   volume24h?: number;
