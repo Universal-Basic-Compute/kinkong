@@ -340,6 +340,7 @@ def create_airtable_signal(analysis, timeframe):
             print("Airtable configuration missing")
             return
             
+        print(f"Creating signal in Airtable with key: {api_key[:8]}...")
         airtable = Airtable(base_id, 'SIGNALS', api_key)
         
         # Map timeframe to signal type
@@ -350,54 +351,63 @@ def create_airtable_signal(analysis, timeframe):
         }
         
         # Map confidence to LOW/MEDIUM/HIGH
-        confidence_mapping = {
-            range(0, 40): 'LOW',
-            range(40, 75): 'MEDIUM',
-            range(75, 101): 'HIGH'
-        }
-        
-        confidence_level = next(
-            (level for range_, level in confidence_mapping.items() 
-             if int(analysis.confidence) in range_),
-            'MEDIUM'
-        )
+        confidence_level = 'LOW' if analysis.confidence < 40 else 'HIGH' if analysis.confidence > 75 else 'MEDIUM'
 
         # Extract price levels from analysis
-        support_levels = analysis.key_levels['support']
-        resistance_levels = analysis.key_levels['resistance']
+        support_levels = analysis.key_levels.get('support', [])
+        resistance_levels = analysis.key_levels.get('resistance', [])
         
         # Calculate entry, target and stop prices
-        current_price = support_levels[0] if analysis.signal == 'BUY' else resistance_levels[0]
-        target_price = resistance_levels[0] if analysis.signal == 'BUY' else support_levels[0]
-        stop_price = support_levels[1] if analysis.signal == 'BUY' else resistance_levels[1]
+        current_price = support_levels[0] if analysis.signal == 'BUY' else resistance_levels[0] if resistance_levels else None
+        target_price = resistance_levels[0] if analysis.signal == 'BUY' else support_levels[0] if support_levels else None
+        stop_price = support_levels[1] if analysis.signal == 'BUY' else resistance_levels[1] if len(resistance_levels) > 1 else None
+
+        # Print debug info
+        print(f"\nCreating signal with parameters:")
+        print(f"Timeframe: {timeframe} -> {timeframe_mapping.get(timeframe)}")
+        print(f"Signal: {analysis.signal}")
+        print(f"Confidence: {analysis.confidence} -> {confidence_level}")
+        print(f"Prices - Entry: {current_price}, Target: {target_price}, Stop: {stop_price}")
         
-        # Create signal record matching the interface exactly
-        signal_data = {
-            'fields': {
-                'timestamp': datetime.now(timezone.utc).isoformat(),
-                'token': 'UBC',
-                'type': analysis.signal,  # BUY/SELL only
-                'timeframe': timeframe_mapping.get(timeframe, 'INTRADAY'),
-                'entryPrice': current_price,
-                'targetPrice': target_price,
-                'stopLoss': stop_price,
-                'confidence': confidence_level,
-                'wallet': os.getenv('STRATEGY_WALLET', ''),  # Add strategy wallet address
-                'reason': (f"{analysis.reasoning}\n\n"
-                          f"Support Levels: {', '.join(map(str, support_levels))}\n"
-                          f"Resistance Levels: {', '.join(map(str, resistance_levels))}\n"
-                          f"R/R Ratio: {analysis.risk_reward_ratio if analysis.risk_reward_ratio else 'N/A'}"),
-                'url': ''  # Optional URL field
-            }
-        }
-        
-        # Only create signal if it's BUY or SELL (not HOLD)
+        # Create signal record
         if analysis.signal in ['BUY', 'SELL']:
-            airtable.insert(signal_data)
+            signal_data = {
+                'fields': {
+                    'timestamp': datetime.now(timezone.utc).isoformat(),
+                    'token': 'UBC',
+                    'type': analysis.signal,
+                    'timeframe': timeframe_mapping.get(timeframe, 'INTRADAY'),
+                    'entryPrice': current_price,
+                    'targetPrice': target_price,
+                    'stopLoss': stop_price,
+                    'confidence': confidence_level,
+                    'wallet': os.getenv('STRATEGY_WALLET', ''),
+                    'reason': (f"{analysis.reasoning}\n\n"
+                             f"Support Levels: {', '.join(map(str, support_levels))}\n"
+                             f"Resistance Levels: {', '.join(map(str, resistance_levels))}\n"
+                             f"R/R Ratio: {analysis.risk_reward_ratio if analysis.risk_reward_ratio else 'N/A'}"),
+                }
+            }
+            
+            print("\nSending to Airtable:", json.dumps(signal_data, indent=2))
+            
+            # Create record and get response
+            response = airtable.insert(signal_data)
+            
+            print(f"\nAirtable response: {json.dumps(response, indent=2)}")
             print(f"Created {analysis.signal} signal in Airtable for {timeframe} timeframe")
+            
+            return response
+        else:
+            print(f"Skipping signal creation for HOLD signal on {timeframe} timeframe")
+            return None
         
     except Exception as e:
-        print(f"Failed to create Airtable signal: {e}")
+        print(f"Failed to create Airtable signal: {str(e)}")
+        print(f"Error type: {type(e)}")
+        if hasattr(e, '__dict__'):
+            print(f"Error attributes: {e.__dict__}")
+        return None
 
 def generate_signal(analyses):
     """Generate combined signal from multiple timeframe analyses"""
