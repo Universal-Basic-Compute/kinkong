@@ -2,8 +2,16 @@ import { getTable } from '../airtable/tables';
 import type { Trade } from '../airtable/tables';
 import { executeJupiterTrade, type TradeParams } from '../utils/trading';
 
+// Add interface for trade result
+interface TradeResult extends Trade {
+  success: boolean;
+  txId?: string;
+  error?: string;
+}
+
 export async function executeTrades(trades: Trade[]) {
-  const results = [];
+  // Explicitly type the results array
+  const results: TradeResult[] = [];
   
   for (const trade of trades) {
     try {
