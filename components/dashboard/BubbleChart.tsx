@@ -143,21 +143,42 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
       circle.setAttribute('stroke', colors.stroke);
       circle.setAttribute('stroke-width', '2');
 
-      // Add token symbol text
-      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      text.setAttribute('x', x.toString());
-      text.setAttribute('y', y.toString());
-      text.setAttribute('text-anchor', 'middle');
-      text.setAttribute('dominant-baseline', 'middle');
-      text.setAttribute('fill', 'white');
-      text.setAttribute('font-size', '10');
-      text.textContent = token.symbol;
+      // Add token text (symbol and name)
+      const textGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+
+      // Symbol text
+      const symbolText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      symbolText.setAttribute('x', x.toString());
+      symbolText.setAttribute('y', (y - 2).toString()); // Move up slightly
+      symbolText.setAttribute('text-anchor', 'middle');
+      symbolText.setAttribute('dominant-baseline', 'bottom');
+      symbolText.setAttribute('fill', 'white');
+      symbolText.setAttribute('font-size', '10');
+      symbolText.setAttribute('font-weight', 'bold');
+      symbolText.textContent = token.symbol;
+
+      // Name text
+      const nameText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      nameText.setAttribute('x', x.toString());
+      nameText.setAttribute('y', (y + 2).toString()); // Move down slightly
+      nameText.setAttribute('text-anchor', 'middle');
+      nameText.setAttribute('dominant-baseline', 'top');
+      nameText.setAttribute('fill', 'rgba(255, 255, 255, 0.6)'); // Slightly transparent
+      nameText.setAttribute('font-size', '8');
+      nameText.textContent = token.name;
+
+      // Add both texts to the group
+      textGroup.appendChild(symbolText);
+      textGroup.appendChild(nameText);
 
       // Hover effects
       group.addEventListener('mouseenter', (e) => {
         circle.setAttribute('stroke-width', '3');
+        symbolText.setAttribute('fill', colors.stroke); // Highlight text
+        nameText.setAttribute('fill', colors.stroke); // Highlight text
         tooltip.innerHTML = `
           <div class="font-bold mb-1">${token.symbol}</div>
+          <div class="text-gray-400 text-xs mb-2">${token.name}</div>
           <div>Volume Growth: ${token.volumeGrowth.toFixed(2)}%</div>
           <div>Price Performance: ${token.pricePerformance.toFixed(2)}%</div>
           <div>Liquidity: $${token.liquidity.toLocaleString()}</div>
@@ -176,11 +197,13 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
 
       group.addEventListener('mouseleave', () => {
         circle.setAttribute('stroke-width', '2');
+        symbolText.setAttribute('fill', 'white'); // Reset text color
+        nameText.setAttribute('fill', 'rgba(255, 255, 255, 0.6)'); // Reset text color
         tooltip.style.display = 'none';
       });
 
       group.appendChild(circle);
-      group.appendChild(text);
+      group.appendChild(textGroup);
       svg.appendChild(group);
     });
 
