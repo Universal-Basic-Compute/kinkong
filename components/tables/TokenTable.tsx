@@ -95,18 +95,13 @@ export const TokenTable = () => {
                 })}
               </td>
               <td className="text-right px-4 py-2 text-gray-300">
-                {token.usdValue 
-                  ? `$${token.usdValue.toLocaleString(undefined, {
-                      maximumFractionDigits: 2
-                    })}` 
-                  : '-'
-                }
+                ${Number(token.usdValue || 0).toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2
+                })}
               </td>
               <td className="text-right px-4 py-2 text-gray-300">
-                {token.usdValue && totalValue > 0
-                  ? `${((token.usdValue / totalValue) * 100).toFixed(1)}%`
-                  : '-'
-                }
+                {((token.usdValue || 0) / totalValue * 100).toFixed(1)}%
               </td>
             </tr>
           ))}
