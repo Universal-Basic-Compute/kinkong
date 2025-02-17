@@ -142,22 +142,14 @@ def create_sample_data():
     return df
 
 def generate_chart(df, config, support_levels=None):
-    # Create charts directory if it doesn't exist
-    charts_dir = os.path.join('public', 'charts')
-    os.makedirs(charts_dir, exist_ok=True)
-    
-    # Set output path
-    output_path = os.path.join(charts_dir, config['filename'])
     try:
         print(f"Starting chart generation for {config['title']}")
-        print(f"Data shape: {df.shape}")
         
         if df is None or df.empty:
             print("No data available for chart generation")
             return False
-        
-        # Calculate key statistics
-        print("Calculating statistics...")
+            
+        # Calculate statistics
         current_price = df['Close'].iloc[-1]
         ath = df['High'].max()
         atl = df['Low'].min()
@@ -165,25 +157,11 @@ def generate_chart(df, config, support_levels=None):
         avg_volume = df['Volume'].mean()
         price_change = ((df['Close'].iloc[-1] - df['Close'].iloc[0]) / df['Close'].iloc[0]) * 100
 
-        # Create more detailed title components
-        main_title = config['title']
-        price_stats = (
-            f"Current: {current_price:.4f} ({price_change:+.2f}%) | "
-            f"ATH: {ath:.4f} | ATL: {atl:.4f} | "
-            f"Avg: {avg_price:.4f}"
-        )
-        volume_stats = f"Avg Vol: {avg_volume:,.2f} | {len(df)} candles"
-        
-        # Enhanced subtitle with more technical info
-        technical_info = (
-            f"EMA(20) & EMA(50) | "
-            f"Period: {df.index[0].strftime('%Y-%m-%d %H:%M')} → {df.index[-1].strftime('%Y-%m-%d %H:%M')} UTC"
-        )
-
-        # Style configuration
+        # Enhanced style with grid
         style = mpf.make_mpf_style(
             base_mpf_style='charles',
-            gridstyle='',
+            gridstyle=':',  # Dotted grid
+            gridcolor='rgba(255, 215, 0, 0.1)',  # Gold color with low opacity
             facecolor='black',
             edgecolor='white',
             figcolor='black',
@@ -195,8 +173,8 @@ def generate_chart(df, config, support_levels=None):
                 volume='gray'
             )
         )
-    
-        # Prepare additional plots (moving averages)
+
+        # Calculate EMAs
         ema20 = df['Close'].ewm(span=20, adjust=False).mean()
         ema50 = df['Close'].ewm(span=50, adjust=False).mean()
         
@@ -204,114 +182,116 @@ def generate_chart(df, config, support_levels=None):
             mpf.make_addplot(ema20, color='yellow', width=0.8, label='EMA20'),
             mpf.make_addplot(ema50, color='blue', width=0.8, label='EMA50')
         ]
-        
-        # Add support/resistance lines if provided
-        if support_levels:
-            for level_type, price in support_levels:
-                color = '#22c55e' if level_type == 'support' else '#ef4444'
-                apds.append(
-                    mpf.make_addplot([price] * len(df), color=color, linestyle='--')
-                )
-            
-        # Define formatters for currency and volume
-        def currency_formatter(x, p):
-            return f'${x:,.4f}'
 
-        def volume_formatter(x, p):
-            return f'${x:,.0f}'
-        
-        # Create figure with adjusted layout and log scale
+        # Create figure with adjusted layout
         fig, axes = mpf.plot(
             df,
             type='candle',
             style=style,
             volume=True,
             figsize=(16, 10),
-            panel_ratios=(3, 1),
+            panel_ratios=(3, 1),  # Price to volume ratio
             addplot=apds,
             returnfig=True,
-            ylabel='Price (USD) - Log Scale',
-        ylabel_lower='Volume (USD)',
-        xrotation=25,
-        datetime_format='%Y-%m-%d %H:%M',
-        title='\n\n\n',  # Add space for custom title
-        yscale='log',    # Add log scale
-        volume_yscale='linear'  # Keep volume linear
-    )
-    
-        # Adjust title spacing and add components
-        # Format text without using $ signs directly
-        def format_price(price):
-            return f"{price:.4f}"
-
-        def format_volume(vol):
-            return f"{vol:,.2f}"
-
-        # Create title components
-        main_title = config['title']
-        price_stats = (
-            f"Current: {format_price(current_price)} ({price_change:+.2f}%) | "
-            f"ATH: {format_price(ath)} | ATL: {format_price(atl)} | "
-            f"Avg: {format_price(avg_price)}"
+            title='\n\n\n\n',  # Extra space for titles
+            ylabel='Price (USD)',
+            ylabel_lower='Volume',
+            datetime_format='%Y-%m-%d %H:%M',
+            xrotation=25,  # Angle date labels for better readability
+            tight_layout=False  # Allow manual layout adjustment
         )
-        volume_stats = f"Avg Vol: {format_volume(avg_volume)} | {len(df)} candles"
     
-        # Add text without math parameter
-        fig.text(0.5, 0.97, main_title,
-                horizontalalignment='center',
-                color='white',
-                fontsize=14,
-                fontweight='bold')
-        
-        fig.text(0.5, 0.94, price_stats,
-                horizontalalignment='center',
-                color='#ffd700',
-                fontsize=11)
-        
-        fig.text(0.5, 0.92, volume_stats,
-                horizontalalignment='center',
-                color='#c0c0c0',
-                fontsize=10)
+            # Get the main price axis and volume axis
+            ax_main = axes[0]
+            ax_volume = axes[2]
 
-        # Update technical info
-        technical_info = (
-            f"EMA(20) & EMA(50) | "
-            f"Period: {df.index[0].strftime('%Y-%m-%d %H:%M')} → {df.index[-1].strftime('%Y-%m-%d %H:%M')} UTC"
-        )
-        
-        fig.text(0.5, 0.90, technical_info,
-                horizontalalignment='center',
-                color='#808080',
-                fontsize=9)
-    
-        # Add support/resistance levels info if present
-        if support_levels:
-            support_text = "Support Levels: " + " | ".join([f"{format_price(price)}" for _, price in support_levels if _=='support'])
-            resistance_text = "Resistance Levels: " + " | ".join([f"{format_price(price)}" for _, price in support_levels if _=='resistance'])
-            
-            fig.text(0.5, 0.88, support_text + "\n" + resistance_text,
+            # Enhance grid
+            ax_main.grid(True, linestyle=':', color='rgba(255, 215, 0, 0.1)', alpha=0.3)
+            ax_main.set_axisbelow(True)  # Put grid behind other elements
+
+            # Format price axis
+            ax_main.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.4f}'))
+            ax_main.yaxis.set_label_position('right')
+            ax_main.yaxis.tick_right()  # Move price ticks to right side
+
+            # Format volume axis
+            ax_volume.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.0f}'))
+            ax_volume.yaxis.set_label_position('right')
+            ax_volume.yaxis.tick_right()
+
+            # Add titles with improved spacing
+            plt.subplots_adjust(top=0.90)  # Adjust top margin for titles
+
+            # Main title
+            fig.text(0.5, 0.96, config['title'],
                     horizontalalignment='center',
-                    color='#a0a0a0',
-                    fontsize=9)
+                    color='white',
+                    fontsize=14,
+                    fontweight='bold')
 
-        # Save figure
-        plt.savefig(
-            output_path,
-            dpi=150,
-            bbox_inches='tight',
-            facecolor='black',
-            edgecolor='none'
-        )
+            # Price statistics
+            fig.text(0.5, 0.93,
+                    f"Current: ${current_price:.4f} ({price_change:+.2f}%) | "
+                    f"ATH: ${ath:.4f} | ATL: ${atl:.4f} | "
+                    f"Avg: ${avg_price:.4f}",
+                    horizontalalignment='center',
+                    color='#ffd700',
+                    fontsize=11)
+
+            # Volume statistics
+            fig.text(0.5, 0.90,
+                    f"Avg Volume: ${avg_volume:,.2f} | Candles: {len(df)}",
+                    horizontalalignment='center',
+                    color='#c0c0c0',
+                    fontsize=10)
+
+            # Timeframe info
+            fig.text(0.5, 0.87,
+                    f"Period: {df.index[0].strftime('%Y-%m-%d %H:%M')} → "
+                    f"{df.index[-1].strftime('%Y-%m-%d %H:%M')} UTC",
+                    horizontalalignment='center',
+                    color='#808080',
+                    fontsize=9)
+    
+            # Add support/resistance levels if present
+            if support_levels:
+                support_text = "Support: " + " | ".join([f"${price:.4f}" for _, price in support_levels if _=='support'])
+                resistance_text = "Resistance: " + " | ".join([f"${price:.4f}" for _, price in support_levels if _=='resistance'])
+            
+                fig.text(0.5, 0.84, support_text + "\n" + resistance_text,
+                        horizontalalignment='center',
+                        color='#a0a0a0',
+                        fontsize=9)
+
+            # Add timestamp
+            fig.text(0.98, 0.02,
+                    f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M UTC')}",
+                    horizontalalignment='right',
+                    color='#808080',
+                    fontsize=8)
+
+            # Save chart with high quality
+            charts_dir = os.path.join('public', 'charts')
+            os.makedirs(charts_dir, exist_ok=True)
+            output_path = os.path.join(charts_dir, config['filename'])
         
-        # Explicitly close the figure
-        plt.close(fig)
+            plt.savefig(
+                output_path,
+                dpi=150,
+                bbox_inches='tight',
+                facecolor='black',
+                edgecolor='none'
+            )
         
-        print(f"Successfully saved chart to {output_path}")
-        return True
-        
-    except Exception as e:
-        print(f"Error generating chart: {str(e)}")
-        return False
+            plt.close(fig)
+            print(f"Successfully saved chart to {output_path}")
+            return True
+
+        except Exception as e:
+            print(f"Error generating chart: {str(e)}")
+            if 'fig' in locals():
+                plt.close(fig)
+            return False
 
     # Adjust main chart position to account for title space
     plt.subplots_adjust(top=0.85)
