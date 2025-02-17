@@ -161,13 +161,19 @@ def generate_chart(df, config, support_levels=None):
     avg_volume = df['Volume'].mean()
     price_change = ((df['Close'].iloc[-1] - df['Close'].iloc[0]) / df['Close'].iloc[0]) * 100
     
-    # Create statistics text
-    stats_text = (
-        f"Current: ${current_price:.4f} | "
-        f"ATH: ${ath:.4f} | "
-        f"ATL: ${atl:.4f} | "
-        f"Avg: ${avg_price:.4f} | "
-        f"Change: {price_change:+.2f}%"
+    # Create more detailed title components
+    main_title = config['title']
+    price_stats = (
+        f"Current: ${current_price:.4f} ({price_change:+.2f}%) | "
+        f"ATH: ${ath:.4f} | ATL: ${atl:.4f} | "
+        f"Avg: ${avg_price:.4f}"
+    )
+    volume_stats = f"Avg Vol: ${avg_volume:,.2f} | {len(df)} candles"
+    
+    # Enhanced subtitle with more technical info
+    technical_info = (
+        f"EMA(20) & EMA(50) | "
+        f"Period: {df.index[0].strftime('%Y-%m-%d %H:%M')} → {df.index[-1].strftime('%Y-%m-%d %H:%M')} UTC"
     )
     
     # Style configuration
@@ -208,7 +214,6 @@ def generate_chart(df, config, support_levels=None):
         df,
         type='candle',
         style=style,
-        title=f'{config["title"]}\n{stats_text}',
         volume=True,
         figsize=(16, 10),
         panel_ratios=(3, 1),
@@ -216,9 +221,45 @@ def generate_chart(df, config, support_levels=None):
         returnfig=True,
         ylabel='Price (USD)',
         ylabel_lower='Volume (USD)',
-        xrotation=25,  # Rotate x-axis dates for better readability
-        datetime_format='%Y-%m-%d %H:%M',  # Full date-time format
+        xrotation=25,
+        datetime_format='%Y-%m-%d %H:%M',
+        title='\n\n\n'  # Add space for custom title
     )
+    
+    # Adjust title spacing and add components
+    fig.text(0.5, 0.97, main_title,
+             horizontalalignment='center',
+             color='white',
+             fontsize=14,
+             fontweight='bold')
+    
+    fig.text(0.5, 0.94, price_stats,
+             horizontalalignment='center',
+             color='#ffd700',  # Gold color for price stats
+             fontsize=11)
+    
+    fig.text(0.5, 0.92, volume_stats,
+             horizontalalignment='center',
+             color='#c0c0c0',  # Silver color for volume stats
+             fontsize=10)
+    
+    fig.text(0.5, 0.90, technical_info,
+             horizontalalignment='center',
+             color='#808080',  # Gray color for technical info
+             fontsize=9)
+    
+    # Add support/resistance levels info if present
+    if support_levels:
+        support_text = "Support Levels: " + " | ".join([f"${price:.4f}" for _, price in support_levels if _=='support'])
+        resistance_text = "Resistance Levels: " + " | ".join([f"${price:.4f}" for _, price in support_levels if _=='resistance'])
+        
+        fig.text(0.5, 0.88, support_text + "\n" + resistance_text,
+                horizontalalignment='center',
+                color='#a0a0a0',
+                fontsize=9)
+
+    # Adjust main chart position to account for title space
+    plt.subplots_adjust(top=0.85)
     
     # Get the main price axis and volume axis
     ax_main = axes[0]
