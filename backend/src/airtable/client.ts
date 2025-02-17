@@ -1,6 +1,4 @@
 import Airtable from 'airtable';
-
-// Add debug logging
 console.log('⚙️ Initializing Airtable client...', {
   hasApiKey: !!process.env.KINKONG_AIRTABLE_API_KEY,
   hasBaseId: !!process.env.KINKONG_AIRTABLE_BASE_ID,
