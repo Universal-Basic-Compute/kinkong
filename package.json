@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build", 
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "analyze-sentiment": "ts-node scripts/analyze-market-sentiment.ts"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
