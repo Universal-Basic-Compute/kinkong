@@ -35,12 +35,42 @@ const TOKEN_METADATA: Record<string, TokenMetadata> = {
   'B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo': {
     name: 'Compute',
     symbol: 'COMPUTE',
-    image: 'https://dd.dexscreener.com/ds-data/tokens/solana/B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo.png?size=lg&key=521a23'
+    image: 'https://dd.dexscreener.com/ds-data/tokens/solana/B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo.png?size=lg'
   },
   '9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump': {
     name: 'UBC',
     symbol: 'UBC',
-    image: 'https://dd.dexscreener.com/ds-data/tokens/solana/9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump.png?size=lg&key=2155bb'
+    image: 'https://dd.dexscreener.com/ds-data/tokens/solana/9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump.png?size=lg'
+  },
+  '0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b': {
+    name: 'Virtual Protocol',
+    symbol: 'VIRTUAL',
+    image: 'https://dd.dexscreener.com/ds-data/tokens/solana/virtual.png'
+  },
+  'HeLp6NuQkmYB4pYWo2zYs22mESHXPQYzXbB8n4V98jwC': {
+    name: 'ai16z',
+    symbol: 'AI16Z',
+    image: 'https://dd.dexscreener.com/ds-data/tokens/solana/ai16z.png'
+  },
+  '0x4F9Fd6Be4a90f2620860d680c0d4d5Fb53d1A825': {
+    name: 'aixbt by Virtuals',
+    symbol: 'AIXBT',
+    image: 'https://dd.dexscreener.com/ds-data/tokens/solana/aixbt.png'
+  },
+  'KENJSUYLASHUMfHyy5o4Hp2FdNqZg1AsUPhfH2kYvEP': {
+    name: 'test griffain.com',
+    symbol: 'GRIFFAIN',
+    image: 'https://dd.dexscreener.com/ds-data/tokens/solana/griffain.png'
+  },
+  'CzLSujWBLFsSjncfkh59rUFqvafWcY5tzedWJSuypump': {
+    name: 'Goatseus Maximus',
+    symbol: 'GOAT',
+    image: 'https://dd.dexscreener.com/ds-data/tokens/solana/goat.png'
+  },
+  '8x5VqbHA8D7NkD52uNuS5nnt3PwA8pLD34ymskeSo2Wn': {
+    name: 'zerebro',
+    symbol: 'ZEREBRO',
+    image: 'https://dd.dexscreener.com/ds-data/tokens/solana/zerebro.png'
   }
 };
 
@@ -53,6 +83,13 @@ function getTokenClass(token: string): string {
       return 'metallic-text-compute';
     case 'SOL':
       return 'metallic-text-sol';
+    case 'VIRTUAL':
+    case 'AI16Z':
+    case 'AIXBT':
+    case 'GRIFFAIN':
+    case 'GOAT':
+    case 'ZEREBRO':
+      return 'metallic-text-argent';
     default:
       return 'metallic-text-argent';
   }
