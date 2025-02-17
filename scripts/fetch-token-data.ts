@@ -141,20 +141,22 @@ async function getJupiterData(mint: string, retries = 3): Promise<JupiterRespons
     try {
       console.log(`Attempting to fetch Jupiter data for ${mint} (attempt ${i + 1}/${retries})...`);
       
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      // Use timeout promise instead of AbortController
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout')), 5000)
+      );
       
-      const response = await fetch(
+      const fetchPromise = fetch(
         `https://price.jup.ag/v4/price?ids=${mint}`,
         {
-          signal: controller.signal,
           headers: {
             'Accept': 'application/json'
           }
         }
       );
 
-      clearTimeout(timeoutId);
+      // Race between fetch and timeout
+      const response = await Promise.race([fetchPromise, timeoutPromise]) as Response;
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
