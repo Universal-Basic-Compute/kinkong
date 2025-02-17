@@ -4,7 +4,19 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import { WalletConnect } from '@/components/wallet/WalletConnect'
 import { signalEvents } from './SignalHistory'
 
-function calculateRiskReward(data: typeof formData): string {
+interface SignalFormData {
+  token: string;
+  direction: 'BUY' | 'SELL';
+  timeframe: 'SCALP' | 'INTRADAY' | 'SWING' | 'POSITION';
+  entryPrice: string;
+  targetPrice: string;
+  stopLoss: string;
+  confidence: 'LOW' | 'MEDIUM' | 'HIGH';
+  reason: string;
+  url: string;
+}
+
+function calculateRiskReward(data: SignalFormData): string {
   if (!data.entryPrice || !data.targetPrice || !data.stopLoss) return 'N/A';
   
   const entry = Number(data.entryPrice);
@@ -24,14 +36,14 @@ function calculateRiskReward(data: typeof formData): string {
 
 export function SignalForm() {
   const { connected, publicKey } = useWallet()
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<SignalFormData>({
     token: '',
-    direction: 'BUY' as 'BUY' | 'SELL',
-    timeframe: 'INTRADAY' as 'SCALP' | 'INTRADAY' | 'SWING' | 'POSITION',
+    direction: 'BUY',
+    timeframe: 'INTRADAY',
     entryPrice: '',
     targetPrice: '',
     stopLoss: '',
-    confidence: 'MEDIUM' as 'LOW' | 'MEDIUM' | 'HIGH',
+    confidence: 'MEDIUM',
     reason: '',
     url: ''
   })
