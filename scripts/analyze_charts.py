@@ -52,25 +52,63 @@ def analyze_chart_with_claude(chart_path):
     filename = Path(chart_path).name
     timeframe = '15m' if '15m' in filename else '2h' if '2h' in filename else '8h'
     
-    prompt = """You are an expert crypto technical analyst. Analyze this UBC/USD chart and provide:
-1. Clear BUY/SELL/HOLD signal with confidence level (0-100%)
-2. Key support and resistance levels
-3. Detailed reasoning including:
-   - Trend analysis
-   - Volume analysis
-   - Key patterns
-   - Risk/reward ratio if applicable
-Format your response as JSON with the following structure:
+    prompt = """You are an expert cryptocurrency technical analyst specializing in UBC/USD market analysis.
+
+Study this chart carefully and follow these steps:
+
+1. PRICE ACTION ANALYSIS
+- Identify the current trend (bullish, bearish, or ranging)
+- Locate key swing highs and lows
+- Note any significant chart patterns
+- Identify key support and resistance levels
+
+2. VOLUME ANALYSIS
+- Compare current volume to average
+- Note any volume spikes or divergences
+- Check if volume confirms price movement
+
+3. TECHNICAL INDICATORS
+- Study the EMA20 and EMA50 relationship
+- Note any crossovers or divergences
+- Check price position relative to EMAs
+
+4. MARKET STRUCTURE
+- Identify higher highs/lows or lower highs/lows
+- Note any break of structure
+- Evaluate current market phase
+
+5. RISK ASSESSMENT
+- Calculate potential risk/reward ratio
+- Identify clear invalidation points
+- Consider current volatility
+
+Based on this analysis, provide:
+1. A clear BUY/SELL/HOLD signal
+2. Confidence level (0-100%)
+3. Key price levels for:
+   - Entry (current price area)
+   - Target (next significant resistance/support)
+   - Stop loss (structure invalidation point)
+4. Detailed reasoning explaining your decision
+
+Format your response as JSON:
 {
     "signal": "BUY|SELL|HOLD",
     "confidence": number,
-    "reasoning": "string",
+    "reasoning": "Detailed multi-paragraph analysis",
     "key_levels": {
         "support": [numbers],
         "resistance": [numbers]
     },
-    "risk_reward_ratio": number (optional)
-}"""
+    "risk_reward_ratio": number
+}
+
+Remember:
+- Only give BUY signals at support with bullish confirmation
+- Only give SELL signals at resistance with bearish confirmation
+- Give HOLD signals when the setup is unclear
+- Confidence should reflect the quality of the setup
+- Include at least 2 levels each for support and resistance"""
 
     try:
         message = client.messages.create(
