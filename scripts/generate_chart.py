@@ -209,7 +209,7 @@ def generate_chart(df, config, support_levels=None):
                 mpf.make_addplot([price] * len(df), color=color, linestyle='--')
             )
     
-    # Create figure and axes with larger size
+    # Create figure with adjusted layout and log scale
     fig, axes = mpf.plot(
         df,
         type='candle',
@@ -219,11 +219,13 @@ def generate_chart(df, config, support_levels=None):
         panel_ratios=(3, 1),
         addplot=apds,
         returnfig=True,
-        ylabel='Price (USD)',
+        ylabel='Price (USD) - Log Scale',
         ylabel_lower='Volume (USD)',
         xrotation=25,
         datetime_format='%Y-%m-%d %H:%M',
-        title='\n\n\n'  # Add space for custom title
+        title='\n\n\n',  # Add space for custom title
+        yscale='log',    # Add log scale
+        volume_yscale='linear'  # Keep volume linear
     )
     
     # Adjust title spacing and add components
@@ -265,14 +267,27 @@ def generate_chart(df, config, support_levels=None):
     ax_main = axes[0]
     ax_volume = axes[2]
     
-    # Format price axis (y-axis)
+    # Format price axis (y-axis) with log scale
     ax_main.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.4f}'))
     ax_main.yaxis.label.set_color('white')
     ax_main.yaxis.set_label_position('right')
     ax_main.tick_params(axis='y', colors='white', labelsize=10)
+    ax_main.set_yscale('log')  # Ensure log scale is applied
     
-    # Add price grid lines
-    ax_main.grid(axis='y', color='gray', alpha=0.2, linestyle='--')
+    # Add minor grid lines for log scale
+    ax_main.grid(which='minor', axis='y', color='gray', alpha=0.1, linestyle='--')
+    ax_main.grid(which='major', axis='y', color='gray', alpha=0.2, linestyle='--')
+    
+    # Calculate percentage changes for y-axis ticks
+    min_price = df['Low'].min()
+    max_price = df['High'].max()
+    
+    # Add percentage change markers on the right side
+    price_levels = np.logspace(np.log10(min_price), np.log10(max_price), num=6)
+    for price in price_levels:
+        pct_change = ((price - min_price) / min_price) * 100
+        ax_main.text(df.index[-1], price, f' +{pct_change:.1f}%', 
+                    color='gray', va='center', fontsize=8)
     
     # Format volume axis
     ax_volume.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.0f}'))
