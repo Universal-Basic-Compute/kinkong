@@ -259,14 +259,14 @@ async function analyzeMarketSentiment(): Promise<WeeklyAnalysis> {
       percentAboveAvg > 60,
       volumeGrowth > 0,
       percentVolumeOnUpDays > 60,
-      aiPerformance > solPerformance
+      aiTokenPerformance > solPerformance
     ];
     
     const bearishCriteria = [
       percentAboveAvg < 40,
       volumeGrowth < 0,
       percentVolumeOnUpDays < 40,
-      aiPerformance < solPerformance
+      aiTokenPerformance < solPerformance
     ];
     
     const bullishCount = bullishCriteria.filter(Boolean).length;
