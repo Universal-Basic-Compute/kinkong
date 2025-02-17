@@ -142,8 +142,8 @@ def get_dexscreener_data(token_address: str = "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXr
         return None
 
 def analyze_chart_with_claude(chart_path):
-    """Analyze a chart using Claude 3.5"""
-    client = anthropic.Anthropic(
+    """Analyze a chart using Claude 3"""
+    client = anthropic.Client(
         api_key=os.getenv('ANTHROPIC_API_KEY')
     )
     
