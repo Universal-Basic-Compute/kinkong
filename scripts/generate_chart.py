@@ -100,7 +100,14 @@ def fetch_ubc_sol_data(timeframe='1H', hours=24):
         # Create DataFrame and set index
         df = pd.DataFrame(df_data)
         df.set_index('Date', inplace=True)
+        
+        # Ensure all numeric columns are float type
+        for col in ['Open', 'High', 'Low', 'Close', 'Volume']:
+            df[col] = df[col].astype(float)
+        
+        # Sort index and remove any duplicates
         df = df.sort_index()
+        df = df[~df.index.duplicated(keep='first')]
         
         print(f"\nFetched {len(df)} candles for UBC/SOL")
         print("\nDataFrame head:")
@@ -142,9 +149,9 @@ def create_sample_data():
     return df
 
 def generate_chart(df, config, support_levels=None):
-    if df is None:
-        print("Using sample data as fallback...")
-        df = create_sample_data()
+    if df is None or df.empty:
+        print("No data available for chart generation")
+        return
     
     # Style configuration
     style = mpf.make_mpf_style(
@@ -162,84 +169,44 @@ def generate_chart(df, config, support_levels=None):
         )
     )
     
-    # Create figure
-    fig = mpf.figure(
-        figsize=(12, 8),
-        facecolor='black',
-        style=style
-    )
+    # Prepare additional plots (moving averages)
+    ema20 = df['Close'].ewm(span=20, adjust=False).mean()
+    ema50 = df['Close'].ewm(span=50, adjust=False).mean()
     
-    # Calculate panel ratios
-    panel_ratios = (6, 2)  # Main chart : Volume ratio
+    apds = [
+        mpf.make_addplot(ema20, color='yellow', width=0.8),
+        mpf.make_addplot(ema50, color='blue', width=0.8)
+    ]
     
-    # Plot candlestick chart with volume
-    ax = mpf.plot(
+    # Add support/resistance lines if provided
+    if support_levels:
+        for level_type, price in support_levels:
+            color = '#22c55e' if level_type == 'support' else '#ef4444'
+            apds.append(
+                mpf.make_addplot([price] * len(df), color=color, linestyle='--')
+            )
+    
+    # Create the plot
+    mpf.plot(
         df,
         type='candle',
         style=style,
+        title=config['title'],
         volume=True,
         figsize=(12, 8),
-        panel_ratios=panel_ratios,
-        mav=(20, 50),  # Add 20 and 50 period moving averages
-        show_nontrading=False,
-        returnfig=True,
-        title=dict(
-            title=config['title'],
-            color='white',
-            weight='bold',
-            size=14,
-            style='normal',
-            y=0.98
-        )
+        panel_ratios=(2, 1),  # Ratio between price and volume panels
+        addplot=apds,
+        savefig=dict(
+            fname=config['filename'],
+            dpi=100,
+            bbox_inches='tight'
+        ),
+        tight_layout=True,
+        scale_padding={'left': 0.5, 'right': 1.5, 'top': 0.5, 'bottom': 0.5}
     )
     
-    fig = ax[0]  # Get the figure
-    axes = ax[1]  # Get the axes list
-    
-    # Add subtitle
-    fig.text(0.5, 0.95, config['subtitle'],
-             color='white',
-             alpha=0.8,
-             fontsize=10,
-             ha='center',
-             va='center')
-    
-    # Add support/resistance levels if provided
-    if support_levels:
-        main_ax = axes[0]  # Main price chart axis
-        for level_type, price in support_levels:
-            color = '#22c55e' if level_type == 'support' else '#ef4444'
-            main_ax.axhline(y=price, color=color, linestyle='--', alpha=0.5)
-            
-            # Add price label
-            main_ax.text(df.index[-1], price, 
-                        f'{level_type.title()}: ${price:.4f}',
-                        color=color, alpha=0.8, 
-                        va='center', ha='left')
-    
-    # Add timestamp
-    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M UTC')
-    fig.text(0.98, 0.02, f'Generated: {timestamp}',
-             color='gray',
-             fontsize=8,
-             ha='right',
-             va='bottom')
-    
-    # Customize axes colors
-    for ax in axes:
-        ax.tick_params(colors='white')
-        for spine in ax.spines.values():
-            spine.set_color('gray')
-    
-    # Save the chart
-    plt.savefig(
-        config['filename'],
-        dpi=100,
-        bbox_inches='tight',
-        facecolor='black',
-        edgecolor='none'
-    )
-    plt.close(fig)
+    # Close any open figures to free memory
+    plt.close('all')
 
 def generate_all_charts():
     for config in CHART_CONFIGS:
@@ -249,7 +216,13 @@ def generate_all_charts():
             hours=config['duration_hours']
         )
         
-        if df is not None:
+        if df is not None and not df.empty:
+            print("Data shape:", df.shape)
+            print("Columns:", df.columns)
+            print("Data types:", df.dtypes)
+            print("Sample data:")
+            print(df.head())
+            
             support_levels = calculate_support_levels(df)
             generate_chart(
                 df,
@@ -258,7 +231,7 @@ def generate_all_charts():
             )
             print(f"Generated {config['filename']}")
         else:
-            print(f"Failed to generate {config['filename']}")
+            print(f"Failed to generate {config['filename']} - no data available")
 
 if __name__ == "__main__":
     generate_all_charts()
