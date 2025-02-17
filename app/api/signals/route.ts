@@ -10,7 +10,7 @@ export async function GET() {
       hasBaseId: !!process.env.KINKONG_AIRTABLE_BASE_ID
     });
 
-    const table = getTable(TABLES.SIGNALS);
+    const table = getTable('SIGNALS');
     console.log('Got Airtable table reference');
 
     // Specific try/catch for the Airtable query

@@ -15,7 +15,7 @@ export async function getInvestments(): Promise<Investment[]> {
   }
 
   try {
-    const table = getTable('Investments');
+    const table = getTable('INVESTMENTS');
     
     const records = await table
       .select({

@@ -2,12 +2,13 @@ import base from './client';
 
 // Main tables
 export const TABLES = {
-  PORTFOLIO: 'Portfolio',
-  TRADES: 'Trades', 
-  TOKENS: 'Tokens',
-  SIGNALS: 'Signals',
-  REPORTS: 'Reports',
-  PORTFOLIO_SNAPSHOTS: 'PortfolioSnapshots'
+  PORTFOLIO: 'PORTFOLIO',
+  TRADES: 'TRADES', 
+  TOKENS: 'TOKENS',
+  SIGNALS: 'SIGNALS',
+  REPORTS: 'REPORTS',
+  PORTFOLIO_SNAPSHOTS: 'PORTFOLIO_SNAPSHOTS',
+  INVESTMENTS: 'INVESTMENTS'
 } as const;
 
 // Table interfaces
