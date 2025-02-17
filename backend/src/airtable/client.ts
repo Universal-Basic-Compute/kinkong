@@ -1,6 +1,21 @@
 import Airtable from 'airtable';
+import dotenv from 'dotenv';
+import path from 'path';
 
+// Add debug logging
 console.log('Initializing Airtable client...', {
+  hasApiKey: !!process.env.KINKONG_AIRTABLE_API_KEY,
+  hasBaseId: !!process.env.KINKONG_AIRTABLE_BASE_ID,
+  nodeEnv: process.env.NODE_ENV,
+  cwd: process.cwd(),
+  envPath: path.resolve(process.cwd(), '.env')
+});
+
+// Load .env explicitly
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+
+// Check again after loading
+console.log('After loading .env:', {
   hasApiKey: !!process.env.KINKONG_AIRTABLE_API_KEY,
   hasBaseId: !!process.env.KINKONG_AIRTABLE_BASE_ID
 });
