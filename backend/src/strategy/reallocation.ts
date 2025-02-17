@@ -293,14 +293,10 @@ export async function executeReallocation() {
       const currentPercentage = (currentValue / totalValue) * 100;
       
       // Calculate target value based on actual portfolio value
-      const targetValue = Math.min(
-        (score.targetAllocation / 100) * totalValue,
-        currentValue + 5000 // Never increase by more than $5000
-      );
-      
+      const targetValue = (score.targetAllocation / 100) * totalValue;
       const difference = targetValue - currentValue;
       
-      // Only trade if adjustment > 3% and we have enough funds
+      // Only trade if adjustment > 3%
       if (Math.abs(difference) / totalValue * 100 > 3) {
         const price = await getTokenPrice(score.symbol);
         if (!price) {
