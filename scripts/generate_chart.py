@@ -223,16 +223,16 @@ def generate_chart(df, config, support_levels=None):
             return f'${x:,.0f}'
         
         # Create figure with adjusted layout and log scale
-    fig, axes = mpf.plot(
-        df,
-        type='candle',
-        style=style,
-        volume=True,
-        figsize=(16, 10),
-        panel_ratios=(3, 1),
-        addplot=apds,
-        returnfig=True,
-        ylabel='Price (USD) - Log Scale',
+        fig, axes = mpf.plot(
+            df,
+            type='candle',
+            style=style,
+            volume=True,
+            figsize=(16, 10),
+            panel_ratios=(3, 1),
+            addplot=apds,
+            returnfig=True,
+            ylabel='Price (USD) - Log Scale',
         ylabel_lower='Volume (USD)',
         xrotation=25,
         datetime_format='%Y-%m-%d %H:%M',
