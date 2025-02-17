@@ -445,7 +445,7 @@ def create_airtable_signal(analysis, timeframe, token_info):
         return None
 
 def generate_signal(analyses, token_info):  # Add token_info parameter
-    """Generate combined signal from multiple timeframe analyses"""
+    """Generate combined signal from serialized analyses"""
     # Extract timeframe analyses (excluding 'overall' key)
     timeframe_analyses = {k: v for k, v in analyses.items() if k != 'overall'}
     
@@ -454,15 +454,15 @@ def generate_signal(analyses, token_info):  # Add token_info parameter
     
     # Check timeframe alignment
     signals_aligned = all(
-        analyses[tf].signal == list(timeframe_analyses.values())[0].signal 
+        analyses[tf]['signal'] == list(timeframe_analyses.values())[0]['signal']
         for tf in timeframe_analyses.keys()
     )
     
     if signals_aligned:
-        base_confidence = max(a.confidence for a in timeframe_analyses.values())
+        base_confidence = max(a['confidence'] for a in timeframe_analyses.values())
         confidence_boost = 20  # Boost confidence when all timeframes align
     else:
-        base_confidence = statistics.mean(a.confidence for a in timeframe_analyses.values())
+        base_confidence = statistics.mean(a['confidence'] for a in timeframe_analyses.values())
         confidence_boost = 0
     
     # Group analyses by timeframe
