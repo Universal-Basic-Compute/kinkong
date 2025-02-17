@@ -163,38 +163,39 @@ def clean_json_string(json_str):
 
 def analyze_charts_with_claude(chart_paths):
     """Analyze multiple timeframe charts together using Claude 3"""
-    # Force reload environment variables
-    load_dotenv(override=True)
-    
-    # Explicitly get API key from .env
-    api_key = os.getenv('ANTHROPIC_API_KEY')
-    if not api_key:
-        raise ValueError("ANTHROPIC_API_KEY not found in .env file")
-    
-    # Debug print to verify the key
-    print(f"API Key from .env: {api_key[:8]}...{api_key[-4:]}")
-    
-    # Create client with explicit API key
-    client = anthropic.Client(
-        api_key=api_key,
-    )
-    
-    # Get market data and context
-    market_data = get_dexscreener_data()
-    market_context = get_market_context()
+    try:
+        # Force reload environment variables
+        load_dotenv(override=True)
+        
+        # Explicitly get API key from .env
+        api_key = os.getenv('ANTHROPIC_API_KEY')
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY not found in .env file")
+        
+        # Debug print to verify the key
+        print(f"API Key from .env: {api_key[:8]}...{api_key[-4:]}")
+        
+        # Create client with explicit API key
+        client = anthropic.Client(
+            api_key=api_key,
+        )
+        
+        # Get market data and context
+        market_data = get_dexscreener_data()
+        market_context = get_market_context()
 
-    # Prepare all chart images
-    chart_contents = []
-    for chart_path in chart_paths:
-        # Convert WindowsPath to string
-        chart_path_str = str(chart_path)
-        with open(chart_path, "rb") as image_file:
-            image_data = base64.b64encode(image_file.read()).decode('utf-8')
-            timeframe = '15m' if '15m' in chart_path_str else '2h' if '2h' in chart_path_str else '8h'
-            chart_contents.append({
-                "timeframe": timeframe,
-                "data": image_data
-            })
+        # Prepare all chart images
+        chart_contents = []
+        for chart_path in chart_paths:
+            # Convert WindowsPath to string
+            chart_path_str = str(chart_path)
+            with open(chart_path, "rb") as image_file:
+                image_data = base64.b64encode(image_file.read()).decode('utf-8')
+                timeframe = '15m' if '15m' in chart_path_str else '2h' if '2h' in chart_path_str else '8h'
+                chart_contents.append({
+                    "timeframe": timeframe,
+                    "data": image_data
+                })
         
         # Format market data for prompt
         market_data_str = ""
@@ -301,6 +302,78 @@ Format your response as JSON:
                         key_levels=data["key_levels"],
                         risk_reward_ratio=data.get("risk_reward_ratio"),
                         reassess_conditions=None  # Could add this to the schema if needed
+                    )
+                    for timeframe, data in analysis["timeframes"].items()
+                }
+                
+                # Add overall analysis
+                analyses["overall"] = analysis["overall_analysis"]
+                
+                return analyses
+                
+            except Exception as e:
+                print(f"Failed to parse analysis: {e}")
+                print("Response content:")
+                print(cleaned_response)
+                raise
+                
+        except Exception as e:
+            print(f"Failed to get Claude response: {e}")
+            raise
+            
+
+        # Format market data for prompt
+        market_data_str = ""
+        if market_data:
+            market_data_str = f"""
+Current Market Data:
+• Price: ${market_data['price']:.4f}
+• 24h Change: {market_data['price_change_24h']:.2f}%
+• 24h Volume: ${market_data['volume_24h']:,.2f}
+• Liquidity: ${market_data['liquidity']:,.2f}
+• FDV: ${market_data['fdv']:,.2f}
+• Market Cap: ${market_data['market_cap']:,.2f}
+"""
+
+        try:
+            message = client.messages.create(
+                model="claude-3-5-sonnet-20241022",
+                max_tokens=4096,
+                messages=[{
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": prompt
+                        },
+                        *[{
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": "image/png",
+                                "data": chart["data"]
+                            }
+                        } for chart in chart_contents]
+                    ]
+                }]
+            )
+            
+            # Clean and parse response
+            cleaned_response = clean_json_string(message.content[0].text)
+            
+            try:
+                analysis = json.loads(cleaned_response)
+                
+                # Convert to ChartAnalysis objects
+                analyses = {
+                    timeframe: ChartAnalysis(
+                        timeframe=timeframe,
+                        signal=data["signal"],
+                        confidence=data["confidence"],
+                        reasoning=data["reasoning"],
+                        key_levels=data["key_levels"],
+                        risk_reward_ratio=data.get("risk_reward_ratio"),
+                        reassess_conditions=None
                     )
                     for timeframe, data in analysis["timeframes"].items()
                 }
