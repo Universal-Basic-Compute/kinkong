@@ -246,7 +246,7 @@ export async function executeReallocation() {
         .map(([token, data]) => [
           token, 
           {
-            percentage: data.percentage.toFixed(2) + '%',
+            percentage: data.allocation.toFixed(2) + '%',
             amount: data.amount?.toFixed(4),
             price: tokenPrices.get(token),
             usdValue: data.usdValue?.toFixed(2),
@@ -276,7 +276,7 @@ export async function executeReallocation() {
     // 5. Update current allocations from portfolio
     for (const score of tokenScores) {
       const portfolio = currentPortfolio.get(score.symbol);
-      score.currentAllocation = portfolio?.percentage || 0;
+      score.currentAllocation = portfolio?.allocation || 0;
     }
 
     // 6. Generate trade orders
