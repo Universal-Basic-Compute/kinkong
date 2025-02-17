@@ -39,24 +39,24 @@ load_dotenv()
 CHART_CONFIGS = [
     {
         'timeframe': '15m',
-        'duration_hours': 34,
-        'title': '{symbol}/USD Short-term Analysis (34H)',
+        'duration_hours': 12,
+        'title': '{symbol}/USD Short-term Analysis (12H)',
         'subtitle': '15-minute candles - Trading Setup View',
-        'filename': '{symbol}_34h_short_term_15m_candles_trading_view.png'
+        'filename': '{symbol}_12h_short_term_15m_candles_trading_view.png'
     },
     {
         'timeframe': '2H',
-        'duration_hours': 270,
-        'title': '{symbol}/USD Medium-term Analysis (11D)',
+        'duration_hours': 48,
+        'title': '{symbol}/USD Medium-term Analysis (48H)',
         'subtitle': '2-hour candles - Swing Trading View',
-        'filename': '{symbol}_11d_medium_term_2h_candles_swing_view.png'
+        'filename': '{symbol}_48h_medium_term_2h_candles_swing_view.png'
     },
     {
         'timeframe': '8H',
-        'duration_hours': 1080,
-        'title': '{symbol}/USD Long-term Analysis (45D)',
+        'duration_hours': 336,
+        'title': '{symbol}/USD Long-term Analysis (14D)',
         'subtitle': '8-hour candles - Trend Analysis View',
-        'filename': '{symbol}_45d_long_term_8h_candles_trend_view.png'
+        'filename': '{symbol}_14d_long_term_8h_candles_trend_view.png'
     }
 ]
 
