@@ -1,5 +1,13 @@
 import { createCanvas } from 'canvas';
-import { createChart, ColorType } from 'lightweight-charts';
+import { 
+    createChart, 
+    ColorType,
+    SeriesType,
+    Time,
+    CandlestickData,
+    LineData,
+    HistogramData
+} from 'lightweight-charts';
 
 interface Candlestick {
     timestamp: number;
@@ -43,7 +51,7 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     const data = await getChartData(token);
     
     // Add candlestick series
-    const candlestickSeries = chart.addSeries('candlestick', {
+    const candlestickSeries = chart.addCandlestickSeries({
         upColor: 'rgba(75, 192, 75, 1)',
         downColor: 'rgba(192, 75, 75, 1)',
         borderVisible: false,
@@ -52,8 +60,8 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     });
     
     // Format data for lightweight-charts
-    const candleData = data.candlesticks.map(candle => ({
-        time: candle.timestamp / 1000, // Convert to seconds
+    const candleData: CandlestickData[] = data.candlesticks.map(candle => ({
+        time: new Date(candle.timestamp * 1000).toISOString().split('T')[0] as Time,
         open: candle.open,
         high: candle.high,
         low: candle.low,
@@ -63,39 +71,44 @@ export async function generateTokenChart(token: string): Promise<Buffer> {
     candlestickSeries.setData(candleData);
     
     // Add EMA lines
-    const ema20Series = chart.addSeries('line', {
+    const ema20Series = chart.addLineSeries({
         color: 'rgba(255, 215, 0, 0.8)',
         lineWidth: 1,
     });
     
-    const ema50Series = chart.addSeries('line', {
+    const ema50Series = chart.addLineSeries({
         color: 'rgba(75, 192, 192, 0.8)',
         lineWidth: 1,
     });
     
-    ema20Series.setData(data.ema20.map(point => ({
-        time: point.time / 1000,
+    const ema20Data: LineData[] = data.ema20.map(point => ({
+        time: new Date(point.time * 1000).toISOString().split('T')[0] as Time,
         value: point.value,
-    })));
+    }));
     
-    ema50Series.setData(data.ema50.map(point => ({
-        time: point.time / 1000,
+    const ema50Data: LineData[] = data.ema50.map(point => ({
+        time: new Date(point.time * 1000).toISOString().split('T')[0] as Time,
         value: point.value,
-    })));
+    }));
+    
+    ema20Series.setData(ema20Data);
+    ema50Series.setData(ema50Data);
     
     // Add volume
-    const volumeSeries = chart.addSeries('histogram', {
+    const volumeSeries = chart.addHistogramSeries({
         color: 'rgba(128, 128, 128, 0.2)',
         priceFormat: {
             type: 'volume',
         },
-        priceScaleId: '', // Set to empty to create a new scale
+        priceScaleId: '',
     });
     
-    volumeSeries.setData(data.volume.map(v => ({
-        time: v.time / 1000,
+    const volumeData: HistogramData[] = data.volume.map(v => ({
+        time: new Date(v.time * 1000).toISOString().split('T')[0] as Time,
         value: v.value,
-    })));
+    }));
+    
+    volumeSeries.setData(volumeData);
     
     // Fit content
     chart.timeScale().fitContent();
