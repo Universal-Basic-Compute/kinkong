@@ -169,11 +169,11 @@ def generate_chart(df, config, support_levels=None):
 
         # Create more detailed title components
         main_title = config['title']
-    price_stats = (
-        f"Current: {current_price:.4f} ({price_change:+.2f}%) | "
-        f"ATH: {ath:.4f} | ATL: {atl:.4f} | "
-        f"Avg: {avg_price:.4f}"
-    )
+        price_stats = (
+            f"Current: {current_price:.4f} ({price_change:+.2f}%) | "
+            f"ATH: {ath:.4f} | ATL: {atl:.4f} | "
+            f"Avg: {avg_price:.4f}"
+        )
     volume_stats = f"Avg Vol: {avg_volume:,.2f} | {len(df)} candles"
     
     # Enhanced subtitle with more technical info
