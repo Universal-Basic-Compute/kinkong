@@ -143,28 +143,40 @@ def create_airtable_signal(analysis, timeframe):
              if int(analysis.confidence) in range_),
             'MEDIUM'
         )
+
+        # Extract price levels from analysis
+        support_levels = analysis.key_levels['support']
+        resistance_levels = analysis.key_levels['resistance']
         
-        # Create signal record
+        # Calculate entry, target and stop prices
+        current_price = support_levels[0] if analysis.signal == 'BUY' else resistance_levels[0]
+        target_price = resistance_levels[0] if analysis.signal == 'BUY' else support_levels[0]
+        stop_price = support_levels[1] if analysis.signal == 'BUY' else resistance_levels[1]
+        
+        # Create signal record matching the interface exactly
         signal_data = {
-            'timestamp': datetime.now(timezone.utc).isoformat(),
-            'token': 'UBC',
-            'type': analysis.signal,  # BUY/SELL/HOLD
-            'timeframe': timeframe_mapping.get(timeframe, 'INTRADAY'),
-            'confidence': confidence_level,
-            'reason': analysis.reasoning,
-            'keyLevels': {
-                'support': analysis.key_levels['support'],
-                'resistance': analysis.key_levels['resistance']
+            'fields': {
+                'timestamp': datetime.now(timezone.utc).isoformat(),
+                'token': 'UBC',
+                'type': analysis.signal,  # BUY/SELL only
+                'timeframe': timeframe_mapping.get(timeframe, 'INTRADAY'),
+                'entryPrice': current_price,
+                'targetPrice': target_price,
+                'stopLoss': stop_price,
+                'confidence': confidence_level,
+                'wallet': os.getenv('STRATEGY_WALLET', ''),  # Add strategy wallet address
+                'reason': (f"{analysis.reasoning}\n\n"
+                          f"Support Levels: {', '.join(map(str, support_levels))}\n"
+                          f"Resistance Levels: {', '.join(map(str, resistance_levels))}\n"
+                          f"R/R Ratio: {analysis.risk_reward_ratio if analysis.risk_reward_ratio else 'N/A'}"),
+                'url': ''  # Optional URL field
             }
         }
         
-        # Add risk/reward ratio if available
-        if analysis.risk_reward_ratio:
-            signal_data['riskRewardRatio'] = analysis.risk_reward_ratio
-            
-        # Create record in Airtable
-        airtable.insert(signal_data)
-        print(f"Created signal in Airtable for {timeframe} timeframe")
+        # Only create signal if it's BUY or SELL (not HOLD)
+        if analysis.signal in ['BUY', 'SELL']:
+            airtable.insert(signal_data)
+            print(f"Created {analysis.signal} signal in Airtable for {timeframe} timeframe")
         
     except Exception as e:
         print(f"Failed to create Airtable signal: {e}")
