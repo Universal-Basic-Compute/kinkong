@@ -492,19 +492,10 @@ def create_airtable_signal(analysis, timeframe, token_info):
                 'stopLoss': stop_price,
                 'confidence': confidence_level,
                 'wallet': os.getenv('STRATEGY_WALLET', ''),
-                'amount': None,  # Will be set when activated
-                'entryValue': None,  # Will be set when activated
-                'activationTime': None,  # Will be set when activated
-                'lastUpdateTime': now.isoformat(),
-                'expiryDate': expiry_date.isoformat(),
                 'reason': (f"{analysis.get('reasoning', '')}\n\n"
                           f"Support Levels: {', '.join(map(str, support_levels))}\n"
                           f"Resistance Levels: {', '.join(map(str, resistance_levels))}\n"
-                          f"R/R Ratio: {analysis.get('risk_reward_ratio', 'N/A')}"),
-                'exitPrice': None,    # Set when position closes
-                'unrealizedPnl': None,  # Updated while position is open
-                'realizedPnl': None,   # Set when position closes
-                'roi': None           # Return on investment including costs
+                          f"R/R Ratio: {analysis.get('risk_reward_ratio', 'N/A')}")
             }
 
             # Validate signal before creating
