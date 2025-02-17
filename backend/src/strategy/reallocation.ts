@@ -219,7 +219,7 @@ export async function executeReallocation() {
       const difference = targetValue - currentValue;
       
       // Only trade if adjustment > 3%
-      if (Math.abs(difference) / totalPortfolioValue * 100 > 3) {
+      if (Math.abs(difference) / totalValue * 100 > 3) {
         const price = await getTokenPrice(score.symbol);
         if (!price) continue;
 
