@@ -295,7 +295,7 @@ export function ChartFlow() {
             </AnimatePresence>
           </div>
           {/* Graphe secondaire au milieu */}
-          <div className="absolute inset-0 flex items-end space-x-1 opacity-50">
+          <div className="absolute inset-0 flex items-end space-x-1 opacity-65">
             <AnimatePresence>
               {secondaryCandles.map((candle) => {
                 const highest = Math.max(...secondaryCandles.map(c => c.high));
@@ -318,7 +318,7 @@ export function ChartFlow() {
                     key={`secondary-${candle.id}`}
                     className="relative w-4 h-full"
                     initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 0.3, x: 0 }}
+                    animate={{ opacity: 0.65, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.2 }}
                   >
