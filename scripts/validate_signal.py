@@ -189,9 +189,10 @@ def validate_signal(
 
 if __name__ == "__main__":
     import os
+    from datetime import datetime, timezone
     from airtable import Airtable
     from dotenv import load_dotenv
-    from analyze_charts import get_dexscreener_data
+    from analyze_charts import get_dexscreener_data, send_telegram_message
     
     # Debug: Print environment variables
     print("\n🔍 Debug Information")
@@ -283,6 +284,10 @@ if __name__ == "__main__":
         print("\nValidation Results:")
         print("-" * 40)
         
+        # Track if signal passes validation on any timeframe
+        passed_validation = False
+        valid_timeframes = []
+        
         # Test all timeframes
         for timeframe in ['15m', '2h', '8h']:
             print(f"\n⏰ {timeframe} Timeframe:")
@@ -303,3 +308,57 @@ if __name__ == "__main__":
             print(f"Trading Costs:   {result['costs']:.1%}")
             print(f"Risk/Reward:     {result['risk_reward']:.2f}")
             print(f"Result:          {result['reason']}")
+            
+            if result['valid']:
+                passed_validation = True
+                valid_timeframes.append(timeframe)
+        
+        # If signal passed validation on any timeframe, create trade
+        if passed_validation:
+            try:
+                # Create trade record
+                trades_table = Airtable(base_id, 'TRADES', api_key)
+                trade_data = {
+                    'signalId': signal['id'],
+                    'timestamp': datetime.now(timezone.utc).isoformat(),
+                    'token': fields['token'],
+                    'type': fields['type'],
+                    'timeframe': ','.join(valid_timeframes),  # Record which timeframes passed
+                    'entryPrice': float(fields['entryPrice']),
+                    'targetPrice': float(fields['targetPrice']),
+                    'stopLoss': float(fields['stopLoss']),
+                    'status': 'PENDING',  # Initial trade status
+                    'market_price': market_data['price'] if market_data else None,
+                    'lastUpdateTime': datetime.now(timezone.utc).isoformat()
+                }
+                
+                # Add trade record
+                trade_result = trades_table.insert(trade_data)
+                print(f"\n✅ Created trade record: {trade_result['id']}")
+                
+                # Update signal status
+                signals_table.update(signal['id'], {
+                    'tradeId': trade_result['id'],
+                    'lastUpdateTime': datetime.now(timezone.utc).isoformat()
+                })
+                
+                # Send notification
+                message = f"""🎯 New Trade Created
+
+Token: ${fields['token']}
+Type: {fields['type']}
+Timeframes: {', '.join(valid_timeframes)}
+Entry: ${float(fields['entryPrice']):.4f}
+Target: ${float(fields['targetPrice']):.4f}
+Stop: ${float(fields['stopLoss']):.4f}
+Current Price: ${market_data['price']:.4f}
+
+Signal ID: {signal['id']}
+Trade ID: {trade_result['id']}"""
+
+                send_telegram_message(message)
+                
+            except Exception as e:
+                print(f"\n❌ Failed to create trade: {e}")
+        else:
+            print(f"\n⚠️ Signal {signal['id']} did not pass validation on any timeframe")
