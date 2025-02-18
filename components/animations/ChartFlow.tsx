@@ -154,8 +154,8 @@ export function ChartFlow() {
   return (
     <div className="w-full h-[400px] bg-black/50 rounded-lg p-4">
       <div className="h-[67%] flex items-end relative">
-        {/* Zone des bougies */}
-        <div className="w-[90%] h-full flex items-end space-x-1">
+        {/* Zone des bougies - réduire à 75% */}
+        <div className="w-[75%] h-full flex items-end space-x-1">
           <AnimatePresence>
             {candles.map((candle) => {
             // Calculer les hauteurs relatives
@@ -232,8 +232,8 @@ export function ChartFlow() {
           </AnimatePresence>
         </div>
         
-        {/* Zone vide réduite */}
-        <div className="w-[10%]"></div>
+        {/* Zone vide augmentée à 25% */}
+        <div className="w-[25%]"></div>
       </div>
     </div>
   );
