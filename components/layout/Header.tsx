@@ -19,8 +19,8 @@ export default function Header() {
       description: 'Your holdings and performance'
     },
     { 
-      label: 'Trading', 
-      href: '#',
+      label: 'Trading',
+      isGroup: true,
       subItems: [
         { 
           label: 'Signals', 
@@ -61,12 +61,9 @@ export default function Header() {
           <nav className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => (
               <div key={item.href} className="relative group">
-                <Link
-                  href={item.href}
-                  className="text-gray-300 hover:text-gold transition-colors duration-200 font-medium tracking-wide px-2 py-1 flex items-center"
-                >
-                  {item.label}
-                  {item.subItems && (
+                {item.isGroup ? (
+                  <div className="text-gray-300 cursor-default px-2 py-1 flex items-center">
+                    {item.label}
                     <svg 
                       className="w-4 h-4 ml-1 transform group-hover:rotate-180 transition-transform duration-200" 
                       fill="none" 
@@ -75,8 +72,25 @@ export default function Header() {
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
-                  )}
-                </Link>
+                  </div>
+                ) : (
+                  <Link
+                    href={item.href}
+                    className="text-gray-300 hover:text-gold transition-colors duration-200 font-medium tracking-wide px-2 py-1 flex items-center"
+                  >
+                    {item.label}
+                    {item.subItems && (
+                      <svg 
+                        className="w-4 h-4 ml-1 transform group-hover:rotate-180 transition-transform duration-200" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    )}
+                  </Link>
+                )}
                 
                 {item.subItems && (
                   <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-black/95 border border-gold/20 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
@@ -156,13 +170,19 @@ export default function Header() {
                       </div>
                     </>
                   ) : (
-                    <Link
-                      href={item.href}
-                      className="text-gray-300 hover:text-gold py-2 transition-colors duration-200 font-medium tracking-wide"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      {item.label}
-                    </Link>
+                    {item.isGroup ? (
+                      <div className="text-gray-300 py-2 font-medium tracking-wide cursor-default">
+                        {item.label}
+                      </div>
+                    ) : (
+                      <Link
+                        href={item.href}
+                        className="text-gray-300 hover:text-gold py-2 transition-colors duration-200 font-medium tracking-wide"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        {item.label}
+                      </Link>
+                    )}
                   )}
                 </div>
               ))}
