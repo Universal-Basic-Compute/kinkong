@@ -418,46 +418,33 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
     try:
         print(f"\nCreating Airtable signal for {token_info['symbol']}...")
         
-        # Generate default reasoning if none provided
+        # Extract the specific timeframe analysis
+        timeframe_analysis = analysis.get('reasoning', '')
         signal_type = analysis.get('signal', 'UNKNOWN')
         confidence = analysis.get('confidence', 0)
         key_levels = analysis.get('key_levels', {})
         
-        # Build default reasoning text
-        default_reasoning = (
-            f"{timeframe} timeframe analysis shows {signal_type} signal with {confidence}% confidence.\n\n"
-            f"Key Price Levels:\n"
-            f"• Support: {', '.join(f'${price:.4f}' for price in key_levels.get('support', []))}\n"
-            f"• Resistance: {', '.join(f'${price:.4f}' for price in key_levels.get('resistance', []))}\n\n"
-        )
-
-        # Extract reasoning with better error handling
-        timeframe_analysis = ""
-        if isinstance(analysis, dict):
-            timeframe_analysis = analysis.get('reasoning', default_reasoning)
-            if not timeframe_analysis:  # If reasoning is empty or None
-                timeframe_analysis = default_reasoning
-        elif hasattr(analysis, 'reasoning'):
-            timeframe_analysis = analysis.reasoning or default_reasoning
-        else:
-            timeframe_analysis = default_reasoning
-
-        # Safely get overall analysis
-        overall = {}
-        if analyses and isinstance(analyses, dict):
-            overall = analyses.get('overall', {})
-
-        # Build complete reason text
+        # Get overall analysis
+        overall = analyses.get('overall', {}) if analyses else {}
+        
+        # Build reason text using the actual analysis data
         reason_text = (
             f"Technical Analysis Summary:\n\n"
-            f"{timeframe_analysis}\n\n"
+            f"{timeframe_analysis}\n\n"  # Use the actual analysis reasoning
             f"Overall Market Context:\n"
             f"• Primary Trend: {overall.get('primary_trend', 'Unknown')}\n"
             f"• Timeframe Alignment: {overall.get('timeframe_alignment', 'Unknown')}\n"
             f"• Best Timeframe: {overall.get('best_timeframe', 'Unknown')}\n\n"
         )
 
-        # Add key levels section
+        # Add key observations if available
+        if overall.get('key_observations'):
+            reason_text += "Key Observations:\n"
+            for observation in overall['key_observations']:
+                reason_text += f"• {observation}\n"
+            reason_text += "\n"
+
+        # Add key levels
         support_levels = key_levels.get('support', [])
         resistance_levels = key_levels.get('resistance', [])
         if support_levels or resistance_levels:
@@ -467,7 +454,7 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
                 f"Resistance: {', '.join(f'${price:.4f}' for price in resistance_levels)}\n\n"
             )
 
-        # Calculate entry, target and stop prices based on key levels
+        # Calculate trade setup
         if signal_type == 'SELL':
             entry_price = resistance_levels[0] if resistance_levels else 0
             target_price = support_levels[0] if support_levels else 0
@@ -488,7 +475,7 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
                 f"• Expected Return: {expected_return:.1f}%\n\n"
             )
 
-        # Add recommended action
+        # Add recommended action from overall analysis
         recommended_action = overall.get('recommended_action', {})
         action_reasoning = recommended_action.get('reasoning', 
             f"Execute {signal_type} order at ${entry_price:.4f} with {confidence}% confidence"
