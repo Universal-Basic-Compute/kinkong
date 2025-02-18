@@ -8,6 +8,12 @@ interface SignalDisplay {
   type: 'BUY' | 'SELL';
 }
 
+interface StreamingReason {
+  text: string;
+  fullText: string;
+  index: number;
+}
+
 interface Candle {
   id: number;
   open: number;
@@ -34,6 +40,11 @@ export function ChartFlow() {
   const [activeSignal, setActiveSignal] = useState<'BUY' | 'SELL' | null>(null);
   const [displaySignals, setDisplaySignals] = useState<SignalDisplay[]>([]);
   const [currentSignalIndex, setCurrentSignalIndex] = useState(0);
+  const [streamingReasons, setStreamingReasons] = useState<StreamingReason[]>([
+    { text: '', fullText: '', index: 0 },
+    { text: '', fullText: '', index: 0 },
+    { text: '', fullText: '', index: 0 }
+  ]);
 
   const generateSignal = (candleId: number) => ({
     id: Math.random(),
@@ -202,6 +213,72 @@ export function ChartFlow() {
 
     return () => clearInterval(interval);
   }, [displaySignals]);
+
+  const getRandomReasons = async () => {
+    try {
+      const response = await fetch('/api/signals');
+      if (!response.ok) throw new Error('Failed to fetch signals');
+      const data = await response.json();
+      
+      // Mélanger le tableau et prendre 3 raisons
+      const shuffled = [...data].sort(() => 0.5 - Math.random());
+      const reasons = shuffled.slice(0, 3).map(signal => signal.reason);
+      
+      return reasons;
+    } catch (error) {
+      console.error('Error fetching reasons:', error);
+      return [
+        'Analyzing market patterns...',
+        'Detecting price movements...',
+        'Calculating momentum indicators...'
+      ];
+    }
+  };
+
+  useEffect(() => {
+    let timeouts: NodeJS.Timeout[] = [];
+    
+    const updateStreams = async () => {
+      const reasons = await getRandomReasons();
+      
+      // Réinitialiser les textes
+      setStreamingReasons(reasons.map(reason => ({
+        text: '',
+        fullText: reason,
+        index: 0
+      })));
+
+      // Créer un effet de streaming pour chaque raison
+      reasons.forEach((_, streamIndex) => {
+        const streamText = () => {
+          setStreamingReasons(prev => prev.map((stream, index) => {
+            if (index !== streamIndex) return stream;
+            if (stream.index >= stream.fullText.length) return stream;
+            
+            return {
+              ...stream,
+              text: stream.fullText.substring(0, stream.index + 1),
+              index: stream.index + 1
+            };
+          }));
+        };
+
+        // Créer un timeout pour chaque caractère
+        for (let i = 0; i < reasons[streamIndex].length; i++) {
+          timeouts.push(setTimeout(streamText, i * 30));
+        }
+      });
+
+      // Programmer la prochaine mise à jour
+      timeouts.push(setTimeout(updateStreams, 5000));
+    };
+
+    updateStreams();
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+    };
+  }, []);
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
@@ -447,6 +524,23 @@ export function ChartFlow() {
           </div>
         </div>
       </div>
+    </div>
+    
+    {/* Section des raisons en streaming */}
+    <div className="mt-4 grid grid-cols-3 gap-4">
+      {streamingReasons.map((stream, index) => (
+        <div 
+          key={index}
+          className="bg-black/30 rounded-lg p-3 border border-gold/10"
+        >
+          <div className="h-20 overflow-hidden">
+            <p className="text-sm text-gray-300 font-mono">
+              {stream.text}
+              <span className="animate-pulse">_</span>
+            </p>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
