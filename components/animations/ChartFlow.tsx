@@ -284,7 +284,7 @@ export function ChartFlow() {
     let timeoutId: NodeJS.Timeout;
 
     const generateRandomSignal = () => {
-      if (candles.length === 0) return; // Skip if no candles
+      if (!candles || candles.length === 0) return;
       
       console.log('Generating signal at:', new Date().toISOString());
       const type = Math.random() > 0.5 ? 'BUY' : 'SELL';
@@ -300,22 +300,23 @@ export function ChartFlow() {
         setActiveSignal(null);
       }, Math.random() * 1000 + 2500);
 
-      // Changé pour 3-5 secondes (3000-5000ms)
       const nextDelay = Math.random() * 2000 + 3000;
       console.log('Next signal scheduled in', nextDelay/1000, 'seconds');
       timeoutId = setTimeout(generateRandomSignal, nextDelay);
     };
 
-    console.log('Signal effect starting');
-    generateRandomSignal();
+    if (candles && candles.length > 0) {
+      console.log('Signal effect starting');
+      generateRandomSignal();
 
-    return () => {
-      console.log('Cleaning up signal effect');
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-    };
-  }, []); // Remove candles dependency
+      return () => {
+        console.log('Cleaning up signal effect');
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+      };
+    }
+  }, [candles]);
 
   return (
     <div className="w-full h-[400px] bg-black/50 rounded-lg p-4">
