@@ -7,31 +7,5 @@
   ],
   "buildCommand": "next build",
   "devCommand": "next dev",
-  "framework": "nextjs",
-  "crons": [
-    {
-      "path": "/api/cron/fetch-tokens",
-      "schedule": "*/15 * * * *"
-    },
-    {
-      "path": "/api/cron/record-snapshot", 
-      "schedule": "0,30 * * * *"
-    },
-    {
-      "path": "/api/cron/analyze-sentiment",
-      "schedule": "0 0 * * 5"
-    },
-    {
-      "path": "/api/cron/reallocation",
-      "schedule": "0 0,6,12,18 * * *"
-    },
-    {
-      "path": "/api/cron/analyze-charts",
-      "schedule": "45 23,5,11,17 * * *"
-    },
-    {
-      "path": "/api/cron/execute-trades",
-      "schedule": "*/1 * * * *"
-    }
-  ]
+  "framework": "nextjs"
 }
