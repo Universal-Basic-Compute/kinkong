@@ -178,7 +178,6 @@ export function SignalHistory() {
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Confidence</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">From</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Reason</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Reference</th>
             <th className="px-6 py-3 text-center text-xs font-medium text-gold uppercase tracking-wider">Success</th>
           </tr>
         </thead>
@@ -250,20 +249,6 @@ export function SignalHistory() {
                     {signal.reason || '-'}
                   </div>
                 </div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm">
-                {signal.url ? (
-                  <a 
-                    href={signal.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-gold hover:text-gold/80 underline"
-                  >
-                    View
-                  </a>
-                ) : (
-                  '-'
-                )}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-center text-2xl">
                 {signal.actualReturn ? (
