@@ -31,14 +31,14 @@ def calculate_returns(signal: Dict) -> Dict:
                 risk = abs(stop_loss - entry_price)
                 reward = abs(entry_price - target_price)
                 
-            risk_ratio = round(reward / risk, 2) if risk != 0 else None
+            risk_reward_ratio = round(reward / risk, 2) if risk != 0 else None
         else:
-            risk_ratio = None
+            risk_reward_ratio = None
             
         return {
             'expectedReturn': round(expected_return, 2) if expected_return else None,
             'actualReturn': round(actual_return, 2) if actual_return is not None else None,
-            'riskRatio': risk_ratio
+            'riskRewardRatio': risk_reward_ratio
         }
         
     except Exception as e:
