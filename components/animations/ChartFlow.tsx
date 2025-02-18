@@ -181,7 +181,7 @@ export function ChartFlow() {
         </div>
         
         {/* Zone des bougies - maintenant sur les 2/3 gauches */}
-        <div className="w-[67%] h-full flex items-end space-x-1">
+        <div className="w-[67%] h-full flex items-end space-x-2">
           <AnimatePresence>
             {candles.map((candle) => {
             // Calculer les hauteurs relatives
@@ -206,7 +206,7 @@ export function ChartFlow() {
             return (
               <motion.div
                 key={candle.id}
-                className="relative w-3 h-full"
+                className="relative w-4 h-full"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
