@@ -550,18 +550,30 @@ export function ChartFlow() {
       </div>
       </div>
       
-        {/* Section des raisons en streaming - superposée au graphique */}
-        <div className="absolute bottom-4 left-4 w-[70%] grid grid-cols-3 gap-2">
+        {/* Section des raisons en streaming - style bulle de chat */}
+        <div className="absolute bottom-8 left-8 w-[65%] flex flex-col gap-3">
           {streamingReasons.map((stream, index) => (
             <div 
               key={index}
-              className="bg-black/40 rounded-lg p-2 border border-gold/10"
+              className={`
+                bg-black/60 rounded-2xl p-3 border border-gold/10 
+                backdrop-blur-sm shadow-lg
+                ${index === 0 ? 'ml-4' : index === 1 ? 'ml-12' : 'ml-20'}
+                max-w-[280px]
+                transform hover:scale-105 transition-transform duration-200
+              `}
             >
-              <div className="h-16 overflow-hidden">
-                <p className="text-xs text-gray-300 font-mono leading-tight">
-                  {stream.text}
-                  <span className="animate-pulse">_</span>
-                </p>
+              <div className="relative">
+                {/* Petit triangle pour l'effet bulle */}
+                <div className="absolute -left-2 bottom-2 w-3 h-3 bg-black/60 border-l border-b border-gold/10 transform rotate-45" />
+                
+                {/* Contenu */}
+                <div className="overflow-hidden">
+                  <p className="text-xs text-gray-200 font-mono leading-relaxed">
+                    {stream.text}
+                    <span className="animate-pulse ml-1 opacity-70">▊</span>
+                  </p>
+                </div>
               </div>
             </div>
           ))}
