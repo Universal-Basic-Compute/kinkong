@@ -9,7 +9,8 @@
     "lint": "next lint",
     "analyze-sentiment": "ts-node scripts/analyze-market-sentiment.ts",
     "fetch-tokens": "ts-node scripts/fetch-token-data.ts",
-    "reallocation": "ts-node scripts/execute-reallocation.ts"
+    "reallocation": "ts-node scripts/execute-reallocation.ts",
+    "snapshot": "ts-node scripts/take-snapshot.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.3",
