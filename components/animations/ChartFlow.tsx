@@ -127,20 +127,28 @@ export function ChartFlow() {
   }, []);
 
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
     const generateRandomSignal = () => {
-      setSignals([{  // Remplacer le signal au lieu d'en ajouter
+      setSignals([{
         id: Math.random(),
         type: Math.random() > 0.5 ? 'BUY' : 'SELL',
         candleId: candles[candles.length - 1].id
       }]);
       
-      // Planifier le prochain signal dans 1-5 secondes
-      setTimeout(generateRandomSignal, Math.random() * 4000 + 1000);
+      // Planifier le prochain signal dans 5-10 secondes
+      timeoutId = setTimeout(generateRandomSignal, Math.random() * 5000 + 5000); // Entre 5 et 10 secondes
     };
 
     generateRandomSignal();
-    return () => {}; // Cleanup si nécessaire
-  }, [candles]);
+
+    // Cleanup function
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, []); // Retirer la dépendance aux candles pour éviter les re-renders multiples
 
   return (
     <div className="w-full h-[400px] bg-black/50 rounded-lg p-4">
