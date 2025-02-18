@@ -32,24 +32,31 @@ load_dotenv()
 CHART_CONFIGS = [
     {
         'timeframe': '15m',
-        'duration_hours': 34,
-        'title': 'UBC/USD Short-term Analysis (34H)',
-        'subtitle': '15-minute candles - Trading Setup View',
-        'filename': 'ubc_34h_short_term_15m_candles_trading_view.png'
+        'duration_hours': 6,  # SCALP: 6 hours
+        'title': 'UBC/USD Scalp Analysis (6H)',
+        'subtitle': '15-minute candles - Scalp Trading View',
+        'filename': 'ubc_6h_scalp_15m_candles_trading_view.png'
     },
     {
-        'timeframe': '2H',
-        'duration_hours': 270,
-        'title': 'UBC/USD Medium-term Analysis (11D)',
-        'subtitle': '2-hour candles - Swing Trading View',
-        'filename': 'ubc_11d_medium_term_2h_candles_swing_view.png'
+        'timeframe': '1H',
+        'duration_hours': 24,  # INTRADAY: 24 hours
+        'title': 'UBC/USD Intraday Analysis (24H)',
+        'subtitle': '1-hour candles - Intraday Trading View',
+        'filename': 'ubc_24h_intraday_1h_candles_trading_view.png'
     },
     {
-        'timeframe': '8H',
-        'duration_hours': 1080,
-        'title': 'UBC/USD Long-term Analysis (45D)',
-        'subtitle': '8-hour candles - Trend Analysis View',
-        'filename': 'ubc_45d_long_term_8h_candles_trend_view.png'
+        'timeframe': '4H',
+        'duration_hours': 168,  # SWING: 7 days
+        'title': 'UBC/USD Swing Analysis (7D)',
+        'subtitle': '4-hour candles - Swing Trading View',
+        'filename': 'ubc_7d_swing_4h_candles_trading_view.png'
+    },
+    {
+        'timeframe': '1D',
+        'duration_hours': 720,  # POSITION: 30 days
+        'title': 'UBC/USD Position Analysis (30D)',
+        'subtitle': 'Daily candles - Position Trading View',
+        'filename': 'ubc_30d_position_daily_candles_trading_view.png'
     }
 ]
 
