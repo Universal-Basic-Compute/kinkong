@@ -96,13 +96,13 @@ def simulate_trade(prices: list, signal_data: dict) -> dict:
                 time_to_exit = i
                 break
     
-    # Calculate returns
+    # Calculate returns and accuracy
     if signal_type == 'BUY':
         actual_return = ((exit_price - entry_price) / entry_price) * 100
         accuracy = 1 if exit_price > entry_price else 0
     else:  # SELL
-        actual_return = ((entry_price - exit_price) / entry_price) * 100
-        accuracy = 1 if exit_price < entry_price else 0
+        actual_return = ((entry_price - exit_price) / entry_price) * 100  # This is correct
+        accuracy = 1 if exit_price < entry_price else 0  # Fixed: SELL is profitable when exit < entry
     
     return {
         'exitPrice': exit_price,
