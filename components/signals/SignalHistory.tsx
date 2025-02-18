@@ -167,7 +167,7 @@ export function SignalHistory() {
 
   return (
     <div className="overflow-x-auto">
-      <div className="max-h-[600px] overflow-y-auto scrollbar-thin scrollbar-thumb-gold/20 scrollbar-track-black/20">
+      <div className="max-h-[600px] overflow-y-auto custom-scrollbar">
         <table className="min-w-full bg-black/50 rounded-lg">
           <thead className="sticky top-0 bg-black/95 z-10">
             <tr className="border-b border-gold/20">
@@ -226,12 +226,12 @@ export function SignalHistory() {
                   {signal.confidence}
                 </span>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-center text-sm">
+              <td className="px-6 py-4 whitespace-nowrap text-center text-2xl">
                 {signal.success !== null && signal.success !== undefined ? (
                   signal.success ? (
                     <span className="metallic-text-ubc font-bold">✓</span>
                   ) : (
-                    <span className="text-red-500">✗</span>
+                    <span className="text-red-500 font-bold">×</span>
                   )
                 ) : null}
               </td>
@@ -278,13 +278,6 @@ export function SignalHistory() {
               </td>
             </tr>
           ))}
-          {signals.length > 15 && (
-            <tr>
-              <td colSpan={9} className="px-6 py-4 text-center text-sm text-gray-400">
-                Scroll to see {signals.length - 15} more signals
-              </td>
-            </tr>
-          )}
           {signals.slice(15).map((signal) => (
             <tr key={signal.id} className="hover:bg-gold/5">
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
