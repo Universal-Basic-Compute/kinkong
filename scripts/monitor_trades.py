@@ -242,4 +242,11 @@ async def run_trade_monitor(interval_seconds=60):
             await asyncio.sleep(60)
 
 if __name__ == "__main__":
-    run_trade_monitor()
+    try:
+        print("\n🔄 Starting trade monitor...")
+        # Run the async function with asyncio
+        asyncio.run(run_trade_monitor())
+    except KeyboardInterrupt:
+        print("\n👋 Trade monitor stopped by user")
+    except Exception as e:
+        print(f"\n❌ Error in main loop: {e}")
