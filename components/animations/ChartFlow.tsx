@@ -15,41 +15,6 @@ interface Candle {
 export function ChartFlow() {
   const [candles, setCandles] = useState<Candle[]>([]);
   const [lastPrice, setLastPrice] = useState(100);
-  const [upperBand, setUpperBand] = useState<number[]>([]);
-  const [lowerBand, setLowerBand] = useState<number[]>([]);
-
-  const calculateBands = (candles: Candle[]) => {
-    // Utiliser les high/low au lieu des close pour englober les bougies
-    const highs = candles.map(c => c.high);
-    const lows = candles.map(c => c.low);
-    const closes = candles.map(c => c.close);
-    
-    const sma = closes.reduce((a, b) => a + b, 0) / closes.length;
-    const time = Date.now() / 1000;
-    
-    // Facteur de respiration asymétrique
-    const upperBreathing = Math.sin(time / 2) * 0.2 + 1.2; // varie entre 1 et 1.4
-    const lowerBreathing = Math.sin(time / 2.5) * 0.15 + 1.1; // varie entre 0.95 et 1.25
-    
-    // Déviations asymétriques
-    const upperDeviation = sma * 0.025 * upperBreathing; // 2.5% de base pour le haut
-    const lowerDeviation = sma * 0.018 * lowerBreathing; // 1.8% de base pour le bas
-    
-    const upper = closes.map((close, i) => {
-      const highestPoint = Math.max(highs[i], close);
-      const randomVariation = (Math.random() * 0.008) * close; // 0.8% de variation
-      return highestPoint + upperDeviation + randomVariation;
-    });
-    
-    const lower = closes.map((close, i) => {
-      const lowestPoint = Math.min(lows[i], close);
-      const randomVariation = (Math.random() * 0.006) * close; // 0.6% de variation
-      return lowestPoint - lowerDeviation - randomVariation;
-    });
-
-    setUpperBand(upper);
-    setLowerBand(lower);
-  };
 
   const generateCandle = (id: number, prevClose: number): Candle => {
     const maxMove = prevClose * 0.03;
@@ -128,7 +93,7 @@ export function ChartFlow() {
     const initialCandles = [];
     let currentPrice = lastPrice;
     
-    for (let i = 0; i < 40; i++) {
+    for (let i = 0; i < 60; i++) {
       const candle = generateCandle(i, currentPrice);
       initialCandles.push(candle);
       currentPrice = candle.close;
@@ -141,7 +106,6 @@ export function ChartFlow() {
       setCandles(prev => {
         const newCandle = generateCandle(prev[prev.length - 1].id + 1, prev[prev.length - 1].close);
         const newCandles = [...prev.slice(1), newCandle];
-        calculateBands(newCandles);
         return newCandles;
       });
     }, 444); // 666ms / 1.5 = 444ms pour speed x1.5
@@ -152,41 +116,8 @@ export function ChartFlow() {
   return (
     <div className="w-full h-[400px] bg-black/50 rounded-lg p-4">
       <div className="h-[67%] flex items-end relative">
-        {/* Bandes de Bollinger */}
-        <div className="absolute inset-0 pointer-events-none">
-          <svg className="w-[75%] h-full ml-[10%]" viewBox="0 0 100 100" preserveAspectRatio="none">
-            {/* Bande supérieure */}
-            <path
-              d={upperBand.map((value, index) => {
-                const x = (index / (candles.length - 1)) * 100;
-                const y = ((Math.max(...upperBand) - value) / (Math.max(...upperBand) - Math.min(...lowerBand))) * 100;
-                return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
-              }).join(' ')}
-              fill="none"
-              stroke="rgba(255, 255, 255, 0.15)"
-              strokeWidth="1"
-              vectorEffect="non-scaling-stroke"
-            />
-            {/* Bande inférieure */}
-            <path
-              d={lowerBand.map((value, index) => {
-                const x = (index / (candles.length - 1)) * 100;
-                const y = ((Math.max(...upperBand) - value) / (Math.max(...upperBand) - Math.min(...lowerBand))) * 100;
-                return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
-              }).join(' ')}
-              fill="none"
-              stroke="rgba(255, 255, 255, 0.15)"
-              strokeWidth="1"
-              vectorEffect="non-scaling-stroke"
-            />
-          </svg>
-        </div>
-        
-        {/* Ajouter un espace à gauche pour pousser les bougies vers la droite */}
-        <div className="w-[10%]"></div>
-        
         {/* Zone des bougies */}
-        <div className="w-[75%] h-full flex items-end space-x-1">
+        <div className="w-[90%] h-full flex items-end space-x-1">
           <AnimatePresence>
             {candles.map((candle) => {
             // Calculer les hauteurs relatives
