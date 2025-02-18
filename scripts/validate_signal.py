@@ -207,11 +207,14 @@ if __name__ == "__main__":
             print("Available fields in TOKENS table:", list(records[0]['fields'].keys()))
         else:
             print("No records found in TOKENS table")
-    
-    # Get signals that haven't expired
-    signals = signals_table.get_all(
-        formula="expiryDate>=TODAY()"  # Only check expiry date
-    )
+        
+        # Get signals that haven't expired
+        signals = signals_table.get_all(
+            formula="expiryDate>=TODAY()"  # Only check expiry date
+        )
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        exit(1)
     
     print("\n🔍 Validating Signals")
     print("=" * 50)
