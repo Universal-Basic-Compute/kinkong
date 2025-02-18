@@ -523,9 +523,10 @@ Recommended Action:
 
             # Map timeframe to signal type
             timeframe_mapping = {
-                '15m': 'SCALP',
-                '2h': 'INTRADAY',
-                '8h': 'SWING'
+                '30D': 'POSITION',  # 30-day chart for POSITION trades
+                '7D': 'SWING',      # 7-day chart for SWING trades 
+                '24H': 'INTRADAY',  # 24-hour chart for INTRADAY trades
+                '6H': 'SCALP'       # 6-hour chart for SCALP trades
             }
             
             strategy_timeframe = timeframe_mapping.get(timeframe, 'INTRADAY')
