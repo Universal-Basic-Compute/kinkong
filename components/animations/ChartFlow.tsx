@@ -24,12 +24,6 @@ interface Candle {
   color: string;
 }
 
-interface Signal {
-  id: number;
-  type: 'BUY' | 'SELL';
-  candleId: number;
-}
-
 export function ChartFlow() {
   const [candles, setCandles] = useState<Candle[]>([]);
   const [lastPrice, setLastPrice] = useState(100);
@@ -37,8 +31,6 @@ export function ChartFlow() {
   const [secondaryLastPrice, setSecondaryLastPrice] = useState(100);
   const [tertiaryCandles, setTertiaryCandles] = useState<Candle[]>([]);
   const [tertiaryLastPrice, setTertiaryLastPrice] = useState(100);
-  const [signals, setSignals] = useState<Signal[]>([]);
-  const [activeSignal, setActiveSignal] = useState<'BUY' | 'SELL' | null>(null);
   const [displaySignals, setDisplaySignals] = useState<SignalDisplay[]>([]);
   const [currentSignalIndex, setCurrentSignalIndex] = useState(0);
   const [streamingReasons, setStreamingReasons] = useState<StreamingReason[]>([
@@ -301,43 +293,6 @@ export function ChartFlow() {
     };
   }, []);
 
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-
-    const generateRandomSignal = () => {
-      if (!candles || candles.length === 0) return;
-      
-      console.log('Generating signal at:', new Date().toISOString());
-      const type = Math.random() > 0.5 ? 'BUY' : 'SELL';
-      setSignals([{
-        id: Math.random(),
-        type,
-        candleId: candles[candles.length - 1].id
-      }]);
-      
-      setActiveSignal(type);
-      
-      setTimeout(() => {
-        setActiveSignal(null);
-      }, Math.random() * 1000 + 2500);
-
-      const nextDelay = Math.random() * 2000 + 3000;
-      console.log('Next signal scheduled in', nextDelay/1000, 'seconds');
-      timeoutId = setTimeout(generateRandomSignal, nextDelay);
-    };
-
-    if (candles && candles.length > 0) {
-      console.log('Signal effect starting');
-      generateRandomSignal();
-
-      return () => {
-        console.log('Cleaning up signal effect');
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-        }
-      };
-    }
-  }, [candles]);
 
   return (
     <div className="w-full">
