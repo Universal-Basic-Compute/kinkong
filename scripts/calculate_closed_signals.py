@@ -197,10 +197,10 @@ def calculate_closed_signals():
                 
                 prices = get_historical_prices(token_mint, activation_time, expiry_time)
                 if not prices:
-                    print(f"No price data available for {fields['token']}")
+                    print(f"❌ No price data available for {fields['token']}")
                     continue
                 
-                # Simulate trade
+                # Simulate trade with actual price data
                 results = simulate_trade(prices, fields)
                 
                 # Update signal with results - only fields in Signal interface
@@ -212,7 +212,7 @@ def calculate_closed_signals():
                 
                 signals_table.update(signal_id, update_data)
                 
-                print(f"✅ Updated signal {signal_id}:")
+                print(f"\n✅ Updated signal {signal_id}:")
                 print(f"Exit Price: ${results['exitPrice']:.4f}")
                 print(f"Actual Return: {results['actualReturn']:.2f}%")
                 print(f"Accuracy: {results['accuracy']}")
