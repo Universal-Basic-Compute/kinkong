@@ -508,25 +508,12 @@ def create_airtable_signal(analysis, timeframe, token_info):
             # Format the analysis into a readable message
             reason_message = f"""Technical Analysis for {token_info['symbol']} ({timeframe})
 
-Signal: {analysis.get('signal')}
-Confidence: {analysis.get('confidence')}%
-
 Market Context:
 • Primary Trend: {analysis.get('primary_trend', 'Unknown')}
 • Timeframe Alignment: {analysis.get('timeframe_alignment', 'Unknown')}
 
 Technical Analysis:
 {analysis.get('reasoning', 'No reasoning provided')}
-
-Price Levels:
-• Support: {', '.join(f'${level:.4f}' for level in support_levels)}
-• Resistance: {', '.join(f'${level:.4f}' for level in resistance_levels)}
-
-Trade Setup:
-• Entry: ${entry_price:.4f}
-• Target: ${target_price:.4f}
-• Stop Loss: ${stop_loss:.4f}
-• Risk/Reward: {analysis.get('risk_reward_ratio', 'Not calculated')}
 
 Key Observations:
 {chr(10).join('• ' + obs for obs in analysis.get('key_observations', ['No observations available']))}
