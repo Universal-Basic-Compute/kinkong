@@ -418,13 +418,34 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
     try:
         print(f"\nCreating Airtable signal for {token_info['symbol']}...")
         
-        # Just get the reasoning text directly
-        reason_text = analysis.get('reasoning', '')
+        # Debug the analysis object
+        print("\nAnalysis object type:", type(analysis))
+        print("Analysis contents:", analysis)
+        
+        # Try different ways to get the reasoning
+        reason_text = ''
+        if isinstance(analysis, dict):
+            reason_text = analysis.get('reasoning', '')
+            print("\nTrying dict access, got:", reason_text)
+        elif hasattr(analysis, 'reasoning'):
+            reason_text = analysis.reasoning
+            print("\nTrying attribute access, got:", reason_text)
+        elif hasattr(analysis, 'get'):
+            reason_text = analysis.get('reasoning', '')
+            print("\nTrying get method, got:", reason_text)
+            
+        if not reason_text:
+            print("\nWARNING: Could not extract reasoning text!")
+            
         signal_type = analysis.get('signal', 'UNKNOWN')
         confidence = analysis.get('confidence', 0)
         key_levels = analysis.get('key_levels', {})
 
-        print(f"\nExtracted reasoning from dict: {reason_text}")
+        print(f"\nExtracted data:")
+        print(f"Reasoning: {reason_text}")
+        print(f"Signal type: {signal_type}")
+        print(f"Confidence: {confidence}")
+        print(f"Key levels: {key_levels}")
 
         # Initialize Airtable
         base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
