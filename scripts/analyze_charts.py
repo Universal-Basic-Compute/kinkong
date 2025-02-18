@@ -419,14 +419,19 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
     try:
         print(f"\nCreating Airtable signal for {token_info['symbol']}...")
         
+        print("\nCreating signal with analysis data:")
+        print(f"Analysis type: {type(analysis)}")
+        print(f"Analysis content: {analysis}")
+        print(f"Timeframe: {timeframe}")
+        print(f"Overall analyses type: {type(analyses)}")
+        print(f"Overall analyses content: {analyses}")
+
         # Convert ChartAnalysis to dict if needed
         if hasattr(analysis, 'to_dict'):
             analysis = analysis.to_dict()
             
         if analyses is None:
             analyses = {'overall': {}}  # Default empty overall analysis if none provided
-        print(f"Analysis type: {type(analysis)}")
-        print(f"Analysis content: {analysis}")
         
         # Initialize Airtable
         base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
@@ -526,21 +531,79 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
             timeframe_analysis = analysis.get('reasoning', '')  # Current timeframe analysis
             overall = analyses.get('overall', {})
 
+            # Get the specific timeframe analysis and overall analysis
+            timeframe_analysis = None
+            if isinstance(analysis, dict):
+                timeframe_analysis = analysis.get('reasoning')
+                print(f"Using dict analysis, reasoning: {timeframe_analysis}")
+            elif hasattr(analysis, 'reasoning'):
+                timeframe_analysis = analysis.reasoning
+                print(f"Using object analysis, reasoning: {timeframe_analysis}")
+            else:
+                print(f"WARNING: Could not extract reasoning from analysis of type {type(analysis)}")
+                timeframe_analysis = "Analysis reasoning not available"
+
+            overall = analyses.get('overall', {}) if analyses else {}
+            print(f"\nOverall analysis data: {overall}")
+
+            # Build reason text with logging
+            print("\nBuilding reason text...")
             reason_text = (
                 f"Technical Analysis Summary:\n\n"
                 f"{timeframe_analysis}\n\n"
+            )
+            print(f"Added timeframe analysis: {timeframe_analysis[:100]}...")
+
+            # Add overall context
+            reason_text += (
                 f"Overall Market Context:\n"
                 f"• Primary Trend: {overall.get('primary_trend', 'Unknown')}\n"
                 f"• Timeframe Alignment: {overall.get('timeframe_alignment', 'Unknown')}\n"
                 f"• Best Timeframe: {overall.get('best_timeframe', 'Unknown')}\n\n"
-                f"Key Support/Resistance Levels:\n"
-                f"Support: {', '.join(f'${price:.4f}' for price in analysis.get('key_levels', {}).get('support', []))}\n"
-                f"Resistance: {', '.join(f'${price:.4f}' for price in analysis.get('key_levels', {}).get('resistance', []))}\n\n"
-                f"Key Observations:\n"
-                f"{chr(10).join('• ' + obs for obs in overall.get('key_observations', []))}\n\n"
-                f"Recommended Action:\n"
-                f"{overall.get('recommended_action', {}).get('reasoning', 'No specific recommendation')}"
             )
+            print("Added market context")
+
+            # Add support/resistance levels
+            if isinstance(analysis, dict):
+                key_levels = analysis.get('key_levels', {})
+            else:
+                key_levels = getattr(analysis, 'key_levels', {})
+
+            print(f"\nKey levels data: {key_levels}")
+
+            support_levels = key_levels.get('support', []) if isinstance(key_levels, dict) else []
+            resistance_levels = key_levels.get('resistance', []) if isinstance(key_levels, dict) else []
+
+            reason_text += (
+                f"Key Support/Resistance Levels:\n"
+                f"Support: {', '.join(f'${price:.4f}' for price in support_levels)}\n"
+                f"Resistance: {', '.join(f'${price:.4f}' for price in resistance_levels)}\n\n"
+            )
+            print("Added support/resistance levels")
+
+            # Add key observations
+            key_observations = overall.get('key_observations', [])
+            print(f"\nKey observations: {key_observations}")
+
+            reason_text += (
+                f"Key Observations:\n"
+                f"{chr(10).join('• ' + obs for obs in key_observations)}\n\n"
+            )
+            print("Added key observations")
+
+            # Add recommended action
+            recommended_action = overall.get('recommended_action', {})
+            action_reasoning = recommended_action.get('reasoning', 'No specific recommendation')
+            print(f"\nRecommended action: {action_reasoning}")
+
+            reason_text += (
+                f"Recommended Action:\n"
+                f"{action_reasoning}"
+            )
+            print("Added recommended action")
+
+            print("\nFinal reason text:")
+            print(reason_text)
 
             # The timeframe should already be one of our standard timeframes
             if timeframe not in ['SCALP', 'INTRADAY', 'SWING', 'POSITION']:
