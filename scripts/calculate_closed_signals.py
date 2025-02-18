@@ -14,24 +14,31 @@ if project_root not in sys.path:
 def get_historical_prices(token_mint: str, start_time: datetime, end_time: datetime) -> list:
     """Get historical minute-by-minute prices from Birdeye"""
     try:
-        url = f"https://public-api.birdeye.so/public/history_price"
+        url = "https://public-api.birdeye.so/defi/history_price"
         params = {
             "address": token_mint,
-            "timeframe": "1M",  # 1 minute candles
-            "from": int(start_time.timestamp()),
-            "to": int(end_time.timestamp())
+            "address_type": "token",
+            "type": "1m",  # 1-minute candles
+            "time_from": int(start_time.timestamp()),
+            "time_to": int(end_time.timestamp())
         }
         headers = {
             "X-API-KEY": os.getenv('BIRDEYE_API_KEY'),
+            "x-chain": "solana",
+            'accept': 'application/json',
             'User-Agent': 'Mozilla/5.0'
         }
+        
+        print(f"Fetching price history for {token_mint}")
+        print(f"Time range: {start_time.isoformat()} to {end_time.isoformat()}")
         
         response = requests.get(url, params=params, headers=headers)
         if response.ok:
             data = response.json()
-            return data.get('data', [])
+            return data.get('data', {}).get('items', [])
         else:
             print(f"Birdeye API error: {response.status_code}")
+            print(f"Response: {response.text}")
             return []
             
     except Exception as e:
