@@ -151,7 +151,8 @@ export function ChartFlow() {
         setActiveSignal(null);
       }, Math.random() * 1000 + 2500);
 
-      const nextDelay = Math.random() * 200000 + 200000;
+      // Changé pour 3-5 secondes (3000-5000ms)
+      const nextDelay = Math.random() * 2000 + 3000;
       console.log('Next signal scheduled in', nextDelay/1000, 'seconds');
       timeoutId = setTimeout(generateRandomSignal, nextDelay);
     };
