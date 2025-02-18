@@ -5,10 +5,11 @@
 ### Signal Generation (analyze_all_tokens.py)
 - Runs every 6 hours
 - Processes all tokens sequentially
-- Generates charts for 3 timeframes:
-  * 15m candles for 12H analysis (SCALP trades)
-  * 2h candles for 48H analysis (INTRADAY trades)
-  * 8h candles for 14D analysis (SWING trades)
+- Generates charts for 4 timeframes:
+  * 15m candles for 6H analysis (SCALP trades)
+  * 1H candles for 24H analysis (INTRADAY trades)
+  * 4H candles for 7D analysis (SWING trades)
+  * 1D candles for 30D analysis (POSITION trades)
 - Creates PENDING signals in Airtable
 
 ### Trade Execution (monitor_trades.py)

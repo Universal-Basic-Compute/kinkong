@@ -90,6 +90,14 @@ def monitor_active_trades():
         
         trades_table = Airtable(base_id, 'TRADES', api_key)
         
+        # Define timeframe monitoring frequencies
+        timeframe_check_intervals = {
+            'SCALP': timedelta(minutes=5),      # Check every 5 minutes
+            'INTRADAY': timedelta(minutes=15),  # Check every 15 minutes
+            'SWING': timedelta(hours=1),        # Check every hour
+            'POSITION': timedelta(hours=4)      # Check every 4 hours
+        }
+        
         print("\n🔍 Checking for trades to monitor...")
         
         # First check pending trades
@@ -101,8 +109,16 @@ def monitor_active_trades():
         for trade in pending_trades:
             try:
                 token = trade['fields'].get('token')
-                print(f"\n📊 Checking pending trade for {token}")
+                timeframe = trade['fields'].get('timeframe')  # Should be SCALP, INTRADAY, etc.
                 
+                # Skip if not due for check based on timeframe
+                last_check = datetime.fromisoformat(trade['fields'].get('lastUpdateTime', '').replace('Z', '+00:00'))
+                check_interval = timeframe_check_intervals.get(timeframe, timedelta(minutes=15))
+                if datetime.now(timezone.utc) - last_check < check_interval:
+                    print(f"Skipping {token} check - Not due yet for {timeframe} timeframe")
+                    continue
+                    
+                print(f"\n📊 Checking pending trade for {token}")
                 current_price = rate_limited_price_check(token)
                 if current_price is None:
                     print(f"❌ Could not get current price for {token}, skipping...")

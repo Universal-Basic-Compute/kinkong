@@ -135,18 +135,25 @@ if project_root not in sys.path:
         all_signals = signals_table.get_all()
         print(f"Total signals in database: {len(all_signals)}")
         
-        # Get signals that need evaluation
-        signals = signals_table.get_all(
-            formula="AND("
-                    "expiryDate<NOW(), "  # Expired signals
-                    "actualReturn=BLANK(), "  # Missing actual return
-                    "entryPrice>0, "          # Has entry price
-                    "targetPrice>0"           # Has target price
-                    ")"
-        )
+        # Get signals that need evaluation, grouped by timeframe
+        timeframes = ['SCALP', 'INTRADAY', 'SWING', 'POSITION']
+        all_signals = []
         
+        for timeframe in timeframes:
+            signals = signals_table.get_all(
+                formula=f"AND("
+                        f"timeframe='{timeframe}', "
+                        f"expiryDate<NOW(), "
+                        f"actualReturn=BLANK(), "
+                        f"entryPrice>0, "
+                        f"targetPrice>0"
+                        f")"
+            )
+            all_signals.extend(signals)
+            print(f"\n🔍 Found {len(signals)} expired {timeframe} signals to evaluate")
+            
         print("\n🔍 Signal Filter Results:")
-        print(f"Found {len(signals)} signals to evaluate that match criteria:")
+        print(f"Found {len(all_signals)} total signals to evaluate that match criteria:")
         print("- Past expiry date")
         print("- Missing actualReturn or accuracy")
         print("- Has valid entry and target prices")

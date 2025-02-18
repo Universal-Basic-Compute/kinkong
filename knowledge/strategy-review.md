@@ -39,11 +39,15 @@ Every Friday, we conduct a comprehensive review of KinKong's trading strategy pe
 - Time window adjustment needs
 
 ### Chart Analysis Performance
-- Analysis accuracy rate
-  - Support/resistance level hits
-  - Pattern completion rate
-  - Sentiment prediction accuracy
-  - Trading recommendation success rate
+- Analysis accuracy by timeframe:
+  * SCALP (15m): 6-hour trade success rate
+  * INTRADAY (1H): 24-hour trade success rate
+  * SWING (4H): 7-day trade success rate
+  * POSITION (1D): 30-day trade success rate
+- Support/resistance level hits
+- Pattern completion rate
+- Sentiment prediction accuracy
+- Trading recommendation success rate
 
 - Execution Impact
   - Price improvement from level awareness
