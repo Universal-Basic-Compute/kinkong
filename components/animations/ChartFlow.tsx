@@ -550,31 +550,26 @@ export function ChartFlow() {
       </div>
       </div>
       
-        {/* Section des raisons en streaming - style bulle de chat */}
-        <div className="absolute bottom-8 left-8 w-[65%] flex flex-col gap-3">
+        {/* Section des raisons en streaming - texte simple */}
+        <div className="absolute inset-0">
           {streamingReasons.map((stream, index) => (
             <div 
               key={index}
               className={`
-                bg-blue-900/40 rounded-2xl p-3 border border-blue-400/10 
-                backdrop-blur-sm shadow-lg
-                ${index === 0 ? 'ml-4' : index === 1 ? 'ml-12' : 'ml-20'}
-                w-[280px] h-[60px]
-                transform hover:scale-105 transition-transform duration-200
+                absolute
+                ${index === 0 
+                  ? 'top-6 left-6' // Premier message en haut à gauche
+                  : index === 1 
+                  ? 'bottom-20 left-6' // Deuxième message en bas à gauche, plus d'espace
+                  : 'bottom-6 right-6' // Troisième message en bas à droite
+                }
+                max-w-[280px]
               `}
             >
-              <div className="relative">
-                {/* Petit triangle pour l'effet bulle */}
-                <div className="absolute -left-2 bottom-2 w-3 h-3 bg-blue-900/40 border-l border-b border-blue-400/10 transform rotate-45" />
-                
-                {/* Contenu */}
-                <div className="overflow-hidden">
-                  <p className="text-xs text-blue-100 font-mono leading-relaxed">
-                    {stream.text}
-                    <span className="animate-pulse ml-1 opacity-70">▊</span>
-                  </p>
-                </div>
-              </div>
+              <p className="text-xs text-blue-100 font-mono leading-relaxed">
+                {stream.text}
+                <span className="animate-pulse ml-1 opacity-70">▊</span>
+              </p>
             </div>
           ))}
         </div>
