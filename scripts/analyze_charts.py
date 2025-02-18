@@ -450,17 +450,10 @@ def create_airtable_signal(analysis, timeframe, token_info):
             'POSITION': timedelta(days=30)    # 30 days for POSITION trades
         }
 
-        # Map timeframe to signal type
-        timeframe_mapping = {
-            '15m': 'SCALP',     # 15-minute chart for 6-hour trades
-            '1H': 'INTRADAY',   # 1-hour chart for 24-hour trades
-            '4H': 'SWING',      # 4-hour chart for 7-day trades
-            '1D': 'POSITION'    # Daily chart for 30-day trades
-        }
-
-        strategy_timeframe = timeframe_mapping.get(timeframe)
+        # The timeframe is already mapped, so we can use it directly
+        strategy_timeframe = timeframe  # It's already 'POSITION', 'SWING', etc.
         if not strategy_timeframe:
-            print(f"Unknown timeframe: {timeframe}")
+            print(f"No timeframe provided in analysis")
             return None
 
         expiry_delta = expiry_mapping.get(strategy_timeframe)
@@ -559,17 +552,9 @@ def create_airtable_signal(analysis, timeframe, token_info):
             else:  # SELL
                 expected_return = ((current_price - target_price) / current_price) * 100
 
-            # Map timeframe to signal type
-            timeframe_mapping = {
-                '15m': 'SCALP',     # 15-minute chart for 6-hour trades
-                '1H': 'INTRADAY',   # 1-hour chart for 24-hour trades
-                '4H': 'SWING',      # 4-hour chart for 7-day trades
-                '1D': 'POSITION'    # Daily chart for 30-day trades
-            }
-
-            strategy_timeframe = timeframe_mapping.get(timeframe)
-            if not strategy_timeframe:
-                print(f"Unknown timeframe: {timeframe}")
+            # Use timeframe directly since it's already mapped
+            if not timeframe:
+                print(f"No timeframe provided")
                 return None
 
             signal_data = {
