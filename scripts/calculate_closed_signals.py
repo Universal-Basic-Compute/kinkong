@@ -348,7 +348,7 @@ def calculate_closed_signals():
                     "expiryDate<NOW(), "  # Expired signals
                     "OR("
                         "actualReturn=BLANK(), "  # Missing actual return
-                        "accuracy=BLANK()"        # Missing accuracy
+                        "success=BLANK()"         # Missing success flag
                     "), "
                     "entryPrice>0, "             # Has entry price
                     "targetPrice>0"              # Has target price
