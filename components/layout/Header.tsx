@@ -11,12 +11,22 @@ type SubItem = {
   isGlowing?: boolean;
 };
 
-type NavItem = {
+type BaseNavItem = {
   label: string;
-  isGroup: boolean;
   subItems: SubItem[];
+};
+
+type GroupNavItem = BaseNavItem & {
+  isGroup: true;
   byLine?: string;
 };
+
+type LinkNavItem = BaseNavItem & {
+  isGroup: false;
+  href: string;
+};
+
+type NavItem = GroupNavItem | LinkNavItem;
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -129,14 +139,14 @@ export default function Header() {
                       {item.byLine || 'by 🦍 KinKong'}
                     </div>
                   </div>
-                ) : item.href ? (
+                ) : (
                   <Link
                     href={item.href}
                     className={`text-gray-300 hover:text-gold transition-colors duration-200 font-medium tracking-wide px-2 py-1 flex items-center
-                      ${item.isGlowing ? 'electric-title' : ''}`}
+                      ${item.subItems.some(si => si.isGlowing) ? 'electric-title' : ''}`}
                   >
                     {item.label}
-                    {item.subItems && (
+                    {item.subItems.length > 0 && (
                       <svg 
                         className="w-4 h-4 ml-1 transform group-hover:rotate-180 transition-transform duration-200" 
                         fill="none" 
