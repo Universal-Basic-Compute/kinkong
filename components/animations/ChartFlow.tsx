@@ -555,7 +555,10 @@ export function ChartFlow() {
           {streamingReasons.map((stream, index) => (
             <div 
               key={index}
-              className="max-w-[280px]"
+              className="max-w-[280px] absolute"
+              style={{
+                transform: `translateX(${(index - 1) * 300}px)` // Décale chaque texte horizontalement
+              }}
             >
               <p className="text-xs font-mono leading-relaxed text-amber-50/90">
                 {stream.text}
