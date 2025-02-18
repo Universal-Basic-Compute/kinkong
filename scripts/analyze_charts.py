@@ -596,7 +596,7 @@ Recommended Action:
 
                 # Add validation results to signal data
                 signal_data.update({
-                    'expectedProfit': validation_result['expected_profit'],
+                    'expectedReturn': validation_result['expected_profit'],  # Changed to match Airtable schema
                     'tradingCosts': validation_result['costs'],
                     'riskRewardRatio': validation_result['risk_reward']
                 })
