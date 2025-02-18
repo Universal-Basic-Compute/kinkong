@@ -152,7 +152,7 @@ export default function Header() {
           <div className="border-t border-gold/20 bg-black/95 backdrop-blur-sm md:hidden">
             <nav className="p-4 flex flex-col space-y-2">
               {navItems.map((item) => (
-                <div key={item.href}>
+                <div key={item.href || item.label}>
                   {item.subItems ? (
                     <>
                       <div className="text-gray-300 py-2 font-medium tracking-wide">
