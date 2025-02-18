@@ -274,7 +274,7 @@ export function SignalHistory() {
                     <span className="text-red-500 font-bold">×</span>
                   )
                 ) : (
-                  <span className="text-gray-400" style={{ filter: 'grayscale(100%)' }}>⌛</span>
+                  <span className="text-gray-600" style={{ filter: 'grayscale(100%)' }}>⌛</span>
                 )}
               </td>
             </tr>
