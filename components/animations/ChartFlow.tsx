@@ -130,17 +130,17 @@ export function ChartFlow() {
     let timeoutId: NodeJS.Timeout;
 
     const generateRandomSignal = () => {
-      // Vérifier que nous avons des bougies avant de générer un signal
       if (candles.length > 0) {
         setSignals([{
           id: Math.random(),
           type: Math.random() > 0.5 ? 'BUY' : 'SELL',
           candleId: candles[candles.length - 1].id
         }]);
+
+        // Planifier le prochain signal dans 2-4 secondes
+        const nextDelay = Math.random() * 2000 + 2000; // Entre 2000ms et 4000ms
+        timeoutId = setTimeout(generateRandomSignal, nextDelay);
       }
-      
-      // Planifier le prochain signal dans 20-40 secondes (4x plus lent)
-      timeoutId = setTimeout(generateRandomSignal, Math.random() * 20000 + 20000);
     };
 
     // Ne démarrer que si nous avons des bougies
