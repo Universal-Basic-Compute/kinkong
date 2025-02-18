@@ -415,7 +415,6 @@ Analyze each timeframe in sequence, considering how they relate to each other:
         raise
 
 def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
-    """Create a signal record in Airtable and check for immediate execution"""
     try:
         print(f"\nCreating Airtable signal for {token_info['symbol']}...")
         
@@ -438,19 +437,15 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
             timeframe_analysis = analysis.get('reasoning', default_reasoning)
             if not timeframe_analysis:  # If reasoning is empty or None
                 timeframe_analysis = default_reasoning
-            print(f"Extracted reasoning from dict: {timeframe_analysis[:100]}...")
         elif hasattr(analysis, 'reasoning'):
             timeframe_analysis = analysis.reasoning or default_reasoning
-            print(f"Extracted reasoning from object: {timeframe_analysis[:100]}...")
         else:
             timeframe_analysis = default_reasoning
-            print(f"Using default reasoning: {timeframe_analysis[:100]}...")
 
         # Safely get overall analysis
         overall = {}
         if analyses and isinstance(analyses, dict):
             overall = analyses.get('overall', {})
-        print(f"Overall analysis: {overall}")
 
         # Build complete reason text
         reason_text = (
@@ -472,64 +467,37 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
                 f"Resistance: {', '.join(f'${price:.4f}' for price in resistance_levels)}\n\n"
             )
 
+        # Calculate entry, target and stop prices based on key levels
+        if signal_type == 'SELL':
+            entry_price = resistance_levels[0] if resistance_levels else 0
+            target_price = support_levels[0] if support_levels else 0
+            stop_loss = resistance_levels[1] if len(resistance_levels) > 1 else entry_price * 1.05
+        else:  # BUY
+            entry_price = support_levels[0] if support_levels else 0
+            target_price = resistance_levels[0] if resistance_levels else 0
+            stop_loss = support_levels[1] if len(support_levels) > 1 else entry_price * 0.95
+
         # Add trade setup details
-        entry_price = float(analysis.get('entryPrice', 0))
-        target_price = float(analysis.get('targetPrice', 0))
-        stop_loss = float(analysis.get('stopLoss', 0))
-        
         if entry_price and target_price:
+            expected_return = abs((target_price - entry_price) / entry_price * 100)
             reason_text += (
                 f"Trade Setup:\n"
                 f"• Entry: ${entry_price:.4f}\n"
                 f"• Target: ${target_price:.4f}\n"
                 f"• Stop Loss: ${stop_loss:.4f}\n"
-                f"• Expected Return: {abs((target_price - entry_price) / entry_price * 100):.1f}%\n\n"
+                f"• Expected Return: {expected_return:.1f}%\n\n"
             )
 
-        # Safely get key levels
-        key_levels = {}
-        if isinstance(analysis, dict):
-            key_levels = analysis.get('key_levels', {})
-        elif hasattr(analysis, 'key_levels'):
-            key_levels = analysis.key_levels or {}
-        
-        support_levels = key_levels.get('support', []) if isinstance(key_levels, dict) else []
-        resistance_levels = key_levels.get('resistance', []) if isinstance(key_levels, dict) else []
-
-        # Add levels if they exist
-        if support_levels or resistance_levels:
-            reason_text += (
-                f"Key Support/Resistance Levels:\n"
-                f"Support: {', '.join(f'${price:.4f}' for price in support_levels)}\n"
-                f"Resistance: {', '.join(f'${price:.4f}' for price in resistance_levels)}\n\n"
-            )
-
-        # Safely add observations
-        key_observations = overall.get('key_observations', [])
-        if key_observations:
-            reason_text += (
-                f"Key Observations:\n"
-                f"{chr(10).join('• ' + obs for obs in key_observations)}\n\n"
-            )
-
-        # Safely add recommended action
+        # Add recommended action
         recommended_action = overall.get('recommended_action', {})
-        action_reasoning = recommended_action.get('reasoning', 'No specific recommendation')
-        reason_text += (
-            f"Recommended Action:\n"
-            f"{action_reasoning}"
+        action_reasoning = recommended_action.get('reasoning', 
+            f"Execute {signal_type} order at ${entry_price:.4f} with {confidence}% confidence"
         )
+        reason_text += f"Recommended Action:\n{action_reasoning}"
 
         print("\nGenerated reason text:")
         print(reason_text)
 
-        # Convert ChartAnalysis to dict if needed
-        if hasattr(analysis, 'to_dict'):
-            analysis = analysis.to_dict()
-            
-        if analyses is None:
-            analyses = {'overall': {}}  # Default empty overall analysis if none provided
-        
         # Initialize Airtable
         base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
         api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
@@ -537,281 +505,48 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
         if not base_id or not api_key:
             print("❌ Airtable configuration missing")
             return
-            
-        # Calculate expiry date based on timeframe
-        now = datetime.now(timezone.utc)
-        expiry_mapping = {
-            'SCALP': timedelta(hours=6),      # 6 hours for SCALP trades
-            'INTRADAY': timedelta(days=1),    # 24 hours for INTRADAY trades
-            'SWING': timedelta(days=7),       # 7 days for SWING trades
-            'POSITION': timedelta(days=30)    # 30 days for POSITION trades
-        }
 
-        # The timeframe should already be one of our standard timeframes
-        if timeframe not in expiry_mapping:
-            print(f"Invalid timeframe: {timeframe}")
-            return None
-
-        expiry_delta = expiry_mapping[timeframe]
-        expiry_date = now + expiry_delta
-        
         print("✅ Airtable configuration found")
-        airtable = Airtable(base_id, 'SIGNALS', api_key)
-
-        # The timeframe is already mapped, so we can use it directly
-        strategy_timeframe = timeframe  # It's already 'POSITION', 'SWING', etc.
-        if not strategy_timeframe:
-            print(f"No timeframe provided in analysis")
-            return None
-
-        expiry_delta = expiry_mapping.get(strategy_timeframe)
-        if not expiry_delta:
-            print(f"No expiry mapping for timeframe: {strategy_timeframe}")
-            return None
-
-        expiry_date = now + expiry_delta
-
-        if not base_id or not api_key:
-            print("Airtable configuration missing")
-            return
-            
-        print(f"Creating signal in Airtable for {token_info['symbol']}...")
         airtable = Airtable(base_id, 'SIGNALS', api_key)
         
         # Map confidence to LOW/MEDIUM/HIGH
-        confidence = analysis.get('confidence', 0)  # Get confidence from dict
         confidence_level = 'LOW' if confidence < 40 else 'HIGH' if confidence > 75 else 'MEDIUM'
 
-        # Extract price levels from analysis
-        key_levels = analysis.get('key_levels', {})
-        support_levels = key_levels.get('support', [])
-        resistance_levels = key_levels.get('resistance', [])
-        
-        # Calculate entry, target and stop prices
-        current_price = support_levels[0] if analysis.get('signal') == 'BUY' else resistance_levels[0] if resistance_levels else None
-        target_price = resistance_levels[0] if analysis.get('signal') == 'BUY' else support_levels[0] if support_levels else None
-        stop_price = support_levels[1] if analysis.get('signal') == 'BUY' else resistance_levels[1] if len(resistance_levels) > 1 else None
-
-        # Print debug info
-        print(f"\nCreating signal with parameters:")
-        print(f"Timeframe: {timeframe}")
-        print(f"Signal: {analysis.get('signal')}")
-        print(f"Confidence: {confidence} -> {confidence_level}")
-        print(f"Prices - Entry: {current_price}, Target: {target_price}, Stop: {stop_price}")
-        
-        # Create signal record
-        signal_type = analysis.get('signal')
-        if signal_type in ['BUY', 'SELL']:
-            # The timeframe should already be one of our standard timeframes
-            if timeframe not in ['SCALP', 'INTRADAY', 'SWING', 'POSITION']:
-                print(f"Invalid timeframe: {timeframe}")
-                return None
-
-            expiry_delta = expiry_mapping.get(timeframe)
-            expiry_date = now + expiry_delta
-
-            # Calculate entry, target and stop prices based on key levels
-            key_levels = analysis.get('key_levels', {})
-            support_levels = key_levels.get('support', [])
-            resistance_levels = key_levels.get('resistance', [])
-            
-            if signal_type == 'SELL':
-                entry_price = resistance_levels[0] if resistance_levels else 0
-                target_price = support_levels[0] if support_levels else 0
-                stop_loss = resistance_levels[1] if len(resistance_levels) > 1 else entry_price * 1.05
-            else:  # BUY
-                entry_price = support_levels[0] if support_levels else 0
-                target_price = resistance_levels[0] if resistance_levels else 0
-                stop_loss = support_levels[1] if len(support_levels) > 1 else entry_price * 0.95
-
-            # Get the specific timeframe analysis and overall analysis
-            timeframe_analysis = analysis.get('reasoning', '')  # Current timeframe analysis
-            overall = analyses.get('overall', {})
-
-            # Get the specific timeframe analysis and overall analysis
-            timeframe_analysis = None
-            if isinstance(analysis, dict):
-                timeframe_analysis = analysis.get('reasoning')
-                print(f"Using dict analysis, reasoning: {timeframe_analysis}")
-            elif hasattr(analysis, 'reasoning'):
-                timeframe_analysis = analysis.reasoning
-                print(f"Using object analysis, reasoning: {timeframe_analysis}")
-            else:
-                print(f"WARNING: Could not extract reasoning from analysis of type {type(analysis)}")
-                timeframe_analysis = "Analysis reasoning not available"
-
-            overall = analyses.get('overall', {}) if analyses else {}
-            print(f"\nOverall analysis data: {overall}")
-
-            # Build reason text with logging
-            print("\nBuilding reason text...")
-            reason_text = (
-                f"Technical Analysis Summary:\n\n"
-                f"{timeframe_analysis}\n\n"
-            )
-            print(f"Added timeframe analysis: {timeframe_analysis[:100]}...")
-
-            # Add overall context
-            reason_text += (
-                f"Overall Market Context:\n"
-                f"• Primary Trend: {overall.get('primary_trend', 'Unknown')}\n"
-                f"• Timeframe Alignment: {overall.get('timeframe_alignment', 'Unknown')}\n"
-                f"• Best Timeframe: {overall.get('best_timeframe', 'Unknown')}\n\n"
-            )
-            print("Added market context")
-
-            # Add support/resistance levels
-            if isinstance(analysis, dict):
-                key_levels = analysis.get('key_levels', {})
-            else:
-                key_levels = getattr(analysis, 'key_levels', {})
-
-            print(f"\nKey levels data: {key_levels}")
-
-            support_levels = key_levels.get('support', []) if isinstance(key_levels, dict) else []
-            resistance_levels = key_levels.get('resistance', []) if isinstance(key_levels, dict) else []
-
-            reason_text += (
-                f"Key Support/Resistance Levels:\n"
-                f"Support: {', '.join(f'${price:.4f}' for price in support_levels)}\n"
-                f"Resistance: {', '.join(f'${price:.4f}' for price in resistance_levels)}\n\n"
-            )
-            print("Added support/resistance levels")
-
-            # Add key observations
-            key_observations = overall.get('key_observations', [])
-            print(f"\nKey observations: {key_observations}")
-
-            reason_text += (
-                f"Key Observations:\n"
-                f"{chr(10).join('• ' + obs for obs in key_observations)}\n\n"
-            )
-            print("Added key observations")
-
-            # Add recommended action
-            recommended_action = overall.get('recommended_action', {})
-            action_reasoning = recommended_action.get('reasoning', 'No specific recommendation')
-            print(f"\nRecommended action: {action_reasoning}")
-
-            reason_text += (
-                f"Recommended Action:\n"
-                f"{action_reasoning}"
-            )
-            print("Added recommended action")
-
-            print("\nFinal reason text:")
-            print(reason_text)
-
-            # The timeframe should already be one of our standard timeframes
-            if timeframe not in ['SCALP', 'INTRADAY', 'SWING', 'POSITION']:
-                print(f"Invalid timeframe: {timeframe}")
-                return None
-
-            expiry_delta = expiry_mapping.get(timeframe)
-            expiry_date = now + expiry_delta
-
-            # Calculate expected return percentage
-            if signal_type == 'BUY':
-                expected_return = ((target_price - current_price) / current_price) * 100
-            else:  # SELL
-                expected_return = ((current_price - target_price) / current_price) * 100
-
-            # Use timeframe directly since it's already mapped
-            if not timeframe:
-                print(f"No timeframe provided")
-                return None
-
-            signal_data = {
-                'timestamp': now.isoformat(),
-                'token': token_info['symbol'],
-                'type': signal_type,
-                'timeframe': strategy_timeframe,  # This will now be 'SCALP', 'INTRADAY', etc.
-                'entryPrice': current_price,
-                'targetPrice': target_price,
-                'stopLoss': stop_price,
-                'confidence': confidence_level,
-                'wallet': os.getenv('STRATEGY_WALLET', ''),
-                'reason': reason_text,  # Just the analysis text
-                'expiryDate': expiry_date.isoformat(),
-                'expectedReturn': round(expected_return, 2)
-            }
-
-            # Validate signal before creating
-            validation_result = validate_signal(
-                timeframe=timeframe,
-                signal_data={
-                    'signal': signal_type,
-                    'entryPrice': current_price,
-                    'targetPrice': target_price,
-                    'stopLoss': stop_price
-                },
-                token_info=token_info,
-                market_data=get_dexscreener_data(token_info['mint'])
-            )
-
-            if validation_result['valid']:
-                # Get current market price
-                market_data = get_dexscreener_data(token_info['mint'])
-                market_price = market_data['price'] if market_data else None
-                
-                if not market_price:
-                    print("Could not get current price for immediate execution check")
-                    return None
-
-                # Check if price is already at entry level
-                entry_price = float(signal_data['entryPrice'])
-                price_threshold = 0.01  # 1% threshold
-                ready_to_execute = False
-
-                if signal_data['type'] == 'BUY':
-                    ready_to_execute = market_price <= entry_price * (1 + price_threshold)
-                else:  # SELL
-                    ready_to_execute = market_price >= entry_price * (1 - price_threshold)
-
-                # Add validation results to signal data
-                signal_data.update({
-                    'expectedReturn': validation_result['expected_profit'],  # Changed to match Airtable schema
-                    'tradingCosts': validation_result['costs'],
-                    'riskRewardRatio': validation_result['risk_reward']
-                })
-                
-                print("\nSending to Airtable:", json.dumps(signal_data, indent=2))
-                
-                # Create record and get response
-                response = airtable.insert(signal_data)
-                signal_id = response['id']
-
-                if ready_to_execute:
-                    print(f"Signal {signal_id} ready for immediate execution")
-                    try:
-                        # Calculate position size
-                        position_size = calculate_position_size(signal_data, market_data)
-                        
-                        if position_size:
-                            # Update signal with position size
-                            airtable.update(signal_id, {
-                                'amount': position_size,
-                                'entryValue': position_size * market_price,
-                                'activationTime': datetime.now(timezone.utc).isoformat(),
-                                'lastUpdateTime': datetime.now(timezone.utc).isoformat()
-                            })
-                            
-                            print(f"Activated signal {signal_id} with position size {position_size:.4f}")
-                        else:
-                            print(f"Could not calculate position size for signal {signal_id}")
-                    except Exception as e:
-                        print(f"Failed to activate signal {signal_id}: {e}")
-                else:
-                    print(f"Signal {signal_id} created but not ready for immediate execution")
-
-                return response
-            else:
-                print(f"Signal validation failed: {validation_result['reason']}")
-                return None
-        else:
-            print(f"Skipping signal creation for HOLD signal on {timeframe} timeframe")
+        # Calculate expiry date based on timeframe
+        now = datetime.now(timezone.utc)
+        expiry_mapping = {
+            'SCALP': timedelta(hours=6),
+            'INTRADAY': timedelta(days=1),
+            'SWING': timedelta(days=7),
+            'POSITION': timedelta(days=30)
+        }
+        expiry_delta = expiry_mapping.get(timeframe)
+        if not expiry_delta:
+            print(f"Invalid timeframe: {timeframe}")
             return None
-        
+        expiry_date = now + expiry_delta
+
+        # Create signal record
+        signal_data = {
+            'timestamp': now.isoformat(),
+            'token': token_info['symbol'],
+            'type': signal_type,
+            'timeframe': timeframe,
+            'entryPrice': entry_price,
+            'targetPrice': target_price,
+            'stopLoss': stop_loss,
+            'confidence': confidence_level,
+            'wallet': os.getenv('STRATEGY_WALLET', ''),
+            'reason': reason_text,
+            'expiryDate': expiry_date.isoformat(),
+            'expectedReturn': round(expected_return, 2) if 'expected_return' in locals() else 0
+        }
+
+        print("\nSending to Airtable:", json.dumps(signal_data, indent=2))
+        response = airtable.insert(signal_data)
+        print(f"✅ Created signal: {response['id']}")
+        return response
+
     except Exception as e:
         print(f"Failed to create Airtable signal: {str(e)}")
         print(f"Error type: {type(e)}")
