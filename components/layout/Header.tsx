@@ -20,16 +20,16 @@ export default function Header() {
     },
     { 
       label: 'Trading', 
-      href: '/trading',
+      href: '#',
       subItems: [
         { 
           label: 'Signals', 
-          href: '/trading/signals',
+          href: '/signals',
           description: 'Trading signals and setups'
         },
         { 
           label: 'Performance', 
-          href: '/trading/performance',
+          href: '/performance',
           description: 'Trading history and analytics'
         }
       ]
