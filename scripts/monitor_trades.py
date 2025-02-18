@@ -42,30 +42,32 @@ def rate_limited_price_check(token_symbol):
             return None
             
         token_mint = token_records[0]['fields']['mint']
+        print(f"Found mint address for {token_symbol}: {token_mint}")
         
         # Now fetch price using mint address
-        current_time = int(time.time())
+        url = 'https://public-api.birdeye.so/public/price'
         params = {
-            'address': token_mint,  # Use mint address instead of symbol
-            'type': '1m',
-            'currency': 'usd',
-            'time_from': current_time - 300,  # Last 5 minutes
-            'time_to': current_time
+            'address': token_mint,
+            'network': 'solana'
+        }
+        headers = {
+            'x-api-key': os.getenv('BIRDEYE_API_KEY')
         }
         
-        response = requests.get(
-            'https://public-api.birdeye.so/defi/ohlcv',
-            params=params,
-            headers={'x-api-key': os.getenv('BIRDEYE_API_KEY')}
-        )
+        print(f"Requesting price for {token_symbol} ({token_mint})")
+        response = requests.get(url, params=params, headers=headers)
         
         if response.ok:
             data = response.json()
-            if data.get('success') and data.get('data'):
-                # Get most recent close price
-                return float(data['data'][-1]['close'])
+            if data.get('success') and data.get('data', {}).get('value'):
+                price = float(data['data']['value'])
+                print(f"Got price for {token_symbol}: ${price}")
+                return price
+            else:
+                print(f"Invalid response format: {data}")
+        else:
+            print(f"API request failed: {response.status_code} - {response.text}")
         
-        print(f"Failed to get price for {token_symbol} ({token_mint})")
         return None
         
     except Exception as e:
@@ -91,12 +93,15 @@ def monitor_active_trades():
         for trade in pending_trades:
             try:
                 current_price = rate_limited_price_check(trade['fields']['token'])
-                if current_price:
-                    # Check if price is at entry level
-                    entry_price = float(trade['fields']['entryPrice'])
-                    if abs(current_price - entry_price) / entry_price <= 0.01:
-                        entry_queue.append(trade)
-                        print(f"Queued {trade['fields']['token']} for entry")
+                if current_price is None:
+                    print(f"Could not get current price for {trade['fields']['token']}, skipping...")
+                    continue
+                    
+                # Check if price is at entry level
+                entry_price = float(trade['fields']['entryPrice'])
+                if abs(current_price - entry_price) / entry_price <= 0.01:
+                    entry_queue.append(trade)
+                    print(f"Queued {trade['fields']['token']} for entry at ${current_price}")
             except Exception as e:
                 print(f"Error checking pending trade: {e}")
                 continue
@@ -115,9 +120,14 @@ def monitor_active_trades():
                 
                 # Rate limited price check
                 current_price = rate_limited_price_check(fields['token'])
-                if not current_price:
-                    print(f"Could not get price for {fields['token']}, skipping...")
+                if current_price is None:
+                    print(f"Could not get current price for {fields['token']}, skipping...")
                     continue
+                
+                print(f"\nChecking {fields['token']} trade:")
+                print(f"Current price: ${current_price:.4f}")
+                print(f"Target: ${fields['targetPrice']}")
+                print(f"Stop: ${fields['stopLoss']}")
                 
                 print(f"\nChecking {fields['token']} trade:")
                 print(f"Current price: {current_price}")
