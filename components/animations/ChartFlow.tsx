@@ -17,7 +17,7 @@ export function ChartFlow() {
   const [lastPrice, setLastPrice] = useState(100);
 
   const generateCandle = (id: number, prevClose: number): Candle => {
-    const maxMove = prevClose * 0.03; // Augmenté à 3% pour plus de volatilité
+    const maxMove = prevClose * 0.03;
     const moveAmount = Math.random() * maxMove;
     
     const direction = prevClose > lastPrice ? 
@@ -26,10 +26,27 @@ export function ChartFlow() {
       
     const close = prevClose + (direction * moveAmount);
     
-    // Mèches plus aléatoires
+    // Nouvelle logique pour des mèches plus variées et souvent plus courtes
     const bodyRange = Math.abs(close - prevClose);
-    const upperWickSize = bodyRange * (0.3 + Math.random() * 1.2); // Entre 30% et 150% du corps
-    const lowerWickSize = bodyRange * (0.3 + Math.random() * 1.2);
+    
+    // Utilise une distribution exponentielle pour favoriser les petites mèches
+    const getWickSize = () => {
+      const random = Math.random();
+      return bodyRange * (0.1 + (random * random) * 1.2); // random² donne plus de petites valeurs
+    };
+
+    const upperWickSize = getWickSize();
+    const lowerWickSize = getWickSize();
+    
+    // Parfois (20% des cas) on aura une mèche plus longue
+    const hasLongWick = Math.random() > 0.8;
+    if (hasLongWick) {
+      if (Math.random() > 0.5) {
+        upperWickSize * 2.5;
+      } else {
+        lowerWickSize * 2.5;
+      }
+    }
     
     const high = Math.max(prevClose, close) + upperWickSize;
     const low = Math.min(prevClose, close) - lowerWickSize;
