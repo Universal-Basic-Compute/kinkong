@@ -344,15 +344,16 @@ Current Market Data:
 • Market Cap: ${market_data['market_cap']:,.2f}
 """
 
-        user_prompt = f"""I'm providing you with three timeframe charts for {token_info['symbol'] if token_info else 'UBC'}/USD for a complete multi-timeframe analysis.
+        user_prompt = f"""I'm providing you with charts for {token_info['symbol'] if token_info else 'UBC'}/USD for a complete multi-timeframe analysis.
 
 {market_data_str}
 
 Analyze each timeframe in sequence, considering how they relate to each other:
 
-1. First analyze the 8h chart for overall trend and market structure
-2. Then analyze the 2h chart for medium-term movements and setups
-3. Finally analyze the 15m chart for immediate price action and potential entries"""
+1. First analyze the 1D chart for long-term trend and market structure
+2. Then analyze the 4H chart for medium-term movements
+3. Then analyze the 1H chart for short-term setups
+4. Finally analyze the 15m chart for immediate price action and entries"""
 
         message = client.messages.create(
             model="claude-3-5-sonnet-20241022",
