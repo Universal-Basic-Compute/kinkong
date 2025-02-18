@@ -214,16 +214,16 @@ export function ChartFlow() {
             {signals.map((signal) => (
               <motion.div
                 key={signal.id}
-                className={`absolute right-0 ${
+                className={`absolute ${
                   signal.type === 'BUY' ? 'text-green-500' : 'text-red-500'
                 } font-bold text-sm`}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
+                initial={{ opacity: 0, y: 20, x: '0%' }}
+                animate={{ opacity: 1, y: 0, x: '0%' }}
+                exit={{ opacity: 0, y: -20, x: '0%' }}
                 transition={{ duration: 0.5 }}
                 style={{
                   bottom: '100%',
-                  transform: 'translateX(50%)'
+                  left: '8px'
                 }}
               >
                 {signal.type}
