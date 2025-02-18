@@ -208,7 +208,7 @@ if __name__ == "__main__":
         
         # Get token info
         token_records = tokens_table.get_all(
-            formula=f"{{symbol}}='{fields['token']}' AND {{isActive}}=1"  # Use symbol field and check isActive
+            formula=f"AND(symbol='{fields['token']}', isActive=1)"  # Fix formula syntax
         )
         
         if not token_records:
