@@ -72,13 +72,13 @@ export function TradeHistory({ userOnly = false }: TradeHistoryProps) {
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                {trade.amount.toLocaleString(undefined, { maximumFractionDigits: 4 })}
+                {(trade.amount ?? 0).toLocaleString(undefined, { maximumFractionDigits: 4 })}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                ${trade.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}
+                ${(trade.price ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                ${trade.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ${(trade.value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">
                 <span className={`px-2 py-1 rounded-full text-xs ${
