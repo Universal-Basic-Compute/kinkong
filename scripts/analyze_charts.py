@@ -422,20 +422,32 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
         print("\nAnalysis object type:", type(analysis))
         print("Analysis contents:", analysis)
         
-        # Try different ways to get the reasoning
+        # Get the reasoning from the original analysis in analyses
         reason_text = ''
-        if isinstance(analysis, dict):
-            reason_text = analysis.get('reasoning', '')
-            print("\nTrying dict access, got:", reason_text)
-        elif hasattr(analysis, 'reasoning'):
-            reason_text = analysis.reasoning
-            print("\nTrying attribute access, got:", reason_text)
-        elif hasattr(analysis, 'get'):
-            reason_text = analysis.get('reasoning', '')
-            print("\nTrying get method, got:", reason_text)
-            
+        if analyses and timeframe in analyses:
+            timeframe_analysis = analyses[timeframe]
+            if isinstance(timeframe_analysis, dict):
+                reason_text = timeframe_analysis.get('reasoning', '')
+                print("\nGot reasoning from timeframe analysis dict:", reason_text)
+            elif hasattr(timeframe_analysis, 'reasoning'):
+                reason_text = timeframe_analysis.reasoning
+                print("\nGot reasoning from timeframe analysis object:", reason_text)
+        
+        # Fallback to the analysis object itself if needed
         if not reason_text:
-            print("\nWARNING: Could not extract reasoning text!")
+            print("\nFalling back to analysis object for reasoning")
+            if isinstance(analysis, dict):
+                reason_text = analysis.get('reasoning', '')
+                print("Got reasoning from analysis dict:", reason_text)
+            elif hasattr(analysis, 'reasoning'):
+                reason_text = analysis.reasoning
+                print("Got reasoning from analysis object:", reason_text)
+            elif hasattr(analysis, 'get'):
+                reason_text = analysis.get('reasoning', '')
+                print("Got reasoning using get method:", reason_text)
+                
+        if not reason_text:
+            print("\nWARNING: Could not extract reasoning text from any source!")
             
         signal_type = analysis.get('signal', 'UNKNOWN')
         confidence = analysis.get('confidence', 0)
@@ -587,7 +599,7 @@ def process_signals_batch(token_analyses):
                     target_price = resistance_levels[0]
                     stop_loss = resistance_levels[1] if len(resistance_levels) > 1 else resistance_levels[0] * 0.95  # 5% below resistance
                 
-                # Create signal data with key levels
+                # Create signal data with key levels and reasoning
                 signal_data = {
                     'timeframe': timeframe,
                     'signal': signal_type,
@@ -596,7 +608,8 @@ def process_signals_batch(token_analyses):
                     'key_levels': key_levels,
                     'entryPrice': entry_price,
                     'targetPrice': target_price,
-                    'stopLoss': stop_loss
+                    'stopLoss': stop_loss,
+                    'reasoning': analysis.get('reasoning', '')  # Add reasoning
                 }
                 
                 # Validate signal
