@@ -139,12 +139,9 @@ if project_root not in sys.path:
         signals = signals_table.get_all(
             formula="AND("
                     "expiryDate<NOW(), "  # Expired signals
-                    "OR("
-                        "actualReturn=BLANK(), "  # Missing actual return
-                        "success=BLANK()"        # Missing success flag
-                    "), "
-                    "entryPrice>0, "             # Has entry price
-                    "targetPrice>0"              # Has target price
+                    "actualReturn=BLANK(), "  # Missing actual return
+                    "entryPrice>0, "          # Has entry price
+                    "targetPrice>0"           # Has target price
                     ")"
         )
         
@@ -198,8 +195,7 @@ if project_root not in sys.path:
                 # Update signal with results
                 update_data = {
                     'exitPrice': results['exitPrice'],
-                    'actualReturn': round(results['actualReturn'], 2),
-                    'success': results['success']
+                    'actualReturn': round(results['actualReturn'], 2)
                 }
                 
                 signals_table.update(signal_id, update_data)
