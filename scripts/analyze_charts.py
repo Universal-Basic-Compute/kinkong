@@ -483,7 +483,7 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
 
         # Print debug info
         print(f"\nCreating signal with parameters:")
-        print(f"Timeframe: {timeframe} -> {timeframe_mapping.get(timeframe)}")
+        print(f"Timeframe: {timeframe}")
         print(f"Signal: {analysis.get('signal')}")
         print(f"Confidence: {confidence} -> {confidence_level}")
         print(f"Prices - Entry: {current_price}, Target: {target_price}, Stop: {stop_price}")
