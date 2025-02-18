@@ -130,13 +130,13 @@ export function ChartFlow() {
   };
 
   useEffect(() => {
-    const initialCandles = [];
+    const initialCandles: Candle[] = [];
     let currentPrice = lastPrice;
     
-    const initialSecondaryCandles = [];
+    const initialSecondaryCandles: Candle[] = [];
     let secondaryPrice = 100 * (1 + (Math.random() * 0.4 - 0.2));
     
-    const initialTertiaryCandles = [];
+    const initialTertiaryCandles: Candle[] = [];
     let tertiaryPrice = 100 * (1 + (Math.random() * 0.4 - 0.2));
     
     for (let i = 0; i < 60; i++) {
