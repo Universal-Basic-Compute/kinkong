@@ -180,20 +180,33 @@ if __name__ == "__main__":
     from dotenv import load_dotenv
     from analyze_charts import get_dexscreener_data
     
+    # Debug: Print environment variables
+    print("\n🔍 Debug Information")
+    print("=" * 50)
+    
     # Load environment variables
     load_dotenv()
     
-    # Initialize Airtable
-    base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
-    api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
-    
-    if not base_id or not api_key:
-        print("❌ Error: Missing Airtable configuration")
-        exit(1)
+    try:
+        # Initialize Airtable
+        base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
+        api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
         
-    # Get signals and tokens tables
-    signals_table = Airtable(base_id, 'SIGNALS', api_key)
-    tokens_table = Airtable(base_id, 'TOKENS', api_key)
+        if not base_id or not api_key:
+            print("❌ Error: Missing Airtable configuration")
+            exit(1)
+            
+        # Get signals and tokens tables
+        signals_table = Airtable(base_id, 'SIGNALS', api_key)
+        tokens_table = Airtable(base_id, 'TOKENS', api_key)
+        
+        # Debug: Print available fields in TOKENS table
+        print("\nChecking TOKENS table structure...")
+        records = tokens_table.get_all(maxRecords=1)
+        if records:
+            print("Available fields in TOKENS table:", list(records[0]['fields'].keys()))
+        else:
+            print("No records found in TOKENS table")
     
     # Get signals that haven't expired
     signals = signals_table.get_all(
@@ -206,14 +219,29 @@ if __name__ == "__main__":
     for signal in signals:
         fields = signal['fields']
         
-        # Get token info
+        # Debug: Try queries with increasing complexity
+        print(f"\nLooking up token: {fields['token']}")
+        
+        # First try without any filter
+        print("\nTrying to get all records...")
+        all_records = tokens_table.get_all()
+        print(f"Found {len(all_records)} total records")
+        
+        if all_records:
+            print("Sample record fields:", list(all_records[0]['fields'].keys()))
+        
+        # Then try with just the symbol filter
+        symbol_filter = f"{{token}}='{fields['token']}'"  # Try 'token' instead of 'symbol'
+        print(f"\nTrying filter: {symbol_filter}")
         token_records = tokens_table.get_all(
-            formula=f"AND({{symbol}}='{fields['token']}', {{isActive}}=1)"  # Use proper Airtable field reference syntax
+            formula=symbol_filter
         )
         
         if not token_records:
-            print(f"\n❌ Token not found or not active: {fields['token']}")
+            print(f"No records found for token {fields['token']}")
             continue
+            
+        print(f"Found {len(token_records)} records with matching symbol")
             
         token_info = token_records[0]['fields']
         
