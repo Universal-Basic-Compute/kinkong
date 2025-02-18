@@ -184,7 +184,7 @@ export function SignalHistory() {
           </tr>
         </thead>
         <tbody className="divide-y divide-gold/10">
-          {signals.slice(0, 15).map((signal) => (
+          {signals.map((signal) => (
             <tr key={signal.id} className="hover:bg-gold/5">
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                 {getRelativeTime(signal.timestamp)}
@@ -246,7 +246,6 @@ export function SignalHistory() {
                 <p className="text-xs text-gray-300 line-clamp-3 max-h-[4.5rem] overflow-hidden">
                   {signal.reason || '-'}
                 </p>
-                {/* Tooltip below */}
                 <div className="hidden group-hover:block absolute left-0 top-full mt-2 z-10">
                   <div className="bg-black/90 border border-gold/20 rounded-lg p-3 max-w-md text-sm text-gray-300 whitespace-pre-line shadow-lg">
                     {signal.reason || '-'}
@@ -276,90 +275,6 @@ export function SignalHistory() {
                   )
                 ) : (
                   <span className="text-gray-400">⏳</span>
-                )}
-              </td>
-            </tr>
-          ))}
-          {signals.slice(15).map((signal) => (
-            <tr key={signal.id} className="hover:bg-gold/5">
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                {getRelativeTime(signal.timestamp)}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm">
-                <span className={getTokenClass(signal.token)}>
-                  {formatTokenSymbol(signal.token)}
-                </span>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm">
-                <span className={`px-2 py-1 rounded-full text-xs ${
-                  signal.type === 'BUY' 
-                    ? 'bg-green-900/50 text-green-400' 
-                    : 'bg-red-900/50 text-red-400'
-                }`}>
-                  {signal.type}
-                </span>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm">
-                <span className="text-gray-300">
-                  {getTimeframeEmoji(signal.timeframe)} {signal.timeframe}
-                </span>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm">
-                <div className="text-xs space-y-1">
-                  {signal.entryPrice && (
-                    <div>Entry: <span className="text-gray-300">${signal.entryPrice}</span></div>
-                  )}
-                  {signal.targetPrice && (
-                    <div>Target: <span className="text-green-400">${signal.targetPrice}</span></div>
-                  )}
-                  {signal.stopLoss && (
-                    <div>Stop: <span className="text-red-400">${signal.stopLoss}</span></div>
-                  )}
-                </div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm">
-                <span className={`px-2 py-1 rounded-full text-xs ${getConfidenceClass(signal.confidence)}`}>
-                  {signal.confidence}
-                </span>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm">
-                <a 
-                  href={`https://solscan.io/account/${signal.wallet}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`text-sm hover:underline ${
-                    signal.wallet === 'FnWyN4t1aoZWFjEEBxopMaAgk5hjL5P3K65oc2T9FBJY' 
-                      ? 'text-gold font-semibold' 
-                      : 'text-gray-300'
-                  }`}
-                >
-                  {signal.wallet === 'FnWyN4t1aoZWFjEEBxopMaAgk5hjL5P3K65oc2T9FBJY' 
-                    ? '🦍 KinKong'
-                    : `${signal.wallet.slice(0, 4)}...${signal.wallet.slice(-4)}`}
-                </a>
-              </td>
-              <td className="px-6 py-4 relative group">
-                <p className="text-xs text-gray-300 line-clamp-3 max-h-[4.5rem] overflow-hidden">
-                  {signal.reason || '-'}
-                </p>
-                <div className="hidden group-hover:block absolute left-0 top-full mt-2 z-10">
-                  <div className="bg-black/90 border border-gold/20 rounded-lg p-3 max-w-md text-sm text-gray-300 whitespace-pre-line shadow-lg">
-                    {signal.reason || '-'}
-                  </div>
-                </div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm">
-                {signal.url ? (
-                  <a 
-                    href={signal.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-gold hover:text-gold/80 underline"
-                  >
-                    View
-                  </a>
-                ) : (
-                  '-'
                 )}
               </td>
             </tr>
