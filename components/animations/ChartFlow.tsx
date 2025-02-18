@@ -28,6 +28,8 @@ export function ChartFlow() {
   const [lastPrice, setLastPrice] = useState(100);
   const [secondaryCandles, setSecondaryCandles] = useState<Candle[]>([]);
   const [secondaryLastPrice, setSecondaryLastPrice] = useState(100);
+  const [tertiaryCandles, setTertiaryCandles] = useState<Candle[]>([]);
+  const [tertiaryLastPrice, setTertiaryLastPrice] = useState(100);
   const [signals, setSignals] = useState<Signal[]>([]);
   const [activeSignal, setActiveSignal] = useState<'BUY' | 'SELL' | null>(null);
   const [displaySignals, setDisplaySignals] = useState<SignalDisplay[]>([]);
@@ -122,6 +124,9 @@ export function ChartFlow() {
     const initialSecondaryCandles = [];
     let secondaryPrice = 100 * (1 + (Math.random() * 0.4 - 0.2));
     
+    const initialTertiaryCandles = [];
+    let tertiaryPrice = 100 * (1 + (Math.random() * 0.4 - 0.2));
+    
     for (let i = 0; i < 60; i++) {
       const candle = generateCandle(i, currentPrice);
       initialCandles.push(candle);
@@ -130,6 +135,10 @@ export function ChartFlow() {
       const secondaryCandle = generateCandle(i, secondaryPrice);
       initialSecondaryCandles.push(secondaryCandle);
       secondaryPrice = secondaryCandle.close;
+      
+      const tertiaryCandle = generateCandle(i, tertiaryPrice);
+      initialTertiaryCandles.push(tertiaryCandle);
+      tertiaryPrice = tertiaryCandle.close;
     }
 
     setCandles(initialCandles);
@@ -137,6 +146,9 @@ export function ChartFlow() {
     
     setSecondaryCandles(initialSecondaryCandles);
     setSecondaryLastPrice(secondaryPrice);
+    
+    setTertiaryCandles(initialTertiaryCandles);
+    setTertiaryLastPrice(tertiaryPrice);
 
     const interval = setInterval(() => {
       setCandles(prev => {
@@ -145,6 +157,11 @@ export function ChartFlow() {
       });
       
       setSecondaryCandles(prev => {
+        const newCandle = generateCandle(prev[prev.length - 1].id + 1, prev[prev.length - 1].close);
+        return [...prev.slice(1), newCandle];
+      });
+      
+      setTertiaryCandles(prev => {
         const newCandle = generateCandle(prev[prev.length - 1].id + 1, prev[prev.length - 1].close);
         return [...prev.slice(1), newCandle];
       });
@@ -228,8 +245,57 @@ export function ChartFlow() {
       <div className="h-[67%] flex items-end relative">
         {/* Zone des bougies - réduire à 75% */}
         <div className="w-[75%] h-full flex items-end space-x-1 relative">
-          {/* Graphe secondaire en arrière-plan */}
+          {/* Graphe tertiaire en arrière-plan */}
           <div className="absolute inset-0 flex items-end space-x-1 opacity-30">
+            <AnimatePresence>
+              {tertiaryCandles.map((candle) => {
+                const highest = Math.max(...tertiaryCandles.map(c => c.high));
+                const lowest = Math.min(...tertiaryCandles.map(c => c.low));
+                const priceRange = highest - lowest;
+
+                const highPercent = ((candle.high - lowest) / priceRange) * 100;
+                const lowPercent = ((candle.low - lowest) / priceRange) * 100;
+                const openPercent = ((candle.open - lowest) / priceRange) * 100;
+                const closePercent = ((candle.close - lowest) / priceRange) * 100;
+
+                const bodyHeight = Math.abs(closePercent - openPercent);
+                const bodyBottom = Math.min(closePercent, openPercent);
+                
+                const wickHeight = highPercent - lowPercent;
+                const wickBottom = lowPercent;
+
+                return (
+                  <motion.div
+                    key={`tertiary-${candle.id}`}
+                    className="relative w-4 h-full"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 0.3, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <div 
+                      className="absolute w-[1px] left-1/2 -translate-x-1/2"
+                      style={{
+                        backgroundColor: candle.color,
+                        height: `${wickHeight}%`,
+                        bottom: `${wickBottom}%`
+                      }}
+                    />
+                    <div 
+                      className="absolute w-full"
+                      style={{
+                        backgroundColor: candle.color,
+                        height: `${bodyHeight}%`,
+                        bottom: `${bodyBottom}%`
+                      }}
+                    />
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </div>
+          {/* Graphe secondaire au milieu */}
+          <div className="absolute inset-0 flex items-end space-x-1 opacity-50">
             <AnimatePresence>
               {secondaryCandles.map((candle) => {
                 const highest = Math.max(...secondaryCandles.map(c => c.high));
