@@ -319,10 +319,11 @@ export function ChartFlow() {
   }, [candles]);
 
   return (
-    <div className="w-full h-[400px] bg-black/50 rounded-lg p-4">
-      <div className="h-[67%] flex items-end relative">
-        {/* Zone des bougies - réduire à 75% */}
-        <div className="w-[75%] h-full flex items-end space-x-1 relative">
+    <div className="w-full">
+      <div className="h-[400px] bg-black/50 rounded-lg p-4">
+        <div className="h-[67%] flex items-end relative">
+          {/* Zone des bougies - réduire à 75% */}
+          <div className="w-[75%] h-full flex items-end space-x-1 relative">
           {/* Graphe tertiaire en arrière-plan */}
           <div className="absolute inset-0 flex items-end space-x-1 opacity-30">
             <AnimatePresence>
@@ -525,23 +526,24 @@ export function ChartFlow() {
           </div>
         </div>
       </div>
-    </div>
-    
-    {/* Section des raisons en streaming */}
-    <div className="mt-4 grid grid-cols-3 gap-4">
-      {streamingReasons.map((stream, index) => (
-        <div 
-          key={index}
-          className="bg-black/30 rounded-lg p-3 border border-gold/10"
-        >
-          <div className="h-20 overflow-hidden">
-            <p className="text-sm text-gray-300 font-mono">
-              {stream.text}
-              <span className="animate-pulse">_</span>
-            </p>
+      </div>
+      
+      {/* Section des raisons en streaming */}
+      <div className="mt-4 grid grid-cols-3 gap-4">
+        {streamingReasons.map((stream, index) => (
+          <div 
+            key={index}
+            className="bg-black/30 rounded-lg p-3 border border-gold/10"
+          >
+            <div className="h-20 overflow-hidden">
+              <p className="text-sm text-gray-300 font-mono">
+                {stream.text}
+                <span className="animate-pulse">_</span>
+              </p>
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
