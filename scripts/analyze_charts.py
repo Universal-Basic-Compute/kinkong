@@ -444,12 +444,32 @@ def create_airtable_signal(analysis, timeframe, token_info):
         # Calculate expiry date based on timeframe
         now = datetime.now(timezone.utc)
         expiry_mapping = {
-            'SCALP': timedelta(hours=6),
-            'INTRADAY': timedelta(days=1),
-            'SWING': timedelta(days=7),
-            'POSITION': timedelta(days=30)
+            'SCALP': timedelta(hours=6),      # 6 hours for SCALP trades
+            'INTRADAY': timedelta(days=1),    # 24 hours for INTRADAY trades
+            'SWING': timedelta(days=7),       # 7 days for SWING trades
+            'POSITION': timedelta(days=30)    # 30 days for POSITION trades
         }
-        
+
+        # Map timeframe to signal type
+        timeframe_mapping = {
+            '15m': 'SCALP',     # 15-minute chart for 6-hour trades
+            '1H': 'INTRADAY',   # 1-hour chart for 24-hour trades
+            '4H': 'SWING',      # 4-hour chart for 7-day trades
+            '1D': 'POSITION'    # Daily chart for 30-day trades
+        }
+
+        strategy_timeframe = timeframe_mapping.get(timeframe)
+        if not strategy_timeframe:
+            print(f"Unknown timeframe: {timeframe}")
+            return None
+
+        expiry_delta = expiry_mapping.get(strategy_timeframe)
+        if not expiry_delta:
+            print(f"No expiry mapping for timeframe: {strategy_timeframe}")
+            return None
+
+        expiry_date = now + expiry_delta
+
         if not base_id or not api_key:
             print("Airtable configuration missing")
             return
