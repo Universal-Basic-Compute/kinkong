@@ -652,13 +652,8 @@ def process_signals_batch(token_analyses):
     print("\n🔄 Starting signals batch processing...")
     print(f"Received {len(token_analyses)} token analyses to process")
     
-    # Update timeframe mapping to match analysis output
-    timeframe_mapping = {
-        '15m': 'SCALP',     # 15-minute chart for 6-hour trades
-        '1H': 'INTRADAY',   # 1-hour chart for 24-hour trades
-        '4H': 'SWING',      # 4-hour chart for 7-day trades
-        '1D': 'POSITION'    # Daily chart for 30-day trades
-    }
+    # Standard timeframes for all analysis
+    STRATEGY_TIMEFRAMES = ['SCALP', 'INTRADAY', 'SWING', 'POSITION']
     
     pending_signals = []
     
@@ -667,17 +662,17 @@ def process_signals_batch(token_analyses):
         print(f"Analysis structure: {type(analyses)}")
         print(f"Available timeframes: {list(analyses.keys())}")
         
-        # Map timeframes and filter valid ones
+        # Filter valid timeframes
         valid_timeframes = {}
         for tf, analysis in analyses.items():
             # Skip the 'overall' key as it's not a timeframe
             if tf == 'overall':
                 continue
                 
-            # Check if timeframe exists in mapping
-            if tf in timeframe_mapping:
-                valid_timeframes[timeframe_mapping[tf]] = analysis
-                print(f"Mapped {tf} to {timeframe_mapping[tf]}")
+            # Check if timeframe is one of our standard timeframes
+            if tf in STRATEGY_TIMEFRAMES:
+                valid_timeframes[tf] = analysis
+                print(f"Valid timeframe: {tf}")
             else:
                 print(f"Skipping unknown timeframe: {tf}")
         
