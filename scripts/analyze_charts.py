@@ -478,6 +478,20 @@ def create_airtable_signal(analysis, timeframe, token_info):
             expiry_delta = expiry_mapping.get(strategy_timeframe)
             expiry_date = now + expiry_delta
 
+            # Calculate entry, target and stop prices based on key levels
+            key_levels = analysis.get('key_levels', {})
+            support_levels = key_levels.get('support', [])
+            resistance_levels = key_levels.get('resistance', [])
+            
+            if signal_type == 'SELL':
+                entry_price = resistance_levels[0] if resistance_levels else 0
+                target_price = support_levels[0] if support_levels else 0
+                stop_loss = resistance_levels[1] if len(resistance_levels) > 1 else entry_price * 1.05
+            else:  # BUY
+                entry_price = support_levels[0] if support_levels else 0
+                target_price = resistance_levels[0] if resistance_levels else 0
+                stop_loss = support_levels[1] if len(support_levels) > 1 else entry_price * 0.95
+
             # Format the analysis into a readable message
             reason_message = f"""Technical Analysis for {token_info['symbol']} ({timeframe})
 
@@ -485,27 +499,27 @@ Signal: {analysis.get('signal')}
 Confidence: {analysis.get('confidence')}%
 
 Market Context:
-• Primary Trend: {analyses.get('overall', {}).get('primary_trend', 'Unknown')}
-• Timeframe Alignment: {analyses.get('overall', {}).get('timeframe_alignment', 'Unknown')}
+• Primary Trend: {analysis.get('primary_trend', 'Unknown')}
+• Timeframe Alignment: {analysis.get('timeframe_alignment', 'Unknown')}
 
 Technical Analysis:
 {analysis.get('reasoning', 'No reasoning provided')}
 
 Price Levels:
-• Support: {', '.join(f'${level:.4f}' for level in analysis.get('key_levels', {}).get('support', []))}
-• Resistance: {', '.join(f'${level:.4f}' for level in analysis.get('key_levels', {}).get('resistance', []))}
+• Support: {', '.join(f'${level:.4f}' for level in support_levels)}
+• Resistance: {', '.join(f'${level:.4f}' for level in resistance_levels)}
 
 Trade Setup:
-• Entry: ${signal_data['entryPrice']:.4f}
-• Target: ${signal_data['targetPrice']:.4f}
-• Stop Loss: ${signal_data['stopLoss']:.4f}
+• Entry: ${entry_price:.4f}
+• Target: ${target_price:.4f}
+• Stop Loss: ${stop_loss:.4f}
 • Risk/Reward: {analysis.get('risk_reward_ratio', 'Not calculated')}
 
 Key Observations:
-{chr(10).join('• ' + obs for obs in analyses.get('overall', {}).get('key_observations', ['No observations available']))}
+{chr(10).join('• ' + obs for obs in analysis.get('key_observations', ['No observations available']))}
 
 Recommended Action:
-{analyses.get('overall', {}).get('recommended_action', {}).get('reasoning', 'No specific recommendation')}"""
+{analysis.get('recommended_action', {}).get('reasoning', 'No specific recommendation')}"""
 
             signal_data = {
                 'timestamp': now.isoformat(),
