@@ -10,8 +10,6 @@ import requests
 project_root = str(Path(__file__).parent.parent.absolute())
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
-
-def calculate_closed_signals():
     """Calculate metrics for all closed signals that haven't been evaluated yet"""
     try:
         load_dotenv()
