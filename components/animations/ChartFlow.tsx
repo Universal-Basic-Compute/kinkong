@@ -127,28 +127,19 @@ export function ChartFlow() {
   }, []);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      // Intervalle aléatoire entre 1 et 5 secondes
-      const randomDelay = Math.floor(Math.random() * 4000) + 1000;
-      clearInterval(interval);
+    const generateRandomSignal = () => {
+      setSignals([{  // Remplacer le signal au lieu d'en ajouter
+        id: Math.random(),
+        type: Math.random() > 0.5 ? 'BUY' : 'SELL',
+        candleId: candles[candles.length - 1].id
+      }]);
       
-      setSignals(prev => {
-        const newSignal = generateSignal(candles[candles.length - 1].id);
-        return [...prev.slice(-5), newSignal]; // Garde seulement les 5 derniers signaux
-      });
+      // Planifier le prochain signal dans 1-5 secondes
+      setTimeout(generateRandomSignal, Math.random() * 4000 + 1000);
+    };
 
-      setTimeout(() => {
-        const newInterval = setInterval(() => {
-          setSignals(prev => {
-            const newSignal = generateSignal(candles[candles.length - 1].id);
-            return [...prev.slice(-5), newSignal];
-          });
-        }, Math.floor(Math.random() * 4000) + 1000);
-        return () => clearInterval(newInterval);
-      }, randomDelay);
-    }, 1000);
-
-    return () => clearInterval(interval);
+    generateRandomSignal();
+    return () => {}; // Cleanup si nécessaire
   }, [candles]);
 
   return (
@@ -216,14 +207,15 @@ export function ChartFlow() {
                 key={signal.id}
                 className={`absolute ${
                   signal.type === 'BUY' ? 'text-green-500' : 'text-red-500'
-                } font-bold text-sm`}
-                initial={{ opacity: 0, y: 20, x: '0%' }}
-                animate={{ opacity: 1, y: 0, x: '0%' }}
-                exit={{ opacity: 0, y: -20, x: '0%' }}
+                } font-bold text-xl`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.5 }}
                 style={{
                   bottom: '100%',
-                  left: '8px'
+                  right: '25%',
+                  transform: 'translateX(50%)'
                 }}
               >
                 {signal.type}
