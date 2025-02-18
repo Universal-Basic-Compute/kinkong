@@ -16,6 +16,7 @@ interface SignalRecord extends FieldSet {
   reason: string;
   url?: string;
   success?: boolean;
+  actualReturn?: number;
 }
 
 export async function GET() {
@@ -53,6 +54,7 @@ export async function GET() {
         wallet: record.get('wallet') as string,
         reason: record.get('reason') as string || '',
         url: record.get('url') as string || undefined,
+        actualReturn: record.get('actualReturn') ? Number(record.get('actualReturn')) : null,
       }));
 
       console.log('Formatted first signal:', signals[0]); // Debug log
