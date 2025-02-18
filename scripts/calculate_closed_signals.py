@@ -102,6 +102,7 @@ def calculate_closed_signals():
             raise ValueError("Missing Airtable configuration")
             
         signals_table = Airtable(base_id, 'SIGNALS', api_key)
+        tokens_table = Airtable(base_id, 'TOKENS', api_key)
         
         # Get all signals that need evaluation
         signals = signals_table.get_all(
