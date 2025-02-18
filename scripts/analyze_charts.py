@@ -32,6 +32,10 @@ class ChartAnalysis:
         self.risk_reward_ratio = risk_reward_ratio
         self.reassess_conditions = reassess_conditions
 
+    def get(self, key, default=None):
+        """Add dictionary-like get method"""
+        return getattr(self, key, default)
+
     def to_dict(self):
         """Convert ChartAnalysis object to dictionary"""
         return {
@@ -414,6 +418,11 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
     """Create a signal record in Airtable and check for immediate execution"""
     try:
         print(f"\nCreating Airtable signal for {token_info['symbol']}...")
+        
+        # Convert ChartAnalysis to dict if needed
+        if hasattr(analysis, 'to_dict'):
+            analysis = analysis.to_dict()
+            
         if analyses is None:
             analyses = {'overall': {}}  # Default empty overall analysis if none provided
         print(f"Analysis type: {type(analysis)}")
@@ -518,8 +527,9 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
             overall = analyses.get('overall', {})
 
             reason_text = (
-                f"Clear {timeframe.lower()} timeframe analysis shows {analysis.get('signal', 'UNKNOWN')} "
-                f"signal with {analysis.get('confidence', 0)}% confidence.\n\n"
+                f"Clear {timeframe.lower()} timeframe analysis shows "
+                f"{analysis.get('signal', 'UNKNOWN') if isinstance(analysis, dict) else analysis.signal} "
+                f"signal with {analysis.get('confidence', 0) if isinstance(analysis, dict) else analysis.confidence}% confidence.\n\n"
                 f"Analysis:\n{timeframe_analysis}\n\n"
                 f"Overall Market Context:\n"
                 f"• Primary Trend: {overall.get('primary_trend', 'Unknown')}\n"
