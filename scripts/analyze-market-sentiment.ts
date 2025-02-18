@@ -120,17 +120,6 @@ ${classification.reasons.map(r => '• ' + r).join('\n')}`;
   }
 }
 
-// Load environment variables
-console.log('🔧 Initializing environment...');
-const envPath = path.resolve(process.cwd(), '.env');
-const result = dotenv.config({ path: envPath });
-console.log('📁 Environment path:', envPath);
-console.log('✅ Environment loaded:', {
-  hasError: result && 'error' in result ? true : false,
-  hasAirtableKey: !!process.env.KINKONG_AIRTABLE_API_KEY,
-  hasAirtableBase: !!process.env.KINKONG_AIRTABLE_BASE_ID
-});
-
 interface TokenMetrics {
   symbol: string;
   price: number;
