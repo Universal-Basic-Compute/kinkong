@@ -412,7 +412,7 @@ def calculate_closed_signals():
                 update_data = {
                     'exitPrice': results['exitPrice'],
                     'actualReturn': round(results['actualReturn'], 2),
-                    'success': results['success']  # Changed from accuracy to success
+                    'success': results['success']
                 }
                 
                 signals_table.update(signal_id, update_data)
