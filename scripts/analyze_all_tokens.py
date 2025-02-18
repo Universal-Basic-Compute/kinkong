@@ -26,7 +26,7 @@ from ratelimit import limits, sleep_and_retry
 import json
 from pathlib import Path
 from generate_chart import generate_chart, fetch_token_data, calculate_support_levels
-from analyze_charts import analyze_charts_with_claude, generate_signal
+from analyze_charts import analyze_charts_with_claude, generate_signal, create_airtable_signal
 
 @sleep_and_retry
 @limits(calls=5, period=1)  # 5 calls per second
@@ -223,7 +223,10 @@ async def analyze_token(token):
                                 result = create_airtable_signal(
                                     analysis,
                                     timeframe,  # Use the timeframe directly from the analysis
-                                    token_info,
+                                    {
+                                        'symbol': token['symbol'],
+                                        'mint': token['mint']
+                                    },
                                     analyses
                                 )
                 
