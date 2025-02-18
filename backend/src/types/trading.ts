@@ -1,5 +1,3 @@
-export type SignalSuccess = true | false | null;
-
 export interface TradeParams {
   inputToken: string;
   outputToken: string;
@@ -29,6 +27,5 @@ export interface Signal {
   wallet: string;
   reason: string;
   url?: string;
-  success: SignalSuccess;
   status: SignalStatus;
 }
