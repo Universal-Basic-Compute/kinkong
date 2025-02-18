@@ -182,8 +182,8 @@ export function ChartFlow() {
           </svg>
         </div>
         
-        {/* Zone des bougies - maintenant sur les 2/3 gauches */}
-        <div className="w-[75%] h-full flex items-end space-x-2">
+        {/* Zone des bougies - étendue à 90% */}
+        <div className="w-[90%] h-full flex items-end space-x-1">
           <AnimatePresence>
             {candles.map((candle) => {
             // Calculer les hauteurs relatives
@@ -238,8 +238,8 @@ export function ChartFlow() {
           </AnimatePresence>
         </div>
         
-        {/* Zone vide pour le dernier tiers */}
-        <div className="w-[25%]"></div>
+        {/* Zone vide réduite */}
+        <div className="w-[10%]"></div>
       </div>
     </div>
   );
