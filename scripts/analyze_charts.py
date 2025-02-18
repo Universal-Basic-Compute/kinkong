@@ -644,9 +644,10 @@ def process_signals_batch(token_analyses):
     
     # Update timeframe mapping to match analysis output
     timeframe_mapping = {
-        '14D': 'SWING',     # 14-day chart for 7-day trades
-        '48H': 'INTRADAY',  # 48-hour chart for 24-hour trades
-        '12H': 'SCALP'      # 12-hour chart for 6-hour trades
+        '15m': 'SCALP',     # 15-minute chart for 6-hour trades
+        '1H': 'INTRADAY',   # 1-hour chart for 24-hour trades
+        '4H': 'SWING',      # 4-hour chart for 7-day trades
+        '1D': 'POSITION'    # Daily chart for 30-day trades
     }
     
     pending_signals = []
