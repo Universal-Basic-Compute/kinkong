@@ -319,17 +319,16 @@ if __name__ == "__main__":
                 # Create trade record
                 trades_table = Airtable(base_id, 'TRADES', api_key)
                 trade_data = {
-                    'signalId': signal['id'],
-                    'timestamp': datetime.now(timezone.utc).isoformat(),
-                    'token': fields['token'],
-                    'type': fields['type'],
-                    'timeframe': ','.join(valid_timeframes),  # Record which timeframes passed
-                    'entryPrice': float(fields['entryPrice']),
-                    'targetPrice': float(fields['targetPrice']),
-                    'stopLoss': float(fields['stopLoss']),
-                    'status': 'PENDING',  # Initial trade status
-                    'market_price': market_data['price'] if market_data else None,
-                    'lastUpdateTime': datetime.now(timezone.utc).isoformat()
+                    'fields': {
+                        'signalId': signal['id'],
+                        'timestamp': datetime.now(timezone.utc).isoformat(),
+                        'token': fields['token'],
+                        'action': fields['type'],  # Changed from 'type' to 'action'
+                        'timeframe': ','.join(valid_timeframes),
+                        'price': float(fields['entryPrice']),  # Changed from entryPrice to price
+                        'amount': 0,  # Will be set when trade executes
+                        'status': 'PENDING'  # Initial trade status
+                    }
                 }
                 
                 # Add trade record
