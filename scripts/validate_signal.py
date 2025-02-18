@@ -321,13 +321,20 @@ if __name__ == "__main__":
                 trade_data = {
                     'fields': {
                         'signalId': signal['id'],
-                        'timestamp': datetime.now(timezone.utc).isoformat(),
                         'token': fields['token'],
-                        'action': fields['type'],  # Changed from 'type' to 'action'
+                        'type': fields['type'],  # Keep as 'type' since that's the actual field name
                         'timeframe': ','.join(valid_timeframes),
-                        'price': float(fields['entryPrice']),  # Changed from entryPrice to price
-                        'amount': 0,  # Will be set when trade executes
-                        'status': 'PENDING'  # Initial trade status
+                        'status': 'PENDING',
+                        'amount': 0,  # Will be set during execution
+                        'entryValue': 0,  # Will be set during execution
+                        'activationTime': None,  # Will be set when activated
+                        'entryPrice': float(fields['entryPrice']),
+                        'stopLoss': float(fields['stopLoss']),
+                        'targetPrice': float(fields['targetPrice']),
+                        'expiryDate': fields['expiryDate'],  # Use the signal's expiry date
+                        'exitPrice': None,  # Will be set when trade closes
+                        'realizedPnl': None,  # Will be set when trade closes
+                        'roi': None  # Will be set when trade closes
                     }
                 }
                 
