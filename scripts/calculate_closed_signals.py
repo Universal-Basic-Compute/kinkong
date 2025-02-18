@@ -346,12 +346,9 @@ def calculate_closed_signals():
         signals = signals_table.get_all(
             formula="AND("
                     "expiryDate<NOW(), "  # Expired signals
-                    "OR("
-                        "actualReturn=BLANK(), "  # Missing actual return
-                        "success=BLANK()"         # Missing success flag
-                    "), "
-                    "entryPrice>0, "             # Has entry price
-                    "targetPrice>0"              # Has target price
+                    "actualReturn=BLANK(), "  # Missing actual return
+                    "entryPrice>0, "          # Has entry price
+                    "targetPrice>0"           # Has target price
                     ")"
         )
         
