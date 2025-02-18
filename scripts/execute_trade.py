@@ -15,25 +15,55 @@ def execute_trade_with_phantom(signal_id: str) -> bool:
         base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
         api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
         
-        # Get signal details from Airtable
-        signals_table = Airtable(base_id, 'SIGNALS', api_key)
-        signal = signals_table.get(signal_id)
+        fields = signal['fields']
+        signal_id = signal['id']
         
-        if not signal or signal['fields'].get('status') != 'ACTIVE':
-            print(f"Signal {signal_id} not found or not active")
-            return False
-            
-        # Get token details
-        tokens_table = Airtable(base_id, 'TOKENS', api_key)
+        print(f"\n⚙️ Processing signal {signal_id}:")
+        print(f"Token: {fields.get('token')}")
+        print(f"Type: {fields.get('type', 'Unknown')}")
+        print(f"Entry: ${float(fields.get('entryPrice', 0)):.4f}")
+        
+        # Get token mint address
         token_records = tokens_table.get_all(
-            formula=f"{{symbol}}='{signal['fields']['token']}'"
+            formula=f"{{symbol}}='{fields['token']}'"
         )
-        
         if not token_records:
-            print(f"Token {signal['fields']['token']} not found")
-            return False
-            
+            print(f"❌ No token record found for {fields['token']}")
+            continue
+        
         token_mint = token_records[0]['fields']['mint']
+        print(f"Found mint address: {token_mint}")
+        
+        # Get historical prices
+        activation_time = datetime.fromisoformat(fields['timestamp'].replace('Z', '+00:00'))
+        expiry_time = datetime.fromisoformat(fields['expiryDate'].replace('Z', '+00:00'))
+        
+        prices = get_historical_prices(token_mint, activation_time, expiry_time)
+        if not prices:
+            print(f"❌ No price data available for {fields['token']}")
+            continue
+        
+        print(f"\n💹 Simulating trade for {fields['token']}...")
+        # Simulate trade with actual price data
+        results = simulate_trade(prices, fields)
+        
+        print(f"\n📝 Trade simulation results:")
+        print(f"Exit Price: ${results['exitPrice']:.4f}")
+        print(f"Exit Reason: {results['exitReason']}")
+        print(f"Time to Exit: {results['timeToExit']} minutes")
+        print(f"Actual Return: {results['actualReturn']:.2f}%")
+        print(f"Accuracy: {results['accuracy']}")
+        
+        # Update signal with results
+        update_data = {
+            'exitPrice': results['exitPrice'],
+            'actualReturn': round(results['actualReturn'], 2),
+            'accuracy': results['accuracy']
+        }
+        
+        signals_table.update(signal_id, update_data)
+        
+        print(f"\n✅ Updated signal {signal_id} in Airtable")
         usdc_mint = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"  # USDC mint address
         
         # Prepare trade parameters
