@@ -79,14 +79,6 @@ def monitor_active_trades():
                 print(f"Target: {fields['targetPrice']}")
                 print(f"Stop: {fields['stopLoss']}")
                 
-                # Update unrealized P&L
-                pnl = calculate_pnl(fields, current_price)
-                trades_table.update(trade_id, {
-                    'unrealizedPnl': pnl['unrealized_pnl'],
-                    'roi': pnl['roi'],
-                    'lastUpdateTime': datetime.now(timezone.utc).isoformat()
-                })
-                
                 # Check exit conditions and queue if needed
                 if fields['type'] == 'BUY':
                     # Check take profit
