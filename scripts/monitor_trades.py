@@ -25,7 +25,7 @@ last_batch_time = datetime.now()
 @sleep_and_retry
 @limits(calls=PRICE_CHECK_LIMIT, period=1)
 def rate_limited_price_check(token_symbol):
-    """Rate limited price check with token lookup"""
+    """Rate limited price check with token lookup using DexScreener"""
     try:
         # First get token mint from Airtable
         base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
@@ -44,31 +44,38 @@ def rate_limited_price_check(token_symbol):
         token_mint = token_records[0]['fields']['mint']
         print(f"Found mint address for {token_symbol}: {token_mint}")
         
-        # Now fetch price using mint address
-        url = 'https://public-api.birdeye.so/public/price'
-        params = {
-            'address': token_mint,
-            'network': 'solana'
-        }
+        # Use DexScreener API
+        url = f"https://api.dexscreener.com/latest/dex/tokens/{token_mint}"
         headers = {
-            'x-api-key': os.getenv('BIRDEYE_API_KEY')
+            'User-Agent': 'Mozilla/5.0',
+            'Accept': 'application/json'
         }
         
-        print(f"Requesting price for {token_symbol} ({token_mint})")
-        response = requests.get(url, params=params, headers=headers)
+        print(f"Requesting DexScreener data for {token_symbol} ({token_mint})")
+        response = requests.get(url, headers=headers)
         
         if response.ok:
             data = response.json()
-            if data.get('success') and data.get('data', {}).get('value'):
-                price = float(data['data']['value'])
-                print(f"Got price for {token_symbol}: ${price}")
-                return price
-            else:
-                print(f"Invalid response format: {data}")
+            
+            if not data.get('pairs'):
+                print(f"No pairs found for {token_symbol}")
+                return None
+                
+            # Get the most liquid Solana pair
+            sol_pairs = [p for p in data['pairs'] if p.get('chainId') == 'solana']
+            if not sol_pairs:
+                print(f"No Solana pairs found for {token_symbol}")
+                return None
+                
+            main_pair = max(sol_pairs, key=lambda x: float(x.get('liquidity', {}).get('usd', 0)))
+            price = float(main_pair.get('priceUsd', 0))
+            
+            print(f"Got price for {token_symbol}: ${price}")
+            return price
+            
         else:
-            print(f"API request failed: {response.status_code} - {response.text}")
-        
-        return None
+            print(f"DexScreener API request failed: {response.status_code} - {response.text}")
+            return None
         
     except Exception as e:
         print(f"Error checking price for {token_symbol}: {e}")
