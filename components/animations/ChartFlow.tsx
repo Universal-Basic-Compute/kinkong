@@ -135,40 +135,37 @@ export function ChartFlow() {
     let timeoutId: NodeJS.Timeout;
 
     const generateRandomSignal = () => {
-      if (candles.length > 0) {
-        const type = Math.random() > 0.5 ? 'BUY' : 'SELL';
-        setSignals([{
-          id: Math.random(),
-          type,
-          candleId: candles[candles.length - 1].id
-        }]);
-        
-        // Mettre à jour le signal actif
-        setActiveSignal(type);
-        
-        // Réinitialiser le signal après 2.5-3.5 secondes
-        setTimeout(() => {
-          setActiveSignal(null);
-        }, Math.random() * 1000 + 2500);
+      if (candles.length === 0) return; // Skip if no candles
+      
+      console.log('Generating signal at:', new Date().toISOString());
+      const type = Math.random() > 0.5 ? 'BUY' : 'SELL';
+      setSignals([{
+        id: Math.random(),
+        type,
+        candleId: candles[candles.length - 1].id
+      }]);
+      
+      setActiveSignal(type);
+      
+      setTimeout(() => {
+        setActiveSignal(null);
+      }, Math.random() * 1000 + 2500);
 
-        // Intervalle entre les signaux : 200-400 secondes (environ 3.5-6.5 minutes)
-        const nextDelay = Math.random() * 200000 + 200000;
-        timeoutId = setTimeout(generateRandomSignal, nextDelay);
-      }
+      const nextDelay = Math.random() * 200000 + 200000;
+      console.log('Next signal scheduled in', nextDelay/1000, 'seconds');
+      timeoutId = setTimeout(generateRandomSignal, nextDelay);
     };
 
-    // Ne démarrer que si nous avons des bougies
-    if (candles.length > 0) {
-      generateRandomSignal();
-    }
+    console.log('Signal effect starting');
+    generateRandomSignal();
 
-    // Cleanup function
     return () => {
+      console.log('Cleaning up signal effect');
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
     };
-  }, [candles]); // Ajouter la dépendance aux candles
+  }, []); // Remove candles dependency
 
   return (
     <div className="w-full h-[400px] bg-black/50 rounded-lg p-4">
