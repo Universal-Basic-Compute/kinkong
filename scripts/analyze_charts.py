@@ -418,27 +418,13 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
     try:
         print(f"\nCreating Airtable signal for {token_info['symbol']}...")
         
-        # Extract the specific timeframe analysis
-        timeframe_analysis = analysis.get('reasoning', '')
+        # Just get the reasoning text directly
+        reason_text = analysis.get('reasoning', '')
         signal_type = analysis.get('signal', 'UNKNOWN')
         confidence = analysis.get('confidence', 0)
         key_levels = analysis.get('key_levels', {})
-        
-        print("\nExtracting analysis components:")
-        print(f"Timeframe analysis: {timeframe_analysis}")
-        print(f"Signal type: {signal_type}")
-        print(f"Confidence: {confidence}")
-        print(f"Key levels: {key_levels}")
-        
-        # Get overall analysis
-        overall = analyses.get('overall', {}) if analyses else {}
-        print(f"\nOverall analysis: {overall}")
-        
-        # Build reason text using just the analysis reasoning
-        reason_text = timeframe_analysis
 
-        print("\nGenerated reason text:")
-        print(reason_text)
+        print(f"\nExtracted reasoning from dict: {reason_text}")
 
         # Initialize Airtable
         base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
@@ -483,7 +469,7 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
 
         expected_return = abs((target_price - entry_price) / entry_price * 100)
 
-        # Create signal record
+        # Create signal record with just the reasoning text
         signal_data = {
             'timestamp': now.isoformat(),
             'token': token_info['symbol'],
@@ -494,7 +480,7 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
             'stopLoss': stop_loss,
             'confidence': confidence_level,
             'wallet': os.getenv('STRATEGY_WALLET', ''),
-            'reason': reason_text,
+            'reason': reason_text,  # Just the raw reasoning text
             'expiryDate': expiry_date.isoformat(),
             'expectedReturn': round(expected_return, 2)
         }
