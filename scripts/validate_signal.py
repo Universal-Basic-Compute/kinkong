@@ -175,51 +175,87 @@ def validate_signal(
 
 
 if __name__ == "__main__":
-    # Test case
-    test_signal = {
-        'signal': 'BUY',
-        'entryPrice': 1.0,
-        'targetPrice': 1.15,  # 15% upside
-        'stopLoss': 0.92,     # 8% downside
-    }
+    import os
+    from airtable import Airtable
+    from dotenv import load_dotenv
+    from analyze_charts import get_dexscreener_data
     
-    test_token = {
-        'symbol': 'TEST',
-        'mint': 'test123'
-    }
+    # Load environment variables
+    load_dotenv()
     
-    test_market = {
-        'price': 1.0,
-        'liquidity': 50000,
-        'price_change_24h': 0
-    }
+    # Initialize Airtable
+    base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
+    api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
     
-    print("\n🔍 Signal Validation Test")
-    print("=" * 50)
-    print(f"Token: {test_token['symbol']} ({test_token['mint']})")
-    print(f"Signal Type: {test_signal['signal']}")
-    print("\nPrice Levels:")
-    print(f"Entry:     ${test_signal['entryPrice']:.4f}")
-    print(f"Target:    ${test_signal['targetPrice']:.4f} ({((test_signal['targetPrice']/test_signal['entryPrice'])-1)*100:.1f}%)")
-    print(f"Stop Loss: ${test_signal['stopLoss']:.4f} ({((test_signal['stopLoss']/test_signal['entryPrice'])-1)*100:.1f}%)")
-    print("\nMarket Conditions:")
-    print(f"Current Price: ${test_market['price']:.4f}")
-    print(f"Liquidity:     ${test_market['liquidity']:,.2f}")
-    print(f"24h Change:    {test_market['price_change_24h']:.1f}%")
-    print("\nValidation Results:")
+    if not base_id or not api_key:
+        print("❌ Error: Missing Airtable configuration")
+        exit(1)
+        
+    # Get signals and tokens tables
+    signals_table = Airtable(base_id, 'SIGNALS', api_key)
+    tokens_table = Airtable(base_id, 'TOKENS', api_key)
+    
+    # Get pending signals
+    pending_signals = signals_table.get_all(
+        formula="AND(status='PENDING', expiryDate>=TODAY())"
+    )
+    
+    print("\n🔍 Validating Pending Signals")
     print("=" * 50)
     
-    # Test different timeframes
-    for timeframe in ['15m', '2h', '8h']:
-        print(f"\n⏰ {timeframe} Timeframe Analysis:")
-        result = validate_signal(
-            timeframe=timeframe,
-            signal_data=test_signal,
-            token_info=test_token,
-            market_data=test_market
+    for signal in pending_signals:
+        fields = signal['fields']
+        
+        # Get token info
+        token_records = tokens_table.get_all(
+            formula=f"{{symbol}}='{fields['token']}'"
         )
-        print(f"Valid:           {'✅' if result['valid'] else '❌'}")
-        print(f"Expected Profit: {result['expected_profit']:.1%}")
-        print(f"Trading Costs:   {result['costs']:.1%}")
-        print(f"Risk/Reward:     {result['risk_reward']:.2f}")
-        print(f"Result:          {result['reason']}")
+        
+        if not token_records:
+            print(f"\n❌ Token not found: {fields['token']}")
+            continue
+            
+        token_info = token_records[0]['fields']
+        
+        # Get market data
+        market_data = get_dexscreener_data(token_info['mint'])
+        if not market_data:
+            print(f"\n⚠️ No market data available for {fields['token']}")
+            continue
+            
+        print(f"\n📊 Signal Analysis for {fields['token']}")
+        print(f"Signal ID: {signal['id']}")
+        print(f"Type: {fields['type']}")
+        print("\nPrice Levels:")
+        print(f"Entry:     ${fields.get('entryPrice', 0):.4f}")
+        print(f"Target:    ${fields.get('targetPrice', 0):.4f}")
+        print(f"Stop Loss: ${fields.get('stopLoss', 0):.4f}")
+        
+        print("\nMarket Conditions:")
+        print(f"Current Price: ${market_data['price']:.4f}")
+        print(f"Liquidity:     ${market_data['liquidity']:,.2f}")
+        print(f"24h Change:    {market_data['price_change_24h']:.1f}%")
+        
+        print("\nValidation Results:")
+        print("-" * 40)
+        
+        # Test all timeframes
+        for timeframe in ['15m', '2h', '8h']:
+            print(f"\n⏰ {timeframe} Timeframe:")
+            result = validate_signal(
+                timeframe=timeframe,
+                signal_data={
+                    'signal': fields['type'],
+                    'entryPrice': float(fields.get('entryPrice', 0)),
+                    'targetPrice': float(fields.get('targetPrice', 0)),
+                    'stopLoss': float(fields.get('stopLoss', 0))
+                },
+                token_info=token_info,
+                market_data=market_data
+            )
+            
+            print(f"Valid:           {'✅' if result['valid'] else '❌'}")
+            print(f"Expected Profit: {result['expected_profit']:.1%}")
+            print(f"Trading Costs:   {result['costs']:.1%}")
+            print(f"Risk/Reward:     {result['risk_reward']:.2f}")
+            print(f"Result:          {result['reason']}")
