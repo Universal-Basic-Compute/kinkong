@@ -14,6 +14,14 @@ if project_root not in sys.path:
 def get_historical_prices(token_mint: str, start_time: datetime, end_time: datetime) -> list:
     """Get historical minute-by-minute prices from Birdeye"""
     try:
+        # Validate dates
+        now = datetime.now(timezone.utc)
+        if start_time > now or end_time > now:
+            print("⚠️ Warning: Future dates detected, adjusting to current time window")
+            duration = end_time - start_time
+            end_time = now
+            start_time = end_time - duration
+
         url = "https://public-api.birdeye.so/defi/history_price"
         params = {
             "address": token_mint,
@@ -30,19 +38,24 @@ def get_historical_prices(token_mint: str, start_time: datetime, end_time: datet
         }
         
         print(f"Fetching price history for {token_mint}")
-        print(f"Time range: {start_time.isoformat()} to {end_time.isoformat()}")
+        print(f"Adjusted time range: {start_time.isoformat()} to {end_time.isoformat()}")
         
         response = requests.get(url, params=params, headers=headers)
         if response.ok:
             data = response.json()
-            return data.get('data', {}).get('items', [])
+            items = data.get('data', {}).get('items', [])
+            if not items:
+                print("⚠️ No price data returned from Birdeye")
+                return []
+            print(f"✅ Retrieved {len(items)} price points")
+            return items
         else:
-            print(f"Birdeye API error: {response.status_code}")
+            print(f"❌ Birdeye API error: {response.status_code}")
             print(f"Response: {response.text}")
             return []
             
     except Exception as e:
-        print(f"Error fetching historical prices: {e}")
+        print(f"❌ Error fetching historical prices: {e}")
         return []
 
 def simulate_trade(prices: list, signal_data: dict) -> dict:
@@ -103,6 +116,12 @@ def calculate_closed_signals():
     """Calculate metrics for all closed signals that haven't been evaluated yet"""
     try:
         load_dotenv()
+        
+        # Verify Birdeye API key
+        birdeye_api_key = os.getenv('BIRDEYE_API_KEY')
+        if not birdeye_api_key:
+            raise ValueError("BIRDEYE_API_KEY not found in environment variables")
+        
         base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
         api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
         
