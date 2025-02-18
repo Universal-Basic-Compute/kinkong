@@ -1,9 +1,8 @@
-import { recordPortfolioSnapshot } from '../backend/src/strategy/snapshots';
 import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 
-// Load environment variables with debug info
+// IMPORTANT: Load environment variables FIRST, before any other imports
 console.log('🔧 Starting environment setup...');
 console.log('Current working directory:', process.cwd());
 const envPath = path.resolve(process.cwd(), '.env');
@@ -30,6 +29,9 @@ console.log('Environment variables loaded:', {
     keyLength: process.env.KINKONG_AIRTABLE_API_KEY?.length || 0,
     baseIdLength: process.env.KINKONG_AIRTABLE_BASE_ID?.length || 0
 });
+
+// Only import after environment variables are loaded
+import { recordPortfolioSnapshot } from '../backend/src/strategy/snapshots';
 
 async function main() {
   try {
