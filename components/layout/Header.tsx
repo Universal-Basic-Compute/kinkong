@@ -170,19 +170,13 @@ export default function Header() {
                       </div>
                     </>
                   ) : (
-                    {item.isGroup ? (
-                      <div className="text-gray-300 py-2 font-medium tracking-wide cursor-default">
-                        {item.label}
-                      </div>
-                    ) : (
-                      <Link
-                        href={item.href}
-                        className="text-gray-300 hover:text-gold py-2 transition-colors duration-200 font-medium tracking-wide"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        {item.label}
-                      </Link>
-                    )}
+                    <Link
+                      href={item.href}
+                      className="text-gray-300 hover:text-gold py-2 transition-colors duration-200 font-medium tracking-wide"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      {item.label}
+                    </Link>
                   )}
                 </div>
               ))}
