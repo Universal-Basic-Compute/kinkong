@@ -541,6 +541,12 @@ Recommended Action:
             expiry_delta = expiry_mapping.get(strategy_timeframe)
             expiry_date = now + expiry_delta
 
+            # Calculate expected return percentage
+            if signal_type == 'BUY':
+                expected_return = ((target_price - current_price) / current_price) * 100
+            else:  # SELL
+                expected_return = ((current_price - target_price) / current_price) * 100
+
             signal_data = {
                 'timestamp': now.isoformat(),
                 'token': token_info['symbol'],
@@ -552,7 +558,8 @@ Recommended Action:
                 'confidence': confidence_level,
                 'wallet': os.getenv('STRATEGY_WALLET', ''),
                 'reason': reason_message,  # Use formatted message instead of JSON dump
-                'expiryDate': expiry_date.isoformat()  # Add expiry date
+                'expiryDate': expiry_date.isoformat(),  # Add expiry date
+                'expectedReturn': round(expected_return, 2)  # Add expected return percentage
             }
 
             # Validate signal before creating
