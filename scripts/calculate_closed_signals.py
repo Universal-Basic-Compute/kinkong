@@ -91,20 +91,20 @@ def simulate_trade(prices: list, signal_data: dict) -> dict:
                 time_to_exit = i
                 break
     
-    # Calculate returns and accuracy
+    # Calculate returns and success
     if signal_type == 'BUY':
         actual_return = ((exit_price - entry_price) / entry_price) * 100
-        accuracy = 1 if exit_price > entry_price else 0
+        success = exit_price > entry_price  # True if profitable
     else:  # SELL
-        actual_return = ((entry_price - exit_price) / entry_price) * 100  # This is correct
-        accuracy = 1 if exit_price < entry_price else 0  # Fixed: SELL is profitable when exit < entry
+        actual_return = ((entry_price - exit_price) / entry_price) * 100
+        success = exit_price < entry_price  # True if profitable
     
     return {
         'exitPrice': exit_price,
         'exitReason': exit_reason,
         'timeToExit': time_to_exit,
         'actualReturn': actual_return,
-        'accuracy': accuracy
+        'success': success  # Changed from accuracy to boolean success
     }
 
 # Add project root to Python path
