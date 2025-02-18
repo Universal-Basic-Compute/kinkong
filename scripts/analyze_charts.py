@@ -408,10 +408,12 @@ Analyze each timeframe in sequence, considering how they relate to each other:
         print(f"Failed to analyze charts: {e}")
         raise
 
-def create_airtable_signal(analysis, timeframe, token_info):
+def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
     """Create a signal record in Airtable and check for immediate execution"""
     try:
         print(f"\nCreating Airtable signal for {token_info['symbol']}...")
+        if analyses is None:
+            analyses = {'overall': {}}  # Default empty overall analysis if none provided
         print(f"Analysis type: {type(analysis)}")
         print(f"Analysis content: {analysis}")
         
@@ -799,7 +801,7 @@ def generate_signal(analyses, token_info):
             signal_id = f"{token_info.get('symbol')}_{timeframe}_{analysis.get('signal')}_{datetime.now().strftime('%Y%m%d')}"
             
             if signal_id not in processed_signals:
-                result = create_airtable_signal(analysis, timeframe, token_info)
+                result = create_airtable_signal(analysis, timeframe, token_info, analyses)
                 if result:
                     high_confidence_signals.append({
                         'timeframe': timeframe,
