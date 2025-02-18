@@ -139,8 +139,8 @@ export function ChartFlow() {
         }]);
       }
       
-      // Planifier le prochain signal dans 5-10 secondes
-      timeoutId = setTimeout(generateRandomSignal, Math.random() * 5000 + 5000);
+      // Planifier le prochain signal dans 20-40 secondes (4x plus lent)
+      timeoutId = setTimeout(generateRandomSignal, Math.random() * 20000 + 20000);
     };
 
     // Ne démarrer que si nous avons des bougies
