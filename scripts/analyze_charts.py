@@ -918,6 +918,14 @@ if __name__ == "__main__":
     main()
 def process_valid_signals(pending_signals):
     """Process signals that have passed validation"""
+    # Map timeframes to strategy types
+    timeframe_mapping = {
+        '15m': 'SCALP',     # 15-minute chart for 6-hour trades
+        '1H': 'INTRADAY',   # 1-hour chart for 24-hour trades
+        '4H': 'SWING',      # 4-hour chart for 7-day trades
+        '1D': 'POSITION'    # Daily chart for 30-day trades
+    }
+    
     processed_signals = []
     
     for signal in pending_signals:
