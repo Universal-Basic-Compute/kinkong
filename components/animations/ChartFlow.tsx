@@ -61,7 +61,7 @@ export function ChartFlow() {
     // Augmenter la taille des mèches pour plus de volatilité
     const getWickSize = () => {
       const random = Math.random();
-      return bodyRange * (0.2 + (random * random) * 1.8); // Augmenté la taille des mèches
+      return bodyRange * (0.2 + (random * random) * 1.8) * volatilityMultiplier;
     };
 
     // Distribution des types de mèches plus extrêmes:
@@ -128,15 +128,15 @@ export function ChartFlow() {
     let tertiaryPrice = 100 * (1 + (Math.random() * 0.4 - 0.2));
     
     for (let i = 0; i < 60; i++) {
-      const candle = generateCandle(i, currentPrice);
+      const candle = generateCandle(i, currentPrice, 1); // volatilité normale
       initialCandles.push(candle);
       currentPrice = candle.close;
       
-      const secondaryCandle = generateCandle(i, secondaryPrice);
+      const secondaryCandle = generateCandle(i, secondaryPrice, 1.5); // 50% plus volatile
       initialSecondaryCandles.push(secondaryCandle);
       secondaryPrice = secondaryCandle.close;
       
-      const tertiaryCandle = generateCandle(i, tertiaryPrice);
+      const tertiaryCandle = generateCandle(i, tertiaryPrice, 2); // 100% plus volatile
       initialTertiaryCandles.push(tertiaryCandle);
       tertiaryPrice = tertiaryCandle.close;
     }
@@ -152,17 +152,17 @@ export function ChartFlow() {
 
     const interval = setInterval(() => {
       setCandles(prev => {
-        const newCandle = generateCandle(prev[prev.length - 1].id + 1, prev[prev.length - 1].close);
+        const newCandle = generateCandle(prev[prev.length - 1].id + 1, prev[prev.length - 1].close, 1);
         return [...prev.slice(1), newCandle];
       });
       
       setSecondaryCandles(prev => {
-        const newCandle = generateCandle(prev[prev.length - 1].id + 1, prev[prev.length - 1].close);
+        const newCandle = generateCandle(prev[prev.length - 1].id + 1, prev[prev.length - 1].close, 1.5);
         return [...prev.slice(1), newCandle];
       });
       
       setTertiaryCandles(prev => {
-        const newCandle = generateCandle(prev[prev.length - 1].id + 1, prev[prev.length - 1].close);
+        const newCandle = generateCandle(prev[prev.length - 1].id + 1, prev[prev.length - 1].close, 2);
         return [...prev.slice(1), newCandle];
       });
     }, 444);
