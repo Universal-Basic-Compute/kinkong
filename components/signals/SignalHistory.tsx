@@ -267,8 +267,8 @@ export function SignalHistory() {
                 )}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-center text-2xl">
-                {signal.success !== null && signal.success !== undefined ? (
-                  signal.success ? (
+                {signal.actualReturn ? (
+                  signal.actualReturn > 0 ? (
                     <span className="metallic-text-ubc font-bold">✓</span>
                   ) : (
                     <span className="text-red-500 font-bold">×</span>
