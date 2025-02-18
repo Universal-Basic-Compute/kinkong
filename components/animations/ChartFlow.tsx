@@ -18,25 +18,33 @@ export function ChartFlow() {
   const [upperBand, setUpperBand] = useState<number[]>([]);
   const [lowerBand, setLowerBand] = useState<number[]>([]);
 
-  // Fonction pour calculer les bandes
   const calculateBands = (candles: Candle[]) => {
+    // Utiliser les high/low au lieu des close pour englober les bougies
+    const highs = candles.map(c => c.high);
+    const lows = candles.map(c => c.low);
     const closes = candles.map(c => c.close);
+    
     const sma = closes.reduce((a, b) => a + b, 0) / closes.length;
-    
-    // Simuler des bandes qui "respirent"
     const time = Date.now() / 1000;
-    const breathingFactor = Math.sin(time / 2) * 0.3 + 1; // Facteur qui varie entre 0.7 et 1.3
     
-    const deviation = sma * 0.015 * breathingFactor; // 1.5% de déviation de base
+    // Facteur de respiration asymétrique
+    const upperBreathing = Math.sin(time / 2) * 0.2 + 1.2; // varie entre 1 et 1.4
+    const lowerBreathing = Math.sin(time / 2.5) * 0.15 + 1.1; // varie entre 0.95 et 1.25
     
-    const upper = closes.map(close => {
-      const randomVariation = (Math.random() * 0.005) * close; // 0.5% de variation aléatoire
-      return close + deviation + randomVariation;
+    // Déviations asymétriques
+    const upperDeviation = sma * 0.025 * upperBreathing; // 2.5% de base pour le haut
+    const lowerDeviation = sma * 0.018 * lowerBreathing; // 1.8% de base pour le bas
+    
+    const upper = closes.map((close, i) => {
+      const highestPoint = Math.max(highs[i], close);
+      const randomVariation = (Math.random() * 0.008) * close; // 0.8% de variation
+      return highestPoint + upperDeviation + randomVariation;
     });
     
-    const lower = closes.map(close => {
-      const randomVariation = (Math.random() * 0.005) * close; // 0.5% de variation aléatoire
-      return close - deviation - randomVariation;
+    const lower = closes.map((close, i) => {
+      const lowestPoint = Math.min(lows[i], close);
+      const randomVariation = (Math.random() * 0.006) * close; // 0.6% de variation
+      return lowestPoint - lowerDeviation - randomVariation;
     });
 
     setUpperBand(upper);
@@ -146,7 +154,7 @@ export function ChartFlow() {
       <div className="h-[67%] flex items-end space-x-1 relative">
         {/* Bandes de Bollinger */}
         <div className="absolute inset-0 pointer-events-none">
-          <svg className="w-full h-full">
+          <svg className="w-full h-full" preserveAspectRatio="none">
             {/* Bande supérieure */}
             <path
               d={upperBand.map((value, index) => {
@@ -155,8 +163,8 @@ export function ChartFlow() {
                 return `${index === 0 ? 'M' : 'L'} ${x},${y}`;
               }).join(' ')}
               fill="none"
-              stroke="rgba(255, 255, 255, 0.1)"
-              strokeWidth="1"
+              stroke="rgba(255, 255, 255, 0.15)"
+              strokeWidth="1.5"
             />
             {/* Bande inférieure */}
             <path
@@ -166,8 +174,8 @@ export function ChartFlow() {
                 return `${index === 0 ? 'M' : 'L'} ${x},${y}`;
               }).join(' ')}
               fill="none"
-              stroke="rgba(255, 255, 255, 0.1)"
-              strokeWidth="1"
+              stroke="rgba(255, 255, 255, 0.15)"
+              strokeWidth="1.5"
             />
           </svg>
         </div>
