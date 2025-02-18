@@ -246,15 +246,15 @@ For each timeframe, provide:
 5. Risk/reward ratio if applicable
 
 Timeframes analyzed:
-- 1D chart (for POSITION trades)
-- 4H chart (for SWING trades)
-- 1H chart (for INTRADAY trades)
-- 15m chart (for SCALP trades)
+- 15m chart (for 6-hour SCALP trades)
+- 1H chart (for 24-hour INTRADAY trades)
+- 4H chart (for 7-day SWING trades)
+- 1D chart (for 30-day POSITION trades)
 
 Format your response as JSON:
 {
     "timeframes": {
-        "1D": {  # For POSITION trades
+        "15m": {  # For SCALP trades
             "signal": "BUY|SELL|HOLD",
             "confidence": 0,
             "reasoning": "Detailed analysis",
@@ -264,24 +264,24 @@ Format your response as JSON:
             },
             "risk_reward_ratio": 0.0
         },
-        "4H": {  # For SWING trades
-            ...
-        },
         "1H": {  # For INTRADAY trades
             ...
         },
-        "15m": {  # For SCALP trades
+        "4H": {  # For SWING trades
+            ...
+        },
+        "1D": {  # For POSITION trades
             ...
         }
     },
     "overall_analysis": {
         "primary_trend": "BULLISH|BEARISH|NEUTRAL",
         "timeframe_alignment": "ALIGNED|MIXED|CONFLICTING",
-        "best_timeframe": "1D|4H|1H|15m",
+        "best_timeframe": "15m|1H|4H|1D",
         "key_observations": ["List of important points"],
         "recommended_action": {
             "signal": "BUY|SELL|HOLD",
-            "timeframe": "1D|4H|1H|15m",
+            "timeframe": "15m|1H|4H|1D",
             "reasoning": "Why this is the best action"
         }
     }
