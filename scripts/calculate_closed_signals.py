@@ -11,6 +11,112 @@ project_root = str(Path(__file__).parent.parent.absolute())
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
+def calculate_closed_signals():
+    """Calculate metrics for all closed signals that haven't been evaluated yet"""
+    try:
+        load_dotenv()
+        
+        # Verify Birdeye API key
+        birdeye_api_key = os.getenv('BIRDEYE_API_KEY')
+        if not birdeye_api_key:
+            raise ValueError("BIRDEYE_API_KEY not found in environment variables")
+        
+        base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
+        api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
+        
+        if not base_id or not api_key:
+            raise ValueError("Missing Airtable configuration")
+            
+        signals_table = Airtable(base_id, 'SIGNALS', api_key)
+        tokens_table = Airtable(base_id, 'TOKENS', api_key)
+        
+        print("\n📊 Checking Airtable for signals...")
+        
+        # First get all signals
+        all_signals = signals_table.get_all()
+        print(f"Total signals in database: {len(all_signals)}")
+        
+        # Get signals that need evaluation
+        signals = signals_table.get_all(
+            formula="AND("
+                    "expiryDate<NOW(), "  # Expired signals
+                    "OR("
+                        "actualReturn=BLANK(), "  # Missing actual return
+                        "accuracy=BLANK()"        # Missing accuracy
+                    "), "
+                    "entryPrice>0, "             # Has entry price
+                    "targetPrice>0"              # Has target price
+                    ")"
+        )
+        
+        print("\n🔍 Signal Filter Results:")
+        print(f"Found {len(signals)} signals to evaluate that match criteria:")
+        print("- Past expiry date")
+        print("- Missing actualReturn or accuracy")
+        print("- Has valid entry and target prices")
+        
+        for signal in signals:
+            try:
+                fields = signal['fields']
+                signal_id = signal['id']
+                
+                print(f"\n⚙️ Processing signal {signal_id}:")
+                print(f"Token: {fields.get('token')}")
+                print(f"Type: {fields.get('type', 'Unknown')}")
+                print(f"Entry: ${float(fields.get('entryPrice', 0)):.4f}")
+                
+                # Get token mint address
+                token_records = tokens_table.get_all(
+                    formula=f"{{symbol}}='{fields['token']}'"
+                )
+                if not token_records:
+                    print(f"❌ No token record found for {fields['token']}")
+                    continue
+                
+                token_mint = token_records[0]['fields']['mint']
+                print(f"Found mint address: {token_mint}")
+                
+                # Get historical prices
+                activation_time = datetime.fromisoformat(fields['timestamp'].replace('Z', '+00:00'))
+                expiry_time = datetime.fromisoformat(fields['expiryDate'].replace('Z', '+00:00'))
+                
+                prices = get_historical_prices(token_mint, activation_time, expiry_time)
+                if not prices:
+                    print(f"❌ No price data available for {fields['token']}")
+                    continue
+                
+                print(f"\n💹 Simulating trade for {fields['token']}...")
+                # Simulate trade with actual price data
+                results = simulate_trade(prices, fields)
+                
+                print(f"\n📝 Trade simulation results:")
+                print(f"Exit Price: ${results['exitPrice']:.4f}")
+                print(f"Exit Reason: {results['exitReason']}")
+                print(f"Time to Exit: {results['timeToExit']} minutes")
+                print(f"Actual Return: {results['actualReturn']:.2f}%")
+                print(f"Accuracy: {results['accuracy']}")
+                
+                # Update signal with results
+                update_data = {
+                    'exitPrice': results['exitPrice'],
+                    'actualReturn': round(results['actualReturn'], 2),
+                    'accuracy': results['accuracy']
+                }
+                
+                signals_table.update(signal_id, update_data)
+                
+                print(f"\n✅ Updated signal {signal_id} in Airtable")
+                
+            except Exception as e:
+                print(f"❌ Error processing signal {signal_id}: {e}")
+                continue
+                
+        print("\n✅ Finished processing signals")
+        
+    except Exception as e:
+        print(f"\n❌ Error: {e}")
+        raise
+
 def get_historical_prices(token_mint: str, start_time: datetime, end_time: datetime) -> list:
     """Get historical minute-by-minute prices from Birdeye"""
     try:
