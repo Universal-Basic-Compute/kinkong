@@ -55,7 +55,7 @@ export default function Header() {
             href="/" 
             className="electric-title text-2xl tracking-tight flex items-center"
           >
-            🦍 KinKong
+            SwarmTrade
             <span className="text-sm text-gray-500 ml-1">(alpha)</span>
           </Link>
 

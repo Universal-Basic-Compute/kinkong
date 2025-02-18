@@ -18,7 +18,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "KinKong - AI Trading Intelligence",
+  title: "SwarmTrade - AI Trading Intelligence",
   description: "24/7 Superhuman Trading Intelligence for Solana AI Tokens",
   icons: {
     icon: [
