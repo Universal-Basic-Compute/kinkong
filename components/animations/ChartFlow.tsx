@@ -191,11 +191,11 @@ export function ChartFlow() {
             const lowest = Math.min(...candles.map(c => c.low));
             const priceRange = highest - lowest;
 
-            // Calculer les positions relatives en pourcentage
-            const highPercent = ((candle.high - lowest) / priceRange) * 100;
-            const lowPercent = ((candle.low - lowest) / priceRange) * 100;
-            const openPercent = ((candle.open - lowest) / priceRange) * 100;
-            const closePercent = ((candle.close - lowest) / priceRange) * 100;
+            // Calculer les positions relatives en pourcentage (ajusté à 75%)
+            const highPercent = ((candle.high - lowest) / priceRange) * 75;
+            const lowPercent = ((candle.low - lowest) / priceRange) * 75;
+            const openPercent = ((candle.open - lowest) / priceRange) * 75;
+            const closePercent = ((candle.close - lowest) / priceRange) * 75;
 
             // Calculer la hauteur et la position du corps
             const bodyHeight = Math.abs(closePercent - openPercent);
