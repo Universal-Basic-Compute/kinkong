@@ -424,6 +424,15 @@ def create_airtable_signal(analysis, timeframe, token_info):
             print("❌ Airtable configuration missing")
             return
             
+        # Calculate expiry date based on timeframe
+        now = datetime.now(timezone.utc)
+        expiry_mapping = {
+            'SCALP': timedelta(hours=6),
+            'INTRADAY': timedelta(days=1),
+            'SWING': timedelta(days=7),
+            'POSITION': timedelta(days=30)
+        }
+        
         print("✅ Airtable configuration found")
         airtable = Airtable(base_id, 'SIGNALS', api_key)
         
@@ -521,6 +530,17 @@ Key Observations:
 Recommended Action:
 {analysis.get('recommended_action', {}).get('reasoning', 'No specific recommendation')}"""
 
+            # Map timeframe to signal type
+            timeframe_mapping = {
+                '15m': 'SCALP',
+                '2h': 'INTRADAY',
+                '8h': 'SWING'
+            }
+            
+            strategy_timeframe = timeframe_mapping.get(timeframe, 'INTRADAY')
+            expiry_delta = expiry_mapping.get(strategy_timeframe)
+            expiry_date = now + expiry_delta
+
             signal_data = {
                 'timestamp': now.isoformat(),
                 'token': token_info['symbol'],
@@ -531,7 +551,9 @@ Recommended Action:
                 'stopLoss': stop_price,
                 'confidence': confidence_level,
                 'wallet': os.getenv('STRATEGY_WALLET', ''),
-                'reason': reason_message  # Use formatted message instead of JSON dump
+                'reason': reason_message,  # Use formatted message instead of JSON dump
+                'expiryDate': expiry_date.isoformat(),  # Add expiry date
+                'status': 'PENDING'  # Explicitly set initial status
             }
 
             # Validate signal before creating
