@@ -22,6 +22,7 @@ export function ChartFlow() {
   const [candles, setCandles] = useState<Candle[]>([]);
   const [lastPrice, setLastPrice] = useState(100);
   const [signals, setSignals] = useState<Signal[]>([]);
+  const [activeSignal, setActiveSignal] = useState<'BUY' | 'SELL' | null>(null);
 
   const generateSignal = (candleId: number) => ({
     id: Math.random(),
@@ -30,12 +31,16 @@ export function ChartFlow() {
   });
 
   const generateCandle = (id: number, prevClose: number): Candle => {
-    const maxMove = prevClose * 0.03;
+    const maxMove = prevClose * (activeSignal ? 0.06 : 0.03);
     const moveAmount = Math.random() * maxMove;
     
-    const direction = prevClose > lastPrice ? 
+    const direction = activeSignal === 'BUY' ? 
+      (Math.random() > 0.3 ? 1 : -1) :  // 70% de chance de monter après BUY
+      activeSignal === 'SELL' ? 
+      (Math.random() > 0.7 ? 1 : -1) :  // 30% de chance de monter après SELL
+      prevClose > lastPrice ? 
       (Math.random() > 0.8 ? 1 : -1) : 
-      (Math.random() > 0.2 ? 1 : -1);  
+      (Math.random() > 0.2 ? 1 : -1);
       
     const close = prevClose + (direction * moveAmount);
     const bodyRange = Math.abs(close - prevClose);
@@ -131,14 +136,22 @@ export function ChartFlow() {
 
     const generateRandomSignal = () => {
       if (candles.length > 0) {
+        const type = Math.random() > 0.5 ? 'BUY' : 'SELL';
         setSignals([{
           id: Math.random(),
-          type: Math.random() > 0.5 ? 'BUY' : 'SELL',
+          type,
           candleId: candles[candles.length - 1].id
         }]);
+        
+        // Mettre à jour le signal actif
+        setActiveSignal(type);
+        
+        // Réinitialiser le signal après 2.5-3.5 secondes
+        setTimeout(() => {
+          setActiveSignal(null);
+        }, Math.random() * 1000 + 2500);
 
-        // Planifier le prochain signal dans 2-4 secondes
-        const nextDelay = Math.random() * 2000 + 2000; // Entre 2000ms et 4000ms
+        const nextDelay = Math.random() * 2000 + 2000;
         timeoutId = setTimeout(generateRandomSignal, nextDelay);
       }
     };
