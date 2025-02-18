@@ -540,19 +540,32 @@ Recommended Action:
             else:  # SELL
                 expected_return = ((current_price - target_price) / current_price) * 100
 
+            # Map timeframe to signal type
+            timeframe_mapping = {
+                '15m': 'SCALP',     # 15-minute chart for 6-hour trades
+                '1H': 'INTRADAY',   # 1-hour chart for 24-hour trades
+                '4H': 'SWING',      # 4-hour chart for 7-day trades
+                '1D': 'POSITION'    # Daily chart for 30-day trades
+            }
+
+            strategy_timeframe = timeframe_mapping.get(timeframe)
+            if not strategy_timeframe:
+                print(f"Unknown timeframe: {timeframe}")
+                return None
+
             signal_data = {
                 'timestamp': now.isoformat(),
                 'token': token_info['symbol'],
                 'type': signal_type,
-                'timeframe': strategy_timeframe,
+                'timeframe': strategy_timeframe,  # This will now be 'SCALP', 'INTRADAY', etc.
                 'entryPrice': current_price,
                 'targetPrice': target_price,
                 'stopLoss': stop_price,
                 'confidence': confidence_level,
                 'wallet': os.getenv('STRATEGY_WALLET', ''),
-                'reason': reason_message,  # Use formatted message instead of JSON dump
-                'expiryDate': expiry_date.isoformat(),  # Add expiry date
-                'expectedReturn': round(expected_return, 2)  # Add expected return percentage
+                'reason': reason_message,
+                'expiryDate': expiry_date.isoformat(),
+                'expectedReturn': round(expected_return, 2)
             }
 
             # Validate signal before creating
