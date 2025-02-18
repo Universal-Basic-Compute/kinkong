@@ -28,10 +28,10 @@ type LinkNavItem = BaseNavItem & {
 
 type NavItem = GroupNavItem | LinkNavItem;
 
-export default function Header() {
+const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const navItems = [
+  const navItems: NavItem[] = [
     { 
       label: 'Managed Trading',
       isGroup: true,
@@ -157,8 +157,6 @@ export default function Header() {
                       </svg>
                     )}
                   </Link>
-                ) : (
-                  <span className="text-gray-300 px-2 py-1">{item.label}</span>
                 )}
                 
                 {item.subItems && (
@@ -263,4 +261,6 @@ export default function Header() {
       </div>
     </header>
   );
-}
+};
+
+export default Header;
