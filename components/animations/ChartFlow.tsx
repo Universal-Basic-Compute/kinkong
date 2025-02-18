@@ -211,7 +211,64 @@ export function ChartFlow() {
     <div className="w-full h-[400px] bg-black/50 rounded-lg p-4">
       <div className="h-[67%] flex items-end relative">
         {/* Zone des bougies - réduire à 75% */}
-        <div className="w-[75%] h-full flex items-end space-x-1">
+        <div className="w-[75%] h-full flex items-end space-x-1 relative">
+          {/* Graphe fantôme en arrière-plan */}
+          <div className="absolute inset-0 flex items-end space-x-1 opacity-30">
+            <AnimatePresence>
+              {candles.map((candle) => {
+                const ghostCandle = {
+                  ...candle,
+                  high: candle.high * (1 + Math.random() * 0.2 - 0.1),
+                  low: candle.low * (1 + Math.random() * 0.2 - 0.1),
+                  open: candle.open * (1 + Math.random() * 0.2 - 0.1),
+                  close: candle.close * (1 + Math.random() * 0.2 - 0.1),
+                };
+
+                const highest = Math.max(...candles.map(c => c.high));
+                const lowest = Math.min(...candles.map(c => c.low));
+                const priceRange = highest - lowest;
+
+                const highPercent = ((ghostCandle.high - lowest) / priceRange) * 100;
+                const lowPercent = ((ghostCandle.low - lowest) / priceRange) * 100;
+                const openPercent = ((ghostCandle.open - lowest) / priceRange) * 100;
+                const closePercent = ((ghostCandle.close - lowest) / priceRange) * 100;
+
+                const bodyHeight = Math.abs(closePercent - openPercent);
+                const bodyBottom = Math.min(closePercent, openPercent);
+                
+                const wickHeight = highPercent - lowPercent;
+                const wickBottom = lowPercent;
+
+                return (
+                  <motion.div
+                    key={`ghost-${candle.id}`}
+                    className="relative w-4 h-full"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 0.3, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <div 
+                      className="absolute w-[1px] left-1/2 -translate-x-1/2"
+                      style={{
+                        backgroundColor: ghostCandle.color,
+                        height: `${wickHeight}%`,
+                        bottom: `${wickBottom}%`
+                      }}
+                    />
+                    <div 
+                      className="absolute w-full"
+                      style={{
+                        backgroundColor: ghostCandle.color,
+                        height: `${bodyHeight}%`,
+                        bottom: `${bodyBottom}%`
+                      }}
+                    />
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </div>
           <AnimatePresence>
             {candles.map((candle) => {
             // Calculer les hauteurs relatives
