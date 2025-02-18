@@ -274,7 +274,9 @@ export function SignalHistory() {
                   ) : (
                     <span className="text-red-500 font-bold">×</span>
                   )
-                ) : null}
+                ) : (
+                  <span className="text-gray-400">⏳</span>
+                )}
               </td>
             </tr>
           ))}
