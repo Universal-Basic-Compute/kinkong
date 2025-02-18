@@ -28,4 +28,5 @@ export interface Signal {
   reason: string;
   url?: string;
   status: SignalStatus;
+  actualReturn?: number;  // Add actual return percentage
 }
