@@ -1,6 +1,24 @@
-import { getTable } from '../backend/src/airtable/tables';
 import dotenv from 'dotenv';
 import path from 'path';
+
+// Load environment variables first
+console.log('🔧 Initializing environment...');
+const envPath = path.resolve(process.cwd(), '.env');
+const result = dotenv.config({ path: envPath });
+console.log('📁 Environment path:', envPath);
+console.log('✅ Environment loaded:', {
+  hasError: result && 'error' in result ? true : false,
+  hasAirtableKey: !!process.env.KINKONG_AIRTABLE_API_KEY,
+  hasAirtableBase: !!process.env.KINKONG_AIRTABLE_BASE_ID
+});
+
+if (!process.env.KINKONG_AIRTABLE_API_KEY || !process.env.KINKONG_AIRTABLE_BASE_ID) {
+  console.error('❌ Required environment variables are missing');
+  process.exit(1);
+}
+
+// Rest of imports
+import { getTable } from '../backend/src/airtable/tables';
 import fetch from 'node-fetch';
 import Airtable from 'airtable';
 
