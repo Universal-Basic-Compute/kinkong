@@ -506,21 +506,20 @@ def create_airtable_signal(analysis, timeframe, token_info):
                 target_price = resistance_levels[0] if resistance_levels else 0
                 stop_loss = support_levels[1] if len(support_levels) > 1 else entry_price * 0.95
 
-            # Format the analysis into a readable message
-            reason_message = f"""Technical Analysis for {token_info['symbol']} ({timeframe})
-
-Market Context:
-• Primary Trend: {analysis.get('primary_trend', 'Unknown')}
-• Timeframe Alignment: {analysis.get('timeframe_alignment', 'Unknown')}
-
-Technical Analysis:
-{analysis.get('reasoning', 'No reasoning provided')}
-
-Key Observations:
-{chr(10).join('• ' + obs for obs in analysis.get('key_observations', ['No observations available']))}
-
-Recommended Action:
-{analysis.get('recommended_action', {}).get('reasoning', 'No specific recommendation')}"""
+            # Format the analysis as structured JSON
+            reason_message = json.dumps({
+                "technical_analysis": {
+                    "token": token_info['symbol'],
+                    "timeframe": timeframe,
+                    "market_context": {
+                        "primary_trend": analysis.get('primary_trend', 'Unknown'),
+                        "timeframe_alignment": analysis.get('timeframe_alignment', 'Unknown')
+                    },
+                    "analysis": analysis.get('reasoning', 'No reasoning provided'),
+                    "key_observations": analysis.get('key_observations', ['No observations available']),
+                    "recommended_action": analysis.get('recommended_action', {}).get('reasoning', 'No specific recommendation')
+                }
+            })
 
             # Map timeframe to signal type
             timeframe_mapping = {
