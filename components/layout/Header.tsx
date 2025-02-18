@@ -8,12 +8,42 @@ export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems = [
-    { label: 'Dashboard', href: '/dashboard' },
-    { label: 'Portfolio', href: '/portfolio' },
-    { label: 'Invest', href: '/invest' },
-    { label: 'Performance', href: '/performance' },
-    { label: 'Signals', href: '/signals' },
-    { label: 'Strategy', href: '/strategy' },
+    { 
+      label: 'Dashboard', 
+      href: '/dashboard',
+      description: 'Market overview and key metrics'
+    },
+    { 
+      label: 'Portfolio', 
+      href: '/portfolio',
+      description: 'Your holdings and performance'
+    },
+    { 
+      label: 'Trading', 
+      href: '/trading',
+      subItems: [
+        { 
+          label: 'Signals', 
+          href: '/trading/signals',
+          description: 'Trading signals and setups'
+        },
+        { 
+          label: 'Performance', 
+          href: '/trading/performance',
+          description: 'Trading history and analytics'
+        }
+      ]
+    },
+    { 
+      label: 'Invest', 
+      href: '/invest',
+      description: 'Investment opportunities and allocation'
+    },
+    { 
+      label: 'Strategy', 
+      href: '/strategy',
+      description: 'Portfolio strategy and settings'
+    }
   ];
 
   return (
@@ -28,15 +58,42 @@ export default function Header() {
             <span className="text-sm text-gray-500 ml-1">(alpha)</span>
           </Link>
 
-          <nav className="hidden md:flex items-center space-x-12">
+          <nav className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="text-gray-300 hover:text-gold transition-colors duration-200 font-medium tracking-wide px-2 py-1"
-              >
-                {item.label}
-              </Link>
+              <div key={item.href} className="relative group">
+                <Link
+                  href={item.href}
+                  className="text-gray-300 hover:text-gold transition-colors duration-200 font-medium tracking-wide px-2 py-1 flex items-center"
+                >
+                  {item.label}
+                  {item.subItems && (
+                    <svg 
+                      className="w-4 h-4 ml-1 transform group-hover:rotate-180 transition-transform duration-200" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  )}
+                </Link>
+                
+                {item.subItems && (
+                  <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-black/95 border border-gold/20 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div className="py-1">
+                      {item.subItems.map((subItem) => (
+                        <Link
+                          key={subItem.href}
+                          href={subItem.href}
+                          className="block px-4 py-2 text-sm text-gray-300 hover:text-gold hover:bg-white/5"
+                        >
+                          {subItem.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             ))}
           </nav>
 
@@ -79,14 +136,35 @@ export default function Header() {
           <div className="border-t border-gold/20 bg-black/95 backdrop-blur-sm md:hidden">
             <nav className="p-4 flex flex-col space-y-2">
               {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="text-gray-300 hover:text-gold py-2 transition-colors duration-200 font-medium tracking-wide"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {item.label}
-                </Link>
+                <div key={item.href}>
+                  {item.subItems ? (
+                    <>
+                      <div className="text-gray-300 py-2 font-medium tracking-wide">
+                        {item.label}
+                      </div>
+                      <div className="pl-4 flex flex-col space-y-2">
+                        {item.subItems.map((subItem) => (
+                          <Link
+                            key={subItem.href}
+                            href={subItem.href}
+                            className="text-gray-400 hover:text-gold py-1 transition-colors duration-200"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            {subItem.label}
+                          </Link>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <Link
+                      href={item.href}
+                      className="text-gray-300 hover:text-gold py-2 transition-colors duration-200 font-medium tracking-wide"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      {item.label}
+                    </Link>
+                  )}
+                </div>
               ))}
               <div className="pt-2">
                 <WalletConnect />
