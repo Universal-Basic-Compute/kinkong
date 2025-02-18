@@ -419,12 +419,78 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
     try:
         print(f"\nCreating Airtable signal for {token_info['symbol']}...")
         
-        print("\nCreating signal with analysis data:")
+        # Debug prints
+        print("\nInput data:")
         print(f"Analysis type: {type(analysis)}")
         print(f"Analysis content: {analysis}")
         print(f"Timeframe: {timeframe}")
-        print(f"Overall analyses type: {type(analyses)}")
-        print(f"Overall analyses content: {analyses}")
+        print(f"Analyses type: {type(analyses)}")
+        print(f"Analyses content: {analyses}")
+
+        # Extract reasoning with better error handling
+        timeframe_analysis = ""
+        if isinstance(analysis, dict):
+            timeframe_analysis = analysis.get('reasoning', '')
+            print(f"Extracted reasoning from dict: {timeframe_analysis[:100]}...")
+        elif hasattr(analysis, 'reasoning'):
+            timeframe_analysis = analysis.reasoning or ''
+            print(f"Extracted reasoning from object: {timeframe_analysis[:100]}...")
+        else:
+            timeframe_analysis = str(analysis)
+            print(f"Using stringified analysis: {timeframe_analysis[:100]}...")
+
+        # Safely get overall analysis
+        overall = {}
+        if analyses and isinstance(analyses, dict):
+            overall = analyses.get('overall', {})
+        print(f"Overall analysis: {overall}")
+
+        # Build reason text with safe defaults
+        reason_text = (
+            f"Technical Analysis Summary:\n\n"
+            f"{timeframe_analysis}\n\n"
+            f"Overall Market Context:\n"
+            f"• Primary Trend: {overall.get('primary_trend', 'Unknown')}\n"
+            f"• Timeframe Alignment: {overall.get('timeframe_alignment', 'Unknown')}\n"
+            f"• Best Timeframe: {overall.get('best_timeframe', 'Unknown')}\n\n"
+        )
+
+        # Safely get key levels
+        key_levels = {}
+        if isinstance(analysis, dict):
+            key_levels = analysis.get('key_levels', {})
+        elif hasattr(analysis, 'key_levels'):
+            key_levels = analysis.key_levels or {}
+        
+        support_levels = key_levels.get('support', []) if isinstance(key_levels, dict) else []
+        resistance_levels = key_levels.get('resistance', []) if isinstance(key_levels, dict) else []
+
+        # Add levels if they exist
+        if support_levels or resistance_levels:
+            reason_text += (
+                f"Key Support/Resistance Levels:\n"
+                f"Support: {', '.join(f'${price:.4f}' for price in support_levels)}\n"
+                f"Resistance: {', '.join(f'${price:.4f}' for price in resistance_levels)}\n\n"
+            )
+
+        # Safely add observations
+        key_observations = overall.get('key_observations', [])
+        if key_observations:
+            reason_text += (
+                f"Key Observations:\n"
+                f"{chr(10).join('• ' + obs for obs in key_observations)}\n\n"
+            )
+
+        # Safely add recommended action
+        recommended_action = overall.get('recommended_action', {})
+        action_reasoning = recommended_action.get('reasoning', 'No specific recommendation')
+        reason_text += (
+            f"Recommended Action:\n"
+            f"{action_reasoning}"
+        )
+
+        print("\nGenerated reason text:")
+        print(reason_text)
 
         # Convert ChartAnalysis to dict if needed
         if hasattr(analysis, 'to_dict'):
