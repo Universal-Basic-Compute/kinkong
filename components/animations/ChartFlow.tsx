@@ -12,6 +12,7 @@ interface StreamingReason {
   text: string;
   fullText: string;
   index: number;
+  isComplete: boolean;
 }
 
 interface Candle {
@@ -41,9 +42,9 @@ export function ChartFlow() {
   const [displaySignals, setDisplaySignals] = useState<SignalDisplay[]>([]);
   const [currentSignalIndex, setCurrentSignalIndex] = useState(0);
   const [streamingReasons, setStreamingReasons] = useState<StreamingReason[]>([
-    { text: '', fullText: '', index: 0 },
-    { text: '', fullText: '', index: 0 },
-    { text: '', fullText: '', index: 0 }
+    { text: '', fullText: '', index: 0, isComplete: false },
+    { text: '', fullText: '', index: 0, isComplete: false },
+    { text: '', fullText: '', index: 0, isComplete: false }
   ]);
 
   const generateSignal = (candleId: number) => ({
@@ -245,7 +246,8 @@ export function ChartFlow() {
       setStreamingReasons(reasons.map(reason => ({
         text: '',
         fullText: reason,
-        index: 0
+        index: 0,
+        isComplete: false
       })));
 
       // Créer un effet de streaming pour chaque raison
@@ -253,24 +255,44 @@ export function ChartFlow() {
         const streamText = () => {
           setStreamingReasons(prev => prev.map((stream, index) => {
             if (index !== streamIndex) return stream;
-            if (stream.index >= stream.fullText.length) return stream;
+            if (stream.isComplete) return stream;
+            
+            const newIndex = stream.index + 1;
+            const isComplete = newIndex >= stream.fullText.length;
             
             return {
               ...stream,
-              text: stream.fullText.substring(0, stream.index + 1),
-              index: stream.index + 1
+              text: stream.fullText.substring(0, newIndex),
+              index: newIndex,
+              isComplete
             };
           }));
         };
 
-        // Créer un timeout pour chaque caractère
+        // Créer un timeout pour chaque caractère avec un délai plus long
         for (let i = 0; i < reasons[streamIndex].length; i++) {
-          timeouts.push(setTimeout(streamText, i * 30));
+          timeouts.push(setTimeout(streamText, i * 50)); // 50ms par caractère pour plus de fluidité
         }
       });
 
-      // Programmer la prochaine mise à jour
-      timeouts.push(setTimeout(updateStreams, 5000));
+      // Vérifier si tous les messages sont complets et redémarrer si nécessaire
+      const checkCompletion = setInterval(() => {
+        setStreamingReasons(prev => {
+          const allComplete = prev.every(stream => stream.isComplete);
+          if (allComplete) {
+            // Redémarrer avec les mêmes messages
+            return prev.map(stream => ({
+              ...stream,
+              text: '',
+              index: 0,
+              isComplete: false
+            }));
+          }
+          return prev;
+        });
+      }, 1000); // Vérifier toutes les secondes
+
+      timeouts.push(checkCompletion);
     };
 
     updateStreams();
@@ -528,22 +550,22 @@ export function ChartFlow() {
       </div>
       </div>
       
-      {/* Section des raisons en streaming */}
-      <div className="mt-4 grid grid-cols-3 gap-4">
-        {streamingReasons.map((stream, index) => (
-          <div 
-            key={index}
-            className="bg-black/30 rounded-lg p-3 border border-gold/10"
-          >
-            <div className="h-20 overflow-hidden">
-              <p className="text-sm text-gray-300 font-mono">
-                {stream.text}
-                <span className="animate-pulse">_</span>
-              </p>
+        {/* Section des raisons en streaming - superposée au graphique */}
+        <div className="absolute bottom-4 left-4 w-[70%] grid grid-cols-3 gap-2">
+          {streamingReasons.map((stream, index) => (
+            <div 
+              key={index}
+              className="bg-black/40 rounded-lg p-2 border border-gold/10"
+            >
+              <div className="h-16 overflow-hidden">
+                <p className="text-xs text-gray-300 font-mono leading-tight">
+                  {stream.text}
+                  <span className="animate-pulse">_</span>
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
     </div>
   );
 }
