@@ -189,6 +189,17 @@ def update_signal_status(signal_id: str, new_status: str, reason: str = None, ex
             'status': new_status,
             'lastUpdateTime': datetime.now(timezone.utc).isoformat()
         }
+
+        # Si le signal est fermé, calculez success
+        if new_status in ['COMPLETED', 'STOPPED', 'EXPIRED']:
+            entry_price = float(signal['fields'].get('entryPrice', 0))
+            if exit_price:
+                if signal['fields'].get('type') == 'BUY':
+                    success = exit_price > entry_price
+                else:  # SELL
+                    success = exit_price < entry_price
+                
+                update_data['success'] = success
         
         # If position is being closed, add exit information
         if new_status in ['COMPLETED', 'STOPPED'] and exit_price:

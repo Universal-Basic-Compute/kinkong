@@ -15,6 +15,7 @@ interface SignalRecord extends FieldSet {
   wallet: string;
   reason: string;
   url?: string;
+  success?: boolean;
 }
 
 export async function GET() {
