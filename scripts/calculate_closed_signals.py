@@ -53,6 +53,60 @@ def get_historical_prices(token_mint: str, start_time: datetime, end_time: datet
         print(f"❌ Error fetching historical prices: {e}")
         return []
 
+def simulate_trade(prices: list, signal_data: dict) -> dict:
+    """Find actual exit price from historical data"""
+    entry_price = float(signal_data.get('entryPrice', 0))
+    target_price = float(signal_data.get('targetPrice', 0))
+    stop_loss = float(signal_data.get('stopLoss', 0))
+    signal_type = signal_data.get('type')
+    
+    # Default to last price if no exit conditions met
+    exit_price = float(prices[-1]['value']) if prices else entry_price
+    exit_reason = 'EXPIRED'
+    time_to_exit = len(prices)  # Default to full duration
+    
+    for i, price_data in enumerate(prices):
+        price = float(price_data['value'])
+        
+        if signal_type == 'BUY':
+            if price >= target_price:
+                exit_price = price
+                exit_reason = 'COMPLETED'
+                time_to_exit = i
+                break
+            elif price <= stop_loss:
+                exit_price = price
+                exit_reason = 'STOPPED'
+                time_to_exit = i
+                break
+        else:  # SELL
+            if price <= target_price:
+                exit_price = price
+                exit_reason = 'COMPLETED'
+                time_to_exit = i
+                break
+            elif price >= stop_loss:
+                exit_price = price
+                exit_reason = 'STOPPED'
+                time_to_exit = i
+                break
+    
+    # Calculate returns and accuracy
+    if signal_type == 'BUY':
+        actual_return = ((exit_price - entry_price) / entry_price) * 100
+        accuracy = 1 if exit_price > entry_price else 0
+    else:  # SELL
+        actual_return = ((entry_price - exit_price) / entry_price) * 100  # This is correct
+        accuracy = 1 if exit_price < entry_price else 0  # Fixed: SELL is profitable when exit < entry
+    
+    return {
+        'exitPrice': exit_price,
+        'exitReason': exit_reason,
+        'timeToExit': time_to_exit,
+        'actualReturn': actual_return,
+        'accuracy': accuracy
+    }
+
 # Add project root to Python path
 project_root = str(Path(__file__).parent.parent.absolute())
 if project_root not in sys.path:
