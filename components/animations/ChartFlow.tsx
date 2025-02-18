@@ -64,14 +64,14 @@ export function ChartFlow() {
         const newCandle = generateCandle(prev[prev.length - 1].id + 1, prev[prev.length - 1].close);
         return [...prev.slice(1), newCandle];
       });
-    }, 666); // 1000ms / 1.5 = ~666ms pour speed x1.5
+    }, 444); // 666ms / 1.5 = 444ms pour speed x1.5
 
     return () => clearInterval(interval);
   }, []);
 
   return (
     <div className="w-full h-[400px] bg-black/50 rounded-lg p-4">
-      <div className="h-full flex items-end space-x-1">
+      <div className="h-[67%] flex items-end space-x-1">
         <AnimatePresence>
           {candles.map((candle) => {
             // Calculer les hauteurs relatives
@@ -100,7 +100,7 @@ export function ChartFlow() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
+                transition={{ duration: 0.2 }}
               >
                 {/* Mèche */}
                 <div 
