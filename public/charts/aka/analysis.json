@@ -1,38 +1,38 @@
 {
-  "timestamp": "2025-02-18T11:26:16.457693",
+  "timestamp": "2025-02-18T18:53:35.329137",
   "token": "AKA",
   "analyses": {
     "14D": {
       "timeframe": "14D",
       "signal": "SELL",
       "confidence": 85,
-      "reasoning": "Strong bearish trend with declining EMAs. Price has fallen -70.34% from ATH, showing consistent lower highs and lower lows. Both EMA20 and EMA50 sloping downward with significant bearish momentum.",
+      "reasoning": "Strong downtrend confirmed by declining EMAs, price consistently making lower lows and lower highs. 71.89% decline from ATH shows significant bearish momentum. Volume profile shows declining interest.",
       "key_levels": {
         "support": [
           0.003,
-          0.0036
+          0.0035
         ],
         "resistance": [
           0.0042,
           0.019
         ]
       },
-      "risk_reward_ratio": 1.5,
+      "risk_reward_ratio": 0.5,
       "reassess_conditions": null
     },
     "48H": {
       "timeframe": "48H",
       "signal": "HOLD",
       "confidence": 60,
-      "reasoning": "Price showing signs of consolidation after sharp decline. EMA20 crossing below EMA50, but recent price action suggests potential short-term bottom formation. Volume declining, indicating possible trend exhaustion.",
+      "reasoning": "Price consolidating between EMAs with decreasing volatility. Recent rejection at 0.0040 resistance level shows selling pressure, but support at 0.0035 holding.",
       "key_levels": {
         "support": [
-          0.0036,
-          0.0038
+          0.0035,
+          0.0037
         ],
         "resistance": [
           0.004,
-          0.0043
+          0.0042
         ]
       },
       "risk_reward_ratio": 1.2,
@@ -40,37 +40,37 @@
     },
     "12H": {
       "timeframe": "12H",
-      "signal": "BUY",
-      "confidence": 65,
-      "reasoning": "Recent bullish momentum with price forming higher lows. EMA20 showing potential crossover above EMA50. Volume increasing on green candles suggesting buying pressure.",
+      "signal": "SELL",
+      "confidence": 75,
+      "reasoning": "Recent bearish momentum with price breaking below EMA20, increased selling volume, and bearish EMA cross (20 below 50).",
       "key_levels": {
         "support": [
-          0.0037,
-          0.0038
+          0.0036,
+          0.0037
         ],
         "resistance": [
-          0.004,
-          0.0042
+          0.0038,
+          0.004
         ]
       },
-      "risk_reward_ratio": 2.0,
+      "risk_reward_ratio": 1.5,
       "reassess_conditions": null
     },
     "overall": {
       "primary_trend": "BEARISH",
-      "timeframe_alignment": "MIXED",
+      "timeframe_alignment": "ALIGNED",
       "best_timeframe": "12H",
       "key_observations": [
-        "Long-term trend remains strongly bearish",
-        "Medium-term showing potential consolidation",
-        "Short-term displaying bullish reversal signals",
-        "Volume profile suggesting short-term accumulation",
-        "Price near critical support level at $0.0036"
+        "All timeframes showing bearish bias",
+        "Significant downtrend on 14D chart",
+        "Decreasing volume across timeframes",
+        "Price below major EMAs on all timeframes",
+        "Multiple failed attempts to break above EMA20"
       ],
       "recommended_action": {
-        "signal": "HOLD",
+        "signal": "SELL",
         "timeframe": "12H",
-        "reasoning": "While short-term indicators show bullish potential, the strong bearish long-term trend suggests caution. Wait for clearer confirmation of trend reversal before entering new positions."
+        "reasoning": "Strong bearish alignment across timeframes with clear resistance levels and increasing selling pressure. 12H timeframe provides best risk/reward for short positions."
       }
     }
   }

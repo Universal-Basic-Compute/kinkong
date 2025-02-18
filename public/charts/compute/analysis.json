@@ -1,12 +1,12 @@
 {
-  "timestamp": "2025-02-18T11:29:09.423262",
+  "timestamp": "2025-02-18T18:56:55.454392",
   "token": "COMPUTE",
   "analyses": {
     "14D": {
       "timeframe": "14D",
       "signal": "SELL",
       "confidence": 85,
-      "reasoning": "Clear downtrend with consistent lower highs and lower lows. Price is below both EMA20 and EMA50, with bearish cross and significant price depreciation (-94.22% from ATH). Volume profile shows declining interest.",
+      "reasoning": "Strong downward trend with price below both EMAs, significant price decline of -92.78% from ATH, consistently decreasing volume profile, and no signs of trend reversal",
       "key_levels": {
         "support": [
           0.0001,
@@ -22,17 +22,17 @@
     },
     "48H": {
       "timeframe": "48H",
-      "signal": "SELL",
-      "confidence": 80,
-      "reasoning": "Accelerating downward momentum with increasing selling pressure. EMA20 crossed below EMA50, multiple red candles forming, and declining volume suggesting weak buying interest.",
+      "signal": "HOLD",
+      "confidence": 60,
+      "reasoning": "Price showing signs of consolidation after downtrend, EMAs flattening but still bearish cross, volume declining indicating potential trend exhaustion",
       "key_levels": {
         "support": [
-          0.00015,
+          0.00016,
           0.00014
         ],
         "resistance": [
-          0.00022,
-          0.0002
+          0.0002,
+          0.00022
         ]
       },
       "risk_reward_ratio": 1.2,
@@ -40,9 +40,9 @@
     },
     "12H": {
       "timeframe": "12H",
-      "signal": "SELL",
-      "confidence": 90,
-      "reasoning": "Immediate bearish pressure with consecutive red candles, price below both EMAs, and declining volume. Strong selling momentum with -9.96% recent drop.",
+      "signal": "BUY",
+      "confidence": 70,
+      "reasoning": "Recent bullish momentum with strong volume spike, price breaking above EMAs, potential short-term reversal forming",
       "key_levels": {
         "support": [
           0.00016,
@@ -50,27 +50,27 @@
         ],
         "resistance": [
           0.00018,
-          0.00017
+          0.0002
         ]
       },
-      "risk_reward_ratio": 2.0,
+      "risk_reward_ratio": 2.1,
       "reassess_conditions": null
     },
     "overall": {
       "primary_trend": "BEARISH",
-      "timeframe_alignment": "ALIGNED",
+      "timeframe_alignment": "MIXED",
       "best_timeframe": "12H",
       "key_observations": [
-        "All timeframes show strong bearish momentum",
-        "Significant volume decline across timeframes",
-        "Price consistently below major EMAs",
-        "Low liquidity ($3,926.51) increases volatility risk",
-        "Substantial decline from ATH (-94.22%)"
+        "Long-term trend remains strongly bearish",
+        "Medium-term showing consolidation",
+        "Short-term bullish momentum emerging",
+        "Volume spike on recent bullish move indicates potential reversal",
+        "High risk due to conflicting signals across timeframes"
       ],
       "recommended_action": {
-        "signal": "SELL",
+        "signal": "SCALP_BUY",
         "timeframe": "12H",
-        "reasoning": "Strong bearish alignment across all timeframes with accelerating downward momentum and declining volume suggests continued downward pressure. The 12H timeframe offers the best risk-reward ratio for short positions."
+        "reasoning": "While longer-term trends remain bearish, short-term momentum and volume suggest potential for quick profitable scalp trades on the long side, with tight stop losses"
       }
     }
   }

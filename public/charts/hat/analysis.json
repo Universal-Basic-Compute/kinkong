@@ -1,20 +1,20 @@
 {
-  "timestamp": "2025-02-18T11:27:23.750054",
+  "timestamp": "2025-02-18T18:54:53.289553",
   "token": "HAT",
   "analyses": {
     "14D": {
       "timeframe": "14D",
       "signal": "SELL",
       "confidence": 85,
-      "reasoning": "Strong bearish trend with lower highs and lower lows. Price below both EMA20 and EMA50 with bearish cross. Significant volume on recent dumps suggests continued downward pressure.",
+      "reasoning": "Strong bearish trend with consecutive red candles, price below both EMA20 and EMA50, significant volume on downward moves, and no signs of reversal yet. Clear downtrend from ATH of 0.0171 to current 0.0082 (-47.52%).",
       "key_levels": {
         "support": [
-          0.0087,
-          0.009
+          0.008,
+          0.0075
         ],
         "resistance": [
-          0.0107,
-          0.0133
+          0.01,
+          0.012
         ]
       },
       "risk_reward_ratio": 1.5,
@@ -23,16 +23,16 @@
     "48H": {
       "timeframe": "48H",
       "signal": "SELL",
-      "confidence": 80,
-      "reasoning": "Clear bearish momentum with steep price decline. EMA20 crossed below EMA50, price making consecutive lower lows with increasing volume on dumps.",
+      "confidence": 90,
+      "reasoning": "Steep bearish momentum with increasing volume on sells, price significantly below EMAs, steep decline from 0.0128 to 0.0082 (-34.09%) with minimal retracements",
       "key_levels": {
         "support": [
-          0.009,
-          0.0093
+          0.008,
+          0.0078
         ],
         "resistance": [
-          0.0107,
-          0.012
+          0.009,
+          0.0095
         ]
       },
       "risk_reward_ratio": 2.0,
@@ -40,20 +40,20 @@
     },
     "12H": {
       "timeframe": "12H",
-      "signal": "HOLD",
-      "confidence": 60,
-      "reasoning": "Potential short-term consolidation forming after sharp decline. Volume profile showing possible exhaustion of sellers, but overall trend remains bearish.",
+      "signal": "SELL",
+      "confidence": 80,
+      "reasoning": "Immediate bearish pressure with increased selling volume, price making new lows, EMAs crossed bearishly, current price at 0.0082 (-14.51%) below key support levels",
       "key_levels": {
         "support": [
-          0.009,
-          0.0092
+          0.008,
+          0.0082
         ],
         "resistance": [
-          0.0099,
-          0.0107
+          0.0085,
+          0.0088
         ]
       },
-      "risk_reward_ratio": 1.2,
+      "risk_reward_ratio": 1.8,
       "reassess_conditions": null
     },
     "overall": {
@@ -62,15 +62,15 @@
       "best_timeframe": "48H",
       "key_observations": [
         "All timeframes show strong bearish momentum",
-        "Significant volume increase on downward moves",
-        "Price trading below all major EMAs",
-        "42.96% decline from ATH indicates strong selling pressure",
-        "Low liquidity could lead to high volatility"
+        "Increasing volume on downward moves",
+        "No significant support levels holding",
+        "EMAs trending downward across all timeframes",
+        "Significant price depreciation across all periods"
       ],
       "recommended_action": {
         "signal": "SELL",
         "timeframe": "48H",
-        "reasoning": "Strong bearish alignment across all timeframes with significant momentum and volume confirmation. Best to wait for potential bounces to resistance levels for optimal short entries."
+        "reasoning": "The 48H timeframe shows the clearest bearish continuation pattern with highest confidence and best risk/reward ratio. Volume profile supports continued downward movement."
       }
     }
   }

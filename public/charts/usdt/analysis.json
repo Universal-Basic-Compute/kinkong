@@ -1,20 +1,20 @@
 {
-  "timestamp": "2025-02-18T11:26:34.180043",
+  "timestamp": "2025-02-18T18:53:57.621534",
   "token": "USDT",
   "analyses": {
     "14D": {
       "timeframe": "14D",
       "signal": "HOLD",
-      "confidence": 90,
-      "reasoning": "Price shows remarkable stability around $1.00 with minimal volatility. EMA20 and EMA50 are flat and tightly compressed, indicating strong price equilibrium. Volume profile is consistent without major anomalies.",
+      "confidence": 85,
+      "reasoning": "Price showing remarkable stability around $1.00 with minimal volatility. EMA20 and EMA50 are tightly compressed, indicating strong price equilibrium. Volume profile is consistent without major anomalies.",
       "key_levels": {
         "support": [
-          0.9996,
-          0.9935
+          0.9961,
+          0.995
         ],
         "resistance": [
-          1.0002,
-          1.0057
+          1.0057,
+          1.01
         ]
       },
       "risk_reward_ratio": null,
@@ -23,16 +23,16 @@
     "48H": {
       "timeframe": "48H",
       "signal": "SELL",
-      "confidence": 75,
-      "reasoning": "Recent bearish momentum with price breaking below both EMAs. Increased selling volume and consecutive red candles suggest short-term downward pressure. EMAs beginning to slope downward.",
+      "confidence": 70,
+      "reasoning": "Recent bearish momentum with price breaking below both EMAs. Increasing selling volume and consecutive red candles suggest short-term downward pressure.",
       "key_levels": {
         "support": [
-          0.9996,
-          0.9998
+          0.9988,
+          0.9985
         ],
         "resistance": [
-          1.0,
-          1.0001
+          1.0002,
+          1.0005
         ]
       },
       "risk_reward_ratio": 2.5,
@@ -41,19 +41,19 @@
     "12H": {
       "timeframe": "12H",
       "signal": "SELL",
-      "confidence": 80,
-      "reasoning": "Strong bearish momentum with price below both EMAs. Higher trading volume during selloffs. Multiple failed attempts to break above EMA20 resistance.",
+      "confidence": 75,
+      "reasoning": "Clear downtrend formation with lower highs and lower lows. EMA20 crossing below EMA50 confirms bearish momentum. Volume increasing on downward moves.",
       "key_levels": {
         "support": [
-          0.9997,
-          0.9998
+          0.999,
+          0.9985
         ],
         "resistance": [
-          0.9999,
-          1.0
+          1.0,
+          1.0005
         ]
       },
-      "risk_reward_ratio": 3.0,
+      "risk_reward_ratio": 2.0,
       "reassess_conditions": null
     },
     "overall": {
@@ -62,14 +62,14 @@
       "best_timeframe": "12H",
       "key_observations": [
         "Long-term stability but short-term bearish pressure",
-        "Increased selling volume across shorter timeframes",
-        "Tight price range suggesting low volatility",
-        "Strong historical support at 0.9996"
+        "Increasing selling volume across shorter timeframes",
+        "Price consistently below $1.00 peg",
+        "Strong historical support at 0.9985"
       ],
       "recommended_action": {
         "signal": "SELL",
         "timeframe": "12H",
-        "reasoning": "Short-term bearish momentum is strong while maintaining proximity to key psychological level of $1.00 for potential exit points. Lower timeframes show clearer directional bias compared to ranging long-term chart."
+        "reasoning": "Short-term bearish momentum is strong while maintaining awareness of USDT's tendency to revert to $1.00. Tight stops recommended due to stablecoin nature."
       }
     }
   }

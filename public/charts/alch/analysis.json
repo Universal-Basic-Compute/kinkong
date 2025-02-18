@@ -1,20 +1,20 @@
 {
-  "timestamp": "2025-02-18T11:26:00.659923",
+  "timestamp": "2025-02-18T18:53:16.372332",
   "token": "ALCH",
   "analyses": {
     "14D": {
       "timeframe": "14D",
       "signal": "SELL",
       "confidence": 85,
-      "reasoning": "Strong bearish trend with consistently lower highs and lower lows. EMA20 and EMA50 showing clear bearish divergence with declining volume profile. Price is trading well below both EMAs with no signs of reversal.",
+      "reasoning": "Strong bearish trend with both EMA20 and EMA50 sloping downward. Price has fallen -58.62% from ATH with consistent lower highs and lower lows. Volume profile shows sustained selling pressure.",
       "key_levels": {
         "support": [
-          0.0161,
+          0.016,
           0.015
         ],
         "resistance": [
-          0.0193,
-          0.021
+          0.0185,
+          0.02
         ]
       },
       "risk_reward_ratio": 1.5,
@@ -22,55 +22,55 @@
     },
     "48H": {
       "timeframe": "48H",
-      "signal": "HOLD",
-      "confidence": 60,
-      "reasoning": "Price showing signs of consolidation after recent downtrend. EMA crossover potentially forming but lacking clear direction. Volume increasing but price action remains choppy.",
+      "signal": "SELL",
+      "confidence": 75,
+      "reasoning": "Price trading below both EMAs with bearish cross. Recent attempt at recovery rejected at EMA20. Volume increasing on downward moves indicating selling pressure.",
       "key_levels": {
         "support": [
           0.0165,
-          0.0161
+          0.016
         ],
         "resistance": [
-          0.0183,
-          0.019
+          0.018,
+          0.0185
         ]
       },
-      "risk_reward_ratio": 1.2,
+      "risk_reward_ratio": 2.0,
       "reassess_conditions": null
     },
     "12H": {
       "timeframe": "12H",
-      "signal": "BUY",
+      "signal": "SELL",
       "confidence": 70,
-      "reasoning": "Short-term bullish momentum with price breaking above both EMAs. Increasing volume supporting recent price action. Formation of higher lows suggesting potential trend reversal.",
+      "reasoning": "Sharp decline after double top formation. EMAs crossed bearish with price making lower lows. Volume increasing during selloffs.",
       "key_levels": {
         "support": [
-          0.0175,
-          0.017
+          0.0165,
+          0.0163
         ],
         "resistance": [
-          0.0183,
-          0.0185
+          0.017,
+          0.0175
         ]
       },
-      "risk_reward_ratio": 2.1,
+      "risk_reward_ratio": 2.5,
       "reassess_conditions": null
     },
     "overall": {
       "primary_trend": "BEARISH",
-      "timeframe_alignment": "MIXED",
-      "best_timeframe": "12H",
+      "timeframe_alignment": "ALIGNED",
+      "best_timeframe": "14D",
       "key_observations": [
-        "Long-term trend remains strongly bearish",
-        "Medium-term showing consolidation",
-        "Short-term bullish momentum emerging",
-        "Volume profile increasing on shorter timeframes",
-        "Price compression visible at current levels"
+        "All timeframes showing bearish momentum",
+        "Significant volume on downward moves",
+        "Price consistently below major EMAs",
+        "No clear signs of trend reversal yet",
+        "Lower highs and lower lows across all timeframes"
       ],
       "recommended_action": {
-        "signal": "SCALP LONG",
-        "timeframe": "12H",
-        "reasoning": "While the overall trend remains bearish, short-term price action suggests opportunity for quick scalp trades to the upside. Tight stops recommended due to conflicting longer-term bearish pressure."
+        "signal": "SELL",
+        "timeframe": "14D",
+        "reasoning": "Strong bearish alignment across all timeframes with increasing selling pressure and no signs of reversal. Best to trade with the dominant trend."
       }
     }
   }

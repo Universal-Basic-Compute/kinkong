@@ -1,20 +1,20 @@
 {
-  "timestamp": "2025-02-18T11:27:07.166929",
+  "timestamp": "2025-02-18T18:54:34.192930",
   "token": "SOL",
   "analyses": {
     "14D": {
       "timeframe": "14D",
       "signal": "SELL",
       "confidence": 85,
-      "reasoning": "Clear downtrend with consistent lower highs and lower lows. Both EMA20 and EMA50 showing strong bearish slope. Price significantly below both moving averages. Volume profile shows sustained selling pressure.",
+      "reasoning": "Strong bearish trend confirmed by death cross of EMA20/50, consistent lower highs and lower lows, significant volume on downward moves, price well below both EMAs with steep downward slope",
       "key_levels": {
         "support": [
-          163.1,
-          160.0
+          160.42,
+          155.0
         ],
         "resistance": [
-          180.0,
-          190.0
+          171.44,
+          180.0
         ]
       },
       "risk_reward_ratio": 2.5,
@@ -22,35 +22,35 @@
     },
     "48H": {
       "timeframe": "48H",
-      "signal": "HOLD",
-      "confidence": 70,
-      "reasoning": "Sharp bearish momentum but showing signs of potential oversold conditions. Price below both EMAs with increasing selling volume. Consider waiting for consolidation before new positions.",
+      "signal": "SELL",
+      "confidence": 80,
+      "reasoning": "Clear bearish momentum with accelerating downward movement, EMAs in bearish alignment, increased selling volume, no signs of reversal yet",
       "key_levels": {
         "support": [
-          165.0,
-          163.1
+          160.42,
+          158.0
         ],
         "resistance": [
-          175.0,
-          180.0
+          170.0,
+          175.0
         ]
       },
-      "risk_reward_ratio": 1.8,
+      "risk_reward_ratio": 2.0,
       "reassess_conditions": null
     },
     "12H": {
       "timeframe": "12H",
-      "signal": "BUY",
-      "confidence": 60,
-      "reasoning": "Potential short-term bounce forming with bullish divergence on volume. Recent green candles suggest temporary relief rally possible, though within larger bearish trend.",
+      "signal": "HOLD",
+      "confidence": 65,
+      "reasoning": "Showing potential short-term oversold conditions, but still in strong downtrend. Minor bullish divergence forming on volume, but not enough for reversal signal",
       "key_levels": {
         "support": [
-          163.1,
-          165.0
+          160.42,
+          162.0
         ],
         "resistance": [
-          172.0,
-          175.0
+          165.0,
+          167.0
         ]
       },
       "risk_reward_ratio": 1.5,
@@ -58,18 +58,19 @@
     },
     "overall": {
       "primary_trend": "BEARISH",
-      "timeframe_alignment": "MIXED",
-      "best_timeframe": "12H",
+      "timeframe_alignment": "ALIGNED",
+      "best_timeframe": "48H",
       "key_observations": [
-        "Strong overall bearish trend across larger timeframes",
-        "Potential short-term relief bounce forming on 12H",
-        "High volume during recent selloff indicates strong conviction",
-        "Price finding temporary support around $163-165 range"
+        "All timeframes showing strong bearish momentum",
+        "Volume increasing on downward moves",
+        "No significant support until 160.42",
+        "EMAs in bearish alignment across all timeframes",
+        "Potential short-term oversold conditions forming"
       ],
       "recommended_action": {
-        "signal": "HOLD",
-        "timeframe": "12H",
-        "reasoning": "While short-term bounce possible, larger trend remains bearish. Better to wait for clear reversal signs or stronger support establishment before taking new positions."
+        "signal": "SELL",
+        "timeframe": "48H",
+        "reasoning": "Strong bearish alignment across all timeframes with clear continuation patterns and increasing selling pressure. Best to wait for small bounces to initiate short positions."
       }
     }
   }

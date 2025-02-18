@@ -1,20 +1,20 @@
 {
-  "timestamp": "2025-02-18T11:28:39.519909",
+  "timestamp": "2025-02-18T18:56:20.694476",
   "token": "AI16Z",
   "analyses": {
     "14D": {
       "timeframe": "14D",
       "signal": "SELL",
-      "confidence": 80,
-      "reasoning": "Price has broken below both EMA20 and EMA50, showing strong bearish momentum. Clear downtrend formation with lower highs and lower lows. Volume profile shows declining buying interest.",
+      "confidence": 85,
+      "reasoning": "Strong bearish trend with price below both EMA20 and EMA50. Multiple red candles showing sustained selling pressure. Price has broken major support levels with increasing volume on downward moves.",
       "key_levels": {
         "support": [
-          0.3186,
-          0.2458
+          0.2444,
+          0.28
         ],
         "resistance": [
-          0.4301,
-          0.6252
+          0.35,
+          0.4
         ]
       },
       "risk_reward_ratio": 2.5,
@@ -22,35 +22,35 @@
     },
     "48H": {
       "timeframe": "48H",
-      "signal": "HOLD",
-      "confidence": 65,
-      "reasoning": "Strong bearish trend but showing signs of potential consolidation. EMA cross to the downside confirms bearish sentiment. Volume declining suggests potential exhaustion of selling pressure.",
+      "signal": "SELL",
+      "confidence": 90,
+      "reasoning": "Sharp bearish momentum with price making lower lows and lower highs. EMA cross to downside with expanding volume on sells. Death cross formation between EMA20 and EMA50.",
       "key_levels": {
         "support": [
-          0.3186,
-          0.3
+          0.2444,
+          0.27
         ],
         "resistance": [
-          0.3633,
-          0.4
+          0.32,
+          0.35
         ]
       },
-      "risk_reward_ratio": 1.8,
+      "risk_reward_ratio": 2.0,
       "reassess_conditions": null
     },
     "12H": {
       "timeframe": "12H",
-      "signal": "BUY",
-      "confidence": 55,
-      "reasoning": "Recent bounce from local bottom with increased volume. Potential short-term relief rally forming. RSI showing oversold conditions on lower timeframes.",
+      "signal": "HOLD",
+      "confidence": 65,
+      "reasoning": "Oversold conditions on shorter timeframe but still in strong downtrend. High volume selling pressure but potential for short-term bounce.",
       "key_levels": {
         "support": [
-          0.3186,
-          0.325
+          0.2444,
+          0.26
         ],
         "resistance": [
-          0.3458,
-          0.3633
+          0.3,
+          0.32
         ]
       },
       "risk_reward_ratio": 1.5,
@@ -58,18 +58,19 @@
     },
     "overall": {
       "primary_trend": "BEARISH",
-      "timeframe_alignment": "MIXED",
-      "best_timeframe": "12H",
+      "timeframe_alignment": "ALIGNED",
+      "best_timeframe": "48H",
       "key_observations": [
-        "Strong bearish trend on higher timeframes",
-        "Potential short-term bounce opportunity",
-        "Declining volume suggests selling exhaustion",
-        "Price near critical support level at $0.3186"
+        "Strong bearish momentum across all timeframes",
+        "Increasing volume on downward moves",
+        "Breaking major support levels",
+        "Death cross formation on multiple timeframes",
+        "Potential oversold conditions on shorter timeframes"
       ],
       "recommended_action": {
-        "signal": "SCALP LONG",
-        "timeframe": "12H",
-        "reasoning": "While longer-term trend remains bearish, oversold conditions and volume profile suggest potential for short-term relief rally. Tight stop loss below $0.3186 recommended."
+        "signal": "SELL",
+        "timeframe": "48H",
+        "reasoning": "Strong bearish alignment across all timeframes with highest confidence on 48H chart. Increasing volume confirms downtrend. Wait for small bounces to enter short positions."
       }
     }
   }

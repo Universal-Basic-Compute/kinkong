@@ -1,76 +1,76 @@
 {
-  "timestamp": "2025-02-18T11:25:22.956527",
+  "timestamp": "2025-02-18T18:52:41.236577",
   "token": "ZEREBRO",
   "analyses": {
     "14D": {
       "timeframe": "14D",
       "signal": "SELL",
       "confidence": 85,
-      "reasoning": "Strong bearish trend with consistently lower highs and lower lows. Both EMA20 and EMA50 showing clear downward slopes. Price is -43.26% from ATH with declining volume profile.",
+      "reasoning": "Strong downtrend evident with declining EMAs, consistent lower highs and lower lows. Price significantly below both EMA20 and EMA50, with bearish cross and widening gap between EMAs. Volume profile shows sustained selling pressure.",
       "key_levels": {
         "support": [
-          0.03,
-          0.0312
+          0.0287,
+          0.027
         ],
         "resistance": [
-          0.036,
-          0.04
+          0.0337,
+          0.0358
         ]
       },
-      "risk_reward_ratio": 0.5,
+      "risk_reward_ratio": 2.5,
       "reassess_conditions": null
     },
     "48H": {
       "timeframe": "48H",
-      "signal": "HOLD",
-      "confidence": 60,
-      "reasoning": "Price consolidating between EMAs with reduced volatility. Volume declining suggesting potential trend exhaustion. Recent rejection from EMA50 indicates bearish pressure still present.",
+      "signal": "SELL",
+      "confidence": 75,
+      "reasoning": "Recent breakdown below key support levels with increasing selling volume. EMA crossover to the downside with price rejecting EMA20 as resistance. Bearish momentum accelerating.",
       "key_levels": {
         "support": [
-          0.031,
-          0.03
+          0.029,
+          0.0287
         ],
         "resistance": [
-          0.0342,
-          0.035
-        ]
-      },
-      "risk_reward_ratio": 1.2,
-      "reassess_conditions": null
-    },
-    "12H": {
-      "timeframe": "12H",
-      "signal": "BUY",
-      "confidence": 65,
-      "reasoning": "Short-term bullish momentum with price breaking above both EMAs. Recent higher lows forming with increasing volume on green candles. Potential short-term reversal setup.",
-      "key_levels": {
-        "support": [
-          0.0325,
-          0.0312
-        ],
-        "resistance": [
-          0.0342,
-          0.035
+          0.032,
+          0.0337
         ]
       },
       "risk_reward_ratio": 2.1,
       "reassess_conditions": null
     },
+    "12H": {
+      "timeframe": "12H",
+      "signal": "SELL",
+      "confidence": 80,
+      "reasoning": "Sharp bearish price action with strong selling volume. EMAs acting as dynamic resistance with clear bearish crossover. No signs of reversal or bullish divergence yet.",
+      "key_levels": {
+        "support": [
+          0.0287,
+          0.028
+        ],
+        "resistance": [
+          0.031,
+          0.032
+        ]
+      },
+      "risk_reward_ratio": 1.8,
+      "reassess_conditions": null
+    },
     "overall": {
       "primary_trend": "BEARISH",
-      "timeframe_alignment": "MIXED",
+      "timeframe_alignment": "ALIGNED",
       "best_timeframe": "12H",
       "key_observations": [
-        "Long-term trend remains strongly bearish",
-        "Medium-term consolidation phase",
-        "Short-term bullish reversal potential",
-        "Declining volume profile on larger timeframes",
-        "Price compressed between key EMAs on shorter timeframes"
+        "All timeframes showing strong bearish momentum",
+        "Increasing sell volume across timeframes",
+        "No significant support levels holding",
+        "EMAs aligned bearishly across all timeframes",
+        "Price making consistent lower lows"
       ],
       "recommended_action": {
-        "signal": "SCALP_LONG",
+        "signal": "SELL",
         "timeframe": "12H",
-        "reasoning": "While maintaining bearish bias on higher timeframes, the 12H chart shows potential for short-term bullish scalp trades with defined risk levels and favorable R:R ratio. Suitable for aggressive traders only."
+        "reasoning": "Strong bearish alignment across all timeframes with increasing momentum and volume. Best to trade with the trend using 12H chart for optimal entry points."
       }
     }
   }

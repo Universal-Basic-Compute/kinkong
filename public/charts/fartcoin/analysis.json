@@ -1,76 +1,76 @@
 {
-  "timestamp": "2025-02-18T11:28:24.775291",
+  "timestamp": "2025-02-18T18:56:04.540422",
   "token": "FARTCOIN",
   "analyses": {
     "14D": {
       "timeframe": "14D",
       "signal": "SELL",
       "confidence": 85,
-      "reasoning": "Strong bearish trend with consistently lower highs and lower lows. Price below both EMA20 and EMA50 with bearish cross. Volume declining during downtrend indicating seller exhaustion, but trend remains firmly bearish.",
+      "reasoning": "Strong bearish trend with consecutive red candles, EMAs in bearish cross, price significantly below both EMAs, high volume selling pressure, -57.82% decline showing sustained downward momentum",
       "key_levels": {
         "support": [
-          0.3003,
-          0.28
+          0.2732,
+          0.25
         ],
         "resistance": [
-          0.3846,
-          0.42
+          0.3447,
+          0.4
         ]
       },
-      "risk_reward_ratio": 1.5,
+      "risk_reward_ratio": 0.5,
       "reassess_conditions": null
     },
     "48H": {
       "timeframe": "48H",
-      "signal": "HOLD",
-      "confidence": 65,
-      "reasoning": "Sharp decline followed by attempted consolidation. EMAs showing strong bearish momentum but potential oversold conditions emerging. Volume spikes during selloff suggest capitulation.",
+      "signal": "SELL",
+      "confidence": 80,
+      "reasoning": "Sharp bearish decline with increasing volume, price below both EMAs, EMAs showing bearish cross, -31.28% decline indicating strong selling pressure",
       "key_levels": {
         "support": [
-          0.32,
-          0.3
+          0.2732,
+          0.28
         ],
         "resistance": [
-          0.36,
-          0.4
+          0.32,
+          0.3447
+        ]
+      },
+      "risk_reward_ratio": 0.8,
+      "reassess_conditions": null
+    },
+    "12H": {
+      "timeframe": "12H",
+      "signal": "HOLD",
+      "confidence": 65,
+      "reasoning": "Oversold conditions on short timeframe, but still in strong downtrend, potential consolidation forming but no clear reversal signals yet",
+      "key_levels": {
+        "support": [
+          0.2732,
+          0.28
+        ],
+        "resistance": [
+          0.3,
+          0.3209
         ]
       },
       "risk_reward_ratio": 1.2,
       "reassess_conditions": null
     },
-    "12H": {
-      "timeframe": "12H",
-      "signal": "BUY",
-      "confidence": 55,
-      "reasoning": "Possible short-term bottom formation with bullish divergence on volume. Recent green candles showing buying pressure, though still below EMAs.",
-      "key_levels": {
-        "support": [
-          0.33,
-          0.32
-        ],
-        "resistance": [
-          0.35,
-          0.365
-        ]
-      },
-      "risk_reward_ratio": 2.0,
-      "reassess_conditions": null
-    },
     "overall": {
       "primary_trend": "BEARISH",
-      "timeframe_alignment": "MIXED",
-      "best_timeframe": "12H",
+      "timeframe_alignment": "ALIGNED",
+      "best_timeframe": "48H",
       "key_observations": [
-        "Long-term trend is strongly bearish",
-        "Short-term potential bounce forming",
-        "High volume selloff suggests possible exhaustion",
-        "Price significantly below major EMAs",
-        "Risk of continued downside remains high"
+        "All timeframes showing strong bearish momentum",
+        "High volume selling pressure across timeframes",
+        "No significant support levels holding",
+        "EMAs in bearish configuration on all timeframes",
+        "Possible short-term oversold conditions"
       ],
       "recommended_action": {
-        "signal": "HOLD",
-        "timeframe": "12H",
-        "reasoning": "While short-term bounce potential exists, overall bearish trend suggests waiting for clearer reversal signals. High risk environment with mixed signals across timeframes."
+        "signal": "SELL",
+        "timeframe": "48H",
+        "reasoning": "Strong bearish alignment across all timeframes with high volume confirming downward movement. Best to wait for any potential bounces to short from higher prices rather than entering at current levels due to oversold conditions on shorter timeframes."
       }
     }
   }

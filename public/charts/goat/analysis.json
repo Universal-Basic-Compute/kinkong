@@ -1,20 +1,20 @@
 {
-  "timestamp": "2025-02-18T11:28:09.828533",
+  "timestamp": "2025-02-18T18:55:47.449266",
   "token": "GOAT",
   "analyses": {
     "14D": {
       "timeframe": "14D",
       "signal": "SELL",
       "confidence": 85,
-      "reasoning": "Strong downward trend with consistently lower highs and lower lows. EMA20 and EMA50 showing clear bearish cross and divergence. Price has broken multiple support levels with increased selling volume.",
+      "reasoning": "Strong bearish trend with consistent lower highs and lower lows. Both EMA20 and EMA50 showing clear downward slope with price action below both moving averages. High volume selling pressure observed in recent days.",
       "key_levels": {
         "support": [
-          0.0934,
-          0.09
+          0.0899,
+          0.085
         ],
         "resistance": [
-          0.1082,
-          0.12
+          0.1,
+          0.1076
         ]
       },
       "risk_reward_ratio": 1.5,
@@ -22,55 +22,55 @@
     },
     "48H": {
       "timeframe": "48H",
-      "signal": "HOLD",
-      "confidence": 65,
-      "reasoning": "Price showing potential consolidation after sharp decline. EMA20 below EMA50 indicating bearish control, but selling momentum appears to be slowing. Volume profile suggests decreased selling pressure.",
+      "signal": "SELL",
+      "confidence": 80,
+      "reasoning": "Recent breakdown below key support levels with increased selling volume. Death cross formation between EMA20 and EMA50. Price showing acceleration in downward momentum.",
       "key_levels": {
         "support": [
-          0.096,
-          0.0934
+          0.0899,
+          0.0922
         ],
         "resistance": [
-          0.1,
-          0.1082
+          0.0988,
+          0.1025
+        ]
+      },
+      "risk_reward_ratio": 2.0,
+      "reassess_conditions": null
+    },
+    "12H": {
+      "timeframe": "12H",
+      "signal": "HOLD",
+      "confidence": 60,
+      "reasoning": "Short-term oversold conditions emerging, but still within strong bearish trend. High volume selloff with potential for short-term bounce, though overall trend remains bearish.",
+      "key_levels": {
+        "support": [
+          0.0899,
+          0.0915
+        ],
+        "resistance": [
+          0.0959,
+          0.0988
         ]
       },
       "risk_reward_ratio": 1.2,
       "reassess_conditions": null
     },
-    "12H": {
-      "timeframe": "12H",
-      "signal": "BUY",
-      "confidence": 55,
-      "reasoning": "Potential short-term bounce forming with higher lows on recent candles. EMA20 showing signs of flattening. Volume declining on downward moves suggesting exhaustion of sellers.",
-      "key_levels": {
-        "support": [
-          0.096,
-          0.095
-        ],
-        "resistance": [
-          0.099,
-          0.1008
-        ]
-      },
-      "risk_reward_ratio": 2.1,
-      "reassess_conditions": null
-    },
     "overall": {
       "primary_trend": "BEARISH",
-      "timeframe_alignment": "MIXED",
-      "best_timeframe": "12H",
+      "timeframe_alignment": "ALIGNED",
+      "best_timeframe": "48H",
       "key_observations": [
-        "Long-term trend is strongly bearish",
-        "Medium-term showing potential consolidation",
-        "Short-term indicates possible relief bounce",
-        "Volume profile suggests selling exhaustion",
-        "Price near historical support level at $0.0934"
+        "Strong bearish momentum across all timeframes",
+        "Significant increase in selling volume",
+        "All EMAs pointing downward",
+        "No significant support levels holding",
+        "Potential short-term oversold conditions"
       ],
       "recommended_action": {
-        "signal": "HOLD",
-        "timeframe": "12H",
-        "reasoning": "While long-term trend remains bearish, short-term oversold conditions and potential consolidation suggest waiting for clearer direction before taking new positions. Consider scalp opportunities on 12H timeframe if support holds."
+        "signal": "SELL",
+        "timeframe": "48H",
+        "reasoning": "Strong bearish alignment across all timeframes with increased selling volume suggests continued downward pressure. Best to wait for any potential bounces to establish new short positions."
       }
     }
   }

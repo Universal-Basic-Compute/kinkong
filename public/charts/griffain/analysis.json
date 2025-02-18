@@ -1,76 +1,76 @@
 {
-  "timestamp": "2025-02-18T11:25:44.623453",
+  "timestamp": "2025-02-18T18:52:57.874680",
   "token": "GRIFFAIN",
   "analyses": {
     "14D": {
       "timeframe": "14D",
       "signal": "SELL",
       "confidence": 85,
-      "reasoning": "Strong bearish trend with consistent lower highs and lower lows. EMA20 and EMA50 showing clear bearish cross and downward slope. Volume profile shows sustained selling pressure. Price is down 58.04% from ATH with no signs of reversal yet.",
+      "reasoning": "Strong bearish trend with consistent lower highs and lower lows. Price is below both EMA20 and EMA50, with EMAs in bearish alignment. Volume profile shows sustained selling pressure. Price has dropped nearly 60% from ATH with no significant signs of reversal.",
       "key_levels": {
         "support": [
-          0.0858,
-          0.08
+          0.079,
+          0.075
         ],
         "resistance": [
           0.1,
-          0.1232
-        ]
-      },
-      "risk_reward_ratio": 2.5,
-      "reassess_conditions": null
-    },
-    "48H": {
-      "timeframe": "48H",
-      "signal": "HOLD",
-      "confidence": 65,
-      "reasoning": "Price showing potential consolidation after sharp decline. EMA crossover remains bearish but momentum might be slowing. Volume declining suggests possible exhaustion of selling pressure.",
-      "key_levels": {
-        "support": [
-          0.0858,
-          0.088
-        ],
-        "resistance": [
-          0.095,
-          0.1
-        ]
-      },
-      "risk_reward_ratio": 1.8,
-      "reassess_conditions": null
-    },
-    "12H": {
-      "timeframe": "12H",
-      "signal": "BUY",
-      "confidence": 60,
-      "reasoning": "Recent bounce from lows with increased volume. Potential short-term reversal forming with higher lows. EMA20 showing signs of flattening.",
-      "key_levels": {
-        "support": [
-          0.087,
-          0.0858
-        ],
-        "resistance": [
-          0.0925,
-          0.0978
+          0.1197
         ]
       },
       "risk_reward_ratio": 1.5,
       "reassess_conditions": null
     },
+    "48H": {
+      "timeframe": "48H",
+      "signal": "SELL",
+      "confidence": 80,
+      "reasoning": "Accelerating downtrend with increasing selling volume. EMAs showing strong bearish crossover. Price action forming consistent bearish candles with minimal retracement.",
+      "key_levels": {
+        "support": [
+          0.079,
+          0.081
+        ],
+        "resistance": [
+          0.09,
+          0.0958
+        ]
+      },
+      "risk_reward_ratio": 2.0,
+      "reassess_conditions": null
+    },
+    "12H": {
+      "timeframe": "12H",
+      "signal": "HOLD",
+      "confidence": 65,
+      "reasoning": "While maintaining bearish bias, showing potential short-term oversold conditions. Recent volume spike might indicate temporary exhaustion of sellers.",
+      "key_levels": {
+        "support": [
+          0.08,
+          0.0826
+        ],
+        "resistance": [
+          0.0878,
+          0.09
+        ]
+      },
+      "risk_reward_ratio": 1.2,
+      "reassess_conditions": null
+    },
     "overall": {
       "primary_trend": "BEARISH",
-      "timeframe_alignment": "MIXED",
-      "best_timeframe": "12H",
+      "timeframe_alignment": "ALIGNED",
+      "best_timeframe": "48H",
       "key_observations": [
-        "Long-term trend remains strongly bearish",
-        "Medium-term showing potential consolidation",
-        "Short-term bounce presents possible scalp opportunities",
-        "Volume profile suggests selling pressure may be exhausting",
-        "Critical support at $0.0858 needs to hold"
+        "Strong bearish momentum across all timeframes",
+        "Significant volume increase during recent selloff",
+        "No clear signs of trend reversal yet",
+        "Price trading near all-time lows",
+        "EMAs showing strong bearish alignment"
       ],
       "recommended_action": {
-        "signal": "HOLD",
-        "timeframe": "12H",
-        "reasoning": "While long-term trend remains bearish, short-term bounce and declining volume suggest waiting for clearer direction. Better to wait for confirmation of trend reversal or continuation before taking new positions."
+        "signal": "SELL",
+        "timeframe": "48H",
+        "reasoning": "Strong bearish alignment across multiple timeframes with increasing selling pressure and no clear signs of reversal. Best to wait for clear reversal signals before considering long positions."
       }
     }
   }
