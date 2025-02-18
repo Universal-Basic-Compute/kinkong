@@ -41,9 +41,9 @@ export function ChartFlow() {
     candleId
   });
 
-  const generateCandle = (id: number, prevClose: number): Candle => {
-    // Augmenter l'amplitude des mouvements
-    const maxMove = prevClose * (activeSignal ? 0.12 : 0.06); // Doublé les pourcentages (6% -> 12% avec signal, 3% -> 6% sans)
+  const generateCandle = (id: number, prevClose: number, volatilityMultiplier: number = 1): Candle => {
+    // Augmenter l'amplitude des mouvements en fonction du multiplicateur
+    const maxMove = prevClose * (activeSignal ? 0.12 : 0.06) * volatilityMultiplier;
     const moveAmount = Math.random() * maxMove;
     
     // Créer des tendances plus prononcées
