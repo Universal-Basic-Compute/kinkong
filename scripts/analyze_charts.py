@@ -575,6 +575,13 @@ def process_signals_batch(token_analyses):
     print("\n🔄 Starting signals batch processing...")
     print(f"Received {len(token_analyses)} token analyses to process")
     
+    # Add timeframe mapping
+    timeframe_mapping = {
+        '12h': '15m',
+        '48h': '2h',
+        '14d': '8h'
+    }
+    
     pending_signals = []
     
     for token_info, analyses in token_analyses:
@@ -582,11 +589,15 @@ def process_signals_batch(token_analyses):
         print(f"Analysis structure: {type(analyses)}")
         print(f"Available timeframes: {list(analyses.keys())}")
         
-        # Filter valid timeframes
-        valid_timeframes = {
-            tf: analysis for tf, analysis in analyses.items()
-            if tf in ['15m', '2h', '8h']
-        }
+        # Map timeframes and filter valid ones
+        valid_timeframes = {}
+        for tf, analysis in analyses.items():
+            # Convert timeframe to lowercase for case-insensitive comparison
+            tf_lower = tf.lower()
+            if tf_lower in timeframe_mapping:
+                valid_timeframes[timeframe_mapping[tf_lower]] = analysis
+            elif tf in ['15m', '2h', '8h']:  # Also accept direct timeframe names
+                valid_timeframes[tf] = analysis
         
         print(f"\nFound {len(valid_timeframes)} valid timeframe analyses")
         
