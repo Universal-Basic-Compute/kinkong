@@ -3,6 +3,7 @@ import os
 from airtable import Airtable
 from dotenv import load_dotenv
 import time
+import requests
 from execute_trade import execute_trade_with_phantom
 from manage_signals import get_token_price, update_signal_status, calculate_pnl
 
@@ -23,9 +24,53 @@ last_batch_time = datetime.now()
 
 @sleep_and_retry
 @limits(calls=PRICE_CHECK_LIMIT, period=1)
-def rate_limited_price_check(token):
-    """Rate limited price check"""
-    return get_token_price(token)
+def rate_limited_price_check(token_symbol):
+    """Rate limited price check with token lookup"""
+    try:
+        # First get token mint from Airtable
+        base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
+        api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
+        tokens_table = Airtable(base_id, 'TOKENS', api_key)
+        
+        # Look up token by symbol
+        token_records = tokens_table.get_all(
+            formula=f"{{symbol}}='{token_symbol}'"
+        )
+        
+        if not token_records:
+            print(f"No token record found for symbol {token_symbol}")
+            return None
+            
+        token_mint = token_records[0]['fields']['mint']
+        
+        # Now fetch price using mint address
+        current_time = int(time.time())
+        params = {
+            'address': token_mint,  # Use mint address instead of symbol
+            'type': '1m',
+            'currency': 'usd',
+            'time_from': current_time - 300,  # Last 5 minutes
+            'time_to': current_time
+        }
+        
+        response = requests.get(
+            'https://public-api.birdeye.so/defi/ohlcv',
+            params=params,
+            headers={'x-api-key': os.getenv('BIRDEYE_API_KEY')}
+        )
+        
+        if response.ok:
+            data = response.json()
+            if data.get('success') and data.get('data'):
+                # Get most recent close price
+                return float(data['data'][-1]['close'])
+        
+        print(f"Failed to get price for {token_symbol} ({token_mint})")
+        return None
+        
+    except Exception as e:
+        print(f"Error checking price for {token_symbol}: {e}")
+        return None
 
 def monitor_active_trades():
     """
