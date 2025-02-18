@@ -478,6 +478,26 @@ def create_airtable_signal(analysis, timeframe, token_info):
             expiry_delta = expiry_mapping.get(strategy_timeframe)
             expiry_date = now + expiry_delta
 
+            # Format the analysis into a readable message
+            reason_message = f"""Technical Analysis for {token_info['symbol']} ({timeframe})
+
+Signal: {analysis.get('signal')}
+Confidence: {analysis.get('confidence')}%
+
+Analysis:
+{analysis.get('reasoning', 'No reasoning provided')}
+
+Key Levels:
+Support: {', '.join(map(str, analysis.get('key_levels', {}).get('support', [])))}
+Resistance: {', '.join(map(str, analysis.get('key_levels', {}).get('resistance', [])))}
+
+Risk/Reward Ratio: {analysis.get('risk_reward_ratio', 'Not calculated')}
+
+Additional Notes:
+- Entry price based on {'resistance' if analysis.get('signal') == 'SELL' else 'support'} level
+- Stop loss derived from {'support' if analysis.get('signal') == 'SELL' else 'resistance'} level
+"""
+
             signal_data = {
                 'timestamp': now.isoformat(),
                 'token': token_info['symbol'],
@@ -488,7 +508,7 @@ def create_airtable_signal(analysis, timeframe, token_info):
                 'stopLoss': stop_price,
                 'confidence': confidence_level,
                 'wallet': os.getenv('STRATEGY_WALLET', ''),
-                'reason': json.dumps(analysis, indent=2)  # Include the full analysis JSON
+                'reason': reason_message  # Use formatted message instead of JSON dump
             }
 
             # Validate signal before creating
