@@ -44,6 +44,30 @@ export default function Header() {
           isGlowing: true
         }
       ]
+    },
+    {
+      label: 'Shares Management',
+      isGroup: true,
+      subItems: [
+        { 
+          label: 'Coming Soon',
+          href: '#',
+          description: 'Shares management features coming soon'
+        }
+      ],
+      byLine: 'by 💫 SwarmVentures'
+    },
+    {
+      label: 'Active Trading',
+      isGroup: true,
+      subItems: [
+        { 
+          label: 'Coming Soon',
+          href: '#',
+          description: 'Active trading features coming soon'
+        }
+      ],
+      byLine: 'by 🏹 RobinHood Agent'
     }
   ];
 
@@ -75,7 +99,9 @@ export default function Header() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </div>
-                    <div className="text-xs text-gray-500 px-2">by 🦍 KinKong</div>
+                    <div className="text-xs text-gray-500 px-2">
+                      {item.byLine || 'by 🦍 KinKong'}
+                    </div>
                   </div>
                 ) : item.href ? (
                   <Link
@@ -164,7 +190,9 @@ export default function Header() {
                         <div className="text-gray-300 py-2 font-medium tracking-wide">
                           {item.label}
                         </div>
-                        <div className="text-xs text-gray-500 mb-2">by 🦍 KinKong</div>
+                        <div className="text-xs text-gray-500 mb-2">
+                          {item.byLine || 'by 🦍 KinKong'}
+                        </div>
                       </div>
                       <div className="pl-4 flex flex-col space-y-2">
                         {item.subItems.map((subItem) => (
