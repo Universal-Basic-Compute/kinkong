@@ -253,7 +253,7 @@ export function SignalHistory() {
                 </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-center text-2xl">
-                {signal.actualReturn ? (
+                {typeof signal.actualReturn !== 'undefined' && signal.actualReturn !== null ? (
                   signal.actualReturn > 0 ? (
                     <span className="metallic-text-ubc font-bold">✓</span>
                   ) : (
@@ -264,7 +264,7 @@ export function SignalHistory() {
                 )}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-right">
-                {signal.actualReturn ? (
+                {typeof signal.actualReturn !== 'undefined' && signal.actualReturn !== null ? (
                   <span className={signal.actualReturn >= 0 ? 'text-green-400' : 'text-red-400'}>
                     {signal.actualReturn.toFixed(2)}%
                   </span>
