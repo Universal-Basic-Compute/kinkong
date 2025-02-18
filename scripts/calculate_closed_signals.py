@@ -131,37 +131,65 @@ def calculate_closed_signals():
         signals_table = Airtable(base_id, 'SIGNALS', api_key)
         tokens_table = Airtable(base_id, 'TOKENS', api_key)
         
-        # Get all signals that need evaluation
+        print("\n📊 Checking Airtable for signals...")
+        
+        # First get all signals
+        all_signals = signals_table.get_all()
+        print(f"Total signals in database: {len(all_signals)}")
+        
+        # Get signals that need evaluation
         signals = signals_table.get_all(
             formula="AND("
-                    "expiryDate<NOW(), "
+                    "expiryDate<NOW(), "  # Expired signals
                     "OR("
-                        "actualReturn=BLANK(), "
-                        "accuracy=BLANK()"
+                        "actualReturn=BLANK(), "  # Missing actual return
+                        "accuracy=BLANK()"        # Missing accuracy
                     "), "
-                    "entryPrice>0, "
-                    "targetPrice>0"
+                    "entryPrice>0, "             # Has entry price
+                    "targetPrice>0"              # Has target price
                     ")"
         )
         
-        print(f"\n🔍 Found {len(signals)} signals to evaluate")
+        print("\n🔍 Signal Filter Results:")
+        print(f"Found {len(signals)} signals to evaluate that match criteria:")
+        print("- Past expiry date")
+        print("- Missing actualReturn or accuracy")
+        print("- Has valid entry and target prices")
+        
+        # Log details of found signals
+        for signal in signals:
+            fields = signal['fields']
+            print(f"\n📝 Signal Details:")
+            print(f"ID: {signal['id']}")
+            print(f"Token: {fields.get('token')}")
+            print(f"Type: {fields.get('type')}")
+            print(f"Timeframe: {fields.get('timeframe')}")
+            print(f"Entry Price: ${float(fields.get('entryPrice', 0)):.4f}")
+            print(f"Target Price: ${float(fields.get('targetPrice', 0)):.4f}")
+            print(f"Stop Loss: ${float(fields.get('stopLoss', 0)):.4f}")
+            print(f"Created: {fields.get('timestamp')}")
+            print(f"Expires: {fields.get('expiryDate')}")
         
         for signal in signals:
             try:
                 fields = signal['fields']
                 signal_id = signal['id']
                 
-                print(f"\nProcessing signal {signal_id} for {fields.get('token')}")
+                print(f"\n⚙️ Processing signal {signal_id}:")
+                print(f"Token: {fields.get('token')}")
+                print(f"Type: {fields.get('type', 'Unknown')}")
+                print(f"Entry: ${float(fields.get('entryPrice', 0)):.4f}")
                 
                 # Get token mint address
                 token_records = tokens_table.get_all(
                     formula=f"{{symbol}}='{fields['token']}'"
                 )
                 if not token_records:
-                    print(f"No token record found for {fields['token']}")
+                    print(f"❌ No token record found for {fields['token']}")
                     continue
                 
                 token_mint = token_records[0]['fields']['mint']
+                print(f"Found mint address: {token_mint}")
                 
                 # Get historical prices
                 activation_time = datetime.fromisoformat(fields['timestamp'].replace('Z', '+00:00'))
