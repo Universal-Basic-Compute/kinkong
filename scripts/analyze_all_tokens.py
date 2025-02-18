@@ -202,6 +202,17 @@ async def analyze_token(token):
                     }
                 )
                 
+                if analyses:
+                    for timeframe, analysis in analyses.items():
+                        if timeframe != 'overall':  # Skip the overall analysis
+                            # Create signal with the correct timeframe
+                            result = create_airtable_signal(
+                                analysis,
+                                timeframe,  # This should now be 'POSITION', 'SWING', etc.
+                                token_info,
+                                analyses
+                            )
+                
                 print("Analysis result type:", type(analyses))
                 print("Analysis keys:", analyses.keys() if analyses else None)
                 

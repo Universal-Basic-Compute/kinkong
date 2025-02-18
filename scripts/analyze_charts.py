@@ -520,6 +520,10 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
             timeframe_analysis = analysis.get('reasoning', '')  # Current timeframe analysis
             overall_analysis = analyses.get('overall', {})
 
+            # Get the specific timeframe analysis and overall analysis
+            timeframe_analysis = analysis.get('reasoning', '')  # Current timeframe analysis
+            overall_analysis = analyses.get('overall', {})
+
             reason_text = (
                 f"Analysis:\n"
                 f"{timeframe_analysis}\n\n"
