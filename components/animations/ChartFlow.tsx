@@ -130,17 +130,23 @@ export function ChartFlow() {
     let timeoutId: NodeJS.Timeout;
 
     const generateRandomSignal = () => {
-      setSignals([{
-        id: Math.random(),
-        type: Math.random() > 0.5 ? 'BUY' : 'SELL',
-        candleId: candles[candles.length - 1].id
-      }]);
+      // Vérifier que nous avons des bougies avant de générer un signal
+      if (candles.length > 0) {
+        setSignals([{
+          id: Math.random(),
+          type: Math.random() > 0.5 ? 'BUY' : 'SELL',
+          candleId: candles[candles.length - 1].id
+        }]);
+      }
       
       // Planifier le prochain signal dans 5-10 secondes
-      timeoutId = setTimeout(generateRandomSignal, Math.random() * 5000 + 5000); // Entre 5 et 10 secondes
+      timeoutId = setTimeout(generateRandomSignal, Math.random() * 5000 + 5000);
     };
 
-    generateRandomSignal();
+    // Ne démarrer que si nous avons des bougies
+    if (candles.length > 0) {
+      generateRandomSignal();
+    }
 
     // Cleanup function
     return () => {
@@ -148,7 +154,7 @@ export function ChartFlow() {
         clearTimeout(timeoutId);
       }
     };
-  }, []); // Retirer la dépendance aux candles pour éviter les re-renders multiples
+  }, [candles]); // Ajouter la dépendance aux candles
 
   return (
     <div className="w-full h-[400px] bg-black/50 rounded-lg p-4">
