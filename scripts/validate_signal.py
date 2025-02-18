@@ -234,7 +234,7 @@ if __name__ == "__main__":
             print("Sample record fields:", list(all_records[0]['fields'].keys()))
         
         # Then try with just the symbol filter
-        symbol_filter = f"{{token}}='{fields['token']}'"  # Try 'token' instead of 'symbol'
+        symbol_filter = f"{{symbol}}='{fields['token']}'"  # Use symbol field name
         print(f"\nTrying filter: {symbol_filter}")
         token_records = tokens_table.get_all(
             formula=symbol_filter
