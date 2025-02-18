@@ -81,7 +81,7 @@ def monitor_active_trades():
                 
                 # Update unrealized P&L
                 pnl = calculate_pnl(fields, current_price)
-                signals_table.update(trade_id, {
+                trades_table.update(trade_id, {
                     'unrealizedPnl': pnl['unrealized_pnl'],
                     'roi': pnl['roi'],
                     'lastUpdateTime': datetime.now(timezone.utc).isoformat()
