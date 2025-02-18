@@ -154,7 +154,7 @@ export function ChartFlow() {
       <div className="h-[67%] flex items-end relative">
         {/* Bandes de Bollinger */}
         <div className="absolute inset-0 pointer-events-none">
-          <svg className="w-[75%] h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <svg className="w-[75%] h-full ml-[15%]" viewBox="0 0 100 100" preserveAspectRatio="none">
             {/* Bande supérieure */}
             <path
               d={upperBand.map((value, index) => {
@@ -182,8 +182,11 @@ export function ChartFlow() {
           </svg>
         </div>
         
-        {/* Zone des bougies - étendue à 90% */}
-        <div className="w-[90%] h-full flex items-end space-x-1">
+        {/* Ajouter un espace à gauche pour pousser les bougies vers la droite */}
+        <div className="w-[15%]"></div>
+        
+        {/* Zone des bougies */}
+        <div className="w-[75%] h-full flex items-end space-x-1">
           <AnimatePresence>
             {candles.map((candle) => {
             // Calculer les hauteurs relatives
