@@ -527,14 +527,15 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
             overall = analyses.get('overall', {})
 
             reason_text = (
-                f"Clear {timeframe.lower()} timeframe analysis shows "
-                f"{analysis.get('signal', 'UNKNOWN') if isinstance(analysis, dict) else analysis.signal} "
-                f"signal with {analysis.get('confidence', 0) if isinstance(analysis, dict) else analysis.confidence}% confidence.\n\n"
-                f"Analysis:\n{timeframe_analysis}\n\n"
+                f"Technical Analysis Summary:\n\n"
+                f"{timeframe_analysis}\n\n"
                 f"Overall Market Context:\n"
                 f"• Primary Trend: {overall.get('primary_trend', 'Unknown')}\n"
                 f"• Timeframe Alignment: {overall.get('timeframe_alignment', 'Unknown')}\n"
                 f"• Best Timeframe: {overall.get('best_timeframe', 'Unknown')}\n\n"
+                f"Key Support/Resistance Levels:\n"
+                f"Support: {', '.join(f'${price:.4f}' for price in analysis.get('key_levels', {}).get('support', []))}\n"
+                f"Resistance: {', '.join(f'${price:.4f}' for price in analysis.get('key_levels', {}).get('resistance', []))}\n\n"
                 f"Key Observations:\n"
                 f"{chr(10).join('• ' + obs for obs in overall.get('key_observations', []))}\n\n"
                 f"Recommended Action:\n"
