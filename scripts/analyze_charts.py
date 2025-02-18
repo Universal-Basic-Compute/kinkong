@@ -484,19 +484,28 @@ def create_airtable_signal(analysis, timeframe, token_info):
 Signal: {analysis.get('signal')}
 Confidence: {analysis.get('confidence')}%
 
-Analysis:
+Market Context:
+• Primary Trend: {analyses.get('overall', {}).get('primary_trend', 'Unknown')}
+• Timeframe Alignment: {analyses.get('overall', {}).get('timeframe_alignment', 'Unknown')}
+
+Technical Analysis:
 {analysis.get('reasoning', 'No reasoning provided')}
 
-Key Levels:
-Support: {', '.join(map(str, analysis.get('key_levels', {}).get('support', [])))}
-Resistance: {', '.join(map(str, analysis.get('key_levels', {}).get('resistance', [])))}
+Price Levels:
+• Support: {', '.join(f'${level:.4f}' for level in analysis.get('key_levels', {}).get('support', []))}
+• Resistance: {', '.join(f'${level:.4f}' for level in analysis.get('key_levels', {}).get('resistance', []))}
 
-Risk/Reward Ratio: {analysis.get('risk_reward_ratio', 'Not calculated')}
+Trade Setup:
+• Entry: ${signal_data['entryPrice']:.4f}
+• Target: ${signal_data['targetPrice']:.4f}
+• Stop Loss: ${signal_data['stopLoss']:.4f}
+• Risk/Reward: {analysis.get('risk_reward_ratio', 'Not calculated')}
 
-Additional Notes:
-- Entry price based on {'resistance' if analysis.get('signal') == 'SELL' else 'support'} level
-- Stop loss derived from {'support' if analysis.get('signal') == 'SELL' else 'resistance'} level
-"""
+Key Observations:
+{chr(10).join('• ' + obs for obs in analyses.get('overall', {}).get('key_observations', ['No observations available']))}
+
+Recommended Action:
+{analyses.get('overall', {}).get('recommended_action', {}).get('reasoning', 'No specific recommendation')}"""
 
             signal_data = {
                 'timestamp': now.isoformat(),
