@@ -72,6 +72,45 @@ def activate_signal(signal_id: str) -> bool:
         print(f"Failed to activate signal: {e}")
         return False
 
+def evaluate_signal_quality(signal_id: str):
+    """Calculate signal performance metrics"""
+    try:
+        load_dotenv()
+        base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
+        api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
+        signals_table = Airtable(base_id, 'SIGNALS', api_key)
+        signal = signals_table.get(signal_id)
+        
+        if not signal or signal['fields'].get('status') not in ['COMPLETED', 'STOPPED', 'EXPIRED']:
+            return
+            
+        fields = signal['fields']
+        
+        # Get prices
+        entry_price = float(fields.get('entryPrice', 0))
+        exit_price = float(fields.get('exitPrice', 0))
+        target_price = float(fields.get('targetPrice', 0))
+        
+        # Calculate returns
+        if fields.get('type') == 'BUY':
+            expected_return = ((target_price - entry_price) / entry_price) * 100
+            actual_return = ((exit_price - entry_price) / entry_price) * 100
+            accuracy = 1 if exit_price > entry_price else 0
+        else:  # SELL
+            expected_return = ((entry_price - target_price) / entry_price) * 100
+            actual_return = ((entry_price - exit_price) / entry_price) * 100
+            accuracy = 1 if exit_price < entry_price else 0
+        
+        # Update signal with metrics
+        signals_table.update(signal_id, {
+            'expectedReturn': round(expected_return, 2),
+            'actualReturn': round(actual_return, 2),
+            'accuracy': accuracy
+        })
+        
+    except Exception as e:
+        print(f"Failed to evaluate signal performance: {e}")
+
 def calculate_pnl(signal_data: dict, current_price: float = None) -> dict:
     """
     Calculate P&L for a signal
@@ -164,6 +203,10 @@ def update_signal_status(signal_id: str, new_status: str, reason: str = None, ex
         
         # Update signal
         signals_table.update(signal_id, update_data)
+        
+        # Evaluate signal performance if it's being closed
+        if new_status in ['COMPLETED', 'STOPPED', 'EXPIRED']:
+            evaluate_signal_quality(signal_id)
         
         # Record status change with P&L if available
         status_record = {

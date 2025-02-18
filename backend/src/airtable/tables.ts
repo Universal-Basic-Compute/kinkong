@@ -60,6 +60,9 @@ export interface Signal {
   wallet: string;
   reason: string;
   url?: string;
+  expectedReturn?: number;
+  actualReturn?: number;
+  accuracy?: number;
 }
 
 export interface MarketSentiment {
