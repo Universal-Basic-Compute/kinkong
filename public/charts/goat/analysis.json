@@ -1,76 +1,76 @@
 {
-  "timestamp": "2025-02-17T19:56:52.158629",
+  "timestamp": "2025-02-18T11:28:09.828533",
   "token": "GOAT",
   "analyses": {
     "14D": {
       "timeframe": "14D",
       "signal": "SELL",
       "confidence": 85,
-      "reasoning": "Clear downtrend since Feb 3rd, price below both EMA20 and EMA50, consistently lower highs and lower lows, declining volume profile",
+      "reasoning": "Strong downward trend with consistently lower highs and lower lows. EMA20 and EMA50 showing clear bearish cross and divergence. Price has broken multiple support levels with increased selling volume.",
       "key_levels": {
         "support": [
-          0.0942,
+          0.0934,
           0.09
         ],
         "resistance": [
-          0.11,
+          0.1082,
           0.12
         ]
       },
-      "risk_reward_ratio": 0.5,
+      "risk_reward_ratio": 1.5,
       "reassess_conditions": null
     },
     "48H": {
       "timeframe": "48H",
-      "signal": "SELL",
-      "confidence": 80,
-      "reasoning": "Strong bearish momentum, EMA cross to downside, increased selling volume, price making new local lows",
+      "signal": "HOLD",
+      "confidence": 65,
+      "reasoning": "Price showing potential consolidation after sharp decline. EMA20 below EMA50 indicating bearish control, but selling momentum appears to be slowing. Volume profile suggests decreased selling pressure.",
       "key_levels": {
         "support": [
-          0.0942,
-          0.092
+          0.096,
+          0.0934
         ],
         "resistance": [
-          0.105,
-          0.1084
+          0.1,
+          0.1082
         ]
       },
-      "risk_reward_ratio": 0.7,
+      "risk_reward_ratio": 1.2,
       "reassess_conditions": null
     },
     "12H": {
       "timeframe": "12H",
-      "signal": "SELL",
-      "confidence": 90,
-      "reasoning": "Sharp bearish price action, high volume selloff, EMAs crossed bearish, no signs of reversal yet",
+      "signal": "BUY",
+      "confidence": 55,
+      "reasoning": "Potential short-term bounce forming with higher lows on recent candles. EMA20 showing signs of flattening. Volume declining on downward moves suggesting exhaustion of sellers.",
       "key_levels": {
         "support": [
-          0.0942,
-          0.093
+          0.096,
+          0.095
         ],
         "resistance": [
-          0.1,
-          0.1025
+          0.099,
+          0.1008
         ]
       },
-      "risk_reward_ratio": 0.8,
+      "risk_reward_ratio": 2.1,
       "reassess_conditions": null
     },
     "overall": {
       "primary_trend": "BEARISH",
-      "timeframe_alignment": "ALIGNED",
+      "timeframe_alignment": "MIXED",
       "best_timeframe": "12H",
       "key_observations": [
-        "All timeframes showing strong bearish momentum",
-        "Volume increasing on downside moves",
-        "No significant support until 0.0942",
-        "EMAs bearishly aligned across all timeframes",
-        "Significant market cap and liquidity decrease"
+        "Long-term trend is strongly bearish",
+        "Medium-term showing potential consolidation",
+        "Short-term indicates possible relief bounce",
+        "Volume profile suggests selling exhaustion",
+        "Price near historical support level at $0.0934"
       ],
       "recommended_action": {
-        "signal": "SELL",
+        "signal": "HOLD",
         "timeframe": "12H",
-        "reasoning": "Strong bearish alignment across all timeframes with increasing selling pressure and no clear reversal signals"
+        "reasoning": "While long-term trend remains bearish, short-term oversold conditions and potential consolidation suggest waiting for clearer direction before taking new positions. Consider scalp opportunities on 12H timeframe if support holds."
       }
     }
   }

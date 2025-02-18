@@ -1,76 +1,76 @@
 {
-  "timestamp": "2025-02-17T19:56:09.537818",
+  "timestamp": "2025-02-18T11:27:23.750054",
   "token": "HAT",
   "analyses": {
-    "8h": {
-      "timeframe": "8h",
+    "14D": {
+      "timeframe": "14D",
       "signal": "SELL",
       "confidence": 85,
-      "reasoning": "Strong bearish momentum with price below both EMA20 and EMA50, steadily declining price action with increasing selling volume, and clear downward trend",
+      "reasoning": "Strong bearish trend with lower highs and lower lows. Price below both EMA20 and EMA50 with bearish cross. Significant volume on recent dumps suggests continued downward pressure.",
       "key_levels": {
         "support": [
-          0.0104,
-          0.01
+          0.0087,
+          0.009
         ],
         "resistance": [
-          0.0115,
-          0.0121
-        ]
-      },
-      "risk_reward_ratio": 2.5,
-      "reassess_conditions": null
-    },
-    "2h": {
-      "timeframe": "2h",
-      "signal": "SELL",
-      "confidence": 90,
-      "reasoning": "Sharp bearish price action with increased volume, death cross forming between EMA20 and EMA50, consistent lower highs and lower lows",
-      "key_levels": {
-        "support": [
-          0.0104,
-          0.01
-        ],
-        "resistance": [
-          0.012,
-          0.0125
-        ]
-      },
-      "risk_reward_ratio": 3.0,
-      "reassess_conditions": null
-    },
-    "15m": {
-      "timeframe": "15m",
-      "signal": "HOLD",
-      "confidence": 70,
-      "reasoning": "Extremely oversold conditions on shorter timeframe, potential for short-term bounce, but overall trend remains bearish",
-      "key_levels": {
-        "support": [
-          0.0104,
-          0.01
-        ],
-        "resistance": [
-          0.011,
-          0.0115
+          0.0107,
+          0.0133
         ]
       },
       "risk_reward_ratio": 1.5,
       "reassess_conditions": null
     },
+    "48H": {
+      "timeframe": "48H",
+      "signal": "SELL",
+      "confidence": 80,
+      "reasoning": "Clear bearish momentum with steep price decline. EMA20 crossed below EMA50, price making consecutive lower lows with increasing volume on dumps.",
+      "key_levels": {
+        "support": [
+          0.009,
+          0.0093
+        ],
+        "resistance": [
+          0.0107,
+          0.012
+        ]
+      },
+      "risk_reward_ratio": 2.0,
+      "reassess_conditions": null
+    },
+    "12H": {
+      "timeframe": "12H",
+      "signal": "HOLD",
+      "confidence": 60,
+      "reasoning": "Potential short-term consolidation forming after sharp decline. Volume profile showing possible exhaustion of sellers, but overall trend remains bearish.",
+      "key_levels": {
+        "support": [
+          0.009,
+          0.0092
+        ],
+        "resistance": [
+          0.0099,
+          0.0107
+        ]
+      },
+      "risk_reward_ratio": 1.2,
+      "reassess_conditions": null
+    },
     "overall": {
       "primary_trend": "BEARISH",
       "timeframe_alignment": "ALIGNED",
-      "best_timeframe": "2h",
+      "best_timeframe": "48H",
       "key_observations": [
-        "All timeframes showing strong bearish momentum",
-        "Significant volume increase during selling periods",
+        "All timeframes show strong bearish momentum",
+        "Significant volume increase on downward moves",
         "Price trading below all major EMAs",
-        "Clear market structure breakdown",
-        "40% decline from ATH indicates strong bearish control"
+        "42.96% decline from ATH indicates strong selling pressure",
+        "Low liquidity could lead to high volatility"
       ],
       "recommended_action": {
         "signal": "SELL",
-        "timeframe": "2h",
-        "reasoning": "Strong bearish alignment across all timeframes with increasing selling pressure and volume confirmation suggests continued downside momentum"
+        "timeframe": "48H",
+        "reasoning": "Strong bearish alignment across all timeframes with significant momentum and volume confirmation. Best to wait for potential bounces to resistance levels for optimal short entries."
       }
     }
   }

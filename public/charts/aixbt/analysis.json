@@ -1,56 +1,56 @@
 {
-  "timestamp": "2025-02-17T19:56:39.431970",
+  "timestamp": "2025-02-18T11:27:53.888394",
   "token": "AIXBT",
   "analyses": {
-    "8h": {
-      "timeframe": "8h",
+    "14D": {
+      "timeframe": "14D",
       "signal": "SELL",
       "confidence": 85,
-      "reasoning": "Strong bearish momentum with price below both EMA20 and EMA50, showing clear downward trajectory. High volume selling pressure and consecutive red candles indicate sustained bearish pressure.",
+      "reasoning": "Strong bearish trend with consistently lower highs and lower lows. EMA20 and EMA50 showing clear bearish crossover and downward slope. Price trading well below both EMAs with significant selling pressure.",
       "key_levels": {
         "support": [
-          0.1921,
-          0.19
+          0.1776,
+          0.17
         ],
         "resistance": [
-          0.21,
-          0.22
+          0.2054,
+          0.2308
         ]
       },
       "risk_reward_ratio": 1.5,
       "reassess_conditions": null
     },
-    "2h": {
-      "timeframe": "2h",
+    "48H": {
+      "timeframe": "48H",
       "signal": "SELL",
       "confidence": 80,
-      "reasoning": "Price has broken below key support levels with increasing volume. EMA crossover to the downside and bearish price action suggest continued downward movement.",
+      "reasoning": "Sharp bearish price action with increased volume on downward moves. Price below both EMAs with bearish crossover. Recent attempts at recovery met with strong selling pressure.",
       "key_levels": {
         "support": [
-          0.1921,
-          0.19
+          0.18,
+          0.1776
         ],
         "resistance": [
-          0.2145,
-          0.2308
+          0.1934,
+          0.2067
         ]
       },
-      "risk_reward_ratio": 1.8,
+      "risk_reward_ratio": 2.0,
       "reassess_conditions": null
     },
-    "15m": {
-      "timeframe": "15m",
+    "12H": {
+      "timeframe": "12H",
       "signal": "HOLD",
       "confidence": 60,
-      "reasoning": "Extremely oversold conditions on shorter timeframe might suggest a brief consolidation or minor bounce, though overall trend remains bearish.",
+      "reasoning": "While overall trend is bearish, price showing signs of short-term consolidation around $0.1834. Volume decreasing suggesting potential exhaustion of selling pressure.",
       "key_levels": {
         "support": [
-          0.1921,
-          0.19
+          0.1776,
+          0.18
         ],
         "resistance": [
-          0.2,
-          0.205
+          0.19,
+          0.1934
         ]
       },
       "risk_reward_ratio": 1.2,
@@ -59,18 +59,18 @@
     "overall": {
       "primary_trend": "BEARISH",
       "timeframe_alignment": "ALIGNED",
-      "best_timeframe": "8h",
+      "best_timeframe": "48H",
       "key_observations": [
-        "All timeframes show strong bearish momentum",
-        "Increasing volume on downward moves",
-        "Price trading below all major EMAs",
-        "Clear lower highs and lower lows pattern",
-        "Significant support break at $0.2000"
+        "Strong bearish momentum across all timeframes",
+        "Significant volume on downward moves",
+        "EMAs showing bearish crossovers",
+        "Price trading below all major moving averages",
+        "Short-term consolidation potentially forming"
       ],
       "recommended_action": {
         "signal": "SELL",
-        "timeframe": "8h",
-        "reasoning": "Strong bearish alignment across all timeframes with increasing selling pressure and volume confirmation suggests continued downward movement. The 8h timeframe provides the clearest picture of the overall trend and optimal entry points for short positions."
+        "timeframe": "48H",
+        "reasoning": "Strong bearish alignment across multiple timeframes with high volume confirming downward movement. Best to wait for any minor rebounds to establish short positions."
       }
     }
   }

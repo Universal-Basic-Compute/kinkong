@@ -1,76 +1,76 @@
 {
-  "timestamp": "2025-02-17T19:57:50.052981",
+  "timestamp": "2025-02-18T11:29:09.423262",
   "token": "COMPUTE",
   "analyses": {
-    "8h": {
-      "timeframe": "8h",
-      "signal": "SELL",
-      "confidence": 75,
-      "reasoning": "Price showing strong bearish momentum with EMA20 crossing below EMA50. Recent large red candles indicate significant selling pressure. Volume increasing on downward moves.",
-      "key_levels": {
-        "support": [
-          0.00014,
-          0.00013
-        ],
-        "resistance": [
-          0.00018,
-          0.0002
-        ]
-      },
-      "risk_reward_ratio": 1.5,
-      "reassess_conditions": null
-    },
-    "2h": {
-      "timeframe": "2h",
+    "14D": {
+      "timeframe": "14D",
       "signal": "SELL",
       "confidence": 85,
-      "reasoning": "Clear downtrend with lower highs and lower lows. EMAs showing strong bearish alignment. Higher timeframe confirmation of bearish momentum.",
+      "reasoning": "Clear downtrend with consistent lower highs and lower lows. Price is below both EMA20 and EMA50, with bearish cross and significant price depreciation (-94.22% from ATH). Volume profile shows declining interest.",
+      "key_levels": {
+        "support": [
+          0.0001,
+          8e-05
+        ],
+        "resistance": [
+          0.0003,
+          0.0005
+        ]
+      },
+      "risk_reward_ratio": 0.5,
+      "reassess_conditions": null
+    },
+    "48H": {
+      "timeframe": "48H",
+      "signal": "SELL",
+      "confidence": 80,
+      "reasoning": "Accelerating downward momentum with increasing selling pressure. EMA20 crossed below EMA50, multiple red candles forming, and declining volume suggesting weak buying interest.",
       "key_levels": {
         "support": [
           0.00015,
           0.00014
         ],
         "resistance": [
-          0.0002,
-          0.00022
+          0.00022,
+          0.0002
         ]
       },
-      "risk_reward_ratio": 2.0,
+      "risk_reward_ratio": 1.2,
       "reassess_conditions": null
     },
-    "15m": {
-      "timeframe": "15m",
-      "signal": "HOLD",
-      "confidence": 60,
-      "reasoning": "Short-term consolidation possible after recent selloff. Wait for clear direction before entering new positions.",
+    "12H": {
+      "timeframe": "12H",
+      "signal": "SELL",
+      "confidence": 90,
+      "reasoning": "Immediate bearish pressure with consecutive red candles, price below both EMAs, and declining volume. Strong selling momentum with -9.96% recent drop.",
       "key_levels": {
         "support": [
           0.00016,
           0.00015
         ],
         "resistance": [
-          0.00019,
-          0.00021
+          0.00018,
+          0.00017
         ]
       },
-      "risk_reward_ratio": 1.2,
+      "risk_reward_ratio": 2.0,
       "reassess_conditions": null
     },
     "overall": {
       "primary_trend": "BEARISH",
       "timeframe_alignment": "ALIGNED",
-      "best_timeframe": "2h",
+      "best_timeframe": "12H",
       "key_observations": [
-        "Strong bearish trend across all timeframes",
-        "Increasing volume on downward moves",
-        "EMA crossovers confirming bearish momentum",
-        "93.46% drop from ATH indicates severe downtrend",
-        "Low liquidity could lead to high volatility"
+        "All timeframes show strong bearish momentum",
+        "Significant volume decline across timeframes",
+        "Price consistently below major EMAs",
+        "Low liquidity ($3,926.51) increases volatility risk",
+        "Substantial decline from ATH (-94.22%)"
       ],
       "recommended_action": {
         "signal": "SELL",
-        "timeframe": "2h",
-        "reasoning": "Multiple timeframe analysis shows strong bearish alignment with increasing selling pressure. The 2h timeframe provides the clearest trend direction and optimal risk/reward setup for short positions."
+        "timeframe": "12H",
+        "reasoning": "Strong bearish alignment across all timeframes with accelerating downward momentum and declining volume suggests continued downward pressure. The 12H timeframe offers the best risk-reward ratio for short positions."
       }
     }
   }

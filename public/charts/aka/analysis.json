@@ -1,76 +1,76 @@
 {
-  "timestamp": "2025-02-17T19:54:54.519498",
+  "timestamp": "2025-02-18T11:26:16.457693",
   "token": "AKA",
   "analyses": {
     "14D": {
       "timeframe": "14D",
       "signal": "SELL",
-      "confidence": 90,
-      "reasoning": "Strong bearish trend with consistently lower highs and lower lows. Price below both EMA20 and EMA50 with bearish crossing. Significant price decline from ATH of 0.0190 to current 0.0034 (-75.04%).",
+      "confidence": 85,
+      "reasoning": "Strong bearish trend with declining EMAs. Price has fallen -70.34% from ATH, showing consistent lower highs and lower lows. Both EMA20 and EMA50 sloping downward with significant bearish momentum.",
       "key_levels": {
         "support": [
           0.003,
-          0.0032
+          0.0036
         ],
         "resistance": [
-          0.0038,
-          0.0046
+          0.0042,
+          0.019
         ]
       },
-      "risk_reward_ratio": 0.5,
+      "risk_reward_ratio": 1.5,
       "reassess_conditions": null
     },
     "48H": {
       "timeframe": "48H",
-      "signal": "SELL",
-      "confidence": 85,
-      "reasoning": "Medium-term downtrend continuation, price action showing increased selling pressure. EMA20 crossed below EMA50, indicating bearish momentum. Volume profile showing distribution pattern.",
+      "signal": "HOLD",
+      "confidence": 60,
+      "reasoning": "Price showing signs of consolidation after sharp decline. EMA20 crossing below EMA50, but recent price action suggests potential short-term bottom formation. Volume declining, indicating possible trend exhaustion.",
       "key_levels": {
         "support": [
-          0.0032,
-          0.0034
+          0.0036,
+          0.0038
         ],
         "resistance": [
           0.004,
-          0.0046
-        ]
-      },
-      "risk_reward_ratio": 0.7,
-      "reassess_conditions": null
-    },
-    "12H": {
-      "timeframe": "12H",
-      "signal": "HOLD",
-      "confidence": 60,
-      "reasoning": "Potential short-term consolidation after recent selloff. Minor bounce from 0.0032 level with increased volume. However, still below key EMAs indicating overall bearish control.",
-      "key_levels": {
-        "support": [
-          0.0032,
-          0.0034
-        ],
-        "resistance": [
-          0.0036,
-          0.0038
+          0.0043
         ]
       },
       "risk_reward_ratio": 1.2,
       "reassess_conditions": null
     },
+    "12H": {
+      "timeframe": "12H",
+      "signal": "BUY",
+      "confidence": 65,
+      "reasoning": "Recent bullish momentum with price forming higher lows. EMA20 showing potential crossover above EMA50. Volume increasing on green candles suggesting buying pressure.",
+      "key_levels": {
+        "support": [
+          0.0037,
+          0.0038
+        ],
+        "resistance": [
+          0.004,
+          0.0042
+        ]
+      },
+      "risk_reward_ratio": 2.0,
+      "reassess_conditions": null
+    },
     "overall": {
       "primary_trend": "BEARISH",
-      "timeframe_alignment": "ALIGNED",
-      "best_timeframe": "14D",
+      "timeframe_alignment": "MIXED",
+      "best_timeframe": "12H",
       "key_observations": [
-        "All timeframes show bearish momentum",
-        "Price consistently below key EMAs",
-        "Significant volume on downward moves",
-        "75% decline from ATH indicates strong bearish market structure",
-        "Minor bounces lacking sufficient buying volume"
+        "Long-term trend remains strongly bearish",
+        "Medium-term showing potential consolidation",
+        "Short-term displaying bullish reversal signals",
+        "Volume profile suggesting short-term accumulation",
+        "Price near critical support level at $0.0036"
       ],
       "recommended_action": {
-        "signal": "SELL",
-        "timeframe": "14D",
-        "reasoning": "Strong bearish alignment across all timeframes with clear downtrend. No significant reversal signals present. Risk management suggests waiting for clear reversal pattern before any long positions."
+        "signal": "HOLD",
+        "timeframe": "12H",
+        "reasoning": "While short-term indicators show bullish potential, the strong bearish long-term trend suggests caution. Wait for clearer confirmation of trend reversal before entering new positions."
       }
     }
   }

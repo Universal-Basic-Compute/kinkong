@@ -1,76 +1,76 @@
 {
-  "timestamp": "2025-02-17T19:57:05.823315",
+  "timestamp": "2025-02-18T11:28:24.775291",
   "token": "FARTCOIN",
   "analyses": {
-    "8h": {
-      "timeframe": "8h",
+    "14D": {
+      "timeframe": "14D",
       "signal": "SELL",
       "confidence": 85,
-      "reasoning": "Strong bearish momentum with price below both EMA20 and EMA50, showing clear downtrend. High volume selling pressure and consecutive red candles indicate sustained bearish pressure.",
+      "reasoning": "Strong bearish trend with consistently lower highs and lower lows. Price below both EMA20 and EMA50 with bearish cross. Volume declining during downtrend indicating seller exhaustion, but trend remains firmly bearish.",
       "key_levels": {
         "support": [
-          0.3562,
-          0.35
+          0.3003,
+          0.28
         ],
         "resistance": [
-          0.4,
-          0.4253
+          0.3846,
+          0.42
         ]
       },
       "risk_reward_ratio": 1.5,
       "reassess_conditions": null
     },
-    "2h": {
-      "timeframe": "2h",
-      "signal": "SELL",
-      "confidence": 90,
-      "reasoning": "Steep price decline with increasing volume, death cross formation between EMA20 and EMA50, and no signs of reversal yet. Strong bearish continuation pattern.",
-      "key_levels": {
-        "support": [
-          0.3562,
-          0.345
-        ],
-        "resistance": [
-          0.38,
-          0.4
-        ]
-      },
-      "risk_reward_ratio": 2.0,
-      "reassess_conditions": null
-    },
-    "15m": {
-      "timeframe": "15m",
+    "48H": {
+      "timeframe": "48H",
       "signal": "HOLD",
-      "confidence": 70,
-      "reasoning": "Extremely oversold conditions on shorter timeframe, but momentum still strongly bearish. Potential for short-term bounce, but overall trend remains down.",
+      "confidence": 65,
+      "reasoning": "Sharp decline followed by attempted consolidation. EMAs showing strong bearish momentum but potential oversold conditions emerging. Volume spikes during selloff suggest capitulation.",
       "key_levels": {
         "support": [
-          0.3562,
-          0.36
+          0.32,
+          0.3
         ],
         "resistance": [
-          0.37,
-          0.38
+          0.36,
+          0.4
         ]
       },
       "risk_reward_ratio": 1.2,
       "reassess_conditions": null
     },
+    "12H": {
+      "timeframe": "12H",
+      "signal": "BUY",
+      "confidence": 55,
+      "reasoning": "Possible short-term bottom formation with bullish divergence on volume. Recent green candles showing buying pressure, though still below EMAs.",
+      "key_levels": {
+        "support": [
+          0.33,
+          0.32
+        ],
+        "resistance": [
+          0.35,
+          0.365
+        ]
+      },
+      "risk_reward_ratio": 2.0,
+      "reassess_conditions": null
+    },
     "overall": {
       "primary_trend": "BEARISH",
-      "timeframe_alignment": "ALIGNED",
-      "best_timeframe": "2h",
+      "timeframe_alignment": "MIXED",
+      "best_timeframe": "12H",
       "key_observations": [
-        "All timeframes showing strong bearish momentum",
-        "Significant increase in selling volume",
-        "Price trading below all major EMAs",
-        "No significant support levels holding",
-        "49.26% decline from ATH indicates severe downtrend"
+        "Long-term trend is strongly bearish",
+        "Short-term potential bounce forming",
+        "High volume selloff suggests possible exhaustion",
+        "Price significantly below major EMAs",
+        "Risk of continued downside remains high"
       ],
       "recommended_action": {
-        "signal": "SELL",
-        "timeframe": "2h",
-        "reasoning": "Strong bearish alignment across all timeframes with high volume confirms downtrend. Best to wait for clear reversal signals before considering long positions."
+        "signal": "HOLD",
+        "timeframe": "12H",
+        "reasoning": "While short-term bounce potential exists, overall bearish trend suggests waiting for clearer reversal signals. High risk environment with mixed signals across timeframes."
       }
     }
   }

@@ -1,20 +1,20 @@
 {
-  "timestamp": "2025-02-17T19:55:14.625967",
+  "timestamp": "2025-02-18T11:26:34.180043",
   "token": "USDT",
   "analyses": {
     "14D": {
       "timeframe": "14D",
       "signal": "HOLD",
       "confidence": 90,
-      "reasoning": "Long-term chart shows extremely stable price action around $1.00 with minimal volatility. EMA20 and EMA50 are flat and tightly compressed, indicating strong price stability.",
+      "reasoning": "Price shows remarkable stability around $1.00 with minimal volatility. EMA20 and EMA50 are flat and tightly compressed, indicating strong price equilibrium. Volume profile is consistent without major anomalies.",
       "key_levels": {
         "support": [
-          0.9935,
-          0.995
+          0.9996,
+          0.9935
         ],
         "resistance": [
-          1.0057,
-          1.0025
+          1.0002,
+          1.0057
         ]
       },
       "risk_reward_ratio": null,
@@ -22,17 +22,17 @@
     },
     "48H": {
       "timeframe": "48H",
-      "signal": "BUY",
-      "confidence": 65,
-      "reasoning": "Price showing slight downward pressure but maintaining critical $0.9998 level. Volume increasing on recent dips suggesting accumulation. EMAs beginning to show potential bullish crossover.",
+      "signal": "SELL",
+      "confidence": 75,
+      "reasoning": "Recent bearish momentum with price breaking below both EMAs. Increased selling volume and consecutive red candles suggest short-term downward pressure. EMAs beginning to slope downward.",
       "key_levels": {
         "support": [
-          0.9998,
-          0.9995
+          0.9996,
+          0.9998
         ],
         "resistance": [
-          1.0002,
-          1.0005
+          1.0,
+          1.0001
         ]
       },
       "risk_reward_ratio": 2.5,
@@ -40,36 +40,36 @@
     },
     "12H": {
       "timeframe": "12H",
-      "signal": "BUY",
-      "confidence": 75,
-      "reasoning": "Recent bounce from $0.9998 support with increasing volume. Short-term momentum turning positive with EMAs starting to curl upward.",
+      "signal": "SELL",
+      "confidence": 80,
+      "reasoning": "Strong bearish momentum with price below both EMAs. Higher trading volume during selloffs. Multiple failed attempts to break above EMA20 resistance.",
       "key_levels": {
         "support": [
-          0.9998,
-          0.9997
+          0.9997,
+          0.9998
         ],
         "resistance": [
-          1.0001,
-          1.0003
+          0.9999,
+          1.0
         ]
       },
       "risk_reward_ratio": 3.0,
       "reassess_conditions": null
     },
     "overall": {
-      "primary_trend": "NEUTRAL",
-      "timeframe_alignment": "ALIGNED",
+      "primary_trend": "BEARISH",
+      "timeframe_alignment": "MIXED",
       "best_timeframe": "12H",
       "key_observations": [
-        "Extremely tight price range characteristic of stablecoin",
-        "Strong support at $0.9998 level across timeframes",
-        "Increasing volume on dips suggests strong buying pressure",
-        "EMAs showing potential bullish convergence on shorter timeframes"
+        "Long-term stability but short-term bearish pressure",
+        "Increased selling volume across shorter timeframes",
+        "Tight price range suggesting low volatility",
+        "Strong historical support at 0.9996"
       ],
       "recommended_action": {
-        "signal": "BUY",
+        "signal": "SELL",
         "timeframe": "12H",
-        "reasoning": "Short-term bullish momentum building with strong support at $0.9998, while longer timeframes confirm overall stability. Risk is minimal with tight stops possible below $0.9997."
+        "reasoning": "Short-term bearish momentum is strong while maintaining proximity to key psychological level of $1.00 for potential exit points. Lower timeframes show clearer directional bias compared to ranging long-term chart."
       }
     }
   }

@@ -1,56 +1,56 @@
 {
-  "timestamp": "2025-02-17T19:55:34.288997",
+  "timestamp": "2025-02-18T11:26:52.406401",
   "token": "ARC",
   "analyses": {
-    "8h": {
-      "timeframe": "8h",
+    "14D": {
+      "timeframe": "14D",
       "signal": "SELL",
       "confidence": 85,
-      "reasoning": "Strong bearish momentum with price below both EMA20 and EMA50, accelerating downtrend with increasing volume, and clear lower lows and lower highs pattern",
+      "reasoning": "Strong bearish trend with price below both EMA20 and EMA50, death cross formation, significant volume decline, and clear lower highs and lower lows pattern. Recent price action shows accelerated downward momentum.",
       "key_levels": {
         "support": [
-          0.1905,
-          0.185
+          0.1692,
+          0.1371
         ],
         "resistance": [
-          0.2501,
-          0.23
+          0.2416,
+          0.2993
         ]
       },
       "risk_reward_ratio": 1.5,
       "reassess_conditions": null
     },
-    "2h": {
-      "timeframe": "2h",
+    "48H": {
+      "timeframe": "48H",
       "signal": "SELL",
       "confidence": 90,
-      "reasoning": "Sharp bearish breakdown with high volume spike, price significantly below moving averages, and steep downward momentum",
+      "reasoning": "Steep downward trend, price consistently below EMAs, high selling volume, and no signs of reversal. EMAs showing strong bearish crossover with increasing spread.",
       "key_levels": {
         "support": [
-          0.1905,
-          0.18
+          0.1692,
+          0.1746
         ],
         "resistance": [
-          0.22,
-          0.2422
+          0.2229,
+          0.2993
         ]
       },
-      "risk_reward_ratio": 2.0,
+      "risk_reward_ratio": 2.1,
       "reassess_conditions": null
     },
-    "15m": {
-      "timeframe": "15m",
-      "signal": "SELL",
-      "confidence": 75,
-      "reasoning": "Immediate bearish trend with minimal retracement, high selling pressure indicated by volume profile",
+    "12H": {
+      "timeframe": "12H",
+      "signal": "HOLD",
+      "confidence": 65,
+      "reasoning": "While maintaining bearish bias, seeing potential short-term consolidation with decreased selling pressure and slight volume reduction. Possible oversold conditions developing.",
       "key_levels": {
         "support": [
-          0.19,
-          0.185
+          0.1692,
+          0.1746
         ],
         "resistance": [
-          0.2,
-          0.21
+          0.1854,
+          0.2055
         ]
       },
       "risk_reward_ratio": 1.8,
@@ -59,18 +59,18 @@
     "overall": {
       "primary_trend": "BEARISH",
       "timeframe_alignment": "ALIGNED",
-      "best_timeframe": "2h",
+      "best_timeframe": "48H",
       "key_observations": [
-        "All timeframes showing strong bearish momentum",
-        "Significant volume increase during selloff",
-        "Price trading well below all major EMAs",
-        "Clear market structure breakdown",
-        "-22.75% daily change indicating strong selling pressure"
+        "Strong bearish momentum across all timeframes",
+        "Significant volume decline indicating potential exhaustion",
+        "Price trading below all major EMAs",
+        "No significant support levels being respected",
+        "27.10% 24h price decrease showing strong selling pressure"
       ],
       "recommended_action": {
         "signal": "SELL",
-        "timeframe": "2h",
-        "reasoning": "Strong bearish alignment across all timeframes with high volume confirmation and clear breakdown of support levels"
+        "timeframe": "48H",
+        "reasoning": "The 48H timeframe shows the clearest bearish setup with optimal risk/reward ratio and strongest trend confirmation. Multiple technical indicators align for continued downward movement."
       }
     }
   }
