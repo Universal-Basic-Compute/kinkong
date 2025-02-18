@@ -158,9 +158,9 @@ export function ChartFlow() {
             {/* Bande supérieure */}
             <path
               d={upperBand.map((value, index) => {
-                const x = (index / (candles.length - 1)) * 100;
+                const x = (index / (candles.length - 1)) * 75;
                 const y = 100 - ((value - Math.min(...lowerBand)) / (Math.max(...upperBand) - Math.min(...lowerBand))) * 100;
-                return `${index === 0 ? 'M' : 'L'} ${x},${y}`;
+                return `${index === 0 ? 'M' : 'L'} ${x}%,${y}%`;
               }).join(' ')}
               fill="none"
               stroke="rgba(255, 255, 255, 0.15)"
@@ -169,9 +169,9 @@ export function ChartFlow() {
             {/* Bande inférieure */}
             <path
               d={lowerBand.map((value, index) => {
-                const x = (index / (candles.length - 1)) * 100;
+                const x = (index / (candles.length - 1)) * 75;
                 const y = 100 - ((value - Math.min(...lowerBand)) / (Math.max(...upperBand) - Math.min(...lowerBand))) * 100;
-                return `${index === 0 ? 'M' : 'L'} ${x},${y}`;
+                return `${index === 0 ? 'M' : 'L'} ${x}%,${y}%`;
               }).join(' ')}
               fill="none"
               stroke="rgba(255, 255, 255, 0.15)"
