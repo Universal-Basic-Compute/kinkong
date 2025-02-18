@@ -412,7 +412,7 @@ def calculate_closed_signals():
                 update_data = {
                     'exitPrice': results['exitPrice'],
                     'actualReturn': round(results['actualReturn'], 2),
-                    'accuracy': results['accuracy']
+                    'success': results['success']  # Changed from accuracy to success
                 }
                 
                 signals_table.update(signal_id, update_data)
@@ -420,7 +420,7 @@ def calculate_closed_signals():
                 print(f"\n✅ Updated signal {signal_id}:")
                 print(f"Exit Price: ${results['exitPrice']:.4f}")
                 print(f"Actual Return: {results['actualReturn']:.2f}%")
-                print(f"Accuracy: {results['accuracy']}")
+                print(f"Success: {'✅' if results['success'] else '❌'}")  # Updated logging
                 print(f"Time to Exit: {results['timeToExit']} minutes")
                 
             except Exception as e:
