@@ -47,17 +47,11 @@ export function ChartFlow() {
 
   const generateCandle = (id: number, prevClose: number, volatilityMultiplier: number = 1): Candle => {
     // Augmenter l'amplitude des mouvements en fonction du multiplicateur
-    const maxMove = prevClose * (activeSignal ? 0.12 : 0.06) * volatilityMultiplier;
+    const maxMove = prevClose * 0.06 * volatilityMultiplier;
     const moveAmount = Math.random() * maxMove;
     
-    // Créer des tendances plus prononcées
-    const direction = activeSignal === 'BUY' ? 
-      (Math.random() > 0.2 ? 1 : -1) :  // 80% de chance de monter après BUY
-      activeSignal === 'SELL' ? 
-      (Math.random() > 0.8 ? 1 : -1) :  // 20% de chance de monter après SELL
-      prevClose > lastPrice ? 
-      (Math.random() > 0.7 ? 1 : -1) :  // Plus de continuité dans la tendance
-      (Math.random() > 0.3 ? 1 : -1);   // Plus de continuité dans la tendance
+    // Simple random direction
+    const direction = Math.random() > 0.5 ? 1 : -1;
       
     const close = prevClose + (direction * moveAmount);
     const bodyRange = Math.abs(close - prevClose);
@@ -451,28 +445,6 @@ export function ChartFlow() {
             })}
           </AnimatePresence>
 
-          {/* Signaux animés */}
-          <AnimatePresence>
-            {signals.map((signal) => (
-              <motion.div
-                key={signal.id}
-                className={`absolute ${
-                  signal.type === 'BUY' ? 'text-green-500' : 'text-red-500'
-                } font-bold text-xl`}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.5 }}
-                style={{
-                  bottom: '100%',
-                  right: '25%',
-                  transform: 'translateX(50%)'
-                }}
-              >
-                {signal.type}
-              </motion.div>
-            ))}
-          </AnimatePresence>
         </div>
         
         {/* Signal display zone - 25% */}
