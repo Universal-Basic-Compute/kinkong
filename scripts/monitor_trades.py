@@ -36,10 +36,10 @@ def monitor_active_trades():
         base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
         api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
         
-        signals_table = Airtable(base_id, 'SIGNALS', api_key)
+        trades_table = Airtable(base_id, 'TRADES', api_key)
         
         # First check pending trades
-        pending_trades = signals_table.get_all(
+        pending_trades = trades_table.get_all(
             formula="AND(status='PENDING', expiryDate>=TODAY())"
         )
         
@@ -57,7 +57,7 @@ def monitor_active_trades():
                 continue
         
         # Then check active trades
-        active_trades = signals_table.get_all(
+        active_trades = trades_table.get_all(
             formula="AND(status='ACTIVE', expiryDate>=TODAY())"
         )
         
