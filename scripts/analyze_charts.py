@@ -536,16 +536,12 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
                 f"{overall_analysis.get('recommended_action', {}).get('reasoning', 'No specific recommendation')}"
             )
 
-            # Map timeframe to signal type
-            timeframe_mapping = {
-                '1D': 'POSITION',   # Daily chart for POSITION trades
-                '4H': 'SWING',      # 4-hour chart for SWING trades
-                '1H': 'INTRADAY',   # 1-hour chart for INTRADAY trades
-                '15m': 'SCALP'      # 15-minute chart for SCALP trades
-            }
-            
-            strategy_timeframe = timeframe_mapping.get(timeframe, 'INTRADAY')
-            expiry_delta = expiry_mapping.get(strategy_timeframe)
+            # The timeframe should already be one of our standard timeframes
+            if timeframe not in ['SCALP', 'INTRADAY', 'SWING', 'POSITION']:
+                print(f"Invalid timeframe: {timeframe}")
+                return None
+
+            expiry_delta = expiry_mapping.get(timeframe)
             expiry_date = now + expiry_delta
 
             # Calculate expected return percentage
