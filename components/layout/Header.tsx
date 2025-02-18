@@ -68,6 +68,18 @@ export default function Header() {
         }
       ],
       byLine: 'by 💫 SwarmVentures'
+    },
+    {
+      label: 'Learn-to-Earn',
+      isGroup: true,
+      subItems: [
+        { 
+          label: 'Coming Soon',
+          href: '#',
+          description: 'Learn-to-Earn features coming soon'
+        }
+      ],
+      byLine: 'by 🐝 WealthHive'
     }
   ];
 
