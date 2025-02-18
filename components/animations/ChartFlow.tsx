@@ -551,20 +551,11 @@ export function ChartFlow() {
       </div>
       
         {/* Section des raisons en streaming - texte simple */}
-        <div className="absolute inset-0">
+        <div className="absolute bottom-[-80px] left-0 right-0 flex justify-center gap-16">
           {streamingReasons.map((stream, index) => (
             <div 
               key={index}
-              className={`
-                absolute
-                ${index === 0 
-                  ? 'top-[20%] left-[15%]' // Premier texte plus à gauche
-                  : index === 1 
-                  ? 'top-[35%] left-[22%]' // Deuxième texte légèrement décalé
-                  : 'top-[50%] left-[18%]' // Troisième texte entre les deux
-                }
-                max-w-[280px]
-              `}
+              className="max-w-[280px]"
             >
               <p className="text-xs font-mono leading-relaxed text-amber-50/90">
                 {stream.text}
