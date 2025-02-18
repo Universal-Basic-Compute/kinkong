@@ -4,6 +4,20 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { WalletConnect } from '@/components/wallet/WalletConnect';
 
+type SubItem = {
+  label: string;
+  href: string;
+  description: string;
+  isGlowing?: boolean;
+};
+
+type NavItem = {
+  label: string;
+  isGroup: boolean;
+  subItems: SubItem[];
+  byLine?: string;
+};
+
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -96,8 +110,8 @@ export default function Header() {
           </Link>
 
           <nav className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => (
-              <div key={item.href || item.label} className="relative group">
+            {navItems.map((item: NavItem) => (
+              <div key={item.label} className="relative group">
                 {item.isGroup ? (
                   <div className="flex flex-col justify-center -mt-1">
                     <div className="text-gray-300 cursor-default px-2 py-1 flex items-center font-medium tracking-wide">
@@ -194,8 +208,8 @@ export default function Header() {
         {isMobileMenuOpen && (
           <div className="border-t border-gold/20 bg-black/95 backdrop-blur-sm md:hidden">
             <nav className="p-4 flex flex-col space-y-2">
-              {navItems.map((item) => (
-                <div key={item.href || item.label}>
+              {navItems.map((item: NavItem) => (
+                <div key={item.label}>
                   {item.subItems ? (
                     <>
                       <div>
