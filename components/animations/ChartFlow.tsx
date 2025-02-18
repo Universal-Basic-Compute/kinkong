@@ -12,9 +12,22 @@ interface Candle {
   color: string;
 }
 
+interface Signal {
+  id: number;
+  type: 'BUY' | 'SELL';
+  candleId: number;
+}
+
 export function ChartFlow() {
   const [candles, setCandles] = useState<Candle[]>([]);
   const [lastPrice, setLastPrice] = useState(100);
+  const [signals, setSignals] = useState<Signal[]>([]);
+
+  const generateSignal = (candleId: number) => ({
+    id: Math.random(),
+    type: Math.random() > 0.5 ? 'BUY' : 'SELL',
+    candleId
+  });
 
   const generateCandle = (id: number, prevClose: number): Candle => {
     const maxMove = prevClose * 0.03;
@@ -113,6 +126,31 @@ export function ChartFlow() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Intervalle aléatoire entre 1 et 5 secondes
+      const randomDelay = Math.floor(Math.random() * 4000) + 1000;
+      clearInterval(interval);
+      
+      setSignals(prev => {
+        const newSignal = generateSignal(candles[candles.length - 1].id);
+        return [...prev.slice(-5), newSignal]; // Garde seulement les 5 derniers signaux
+      });
+
+      setTimeout(() => {
+        const newInterval = setInterval(() => {
+          setSignals(prev => {
+            const newSignal = generateSignal(candles[candles.length - 1].id);
+            return [...prev.slice(-5), newSignal];
+          });
+        }, Math.floor(Math.random() * 4000) + 1000);
+        return () => clearInterval(newInterval);
+      }, randomDelay);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [candles]);
+
   return (
     <div className="w-full h-[400px] bg-black/50 rounded-lg p-4">
       <div className="h-[67%] flex items-end relative">
@@ -169,6 +207,28 @@ export function ChartFlow() {
               </motion.div>
             );
             })}
+          </AnimatePresence>
+
+          {/* Signaux animés */}
+          <AnimatePresence>
+            {signals.map((signal) => (
+              <motion.div
+                key={signal.id}
+                className={`absolute right-0 ${
+                  signal.type === 'BUY' ? 'text-green-500' : 'text-red-500'
+                } font-bold text-sm`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5 }}
+                style={{
+                  bottom: '100%',
+                  transform: 'translateX(50%)'
+                }}
+              >
+                {signal.type}
+              </motion.div>
+            ))}
           </AnimatePresence>
         </div>
         
