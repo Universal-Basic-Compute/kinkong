@@ -18,7 +18,7 @@ def get_historical_prices(token_mint: str, start_time: datetime, end_time: datet
         params = {
             "address": token_mint,
             "address_type": "token",
-            "type": "1m",  # 1-minute candles
+            "type": "1m",  # 1-minute candles for most granular data
             "time_from": int(start_time.timestamp()),
             "time_to": int(end_time.timestamp())
         }
@@ -46,13 +46,14 @@ def get_historical_prices(token_mint: str, start_time: datetime, end_time: datet
         return []
 
 def simulate_trade(prices: list, signal_data: dict) -> dict:
-    """Simulate trade execution and return results"""
+    """Find actual exit price from historical data"""
     entry_price = float(signal_data.get('entryPrice', 0))
     target_price = float(signal_data.get('targetPrice', 0))
     stop_loss = float(signal_data.get('stopLoss', 0))
     signal_type = signal_data.get('type')
     
-    exit_price = entry_price  # Default to entry if no conditions met
+    # Default to last price if no exit conditions met
+    exit_price = float(prices[-1]['value']) if prices else entry_price
     exit_reason = 'EXPIRED'
     time_to_exit = len(prices)  # Default to full duration
     
@@ -61,23 +62,23 @@ def simulate_trade(prices: list, signal_data: dict) -> dict:
         
         if signal_type == 'BUY':
             if price >= target_price:
-                exit_price = target_price
+                exit_price = price
                 exit_reason = 'COMPLETED'
                 time_to_exit = i
                 break
             elif price <= stop_loss:
-                exit_price = stop_loss
+                exit_price = price
                 exit_reason = 'STOPPED'
                 time_to_exit = i
                 break
         else:  # SELL
             if price <= target_price:
-                exit_price = target_price
+                exit_price = price
                 exit_reason = 'COMPLETED'
                 time_to_exit = i
                 break
             elif price >= stop_loss:
-                exit_price = stop_loss
+                exit_price = price
                 exit_reason = 'STOPPED'
                 time_to_exit = i
                 break
