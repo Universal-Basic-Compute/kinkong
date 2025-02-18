@@ -558,15 +558,15 @@ export function ChartFlow() {
               className={`
                 absolute
                 ${index === 0 
-                  ? 'top-4 left-4' // Plus proche du haut
+                  ? 'top-[25%] left-[25%]' // Premier texte au quart supérieur gauche
                   : index === 1 
-                  ? 'bottom-16 left-4' // Plus proche du bas
-                  : 'bottom-4 right-4' // Plus proche du bas à droite
+                  ? 'top-[40%] left-[35%]' // Deuxième texte vers le centre-gauche
+                  : 'top-[55%] left-[30%]' // Troisième texte vers le centre-bas
                 }
                 max-w-[280px]
               `}
             >
-              <p className="text-xs font-mono leading-relaxed text-amber-50/90"> {/* Couleur plus blanc-jaune */}
+              <p className="text-xs font-mono leading-relaxed text-amber-50/90">
                 {stream.text}
                 <span className="animate-pulse ml-1 opacity-70">🦍</span>
               </p>
