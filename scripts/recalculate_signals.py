@@ -84,10 +84,16 @@ def main():
             
         signals_table = Airtable(base_id, 'SIGNALS', api_key)
         
-        # Get all signals
+        # Get all signals that need evaluation - only check for missing metrics
         print("\nFetching signals from Airtable...")
-        signals = signals_table.get_all()
-        print(f"Found {len(signals)} signals to process")
+        signals = signals_table.get_all(
+            formula="OR("
+                    "expectedReturn=BLANK(), "
+                    "actualReturn=BLANK(), "
+                    "riskRewardRatio=BLANK()"
+                    ")"
+        )
+        print(f"Found {len(signals)} signals to evaluate")
         
         # Process each signal
         for signal in signals:
@@ -113,9 +119,12 @@ def main():
                 if calculations:
                     updates.update(calculations)
                     print("Calculated metrics:")
-                    print(f"Expected Return: {calculations.get('expectedReturn')}%")
-                    print(f"Actual Return: {calculations.get('actualReturn')}%")
-                    print(f"Risk Ratio: {calculations.get('riskRatio')}:1")
+                    if 'expectedReturn' in calculations:
+                        print(f"Expected Return: {calculations['expectedReturn']}%")
+                    if 'actualReturn' in calculations:
+                        print(f"Actual Return: {calculations['actualReturn']}%")
+                    if 'riskRewardRatio' in calculations:
+                        print(f"Risk/Reward Ratio: {calculations['riskRewardRatio']}:1")
                 
                 # Update signal if we have any changes
                 if updates:
