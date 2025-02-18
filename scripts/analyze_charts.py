@@ -512,8 +512,18 @@ def create_airtable_signal(analysis, timeframe, token_info):
                 target_price = resistance_levels[0] if resistance_levels else 0
                 stop_loss = support_levels[1] if len(support_levels) > 1 else entry_price * 0.95
 
-            # Just extract the analysis reasoning text
-            reason_text = analysis.get('reasoning', '').strip()
+            # Combine relevant reasonings into a single text
+            reason_text = (
+                f"Analysis:\n"
+                f"{analysis.get('reasoning', '').strip()}\n\n"
+                f"Overall Market Context:\n"
+                f"• Trend: {analyses.get('overall', {}).get('primary_trend', 'Unknown')}\n"
+                f"• Timeframe Alignment: {analyses.get('overall', {}).get('timeframe_alignment', 'Unknown')}\n"
+                f"• Key Observations:\n"
+                f"{chr(10).join('  - ' + obs for obs in analyses.get('overall', {}).get('key_observations', []))}\n\n"
+                f"Recommended Action:\n"
+                f"{analyses.get('overall', {}).get('recommended_action', {}).get('reasoning', 'No specific recommendation')}"
+            )
 
             # Map timeframe to signal type
             timeframe_mapping = {
