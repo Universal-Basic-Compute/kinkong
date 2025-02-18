@@ -74,7 +74,7 @@ export default function Header() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </div>
-                ) : (
+                ) : item.href ? (
                   <Link
                     href={item.href}
                     className={`text-gray-300 hover:text-gold transition-colors duration-200 font-medium tracking-wide px-2 py-1 flex items-center
@@ -92,6 +92,8 @@ export default function Header() {
                       </svg>
                     )}
                   </Link>
+                ) : (
+                  <span className="text-gray-300 px-2 py-1">{item.label}</span>
                 )}
                 
                 {item.subItems && (
