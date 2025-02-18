@@ -245,16 +245,15 @@ For each timeframe, provide:
 4. Detailed reasoning
 5. Risk/reward ratio if applicable
 
-Consider:
-- How the different timeframes confirm or conflict with each other
-- Whether price action shows alignment across timeframes
-- Volume patterns across different time periods
-- Key technical levels visible in multiple timeframes
+Timeframes analyzed (2x trade duration for context):
+- 14D chart (for 7-day SWING trades)
+- 48H chart (for 24-hour INTRADAY trades)
+- 12H chart (for 6-hour SCALP trades)
 
 Format your response as JSON:
 {
     "timeframes": {
-        "8h": {
+        "14D": {  # For 7-day SWING trades
             "signal": "BUY|SELL|HOLD",
             "confidence": 0,
             "reasoning": "Detailed analysis",
@@ -264,8 +263,12 @@ Format your response as JSON:
             },
             "risk_reward_ratio": 0.0
         },
-        "2h": { ... },
-        "15m": { ... }
+        "48H": {  # For 24-hour INTRADAY trades
+            ...
+        },
+        "12H": {  # For 6-hour SCALP trades
+            ...
+        }
     },
     "overall_analysis": {
         "primary_trend": "BULLISH|BEARISH|NEUTRAL",
@@ -576,10 +579,11 @@ def process_signals_batch(token_analyses):
     print(f"Received {len(token_analyses)} token analyses to process")
     
     # Add timeframe mapping
+    # Map chart timeframes to trade durations
     timeframe_mapping = {
-        '12h': '15m',
-        '48h': '2h',
-        '14d': '8h'
+        '14D': 'SWING',     # 14-day chart for 7-day trades
+        '48H': 'INTRADAY',  # 48-hour chart for 24-hour trades
+        '12H': 'SCALP'      # 12-hour chart for 6-hour trades
     }
     
     pending_signals = []
