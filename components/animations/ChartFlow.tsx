@@ -29,16 +29,31 @@ export function ChartFlow() {
     // Nouvelle logique pour des mèches plus variées et souvent plus courtes
     const bodyRange = Math.abs(close - prevClose);
     
-    // Utilise une distribution exponentielle pour favoriser les petites mèches
+    // 30% de chance de n'avoir aucune mèche
+    const hasWicks = Math.random() > 0.3;
+    
+    if (!hasWicks) {
+      // Retourne une bougie sans mèches
+      return {
+        id,
+        open: prevClose,
+        close,
+        high: Math.max(prevClose, close),
+        low: Math.min(prevClose, close),
+        color: close >= prevClose ? '#22c55e' : '#ef4444'
+      };
+    }
+    
+    // Pour les bougies avec mèches
     const getWickSize = () => {
       const random = Math.random();
-      return bodyRange * (0.1 + (random * random) * 1.2); // random² donne plus de petites valeurs
+      return bodyRange * (0.1 + (random * random) * 1.2);
     };
 
     const upperWickSize = getWickSize();
     const lowerWickSize = getWickSize();
     
-    // Parfois (20% des cas) on aura une mèche plus longue
+    // 20% de chance d'avoir une mèche longue
     const hasLongWick = Math.random() > 0.8;
     if (hasLongWick) {
       if (Math.random() > 0.5) {
@@ -51,7 +66,7 @@ export function ChartFlow() {
     const high = Math.max(prevClose, close) + upperWickSize;
     const low = Math.min(prevClose, close) - lowerWickSize;
 
-    setLastPrice(prevClose); // Keep track of last price for trend
+    setLastPrice(prevClose);
 
     return {
       id,
