@@ -179,6 +179,7 @@ export function SignalHistory() {
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">From</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Reason</th>
             <th className="px-6 py-3 text-center text-xs font-medium text-gold uppercase tracking-wider">Success</th>
+            <th className="px-6 py-3 text-right text-xs font-medium text-gold uppercase tracking-wider">Return</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gold/10">
@@ -259,6 +260,15 @@ export function SignalHistory() {
                   )
                 ) : (
                   <span style={{ color: '#333333', filter: 'grayscale(100%) brightness(0.3)' }}>⌛</span>
+                )}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-right">
+                {signal.actualReturn ? (
+                  <span className={signal.actualReturn >= 0 ? 'text-green-400' : 'text-red-400'}>
+                    {signal.actualReturn.toFixed(2)}%
+                  </span>
+                ) : (
+                  '-'
                 )}
               </td>
             </tr>
