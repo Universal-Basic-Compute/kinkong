@@ -9,19 +9,19 @@ export default function Header() {
 
   const navItems = [
     { 
-      label: 'Dashboard', 
-      href: '/dashboard',
-      description: 'Market overview and key metrics'
-    },
-    { 
-      label: 'Portfolio', 
-      href: '/portfolio',
-      description: 'Your holdings and performance'
-    },
-    { 
-      label: 'Trading',
+      label: 'Managed Trading',
       isGroup: true,
       subItems: [
+        { 
+          label: 'Dashboard', 
+          href: '/dashboard',
+          description: 'Market overview and key metrics'
+        },
+        { 
+          label: 'Portfolio', 
+          href: '/portfolio',
+          description: 'Your holdings and performance'
+        },
         { 
           label: 'Signals', 
           href: '/signals',
@@ -31,19 +31,19 @@ export default function Header() {
           label: 'Performance', 
           href: '/performance',
           description: 'Trading history and analytics'
+        },
+        { 
+          label: 'Strategy', 
+          href: '/strategy',
+          description: 'Portfolio strategy and settings'
+        },
+        { 
+          label: 'Invest', 
+          href: '/invest',
+          description: 'Investment opportunities and allocation',
+          isGlowing: true
         }
       ]
-    },
-    { 
-      label: 'Strategy', 
-      href: '/strategy',
-      description: 'Portfolio strategy and settings'
-    },
-    { 
-      label: 'Invest', 
-      href: '/invest',
-      description: 'Investment opportunities and allocation',
-      isGlowing: true
     }
   ];
 
