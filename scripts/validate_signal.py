@@ -319,23 +319,21 @@ if __name__ == "__main__":
                 # Create trade record
                 trades_table = Airtable(base_id, 'TRADES', api_key)
                 trade_data = {
-                    'fields': {
-                        'signalId': signal['id'],
-                        'token': fields['token'],
-                        'type': fields['type'],  # Keep as 'type' since that's the actual field name
-                        'timeframe': ','.join(valid_timeframes),
-                        'status': 'PENDING',
-                        'amount': 0,  # Will be set during execution
-                        'entryValue': 0,  # Will be set during execution
-                        'activationTime': None,  # Will be set when activated
-                        'entryPrice': float(fields['entryPrice']),
-                        'stopLoss': float(fields['stopLoss']),
-                        'targetPrice': float(fields['targetPrice']),
-                        'expiryDate': fields['expiryDate'],  # Use the signal's expiry date
-                        'exitPrice': None,  # Will be set when trade closes
-                        'realizedPnl': None,  # Will be set when trade closes
-                        'roi': None  # Will be set when trade closes
-                    }
+                    'signalId': signal['id'],
+                    'token': fields['token'],
+                    'type': fields['type'],
+                    'timeframe': ','.join(valid_timeframes),
+                    'status': 'PENDING',
+                    'amount': 0,
+                    'entryValue': 0,
+                    'activationTime': None,
+                    'entryPrice': float(fields['entryPrice']),
+                    'stopLoss': float(fields['stopLoss']),
+                    'targetPrice': float(fields['targetPrice']),
+                    'expiryDate': fields['expiryDate'],
+                    'exitPrice': None,
+                    'realizedPnl': None,
+                    'roi': None
                 }
                 
                 # Add trade record
