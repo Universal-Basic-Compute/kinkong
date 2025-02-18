@@ -67,6 +67,41 @@ def validate_signal(
             '2h': 'INTRADAY',
             '8h': 'SWING'
         }
+
+if __name__ == "__main__":
+    # Test case
+    test_signal = {
+        'signal': 'BUY',
+        'entryPrice': 1.0,
+        'targetPrice': 1.15,  # 15% upside
+        'stopLoss': 0.92,     # 8% downside
+    }
+    
+    test_token = {
+        'symbol': 'TEST',
+        'mint': 'test123'
+    }
+    
+    test_market = {
+        'price': 1.0,
+        'liquidity': 50000,
+        'price_change_24h': 0
+    }
+    
+    # Test different timeframes
+    for timeframe in ['15m', '2h', '8h']:
+        print(f"\nTesting {timeframe} timeframe:")
+        result = validate_signal(
+            timeframe=timeframe,
+            signal_data=test_signal,
+            token_info=test_token,
+            market_data=test_market
+        )
+        print(f"Valid: {result['valid']}")
+        print(f"Reason: {result['reason']}")
+        print(f"Expected profit: {result['expected_profit']:.1%}")
+        print(f"Costs: {result['costs']:.1%}")
+        print(f"Risk/Reward: {result['risk_reward']:.2f}")
         strategy_timeframe = timeframe_mapping.get(timeframe, 'INTRADAY')
         
         # Get requirements for this timeframe
