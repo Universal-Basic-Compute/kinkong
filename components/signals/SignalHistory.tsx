@@ -90,6 +90,7 @@ interface Signal {
   wallet: string;
   reason: string;
   url?: string;
+  success?: boolean;
 }
 
 function getConfidenceClass(confidence: Signal['confidence']) {
@@ -176,6 +177,7 @@ export function SignalHistory() {
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Timeframe</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Prices</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Confidence</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Success</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">From</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Reason</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Reference</th>
@@ -223,6 +225,15 @@ export function SignalHistory() {
                 <span className={`px-2 py-1 rounded-full text-xs ${getConfidenceClass(signal.confidence)}`}>
                   {signal.confidence}
                 </span>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-center text-sm">
+                {signal.success !== null && signal.success !== undefined ? (
+                  signal.success ? (
+                    <span className="metallic-text-ubc font-bold">✓</span>
+                  ) : (
+                    <span className="text-red-500">✗</span>
+                  )
+                ) : null}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">
                 <a 
