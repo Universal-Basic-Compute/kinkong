@@ -35,6 +35,7 @@ def rate_limited_fetch(timeframe, hours, token_address):
 CHART_CONFIGS = [
     {
         'timeframe': '15m',
+        'strategy_timeframe': 'SCALP',
         'duration_hours': 6,  # SCALP: 6 hours
         'title': '{symbol}/USD Scalp Analysis (6H)',
         'subtitle': '15-minute candles - Scalp Trading View',
@@ -42,6 +43,7 @@ CHART_CONFIGS = [
     },
     {
         'timeframe': '1H',
+        'strategy_timeframe': 'INTRADAY',
         'duration_hours': 24,  # INTRADAY: 24 hours
         'title': '{symbol}/USD Intraday Analysis (24H)',
         'subtitle': '1-hour candles - Intraday Trading View',
@@ -49,6 +51,7 @@ CHART_CONFIGS = [
     },
     {
         'timeframe': '4H',
+        'strategy_timeframe': 'SWING',
         'duration_hours': 168,  # SWING: 7 days
         'title': '{symbol}/USD Swing Analysis (7D)',
         'subtitle': '4-hour candles - Swing Trading View',
@@ -56,6 +59,7 @@ CHART_CONFIGS = [
     },
     {
         'timeframe': '1D',
+        'strategy_timeframe': 'POSITION',
         'duration_hours': 720,  # POSITION: 30 days
         'title': '{symbol}/USD Position Analysis (30D)',
         'subtitle': 'Daily candles - Position Trading View',
