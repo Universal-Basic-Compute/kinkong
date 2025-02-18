@@ -35,24 +35,31 @@ def rate_limited_fetch(timeframe, hours, token_address):
 CHART_CONFIGS = [
     {
         'timeframe': '15m',
-        'duration_hours': 12,
-        'title': '{symbol}/USD Short-term Analysis (12H)',
-        'subtitle': '15-minute candles - Trading Setup View',
-        'filename': '{symbol}_12h_short_term_15m_candles_trading_view.png'
+        'duration_hours': 6,  # SCALP: 6 hours
+        'title': '{symbol}/USD Scalp Analysis (6H)',
+        'subtitle': '15-minute candles - Scalp Trading View',
+        'filename': '{symbol}_6h_scalp_15m_candles_trading_view.png'
     },
     {
-        'timeframe': '2H',
-        'duration_hours': 48,
-        'title': '{symbol}/USD Medium-term Analysis (48H)',
-        'subtitle': '2-hour candles - Swing Trading View',
-        'filename': '{symbol}_48h_medium_term_2h_candles_swing_view.png'
+        'timeframe': '1H',
+        'duration_hours': 24,  # INTRADAY: 24 hours
+        'title': '{symbol}/USD Intraday Analysis (24H)',
+        'subtitle': '1-hour candles - Intraday Trading View',
+        'filename': '{symbol}_24h_intraday_1h_candles_trading_view.png'
     },
     {
-        'timeframe': '8H',
-        'duration_hours': 336,
-        'title': '{symbol}/USD Long-term Analysis (14D)',
-        'subtitle': '8-hour candles - Trend Analysis View',
-        'filename': '{symbol}_14d_long_term_8h_candles_trend_view.png'
+        'timeframe': '4H',
+        'duration_hours': 168,  # SWING: 7 days
+        'title': '{symbol}/USD Swing Analysis (7D)',
+        'subtitle': '4-hour candles - Swing Trading View',
+        'filename': '{symbol}_7d_swing_4h_candles_trading_view.png'
+    },
+    {
+        'timeframe': '1D',
+        'duration_hours': 720,  # POSITION: 30 days
+        'title': '{symbol}/USD Position Analysis (30D)',
+        'subtitle': 'Daily candles - Position Trading View',
+        'filename': '{symbol}_30d_position_daily_candles_trading_view.png'
     }
 ]
 
