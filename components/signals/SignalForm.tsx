@@ -60,6 +60,27 @@ export function SignalForm() {
     setSuccess(false)
 
     try {
+      // Calculate expiry date based on timeframe
+      const now = new Date();
+      let expiryDate: Date;
+      
+      switch (formData.timeframe) {
+        case 'SCALP':
+          expiryDate = new Date(now.getTime() + 6 * 60 * 60 * 1000); // 6 hours
+          break;
+        case 'INTRADAY':
+          expiryDate = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours
+          break;
+        case 'SWING':
+          expiryDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
+          break;
+        case 'POSITION':
+          expiryDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
+          break;
+        default:
+          expiryDate = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Default to 24 hours
+      }
+
       const response = await fetch('/api/signals', {
         method: 'POST',
         headers: {
@@ -68,6 +89,8 @@ export function SignalForm() {
         body: JSON.stringify({
           ...formData,
           wallet: publicKey.toString(),
+          expiryDate: expiryDate.toISOString(),
+          status: 'PENDING'
         }),
       })
 
