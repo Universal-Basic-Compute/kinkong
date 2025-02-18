@@ -151,8 +151,8 @@ export function ChartFlow() {
           setActiveSignal(null);
         }, Math.random() * 1000 + 2500);
 
-        // Intervalle beaucoup plus long entre les signaux : 20-40 secondes
-        const nextDelay = Math.random() * 20000 + 20000;
+        // Intervalle entre les signaux : 200-400 secondes (environ 3.5-6.5 minutes)
+        const nextDelay = Math.random() * 200000 + 200000;
         timeoutId = setTimeout(generateRandomSignal, nextDelay);
       }
     };
