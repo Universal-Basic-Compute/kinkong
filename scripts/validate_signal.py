@@ -195,15 +195,15 @@ if __name__ == "__main__":
     signals_table = Airtable(base_id, 'SIGNALS', api_key)
     tokens_table = Airtable(base_id, 'TOKENS', api_key)
     
-    # Get pending signals
-    pending_signals = signals_table.get_all(
-        formula="AND(status='PENDING', expiryDate>=TODAY())"
+    # Get signals that haven't expired
+    signals = signals_table.get_all(
+        formula="expiryDate>=TODAY()"  # Only check expiry date
     )
     
-    print("\n🔍 Validating Pending Signals")
+    print("\n🔍 Validating Signals")
     print("=" * 50)
     
-    for signal in pending_signals:
+    for signal in signals:
         fields = signal['fields']
         
         # Get token info
