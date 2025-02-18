@@ -304,8 +304,10 @@ export function ChartFlow() {
                 transition={{ duration: 0.5 }}
                 className="flex justify-between items-center py-2 border-b border-gold/10 last:border-0"
               >
-                <span className="text-gold font-medium">{signal.token}</span>
-                <span className="text-gray-300">${signal.entryPrice?.toFixed(3)}</span>
+                <span className="metallic-text-gold font-medium">${signal.token}</span>
+                <span className={`metallic-text-${signal.type === 'BUY' ? 'green' : 'red'}`}>
+                  {signal.type}
+                </span>
               </motion.div>
             ))}
           </div>
