@@ -23,11 +23,6 @@ export default function Header() {
           description: 'Your holdings and performance'
         },
         { 
-          label: 'Signals', 
-          href: '/signals',
-          description: 'Trading signals and setups'
-        },
-        { 
           label: 'Performance', 
           href: '/performance',
           description: 'Trading history and analytics'
@@ -46,6 +41,23 @@ export default function Header() {
       ]
     },
     {
+      label: 'Active Trading',
+      isGroup: true,
+      subItems: [
+        { 
+          label: 'Signals', 
+          href: '/signals',
+          description: 'Trading signals and setups'
+        },
+        { 
+          label: 'Coming Soon',
+          href: '#',
+          description: 'Active trading features coming soon'
+        }
+      ],
+      byLine: 'by 🏹 RobinHood Agent'
+    },
+    {
       label: 'Shares Management',
       isGroup: true,
       subItems: [
@@ -56,18 +68,6 @@ export default function Header() {
         }
       ],
       byLine: 'by 💫 SwarmVentures'
-    },
-    {
-      label: 'Active Trading',
-      isGroup: true,
-      subItems: [
-        { 
-          label: 'Coming Soon',
-          href: '#',
-          description: 'Active trading features coming soon'
-        }
-      ],
-      byLine: 'by 🏹 RobinHood Agent'
     }
   ];
 
