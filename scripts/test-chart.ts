@@ -1,5 +1,4 @@
-import { generateTokenChart, getChartData } from '../utils/charts';
-import fs from 'fs';
+import { getChartData } from '../utils/charts';
 
 interface Candlestick {
     timestamp: number;
@@ -15,15 +14,10 @@ async function testChart() {
         // Correct UBC mint address
         const ubcMint = '9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump';
         
-        console.log('Generating chart for UBC...');
-        const chartBuffer = await generateTokenChart(ubcMint);
-        
-        // Save to file
-        fs.writeFileSync('ubc-chart.png', chartBuffer);
-        console.log('Chart saved as ubc-chart.png');
-        
-        // Also log some chart data
+        console.log('Getting chart data for UBC...');
         const data = await getChartData(ubcMint);
+        
+        // Log chart data
         console.log('Latest price:', data.candlesticks[data.candlesticks.length - 1].close);
         console.log('24h high:', Math.max(...data.candlesticks.map((c: Candlestick) => c.high)));
         console.log('24h low:', Math.min(...data.candlesticks.map((c: Candlestick) => c.low)));
@@ -36,7 +30,7 @@ async function testChart() {
         console.log('24h price change:', priceChange.toFixed(2) + '%');
         
     } catch (error) {
-        console.error('Failed to generate chart:', error);
+        console.error('Failed to get chart data:', error);
     }
 }
 
