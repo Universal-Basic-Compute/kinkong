@@ -2,6 +2,7 @@ import sys
 from pathlib import Path
 import os
 from datetime import datetime, timedelta
+import argparse
 
 # Get absolute path to project root
 project_root = str(Path(__file__).parent.parent.absolute())
@@ -256,14 +257,31 @@ async def analyze_token(token):
 
 async def main():
     try:
+        # Add argument parsing
+        parser = argparse.ArgumentParser(description='Analyze token charts')
+        parser.add_argument('--token', type=str, help='Analyze specific token only')
+        args = parser.parse_args()
+
         print("\n🚀 Starting token analysis...")
         
         # Get active tokens
-        tokens = await get_active_tokens()
+        all_tokens = await get_active_tokens()
         
-        if not tokens:
+        if not all_tokens:
             print("No active tokens found")
             return
+
+        # Filter tokens based on command line argument
+        tokens = []
+        if args.token:
+            tokens = [t for t in all_tokens if t['symbol'].upper() == args.token.upper()]
+            if not tokens:
+                print(f"Token {args.token} not found in active tokens")
+                return
+            print(f"Analyzing single token: {args.token}")
+        else:
+            tokens = all_tokens
+            print(f"Analyzing all {len(tokens)} active tokens")
             
         # Collect analyses for all tokens
         analyses = []
