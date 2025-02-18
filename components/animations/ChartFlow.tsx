@@ -238,8 +238,11 @@ export function ChartFlow() {
 
   useEffect(() => {
     let timeouts: NodeJS.Timeout[] = [];
+    let isActive = true; // Pour gérer le nettoyage
     
     const updateStreams = async () => {
+      if (!isActive) return; // Vérifier si le composant est toujours monté
+
       const reasons = await getRandomReasons();
       
       // Réinitialiser les textes
@@ -252,11 +255,12 @@ export function ChartFlow() {
 
       // Créer un effet de streaming pour chaque raison avec des délais différents
       reasons.forEach((_, streamIndex) => {
-        // Ajouter un délai initial différent pour chaque stream
-        const initialDelay = streamIndex * 1000; // 1 seconde de délai entre chaque démarrage
+        const initialDelay = streamIndex * 1000;
 
-        setTimeout(() => {
+        timeouts.push(setTimeout(() => {
           const streamText = () => {
+            if (!isActive) return;
+            
             setStreamingReasons(prev => prev.map((stream, index) => {
               if (index !== streamIndex) return stream;
               if (stream.isComplete) return stream;
@@ -277,28 +281,22 @@ export function ChartFlow() {
           for (let i = 0; i < reasons[streamIndex].length; i++) {
             timeouts.push(setTimeout(streamText, i * 50));
           }
-        }, initialDelay);
+        }, initialDelay));
       });
 
-      // Vérifier si tous les messages sont complets et redémarrer si nécessaire
-      const checkCompletion = setInterval(() => {
-        setStreamingReasons(prev => {
-          const allComplete = prev.every(stream => stream.isComplete);
-          if (allComplete) {
-            // Redémarrer avec les mêmes messages après un délai
-            setTimeout(updateStreams, 2000);
-            return prev;
-          }
-          return prev;
-        });
-      }, 1000);
-
-      timeouts.push(checkCompletion);
+      // Attendre que tous les textes soient complets avant de redémarrer
+      const totalDuration = Math.max(...reasons.map(r => r.length)) * 50 + 3000; // Durée max + 3s de pause
+      timeouts.push(setTimeout(() => {
+        if (isActive) {
+          updateStreams(); // Relancer le cycle
+        }
+      }, totalDuration));
     };
 
     updateStreams();
 
     return () => {
+      isActive = false;
       timeouts.forEach(clearTimeout);
     };
   }, []);
