@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 interface SignalDisplay {
   token: string;
-  entryPrice: number | null;
+  type: 'BUY' | 'SELL';
 }
 
 interface Candle {
@@ -144,13 +144,10 @@ export function ChartFlow() {
         if (!response.ok) throw new Error('Failed to fetch signals');
         const data = await response.json();
         
-        // Filter for signals with a price
-        const validSignals = data
-          .filter((signal: any) => signal.entryPrice)
-          .map((signal: any) => ({
-            token: signal.token,
-            entryPrice: signal.entryPrice
-          }));
+        const validSignals = data.map((signal: any) => ({
+          token: signal.token,
+          type: signal.type
+        }));
         
         setDisplaySignals(validSignals);
       } catch (error) {
