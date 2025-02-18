@@ -128,7 +128,7 @@ export function ChartFlow() {
     const initialCandles = [];
     let currentPrice = lastPrice;
     
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 30; i++) {
       const candle = generateCandle(i, currentPrice);
       initialCandles.push(candle);
       currentPrice = candle.close;
