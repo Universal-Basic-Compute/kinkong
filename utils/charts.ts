@@ -1,22 +1,5 @@
 import { Chart, ChartConfiguration } from 'chart.js/auto';
-import { createCanvas } from 'canvas';
 import { enUS } from 'date-fns/locale';
-
-// Handle date adapter loading
-let dateAdapter: any = null;
-
-async function ensureDateAdapter() {
-  if (!dateAdapter) {
-    try {
-      // Use dynamic import with await
-      const adapter = await import('chartjs-adapter-date-fns');
-      dateAdapter = adapter.default || adapter;
-    } catch (error) {
-      console.warn('Failed to load date adapter:', error);
-    }
-  }
-  return dateAdapter;
-}
 
 interface Candlestick {
     timestamp: number;
@@ -34,140 +17,13 @@ interface ChartDataSet {
     ema50: Array<{time: number, value: number}>;
 }
 
-type CandlestickData = {
-    x: Date;
-    o: number;
-    h: number;
-    l: number;
-    c: number;
-};
-
-export async function generateTokenChart(token: string): Promise<Buffer> {
-    // Ensure date adapter is loaded
-    await ensureDateAdapter();
-    
-    // Get data
-    const data = await getChartData(token);
-    
-    // Create canvas
-    const canvas = createCanvas(800, 400);
-    const ctx = canvas.getContext('2d');
-    
-    const config: ChartConfiguration = {
-        type: 'bar',
-        data: {
-            datasets: [
-                {
-                    type: 'bar',
-                    label: token,
-                    data: data.candlesticks.map((candle) => ({
-                        x: candle.timestamp * 1000,
-                        y: candle.close
-                    })),
-                    backgroundColor: 'rgba(75, 192, 75, 1)'
-                },
-                {
-                    type: 'line',
-                    label: 'EMA 20',
-                    data: data.ema20.map((point) => ({
-                        x: point.time * 1000,
-                        y: point.value
-                    })),
-                    borderColor: 'rgba(255, 215, 0, 0.8)',
-                    borderWidth: 1,
-                    pointRadius: 0
-                },
-                {
-                    type: 'line',
-                    label: 'EMA 50',
-                    data: data.ema50.map((point) => ({
-                        x: point.time * 1000,
-                        y: point.value
-                    })),
-                    borderColor: 'rgba(75, 192, 192, 0.8)',
-                    borderWidth: 1,
-                    pointRadius: 0
-                },
-                {
-                    type: 'bar',
-                    label: 'Volume',
-                    data: data.volume.map((v) => ({
-                        x: v.time * 1000,
-                        y: v.value
-                    })),
-                    backgroundColor: 'rgba(128, 128, 128, 0.2)',
-                    yAxisID: 'volume'
-                }
-            ]
-        },
-        options: {
-            responsive: false,
-            scales: {
-                x: {
-                    type: 'time',
-                    adapters: {
-                        date: {
-                            locale: enUS
-                        }
-                    },
-                    time: {
-                        unit: 'hour',
-                        displayFormats: {
-                            hour: 'HH:mm'
-                        }
-                    },
-                    grid: {
-                        color: 'rgba(255, 215, 0, 0.1)'
-                    },
-                    ticks: {
-                        color: '#d1d4dc'
-                    }
-                },
-                y: {
-                    position: 'right',
-                    grid: {
-                        color: 'rgba(255, 215, 0, 0.1)'
-                    },
-                    ticks: {
-                        color: '#d1d4dc'
-                    }
-                },
-                volume: {
-                    position: 'left',
-                    grid: {
-                        display: false
-                    },
-                    ticks: {
-                        color: '#d1d4dc'
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: true,
-                    labels: {
-                        color: '#d1d4dc'
-                    }
-                }
-            }
-        }
-    } as ChartConfiguration;
-    
-    // Create chart
-    new Chart(ctx as any, config);
-    
-    // Convert to buffer and return
-    return canvas.toBuffer('image/png');
-}
-
 export async function getChartData(mintAddress: string): Promise<ChartDataSet> {
   try {
-    // Use the correct Jupiter API endpoint
     const response = await fetch(
       `https://price.jup.ag/v4/price/history?` +
-      `ids=${mintAddress}&` + // Changed from id to ids
-      `vsToken=USDC&` +       // Add vsToken parameter
-      `timeframe=24H&` +      // Use timeframe instead of start/end time
+      `ids=${mintAddress}&` +
+      `vsToken=USDC&` +
+      `timeframe=24H&` +
       `interval=1H`
     );
 
