@@ -246,15 +246,15 @@ For each timeframe, provide:
 5. Risk/reward ratio if applicable
 
 Timeframes analyzed:
-- 15m chart (for 6-hour SCALP trades)
-- 1H chart (for 24-hour INTRADAY trades)
-- 4H chart (for 7-day SWING trades)
-- 1D chart (for 30-day POSITION trades)
+- SCALP (15m chart, 6-hour trades)
+- INTRADAY (1H chart, 24-hour trades)
+- SWING (4H chart, 7-day trades)
+- POSITION (1D chart, 30-day trades)
 
 Format your response as JSON:
 {
     "timeframes": {
-        "15m": {  # For SCALP trades
+        "SCALP": {
             "signal": "BUY|SELL|HOLD",
             "confidence": 0,
             "reasoning": "Detailed analysis",
@@ -264,24 +264,18 @@ Format your response as JSON:
             },
             "risk_reward_ratio": 0.0
         },
-        "1H": {  # For INTRADAY trades
-            ...
-        },
-        "4H": {  # For SWING trades
-            ...
-        },
-        "1D": {  # For POSITION trades
-            ...
-        }
+        "INTRADAY": { ... },
+        "SWING": { ... },
+        "POSITION": { ... }
     },
     "overall_analysis": {
         "primary_trend": "BULLISH|BEARISH|NEUTRAL",
         "timeframe_alignment": "ALIGNED|MIXED|CONFLICTING",
-        "best_timeframe": "15m|1H|4H|1D",
+        "best_timeframe": "SCALP|INTRADAY|SWING|POSITION",
         "key_observations": ["List of important points"],
         "recommended_action": {
             "signal": "BUY|SELL|HOLD",
-            "timeframe": "15m|1H|4H|1D",
+            "timeframe": "SCALP|INTRADAY|SWING|POSITION",
             "reasoning": "Why this is the best action"
         }
     }
@@ -350,10 +344,10 @@ Current Market Data:
 
 Analyze each timeframe in sequence, considering how they relate to each other:
 
-1. First analyze the 1D chart for long-term trend and market structure
-2. Then analyze the 4H chart for medium-term movements
-3. Then analyze the 1H chart for short-term setups
-4. Finally analyze the 15m chart for immediate price action and entries"""
+1. First analyze the POSITION timeframe for long-term trend and market structure
+2. Then analyze the SWING timeframe for medium-term movements
+3. Then analyze the INTRADAY timeframe for short-term setups
+4. Finally analyze the SCALP timeframe for immediate price action and entries"""
 
         message = client.messages.create(
             model="claude-3-5-sonnet-20241022",
