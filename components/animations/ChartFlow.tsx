@@ -3,6 +3,11 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+interface SignalDisplay {
+  token: string;
+  entryPrice: number | null;
+}
+
 interface Candle {
   id: number;
   open: number;
@@ -23,6 +28,8 @@ export function ChartFlow() {
   const [lastPrice, setLastPrice] = useState(100);
   const [signals, setSignals] = useState<Signal[]>([]);
   const [activeSignal, setActiveSignal] = useState<'BUY' | 'SELL' | null>(null);
+  const [displaySignals, setDisplaySignals] = useState<SignalDisplay[]>([]);
+  const [currentSignalIndex, setCurrentSignalIndex] = useState(0);
 
   const generateSignal = (candleId: number) => ({
     id: Math.random(),
@@ -129,6 +136,42 @@ export function ChartFlow() {
 
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    const fetchSignals = async () => {
+      try {
+        const response = await fetch('/api/signals');
+        if (!response.ok) throw new Error('Failed to fetch signals');
+        const data = await response.json();
+        
+        // Filter for signals with a price
+        const validSignals = data
+          .filter((signal: any) => signal.entryPrice)
+          .map((signal: any) => ({
+            token: signal.token,
+            entryPrice: signal.entryPrice
+          }));
+        
+        setDisplaySignals(validSignals);
+      } catch (error) {
+        console.error('Error fetching signals:', error);
+      }
+    };
+
+    fetchSignals();
+  }, []);
+
+  useEffect(() => {
+    if (displaySignals.length === 0) return;
+    
+    const interval = setInterval(() => {
+      setCurrentSignalIndex((prev) => 
+        prev + 1 >= displaySignals.length ? 0 : prev + 1
+      );
+    }, 2000); // Change every 2 seconds
+
+    return () => clearInterval(interval);
+  }, [displaySignals]);
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
@@ -249,8 +292,24 @@ export function ChartFlow() {
           </AnimatePresence>
         </div>
         
-        {/* Zone vide augmentée à 25% */}
-        <div className="w-[25%]"></div>
+        {/* Signal display zone - 25% */}
+        <div className="w-[25%] h-full flex flex-col justify-start pl-4">
+          <div className="bg-black/30 rounded-lg p-2">
+            {displaySignals.slice(currentSignalIndex, currentSignalIndex + 3).map((signal, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.5 }}
+                className="flex justify-between items-center py-2 border-b border-gold/10 last:border-0"
+              >
+                <span className="text-gold font-medium">{signal.token}</span>
+                <span className="text-gray-300">${signal.entryPrice?.toFixed(3)}</span>
+              </motion.div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
