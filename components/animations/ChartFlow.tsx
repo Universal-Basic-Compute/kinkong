@@ -128,7 +128,7 @@ export function ChartFlow() {
     const initialCandles = [];
     let currentPrice = lastPrice;
     
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 40; i++) {
       const candle = generateCandle(i, currentPrice);
       initialCandles.push(candle);
       currentPrice = candle.close;
@@ -154,7 +154,7 @@ export function ChartFlow() {
       <div className="h-[67%] flex items-end relative">
         {/* Bandes de Bollinger */}
         <div className="absolute inset-0 pointer-events-none">
-          <svg className="w-[75%] h-full ml-[15%]" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <svg className="w-[75%] h-full ml-[10%]" viewBox="0 0 100 100" preserveAspectRatio="none">
             {/* Bande supérieure */}
             <path
               d={upperBand.map((value, index) => {
@@ -183,7 +183,7 @@ export function ChartFlow() {
         </div>
         
         {/* Ajouter un espace à gauche pour pousser les bougies vers la droite */}
-        <div className="w-[15%]"></div>
+        <div className="w-[10%]"></div>
         
         {/* Zone des bougies */}
         <div className="w-[75%] h-full flex items-end space-x-1">
