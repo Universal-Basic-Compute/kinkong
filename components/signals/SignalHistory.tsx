@@ -90,7 +90,6 @@ interface Signal {
   wallet: string;
   reason: string;
   url?: string;
-  success?: boolean;
 }
 
 function getConfidenceClass(confidence: Signal['confidence']) {
