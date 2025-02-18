@@ -31,28 +31,32 @@ export function ChartFlow() {
   });
 
   const generateCandle = (id: number, prevClose: number): Candle => {
-    const maxMove = prevClose * (activeSignal ? 0.06 : 0.03);
+    // Augmenter l'amplitude des mouvements
+    const maxMove = prevClose * (activeSignal ? 0.12 : 0.06); // Doublé les pourcentages (6% -> 12% avec signal, 3% -> 6% sans)
     const moveAmount = Math.random() * maxMove;
     
+    // Créer des tendances plus prononcées
     const direction = activeSignal === 'BUY' ? 
-      (Math.random() > 0.3 ? 1 : -1) :  // 70% de chance de monter après BUY
+      (Math.random() > 0.2 ? 1 : -1) :  // 80% de chance de monter après BUY
       activeSignal === 'SELL' ? 
-      (Math.random() > 0.7 ? 1 : -1) :  // 30% de chance de monter après SELL
+      (Math.random() > 0.8 ? 1 : -1) :  // 20% de chance de monter après SELL
       prevClose > lastPrice ? 
-      (Math.random() > 0.8 ? 1 : -1) : 
-      (Math.random() > 0.2 ? 1 : -1);
+      (Math.random() > 0.7 ? 1 : -1) :  // Plus de continuité dans la tendance
+      (Math.random() > 0.3 ? 1 : -1);   // Plus de continuité dans la tendance
       
     const close = prevClose + (direction * moveAmount);
     const bodyRange = Math.abs(close - prevClose);
     
-    // Distribution des types de mèches:
-    // 30% sans mèches
-    // 20% une mèche en haut seulement
-    // 20% une mèche en bas seulement
-    // 30% deux mèches
+    // Augmenter la taille des mèches pour plus de volatilité
+    const getWickSize = () => {
+      const random = Math.random();
+      return bodyRange * (0.2 + (random * random) * 1.8); // Augmenté la taille des mèches
+    };
+
+    // Distribution des types de mèches plus extrêmes:
     const wickType = Math.random();
     
-    if (wickType < 0.3) {
+    if (wickType < 0.2) { // Réduit la probabilité de bougies sans mèches
       // Pas de mèches
       return {
         id,
@@ -64,30 +68,25 @@ export function ChartFlow() {
       };
     }
     
-    const getWickSize = () => {
-      const random = Math.random();
-      return bodyRange * (0.1 + (random * random) * 1.2);
-    };
-
     let upperWickSize = 0;
     let lowerWickSize = 0;
 
-    if (wickType < 0.5) {
+    if (wickType < 0.4) {
       // Mèche en haut seulement
-      upperWickSize = getWickSize() * (Math.random() > 0.8 ? 2.5 : 1);
-    } else if (wickType < 0.7) {
+      upperWickSize = getWickSize() * (Math.random() > 0.6 ? 3 : 1); // Plus de chances de grandes mèches
+    } else if (wickType < 0.6) {
       // Mèche en bas seulement
-      lowerWickSize = getWickSize() * (Math.random() > 0.8 ? 2.5 : 1);
+      lowerWickSize = getWickSize() * (Math.random() > 0.6 ? 3 : 1);
     } else {
       // Deux mèches
       upperWickSize = getWickSize();
       lowerWickSize = getWickSize();
-      // Chance d'avoir une mèche longue
-      if (Math.random() > 0.8) {
+      // Plus de chances d'avoir des mèches longues
+      if (Math.random() > 0.6) {
         if (Math.random() > 0.5) {
-          upperWickSize *= 2.5;
+          upperWickSize *= 3;
         } else {
-          lowerWickSize *= 2.5;
+          lowerWickSize *= 3;
         }
       }
     }
