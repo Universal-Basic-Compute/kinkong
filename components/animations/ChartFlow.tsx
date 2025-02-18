@@ -15,6 +15,33 @@ interface Candle {
 export function ChartFlow() {
   const [candles, setCandles] = useState<Candle[]>([]);
   const [lastPrice, setLastPrice] = useState(100);
+  const [upperBand, setUpperBand] = useState<number[]>([]);
+  const [lowerBand, setLowerBand] = useState<number[]>([]);
+
+  // Fonction pour calculer les bandes
+  const calculateBands = (candles: Candle[]) => {
+    const closes = candles.map(c => c.close);
+    const sma = closes.reduce((a, b) => a + b, 0) / closes.length;
+    
+    // Simuler des bandes qui "respirent"
+    const time = Date.now() / 1000;
+    const breathingFactor = Math.sin(time / 2) * 0.3 + 1; // Facteur qui varie entre 0.7 et 1.3
+    
+    const deviation = sma * 0.015 * breathingFactor; // 1.5% de déviation de base
+    
+    const upper = closes.map(close => {
+      const randomVariation = (Math.random() * 0.005) * close; // 0.5% de variation aléatoire
+      return close + deviation + randomVariation;
+    });
+    
+    const lower = closes.map(close => {
+      const randomVariation = (Math.random() * 0.005) * close; // 0.5% de variation aléatoire
+      return close - deviation - randomVariation;
+    });
+
+    setUpperBand(upper);
+    setLowerBand(lower);
+  };
 
   const generateCandle = (id: number, prevClose: number): Candle => {
     const maxMove = prevClose * 0.03;
@@ -105,7 +132,9 @@ export function ChartFlow() {
     const interval = setInterval(() => {
       setCandles(prev => {
         const newCandle = generateCandle(prev[prev.length - 1].id + 1, prev[prev.length - 1].close);
-        return [...prev.slice(1), newCandle];
+        const newCandles = [...prev.slice(1), newCandle];
+        calculateBands(newCandles);
+        return newCandles;
       });
     }, 444); // 666ms / 1.5 = 444ms pour speed x1.5
 
@@ -114,7 +143,34 @@ export function ChartFlow() {
 
   return (
     <div className="w-full h-[400px] bg-black/50 rounded-lg p-4">
-      <div className="h-[67%] flex items-end space-x-1">
+      <div className="h-[67%] flex items-end space-x-1 relative">
+        {/* Bandes de Bollinger */}
+        <div className="absolute inset-0 pointer-events-none">
+          <svg className="w-full h-full">
+            {/* Bande supérieure */}
+            <path
+              d={upperBand.map((value, index) => {
+                const x = (index / (candles.length - 1)) * 100;
+                const y = 100 - ((value - Math.min(...lowerBand)) / (Math.max(...upperBand) - Math.min(...lowerBand))) * 100;
+                return `${index === 0 ? 'M' : 'L'} ${x},${y}`;
+              }).join(' ')}
+              fill="none"
+              stroke="rgba(255, 255, 255, 0.1)"
+              strokeWidth="1"
+            />
+            {/* Bande inférieure */}
+            <path
+              d={lowerBand.map((value, index) => {
+                const x = (index / (candles.length - 1)) * 100;
+                const y = 100 - ((value - Math.min(...lowerBand)) / (Math.max(...upperBand) - Math.min(...lowerBand))) * 100;
+                return `${index === 0 ? 'M' : 'L'} ${x},${y}`;
+              }).join(' ')}
+              fill="none"
+              stroke="rgba(255, 255, 255, 0.1)"
+              strokeWidth="1"
+            />
+          </svg>
+        </div>
         <AnimatePresence>
           {candles.map((candle) => {
             // Calculer les hauteurs relatives
