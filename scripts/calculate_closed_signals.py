@@ -155,13 +155,11 @@ def calculate_closed_signals():
                 # Simulate trade
                 results = simulate_trade(prices, fields)
                 
-                # Update signal with results
+                # Update signal with results - only fields in Signal interface
                 update_data = {
                     'exitPrice': results['exitPrice'],
                     'actualReturn': round(results['actualReturn'], 2),
-                    'accuracy': results['accuracy'],
-                    'timeToExit': results['timeToExit'],
-                    'lastUpdateTime': datetime.now(timezone.utc).isoformat()
+                    'accuracy': results['accuracy']
                 }
                 
                 signals_table.update(signal_id, update_data)
