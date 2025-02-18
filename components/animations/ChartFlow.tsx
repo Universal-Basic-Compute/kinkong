@@ -556,20 +556,20 @@ export function ChartFlow() {
             <div 
               key={index}
               className={`
-                bg-black/60 rounded-2xl p-3 border border-gold/10 
+                bg-blue-900/40 rounded-2xl p-3 border border-blue-400/10 
                 backdrop-blur-sm shadow-lg
                 ${index === 0 ? 'ml-4' : index === 1 ? 'ml-12' : 'ml-20'}
-                max-w-[280px]
+                w-[280px] h-[60px]
                 transform hover:scale-105 transition-transform duration-200
               `}
             >
               <div className="relative">
                 {/* Petit triangle pour l'effet bulle */}
-                <div className="absolute -left-2 bottom-2 w-3 h-3 bg-black/60 border-l border-b border-gold/10 transform rotate-45" />
+                <div className="absolute -left-2 bottom-2 w-3 h-3 bg-blue-900/40 border-l border-b border-blue-400/10 transform rotate-45" />
                 
                 {/* Contenu */}
                 <div className="overflow-hidden">
-                  <p className="text-xs text-gray-200 font-mono leading-relaxed">
+                  <p className="text-xs text-blue-100 font-mono leading-relaxed">
                     {stream.text}
                     <span className="animate-pulse ml-1 opacity-70">▊</span>
                   </p>
