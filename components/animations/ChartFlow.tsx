@@ -154,28 +154,30 @@ export function ChartFlow() {
       <div className="h-[67%] flex items-end relative">
         {/* Bandes de Bollinger */}
         <div className="absolute inset-0 pointer-events-none">
-          <svg className="w-[75%] h-full" preserveAspectRatio="none">
+          <svg className="w-[75%] h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
             {/* Bande supérieure */}
             <path
               d={upperBand.map((value, index) => {
                 const x = (index / (candles.length - 1)) * 100;
-                const y = 100 - ((value - Math.min(...lowerBand)) / (Math.max(...upperBand) - Math.min(...lowerBand))) * 100;
-                return `${index === 0 ? 'M' : 'L'} ${x},${y}`;
+                const y = ((Math.max(...upperBand) - value) / (Math.max(...upperBand) - Math.min(...lowerBand))) * 100;
+                return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
               }).join(' ')}
               fill="none"
               stroke="rgba(255, 255, 255, 0.15)"
-              strokeWidth="2"
+              strokeWidth="1"
+              vectorEffect="non-scaling-stroke"
             />
             {/* Bande inférieure */}
             <path
               d={lowerBand.map((value, index) => {
                 const x = (index / (candles.length - 1)) * 100;
-                const y = 100 - ((value - Math.min(...lowerBand)) / (Math.max(...upperBand) - Math.min(...lowerBand))) * 100;
-                return `${index === 0 ? 'M' : 'L'} ${x},${y}`;
+                const y = ((Math.max(...upperBand) - value) / (Math.max(...upperBand) - Math.min(...lowerBand))) * 100;
+                return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
               }).join(' ')}
               fill="none"
               stroke="rgba(255, 255, 255, 0.15)"
-              strokeWidth="2"
+              strokeWidth="1"
+              vectorEffect="non-scaling-stroke"
             />
           </svg>
         </div>
