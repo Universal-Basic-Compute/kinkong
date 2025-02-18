@@ -525,13 +525,13 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
             overall_analysis = analyses.get('overall', {})
 
             reason_text = (
-                f"Analysis:\n"
-                f"{timeframe_analysis}\n\n"
+                f"{timeframe_analysis}\n\n"  # Just use the timeframe-specific reasoning
                 f"Overall Market Context:\n"
-                f"• Trend: {overall_analysis.get('primary_trend', 'Unknown')}\n"
+                f"• Primary Trend: {overall_analysis.get('primary_trend', 'Unknown')}\n"
                 f"• Timeframe Alignment: {overall_analysis.get('timeframe_alignment', 'Unknown')}\n"
-                f"• Key Observations:\n"
-                f"{chr(10).join('  - ' + obs for obs in overall_analysis.get('key_observations', []))}\n\n"
+                f"• Best Timeframe: {overall_analysis.get('best_timeframe', 'Unknown')}\n\n"
+                f"Key Observations:\n"
+                f"{chr(10).join('• ' + obs for obs in overall_analysis.get('key_observations', []))}\n\n"
                 f"Recommended Action:\n"
                 f"{overall_analysis.get('recommended_action', {}).get('reasoning', 'No specific recommendation')}"
             )

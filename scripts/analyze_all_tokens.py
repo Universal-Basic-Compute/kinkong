@@ -205,13 +205,27 @@ async def analyze_token(token):
                 if analyses:
                     for timeframe, analysis in analyses.items():
                         if timeframe != 'overall':  # Skip the overall analysis
-                            # Create signal with the correct timeframe
-                            result = create_airtable_signal(
-                                analysis,
-                                timeframe,  # This should now be 'POSITION', 'SWING', etc.
-                                token_info,
-                                analyses
-                            )
+                            print(f"\n⏰ Processing {timeframe} timeframe...")
+                            
+                            # Extract signal details
+                            signal_type = analysis.get('signal')
+                            confidence = analysis.get('confidence', 0)
+                            key_levels = analysis.get('key_levels')
+                            
+                            print(f"Signal type: {signal_type}")
+                            print(f"Confidence: {confidence}")
+                            print(f"Key levels: {key_levels}")
+                            
+                            if signal_type and signal_type != 'HOLD' and confidence >= 60:
+                                print("✅ Signal meets criteria for creation")
+                                
+                                # Create signal with the correct timeframe
+                                result = create_airtable_signal(
+                                    analysis,
+                                    timeframe,  # Use the timeframe directly from the analysis
+                                    token_info,
+                                    analyses
+                                )
                 
                 print("Analysis result type:", type(analyses))
                 print("Analysis keys:", analyses.keys() if analyses else None)
