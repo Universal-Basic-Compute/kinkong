@@ -20,6 +20,12 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "KinKong - AI Trading Intelligence",
   description: "24/7 Superhuman Trading Intelligence for Solana AI Tokens",
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/icon.png', type: 'image/png' }
+    ],
+  }
 };
 
 export default function RootLayout({
