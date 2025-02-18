@@ -424,63 +424,18 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
         confidence = analysis.get('confidence', 0)
         key_levels = analysis.get('key_levels', {})
         
+        print("\nExtracting analysis components:")
+        print(f"Timeframe analysis: {timeframe_analysis}")
+        print(f"Signal type: {signal_type}")
+        print(f"Confidence: {confidence}")
+        print(f"Key levels: {key_levels}")
+        
         # Get overall analysis
         overall = analyses.get('overall', {}) if analyses else {}
+        print(f"\nOverall analysis: {overall}")
         
-        # Build reason text using the actual analysis data
-        reason_text = (
-            f"Technical Analysis Summary:\n\n"
-            f"{timeframe_analysis}\n\n"  # Use the actual analysis reasoning
-            f"Overall Market Context:\n"
-            f"• Primary Trend: {overall.get('primary_trend', 'Unknown')}\n"
-            f"• Timeframe Alignment: {overall.get('timeframe_alignment', 'Unknown')}\n"
-            f"• Best Timeframe: {overall.get('best_timeframe', 'Unknown')}\n\n"
-        )
-
-        # Add key observations if available
-        if overall.get('key_observations'):
-            reason_text += "Key Observations:\n"
-            for observation in overall['key_observations']:
-                reason_text += f"• {observation}\n"
-            reason_text += "\n"
-
-        # Add key levels
-        support_levels = key_levels.get('support', [])
-        resistance_levels = key_levels.get('resistance', [])
-        if support_levels or resistance_levels:
-            reason_text += (
-                f"Key Support/Resistance Levels:\n"
-                f"Support: {', '.join(f'${price:.4f}' for price in support_levels)}\n"
-                f"Resistance: {', '.join(f'${price:.4f}' for price in resistance_levels)}\n\n"
-            )
-
-        # Calculate trade setup
-        if signal_type == 'SELL':
-            entry_price = resistance_levels[0] if resistance_levels else 0
-            target_price = support_levels[0] if support_levels else 0
-            stop_loss = resistance_levels[1] if len(resistance_levels) > 1 else entry_price * 1.05
-        else:  # BUY
-            entry_price = support_levels[0] if support_levels else 0
-            target_price = resistance_levels[0] if resistance_levels else 0
-            stop_loss = support_levels[1] if len(support_levels) > 1 else entry_price * 0.95
-
-        # Add trade setup details
-        if entry_price and target_price:
-            expected_return = abs((target_price - entry_price) / entry_price * 100)
-            reason_text += (
-                f"Trade Setup:\n"
-                f"• Entry: ${entry_price:.4f}\n"
-                f"• Target: ${target_price:.4f}\n"
-                f"• Stop Loss: ${stop_loss:.4f}\n"
-                f"• Expected Return: {expected_return:.1f}%\n\n"
-            )
-
-        # Add recommended action from overall analysis
-        recommended_action = overall.get('recommended_action', {})
-        action_reasoning = recommended_action.get('reasoning', 
-            f"Execute {signal_type} order at ${entry_price:.4f} with {confidence}% confidence"
-        )
-        reason_text += f"Recommended Action:\n{action_reasoning}"
+        # Build reason text using just the analysis reasoning
+        reason_text = timeframe_analysis
 
         print("\nGenerated reason text:")
         print(reason_text)
@@ -513,6 +468,21 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
             return None
         expiry_date = now + expiry_delta
 
+        # Get entry/target/stop prices from key levels
+        support_levels = key_levels.get('support', [])
+        resistance_levels = key_levels.get('resistance', [])
+        
+        if signal_type == 'SELL':
+            entry_price = resistance_levels[0] if resistance_levels else 0
+            target_price = support_levels[0] if support_levels else 0
+            stop_loss = resistance_levels[1] if len(resistance_levels) > 1 else entry_price * 1.05
+        else:  # BUY
+            entry_price = support_levels[0] if support_levels else 0
+            target_price = resistance_levels[0] if resistance_levels else 0
+            stop_loss = support_levels[1] if len(support_levels) > 1 else entry_price * 0.95
+
+        expected_return = abs((target_price - entry_price) / entry_price * 100)
+
         # Create signal record
         signal_data = {
             'timestamp': now.isoformat(),
@@ -526,7 +496,7 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
             'wallet': os.getenv('STRATEGY_WALLET', ''),
             'reason': reason_text,
             'expiryDate': expiry_date.isoformat(),
-            'expectedReturn': round(expected_return, 2) if 'expected_return' in locals() else 0
+            'expectedReturn': round(expected_return, 2)
         }
 
         print("\nSending to Airtable:", json.dumps(signal_data, indent=2))
