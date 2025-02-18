@@ -21,7 +21,7 @@ def calculate_returns(signal: Dict) -> Dict:
             expected_return = ((entry_price - target_price) / entry_price) * 100
             actual_return = ((entry_price - exit_price) / entry_price) * 100 if exit_price else None
             
-        # Calculate risk ratio (reward:risk)
+        # Calculate risk/reward ratio
         stop_loss = float(fields.get('stopLoss', 0))
         if stop_loss:
             if signal_type == 'BUY':
@@ -35,11 +35,16 @@ def calculate_returns(signal: Dict) -> Dict:
         else:
             risk_reward_ratio = None
             
-        return {
-            'expectedReturn': round(expected_return, 2) if expected_return else None,
-            'actualReturn': round(actual_return, 2) if actual_return is not None else None,
-            'riskRewardRatio': risk_reward_ratio
-        }
+        # Only include fields that exist in the Signal interface
+        updates = {}
+        if expected_return is not None:
+            updates['expectedReturn'] = round(expected_return, 2)
+        if actual_return is not None:
+            updates['actualReturn'] = round(actual_return, 2)
+        if risk_reward_ratio is not None:
+            updates['riskRewardRatio'] = risk_reward_ratio
+            
+        return updates
         
     except Exception as e:
         print(f"Error calculating returns for signal {signal.get('id')}: {e}")
