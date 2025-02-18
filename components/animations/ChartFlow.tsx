@@ -250,29 +250,34 @@ export function ChartFlow() {
         isComplete: false
       })));
 
-      // Créer un effet de streaming pour chaque raison
+      // Créer un effet de streaming pour chaque raison avec des délais différents
       reasons.forEach((_, streamIndex) => {
-        const streamText = () => {
-          setStreamingReasons(prev => prev.map((stream, index) => {
-            if (index !== streamIndex) return stream;
-            if (stream.isComplete) return stream;
-            
-            const newIndex = stream.index + 1;
-            const isComplete = newIndex >= stream.fullText.length;
-            
-            return {
-              ...stream,
-              text: stream.fullText.substring(0, newIndex),
-              index: newIndex,
-              isComplete
-            };
-          }));
-        };
+        // Ajouter un délai initial différent pour chaque stream
+        const initialDelay = streamIndex * 1000; // 1 seconde de délai entre chaque démarrage
 
-        // Créer un timeout pour chaque caractère avec un délai plus long
-        for (let i = 0; i < reasons[streamIndex].length; i++) {
-          timeouts.push(setTimeout(streamText, i * 50)); // 50ms par caractère pour plus de fluidité
-        }
+        setTimeout(() => {
+          const streamText = () => {
+            setStreamingReasons(prev => prev.map((stream, index) => {
+              if (index !== streamIndex) return stream;
+              if (stream.isComplete) return stream;
+              
+              const newIndex = stream.index + 1;
+              const isComplete = newIndex >= stream.fullText.length;
+              
+              return {
+                ...stream,
+                text: stream.fullText.substring(0, newIndex),
+                index: newIndex,
+                isComplete
+              };
+            }));
+          };
+
+          // Créer un timeout pour chaque caractère
+          for (let i = 0; i < reasons[streamIndex].length; i++) {
+            timeouts.push(setTimeout(streamText, i * 50));
+          }
+        }, initialDelay);
       });
 
       // Vérifier si tous les messages sont complets et redémarrer si nécessaire
@@ -280,17 +285,13 @@ export function ChartFlow() {
         setStreamingReasons(prev => {
           const allComplete = prev.every(stream => stream.isComplete);
           if (allComplete) {
-            // Redémarrer avec les mêmes messages
-            return prev.map(stream => ({
-              ...stream,
-              text: '',
-              index: 0,
-              isComplete: false
-            }));
+            // Redémarrer avec les mêmes messages après un délai
+            setTimeout(updateStreams, 2000);
+            return prev;
           }
           return prev;
         });
-      }, 1000); // Vérifier toutes les secondes
+      }, 1000);
 
       timeouts.push(checkCompletion);
     };
