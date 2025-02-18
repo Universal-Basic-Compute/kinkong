@@ -141,7 +141,7 @@ if project_root not in sys.path:
                     "expiryDate<NOW(), "  # Expired signals
                     "OR("
                         "actualReturn=BLANK(), "  # Missing actual return
-                        "accuracy=BLANK()"        # Missing accuracy
+                        "success=BLANK()"        # Missing success flag
                     "), "
                     "entryPrice>0, "             # Has entry price
                     "targetPrice>0"              # Has target price
