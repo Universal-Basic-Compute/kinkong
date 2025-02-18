@@ -568,7 +568,7 @@ export function ChartFlow() {
             >
               <p className="text-xs text-blue-100 font-mono leading-relaxed">
                 {stream.text}
-                <span className="animate-pulse ml-1 opacity-70">▊</span>
+                <span className="animate-pulse ml-1 opacity-70">🦍</span>
               </p>
             </div>
           ))}
