@@ -552,8 +552,7 @@ Recommended Action:
                 'confidence': confidence_level,
                 'wallet': os.getenv('STRATEGY_WALLET', ''),
                 'reason': reason_message,  # Use formatted message instead of JSON dump
-                'expiryDate': expiry_date.isoformat(),  # Add expiry date
-                'status': 'PENDING'  # Explicitly set initial status
+                'expiryDate': expiry_date.isoformat()  # Add expiry date
             }
 
             # Validate signal before creating

@@ -89,8 +89,7 @@ export function SignalForm() {
         body: JSON.stringify({
           ...formData,
           wallet: publicKey.toString(),
-          expiryDate: expiryDate.toISOString(),
-          status: 'PENDING'
+          expiryDate: expiryDate.toISOString()
         }),
       })
 

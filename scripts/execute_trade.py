@@ -73,7 +73,8 @@ def execute_trade_with_phantom(signal_id: str) -> bool:
             'amount': signal['fields']['amount'],
             'price': result['price'],
             'value': float(signal['fields']['amount']) * result['price'],
-            'signature': result['signature']
+            'signature': result['signature'],
+            'status': 'ACTIVE'  # Add initial trade status
         })
         
         return True
