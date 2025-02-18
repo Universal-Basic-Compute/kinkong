@@ -49,6 +49,7 @@ export async function GET() {
         targetPrice: record.get('targetPrice') ? Number(record.get('targetPrice')) : undefined,
         stopLoss: record.get('stopLoss') ? Number(record.get('stopLoss')) : undefined,
         confidence: record.get('confidence') as 'LOW' | 'MEDIUM' | 'HIGH' || 'MEDIUM', // Default to MEDIUM if missing
+        success: record.get('success') as boolean | null,
         wallet: record.get('wallet') as string,
         reason: record.get('reason') as string || '',
         url: record.get('url') as string || undefined,
