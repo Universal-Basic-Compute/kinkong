@@ -193,13 +193,13 @@ if project_root not in sys.path:
                 print(f"Exit Reason: {results['exitReason']}")
                 print(f"Time to Exit: {results['timeToExit']} minutes")
                 print(f"Actual Return: {results['actualReturn']:.2f}%")
-                print(f"Accuracy: {results['accuracy']}")
+                print(f"Success: {'✅' if results['success'] else '❌'}")
                 
                 # Update signal with results
                 update_data = {
                     'exitPrice': results['exitPrice'],
                     'actualReturn': round(results['actualReturn'], 2),
-                    'accuracy': results['accuracy']
+                    'success': results['success']
                 }
                 
                 signals_table.update(signal_id, update_data)
