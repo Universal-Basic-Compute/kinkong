@@ -376,24 +376,26 @@ Analyze each timeframe in sequence, considering how they relate to each other:
             # Clean and parse response
             cleaned_response = clean_json_string(message.content[0].text)
             analysis = json.loads(cleaned_response)
-            
-            # Convert to ChartAnalysis objects without generating signals
-            analyses = {
-                timeframe: ChartAnalysis(
+                
+            # Extract timeframe analyses
+            timeframe_analyses = analysis.get('timeframes', {})
+                
+            # Convert to ChartAnalysis objects
+            analyses = {}
+            for timeframe, data in timeframe_analyses.items():
+                analyses[timeframe] = ChartAnalysis(
                     timeframe=timeframe,
-                    signal=data["signal"],
-                    confidence=data["confidence"],
-                    reasoning=data["reasoning"],
-                    key_levels=data["key_levels"],
+                    signal=data.get("signal"),
+                    confidence=data.get("confidence"),
+                    reasoning=data.get("reasoning"),
+                    key_levels=data.get("key_levels"),
                     risk_reward_ratio=data.get("risk_reward_ratio"),
                     reassess_conditions=None
                 )
-                for timeframe, data in analysis["timeframes"].items()
-            }
-            
+                
             # Add overall analysis
-            analyses["overall"] = analysis["overall_analysis"]
-            
+            analyses["overall"] = analysis.get("overall_analysis", {})
+                
             return analyses
             
         except Exception as e:
@@ -514,17 +516,20 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
                 target_price = resistance_levels[0] if resistance_levels else 0
                 stop_loss = support_levels[1] if len(support_levels) > 1 else entry_price * 0.95
 
-            # Combine relevant reasonings into a single text
+            # Get the specific timeframe analysis and overall analysis
+            timeframe_analysis = analysis.get('reasoning', '')  # Current timeframe analysis
+            overall_analysis = analyses.get('overall', {})
+
             reason_text = (
                 f"Analysis:\n"
-                f"{analysis.get('reasoning', '').strip()}\n\n"
+                f"{timeframe_analysis}\n\n"
                 f"Overall Market Context:\n"
-                f"• Trend: {analyses.get('overall', {}).get('primary_trend', 'Unknown')}\n"
-                f"• Timeframe Alignment: {analyses.get('overall', {}).get('timeframe_alignment', 'Unknown')}\n"
+                f"• Trend: {overall_analysis.get('primary_trend', 'Unknown')}\n"
+                f"• Timeframe Alignment: {overall_analysis.get('timeframe_alignment', 'Unknown')}\n"
                 f"• Key Observations:\n"
-                f"{chr(10).join('  - ' + obs for obs in analyses.get('overall', {}).get('key_observations', []))}\n\n"
+                f"{chr(10).join('  - ' + obs for obs in overall_analysis.get('key_observations', []))}\n\n"
                 f"Recommended Action:\n"
-                f"{analyses.get('overall', {}).get('recommended_action', {}).get('reasoning', 'No specific recommendation')}"
+                f"{overall_analysis.get('recommended_action', {}).get('reasoning', 'No specific recommendation')}"
             )
 
             # Map timeframe to signal type
