@@ -62,7 +62,7 @@ export default function Header() {
             {navItems.map((item) => (
               <div key={item.href} className="relative group">
                 {item.isGroup ? (
-                  <div className="text-gray-300 cursor-default px-2 py-1 flex items-center">
+                  <div className="text-gray-300 cursor-default px-2 py-1 flex items-center font-medium tracking-wide">
                     {item.label}
                     <svg 
                       className="w-4 h-4 ml-1 transform group-hover:rotate-180 transition-transform duration-200" 
