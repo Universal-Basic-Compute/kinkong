@@ -25,15 +25,17 @@ export function ChartFlow() {
       (Math.random() > 0.2 ? 1 : -1);  
       
     const close = prevClose + (direction * moveAmount);
-    
-    // Nouvelle logique pour des mèches plus variées et souvent plus courtes
     const bodyRange = Math.abs(close - prevClose);
     
-    // 30% de chance de n'avoir aucune mèche
-    const hasWicks = Math.random() > 0.3;
+    // Distribution des types de mèches:
+    // 30% sans mèches
+    // 20% une mèche en haut seulement
+    // 20% une mèche en bas seulement
+    // 30% deux mèches
+    const wickType = Math.random();
     
-    if (!hasWicks) {
-      // Retourne une bougie sans mèches
+    if (wickType < 0.3) {
+      // Pas de mèches
       return {
         id,
         open: prevClose,
@@ -44,22 +46,31 @@ export function ChartFlow() {
       };
     }
     
-    // Pour les bougies avec mèches
     const getWickSize = () => {
       const random = Math.random();
       return bodyRange * (0.1 + (random * random) * 1.2);
     };
 
-    const upperWickSize = getWickSize();
-    const lowerWickSize = getWickSize();
-    
-    // 20% de chance d'avoir une mèche longue
-    const hasLongWick = Math.random() > 0.8;
-    if (hasLongWick) {
-      if (Math.random() > 0.5) {
-        upperWickSize * 2.5;
-      } else {
-        lowerWickSize * 2.5;
+    let upperWickSize = 0;
+    let lowerWickSize = 0;
+
+    if (wickType < 0.5) {
+      // Mèche en haut seulement
+      upperWickSize = getWickSize() * (Math.random() > 0.8 ? 2.5 : 1);
+    } else if (wickType < 0.7) {
+      // Mèche en bas seulement
+      lowerWickSize = getWickSize() * (Math.random() > 0.8 ? 2.5 : 1);
+    } else {
+      // Deux mèches
+      upperWickSize = getWickSize();
+      lowerWickSize = getWickSize();
+      // Chance d'avoir une mèche longue
+      if (Math.random() > 0.8) {
+        if (Math.random() > 0.5) {
+          upperWickSize *= 2.5;
+        } else {
+          lowerWickSize *= 2.5;
+        }
       }
     }
     
