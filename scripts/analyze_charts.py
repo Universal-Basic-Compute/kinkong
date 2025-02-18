@@ -467,13 +467,6 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
         print(f"Creating signal in Airtable for {token_info['symbol']}...")
         airtable = Airtable(base_id, 'SIGNALS', api_key)
         
-        # Map timeframe to signal type
-        timeframe_mapping = {
-            '15m': 'SCALP',
-            '2h': 'INTRADAY',
-            '8h': 'SWING'
-        }
-        
         # Map confidence to LOW/MEDIUM/HIGH
         confidence = analysis.get('confidence', 0)  # Get confidence from dict
         confidence_level = 'LOW' if confidence < 40 else 'HIGH' if confidence > 75 else 'MEDIUM'
@@ -498,8 +491,12 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
         # Create signal record
         signal_type = analysis.get('signal')
         if signal_type in ['BUY', 'SELL']:
-            strategy_timeframe = timeframe_mapping.get(timeframe, 'INTRADAY')
-            expiry_delta = expiry_mapping.get(strategy_timeframe)
+            # The timeframe should already be one of our standard timeframes
+            if timeframe not in ['SCALP', 'INTRADAY', 'SWING', 'POSITION']:
+                print(f"Invalid timeframe: {timeframe}")
+                return None
+
+            expiry_delta = expiry_mapping.get(timeframe)
             expiry_date = now + expiry_delta
 
             # Calculate entry, target and stop prices based on key levels
@@ -518,22 +515,20 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
 
             # Get the specific timeframe analysis and overall analysis
             timeframe_analysis = analysis.get('reasoning', '')  # Current timeframe analysis
-            overall_analysis = analyses.get('overall', {})
-
-            # Get the specific timeframe analysis and overall analysis
-            timeframe_analysis = analysis.get('reasoning', '')  # Current timeframe analysis
-            overall_analysis = analyses.get('overall', {})
+            overall = analyses.get('overall', {})
 
             reason_text = (
-                f"{timeframe_analysis}\n\n"  # Just use the timeframe-specific reasoning
+                f"Clear {timeframe.lower()} timeframe analysis shows {analysis.get('signal', 'UNKNOWN')} "
+                f"signal with {analysis.get('confidence', 0)}% confidence.\n\n"
+                f"Analysis:\n{timeframe_analysis}\n\n"
                 f"Overall Market Context:\n"
-                f"• Primary Trend: {overall_analysis.get('primary_trend', 'Unknown')}\n"
-                f"• Timeframe Alignment: {overall_analysis.get('timeframe_alignment', 'Unknown')}\n"
-                f"• Best Timeframe: {overall_analysis.get('best_timeframe', 'Unknown')}\n\n"
+                f"• Primary Trend: {overall.get('primary_trend', 'Unknown')}\n"
+                f"• Timeframe Alignment: {overall.get('timeframe_alignment', 'Unknown')}\n"
+                f"• Best Timeframe: {overall.get('best_timeframe', 'Unknown')}\n\n"
                 f"Key Observations:\n"
-                f"{chr(10).join('• ' + obs for obs in overall_analysis.get('key_observations', []))}\n\n"
+                f"{chr(10).join('• ' + obs for obs in overall.get('key_observations', []))}\n\n"
                 f"Recommended Action:\n"
-                f"{overall_analysis.get('recommended_action', {}).get('reasoning', 'No specific recommendation')}"
+                f"{overall.get('recommended_action', {}).get('reasoning', 'No specific recommendation')}"
             )
 
             # The timeframe should already be one of our standard timeframes
