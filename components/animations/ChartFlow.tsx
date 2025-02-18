@@ -561,7 +561,9 @@ export function ChartFlow() {
             >
               <p className="text-xs font-mono leading-relaxed text-amber-50/90">
                 {stream.text}
-                <span className="animate-pulse ml-1 opacity-70">🦍</span>
+                {stream.isComplete && (
+                  <span className="animate-pulse ml-1 opacity-70">🦍</span>
+                )}
               </p>
             </div>
           ))}
