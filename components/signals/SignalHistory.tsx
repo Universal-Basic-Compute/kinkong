@@ -177,10 +177,10 @@ export function SignalHistory() {
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Timeframe</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Prices</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Confidence</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Success</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">From</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Reason</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Reference</th>
+            <th className="px-6 py-3 text-center text-xs font-medium text-gold uppercase tracking-wider">Success</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gold/10">
@@ -226,15 +226,6 @@ export function SignalHistory() {
                   {signal.confidence}
                 </span>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-center text-2xl">
-                {signal.success !== null && signal.success !== undefined ? (
-                  signal.success ? (
-                    <span className="metallic-text-ubc font-bold">✓</span>
-                  ) : (
-                    <span className="text-red-500 font-bold">×</span>
-                  )
-                ) : null}
-              </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">
                 <a 
                   href={`https://solscan.io/account/${signal.wallet}`}
@@ -275,6 +266,15 @@ export function SignalHistory() {
                 ) : (
                   '-'
                 )}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-center text-2xl">
+                {signal.success !== null && signal.success !== undefined ? (
+                  signal.success ? (
+                    <span className="metallic-text-ubc font-bold">✓</span>
+                  ) : (
+                    <span className="text-red-500 font-bold">×</span>
+                  )
+                ) : null}
               </td>
             </tr>
           ))}
