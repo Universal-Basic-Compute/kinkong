@@ -419,25 +419,32 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
     try:
         print(f"\nCreating Airtable signal for {token_info['symbol']}...")
         
-        # Debug prints
-        print("\nInput data:")
-        print(f"Analysis type: {type(analysis)}")
-        print(f"Analysis content: {analysis}")
-        print(f"Timeframe: {timeframe}")
-        print(f"Analyses type: {type(analyses)}")
-        print(f"Analyses content: {analyses}")
+        # Generate default reasoning if none provided
+        signal_type = analysis.get('signal', 'UNKNOWN')
+        confidence = analysis.get('confidence', 0)
+        key_levels = analysis.get('key_levels', {})
+        
+        # Build default reasoning text
+        default_reasoning = (
+            f"{timeframe} timeframe analysis shows {signal_type} signal with {confidence}% confidence.\n\n"
+            f"Key Price Levels:\n"
+            f"• Support: {', '.join(f'${price:.4f}' for price in key_levels.get('support', []))}\n"
+            f"• Resistance: {', '.join(f'${price:.4f}' for price in key_levels.get('resistance', []))}\n\n"
+        )
 
         # Extract reasoning with better error handling
         timeframe_analysis = ""
         if isinstance(analysis, dict):
-            timeframe_analysis = analysis.get('reasoning', '')
+            timeframe_analysis = analysis.get('reasoning', default_reasoning)
+            if not timeframe_analysis:  # If reasoning is empty or None
+                timeframe_analysis = default_reasoning
             print(f"Extracted reasoning from dict: {timeframe_analysis[:100]}...")
         elif hasattr(analysis, 'reasoning'):
-            timeframe_analysis = analysis.reasoning or ''
+            timeframe_analysis = analysis.reasoning or default_reasoning
             print(f"Extracted reasoning from object: {timeframe_analysis[:100]}...")
         else:
-            timeframe_analysis = str(analysis)
-            print(f"Using stringified analysis: {timeframe_analysis[:100]}...")
+            timeframe_analysis = default_reasoning
+            print(f"Using default reasoning: {timeframe_analysis[:100]}...")
 
         # Safely get overall analysis
         overall = {}
@@ -445,7 +452,7 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
             overall = analyses.get('overall', {})
         print(f"Overall analysis: {overall}")
 
-        # Build reason text with safe defaults
+        # Build complete reason text
         reason_text = (
             f"Technical Analysis Summary:\n\n"
             f"{timeframe_analysis}\n\n"
@@ -454,6 +461,30 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
             f"• Timeframe Alignment: {overall.get('timeframe_alignment', 'Unknown')}\n"
             f"• Best Timeframe: {overall.get('best_timeframe', 'Unknown')}\n\n"
         )
+
+        # Add key levels section
+        support_levels = key_levels.get('support', [])
+        resistance_levels = key_levels.get('resistance', [])
+        if support_levels or resistance_levels:
+            reason_text += (
+                f"Key Support/Resistance Levels:\n"
+                f"Support: {', '.join(f'${price:.4f}' for price in support_levels)}\n"
+                f"Resistance: {', '.join(f'${price:.4f}' for price in resistance_levels)}\n\n"
+            )
+
+        # Add trade setup details
+        entry_price = float(analysis.get('entryPrice', 0))
+        target_price = float(analysis.get('targetPrice', 0))
+        stop_loss = float(analysis.get('stopLoss', 0))
+        
+        if entry_price and target_price:
+            reason_text += (
+                f"Trade Setup:\n"
+                f"• Entry: ${entry_price:.4f}\n"
+                f"• Target: ${target_price:.4f}\n"
+                f"• Stop Loss: ${stop_loss:.4f}\n"
+                f"• Expected Return: {abs((target_price - entry_price) / entry_price * 100):.1f}%\n\n"
+            )
 
         # Safely get key levels
         key_levels = {}
