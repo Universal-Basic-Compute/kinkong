@@ -208,7 +208,7 @@ if __name__ == "__main__":
         
         # Get token info
         token_records = tokens_table.get_all(
-            formula=f"AND(symbol='{fields['token']}', isActive=1)"  # Fix formula syntax
+            formula=f"AND({{{symbol}}}='{fields['token']}', {{{isActive}}}=1)"  # Use proper Airtable field reference syntax
         )
         
         if not token_records:

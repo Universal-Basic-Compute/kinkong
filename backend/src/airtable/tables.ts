@@ -40,7 +40,7 @@ export interface Trade {
 }
 
 export interface Token {
-  symbol: string;
+  symbol: string;  // Changed from token to symbol
   mint: string;
   isActive: boolean;
   volume7d: number;
