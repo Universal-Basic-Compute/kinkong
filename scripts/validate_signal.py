@@ -194,17 +194,32 @@ if __name__ == "__main__":
         'price_change_24h': 0
     }
     
+    print("\n🔍 Signal Validation Test")
+    print("=" * 50)
+    print(f"Token: {test_token['symbol']} ({test_token['mint']})")
+    print(f"Signal Type: {test_signal['signal']}")
+    print("\nPrice Levels:")
+    print(f"Entry:     ${test_signal['entryPrice']:.4f}")
+    print(f"Target:    ${test_signal['targetPrice']:.4f} ({((test_signal['targetPrice']/test_signal['entryPrice'])-1)*100:.1f}%)")
+    print(f"Stop Loss: ${test_signal['stopLoss']:.4f} ({((test_signal['stopLoss']/test_signal['entryPrice'])-1)*100:.1f}%)")
+    print("\nMarket Conditions:")
+    print(f"Current Price: ${test_market['price']:.4f}")
+    print(f"Liquidity:     ${test_market['liquidity']:,.2f}")
+    print(f"24h Change:    {test_market['price_change_24h']:.1f}%")
+    print("\nValidation Results:")
+    print("=" * 50)
+    
     # Test different timeframes
     for timeframe in ['15m', '2h', '8h']:
-        print(f"\nTesting {timeframe} timeframe:")
+        print(f"\n⏰ {timeframe} Timeframe Analysis:")
         result = validate_signal(
             timeframe=timeframe,
             signal_data=test_signal,
             token_info=test_token,
             market_data=test_market
         )
-        print(f"Valid: {result['valid']}")
-        print(f"Reason: {result['reason']}")
-        print(f"Expected profit: {result['expected_profit']:.1%}")
-        print(f"Costs: {result['costs']:.1%}")
-        print(f"Risk/Reward: {result['risk_reward']:.2f}")
+        print(f"Valid:           {'✅' if result['valid'] else '❌'}")
+        print(f"Expected Profit: {result['expected_profit']:.1%}")
+        print(f"Trading Costs:   {result['costs']:.1%}")
+        print(f"Risk/Reward:     {result['risk_reward']:.2f}")
+        print(f"Result:          {result['reason']}")
