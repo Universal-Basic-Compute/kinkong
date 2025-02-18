@@ -558,10 +558,10 @@ export function ChartFlow() {
               className={`
                 absolute
                 ${index === 0 
-                  ? 'top-[25%] left-[25%]' // Premier texte au quart supérieur gauche
+                  ? 'top-[20%] left-[15%]' // Premier texte plus à gauche
                   : index === 1 
-                  ? 'top-[40%] left-[35%]' // Deuxième texte vers le centre-gauche
-                  : 'top-[55%] left-[30%]' // Troisième texte vers le centre-bas
+                  ? 'top-[35%] left-[22%]' // Deuxième texte légèrement décalé
+                  : 'top-[50%] left-[18%]' // Troisième texte entre les deux
                 }
                 max-w-[280px]
               `}
