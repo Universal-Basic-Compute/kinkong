@@ -117,8 +117,8 @@ async def analyze_token(token):
                     analysis_time = datetime.fromisoformat(saved_analysis['timestamp'])
                     time_diff = datetime.now() - analysis_time
                     
-                    # If analysis is less than 10 minutes old
-                    if time_diff < timedelta(minutes=10):
+                    # If analysis is less than 30 minutes old
+                    if time_diff < timedelta(minutes=30):
                         print(f"Using recent analysis from {time_diff.seconds // 60} minutes ago")
                         
                         # Verify all chart files exist
