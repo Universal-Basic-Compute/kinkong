@@ -246,15 +246,15 @@ For each timeframe, provide:
 5. Risk/reward ratio if applicable
 
 Timeframes analyzed:
-- 30D chart (for POSITION trades)
-- 7D chart (for SWING trades)
-- 24H chart (for INTRADAY trades)
-- 6H chart (for SCALP trades)
+- 1D chart (for POSITION trades)
+- 4H chart (for SWING trades)
+- 1H chart (for INTRADAY trades)
+- 15m chart (for SCALP trades)
 
 Format your response as JSON:
 {
     "timeframes": {
-        "30D": {  # For POSITION trades
+        "1D": {  # For POSITION trades
             "signal": "BUY|SELL|HOLD",
             "confidence": 0,
             "reasoning": "Detailed analysis",
@@ -264,13 +264,13 @@ Format your response as JSON:
             },
             "risk_reward_ratio": 0.0
         },
-        "7D": {  # For SWING trades
+        "4H": {  # For SWING trades
             ...
         },
-        "24H": {  # For INTRADAY trades
+        "1H": {  # For INTRADAY trades
             ...
         },
-        "6H": {  # For SCALP trades
+        "15m": {  # For SCALP trades
             ...
         }
     },
@@ -523,10 +523,10 @@ Recommended Action:
 
             # Map timeframe to signal type
             timeframe_mapping = {
-                '30D': 'POSITION',  # 30-day chart for POSITION trades
-                '7D': 'SWING',      # 7-day chart for SWING trades 
-                '24H': 'INTRADAY',  # 24-hour chart for INTRADAY trades
-                '6H': 'SCALP'       # 6-hour chart for SCALP trades
+                '1D': 'POSITION',   # Daily chart for POSITION trades
+                '4H': 'SWING',      # 4-hour chart for SWING trades
+                '1H': 'INTRADAY',   # 1-hour chart for INTRADAY trades
+                '15m': 'SCALP'      # 15-minute chart for SCALP trades
             }
             
             strategy_timeframe = timeframe_mapping.get(timeframe, 'INTRADAY')
