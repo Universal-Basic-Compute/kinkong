@@ -550,7 +550,7 @@ export function ChartFlow() {
       </div>
       
         {/* Section des raisons en streaming - texte simple */}
-        <div className="absolute bottom-[130px] left-0 w-[75%] flex justify-center gap-16">
+        <div className="absolute bottom-[180px] left-0 w-[75%] flex justify-center gap-16">
           {streamingReasons.map((stream, index) => (
             <div 
               key={index}
