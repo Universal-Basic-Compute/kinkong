@@ -3,8 +3,8 @@ import { Connection, PublicKey } from '@solana/web3.js';
 import { getTable } from '@/backend/src/airtable/tables';
 
 // Validate environment variables
-if (!process.env.NEXT_PUBLIC_SUBSCRIPTION_WALLET) {
-  throw new Error('Subscription wallet not configured');
+if (!process.env.STRATEGY_WALLET) {
+  throw new Error('Strategy wallet not configured');
 }
 
 const SUBSCRIPTION_COST = 1.5; // SOL
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       : tx.transaction.message.staticAccountKeys;
       
     const receiverIndex = accountKeys.findIndex(
-      key => key.equals(new PublicKey(process.env.NEXT_PUBLIC_SUBSCRIPTION_WALLET!))
+      key => key.equals(new PublicKey(process.env.STRATEGY_WALLET!))
     );
 
     if (receiverIndex === -1) {
