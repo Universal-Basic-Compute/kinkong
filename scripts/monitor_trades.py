@@ -202,15 +202,20 @@ def monitor_active_trades():
                         })
                 
                 # Check expiry
-                expiry_date = datetime.fromisoformat(fields['expiryDate'].replace('Z', '+00:00'))
-                if datetime.now(timezone.utc) >= expiry_date:
-                    print(f"⏰ Trade expired for {token}")
-                    exit_queue.append({
-                        'trade_id': trade_id,
-                        'type': 'EXPIRED',
-                        'reason': f'Position expired at ${current_price:.4f}',
-                        'price': current_price
-                    })
+                try:
+                    expiry_date = datetime.fromisoformat(fields['expiryDate'].replace('Z', '+00:00'))
+                    if datetime.now(timezone.utc) >= expiry_date:
+                        print(f"⏰ Trade expired for {token}")
+                        exit_queue.append({
+                            'trade_id': trade_id,
+                            'type': 'EXPIRED',
+                            'reason': f'Position expired at ${current_price:.4f}',
+                            'price': current_price,
+                            'exitTime': datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
+                        })
+                except (ValueError, KeyError) as e:
+                    print(f"❌ Error parsing expiry date: {e}")
+                    continue
                 
             except Exception as e:
                 print(f"❌ Error processing trade {trade_id}: {e}")

@@ -34,11 +34,12 @@ export interface PortfolioSnapshot {
 }
 
 export interface Trade {
-  createdAt: string;  // Changed from timestamp
+  createdAt: string;  // ISO 8601 UTC format
   token: string;
   action: 'BUY' | 'SELL';
   amount: number;
   price: number;
+  lastUpdateTime?: string;  // ISO 8601 UTC format
 }
 
 export interface Token {

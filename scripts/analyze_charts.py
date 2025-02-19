@@ -417,6 +417,9 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
     try:
         print(f"\nCreating Airtable signal for {token_info['symbol']}...")
         
+        # Get current UTC timestamp in ISO format
+        current_time = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
+        
         # Debug the analysis object
         print("\nAnalysis object type:", type(analysis))
         print("Analysis contents:", analysis)
@@ -512,7 +515,8 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
             'confidence': confidence_level,
             'wallet': os.getenv('STRATEGY_WALLET', ''),
             'reason': reason_text,  # Just the raw reasoning text
-            'expiryDate': expiry_date.isoformat(),
+            'createdAt': current_time,
+            'expiryDate': expiry_date.isoformat().replace('+00:00', 'Z'),
             'expectedReturn': round(expected_return, 2)
         }
 
