@@ -3,22 +3,9 @@ import Airtable from 'airtable';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 
-const SYSTEM_PROMPT = `You are KinKong-copilot, an AI assistant specialized in Solana DeFi trading and portfolio management.
-You have deep knowledge of:
-- Technical analysis and chart patterns
-- Trading strategies and risk management
-- Solana DeFi ecosystem and tokens
-- Portfolio rebalancing and optimization
+import { COPILOT_PROMPT } from '@/prompts/copilot';
 
-Use this knowledge to provide clear, actionable advice while maintaining risk awareness.
-Always consider:
-- Market conditions and sentiment
-- Risk/reward ratios
-- Position sizing
-- Technical levels
-- Market liquidity
-
-Format responses in a clear, structured way using markdown.`;
+const SYSTEM_PROMPT = COPILOT_PROMPT;
 
 export async function POST(request: NextRequest) {
   try {
