@@ -117,6 +117,13 @@ ${typeof context?.pageContent === 'object'
           systemPromptLength: systemPrompt.length
         });
 
+        // Log before making Anthropic API call
+        console.log('🚀 Sending request to Anthropic:', {
+          model: "claude-3-5-sonnet-20241022",
+          messageCount: conversationHistory.length + 1,
+          systemPromptLength: systemPrompt.length
+        });
+
         const copilotResponse = await Promise.race([
           fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
@@ -145,6 +152,12 @@ ${typeof context?.pageContent === 'object'
             setTimeout(() => reject(new Error('Copilot response timeout')), 15000)
           )
         ]) as Response;
+
+        // Log Anthropic API response status
+        console.log('✅ Anthropic API Response:', {
+          status: copilotResponse.status,
+          ok: copilotResponse.ok
+        });
 
         // Log Anthropic API response status
         console.log('✅ Anthropic API Response:', {
