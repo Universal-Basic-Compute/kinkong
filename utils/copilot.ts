@@ -1,6 +1,12 @@
+// Add PageContent interface
+interface PageContent {
+  url: string;
+  pageContent: string;
+}
+
 export interface CopilotContext {
   url?: string;
-  pageContent?: string;
+  pageContent?: string | PageContent;  // Can be either string or PageContent object
   marketSentiment?: string;
   portfolioValue?: number;
   topHoldings?: string[];
