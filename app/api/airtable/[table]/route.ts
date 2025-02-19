@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Airtable from 'airtable';
 
-// Configure Airtable
+// Verify environment variables
+if (!process.env.KINKONG_AIRTABLE_API_KEY || !process.env.KINKONG_AIRTABLE_BASE_ID) {
+  throw new Error('Missing required Airtable configuration');
+}
+
+// Configure Airtable with verified environment variables
 const base = new Airtable({
   apiKey: process.env.KINKONG_AIRTABLE_API_KEY
-}).base(process.env.KINKONG_AIRTABLE_BASE_ID!);
+}).base(process.env.KINKONG_AIRTABLE_BASE_ID);
 
 // Define allowed tables and their fields for public access
 const ALLOWED_TABLES = {
