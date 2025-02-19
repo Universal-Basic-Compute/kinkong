@@ -166,13 +166,6 @@ ${typeof context?.pageContent === 'object'
           hasPageContent: systemPrompt.includes('Page Content:')
         });
 
-        // Log before making Anthropic API call
-        console.log('🚀 Sending request to Anthropic:', {
-          model: "claude-3-5-sonnet-20241022",
-          messageCount: conversationHistory.length + 1,
-          systemPromptLength: systemPrompt.length
-        });
-
         // Enhanced logging
         console.log('📝 Copilot Request:', {
           message: message?.slice(0, 100) + '...',
@@ -193,6 +186,13 @@ ${context?.pageContent ? `\nContent:\n${context.pageContent}` : 'No page content
           length: systemPrompt.length,
           preview: systemPrompt.slice(0, 200) + '...',
           hasPageContent: systemPrompt.includes('Content:')
+        });
+
+        // Log before making Anthropic API call
+        console.log('🚀 Sending request to Anthropic:', {
+          model: "claude-3-5-sonnet-20241022",
+          messageCount: conversationHistory.length + 1,
+          systemPromptLength: systemPrompt.length
         });
 
         const copilotResponse = await Promise.race([
