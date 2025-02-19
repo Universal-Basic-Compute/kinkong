@@ -30,6 +30,7 @@ interface CopilotContext {
   portfolioValue?: number;
   topHoldings?: string[];
   recentTrades?: string;
+  wallet?: string;
 }
 
 interface CopilotRequest {

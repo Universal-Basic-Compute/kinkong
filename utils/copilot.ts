@@ -5,6 +5,7 @@ export interface CopilotContext {
   portfolioValue?: number;
   topHoldings?: string[];
   recentTrades?: string;
+  wallet?: string;
 }
 
 export async function askKinKongCopilot(
