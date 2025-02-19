@@ -9,24 +9,28 @@ export async function askKinKongCopilot(
   context?: CopilotContext
 ) {
   try {
-    // Get current page content
-    const pageContent = document.body.innerText;
+    // Get current page content if not provided
     const currentUrl = window.location.href;
+    const currentContent = document.body.innerText;
+
+    // Merge provided context with current page info
+    const fullContext = {
+      url: context?.url || currentUrl,
+      pageContent: context?.pageContent || currentContent,
+      wallet: context?.wallet
+    };
 
     const requestBody = {
       message,
-      context: {
-        url: currentUrl,
-        pageContent: pageContent,
-        ...context // Any additional context
-      }
+      context: fullContext
     };
 
     console.log('Preparing copilot request:', {
       messageLength: message.length,
-      hasContext: !!context,
-      contentLength: context?.pageContent?.length || 0,
-      walletPrefix: context?.wallet ? context.wallet.slice(0, 8) + '...' : 'none'
+      hasContext: true, // Will always be true now
+      url: fullContext.url,
+      contentLength: fullContext.pageContent.length,
+      walletPrefix: fullContext.wallet ? fullContext.wallet.slice(0, 8) + '...' : 'none'
     });
 
     const response = await fetch('/api/copilot', {
