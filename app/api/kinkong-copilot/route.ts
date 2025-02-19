@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
 
-// Initialize Anthropic client with API key
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY!,
-});
+const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 
 const SYSTEM_PROMPT = `You are KinKong-copilot, an AI assistant specialized in Solana DeFi trading and portfolio management.
 You have deep knowledge of:
@@ -53,35 +49,52 @@ Current Context:
 `;
     }
 
-    // Get response from Claude using the correct method
-    const response = await client.complete({
-      model: "claude-3-5-sonnet-20241022",
-      max_tokens_to_sample: 4096,
-      prompt: `\n\nHuman: ${SYSTEM_PROMPT}\n\n${contextString}\nUser Question: ${message}\n\nAssistant:`,
+    // Make direct API call to Claude
+    const response = await fetch(ANTHROPIC_API_URL, {
+      method: 'POST',
+      headers: {
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: "claude-3-5-sonnet-20241022",
+        max_tokens: 4096,
+        messages: [{
+          role: 'user',
+          content: `${SYSTEM_PROMPT}\n\n${contextString}\nUser Question: ${message}`
+        }]
+      })
     });
+
+    if (!response.ok) {
+      throw new Error(`Anthropic API error: ${response.status}`);
+    }
+
+    const data = await response.json();
 
     // Log interaction for monitoring
     console.log('KinKong-copilot interaction:', {
       timestamp: new Date().toISOString(),
       message,
       contextProvided: !!context,
-      responseLength: response.completion.length
+      responseLength: data.content?.[0]?.text?.length
     });
 
     // Create thought record in Airtable
     await createThought({
       type: 'COPILOT_INTERACTION',
       content: message,
-      response: response.completion,
+      response: data.content[0].text,
       context: context || {}
     });
 
     // Return response
     return NextResponse.json({
-      response: response.completion,
+      response: data.content[0].text,
       metadata: {
-        model: "claude-3-5-sonnet-20241022",
-        prompt_tokens: response.stop_reason === 'max_tokens' ? 4096 : undefined
+        model: data.model,
+        usage: data.usage
       }
     });
 
