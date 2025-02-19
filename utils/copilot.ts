@@ -23,26 +23,24 @@ export async function askKinKongCopilot(
     const pageContent = document.body.innerText;
     const currentUrl = window.location.href;
 
-    // Add debug log
-    console.log('Preparing copilot request:', {
+    const requestBody = {
       message,
-      url: currentUrl,
-      contentLength: pageContent.length
-    });
+      context: {
+        url: currentUrl,
+        pageContent: pageContent,
+        ...context // Any additional context
+      }
+    };
+
+    // Debug log
+    console.log('Sending copilot request:', requestBody);
 
     const response = await fetch('/api/copilot', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        message,
-        context: {
-          url: currentUrl,
-          pageContent: pageContent,
-          ...context // Spread any additional context
-        }
-      })
+      body: JSON.stringify(requestBody)
     });
 
     if (!response.ok) {
