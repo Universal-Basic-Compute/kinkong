@@ -26,12 +26,10 @@ interface CopilotContext {
 
 interface CopilotRequest {
   message: string;
-  context?: CopilotContext;
-}
-
-interface CopilotError extends Error {
-  code?: string;
-  status?: number;
+  url?: string;
+  pageContent?: any;
+  pageType?: string;
+  fullyLoaded?: boolean;
 }
 
 export async function POST(request: NextRequest) {
@@ -49,7 +47,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json() as CopilotRequest;
-    const { message, context } = body;
+    const { message, url, pageContent } = body;
 
     // Validate request
     if (!message || typeof message !== 'string') {
@@ -59,28 +57,14 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Validate context if present
-    if (context && typeof context !== 'object') {
-      throw Object.assign(new Error('Invalid context format'), {
-        code: 'INVALID_CONTEXT',
-        status: 400
-      });
-    }
-
     // Enhanced logging
     console.log('📝 Copilot Request:', {
       message: message?.slice(0, 100) + '...',
-      hasContext: !!context?.pageContent,
-      url: context?.url,
-      contentLength: typeof context?.pageContent === 'string' 
-        ? context.pageContent.length 
-        : 0,
-      walletPrefix: context?.wallet ? context.wallet.slice(0, 8) + '...' : 'none'
+      hasContext: !!pageContent?.pageContent?.mainContent,
+      url: url,
+      contentLength: pageContent?.pageContent?.mainContent?.length || 0,
+      walletPrefix: 'none'
     });
-
-    if (!message) {
-      throw new Error('Message is required');
-    }
 
     // Log context details if present
     if (context) {
