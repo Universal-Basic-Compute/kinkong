@@ -48,14 +48,6 @@ export default function CopilotChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const context: CopilotContext = {
-    url: window.location.href,
-    pageContent: document.body.innerText,
-    marketSentiment: undefined,  // Optional
-    portfolioValue: undefined,   // Optional 
-    topHoldings: undefined,      // Optional
-    recentTrades: undefined      // Optional
-  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -71,7 +63,8 @@ export default function CopilotChatPage() {
         pageContent: {
           url: window.location.href,
           pageContent: document.body.innerText
-        }
+        },
+        wallet: publicKey?.toString()
       };
 
       // Log context being sent
