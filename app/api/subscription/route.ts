@@ -55,13 +55,14 @@ export async function POST(request: NextRequest) {
     // Create PublicKey from strategy wallet address
     const strategyWallet = new PublicKey(process.env.STRATEGY_WALLET!);
     
-    // Convert MessageAccountKeys to array before using findIndex
-    const accountKeysArray = Array.from(accountKeys);
-    
-    // Compare PublicKeys using base58 strings
-    const receiverIndex = accountKeysArray.findIndex(
-      key => key.toBase58() === strategyWallet.toBase58()
-    );
+    // Find receiver index by iterating over account keys
+    let receiverIndex = -1;
+    for (let i = 0; i < accountKeys.length; i++) {
+      if (accountKeys[i].toBase58() === strategyWallet.toBase58()) {
+        receiverIndex = i;
+        break;
+      }
+    }
 
     if (receiverIndex === -1) {
       return NextResponse.json(
