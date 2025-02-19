@@ -147,34 +147,7 @@ export async function POST(request: NextRequest) {
           }
         }]);
 
-        // Get copilot response with timeout
-        // Format system prompt
-        const systemPrompt = `${COPILOT_PROMPT}
-
-Current Website Context:
-URL: ${context?.url || 'Not provided'}
-
-Page Content:
-${typeof context?.pageContent === 'object' 
-  ? (context.pageContent as PageContent)?.pageContent || JSON.stringify(context.pageContent, null, 2)
-  : context?.pageContent || 'Not provided'}`;
-
-        // Log formatted system prompt (truncated)
-        console.log('📋 System Prompt Preview:', {
-          length: systemPrompt.length,
-          preview: systemPrompt.slice(0, 200) + '...',
-          hasPageContent: systemPrompt.includes('Page Content:')
-        });
-
-        // Enhanced logging
-        console.log('📝 Copilot Request:', {
-          message: message?.slice(0, 100) + '...',
-          hasContext: !!context,
-          url: context?.url,
-          contentLength: context?.pageContent?.length || 0
-        });
-
-        // Format system prompt with guaranteed context
+        // Format system prompt with context
         const systemPrompt = `${COPILOT_PROMPT}
 
 Current Page Context:
@@ -188,7 +161,7 @@ ${context?.pageContent ? `\nContent:\n${context.pageContent}` : 'No page content
           hasPageContent: systemPrompt.includes('Content:')
         });
 
-        // Log before making Anthropic API call
+        // Make Anthropic API call
         console.log('🚀 Sending request to Anthropic:', {
           model: "claude-3-5-sonnet-20241022",
           messageCount: conversationHistory.length + 1,
