@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 
 // Initialize Anthropic client
-const anthropic = new Anthropic({
+const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY!,
 });
 
@@ -54,7 +54,7 @@ Current Context:
     }
 
     // Get response from Claude using the correct model and API
-    const response = await anthropic.messages.create({
+    const response = await client.messages.create({
       model: "claude-3-5-sonnet-20241022",
       max_tokens: 4096,
       temperature: 0.7,
