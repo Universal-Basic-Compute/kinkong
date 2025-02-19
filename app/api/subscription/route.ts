@@ -48,9 +48,10 @@ export async function POST(request: NextRequest) {
     const preBalances = tx.meta?.preBalances || [];
 
     // Find receiver index (your subscription wallet)
-    const accountKeys = 'getAccountKeys' in tx.transaction.message 
-      ? tx.transaction.message.getAccountKeys()
-      : tx.transaction.message.staticAccountKeys;
+    const accountKeys = tx.transaction.message.getAccountKeys?.() || 
+      ('staticAccountKeys' in tx.transaction.message 
+        ? tx.transaction.message.staticAccountKeys 
+        : tx.transaction.message.accountKeys);
       
     // Create PublicKey from strategy wallet address
     const strategyWallet = new PublicKey(process.env.STRATEGY_WALLET!);
