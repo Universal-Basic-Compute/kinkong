@@ -34,7 +34,7 @@ export async function GET() {
     try {
       const records = await table
         .select({
-          sort: [{ field: 'timestamp', direction: 'desc' }],
+          sort: [{ field: 'createdAt', direction: 'desc' }],
           maxRecords: 100
         })
         .all();

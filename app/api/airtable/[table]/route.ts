@@ -14,7 +14,7 @@ const base = new Airtable({
 // Define allowed tables and their fields for public access
 const ALLOWED_TABLES = {
   'SIGNALS': [
-    'id', 'timestamp', 'token', 'type', 'timeframe', 
+    'id', 'createdAt', 'token', 'type', 'timeframe',
     'entryPrice', 'targetPrice', 'stopLoss', 'confidence',
     'wallet', 'reason', 'expiryDate', 'actualReturn'
   ],
