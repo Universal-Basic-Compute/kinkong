@@ -6,21 +6,12 @@ export async function POST(request: NextRequest) {
   try {
     // Parse request
     const body = await request.json();
-    const { message, wallet, context } = body;
+    const { message, context } = body;
 
-    if (!message || !wallet) {
+    if (!message) {
       return NextResponse.json(
-        { error: 'Message and wallet are required' },
+        { error: 'Message is required' },
         { status: 400 }
-      );
-    }
-
-    // Verify subscription
-    const subscription = await verifySubscription(wallet);
-    if (!subscription.active) {
-      return NextResponse.json(
-        { error: 'Active subscription required' },
-        { status: 403 }
       );
     }
 
@@ -32,7 +23,7 @@ export async function POST(request: NextRequest) {
       response,
       subscription: {
         active: true,
-        expiresAt: subscription.subscription?.endDate
+        expiresAt: null
       }
     });
 
