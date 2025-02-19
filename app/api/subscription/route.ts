@@ -44,6 +44,10 @@ export async function POST(request: NextRequest) {
     const accountKeys = tx.transaction.message.accountKeys;
 
     // Find receiver index (your subscription wallet)
+    const accountKeys = 'getAccountKeys' in tx.transaction.message 
+      ? tx.transaction.message.getAccountKeys()
+      : tx.transaction.message.staticAccountKeys;
+      
     const receiverIndex = accountKeys.findIndex(
       key => key.toString() === process.env.SUBSCRIPTION_WALLET
     );
