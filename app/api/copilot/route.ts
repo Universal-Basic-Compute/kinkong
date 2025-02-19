@@ -173,11 +173,26 @@ ${typeof context?.pageContent === 'object'
           systemPromptLength: systemPrompt.length
         });
 
-        // Log before making Anthropic API call
-        console.log('🚀 Sending request to Anthropic:', {
-          model: "claude-3-5-sonnet-20241022",
-          messageCount: conversationHistory.length + 1,
-          systemPromptLength: systemPrompt.length
+        // Enhanced logging
+        console.log('📝 Copilot Request:', {
+          message: message?.slice(0, 100) + '...',
+          hasContext: !!context,
+          url: context?.url,
+          contentLength: context?.pageContent?.length || 0
+        });
+
+        // Format system prompt with guaranteed context
+        const systemPrompt = `${COPILOT_PROMPT}
+
+Current Page Context:
+URL: ${context?.url || 'Not provided'}
+${context?.pageContent ? `\nContent:\n${context.pageContent}` : 'No page content available'}`;
+
+        // Log formatted prompt
+        console.log('📋 System Prompt:', {
+          length: systemPrompt.length,
+          preview: systemPrompt.slice(0, 200) + '...',
+          hasPageContent: systemPrompt.includes('Content:')
         });
 
         const copilotResponse = await Promise.race([

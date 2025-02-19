@@ -57,24 +57,18 @@ export default function CopilotChatPage() {
       setIsLoading(true);
       setError(null);
 
-      // Gather current page context
+      // Get current page context
       const context: CopilotContext = {
         url: window.location.href,
-        pageContent: {
-          url: window.location.href,
-          pageContent: document.body.innerText
-        },
+        pageContent: document.body.innerText,
         wallet: publicKey?.toString()
       };
 
       // Log context being sent
       console.log('Sending context:', {
         url: context.url,
-        contentLength: context.pageContent ? 
-          (typeof context.pageContent === 'string' ? 
-            context.pageContent.length : 
-            JSON.stringify(context.pageContent).length) 
-          : 0
+        contentLength: context.pageContent?.length || 0,
+        wallet: context.wallet
       });
 
       // Add user message

@@ -19,18 +19,15 @@ export async function askKinKongCopilot(
   context?: CopilotContext
 ) {
   try {
+    // Get current page content
+    const pageContent = document.body.innerText;
+    const currentUrl = window.location.href;
+
     // Add debug log
-    console.log('Sending copilot request:', {
+    console.log('Preparing copilot request:', {
       message,
-      contextSummary: {
-        hasContext: !!context,
-        url: context?.url,
-        pageContentLength: context?.pageContent ? 
-          (typeof context.pageContent === 'string' ? 
-            context.pageContent.length : 
-            JSON.stringify(context.pageContent).length) 
-          : 0
-      }
+      url: currentUrl,
+      contentLength: pageContent.length
     });
 
     const response = await fetch('/api/copilot', {
@@ -41,8 +38,9 @@ export async function askKinKongCopilot(
       body: JSON.stringify({
         message,
         context: {
-          url: window.location.href,  // Always include current URL
-          pageContent: context?.pageContent || document.body.innerText // Fallback to page content
+          url: currentUrl,
+          pageContent: pageContent,
+          ...context // Spread any additional context
         }
       })
     });
