@@ -25,8 +25,22 @@ export async function askKinKongCopilot(
       throw new Error('Failed to get copilot response');
     }
 
-    const data = await response.json();
-    return data.response;
+    // Handle streaming response
+    const reader = response.body?.getReader();
+    const decoder = new TextDecoder();
+    let result = '';
+
+    if (reader) {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const chunk = decoder.decode(value);
+        result += chunk;
+      }
+    }
+
+    return result;
 
   } catch (error) {
     console.error('Error asking KinKong-copilot:', error);

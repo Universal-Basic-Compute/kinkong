@@ -64,32 +64,21 @@ export default function CopilotChatPage() {
       setMessages(prev => [...prev, userMessage]);
       setInput('');
 
-      // Get copilot response
-      const response = await fetch('/api/copilot', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          message: input,
-          wallet: publicKey.toString()
-        })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to get response');
-      }
-
-      const data = await response.json();
-
-      // Add assistant message
+      // Create placeholder for assistant message
       const assistantMessage: Message = {
         role: 'assistant',
-        content: data.response,
+        content: '',
         timestamp: new Date().toISOString()
       };
       setMessages(prev => [...prev, assistantMessage]);
+
+      // Get streaming response
+      const response = await askKinKongCopilot(input, context);
+    
+      // Update the assistant message with complete response
+      setMessages(prev => prev.map((msg, i) => 
+        i === prev.length - 1 ? { ...msg, content: response } : msg
+      ));
 
     } catch (err) {
       console.error('Chat error:', err);
