@@ -66,41 +66,36 @@ export async function GET() {
     }
 
     // Get performance history (daily points)
-    const history = trades.reduce((acc: HistoryDictionary, trade: AirtableRecord<TradeRecord>) => {
+    const history = trades.reduce<HistoryDictionary>((acc, trade) => {
       try {
-        // Safely parse the timestamp
-        const timestamp = trade.get('timestamp');
-        if (!timestamp || typeof timestamp !== 'string') {
-          console.warn('Invalid timestamp format:', timestamp);
+        // Safely parse the createdAt timestamp
+        const createdAt = trade.get('createdAt');
+        if (!createdAt || typeof createdAt !== 'string') {
+          console.warn('Invalid createdAt format:', createdAt);
           return acc;
         }
 
-        let dateStr: string;
-        try {
-          // Try parsing as ISO string
-          const date = new Date(timestamp);
-          if (isNaN(date.getTime())) {
-            console.warn('Invalid date value:', timestamp);
-            return acc;
-          }
-          dateStr = date.toISOString().split('T')[0];
-        } catch (e) {
-          console.warn('Invalid date format:', timestamp);
-          return acc;
-        }
-
-        const value = parseFloat(trade.get('value') as string) || 0;
+        // Get the date part only for the key
+        const dateStr = createdAt.split('T')[0];
         
+        // Get the value
+        const value = parseFloat(trade.get('value') as string) || 0;
+
+        // Initialize or update the accumulator entry
         if (!acc[dateStr]) {
-          acc[dateStr] = { timestamp: dateStr, value: 0 };
+          acc[dateStr] = {
+            createdAt: createdAt,
+            value: 0
+          };
         }
         acc[dateStr].value += value;
+
         return acc;
-      } catch (e) {
-        console.error('Error processing trade:', e);
+      } catch (error) {
+        console.error('Error processing trade:', error);
         return acc;
       }
-    }, {} as Record<string, { timestamp: string; value: number }>);
+    }, {} as HistoryDictionary);
 
     // Debug logs
     console.log('Metrics calculated:', {
