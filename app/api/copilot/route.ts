@@ -99,7 +99,9 @@ Current Website Context:
 URL: ${context?.url || 'Not provided'}
 
 Page Content:
-${context?.pageContent || 'Not provided'}`
+${typeof context?.pageContent === 'object' 
+  ? JSON.stringify(context.pageContent, null, 2) 
+  : context?.pageContent || 'Not provided'}`
             })
           }) as Promise<Response>,
           new Promise((_, reject) => 
