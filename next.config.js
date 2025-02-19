@@ -10,6 +10,10 @@ const nextConfig = {
         source: '/api/airtable/:table*',
         destination: '/api/airtable/:table*',
       },
+      {
+        source: '/api/copilot',
+        destination: '/api/copilot',
+      },
     ];
   },
 };
