@@ -113,7 +113,7 @@ export function SignalHistory() {
   const [error, setError] = useState<string | null>(null);
   const [typeFilter, setTypeFilter] = useState<'ALL' | 'BUY' | 'SELL'>('ALL');
   const [timeframeFilter, setTimeframeFilter] = useState<'ALL' | 'SCALP' | 'INTRADAY' | 'SWING' | 'POSITION'>('ALL');
-  const [sortField, setSortField] = useState<'actualReturn' | 'createdAt' | null>(null);
+  const [sortField, setSortField] = useState<'actualReturn' | 'createdAt' | 'token' | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   const handleSort = (field: 'actualReturn' | 'createdAt') => {
@@ -139,10 +139,53 @@ export function SignalHistory() {
           ? new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
           : new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
           
+      case 'token':
+        return sortDirection === 'asc' 
+          ? a.token.localeCompare(b.token)
+          : b.token.localeCompare(a.token);
+          
       default:
         return 0;
     }
   };
+
+  const SortHeader = ({ 
+    field, 
+    label, 
+    currentSort, 
+    currentDirection, 
+    onSort 
+  }: { 
+    field: 'createdAt' | 'token' | 'actualReturn';
+    label: string;
+    currentSort: string | null;
+    currentDirection: 'asc' | 'desc';
+    onSort: (field: 'createdAt' | 'token' | 'actualReturn') => void;
+  }) => (
+    <div 
+      className="flex items-center gap-2 cursor-pointer group"
+      onClick={() => onSort(field)}
+    >
+      {label}
+      <div className="text-gray-400 group-hover:text-gold">
+        {currentSort === field ? (
+          currentDirection === 'asc' ? (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+              <path fillRule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z" clipRule="evenodd" />
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+              <path fillRule="evenodd" d="M10 3a.75.75 0 01.75.75v10.638l3.96-4.158a.75.75 0 111.08 1.04l-5.25 5.5a.75.75 0 01-1.08 0l-5.25-5.5a.75.75 0 111.08-1.04l3.96 4.158V3.75A.75.75 0 0110 3z" clipRule="evenodd" />
+            </svg>
+          )
+        ) : (
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 opacity-0 group-hover:opacity-100">
+            <path fillRule="evenodd" d="M10 3a.75.75 0 01.75.75v10.638l3.96-4.158a.75.75 0 111.08 1.04l-5.25 5.5a.75.75 0 01-1.08 0l-5.25-5.5a.75.75 0 111.08-1.04l3.96 4.158V3.75A.75.75 0 0110 3z" clipRule="evenodd" />
+          </svg>
+        )}
+      </div>
+    </div>
+  );
 
   const fetchSignals = async () => {
     try {
@@ -204,8 +247,24 @@ export function SignalHistory() {
         <table className="min-w-full bg-black/50 rounded-lg">
           <thead className="sticky top-0 bg-black/95 z-10">
             <tr className="border-b border-gold/20">
-            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Time</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Token</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">
+              <SortHeader
+                field="createdAt"
+                label="Time"
+                currentSort={sortField}
+                currentDirection={sortDirection}
+                onSort={handleSort}
+              />
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">
+              <SortHeader
+                field="token"
+                label="Token"
+                currentSort={sortField}
+                currentDirection={sortDirection}
+                onSort={handleSort}
+              />
+            </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">
               <div className="flex items-center gap-2">
                 Type
@@ -301,28 +360,14 @@ export function SignalHistory() {
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Reason</th>
             <th className="px-6 py-3 text-center text-xs font-medium text-gold uppercase tracking-wider">Success</th>
             <th className="px-6 py-3 text-right text-xs font-medium text-gold uppercase tracking-wider">
-              <div 
-                className="flex items-center justify-end gap-2 cursor-pointer group"
-                onClick={() => handleSort('actualReturn')}
-              >
-                Return
-                <div className="text-gray-400 group-hover:text-gold">
-                  {sortField === 'actualReturn' ? (
-                    sortDirection === 'asc' ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                        <path fillRule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z" clipRule="evenodd" />
-                      </svg>
-                    ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                        <path fillRule="evenodd" d="M10 3a.75.75 0 01.75.75v10.638l3.96-4.158a.75.75 0 111.08 1.04l-5.25 5.5a.75.75 0 01-1.08 0l-5.25-5.5a.75.75 0 111.08-1.04l3.96 4.158V3.75A.75.75 0 0110 3z" clipRule="evenodd" />
-                      </svg>
-                    )
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 opacity-0 group-hover:opacity-100">
-                      <path fillRule="evenodd" d="M10 3a.75.75 0 01.75.75v10.638l3.96-4.158a.75.75 0 111.08 1.04l-5.25 5.5a.75.75 0 01-1.08 0l-5.25-5.5a.75.75 0 111.08-1.04l3.96 4.158V3.75A.75.75 0 0110 3z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                </div>
+              <div className="flex justify-end">
+                <SortHeader
+                  field="actualReturn"
+                  label="Return"
+                  currentSort={sortField}
+                  currentDirection={sortDirection}
+                  onSort={handleSort}
+                />
               </div>
             </th>
           </tr>
