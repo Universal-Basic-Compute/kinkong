@@ -2,20 +2,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Connection, PublicKey, Message, VersionedMessage } from '@solana/web3.js';
 import { getTable } from '@/backend/src/airtable/tables';
 
-// Validate environment variables
-if (!process.env.STRATEGY_WALLET) {
-  throw new Error('Strategy wallet not configured');
-}
-
+// Constants
 const SUBSCRIPTION_COST = 1.5; // SOL
 const SUBSCRIPTION_DURATION = 90; // days
 
+// Validate environment variables at runtime rather than top-level
+function validateEnvironment() {
+  if (!process.env.STRATEGY_WALLET) {
+    throw new Error('Strategy wallet not configured');
+  }
+  if (!process.env.NEXT_PUBLIC_HELIUS_RPC_URL) {
+    throw new Error('RPC URL not configured');
+  }
+  return true;
+}
+
 export async function POST(request: NextRequest) {
   try {
-    // Validate environment variables
-    if (!process.env.NEXT_PUBLIC_HELIUS_RPC_URL) {
-      throw new Error('RPC URL not configured');
-    }
+    // Validate environment
+    validateEnvironment();
 
     // Parse request body
     const body = await request.json();
@@ -47,16 +52,17 @@ export async function POST(request: NextRequest) {
     const postBalances = tx.meta?.postBalances || [];
     const preBalances = tx.meta?.preBalances || [];
 
-    // Find receiver index (your subscription wallet)
-    const accountKeys = tx.transaction.message.getAccountKeys?.() || 
-      ((tx.transaction.message as Message | VersionedMessage).staticAccountKeys || 
-       (tx.transaction.message as Message).accountKeys);
-      
     // Create PublicKey from strategy wallet address
     const strategyWallet = new PublicKey(process.env.STRATEGY_WALLET!);
-    
-    // Find receiver index by iterating over account keys
+
+    // Get account keys safely
     let receiverIndex = -1;
+    const accountKeys = tx.transaction.message.getAccountKeys?.() || 
+      ('staticAccountKeys' in tx.transaction.message 
+        ? tx.transaction.message.staticAccountKeys 
+        : []);
+
+    // Find receiver index using loop
     for (let i = 0; i < accountKeys.length; i++) {
       if (accountKeys[i].toBase58() === strategyWallet.toBase58()) {
         receiverIndex = i;
