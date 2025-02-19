@@ -188,7 +188,7 @@ export function SignalHistory() {
           {signals.map((signal) => (
             <tr key={signal.id} className="hover:bg-gold/5">
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                {getRelativeTime(signal.timestamp)}
+                {getRelativeTime(signal.createdAt)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">
                 <span className={getTokenClass(signal.token)}>
