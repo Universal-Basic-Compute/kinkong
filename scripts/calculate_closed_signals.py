@@ -397,7 +397,7 @@ def calculate_closed_signals():
                 print(f"Found mint address: {token_mint}")
                 
                 # Get historical prices
-                activation_time = datetime.fromisoformat(fields['timestamp'].replace('Z', '+00:00'))
+                activation_time = datetime.fromisoformat(fields['createdAt'].replace('Z', '+00:00'))
                 expiry_time = datetime.fromisoformat(fields['expiryDate'].replace('Z', '+00:00'))
                 
                 prices = get_historical_prices(token_mint, activation_time, expiry_time)
