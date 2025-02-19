@@ -55,15 +55,29 @@ export async function POST(request: NextRequest) {
     });
 
     // Get copilot response with conversation history
-    const copilotResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/kinkong-copilot`, {
+    const copilotResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json'
       },
       body: JSON.stringify({
-        message,
-        context,
-        conversationHistory
+        model: "claude-3-sonnet-20240229",
+        max_tokens: 1024,
+        system: COPILOT_PROMPT,
+        messages: [
+          // Include conversation history
+          ...conversationHistory.map(msg => ({
+            role: msg.role,
+            content: msg.content
+          })),
+          // Add the current message
+          {
+            role: 'user',
+            content: message
+          }
+        ]
       })
     });
 
@@ -72,20 +86,21 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await copilotResponse.json();
+    const assistantMessage = data.content[0].text;
 
     // Save assistant message
     await messagesTable.create([{
       fields: {
         createdAt: new Date().toISOString(),
         role: 'assistant',
-        content: data.response,
+        content: assistantMessage,
         wallet: context?.wallet || '',
         context: context ? JSON.stringify(context) : ''
       }
     }]);
 
     // Stream the response in chunks
-    const chunks = data.response.match(/.{1,1000}/g) || [];
+    const chunks = assistantMessage.match(/.{1,1000}/g) || [];
     for (const chunk of chunks) {
       await writer.write(customEncode(chunk));
       await new Promise(resolve => setTimeout(resolve, 50));
