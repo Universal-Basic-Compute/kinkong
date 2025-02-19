@@ -53,9 +53,9 @@ Current Context:
 `;
     }
 
-    // Get response from Claude
-    const response = await anthropic.messages.create({
-      model: "claude-3-opus-20240229",
+    // Get response from Claude using the correct model and API
+    const response = await anthropic.beta.messages.create({
+      model: "claude-3-sonnet-20240229",
       max_tokens: 4096,
       temperature: 0.7,
       system: SYSTEM_PROMPT,
