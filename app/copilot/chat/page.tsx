@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { askKinKongCopilot } from '@/utils/kinkong-copilot';
+import { askKinKongCopilot, CopilotContext } from '@/utils/copilot';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { verifySubscription } from '@/utils/subscription';
 import ReactMarkdown from 'react-markdown';
@@ -48,9 +48,13 @@ export default function CopilotChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const context = {
+  const context: CopilotContext = {
     url: window.location.href,
-    pageContent: document.body.innerText
+    pageContent: document.body.innerText,
+    marketSentiment: undefined,  // Optional
+    portfolioValue: undefined,   // Optional 
+    topHoldings: undefined,      // Optional
+    recentTrades: undefined      // Optional
   };
 
   async function handleSubmit(e: React.FormEvent) {
