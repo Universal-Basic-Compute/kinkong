@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import Airtable from 'airtable';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 
@@ -117,19 +118,30 @@ async function createThought(params: {
   context: any;
 }) {
   try {
-    const response = await fetch('/api/thoughts', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(params)
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to create thought record');
+    // Create Airtable instance directly
+    if (!process.env.KINOS_AIRTABLE_API_KEY || !process.env.KINOS_AIRTABLE_BASE_ID) {
+      console.warn('Kinos Airtable configuration missing');
+      return;
     }
 
-    return await response.json();
+    const kinosBase = new Airtable({
+      apiKey: process.env.KINOS_AIRTABLE_API_KEY
+    }).base(process.env.KINOS_AIRTABLE_BASE_ID);
+
+    const thoughtsTable = kinosBase.table('THOUGHTS');
+
+    const record = await thoughtsTable.create([{
+      fields: {
+        type: params.type,
+        content: params.content,
+        response: params.response,
+        context: JSON.stringify(params.context),
+        timestamp: new Date().toISOString()
+      }
+    }]);
+
+    return record;
+
   } catch (error) {
     console.error('Failed to create thought:', error);
     // Don't throw - we don't want to fail the main request if thought creation fails
