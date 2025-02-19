@@ -1,6 +1,5 @@
 'use client';
 
-import { SignalForm } from '@/components/signals/SignalForm'
 import { SignalHistory } from '@/components/signals/SignalHistory'
 import { WalletConnect } from '@/components/wallet/WalletConnect'
 import { useState, useEffect } from 'react'
@@ -81,27 +80,6 @@ export default function Signals() {
           <SignalHistory />
         </div>
 
-        {/* Signal Form Section */}
-        <div className="max-w-2xl">
-          <div className="flex items-center gap-2 mb-4">
-            <h2 className="text-xl font-bold">Submit Signal</h2>
-            <div className="group relative">
-              <div className="cursor-help text-gray-400 border border-gray-400 rounded-full w-4 h-4 flex items-center justify-center text-xs">
-                i
-              </div>
-              <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-80 p-2 bg-black/90 border border-gold/20 rounded-lg text-xs text-gray-300 z-10">
-                A quality signal should include:
-                • Clear token symbol and direction (BUY/SELL)
-                • Specific reasoning based on technical or fundamental analysis
-                • Supporting evidence via reference links
-                • Price targets or key levels
-                • Risk considerations
-                Higher quality signals that lead to profitable trades increase your profit share allocation.
-              </div>
-            </div>
-          </div>
-          <SignalForm />
-        </div>
 
         {/* Info Section - Now Last */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
