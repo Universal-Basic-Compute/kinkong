@@ -25,8 +25,8 @@ export async function askKinKongCopilot(
     console.log('Preparing copilot request:', {
       messageLength: message.length,
       hasContext: !!context,
-      contentLength: context.pageContent.length,
-      walletPrefix: context.wallet ? context.wallet.slice(0, 8) + '...' : 'none'
+      contentLength: context?.pageContent?.length || 0,
+      walletPrefix: context?.wallet ? context.wallet.slice(0, 8) + '...' : 'none'
     });
 
     const response = await fetch('/api/copilot', {
