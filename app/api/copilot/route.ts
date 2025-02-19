@@ -20,8 +20,28 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { message, context } = body;
 
+    // Log incoming request
+    console.log('📝 Copilot Request:', {
+      message: message?.slice(0, 100) + '...',  // Truncate long messages
+      hasContext: !!context,
+      url: context?.url,
+      contextType: context ? typeof context.pageContent : 'none'
+    });
+
     if (!message) {
       throw new Error('Message is required');
+    }
+
+    // Log context details
+    if (context) {
+      console.log('🔍 Context Details:', {
+        url: context.url,
+        pageContentType: typeof context.pageContent,
+        isNestedObject: typeof context.pageContent === 'object',
+        nestedContent: typeof context.pageContent === 'object' 
+          ? typeof context.pageContent.pageContent 
+          : 'n/a'
+      });
     }
 
     // Create streaming response
@@ -72,6 +92,31 @@ export async function POST(request: NextRequest) {
         }]);
 
         // Get copilot response with timeout
+        // Format system prompt
+        const systemPrompt = `${COPILOT_PROMPT}
+
+Current Website Context:
+URL: ${context?.url || 'Not provided'}
+
+Page Content:
+${typeof context?.pageContent === 'object' 
+  ? context.pageContent.pageContent || JSON.stringify(context.pageContent, null, 2)
+  : context?.pageContent || 'Not provided'}`;
+
+        // Log formatted system prompt (truncated)
+        console.log('📋 System Prompt Preview:', {
+          length: systemPrompt.length,
+          preview: systemPrompt.slice(0, 200) + '...',
+          hasPageContent: systemPrompt.includes('Page Content:')
+        });
+
+        // Log before making Anthropic API call
+        console.log('🚀 Sending request to Anthropic:', {
+          model: "claude-3-5-sonnet-20241022",
+          messageCount: conversationHistory.length + 1,
+          systemPromptLength: systemPrompt.length
+        });
+
         const copilotResponse = await Promise.race([
           fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
@@ -93,15 +138,7 @@ export async function POST(request: NextRequest) {
                   content: message
                 }
               ],
-              system: `${COPILOT_PROMPT}
-
-Current Website Context:
-URL: ${context?.url || 'Not provided'}
-
-Page Content:
-${typeof context?.pageContent === 'object' 
-  ? context.pageContent.pageContent || JSON.stringify(context.pageContent, null, 2)
-  : context?.pageContent || 'Not provided'}`
+              system: systemPrompt
             })
           }) as Promise<Response>,
           new Promise((_, reject) => 
@@ -109,12 +146,23 @@ ${typeof context?.pageContent === 'object'
           )
         ]) as Response;
 
+        // Log Anthropic API response status
+        console.log('✅ Anthropic API Response:', {
+          status: copilotResponse.status,
+          ok: copilotResponse.ok
+        });
+
         if (!copilotResponse.ok) {
           throw new Error(`Failed to get copilot response: ${copilotResponse.status} ${copilotResponse.statusText}`);
         }
 
         const data = await copilotResponse.json();
         const assistantMessage = data.content[0].text;
+
+        console.log('📤 Assistant Message:', {
+          length: assistantMessage.length,
+          preview: assistantMessage.slice(0, 100) + '...'
+        });
 
         // Save assistant message
         await messagesTable.create([{
@@ -146,7 +194,11 @@ ${typeof context?.pageContent === 'object'
     return response;
 
   } catch (error) {
-    console.error('Copilot error:', error);
+    console.error('❌ Copilot error:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    });
     return new Response(
       JSON.stringify({ 
         error: 'Failed to process request',
