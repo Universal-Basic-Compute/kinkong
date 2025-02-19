@@ -15,38 +15,11 @@ export async function POST(request: NextRequest) {
       throw new Error('Message is required');
     }
 
-    // Get recent message history
-    const messagesTable = getTable('MESSAGES');
-    const recentMessages = await messagesTable
-      .select({
-        maxRecords: 20,
-        sort: [{ field: 'createdAt', direction: 'desc' }]
-      })
-      .all();
-
-    // Format conversation history
-    const conversationHistory = recentMessages
-      .reverse()
-      .map(record => ({
-        role: record.get('role') as 'user' | 'assistant',
-        content: record.get('content') as string
-      }));
-
-    // Save user message
-    await messagesTable.create([{
-      fields: {
-        createdAt: new Date().toISOString().slice(0, 19).replace('T', ' '),  // Format: "2024-03-14 15:30:00"
-        role: 'user',
-        content: message,
-        wallet: context?.wallet || '',
-        context: context ? JSON.stringify(context) : ''
-      }
-    }]);
-
     // Create streaming response
     const stream = new TransformStream();
     const writer = stream.writable.getWriter();
-    
+
+    // Set up response with proper headers
     const response = new Response(stream.readable, {
       headers: {
         'Content-Type': 'text/event-stream',
@@ -55,84 +28,118 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Get copilot response with conversation history
-    const copilotResponse = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': process.env.ANTHROPIC_API_KEY || '',
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json'
-      } as HeadersInit,
-      body: JSON.stringify({
-        model: "claude-3-5-sonnet-20241022",
-        max_tokens: 1024,
-        messages: [
-          // Include conversation history with correct format
-          ...conversationHistory.map(msg => ({
-            role: msg.role,
-            content: msg.content
-          })),
-          // Add the current message
-          {
+    // Start background processing
+    (async () => {
+      try {
+        // Get recent message history with timeout
+        const messagesTable = getTable('MESSAGES');
+        const recentMessages = await Promise.race([
+          messagesTable.select({
+            maxRecords: 20,
+            sort: [{ field: 'createdAt', direction: 'desc' }]
+          }).all(),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Message history timeout')), 5000)
+          )
+        ]);
+
+        // Format conversation history
+        const conversationHistory = recentMessages
+          .reverse()
+          .map(record => ({
+            role: record.get('role') as 'user' | 'assistant',
+            content: record.get('content') as string
+          }));
+
+        // Save user message
+        await messagesTable.create([{
+          fields: {
+            createdAt: new Date().toISOString().slice(0, 19).replace('T', ' '),
             role: 'user',
-            content: message
+            content: message,
+            wallet: context?.wallet || '',
+            context: context ? JSON.stringify(context) : ''
           }
-        ],
-        system: `${COPILOT_PROMPT}
+        }]);
 
-Current Context:
-URL: ${context?.url || 'Not provided'}
-Page Content: ${context?.pageContent || 'Not provided'}`
-      })
-    });
+        // Get copilot response with timeout
+        const copilotResponse = await Promise.race([
+          fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+              'x-api-key': process.env.ANTHROPIC_API_KEY || '',
+              'anthropic-version': '2023-06-01',
+              'content-type': 'application/json'
+            },
+            body: JSON.stringify({
+              model: "claude-3-5-sonnet-20241022",
+              max_tokens: 1024,
+              messages: [
+                ...conversationHistory.map(msg => ({
+                  role: msg.role,
+                  content: msg.content
+                })),
+                {
+                  role: 'user',
+                  content: message
+                }
+              ],
+              system: `${COPILOT_PROMPT}\n\nCurrent Context:\nURL: ${context?.url || 'Not provided'}\nPage Content: ${context?.pageContent || 'Not provided'}`
+            })
+          }),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Copilot response timeout')), 15000)
+          )
+        ]);
 
-    // Add detailed error handling
-    if (!copilotResponse.ok) {
-      const errorData = await copilotResponse.text();
-      console.error('Anthropic API error:', {
-        status: copilotResponse.status,
-        statusText: copilotResponse.statusText,
-        error: errorData
-      });
-      throw new Error(`Failed to get copilot response: ${copilotResponse.status} ${copilotResponse.statusText}`);
-    }
-
-    const data = await copilotResponse.json();
-    const assistantMessage = data.content[0].text;
-
-    // Save assistant message
-    await messagesTable.create([{
-      fields: {
-        createdAt: new Date().toISOString().slice(0, 19).replace('T', ' '),  // Format: "2024-03-14 15:30:00"
-        role: 'assistant',
-        content: assistantMessage,
-        wallet: context?.wallet || '',
-        context: context ? JSON.stringify(context) : ''
-      }
-    }]);
-
-    // Stream the response in chunks
-    const chunks = assistantMessage.match(/.{1,1000}/g) || [];
-    for (const chunk of chunks) {
-      await writer.write(customEncode(chunk));
-      await new Promise(resolve => setTimeout(resolve, 50));
-    }
-
-    // Create thought record
-    try {
-      await createThought({
-        type: 'COPILOT_INTERACTION',
-        content: message,
-        context: {
-          response: assistantMessage,
-          ...context || {}
+        if (!copilotResponse.ok) {
+          throw new Error(`Failed to get copilot response: ${copilotResponse.status} ${copilotResponse.statusText}`);
         }
-      });
-    } catch (error) {
-      console.error('Failed to create thought:', error);
-    }
 
-    await writer.close();
+        const data = await copilotResponse.json();
+        const assistantMessage = data.content[0].text;
+
+        // Save assistant message
+        await messagesTable.create([{
+          fields: {
+            createdAt: new Date().toISOString().slice(0, 19).replace('T', ' '),
+            role: 'assistant',
+            content: assistantMessage,
+            wallet: context?.wallet || '',
+            context: context ? JSON.stringify(context) : ''
+          }
+        }]);
+
+        // Stream the response in smaller chunks
+        const chunks = assistantMessage.match(/.{1,500}/g) || [];
+        for (const chunk of chunks) {
+          await writer.write(customEncode(chunk));
+          await new Promise(resolve => setTimeout(resolve, 25)); // Small delay between chunks
+        }
+
+        // Create thought record
+        try {
+          await createThought({
+            type: 'COPILOT_INTERACTION',
+            content: message,
+            context: {
+              response: assistantMessage,
+              ...context || {}
+            }
+          });
+        } catch (error) {
+          console.error('Failed to create thought:', error);
+        }
+
+        await writer.close();
+
+      } catch (error) {
+        console.error('Streaming error:', error);
+        await writer.write(customEncode(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`));
+        await writer.close();
+      }
+    })();
+
     return response;
 
   } catch (error) {
