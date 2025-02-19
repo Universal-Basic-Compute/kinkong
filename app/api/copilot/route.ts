@@ -76,20 +76,13 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Log incoming request
+    // Enhanced logging
     console.log('📝 Copilot Request:', {
-      message: message?.slice(0, 100) + '...',  // Truncate long messages
-      hasContext: !!context,
+      message: message?.slice(0, 100) + '...',
+      hasContext: !!context?.pageContent,
       url: context?.url,
-      contextType: typeof context?.pageContent,
-      contextDetails: context ? {
-        hasUrl: !!context.url,
-        hasPageContent: !!context.pageContent,
-        pageContentType: typeof context.pageContent,
-        nestedContent: typeof context.pageContent === 'object' 
-          ? !!context.pageContent.pageContent 
-          : 'n/a'
-      } : null
+      contentLength: context?.pageContent?.length || 0,
+      walletPrefix: context?.wallet ? context.wallet.slice(0, 8) + '...' : 'none'
     });
 
     if (!message) {
