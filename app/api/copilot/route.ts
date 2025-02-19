@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
         role: 'user',
         content: message,
         wallet: context?.wallet || '',
-        context: JSON.stringify(context || {})
+        context: context ? JSON.stringify(context) : ''
       }
     }]);
 
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
         role: 'assistant',
         content: data.response,
         wallet: context?.wallet || '',
-        context: JSON.stringify(context || {})
+        context: context ? JSON.stringify(context) : ''
       }
     }]);
 

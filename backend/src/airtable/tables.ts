@@ -10,7 +10,8 @@ export const TABLES = {
   PORTFOLIO_SNAPSHOTS: 'PORTFOLIO_SNAPSHOTS',
   INVESTMENTS: 'INVESTMENTS',
   MARKET_SENTIMENT: 'MARKET_SENTIMENT',
-  MESSAGES: 'MESSAGES'
+  MESSAGES: 'MESSAGES',
+  THOUGHTS: 'THOUGHTS'
 } as const;
 
 // Table interfaces
@@ -87,7 +88,7 @@ export interface Message {
   role: 'user' | 'assistant';
   content: string;
   wallet?: string;
-  context?: Record<string, any>;
+  context?: string; // Changed to string since Airtable stores as text
 }
 
 export interface Thought {
