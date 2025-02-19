@@ -372,7 +372,7 @@ def calculate_closed_signals():
             print(f"Entry Price: ${float(fields.get('entryPrice', 0)):.4f}")
             print(f"Target Price: ${float(fields.get('targetPrice', 0)):.4f}")
             print(f"Stop Loss: ${float(fields.get('stopLoss', 0)):.4f}")
-            print(f"Created: {fields.get('timestamp')}")
+            print(f"Created: {fields.get('createdAt')}")
             print(f"Expires: {fields.get('expiryDate')}")
         
         for signal in signals:
