@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Connection, PublicKey } from '@solana/web3.js';
+import { Connection, PublicKey, Message, VersionedMessage } from '@solana/web3.js';
 import { getTable } from '@/backend/src/airtable/tables';
 
 // Validate environment variables
@@ -49,9 +49,8 @@ export async function POST(request: NextRequest) {
 
     // Find receiver index (your subscription wallet)
     const accountKeys = tx.transaction.message.getAccountKeys?.() || 
-      ('staticAccountKeys' in tx.transaction.message 
-        ? tx.transaction.message.staticAccountKeys 
-        : tx.transaction.message.accountKeys);
+      ((tx.transaction.message as Message | VersionedMessage).staticAccountKeys || 
+       (tx.transaction.message as Message).accountKeys);
       
     // Create PublicKey from strategy wallet address
     const strategyWallet = new PublicKey(process.env.STRATEGY_WALLET!);
