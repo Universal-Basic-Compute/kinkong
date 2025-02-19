@@ -4,7 +4,7 @@ import type { Record, FieldSet } from 'airtable';
 
 interface TradeRecord extends FieldSet {
   returnPercent: number;
-  timestamp: string;
+  createdAt: string;
   value: number;
 }
 
