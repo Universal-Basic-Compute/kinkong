@@ -1,48 +1,30 @@
 {
-  "timestamp": "2025-02-18T18:53:57.621534",
+  "timestamp": "2025-02-19T00:07:59.825064",
   "token": "USDT",
   "analyses": {
-    "14D": {
-      "timeframe": "14D",
-      "signal": "HOLD",
-      "confidence": 85,
-      "reasoning": "Price showing remarkable stability around $1.00 with minimal volatility. EMA20 and EMA50 are tightly compressed, indicating strong price equilibrium. Volume profile is consistent without major anomalies.",
-      "key_levels": {
-        "support": [
-          0.9961,
-          0.995
-        ],
-        "resistance": [
-          1.0057,
-          1.01
-        ]
-      },
-      "risk_reward_ratio": null,
-      "reassess_conditions": null
-    },
-    "48H": {
-      "timeframe": "48H",
+    "SCALP": {
+      "timeframe": "SCALP",
       "signal": "SELL",
-      "confidence": 70,
-      "reasoning": "Recent bearish momentum with price breaking below both EMAs. Increasing selling volume and consecutive red candles suggest short-term downward pressure.",
+      "confidence": 75,
+      "reasoning": "Price showing consistent bearish momentum with declining EMAs. Multiple red candles forming with lower lows and lower highs. Volume declining indicating potential continuation of downward movement.",
       "key_levels": {
         "support": [
-          0.9988,
-          0.9985
+          0.9992,
+          0.9988
         ],
         "resistance": [
-          1.0002,
-          1.0005
+          0.9997,
+          1.0
         ]
       },
       "risk_reward_ratio": 2.5,
       "reassess_conditions": null
     },
-    "12H": {
-      "timeframe": "12H",
+    "INTRADAY": {
+      "timeframe": "INTRADAY",
       "signal": "SELL",
-      "confidence": 75,
-      "reasoning": "Clear downtrend formation with lower highs and lower lows. EMA20 crossing below EMA50 confirms bearish momentum. Volume increasing on downward moves.",
+      "confidence": 85,
+      "reasoning": "Strong bearish trend on 24H timeframe with price below both EMA20 and EMA50. Clear downward channel formation with consistent selling pressure and increasing bearish momentum.",
       "key_levels": {
         "support": [
           0.999,
@@ -53,23 +35,59 @@
           1.0005
         ]
       },
-      "risk_reward_ratio": 2.0,
+      "risk_reward_ratio": 3.0,
+      "reassess_conditions": null
+    },
+    "SWING": {
+      "timeframe": "SWING",
+      "signal": "HOLD",
+      "confidence": 60,
+      "reasoning": "Price recently broke below key support level at 1.0000. EMAs starting to cross bearishly but showing some consolidation. Volume profile relatively stable indicating potential ranging behavior.",
+      "key_levels": {
+        "support": [
+          0.9985,
+          0.9975
+        ],
+        "resistance": [
+          1.0,
+          1.0007
+        ]
+      },
+      "risk_reward_ratio": 1.5,
+      "reassess_conditions": null
+    },
+    "POSITION": {
+      "timeframe": "POSITION",
+      "signal": "HOLD",
+      "confidence": 70,
+      "reasoning": "Long-term trend remains neutral with price maintaining stability near the 1.0000 level. EMAs showing minimal deviation indicating strong price stability over 30D period.",
+      "key_levels": {
+        "support": [
+          0.995,
+          0.99
+        ],
+        "resistance": [
+          1.005,
+          1.01
+        ]
+      },
+      "risk_reward_ratio": 1.0,
       "reassess_conditions": null
     },
     "overall": {
       "primary_trend": "BEARISH",
       "timeframe_alignment": "MIXED",
-      "best_timeframe": "12H",
+      "best_timeframe": "INTRADAY",
       "key_observations": [
-        "Long-term stability but short-term bearish pressure",
-        "Increasing selling volume across shorter timeframes",
-        "Price consistently below $1.00 peg",
-        "Strong historical support at 0.9985"
+        "Short-term bearish momentum is strong",
+        "Price consistently trading below key 1.0000 level",
+        "Volume profile showing distribution pattern",
+        "Long-term stability remains intact despite short-term weakness"
       ],
       "recommended_action": {
         "signal": "SELL",
-        "timeframe": "12H",
-        "reasoning": "Short-term bearish momentum is strong while maintaining awareness of USDT's tendency to revert to $1.00. Tight stops recommended due to stablecoin nature."
+        "timeframe": "INTRADAY",
+        "reasoning": "Strong bearish momentum on shorter timeframes with clear technical breakdown below 1.0000 support level. Best risk-reward ratio for short-term trades while maintaining awareness of long-term stability."
       }
     }
   }

@@ -1,76 +1,93 @@
 {
-  "timestamp": "2025-02-18T18:56:04.540422",
+  "timestamp": "2025-02-19T00:10:33.033491",
   "token": "FARTCOIN",
   "analyses": {
-    "14D": {
-      "timeframe": "14D",
+    "SCALP": {
+      "timeframe": "SCALP",
+      "signal": "BUY",
+      "confidence": 75,
+      "reasoning": "Price showing bullish momentum on 15m chart with higher lows and higher highs. EMA20 crossing above EMA50 indicating short-term strength. Volume supporting recent upward movement.",
+      "key_levels": {
+        "support": [
+          0.315,
+          0.31
+        ],
+        "resistance": [
+          0.325,
+          0.33
+        ]
+      },
+      "risk_reward_ratio": 2.5,
+      "reassess_conditions": null
+    },
+    "INTRADAY": {
+      "timeframe": "INTRADAY",
+      "signal": "HOLD",
+      "confidence": 60,
+      "reasoning": "Price in consolidation after significant downtrend. Potential bottoming formation but EMAs still bearish. Need more confirmation for reversal.",
+      "key_levels": {
+        "support": [
+          0.29,
+          0.2732
+        ],
+        "resistance": [
+          0.34,
+          0.3846
+        ]
+      },
+      "risk_reward_ratio": 1.8,
+      "reassess_conditions": null
+    },
+    "SWING": {
+      "timeframe": "SWING",
       "signal": "SELL",
       "confidence": 85,
-      "reasoning": "Strong bearish trend with consecutive red candles, EMAs in bearish cross, price significantly below both EMAs, high volume selling pressure, -57.82% decline showing sustained downward momentum",
+      "reasoning": "Strong downtrend on 4H chart with declining EMAs. Price making lower lows and lower highs. High volume on selling pressure indicates continued bearish momentum.",
       "key_levels": {
         "support": [
           0.2732,
           0.25
         ],
         "resistance": [
-          0.3447,
-          0.4
+          0.4,
+          0.45
         ]
       },
-      "risk_reward_ratio": 0.5,
+      "risk_reward_ratio": 3.2,
       "reassess_conditions": null
     },
-    "48H": {
-      "timeframe": "48H",
+    "POSITION": {
+      "timeframe": "POSITION",
       "signal": "SELL",
-      "confidence": 80,
-      "reasoning": "Sharp bearish decline with increasing volume, price below both EMAs, EMAs showing bearish cross, -31.28% decline indicating strong selling pressure",
+      "confidence": 90,
+      "reasoning": "Severe bearish trend on daily chart with -82.09% decline. Both EMAs declining sharply with no signs of reversal. Market structure completely broken.",
       "key_levels": {
         "support": [
-          0.2732,
-          0.28
+          0.25,
+          0.2
         ],
         "resistance": [
-          0.32,
-          0.3447
+          0.5,
+          0.75
         ]
       },
-      "risk_reward_ratio": 0.8,
-      "reassess_conditions": null
-    },
-    "12H": {
-      "timeframe": "12H",
-      "signal": "HOLD",
-      "confidence": 65,
-      "reasoning": "Oversold conditions on short timeframe, but still in strong downtrend, potential consolidation forming but no clear reversal signals yet",
-      "key_levels": {
-        "support": [
-          0.2732,
-          0.28
-        ],
-        "resistance": [
-          0.3,
-          0.3209
-        ]
-      },
-      "risk_reward_ratio": 1.2,
+      "risk_reward_ratio": 4.0,
       "reassess_conditions": null
     },
     "overall": {
       "primary_trend": "BEARISH",
-      "timeframe_alignment": "ALIGNED",
-      "best_timeframe": "48H",
+      "timeframe_alignment": "MIXED",
+      "best_timeframe": "SCALP",
       "key_observations": [
-        "All timeframes showing strong bearish momentum",
-        "High volume selling pressure across timeframes",
-        "No significant support levels holding",
-        "EMAs in bearish configuration on all timeframes",
-        "Possible short-term oversold conditions"
+        "Long-term trend severely bearish with -82.09% decline",
+        "Short-term potential bounce forming on scalp timeframe",
+        "Volume profile suggests continued selling pressure on higher timeframes",
+        "Price significantly below all major EMAs on higher timeframes"
       ],
       "recommended_action": {
-        "signal": "SELL",
-        "timeframe": "48H",
-        "reasoning": "Strong bearish alignment across all timeframes with high volume confirming downward movement. Best to wait for any potential bounces to short from higher prices rather than entering at current levels due to oversold conditions on shorter timeframes."
+        "signal": "SCALP_LONG",
+        "timeframe": "SCALP",
+        "reasoning": "While longer timeframes remain bearish, scalp opportunities exist for quick profits on oversold bounces. Tight stops required due to overall market weakness."
       }
     }
   }

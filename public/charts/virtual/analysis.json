@@ -1,76 +1,94 @@
 {
-  "timestamp": "2025-02-18T18:55:11.828262",
+  "timestamp": "2025-02-19T00:09:19.927312",
   "token": "VIRTUAL",
   "analyses": {
-    "14D": {
-      "timeframe": "14D",
-      "signal": "SELL",
-      "confidence": 85,
-      "reasoning": "Strong bearish trend with price below both EMA20 and EMA50, showing consistent downward momentum. Price has fallen -47.82% from ATH with increasing sell volume. No significant support levels holding.",
+    "SCALP": {
+      "timeframe": "SCALP",
+      "signal": "BUY",
+      "confidence": 65,
+      "reasoning": "Price showing bullish momentum on 15m chart with higher lows forming. EMA20 crossing above EMA50 suggesting short-term trend reversal. Increased volume supporting recent price action.",
       "key_levels": {
         "support": [
-          0.9445,
-          0.6226
+          0.9945,
+          0.9845
         ],
         "resistance": [
-          1.1393,
-          1.255
+          1.0202,
+          1.05
         ]
       },
-      "risk_reward_ratio": 1.5,
+      "risk_reward_ratio": 2.5,
       "reassess_conditions": null
     },
-    "48H": {
-      "timeframe": "48H",
-      "signal": "SELL",
-      "confidence": 90,
-      "reasoning": "Sharp bearish decline with heavy selling volume. Price broke below multiple support levels with strong momentum. EMAs showing bearish cross and declining slope.",
-      "key_levels": {
-        "support": [
-          0.9445,
-          0.9
-        ],
-        "resistance": [
-          1.1624,
-          1.2693
-        ]
-      },
-      "risk_reward_ratio": 2.1,
-      "reassess_conditions": null
-    },
-    "12H": {
-      "timeframe": "12H",
-      "signal": "SELL",
-      "confidence": 95,
-      "reasoning": "Immediate strong bearish pressure with increasing volume. Price making consecutive lower lows and lower highs. EMAs aligned bearishly with steep declining slope.",
+    "INTRADAY": {
+      "timeframe": "INTRADAY",
+      "signal": "HOLD",
+      "confidence": 55,
+      "reasoning": "Strong bearish trend on 1H chart but showing signs of potential consolidation. EMAs in bearish alignment but price attempting to stabilize around $1.00 level.",
       "key_levels": {
         "support": [
           0.9445,
           0.92
         ],
         "resistance": [
-          1.0807,
-          1.1393
+          1.1,
+          1.1619
         ]
       },
-      "risk_reward_ratio": 2.5,
+      "risk_reward_ratio": 1.8,
+      "reassess_conditions": null
+    },
+    "SWING": {
+      "timeframe": "SWING",
+      "signal": "SELL",
+      "confidence": 80,
+      "reasoning": "Clear bearish trend on 4H chart with consistent lower highs and lower lows. EMAs in strong bearish cross with declining volume suggesting continued downward pressure.",
+      "key_levels": {
+        "support": [
+          0.9445,
+          0.9
+        ],
+        "resistance": [
+          1.2,
+          1.3
+        ]
+      },
+      "risk_reward_ratio": 3.2,
+      "reassess_conditions": null
+    },
+    "POSITION": {
+      "timeframe": "POSITION",
+      "signal": "SELL",
+      "confidence": 85,
+      "reasoning": "Strong bearish trend on daily chart with significant price depreciation. EMAs showing bearish cross with sustained selling pressure. Volume profile indicates distribution phase.",
+      "key_levels": {
+        "support": [
+          0.6226,
+          0.5
+        ],
+        "resistance": [
+          1.5,
+          2.0
+        ]
+      },
+      "risk_reward_ratio": 4.0,
       "reassess_conditions": null
     },
     "overall": {
       "primary_trend": "BEARISH",
-      "timeframe_alignment": "ALIGNED",
-      "best_timeframe": "12H",
+      "timeframe_alignment": "MIXED",
+      "best_timeframe": "SCALP",
       "key_observations": [
-        "All timeframes showing strong bearish momentum",
-        "Increasing sell volume across timeframes",
-        "No significant support levels holding",
-        "EMAs aligned bearishly on all timeframes",
-        "Sharp price decline with high volume suggests continued downside"
+        "Major bearish trend on higher timeframes",
+        "Potential short-term reversal on lower timeframes",
+        "Critical support at $1.00 psychological level",
+        "Declining volume on larger timeframes",
+        "Price significantly below ATH of $3.4457"
       ],
       "recommended_action": {
-        "signal": "SELL",
-        "timeframe": "12H",
-        "reasoning": "Strong bearish alignment across all timeframes with highest confidence on 12H chart. High volume selling pressure suggests continued downside momentum."
+        "signal": "SCALP_LONG",
+        "timeframe": "SCALP",
+        "reasoning": "While larger timeframes show bearish momentum, scalp opportunities exist for quick profits on short-term bounces. Tight stops required due to overall bearish market structure."
       }
     }
   }

@@ -1,76 +1,93 @@
 {
-  "timestamp": "2025-02-18T18:54:34.192930",
+  "timestamp": "2025-02-19T00:04:09.514686",
   "token": "SOL",
   "analyses": {
-    "14D": {
-      "timeframe": "14D",
-      "signal": "SELL",
-      "confidence": 85,
-      "reasoning": "Strong bearish trend confirmed by death cross of EMA20/50, consistent lower highs and lower lows, significant volume on downward moves, price well below both EMAs with steep downward slope",
+    "SCALP": {
+      "timeframe": "SCALP",
+      "signal": "BUY",
+      "confidence": 65,
+      "reasoning": "Price showing bullish momentum on 15m chart with higher lows forming. EMA20 crossing above EMA50 indicating short-term strength. Volume supporting recent green candles.",
       "key_levels": {
         "support": [
-          160.42,
-          155.0
+          165.57,
+          162.41
         ],
         "resistance": [
-          171.44,
-          180.0
+          169.65,
+          172.0
         ]
       },
       "risk_reward_ratio": 2.5,
       "reassess_conditions": null
     },
-    "48H": {
-      "timeframe": "48H",
-      "signal": "SELL",
-      "confidence": 80,
-      "reasoning": "Clear bearish momentum with accelerating downward movement, EMAs in bearish alignment, increased selling volume, no signs of reversal yet",
+    "INTRADAY": {
+      "timeframe": "INTRADAY",
+      "signal": "HOLD",
+      "confidence": 55,
+      "reasoning": "Bearish trend on 1H chart but showing signs of bottoming. EMAs in bearish alignment but price attempting to stabilize around 167 level. Volume profile mixed.",
       "key_levels": {
         "support": [
           160.42,
-          158.0
+          165.0
         ],
         "resistance": [
           170.0,
           175.0
         ]
       },
-      "risk_reward_ratio": 2.0,
+      "risk_reward_ratio": 1.8,
       "reassess_conditions": null
     },
-    "12H": {
-      "timeframe": "12H",
-      "signal": "HOLD",
-      "confidence": 65,
-      "reasoning": "Showing potential short-term oversold conditions, but still in strong downtrend. Minor bullish divergence forming on volume, but not enough for reversal signal",
+    "SWING": {
+      "timeframe": "SWING",
+      "signal": "SELL",
+      "confidence": 80,
+      "reasoning": "Strong bearish trend on 4H chart with EMAs in clear bearish alignment. Price making lower lows and lower highs. Significant volume on sell-offs.",
       "key_levels": {
         "support": [
           160.42,
-          162.0
+          165.0
         ],
         "resistance": [
-          165.0,
-          167.0
+          180.0,
+          190.0
         ]
       },
-      "risk_reward_ratio": 1.5,
+      "risk_reward_ratio": 3.0,
+      "reassess_conditions": null
+    },
+    "POSITION": {
+      "timeframe": "POSITION",
+      "signal": "SELL",
+      "confidence": 90,
+      "reasoning": "Strong bearish trend on daily chart with price down over 30%. EMAs showing strong bearish alignment with no signs of reversal yet. Heavy selling volume.",
+      "key_levels": {
+        "support": [
+          160.0,
+          150.0
+        ],
+        "resistance": [
+          200.0,
+          220.0
+        ]
+      },
+      "risk_reward_ratio": 3.5,
       "reassess_conditions": null
     },
     "overall": {
       "primary_trend": "BEARISH",
-      "timeframe_alignment": "ALIGNED",
-      "best_timeframe": "48H",
+      "timeframe_alignment": "MIXED",
+      "best_timeframe": "SCALP",
       "key_observations": [
-        "All timeframes showing strong bearish momentum",
-        "Volume increasing on downward moves",
-        "No significant support until 160.42",
-        "EMAs in bearish alignment across all timeframes",
-        "Potential short-term oversold conditions forming"
+        "Long-term trend strongly bearish",
+        "Short-term bounce potential on scalp timeframe",
+        "Volume profile supporting bearish bias on higher timeframes",
+        "Price at critical support level around 165-167"
       ],
       "recommended_action": {
-        "signal": "SELL",
-        "timeframe": "48H",
-        "reasoning": "Strong bearish alignment across all timeframes with clear continuation patterns and increasing selling pressure. Best to wait for small bounces to initiate short positions."
+        "signal": "HOLD",
+        "timeframe": "SCALP",
+        "reasoning": "While longer timeframes remain bearish, scalp opportunities exist for brief bounces. Wait for clear reversal signals before taking larger positions."
       }
     }
   }

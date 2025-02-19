@@ -1,76 +1,94 @@
 {
-  "timestamp": "2025-02-18T18:52:57.874680",
+  "timestamp": "2025-02-19T00:06:45.455020",
   "token": "GRIFFAIN",
   "analyses": {
-    "14D": {
-      "timeframe": "14D",
+    "SCALP": {
+      "timeframe": "SCALP",
+      "signal": "BUY",
+      "confidence": 75,
+      "reasoning": "Short-term upward momentum with bullish EMA crossover. Price making higher lows and higher highs in the last 6 hours. Increasing volume supporting the upward move.",
+      "key_levels": {
+        "support": [
+          0.0877,
+          0.079
+        ],
+        "resistance": [
+          0.0927,
+          0.095
+        ]
+      },
+      "risk_reward_ratio": 2.5,
+      "reassess_conditions": null
+    },
+    "INTRADAY": {
+      "timeframe": "INTRADAY",
+      "signal": "HOLD",
+      "confidence": 60,
+      "reasoning": "Price showing signs of bottoming after significant decline. EMA20 starting to flatten but still below EMA50. Need confirmation of trend reversal.",
+      "key_levels": {
+        "support": [
+          0.079,
+          0.085
+        ],
+        "resistance": [
+          0.0978,
+          0.1
+        ]
+      },
+      "risk_reward_ratio": 1.8,
+      "reassess_conditions": null
+    },
+    "SWING": {
+      "timeframe": "SWING",
       "signal": "SELL",
       "confidence": 85,
-      "reasoning": "Strong bearish trend with consistent lower highs and lower lows. Price is below both EMA20 and EMA50, with EMAs in bearish alignment. Volume profile shows sustained selling pressure. Price has dropped nearly 60% from ATH with no significant signs of reversal.",
+      "reasoning": "Strong downtrend on 7D chart with consistently lower highs and lower lows. Both EMAs sloping downward with significant bearish momentum.",
       "key_levels": {
         "support": [
           0.079,
-          0.075
+          0.07
         ],
         "resistance": [
-          0.1,
-          0.1197
+          0.12,
+          0.15
         ]
       },
-      "risk_reward_ratio": 1.5,
+      "risk_reward_ratio": 3.2,
       "reassess_conditions": null
     },
-    "48H": {
-      "timeframe": "48H",
+    "POSITION": {
+      "timeframe": "POSITION",
       "signal": "SELL",
-      "confidence": 80,
-      "reasoning": "Accelerating downtrend with increasing selling volume. EMAs showing strong bearish crossover. Price action forming consistent bearish candles with minimal retracement.",
+      "confidence": 90,
+      "reasoning": "Severe bearish trend on 30D timeframe with -83.59% decline. No signs of long-term trend reversal. EMAs in strong bearish configuration.",
       "key_levels": {
         "support": [
-          0.079,
-          0.081
+          0.07,
+          0.05
         ],
         "resistance": [
-          0.09,
-          0.0958
+          0.15,
+          0.2
         ]
       },
-      "risk_reward_ratio": 2.0,
-      "reassess_conditions": null
-    },
-    "12H": {
-      "timeframe": "12H",
-      "signal": "HOLD",
-      "confidence": 65,
-      "reasoning": "While maintaining bearish bias, showing potential short-term oversold conditions. Recent volume spike might indicate temporary exhaustion of sellers.",
-      "key_levels": {
-        "support": [
-          0.08,
-          0.0826
-        ],
-        "resistance": [
-          0.0878,
-          0.09
-        ]
-      },
-      "risk_reward_ratio": 1.2,
+      "risk_reward_ratio": 4.0,
       "reassess_conditions": null
     },
     "overall": {
       "primary_trend": "BEARISH",
-      "timeframe_alignment": "ALIGNED",
-      "best_timeframe": "48H",
+      "timeframe_alignment": "MIXED",
+      "best_timeframe": "SCALP",
       "key_observations": [
-        "Strong bearish momentum across all timeframes",
-        "Significant volume increase during recent selloff",
-        "No clear signs of trend reversal yet",
-        "Price trading near all-time lows",
-        "EMAs showing strong bearish alignment"
+        "Long-term trend is strongly bearish",
+        "Short-term bounce potential on scalp timeframe",
+        "Volume profile showing potential short-term accumulation",
+        "Major support at $0.0790 (ATL)",
+        "Risk of continued downward pressure from higher timeframes"
       ],
       "recommended_action": {
-        "signal": "SELL",
-        "timeframe": "48H",
-        "reasoning": "Strong bearish alignment across multiple timeframes with increasing selling pressure and no clear signs of reversal. Best to wait for clear reversal signals before considering long positions."
+        "signal": "SCALP_LONG",
+        "timeframe": "SCALP",
+        "reasoning": "While longer timeframes remain bearish, scalp opportunities exist for quick profits on the bounce from oversold conditions. Tight stops required due to overall bearish market structure."
       }
     }
   }

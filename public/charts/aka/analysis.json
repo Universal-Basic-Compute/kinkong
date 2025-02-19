@@ -1,76 +1,94 @@
 {
-  "timestamp": "2025-02-18T18:53:35.329137",
+  "timestamp": "2025-02-19T00:07:34.593132",
   "token": "AKA",
   "analyses": {
-    "14D": {
-      "timeframe": "14D",
+    "SCALP": {
+      "timeframe": "SCALP",
       "signal": "SELL",
       "confidence": 85,
-      "reasoning": "Strong downtrend confirmed by declining EMAs, price consistently making lower lows and lower highs. 71.89% decline from ATH shows significant bearish momentum. Volume profile shows declining interest.",
+      "reasoning": "Strong bearish momentum with declining EMAs, recent large red candle showing significant selling pressure, and increasing volume on downward moves",
       "key_levels": {
         "support": [
-          0.003,
-          0.0035
+          0.0034,
+          0.00335
         ],
         "resistance": [
-          0.0042,
-          0.019
+          0.00365,
+          0.0038
         ]
       },
-      "risk_reward_ratio": 0.5,
+      "risk_reward_ratio": 2.5,
       "reassess_conditions": null
     },
-    "48H": {
-      "timeframe": "48H",
-      "signal": "HOLD",
-      "confidence": 60,
-      "reasoning": "Price consolidating between EMAs with decreasing volatility. Recent rejection at 0.0040 resistance level shows selling pressure, but support at 0.0035 holding.",
-      "key_levels": {
-        "support": [
-          0.0035,
-          0.0037
-        ],
-        "resistance": [
-          0.004,
-          0.0042
-        ]
-      },
-      "risk_reward_ratio": 1.2,
-      "reassess_conditions": null
-    },
-    "12H": {
-      "timeframe": "12H",
+    "INTRADAY": {
+      "timeframe": "INTRADAY",
       "signal": "SELL",
-      "confidence": 75,
-      "reasoning": "Recent bearish momentum with price breaking below EMA20, increased selling volume, and bearish EMA cross (20 below 50).",
+      "confidence": 90,
+      "reasoning": "Clear downtrend with EMA20 crossing below EMA50, consistent bearish price action over 24H, increasing sell volume",
       "key_levels": {
         "support": [
-          0.0036,
-          0.0037
+          0.0033,
+          0.0032
         ],
         "resistance": [
           0.0038,
           0.004
         ]
       },
-      "risk_reward_ratio": 1.5,
+      "risk_reward_ratio": 3.0,
+      "reassess_conditions": null
+    },
+    "SWING": {
+      "timeframe": "SWING",
+      "signal": "SELL",
+      "confidence": 95,
+      "reasoning": "Strong bearish trend over 7 days with -37.54% decline, no signs of reversal, bearish EMA cross and declining volume profile",
+      "key_levels": {
+        "support": [
+          0.003,
+          0.0028
+        ],
+        "resistance": [
+          0.0042,
+          0.005
+        ]
+      },
+      "risk_reward_ratio": 3.5,
+      "reassess_conditions": null
+    },
+    "POSITION": {
+      "timeframe": "POSITION",
+      "signal": "SELL",
+      "confidence": 98,
+      "reasoning": "Massive -84.47% decline over 30 days, strong bearish trend with no signs of bottoming, declining volume indicating potential further downside",
+      "key_levels": {
+        "support": [
+          0.0025,
+          0.002
+        ],
+        "resistance": [
+          0.005,
+          0.0067
+        ]
+      },
+      "risk_reward_ratio": 4.0,
       "reassess_conditions": null
     },
     "overall": {
       "primary_trend": "BEARISH",
       "timeframe_alignment": "ALIGNED",
-      "best_timeframe": "12H",
+      "best_timeframe": "POSITION",
       "key_observations": [
-        "All timeframes showing bearish bias",
-        "Significant downtrend on 14D chart",
-        "Decreasing volume across timeframes",
-        "Price below major EMAs on all timeframes",
-        "Multiple failed attempts to break above EMA20"
+        "All timeframes showing strong bearish alignment",
+        "Significant decline across all periods (-84.47% on 30D)",
+        "Declining volume profile suggesting potential capitulation",
+        "No significant support levels being respected",
+        "EMAs consistently showing bearish crosses"
       ],
       "recommended_action": {
         "signal": "SELL",
-        "timeframe": "12H",
-        "reasoning": "Strong bearish alignment across timeframes with clear resistance levels and increasing selling pressure. 12H timeframe provides best risk/reward for short positions."
+        "timeframe": "POSITION",
+        "reasoning": "The strong bearish alignment across all timeframes, significant price decline, and lack of support suggests continuing downward pressure. Position trades offer the best risk/reward ratio in this environment."
       }
     }
   }

@@ -1,76 +1,93 @@
 {
-  "timestamp": "2025-02-18T18:55:30.834962",
+  "timestamp": "2025-02-19T00:09:45.226103",
   "token": "AIXBT",
   "analyses": {
-    "14D": {
-      "timeframe": "14D",
+    "SCALP": {
+      "timeframe": "SCALP",
+      "signal": "BUY",
+      "confidence": 65,
+      "reasoning": "Short-term uptrend forming with bullish momentum on EMA crossover. Volume supporting recent green candles. Price above both EMAs showing strength.",
+      "key_levels": {
+        "support": [
+          0.1789,
+          0.175
+        ],
+        "resistance": [
+          0.185,
+          0.19
+        ]
+      },
+      "risk_reward_ratio": 2.5,
+      "reassess_conditions": null
+    },
+    "INTRADAY": {
+      "timeframe": "INTRADAY",
+      "signal": "HOLD",
+      "confidence": 55,
+      "reasoning": "Price attempting to stabilize after significant decline. EMAs trending down but price showing potential bottom formation. Volume decreasing on selling pressure.",
+      "key_levels": {
+        "support": [
+          0.17,
+          0.165
+        ],
+        "resistance": [
+          0.19,
+          0.2
+        ]
+      },
+      "risk_reward_ratio": 1.8,
+      "reassess_conditions": null
+    },
+    "SWING": {
+      "timeframe": "SWING",
       "signal": "SELL",
-      "confidence": 85,
-      "reasoning": "Strong bearish trend confirmed by declining EMAs, consistent lower highs and lower lows, significant price deterioration (-47.54%) with increasing selling volume. Price well below both EMA20 and EMA50 indicating strong bearish momentum.",
+      "confidence": 80,
+      "reasoning": "Strong downtrend intact with lower lows and lower highs. EMAs in bearish alignment with significant space between them. Volume increasing on downward moves.",
       "key_levels": {
         "support": [
           0.1581,
           0.15
         ],
         "resistance": [
-          0.1894,
-          0.2308
+          0.22,
+          0.24
         ]
       },
-      "risk_reward_ratio": 1.5,
+      "risk_reward_ratio": 3.2,
       "reassess_conditions": null
     },
-    "48H": {
-      "timeframe": "48H",
+    "POSITION": {
+      "timeframe": "POSITION",
       "signal": "SELL",
-      "confidence": 80,
-      "reasoning": "Sharp bearish movement with accelerating downside momentum, EMA crossover to downside, increased selling volume. Price showing -21.43% decline with little sign of reversal.",
+      "confidence": 90,
+      "reasoning": "Major downtrend evident with price down 74.69% from ATH. EMAs showing strong bearish divergence. No signs of trend reversal on higher timeframe.",
       "key_levels": {
         "support": [
-          0.165,
-          0.1581
+          0.15,
+          0.1
         ],
         "resistance": [
-          0.1854,
-          0.2
+          0.3,
+          0.4
         ]
       },
-      "risk_reward_ratio": 2.0,
-      "reassess_conditions": null
-    },
-    "12H": {
-      "timeframe": "12H",
-      "signal": "HOLD",
-      "confidence": 65,
-      "reasoning": "Immediate term showing potential oversold conditions, but still within strong bearish trend. Volume profile suggests possible short-term consolidation before next move.",
-      "key_levels": {
-        "support": [
-          0.165,
-          0.16
-        ],
-        "resistance": [
-          0.175,
-          0.1854
-        ]
-      },
-      "risk_reward_ratio": 1.2,
+      "risk_reward_ratio": 4.0,
       "reassess_conditions": null
     },
     "overall": {
       "primary_trend": "BEARISH",
-      "timeframe_alignment": "ALIGNED",
-      "best_timeframe": "48H",
+      "timeframe_alignment": "MIXED",
+      "best_timeframe": "SCALP",
       "key_observations": [
-        "All timeframes show strong bearish momentum",
-        "Significant volume increase on downside moves",
-        "No clear reversal signals across timeframes",
-        "EMAs showing bearish alignment on all timeframes",
-        "Price at multi-day lows with continued selling pressure"
+        "Long-term trend strongly bearish",
+        "Short-term bounce potential on oversold conditions",
+        "Volume profile showing possible accumulation at current levels",
+        "Major resistance levels far above current price"
       ],
       "recommended_action": {
-        "signal": "SELL",
-        "timeframe": "48H",
-        "reasoning": "Strong bearish alignment across all timeframes with increasing volume confirms downtrend. Best to maintain short positions or wait for clear reversal signals before considering longs."
+        "signal": "SCALP_LONG",
+        "timeframe": "SCALP",
+        "reasoning": "While longer timeframes remain bearish, oversold conditions and positive divergence on shorter timeframes present scalping opportunities for quick profits. Tight stops required due to overall bearish trend."
       }
     }
   }

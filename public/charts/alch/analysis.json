@@ -1,30 +1,30 @@
 {
-  "timestamp": "2025-02-18T18:53:16.372332",
+  "timestamp": "2025-02-19T00:07:10.363575",
   "token": "ALCH",
   "analyses": {
-    "14D": {
-      "timeframe": "14D",
-      "signal": "SELL",
-      "confidence": 85,
-      "reasoning": "Strong bearish trend with both EMA20 and EMA50 sloping downward. Price has fallen -58.62% from ATH with consistent lower highs and lower lows. Volume profile shows sustained selling pressure.",
+    "SCALP": {
+      "timeframe": "SCALP",
+      "signal": "BUY",
+      "confidence": 75,
+      "reasoning": "Strong bullish momentum on 15m chart with EMA20 crossing above EMA50. Multiple green candles showing buying pressure with increasing volume support.",
       "key_levels": {
         "support": [
-          0.016,
-          0.015
+          0.0174,
+          0.017
         ],
         "resistance": [
-          0.0185,
-          0.02
+          0.0183,
+          0.0185
         ]
       },
-      "risk_reward_ratio": 1.5,
+      "risk_reward_ratio": 2.5,
       "reassess_conditions": null
     },
-    "48H": {
-      "timeframe": "48H",
-      "signal": "SELL",
-      "confidence": 75,
-      "reasoning": "Price trading below both EMAs with bearish cross. Recent attempt at recovery rejected at EMA20. Volume increasing on downward moves indicating selling pressure.",
+    "INTRADAY": {
+      "timeframe": "INTRADAY",
+      "signal": "HOLD",
+      "confidence": 60,
+      "reasoning": "Price consolidating between EMAs with mixed signals. Recent bounce from support but showing some resistance at EMA20.",
       "key_levels": {
         "support": [
           0.0165,
@@ -35,42 +35,59 @@
           0.0185
         ]
       },
-      "risk_reward_ratio": 2.0,
+      "risk_reward_ratio": 1.8,
       "reassess_conditions": null
     },
-    "12H": {
-      "timeframe": "12H",
+    "SWING": {
+      "timeframe": "SWING",
       "signal": "SELL",
-      "confidence": 70,
-      "reasoning": "Sharp decline after double top formation. EMAs crossed bearish with price making lower lows. Volume increasing during selloffs.",
+      "confidence": 85,
+      "reasoning": "Strong downtrend on 4H chart with both EMAs pointing down. Price well below both moving averages with -25.56% weekly performance.",
       "key_levels": {
         "support": [
-          0.0165,
-          0.0163
+          0.016,
+          0.015
         ],
         "resistance": [
-          0.017,
-          0.0175
+          0.02,
+          0.022
         ]
       },
-      "risk_reward_ratio": 2.5,
+      "risk_reward_ratio": 3.0,
+      "reassess_conditions": null
+    },
+    "POSITION": {
+      "timeframe": "POSITION",
+      "signal": "SELL",
+      "confidence": 90,
+      "reasoning": "Severe bearish trend on daily chart with -79.01% monthly decline. Both EMAs trending down sharply with no signs of reversal.",
+      "key_levels": {
+        "support": [
+          0.016,
+          0.014
+        ],
+        "resistance": [
+          0.025,
+          0.03
+        ]
+      },
+      "risk_reward_ratio": 4.0,
       "reassess_conditions": null
     },
     "overall": {
       "primary_trend": "BEARISH",
-      "timeframe_alignment": "ALIGNED",
-      "best_timeframe": "14D",
+      "timeframe_alignment": "MIXED",
+      "best_timeframe": "SCALP",
       "key_observations": [
-        "All timeframes showing bearish momentum",
-        "Significant volume on downward moves",
-        "Price consistently below major EMAs",
-        "No clear signs of trend reversal yet",
-        "Lower highs and lower lows across all timeframes"
+        "Long-term trend is strongly bearish",
+        "Short-term bounce potential on lower timeframes",
+        "Volume profile showing accumulation at current levels",
+        "Significant resistance overhead from longer timeframes"
       ],
       "recommended_action": {
-        "signal": "SELL",
-        "timeframe": "14D",
-        "reasoning": "Strong bearish alignment across all timeframes with increasing selling pressure and no signs of reversal. Best to trade with the dominant trend."
+        "signal": "SCALP_LONG",
+        "timeframe": "SCALP",
+        "reasoning": "While longer timeframes are bearish, scalp opportunities exist for quick profits on the current bounce. Tight stops required due to overall bearish trend."
       }
     }
   }

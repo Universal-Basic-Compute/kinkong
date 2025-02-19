@@ -1,76 +1,93 @@
 {
-  "timestamp": "2025-02-18T18:54:16.820771",
+  "timestamp": "2025-02-19T00:08:27.423384",
   "token": "ARC",
   "analyses": {
-    "14D": {
-      "timeframe": "14D",
-      "signal": "SELL",
-      "confidence": 85,
-      "reasoning": "Strong bearish trend evident with price below both EMA20 and EMA50. Recent peak at 0.46 followed by sharp decline. Death cross formation and declining volume suggest continued downward pressure.",
+    "SCALP": {
+      "timeframe": "SCALP",
+      "signal": "BUY",
+      "confidence": 65,
+      "reasoning": "Price showing bullish divergence on 15m with increasing buy volume. EMA20 crossing above EMA50 suggesting short-term momentum shift. Multiple green candles forming support.",
       "key_levels": {
         "support": [
-          0.137,
+          0.1466,
           0.15
         ],
         "resistance": [
-          0.25,
-          0.3
+          0.1712,
+          0.165
         ]
       },
-      "risk_reward_ratio": 2.5,
+      "risk_reward_ratio": 2.1,
       "reassess_conditions": null
     },
-    "48H": {
-      "timeframe": "48H",
+    "INTRADAY": {
+      "timeframe": "INTRADAY",
       "signal": "SELL",
-      "confidence": 90,
-      "reasoning": "Aggressive bearish momentum with consecutive red candles. Price action showing steep decline with increasing selling volume. EMAs in bearish alignment with widening spread.",
+      "confidence": 80,
+      "reasoning": "Strong bearish trend on 1H chart with both EMAs pointing down. Significant volume on selling pressure. Price making lower lows and lower highs consistently.",
       "key_levels": {
         "support": [
-          0.149,
-          0.16
+          0.1466,
+          0.14
+        ],
+        "resistance": [
+          0.17,
+          0.18
+        ]
+      },
+      "risk_reward_ratio": 3.5,
+      "reassess_conditions": null
+    },
+    "SWING": {
+      "timeframe": "SWING",
+      "signal": "SELL",
+      "confidence": 90,
+      "reasoning": "Clear bearish trend on 4H chart with sharp decline from 0.40 to 0.15. Death cross formation with EMA20 below EMA50. High selling volume indicating strong bearish momentum.",
+      "key_levels": {
+        "support": [
+          0.14,
+          0.12
         ],
         "resistance": [
           0.2,
-          0.22
+          0.25
         ]
       },
-      "risk_reward_ratio": 3.0,
+      "risk_reward_ratio": 4.2,
       "reassess_conditions": null
     },
-    "12H": {
-      "timeframe": "12H",
-      "signal": "HOLD",
-      "confidence": 70,
-      "reasoning": "Oversold conditions on shorter timeframe may lead to temporary bounce. However, strong bearish momentum and high volume selling suggest waiting for clear reversal signals.",
+    "POSITION": {
+      "timeframe": "POSITION",
+      "signal": "SELL",
+      "confidence": 95,
+      "reasoning": "Massive bearish trend on daily chart showing -64.21% decline. Both EMAs trending down strongly with no signs of reversal. Volume profile supports continued downward movement.",
       "key_levels": {
         "support": [
-          0.15,
-          0.155
+          0.1371,
+          0.12
         ],
         "resistance": [
-          0.165,
-          0.17
+          0.2939,
+          0.35
         ]
       },
-      "risk_reward_ratio": 1.5,
+      "risk_reward_ratio": 5.0,
       "reassess_conditions": null
     },
     "overall": {
       "primary_trend": "BEARISH",
-      "timeframe_alignment": "ALIGNED",
-      "best_timeframe": "48H",
+      "timeframe_alignment": "MIXED",
+      "best_timeframe": "POSITION",
       "key_observations": [
-        "All timeframes showing strong bearish momentum",
-        "High volume selling pressure",
-        "No clear support levels holding",
-        "EMAs in bearish alignment across timeframes",
-        "Price down over 42% in 14 days"
+        "Strong bearish trend across higher timeframes",
+        "Potential short-term bounce on scalp timeframe",
+        "High volume supporting downward movement",
+        "Significant price depreciation of -64.21% on monthly chart"
       ],
       "recommended_action": {
         "signal": "SELL",
-        "timeframe": "48H",
-        "reasoning": "Strong bearish alignment across all timeframes with increasing selling volume suggests further downside potential. Best to wait for clear reversal signals before considering long positions."
+        "timeframe": "POSITION",
+        "reasoning": "The overwhelming bearish pressure across higher timeframes suggests maintaining short positions is optimal. While scalp timeframe shows potential bounce, the larger trend remains strongly bearish with significant momentum."
       }
     }
   }

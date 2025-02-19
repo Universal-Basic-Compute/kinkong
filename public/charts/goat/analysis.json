@@ -1,76 +1,94 @@
 {
-  "timestamp": "2025-02-18T18:55:47.449266",
+  "timestamp": "2025-02-19T00:10:09.071251",
   "token": "GOAT",
   "analyses": {
-    "14D": {
-      "timeframe": "14D",
+    "SCALP": {
+      "timeframe": "SCALP",
+      "signal": "BUY",
+      "confidence": 75,
+      "reasoning": "Price showing bullish momentum on 15m chart with higher lows and higher highs. EMA20 crossing above EMA50 with increasing volume support.",
+      "key_levels": {
+        "support": [
+          0.0948,
+          0.0935
+        ],
+        "resistance": [
+          0.0972,
+          0.098
+        ]
+      },
+      "risk_reward_ratio": 2.5,
+      "reassess_conditions": null
+    },
+    "INTRADAY": {
+      "timeframe": "INTRADAY",
+      "signal": "HOLD",
+      "confidence": 60,
+      "reasoning": "Price attempting to stabilize after significant decline. EMAs showing bearish crossover but price forming potential bottom pattern.",
+      "key_levels": {
+        "support": [
+          0.0899,
+          0.092
+        ],
+        "resistance": [
+          0.1008,
+          0.1
+        ]
+      },
+      "risk_reward_ratio": 1.8,
+      "reassess_conditions": null
+    },
+    "SWING": {
+      "timeframe": "SWING",
       "signal": "SELL",
       "confidence": 85,
-      "reasoning": "Strong bearish trend with consistent lower highs and lower lows. Both EMA20 and EMA50 showing clear downward slope with price action below both moving averages. High volume selling pressure observed in recent days.",
+      "reasoning": "Strong downtrend on 4H chart with consistently lower highs and lower lows. EMAs in bearish alignment with significant volume selling pressure.",
       "key_levels": {
         "support": [
           0.0899,
           0.085
         ],
         "resistance": [
-          0.1,
-          0.1076
+          0.1253,
+          0.115
         ]
       },
-      "risk_reward_ratio": 1.5,
+      "risk_reward_ratio": 3.2,
       "reassess_conditions": null
     },
-    "48H": {
-      "timeframe": "48H",
+    "POSITION": {
+      "timeframe": "POSITION",
       "signal": "SELL",
-      "confidence": 80,
-      "reasoning": "Recent breakdown below key support levels with increased selling volume. Death cross formation between EMA20 and EMA50. Price showing acceleration in downward momentum.",
+      "confidence": 90,
+      "reasoning": "Clear bearish trend on daily chart with price down 62.92% from ATH. EMAs showing strong bearish momentum with no signs of reversal.",
       "key_levels": {
         "support": [
           0.0899,
-          0.0922
+          0.08
         ],
         "resistance": [
-          0.0988,
-          0.1025
+          0.4977,
+          0.25
         ]
       },
-      "risk_reward_ratio": 2.0,
-      "reassess_conditions": null
-    },
-    "12H": {
-      "timeframe": "12H",
-      "signal": "HOLD",
-      "confidence": 60,
-      "reasoning": "Short-term oversold conditions emerging, but still within strong bearish trend. High volume selloff with potential for short-term bounce, though overall trend remains bearish.",
-      "key_levels": {
-        "support": [
-          0.0899,
-          0.0915
-        ],
-        "resistance": [
-          0.0959,
-          0.0988
-        ]
-      },
-      "risk_reward_ratio": 1.2,
+      "risk_reward_ratio": 4.0,
       "reassess_conditions": null
     },
     "overall": {
       "primary_trend": "BEARISH",
-      "timeframe_alignment": "ALIGNED",
-      "best_timeframe": "48H",
+      "timeframe_alignment": "MIXED",
+      "best_timeframe": "SCALP",
       "key_observations": [
-        "Strong bearish momentum across all timeframes",
-        "Significant increase in selling volume",
-        "All EMAs pointing downward",
-        "No significant support levels holding",
-        "Potential short-term oversold conditions"
+        "Strong bearish trend on higher timeframes",
+        "Potential short-term bounce opportunity on lower timeframes",
+        "High volume selling pressure on swing timeframe",
+        "Significant price depreciation from ATH",
+        "Mixed signals between short and long timeframes"
       ],
       "recommended_action": {
-        "signal": "SELL",
-        "timeframe": "48H",
-        "reasoning": "Strong bearish alignment across all timeframes with increased selling volume suggests continued downward pressure. Best to wait for any potential bounces to establish new short positions."
+        "signal": "SCALP_LONG",
+        "timeframe": "SCALP",
+        "reasoning": "While longer timeframes remain bearish, scalp opportunities exist for quick profits on bounces. Tight stops required due to overall bearish market structure."
       }
     }
   }

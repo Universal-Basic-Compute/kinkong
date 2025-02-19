@@ -1,76 +1,93 @@
 {
-  "timestamp": "2025-02-18T18:56:38.359424",
+  "timestamp": "2025-02-19T00:11:27.528170",
   "token": "UBC",
   "analyses": {
-    "14D": {
-      "timeframe": "14D",
-      "signal": "SELL",
-      "confidence": 85,
-      "reasoning": "Strong downtrend evident with both EMA20 and EMA50 sloping downward. Price has fallen -65.88% from ATH with consistent lower highs and lower lows. Volume profile shows declining interest.",
-      "key_levels": {
-        "support": [
-          0.0013,
-          0.0012
-        ],
-        "resistance": [
-          0.0016,
-          0.0042
-        ]
-      },
-      "risk_reward_ratio": 0.5,
-      "reassess_conditions": null
-    },
-    "48H": {
-      "timeframe": "48H",
+    "SCALP": {
+      "timeframe": "SCALP",
       "signal": "HOLD",
-      "confidence": 60,
-      "reasoning": "Price showing signs of short-term bottoming with recent higher lows, but still below declining EMAs. Recent bounce from 0.0013 support level but resistance at 0.0014-0.0015 zone.",
-      "key_levels": {
-        "support": [
-          0.0013,
-          0.0012
-        ],
-        "resistance": [
-          0.0014,
-          0.0015
-        ]
-      },
-      "risk_reward_ratio": 1.2,
-      "reassess_conditions": null
-    },
-    "12H": {
-      "timeframe": "12H",
-      "signal": "BUY",
       "confidence": 65,
-      "reasoning": "Short-term bullish momentum with price above EMA20 and EMA50 crossover. Higher lows forming with decent volume support. Current consolidation above EMAs suggests potential continuation.",
+      "reasoning": "Price showing consolidation after recent surge, with decreasing volume. EMA20 crossed above EMA50 showing short-term bullish momentum, but immediate resistance at 0.00146 causing hesitation.",
       "key_levels": {
         "support": [
-          0.0013,
+          0.00142,
           0.0014
         ],
         "resistance": [
-          0.0015,
-          0.0016
+          0.00146,
+          0.00148
         ]
       },
-      "risk_reward_ratio": 2.0,
+      "risk_reward_ratio": 1.5,
+      "reassess_conditions": null
+    },
+    "INTRADAY": {
+      "timeframe": "INTRADAY",
+      "signal": "BUY",
+      "confidence": 75,
+      "reasoning": "Strong uptrend with higher lows and higher highs. EMA20 trending above EMA50 with increasing momentum. Volume profile supporting upward movement.",
+      "key_levels": {
+        "support": [
+          0.00138,
+          0.00135
+        ],
+        "resistance": [
+          0.00147,
+          0.0015
+        ]
+      },
+      "risk_reward_ratio": 2.1,
+      "reassess_conditions": null
+    },
+    "SWING": {
+      "timeframe": "SWING",
+      "signal": "SELL",
+      "confidence": 70,
+      "reasoning": "Downward trend from recent highs, EMA crossover to downside. Volume declining with bearish divergence on momentum indicators.",
+      "key_levels": {
+        "support": [
+          0.0013,
+          0.00125
+        ],
+        "resistance": [
+          0.0018,
+          0.002
+        ]
+      },
+      "risk_reward_ratio": 1.8,
+      "reassess_conditions": null
+    },
+    "POSITION": {
+      "timeframe": "POSITION",
+      "signal": "SELL",
+      "confidence": 85,
+      "reasoning": "Strong bearish trend with -87.84% decline. Both EMAs pointing downward with significant bearish momentum. No signs of long-term reversal yet.",
+      "key_levels": {
+        "support": [
+          0.0013,
+          0.001
+        ],
+        "resistance": [
+          0.002,
+          0.003
+        ]
+      },
+      "risk_reward_ratio": 2.5,
       "reassess_conditions": null
     },
     "overall": {
       "primary_trend": "BEARISH",
       "timeframe_alignment": "MIXED",
-      "best_timeframe": "12H",
+      "best_timeframe": "INTRADAY",
       "key_observations": [
-        "Long-term downtrend remains intact",
-        "Medium-term showing potential bottoming pattern",
-        "Short-term momentum turning bullish",
-        "Volume declining across timeframes",
-        "Price consolidating at critical support level"
+        "Long-term bearish trend still dominant",
+        "Short-term bullish reversal potential on lower timeframes",
+        "Volume declining across multiple timeframes",
+        "Price consolidating at current levels"
       ],
       "recommended_action": {
-        "signal": "HOLD",
-        "timeframe": "12H",
-        "reasoning": "While short-term indicators suggest potential upside, the conflicting signals across timeframes and strong overall bearish trend warrant caution. Better to wait for stronger confirmation of trend reversal before taking new positions."
+        "signal": "BUY",
+        "timeframe": "INTRADAY",
+        "reasoning": "While longer-term trend remains bearish, intraday setup shows promising reversal potential with good risk/reward ratio for short-term trades"
       }
     }
   }

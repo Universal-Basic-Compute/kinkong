@@ -1,76 +1,94 @@
 {
-  "timestamp": "2025-02-18T18:56:20.694476",
+  "timestamp": "2025-02-19T00:10:59.511870",
   "token": "AI16Z",
   "analyses": {
-    "14D": {
-      "timeframe": "14D",
+    "SCALP": {
+      "timeframe": "SCALP",
+      "signal": "BUY",
+      "confidence": 65,
+      "reasoning": "Short-term upward momentum with bullish EMA crossover, increasing volume on green candles, and price holding above key support",
+      "key_levels": {
+        "support": [
+          0.3095,
+          0.3044
+        ],
+        "resistance": [
+          0.3195,
+          0.325
+        ]
+      },
+      "risk_reward_ratio": 2.1,
+      "reassess_conditions": null
+    },
+    "INTRADAY": {
+      "timeframe": "INTRADAY",
       "signal": "SELL",
-      "confidence": 85,
-      "reasoning": "Strong bearish trend with price below both EMA20 and EMA50. Multiple red candles showing sustained selling pressure. Price has broken major support levels with increasing volume on downward moves.",
+      "confidence": 75,
+      "reasoning": "Clear downward trend with bearish EMA cross, significant volume on red candles, and price below both EMAs",
       "key_levels": {
         "support": [
           0.2444,
-          0.28
+          0.3
         ],
         "resistance": [
-          0.35,
-          0.4
+          0.3633,
+          0.34
+        ]
+      },
+      "risk_reward_ratio": 1.8,
+      "reassess_conditions": null
+    },
+    "SWING": {
+      "timeframe": "SWING",
+      "signal": "SELL",
+      "confidence": 85,
+      "reasoning": "Strong bearish trend with -35.66% decline, declining EMAs, and consistent high-volume selling pressure",
+      "key_levels": {
+        "support": [
+          0.2444,
+          0.3
+        ],
+        "resistance": [
+          0.5931,
+          0.45
         ]
       },
       "risk_reward_ratio": 2.5,
       "reassess_conditions": null
     },
-    "48H": {
-      "timeframe": "48H",
+    "POSITION": {
+      "timeframe": "POSITION",
       "signal": "SELL",
       "confidence": 90,
-      "reasoning": "Sharp bearish momentum with price making lower lows and lower highs. EMA cross to downside with expanding volume on sells. Death cross formation between EMA20 and EMA50.",
+      "reasoning": "Major downtrend with -65.98% decline from ATH, bearish EMAs, and sustained selling pressure across multiple weeks",
       "key_levels": {
         "support": [
           0.2444,
-          0.27
+          0.3
         ],
         "resistance": [
-          0.32,
-          0.35
+          1.2794,
+          0.6
         ]
       },
-      "risk_reward_ratio": 2.0,
-      "reassess_conditions": null
-    },
-    "12H": {
-      "timeframe": "12H",
-      "signal": "HOLD",
-      "confidence": 65,
-      "reasoning": "Oversold conditions on shorter timeframe but still in strong downtrend. High volume selling pressure but potential for short-term bounce.",
-      "key_levels": {
-        "support": [
-          0.2444,
-          0.26
-        ],
-        "resistance": [
-          0.3,
-          0.32
-        ]
-      },
-      "risk_reward_ratio": 1.5,
+      "risk_reward_ratio": 3.2,
       "reassess_conditions": null
     },
     "overall": {
       "primary_trend": "BEARISH",
-      "timeframe_alignment": "ALIGNED",
-      "best_timeframe": "48H",
+      "timeframe_alignment": "MIXED",
+      "best_timeframe": "SCALP",
       "key_observations": [
-        "Strong bearish momentum across all timeframes",
-        "Increasing volume on downward moves",
-        "Breaking major support levels",
-        "Death cross formation on multiple timeframes",
-        "Potential oversold conditions on shorter timeframes"
+        "Strong bearish trend on higher timeframes",
+        "Potential short-term bounce on scalp timeframe",
+        "High volume selling pressure across multiple timeframes",
+        "Price significantly below ATH with -65.98% decline",
+        "EMAs showing bearish alignment on all timeframes except scalp"
       ],
       "recommended_action": {
-        "signal": "SELL",
-        "timeframe": "48H",
-        "reasoning": "Strong bearish alignment across all timeframes with highest confidence on 48H chart. Increasing volume confirms downtrend. Wait for small bounces to enter short positions."
+        "signal": "HOLD",
+        "timeframe": "SCALP",
+        "reasoning": "While longer timeframes show strong bearish momentum, scalp timeframe indicates potential short-term relief bounce. Best to wait for clear reversal confirmation before taking new positions."
       }
     }
   }
