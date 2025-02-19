@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { createThought } from '@/backend/src/airtable/thoughts';
 import { getTable } from '@/backend/src/airtable/tables';
+import { COPILOT_PROMPT } from '@/prompts/copilot';
 
 export async function POST(request: NextRequest) {
   const encoder = new TextEncoder();
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest) {
         'content-type': 'application/json'
       } as HeadersInit,  // Explicitly type as HeadersInit
       body: JSON.stringify({
-        model: "claude-3-sonnet-20240229",
+        model: "claude-3-5-sonnet-20241022",
         max_tokens: 1024,
         system: `${COPILOT_PROMPT}
 
