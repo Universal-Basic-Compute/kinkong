@@ -114,14 +114,12 @@ export function SignalHistory() {
 
   const fetchSignals = async () => {
     try {
-      const records = await fetchAirtableData('SIGNALS', {
-        sort: [{ field: 'timestamp', direction: 'desc' }],
-        maxRecords: 100
-      });
-      setSignals(records.map((record: any) => ({
-        id: record.id,
-        ...record.fields
-      })));
+      const response = await fetch('/api/signals');
+      if (!response.ok) {
+        throw new Error('Failed to fetch signals');
+      }
+      const data = await response.json();
+      setSignals(data); // The API already returns formatted signals
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load signals');
       console.error('Error fetching signals:', err);
