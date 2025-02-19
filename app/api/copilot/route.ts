@@ -14,20 +14,25 @@ interface CopilotRequest {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json() as CopilotRequest;
-    const { message } = body;
+    const requestBody = await request.json();
+    
+    // Extract message from body
+    const message = requestBody.message;
+    
+    // Stringify the whole body
+    const bodyContent = JSON.stringify(requestBody);
 
     // Simple logging
     console.log('📝 Copilot Request:', {
-      message: message?.slice(0, 100) + '...',
-      bodyLength: body.body?.length || 0
+      message: message,
+      bodyLength: bodyContent.length
     });
 
     // Simple system prompt
     const systemPrompt = `${COPILOT_PROMPT}
 
 Current Page Content:
-${body.body || 'No content available'}`;
+${bodyContent}`;
 
     // Log formatted prompt
     console.log('📋 System Prompt:', {
