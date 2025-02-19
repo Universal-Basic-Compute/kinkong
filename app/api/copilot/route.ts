@@ -59,12 +59,12 @@ export async function POST(request: NextRequest) {
     const copilotResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'x-api-key': process.env.ANTHROPIC_API_KEY || '',  // Provide empty string as fallback
+        'x-api-key': process.env.ANTHROPIC_API_KEY || '',
         'anthropic-version': '2023-06-01',
         'content-type': 'application/json'
-      } as HeadersInit,  // Explicitly type as HeadersInit
+      } as HeadersInit,
       body: JSON.stringify({
-        model: "claude-3-5-sonnet-20241022",
+        model: "claude-3-sonnet-20240229",
         max_tokens: 1024,
         system: `${COPILOT_PROMPT}
 
@@ -86,8 +86,15 @@ Page Content: ${context?.pageContent || 'Not provided'}`,
       })
     });
 
+    // Add detailed error handling
     if (!copilotResponse.ok) {
-      throw new Error('Failed to get copilot response');
+      const errorData = await copilotResponse.text();
+      console.error('Anthropic API error:', {
+        status: copilotResponse.status,
+        statusText: copilotResponse.statusText,
+        error: errorData
+      });
+      throw new Error(`Failed to get copilot response: ${copilotResponse.status} ${copilotResponse.statusText}`);
     }
 
     const data = await copilotResponse.json();
