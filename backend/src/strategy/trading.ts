@@ -48,7 +48,7 @@ export async function updateTradeHistory(results: any[]) {
     if (result.success) {
       await table.create([{
         fields: {
-          timestamp: new Date().toISOString(),
+          createdAt: new Date().toISOString(),  // Changed from timestamp
           token: result.token,
           action: result.action,
           amount: result.amount,

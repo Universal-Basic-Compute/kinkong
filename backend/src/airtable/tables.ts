@@ -34,7 +34,7 @@ export interface PortfolioSnapshot {
 }
 
 export interface Trade {
-  timestamp: string;
+  createdAt: string;  // Changed from timestamp
   token: string;
   action: 'BUY' | 'SELL';
   amount: number;
