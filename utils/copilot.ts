@@ -1,16 +1,7 @@
 // Add PageContent interface
-interface PageContent {
+export interface CopilotContext {
   url: string;
   pageContent: string;
-}
-
-export interface CopilotContext {
-  url?: string;
-  pageContent?: string | PageContent;  // Can be either string or PageContent object
-  marketSentiment?: string;
-  portfolioValue?: number;
-  topHoldings?: string[];
-  recentTrades?: string;
   wallet?: string;
 }
 
@@ -32,8 +23,12 @@ export async function askKinKongCopilot(
       }
     };
 
-    // Debug log
-    console.log('Sending copilot request:', requestBody);
+    console.log('Preparing copilot request:', {
+      messageLength: message.length,
+      hasContext: !!context,
+      contentLength: context.pageContent.length,
+      walletPrefix: context.wallet ? context.wallet.slice(0, 8) + '...' : 'none'
+    });
 
     const response = await fetch('/api/copilot', {
       method: 'POST',

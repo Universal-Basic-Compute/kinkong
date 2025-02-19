@@ -158,9 +158,10 @@ export async function POST(request: NextRequest) {
         // Format system prompt with context
         const systemPrompt = `${COPILOT_PROMPT}
 
-Current Page Context:
+Current Context:
 URL: ${context?.url || 'Not provided'}
-${context?.pageContent ? `\nContent:\n${context.pageContent}` : 'No page content available'}`;
+Wallet: ${context?.wallet ? context.wallet.slice(0, 8) + '...' : 'Not connected'}
+${context?.pageContent ? `\nPage Content:\n${context.pageContent}` : 'No page content available'}`;
 
         // Log formatted prompt
         console.log('📋 System Prompt:', {
