@@ -93,7 +93,13 @@ export async function POST(request: NextRequest) {
                   content: message
                 }
               ],
-              system: `${COPILOT_PROMPT}\n\nCurrent Context:\nURL: ${context?.url || 'Not provided'}\nPage Content: ${context?.pageContent || 'Not provided'}`
+              system: `${COPILOT_PROMPT}
+
+Current Website Context:
+URL: ${context?.url || 'Not provided'}
+
+Page Content:
+${context?.pageContent || 'Not provided'}`
             })
           }) as Promise<Response>,
           new Promise((_, reject) => 
