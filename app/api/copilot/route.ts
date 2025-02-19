@@ -72,7 +72,9 @@ export async function POST(request: NextRequest) {
       message: message?.slice(0, 100) + '...',
       hasContext: !!context?.pageContent,
       url: context?.url,
-      contentLength: context?.pageContent?.length || 0,
+      contentLength: typeof context?.pageContent === 'string' 
+        ? context.pageContent.length 
+        : 0,
       walletPrefix: context?.wallet ? context.wallet.slice(0, 8) + '...' : 'none'
     });
 
@@ -80,15 +82,12 @@ export async function POST(request: NextRequest) {
       throw new Error('Message is required');
     }
 
-    // Log context details
+    // Log context details if present
     if (context) {
       console.log('🔍 Context Details:', {
         url: context.url,
-        pageContentType: typeof context.pageContent,
-        isNestedObject: typeof context.pageContent === 'object',
-        nestedContent: typeof context.pageContent === 'object' 
-          ? typeof (context.pageContent as PageContent)?.pageContent 
-          : 'n/a'
+        contentLength: context.pageContent?.length || 0,
+        hasWallet: !!context.wallet
       });
     }
 
