@@ -1,7 +1,7 @@
 export async function askKinKongCopilot(message: string, context?: any) {
   try {
-    // Always get the entire document body as context
-    const fullContext = {
+    // Use provided context or get current page content
+    const fullContext = context || {
       url: window.location.href,
       pageContent: document.body.innerText
     };

@@ -57,15 +57,15 @@ export default function CopilotChatPage() {
       setIsLoading(true);
       setError(null);
 
-      // Ensure pageContent is a string
-      const context: CopilotContext = {
+      // Get current page content
+      const context = {
         url: window.location.href,
         pageContent: document.body.innerText,
         wallet: publicKey.toString()
       };
 
-      // Add debug logging
-      console.log('Submitting chat with context:', {
+      // Debug log
+      console.log('Sending chat with context:', {
         messageLength: input.length,
         hasContext: !!context,
         contentLength: context.pageContent.length,
