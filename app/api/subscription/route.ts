@@ -7,20 +7,24 @@ const SUBSCRIPTION_COST = 1.5; // SOL
 const SUBSCRIPTION_DURATION = 90; // days
 
 // Validate environment variables at runtime rather than top-level
-function validateEnvironment() {
-  if (!process.env.STRATEGY_WALLET) {
+function validateEnvironment(): { rpcUrl: string; strategyWallet: string } {
+  const rpcUrl = process.env.NEXT_PUBLIC_HELIUS_RPC_URL;
+  const strategyWallet = process.env.STRATEGY_WALLET;
+
+  if (!strategyWallet) {
     throw new Error('Strategy wallet not configured');
   }
-  if (!process.env.NEXT_PUBLIC_HELIUS_RPC_URL) {
+  if (!rpcUrl) {
     throw new Error('RPC URL not configured');
   }
-  return true;
+
+  return { rpcUrl, strategyWallet };
 }
 
 export async function POST(request: NextRequest) {
   try {
-    // Validate environment
-    validateEnvironment();
+    // Get validated environment variables
+    const { rpcUrl, strategyWallet } = validateEnvironment();
 
     // Parse request body
     const body = await request.json();
@@ -33,8 +37,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Initialize Solana connection
-    const connection = new Connection(process.env.NEXT_PUBLIC_HELIUS_RPC_URL);
+    // Initialize Solana connection with validated RPC URL
+    const connection = new Connection(rpcUrl);
 
     // Verify transaction
     const tx = await connection.getTransaction(signature, {
@@ -52,8 +56,8 @@ export async function POST(request: NextRequest) {
     const postBalances = tx.meta?.postBalances || [];
     const preBalances = tx.meta?.preBalances || [];
 
-    // Create PublicKey from strategy wallet address
-    const strategyWallet = new PublicKey(process.env.STRATEGY_WALLET!);
+    // Create PublicKey from validated strategy wallet address
+    const strategyWalletPubkey = new PublicKey(strategyWallet);
 
     // Get account keys safely
     let receiverIndex = -1;
@@ -64,7 +68,7 @@ export async function POST(request: NextRequest) {
 
     // Find receiver index using loop
     for (let i = 0; i < accountKeys.length; i++) {
-      if (accountKeys[i].toBase58() === strategyWallet.toBase58()) {
+      if (accountKeys[i].toBase58() === strategyWalletPubkey.toBase58()) {
         receiverIndex = i;
         break;
       }
