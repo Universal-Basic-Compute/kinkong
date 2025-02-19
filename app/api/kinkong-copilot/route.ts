@@ -73,17 +73,21 @@ Current Context:
       responseLength: response.content.length
     });
 
+    const responseText = response.content[0].type === 'text' 
+      ? response.content[0].text 
+      : JSON.stringify(response.content[0]);
+
     // Create thought record in Airtable
     await createThought({
       type: 'COPILOT_INTERACTION',
       content: message,
-      response: response.content[0].text,
+      response: responseText,
       context: context || {}
     });
 
     // Return response
     return NextResponse.json({
-      response: response.content[0].text,
+      response: responseText,
       metadata: {
         model: response.model,
         role: response.role
