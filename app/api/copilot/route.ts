@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifySubscription } from '@/utils/subscription';
-import { askKinKongCopilot } from '@/utils/kinkong-copilot';
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,12 +14,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get copilot response
-    const response = await askKinKongCopilot(message, context);
+    // Get copilot response by calling kinkong-copilot endpoint directly
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/kinkong-copilot`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message,
+        context
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to get copilot response');
+    }
+
+    const data = await response.json();
 
     // Return response
     return NextResponse.json({
-      response,
+      response: data.response,
       subscription: {
         active: true,
         expiresAt: null
