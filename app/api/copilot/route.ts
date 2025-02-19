@@ -134,20 +134,6 @@ ${typeof context?.pageContent === 'object'
           await new Promise(resolve => setTimeout(resolve, 25)); // Small delay between chunks
         }
 
-        // Create thought record
-        try {
-          await createThought({
-            type: 'COPILOT_INTERACTION',
-            content: message,
-            context: {
-              response: assistantMessage,
-              ...context || {}
-            }
-          });
-        } catch (error) {
-          console.error('Failed to create thought:', error);
-        }
-
         await writer.close();
 
       } catch (error) {
