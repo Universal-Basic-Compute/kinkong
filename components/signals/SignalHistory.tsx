@@ -178,16 +178,39 @@ export function SignalHistory() {
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">
               <div className="flex items-center gap-2">
                 Type
-                <div className="relative">
-                  <select
-                    value={typeFilter}
-                    onChange={(e) => setTypeFilter(e.target.value as 'ALL' | 'BUY' | 'SELL')}
-                    className="bg-black/50 border border-gold/20 rounded px-2 py-1 text-xs text-gray-300 cursor-pointer hover:border-gold focus:outline-none focus:border-gold"
-                  >
-                    <option value="ALL">All</option>
-                    <option value="BUY">Buy</option>
-                    <option value="SELL">Sell</option>
-                  </select>
+                <div className="relative group">
+                  <div className="cursor-pointer hover:text-gold/80">
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      viewBox="0 0 24 24" 
+                      fill="currentColor" 
+                      className="w-4 h-4"
+                    >
+                      <path d="M18.75 12.75h1.5a.75.75 0 000-1.5h-1.5a.75.75 0 000 1.5zM12 6a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5A.75.75 0 0112 6zM12 18a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5A.75.75 0 0112 18zM3.75 6.75h1.5a.75.75 0 100-1.5h-1.5a.75.75 0 000 1.5zM5.25 18.75h-1.5a.75.75 0 010-1.5h1.5a.75.75 0 010 1.5zM3 12a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5A.75.75 0 013 12zM9 3.75a2.25 2.25 0 100 4.5 2.25 2.25 0 000-4.5zM12.75 12a2.25 2.25 0 114.5 0 2.25 2.25 0 01-4.5 0zM9 15.75a2.25 2.25 0 100 4.5 2.25 2.25 0 000-4.5z" />
+                    </svg>
+                  </div>
+                  <div className="absolute right-0 mt-2 hidden group-hover:block z-20">
+                    <div className="bg-black/95 border border-gold/20 rounded-lg shadow-lg py-2 min-w-[100px]">
+                      <div 
+                        className={`px-4 py-1 cursor-pointer hover:bg-gold/10 ${typeFilter === 'ALL' ? 'text-gold' : 'text-gray-300'}`}
+                        onClick={() => setTypeFilter('ALL')}
+                      >
+                        All
+                      </div>
+                      <div 
+                        className={`px-4 py-1 cursor-pointer hover:bg-gold/10 ${typeFilter === 'BUY' ? 'text-gold' : 'text-gray-300'}`}
+                        onClick={() => setTypeFilter('BUY')}
+                      >
+                        Buy
+                      </div>
+                      <div 
+                        className={`px-4 py-1 cursor-pointer hover:bg-gold/10 ${typeFilter === 'SELL' ? 'text-gold' : 'text-gray-300'}`}
+                        onClick={() => setTypeFilter('SELL')}
+                      >
+                        Sell
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </th>
