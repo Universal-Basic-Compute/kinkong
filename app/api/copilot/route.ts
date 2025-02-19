@@ -3,6 +3,12 @@ import { createThought } from '@/backend/src/airtable/thoughts';
 import { getTable } from '@/backend/src/airtable/tables';
 import { COPILOT_PROMPT } from '@/prompts/copilot';
 import { Record, FieldSet } from 'airtable';
+import { rateLimit } from '@/utils/rate-limit';
+
+const limiter = rateLimit({
+  interval: 60 * 1000, // 1 minute
+  uniqueTokenPerInterval: 500, // Max 500 users per interval
+});
 
 interface MessageRecord extends FieldSet {
   role: 'user' | 'assistant';
@@ -12,13 +18,55 @@ interface MessageRecord extends FieldSet {
   context?: string;
 }
 
+interface CopilotRequest {
+  message: string;
+  context?: {
+    url?: string;
+    pageContent?: string | object;
+    marketSentiment?: string;
+    portfolioValue?: number;
+    topHoldings?: string[];
+    recentTrades?: string;
+  };
+}
+
+interface CopilotError extends Error {
+  code?: string;
+  status?: number;
+}
+
 export async function POST(request: NextRequest) {
+  // Rate limiting
+  try {
+    await limiter.check(10, request.ip || 'anonymous'); // 10 requests per minute per IP
+  } catch {
+    return new NextResponse(
+      JSON.stringify({ error: 'Too many requests' }),
+      { status: 429 }
+    );
+  }
   const encoder = new TextEncoder();
   const customEncode = (str: string) => encoder.encode(str + '\n');
 
   try {
-    const body = await request.json();
+    const body = await request.json() as CopilotRequest;
     const { message, context } = body;
+
+    // Validate request
+    if (!message || typeof message !== 'string') {
+      throw Object.assign(new Error('Invalid message format'), {
+        code: 'INVALID_MESSAGE',
+        status: 400
+      });
+    }
+
+    // Validate context if present
+    if (context && typeof context !== 'object') {
+      throw Object.assign(new Error('Invalid context format'), {
+        code: 'INVALID_CONTEXT',
+        status: 400
+      });
+    }
 
     // Log incoming request
     console.log('📝 Copilot Request:', {
@@ -210,15 +258,21 @@ ${typeof context?.pageContent === 'object'
     console.error('❌ Copilot error:', {
       name: error instanceof Error ? error.name : 'Unknown',
       message: error instanceof Error ? error.message : 'Unknown error',
+      code: (error as CopilotError).code,
       stack: error instanceof Error ? error.stack : undefined
     });
-    return new Response(
+
+    const status = (error as CopilotError).status || 500;
+    const code = (error as CopilotError).code || 'INTERNAL_ERROR';
+    
+    return new NextResponse(
       JSON.stringify({ 
         error: 'Failed to process request',
+        code,
         details: error instanceof Error ? error.message : 'Unknown error'
       }),
       { 
-        status: 500,
+        status,
         headers: {
           'Content-Type': 'application/json'
         }
