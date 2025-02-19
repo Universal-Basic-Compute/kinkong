@@ -84,7 +84,7 @@ export default function Home() {
         <h2 className="text-4xl font-bold text-center mb-12 text-gold">How It Works</h2>
         <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
-            { number: 1, title: "Invest", desc: "Start with minimum 1,000 USDC" },
+            { number: 1, title: "Invest", desc: "Start with minimum 500 USDC" },
             { number: 2, title: "AI Trades", desc: "Our AI trades 24/7 across markets" },
             { number: 3, title: "Get Paid", desc: "Receive 75% profits every Friday" }
           ].map((step, i) => (
