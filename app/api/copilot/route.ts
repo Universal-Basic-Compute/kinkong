@@ -116,8 +116,10 @@ Page Content: ${context?.pageContent || 'Not provided'}`,
       await createThought({
         type: 'COPILOT_INTERACTION',
         content: message,
-        response: data.response,
-        context: context || {}
+        context: {
+          response: assistantMessage,
+          ...context || {}
+        }
       });
     } catch (error) {
       console.error('Failed to create thought:', error);
