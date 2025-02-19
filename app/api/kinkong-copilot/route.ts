@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Anthropic } from '@anthropic-ai/sdk';
 
-// Initialize Anthropic client
+// Initialize Anthropic client with API key
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY!,
 });
@@ -53,17 +53,13 @@ Current Context:
 `;
     }
 
-    // Get response from Claude using the correct model and API
+    // Get response from Claude
     const response = await client.messages.create({
       model: "claude-3-5-sonnet-20241022",
       max_tokens: 4096,
-      system: SYSTEM_PROMPT,
       messages: [{
         role: 'user',
-        content: [{
-          type: 'text',
-          text: `${contextString}\nUser Question: ${message}`
-        }]
+        content: `${SYSTEM_PROMPT}\n\n${contextString}\nUser Question: ${message}`
       }]
     });
 
@@ -75,9 +71,7 @@ Current Context:
       responseLength: response.content.length
     });
 
-    const responseText = response.content[0].type === 'text' 
-      ? response.content[0].text 
-      : JSON.stringify(response.content[0]);
+    const responseText = response.content[0].text;
 
     // Create thought record in Airtable
     await createThought({
