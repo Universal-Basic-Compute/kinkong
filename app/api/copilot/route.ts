@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createThought } from '@/backend/src/airtable/thoughts';
 import { getTable } from '@/backend/src/airtable/tables';
 import { COPILOT_PROMPT } from '@/prompts/copilot';
+import { Record, FieldSet } from 'airtable';
+
+interface MessageRecord extends FieldSet {
+  role: 'user' | 'assistant';
+  content: string;
+  createdAt: string;
+  wallet?: string;
+  context?: string;
+}
 
 export async function POST(request: NextRequest) {
   const encoder = new TextEncoder();
@@ -37,11 +46,11 @@ export async function POST(request: NextRequest) {
           messagesTable.select({
             maxRecords: 20,
             sort: [{ field: 'createdAt', direction: 'desc' }]
-          }).all(),
+          }).all() as Promise<Array<Record<MessageRecord>>>,
           new Promise((_, reject) => 
             setTimeout(() => reject(new Error('Message history timeout')), 5000)
           )
-        ]);
+        ]) as Array<Record<MessageRecord>>;
 
         // Format conversation history
         const conversationHistory = recentMessages
