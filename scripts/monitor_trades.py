@@ -233,6 +233,11 @@ async def process_trade_batches():
     """Process queued trades in batches"""
     global last_batch_time
     
+    # Initialize Airtable connection
+    base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
+    api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
+    trades_table = Airtable(base_id, 'TRADES', api_key)
+    
     while True:
         try:
             current_time = datetime.now()
@@ -246,12 +251,11 @@ async def process_trade_batches():
                     try:
                         success = execute_trade_with_phantom(trade['id'])
                         if success:
-                            trades_table.update(trade_id, {
-                                'status': new_status,
-                                'exitReason': reason,
-                                'exitPrice': exit_price,
+                            # Update trade status
+                            trades_table.update(trade['id'], {
+                                'status': 'ACTIVE',
                                 'lastUpdateTime': datetime.now(timezone.utc).isoformat(),
-                                'actualReturn': calculate_pnl(trade_id, exit_price)
+                                'executionPrice': get_token_price(trade['fields']['token'])
                             })
                     except Exception as e:
                         print(f"Failed to execute entry trade: {e}")
