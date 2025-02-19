@@ -44,27 +44,41 @@ export default function CopilotSubscriptionPage() {
       setIsProcessing(true);
       setError(null);
 
+      // Validate environment variables
+      const rpcUrl = process.env.NEXT_PUBLIC_HELIUS_RPC_URL;
+      const subscriptionWallet = process.env.NEXT_PUBLIC_SUBSCRIPTION_WALLET;
+
+      if (!rpcUrl || !subscriptionWallet) {
+        throw new Error('Missing configuration');
+      }
+
       // Create subscription payment transaction
-      const connection = new Connection(process.env.NEXT_PUBLIC_HELIUS_RPC_URL!);
-      const subscriptionWallet = new PublicKey(process.env.NEXT_PUBLIC_SUBSCRIPTION_WALLET!);
+      const connection = new Connection(rpcUrl);
+      const subscriptionPubkey = new PublicKey(subscriptionWallet);
 
       const transaction = new Transaction().add(
         SystemProgram.transfer({
           fromPubkey: publicKey,
-          toPubkey: subscriptionWallet,
-          lamports: SUBSCRIPTION_COST * LAMPORTS_PER_SOL
+          toPubkey: subscriptionPubkey,
+          lamports: LAMPORTS_PER_SOL * SUBSCRIPTION_COST // Convert SOL to lamports
         })
       );
 
       // Get latest blockhash
-      const { blockhash } = await connection.getLatestBlockhash();
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = publicKey;
 
       // Sign and send transaction
       const signedTx = await signTransaction(transaction);
       const signature = await connection.sendRawTransaction(signedTx.serialize());
-      await connection.confirmTransaction(signature);
+      
+      // Wait for confirmation
+      await connection.confirmTransaction({
+        signature,
+        blockhash,
+        lastValidBlockHeight
+      });
 
       // Create subscription record
       await createSubscription(signature, publicKey.toString());
