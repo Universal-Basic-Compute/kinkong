@@ -84,7 +84,7 @@ export interface MarketSentiment {
 }
 
 export interface Message {
-  timestamp: string;
+  createdAt: string;
   role: 'user' | 'assistant';
   content: string;
   wallet?: string;

@@ -80,7 +80,7 @@ function formatDisplayDate(isoString: string): string {
 
 interface Signal {
   id: string;
-  timestamp: string;
+  createdAt: string;
   token: string;
   type: 'BUY' | 'SELL';
   timeframe: 'SCALP' | 'INTRADAY' | 'SWING' | 'POSITION';

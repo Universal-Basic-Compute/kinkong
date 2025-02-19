@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     const messagesTable = getTable('MESSAGES');
     await messagesTable.create([{
       fields: {
-        timestamp: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
         role: 'user',
         content: message,
         wallet: context?.wallet || '',
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     // Save assistant message
     await messagesTable.create([{
       fields: {
-        timestamp: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
         role: 'assistant',
         content: data.response,
         wallet: context?.wallet || '',

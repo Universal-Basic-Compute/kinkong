@@ -123,7 +123,7 @@ async function createThought(params: {
         content: params.content,
         response: params.response,
         context: JSON.stringify(params.context),
-        timestamp: new Date().toISOString()
+        createdAt: new Date().toISOString()
       }
     }]);
 
