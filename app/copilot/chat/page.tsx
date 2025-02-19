@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { askKinKongCopilot } from '@/utils/kinkong-copilot';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { verifySubscription } from '@/utils/subscription';
 import ReactMarkdown from 'react-markdown';
@@ -45,6 +46,11 @@ export default function CopilotChatPage() {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const context = {
+    url: window.location.href,
+    pageContent: document.body.innerText
   };
 
   async function handleSubmit(e: React.FormEvent) {
