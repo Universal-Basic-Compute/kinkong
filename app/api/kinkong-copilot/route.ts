@@ -61,7 +61,10 @@ Current Context:
       system: SYSTEM_PROMPT,
       messages: [{
         role: 'user',
-        content: `${contextString}\nUser Question: ${message}`
+        content: [{
+          type: 'text',
+          text: `${contextString}\nUser Question: ${message}`
+        }]
       }]
     });
 
