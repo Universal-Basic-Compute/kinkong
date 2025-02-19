@@ -100,7 +100,7 @@ URL: ${context?.url || 'Not provided'}
 
 Page Content:
 ${typeof context?.pageContent === 'object' 
-  ? JSON.stringify(context.pageContent, null, 2) 
+  ? context.pageContent.pageContent || JSON.stringify(context.pageContent, null, 2)
   : context?.pageContent || 'Not provided'}`
             })
           }) as Promise<Response>,
