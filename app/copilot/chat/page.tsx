@@ -65,7 +65,7 @@ export default function CopilotChatPage() {
       setInput('');
 
       // Get copilot response
-      const response = await fetch('/copilot', {
+      const response = await fetch('/api/copilot', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
