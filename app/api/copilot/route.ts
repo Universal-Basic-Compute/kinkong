@@ -95,11 +95,11 @@ export async function POST(request: NextRequest) {
               ],
               system: `${COPILOT_PROMPT}\n\nCurrent Context:\nURL: ${context?.url || 'Not provided'}\nPage Content: ${context?.pageContent || 'Not provided'}`
             })
-          }),
+          }) as Promise<Response>,
           new Promise((_, reject) => 
             setTimeout(() => reject(new Error('Copilot response timeout')), 15000)
           )
-        ]);
+        ]) as Response;
 
         if (!copilotResponse.ok) {
           throw new Error(`Failed to get copilot response: ${copilotResponse.status} ${copilotResponse.statusText}`);
