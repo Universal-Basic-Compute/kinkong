@@ -66,15 +66,10 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         model: "claude-3-5-sonnet-20241022",
         max_tokens: 1024,
-        system: `${COPILOT_PROMPT}
-
-Current Context:
-URL: ${context?.url || 'Not provided'}
-Page Content: ${context?.pageContent || 'Not provided'}`,
         messages: [
-          // Include conversation history
+          // Include conversation history with correct format
           ...conversationHistory.map(msg => ({
-            role: msg.role === 'user' ? 'user' : 'assistant',
+            role: msg.role,
             content: msg.content
           })),
           // Add the current message
@@ -82,7 +77,12 @@ Page Content: ${context?.pageContent || 'Not provided'}`,
             role: 'user',
             content: message
           }
-        ]
+        ],
+        system: `${COPILOT_PROMPT}
+
+Current Context:
+URL: ${context?.url || 'Not provided'}
+Page Content: ${context?.pageContent || 'Not provided'}`
       })
     });
 
