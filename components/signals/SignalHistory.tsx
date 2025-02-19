@@ -179,7 +179,7 @@ export function SignalHistory() {
               <div className="flex items-center gap-2">
                 Type
                 <div className="relative group">
-                  <div className="cursor-pointer hover:text-gold/80">
+                  <div className="cursor-pointer hover:text-gold/80 text-gray-400">
                     <svg 
                       xmlns="http://www.w3.org/2000/svg" 
                       viewBox="0 0 24 24" 
