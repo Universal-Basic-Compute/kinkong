@@ -40,9 +40,17 @@ export async function GET(
     
     // Validate table name
     if (!ALLOWED_TABLES[table as AllowedTable]) {
-      return NextResponse.json(
-        { error: 'Invalid table name' },
-        { status: 400 }
+      return new NextResponse(
+        JSON.stringify({ error: 'Invalid table name' }),
+        {
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type'
+          }
+        }
       );
     }
 
@@ -81,22 +89,46 @@ export async function GET(
       };
     });
 
-    // Cache for 5 minutes
-    return NextResponse.json(
-      { records: filteredRecords },
+    // Return with proper headers
+    return new NextResponse(
+      JSON.stringify({ records: filteredRecords }),
       {
+        status: 200,
         headers: {
-          'Cache-Control': 'public, s-maxage=300',
-          'Access-Control-Allow-Origin': '*'
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type',
+          'Cache-Control': 'public, s-maxage=300'
         }
       }
     );
 
   } catch (error) {
     console.error('Airtable proxy error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+    return new NextResponse(
+      JSON.stringify({ error: 'Internal server error' }),
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type'
+        }
+      }
     );
   }
+}
+
+// Add OPTIONS handler for CORS preflight
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type'
+    }
+  });
 }
