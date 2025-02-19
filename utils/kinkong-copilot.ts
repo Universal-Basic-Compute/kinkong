@@ -10,7 +10,7 @@ export async function askKinKongCopilot(
   context?: CopilotContext
 ) {
   try {
-    const response = await fetch('/api/kinkong-copilot', {
+    const response = await fetch('/api/copilot', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
