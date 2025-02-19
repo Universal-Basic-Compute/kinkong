@@ -9,7 +9,8 @@ export const TABLES = {
   REPORTS: 'REPORTS',
   PORTFOLIO_SNAPSHOTS: 'PORTFOLIO_SNAPSHOTS',
   INVESTMENTS: 'INVESTMENTS',
-  MARKET_SENTIMENT: 'MARKET_SENTIMENT'
+  MARKET_SENTIMENT: 'MARKET_SENTIMENT',
+  MESSAGES: 'MESSAGES'
 } as const;
 
 // Table interfaces
@@ -79,6 +80,14 @@ export interface MarketSentiment {
   solPerformance: number;
   aiTokensPerformance: number;
   notes: string;
+}
+
+export interface Message {
+  timestamp: string;
+  role: 'user' | 'assistant';
+  content: string;
+  wallet?: string;
+  context?: Record<string, any>;
 }
 
 export interface Thought {

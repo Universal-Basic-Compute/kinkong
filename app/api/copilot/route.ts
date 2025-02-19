@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { createThought } from '@/backend/src/airtable/thoughts';
+import { getTable } from '@/backend/src/airtable/tables';
 
 export async function POST(request: NextRequest) {
   // Set up streaming
@@ -28,6 +29,18 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Save user message
+    const messagesTable = getTable('MESSAGES');
+    await messagesTable.create([{
+      fields: {
+        timestamp: new Date().toISOString(),
+        role: 'user',
+        content: message,
+        wallet: context?.wallet || '',
+        context: JSON.stringify(context || {})
+      }
+    }]);
+
     // Get copilot response by calling kinkong-copilot endpoint
     const copilotResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/kinkong-copilot`, {
       method: 'POST',
@@ -45,6 +58,17 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await copilotResponse.json();
+
+    // Save assistant message
+    await messagesTable.create([{
+      fields: {
+        timestamp: new Date().toISOString(),
+        role: 'assistant',
+        content: data.response,
+        wallet: context?.wallet || '',
+        context: JSON.stringify(context || {})
+      }
+    }]);
 
     // Stream the response in chunks
     const chunks = data.response.match(/.{1,1000}/g) || [];
