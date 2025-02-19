@@ -81,7 +81,15 @@ export async function POST(request: NextRequest) {
       message: message?.slice(0, 100) + '...',  // Truncate long messages
       hasContext: !!context,
       url: context?.url,
-      contextType: context ? typeof context.pageContent : 'none'
+      contextType: typeof context?.pageContent,
+      contextDetails: context ? {
+        hasUrl: !!context.url,
+        hasPageContent: !!context.pageContent,
+        pageContentType: typeof context.pageContent,
+        nestedContent: typeof context.pageContent === 'object' 
+          ? !!context.pageContent.pageContent 
+          : 'n/a'
+      } : null
     });
 
     if (!message) {

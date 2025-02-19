@@ -60,16 +60,23 @@ export default function CopilotChatPage() {
       // Get current page context
       const context: CopilotContext = {
         url: window.location.href,
-        pageContent: document.body.innerText,
+        pageContent: {
+          url: window.location.href,
+          pageContent: document.body.innerText
+        },
         wallet: publicKey?.toString()
       };
 
-      // Log context being sent
+      // Enhanced logging
       console.log('Sending context:', {
         url: context.url,
+        hasPageContent: !!context.pageContent,
+        pageContentType: typeof context.pageContent,
         contentLength: typeof context.pageContent === 'string' 
           ? context.pageContent.length 
-          : context.pageContent?.pageContent?.length || 0,
+          : typeof context.pageContent === 'object' && context.pageContent?.pageContent
+            ? context.pageContent.pageContent.length 
+            : 0,
         wallet: context.wallet
       });
 
