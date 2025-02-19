@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { askKinKongCopilot, CopilotContext } from '@/utils/copilot';
+import { askKinKongCopilot } from '@/utils/copilot';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { verifySubscription } from '@/utils/subscription';
 import ReactMarkdown from 'react-markdown';
