@@ -178,7 +178,6 @@ export function SignalHistory() {
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Timeframe</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Prices</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Confidence</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">From</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Reason</th>
             <th className="px-6 py-3 text-center text-xs font-medium text-gold uppercase tracking-wider">Success</th>
             <th className="px-6 py-3 text-right text-xs font-medium text-gold uppercase tracking-wider">Return</th>
@@ -226,22 +225,6 @@ export function SignalHistory() {
                 <span className={`px-2 py-1 rounded-full text-xs ${getConfidenceClass(signal.confidence)}`}>
                   {signal.confidence}
                 </span>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm">
-                <a 
-                  href={`https://solscan.io/account/${signal.wallet}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`text-sm hover:underline ${
-                    signal.wallet === 'FnWyN4t1aoZWFjEEBxopMaAgk5hjL5P3K65oc2T9FBJY' 
-                      ? 'text-gold font-semibold' 
-                      : 'text-gray-300'
-                  }`}
-                >
-                  {signal.wallet === 'FnWyN4t1aoZWFjEEBxopMaAgk5hjL5P3K65oc2T9FBJY' 
-                    ? '🦍 KinKong'
-                    : `${signal.wallet.slice(0, 4)}...${signal.wallet.slice(-4)}`}
-                </a>
               </td>
               <td className="px-6 py-4 relative group">
                 <p className="text-xs text-gray-300 line-clamp-3 max-h-[4.5rem] overflow-hidden">
