@@ -57,12 +57,11 @@ export default function CopilotChatPage() {
       setIsLoading(true);
       setError(null);
 
-      // Get current page context
-      // Simplify context structure
-      const context = {
+      // Ensure pageContent is a string
+      const context: CopilotContext = {
         url: window.location.href,
         pageContent: document.body.innerText,
-        wallet: publicKey?.toString()
+        wallet: publicKey.toString()
       };
 
       // Add debug logging

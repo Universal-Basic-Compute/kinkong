@@ -18,18 +18,9 @@ interface MessageRecord extends FieldSet {
   context?: string;
 }
 
-interface PageContent {
-  url?: string;
-  pageContent?: string;
-}
-
 interface CopilotContext {
   url?: string;
-  pageContent?: string | PageContent;
-  marketSentiment?: string;
-  portfolioValue?: number;
-  topHoldings?: string[];
-  recentTrades?: string;
+  pageContent?: string;
   wallet?: string;
 }
 

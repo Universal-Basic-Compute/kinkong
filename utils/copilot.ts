@@ -1,7 +1,6 @@
-// Add PageContent interface
 export interface CopilotContext {
   url: string;
-  pageContent: string;
+  pageContent: string; // Simplify to just string
   wallet?: string;
 }
 
