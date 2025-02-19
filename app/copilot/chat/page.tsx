@@ -57,21 +57,6 @@ export default function CopilotChatPage() {
       setIsLoading(true);
       setError(null);
 
-      // Get current page content
-      const context = {
-        url: window.location.href,
-        pageContent: document.body.innerText,
-        wallet: publicKey.toString()
-      };
-
-      // Debug log
-      console.log('Sending chat with context:', {
-        messageLength: input.length,
-        hasContext: !!context,
-        contentLength: context.pageContent.length,
-        wallet: context.wallet?.slice(0, 8) + '...'
-      });
-
       // Add user message
       const userMessage: Message = {
         role: 'user',
@@ -81,21 +66,16 @@ export default function CopilotChatPage() {
       setMessages(prev => [...prev, userMessage]);
       setInput('');
 
-      // Create placeholder for assistant message
+      // Get streaming response
+      const response = await askKinKongCopilot(input);
+    
+      // Add assistant message
       const assistantMessage: Message = {
         role: 'assistant',
-        content: '',
+        content: response,
         timestamp: new Date().toISOString()
       };
       setMessages(prev => [...prev, assistantMessage]);
-
-      // Get streaming response with context
-      const response = await askKinKongCopilot(input, context);
-    
-      // Update the assistant message with complete response
-      setMessages(prev => prev.map((msg, i) => 
-        i === prev.length - 1 ? { ...msg, content: response } : msg
-      ));
 
     } catch (err) {
       console.error('Chat error:', err);

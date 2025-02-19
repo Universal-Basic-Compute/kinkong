@@ -1,18 +1,13 @@
-export interface CopilotContext {
-  url?: string;
-  pageContent?: string;
-  wallet?: string;
-}
-
-export async function askKinKongCopilot(message: string, context?: CopilotContext) {
+export async function askKinKongCopilot(message: string) {
   try {
-    // Use the typed context directly
     const requestBody = {
       message,
-      context: {
-        url: context?.url || window.location.href,
-        pageContent: context?.pageContent || document.body.innerText,
-        wallet: context?.wallet
+      url: window.location.href,
+      pageContent: {
+        url: window.location.href,
+        pageContent: {
+          mainContent: document.body.innerText
+        }
       }
     };
 

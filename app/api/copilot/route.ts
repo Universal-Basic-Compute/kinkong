@@ -18,18 +18,15 @@ interface MessageRecord extends FieldSet {
   context?: string;
 }
 
-interface CopilotContext {
-  url?: string;
-  pageContent?: string;
-  wallet?: string;
-}
-
 interface CopilotRequest {
   message: string;
   url?: string;
-  pageContent?: any;
-  pageType?: string;
-  fullyLoaded?: boolean;
+  pageContent?: {
+    url: string;
+    pageContent: {
+      mainContent: string;
+    };
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -49,31 +46,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json() as CopilotRequest;
     const { message, url, pageContent } = body;
 
-    // Validate request
-    if (!message || typeof message !== 'string') {
-      throw Object.assign(new Error('Invalid message format'), {
-        code: 'INVALID_MESSAGE',
-        status: 400
-      });
-    }
-
-    // Enhanced logging
+    // Log what we received
     console.log('📝 Copilot Request:', {
       message: message?.slice(0, 100) + '...',
       hasContext: !!pageContent?.pageContent?.mainContent,
       url: url,
-      contentLength: pageContent?.pageContent?.mainContent?.length || 0,
-      walletPrefix: 'none'
+      contentLength: pageContent?.pageContent?.mainContent?.length || 0
     });
-
-    // Log context details if present
-    if (context) {
-      console.log('🔍 Context Details:', {
-        url: context.url,
-        contentLength: context.pageContent?.length || 0,
-        hasWallet: !!context.wallet
-      });
-    }
 
     // Create streaming response
     const stream = new TransformStream();
