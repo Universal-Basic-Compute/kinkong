@@ -142,9 +142,8 @@ export async function POST(request: NextRequest) {
         const systemPrompt = `${COPILOT_PROMPT}
 
 Current Context:
-URL: ${context?.url || 'Not provided'}
-Wallet: ${context?.wallet ? context.wallet.slice(0, 8) + '...' : 'Not connected'}
-${context?.pageContent ? `\nPage Content:\n${context.pageContent}` : 'No page content available'}`;
+URL: ${url || 'Not provided'}
+${pageContent?.pageContent?.mainContent ? `\nPage Content:\n${pageContent.pageContent.mainContent}` : 'No page content available'}`;
 
         // Log formatted prompt
         console.log('📋 System Prompt:', {
