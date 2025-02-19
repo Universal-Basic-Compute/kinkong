@@ -3,12 +3,10 @@ import { createThought } from '@/backend/src/airtable/thoughts';
 import { getTable } from '@/backend/src/airtable/tables';
 
 export async function POST(request: NextRequest) {
-  // Set up streaming
   const encoder = new TextEncoder();
   const customEncode = (str: string) => encoder.encode(str + '\n');
 
   try {
-    // Parse request
     const body = await request.json();
     const { message, context } = body;
 
@@ -16,21 +14,24 @@ export async function POST(request: NextRequest) {
       throw new Error('Message is required');
     }
 
-    // Create streaming response
-    const stream = new TransformStream();
-    const writer = stream.writable.getWriter();
-    
-    // Start the response
-    const response = new Response(stream.readable, {
-      headers: {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-      },
-    });
+    // Get recent message history
+    const messagesTable = getTable('MESSAGES');
+    const recentMessages = await messagesTable
+      .select({
+        maxRecords: 20,
+        sort: [{ field: 'createdAt', direction: 'desc' }]
+      })
+      .all();
+
+    // Format conversation history
+    const conversationHistory = recentMessages
+      .reverse()
+      .map(record => ({
+        role: record.get('role') as 'user' | 'assistant',
+        content: record.get('content') as string
+      }));
 
     // Save user message
-    const messagesTable = getTable('MESSAGES');
     await messagesTable.create([{
       fields: {
         createdAt: new Date().toISOString(),
@@ -41,7 +42,19 @@ export async function POST(request: NextRequest) {
       }
     }]);
 
-    // Get copilot response by calling kinkong-copilot endpoint
+    // Create streaming response
+    const stream = new TransformStream();
+    const writer = stream.writable.getWriter();
+    
+    const response = new Response(stream.readable, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
+    });
+
+    // Get copilot response with conversation history
     const copilotResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/kinkong-copilot`, {
       method: 'POST',
       headers: {
@@ -49,7 +62,8 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         message,
-        context
+        context,
+        conversationHistory
       })
     });
 
@@ -74,11 +88,10 @@ export async function POST(request: NextRequest) {
     const chunks = data.response.match(/.{1,1000}/g) || [];
     for (const chunk of chunks) {
       await writer.write(customEncode(chunk));
-      // Add a small delay between chunks to simulate streaming
       await new Promise(resolve => setTimeout(resolve, 50));
     }
 
-    // Create thought record after sending response
+    // Create thought record
     try {
       await createThought({
         type: 'COPILOT_INTERACTION',
@@ -88,10 +101,8 @@ export async function POST(request: NextRequest) {
       });
     } catch (error) {
       console.error('Failed to create thought:', error);
-      // Don't throw - we don't want to fail the main request
     }
 
-    // Close the stream
     await writer.close();
     return response;
 
