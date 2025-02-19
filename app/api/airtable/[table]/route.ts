@@ -64,7 +64,7 @@ export async function GET(
     if (maxRecords) queryOptions.maxRecords = parseInt(maxRecords);
 
     // Fetch data from Airtable
-    const records = await base(table).select(queryOptions).all();
+    const records = await base.table(table).select(queryOptions).all();
 
     // Filter fields for public access
     const allowedFields = ALLOWED_TABLES[table as AllowedTable];
