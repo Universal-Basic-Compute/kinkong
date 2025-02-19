@@ -51,7 +51,7 @@ export interface Token {
 }
 
 export interface Signal {
-  timestamp: string;
+  createdAt: string;
   token: string;
   type: 'BUY' | 'SELL';
   timeframe: 'SCALP' | 'INTRADAY' | 'SWING' | 'POSITION';

@@ -503,7 +503,7 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
 
         # Create signal record with just the reasoning text
         signal_data = {
-            'timestamp': now.isoformat(),
+            'createdAt': now.isoformat(),
             'token': token_info['symbol'],
             'type': signal_type,
             'timeframe': timeframe,

@@ -112,7 +112,7 @@ def monitor_active_trades():
                 timeframe = trade['fields'].get('timeframe')  # Should be SCALP, INTRADAY, etc.
                 
                 # Skip if not due for check based on timeframe
-                last_check = datetime.fromisoformat(trade['fields'].get('lastUpdateTime', '').replace('Z', '+00:00'))
+                last_check = datetime.fromisoformat(trade['fields'].get('createdAt', '').replace('Z', '+00:00'))
                 check_interval = timeframe_check_intervals.get(timeframe, timedelta(minutes=15))
                 if datetime.now(timezone.utc) - last_check < check_interval:
                     print(f"Skipping {token} check - Not due yet for {timeframe} timeframe")

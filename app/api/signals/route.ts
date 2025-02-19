@@ -4,7 +4,7 @@ import { parseAndFormatDate } from '@/backend/src/utils/dates';
 import type { Record, FieldSet } from 'airtable';
 
 interface SignalRecord extends FieldSet {
-  timestamp: string;
+  createdAt: string;
   token: string;
   type: 'BUY' | 'SELL';
   timeframe: 'SCALP' | 'INTRADAY' | 'SWING' | 'POSITION';
@@ -42,7 +42,7 @@ export async function GET() {
 
       const signals = records.map((record: Record<SignalRecord>) => ({
         id: record.id,
-        timestamp: parseAndFormatDate(record.get('timestamp')),
+        createdAt: parseAndFormatDate(record.get('createdAt')),
         token: record.get('token') as string,
         type: record.get('type') as 'BUY' | 'SELL',
         timeframe: record.get('timeframe') as 'SCALP' | 'INTRADAY' | 'SWING' | 'POSITION' || 'INTRADAY', // Default to INTRADAY if missing
@@ -129,7 +129,7 @@ export async function POST(request: Request) {
           reason,
           url: url || '',
           wallet,
-          timestamp: parseAndFormatDate(new Date()),
+          createdAt: parseAndFormatDate(new Date()),
         },
       },
     ]);
