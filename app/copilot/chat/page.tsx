@@ -65,6 +65,25 @@ export default function CopilotChatPage() {
       setIsLoading(true);
       setError(null);
 
+      // Gather current page context
+      const context: CopilotContext = {
+        url: window.location.href,
+        pageContent: {
+          url: window.location.href,
+          pageContent: document.body.innerText
+        }
+      };
+
+      // Log context being sent
+      console.log('Sending context:', {
+        url: context.url,
+        contentLength: context.pageContent ? 
+          (typeof context.pageContent === 'string' ? 
+            context.pageContent.length : 
+            JSON.stringify(context.pageContent).length) 
+          : 0
+      });
+
       // Add user message
       const userMessage: Message = {
         role: 'user',
@@ -82,7 +101,7 @@ export default function CopilotChatPage() {
       };
       setMessages(prev => [...prev, assistantMessage]);
 
-      // Get streaming response
+      // Get streaming response with context
       const response = await askKinKongCopilot(input, context);
     
       // Update the assistant message with complete response
