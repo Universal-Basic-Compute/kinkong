@@ -1,9 +1,13 @@
 export async function askKinKongCopilot(message: string, context?: any) {
   try {
-    // Use provided context or get current page content
-    const fullContext = context || {
-      url: window.location.href,
-      pageContent: document.body.innerText
+    // Simplify the context structure to match what the API expects
+    const requestBody = {
+      message,
+      context: {
+        url: context?.url || window.location.href,
+        pageContent: context?.pageContent || document.body.innerText,
+        wallet: context?.wallet
+      }
     };
 
     const response = await fetch('/api/copilot', {
@@ -11,10 +15,7 @@ export async function askKinKongCopilot(message: string, context?: any) {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        message,
-        context: fullContext
-      })
+      body: JSON.stringify(requestBody)
     });
 
     if (!response.ok) {
