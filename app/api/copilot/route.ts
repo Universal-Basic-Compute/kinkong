@@ -20,93 +20,25 @@ interface MessageRecord extends FieldSet {
 
 interface CopilotRequest {
   message: string;
-  url?: string;
-  pageContent?: {
-    url: string;
-    pageContent: {
-      mainContent: string;
-    };
-  };
+  body: string;
 }
 
 export async function POST(request: NextRequest) {
-  // Rate limiting
-  try {
-    await limiter.check(10, request.ip || 'anonymous'); // 10 requests per minute per IP
-  } catch {
-    return new NextResponse(
-      JSON.stringify({ error: 'Too many requests' }),
-      { status: 429 }
-    );
-  }
-  const encoder = new TextEncoder();
-  const customEncode = (str: string) => encoder.encode(str + '\n');
-
   try {
     const body = await request.json() as CopilotRequest;
-    const { message, url, pageContent } = body;
+    const { message } = body;
 
-    // Log what we received
+    // Simple logging
     console.log('📝 Copilot Request:', {
       message: message?.slice(0, 100) + '...',
-      hasContext: !!pageContent?.pageContent?.mainContent,
-      url: url,
-      contentLength: pageContent?.pageContent?.mainContent?.length || 0
+      bodyLength: body.body?.length || 0
     });
 
-    // Create streaming response
-    const stream = new TransformStream();
-    const writer = stream.writable.getWriter();
+    // Simple system prompt
+    const systemPrompt = `${COPILOT_PROMPT}
 
-    // Set up response with proper headers
-    const response = new Response(stream.readable, {
-      headers: {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-      },
-    });
-
-    // Start background processing
-    (async () => {
-      try {
-        // Get recent message history with timeout
-        const messagesTable = getTable('MESSAGES');
-        const recentMessages = await Promise.race([
-          messagesTable.select({
-            maxRecords: 20,
-            sort: [{ field: 'createdAt', direction: 'desc' }]
-          }).all() as Promise<Array<Record<MessageRecord>>>,
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Message history timeout')), 5000)
-          )
-        ]) as Array<Record<MessageRecord>>;
-
-        // Format conversation history
-        const conversationHistory = recentMessages
-          .reverse()
-          .map(record => ({
-            role: record.get('role') as 'user' | 'assistant',
-            content: record.get('content') as string
-          }));
-
-        // Save user message
-        await messagesTable.create([{
-          fields: {
-            createdAt: new Date().toISOString().slice(0, 19).replace('T', ' '),
-            role: 'user',
-            content: message,
-            wallet: context?.wallet || '',
-            context: context ? JSON.stringify(context) : ''
-          }
-        }]);
-
-        // Format system prompt with context
-        const systemPrompt = `${COPILOT_PROMPT}
-
-Current Context:
-URL: ${url || 'Not provided'}
-${pageContent?.pageContent?.mainContent ? `\nPage Content:\n${pageContent.pageContent.mainContent}` : 'No page content available'}`;
+Current Page Content:
+${body.body || 'No content available'}`;
 
         // Log formatted prompt
         console.log('📋 System Prompt:', {

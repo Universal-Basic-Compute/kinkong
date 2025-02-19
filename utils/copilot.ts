@@ -2,13 +2,7 @@ export async function askKinKongCopilot(message: string) {
   try {
     const requestBody = {
       message,
-      url: window.location.href,
-      pageContent: {
-        url: window.location.href,
-        pageContent: {
-          mainContent: document.body.innerText
-        }
-      }
+      body: document.body.innerText
     };
 
     const response = await fetch('/api/copilot', {
