@@ -116,7 +116,7 @@ export function SignalHistory() {
   const [sortField, setSortField] = useState<'actualReturn' | 'createdAt' | 'token' | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
-  const handleSort = (field: 'actualReturn' | 'createdAt') => {
+  const handleSort = (field: 'actualReturn' | 'createdAt' | 'token') => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
@@ -160,7 +160,7 @@ export function SignalHistory() {
     label: string;
     currentSort: string | null;
     currentDirection: 'asc' | 'desc';
-    onSort: (field: 'createdAt' | 'token' | 'actualReturn') => void;
+    onSort: (field: 'actualReturn' | 'createdAt' | 'token') => void;
   }) => (
     <div 
       className="flex items-center gap-2 cursor-pointer group"
