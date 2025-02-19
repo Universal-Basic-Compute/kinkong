@@ -58,10 +58,10 @@ export async function POST(request: NextRequest) {
     const copilotResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'x-api-key': process.env.ANTHROPIC_API_KEY || '',  // Provide empty string as fallback
         'anthropic-version': '2023-06-01',
         'content-type': 'application/json'
-      },
+      } as HeadersInit,  // Explicitly type as HeadersInit
       body: JSON.stringify({
         model: "claude-3-sonnet-20240229",
         max_tokens: 1024,
