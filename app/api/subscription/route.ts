@@ -41,7 +41,6 @@ export async function POST(request: NextRequest) {
     // Verify transaction details
     const postBalances = tx.meta?.postBalances || [];
     const preBalances = tx.meta?.preBalances || [];
-    const accountKeys = tx.transaction.message.accountKeys;
 
     // Find receiver index (your subscription wallet)
     const accountKeys = 'getAccountKeys' in tx.transaction.message 
