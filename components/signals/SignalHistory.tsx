@@ -111,6 +111,7 @@ export function SignalHistory() {
   const [signals, setSignals] = useState<Signal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [typeFilter, setTypeFilter] = useState<'ALL' | 'BUY' | 'SELL'>('ALL');
 
   const fetchSignals = async () => {
     try {
@@ -174,7 +175,22 @@ export function SignalHistory() {
             <tr className="border-b border-gold/20">
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Time</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Token</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Type</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">
+              <div className="flex items-center gap-2">
+                Type
+                <div className="relative">
+                  <select
+                    value={typeFilter}
+                    onChange={(e) => setTypeFilter(e.target.value as 'ALL' | 'BUY' | 'SELL')}
+                    className="bg-black/50 border border-gold/20 rounded px-2 py-1 text-xs text-gray-300 cursor-pointer hover:border-gold focus:outline-none focus:border-gold"
+                  >
+                    <option value="ALL">All</option>
+                    <option value="BUY">Buy</option>
+                    <option value="SELL">Sell</option>
+                  </select>
+                </div>
+              </div>
+            </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Timeframe</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Prices</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Confidence</th>
@@ -184,7 +200,9 @@ export function SignalHistory() {
           </tr>
         </thead>
         <tbody className="divide-y divide-gold/10">
-          {signals.map((signal) => (
+          {signals
+            .filter(signal => typeFilter === 'ALL' || signal.type === typeFilter)
+            .map((signal) => (
             <tr key={signal.id} className="hover:bg-gold/5">
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                 {getRelativeTime(signal.createdAt)}
