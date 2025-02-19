@@ -13,7 +13,7 @@ export interface RateLimitResult {
 }
 
 export function rateLimit(options: RateLimitOptions = {}) {
-  const tokenCache = new LRUCache({
+  const tokenCache = new LRUCache<string, number[]>({
     max: options.uniqueTokenPerInterval || 500,
     ttl: options.interval || 60000,
   });
@@ -21,10 +21,12 @@ export function rateLimit(options: RateLimitOptions = {}) {
   return {
     check: (limit: number, token: string): Promise<RateLimitResult> =>
       new Promise((resolve, reject) => {
-        const tokenCount = (tokenCache.get(token) as number[]) || [0];
+        const tokenCount = tokenCache.get(token) || [0];
         const currentUsage = tokenCount[0];
         const currentTime = Date.now();
-        const ttl = tokenCache.getTtl(token) || 0;
+        
+        // Get TTL by checking remaining time
+        const ttl = Math.max(0, (tokenCache.getRemainingTTL(token) || 0));
 
         if (currentUsage === 0) {
           tokenCache.set(token, [1]);
@@ -32,7 +34,7 @@ export function rateLimit(options: RateLimitOptions = {}) {
             success: true,
             limit,
             remaining: limit - 1,
-            reset: ttl,
+            reset: currentTime + ttl
           });
         }
 
@@ -42,7 +44,7 @@ export function rateLimit(options: RateLimitOptions = {}) {
             success: true,
             limit,
             remaining: limit - currentUsage - 1,
-            reset: ttl,
+            reset: currentTime + ttl
           });
         }
 
@@ -50,7 +52,7 @@ export function rateLimit(options: RateLimitOptions = {}) {
           success: false,
           limit,
           remaining: 0,
-          reset: ttl,
+          reset: currentTime + ttl
         });
       }),
   };
