@@ -7,8 +7,8 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: '/api/airtable/:table',
-        destination: '/api/airtable/:table/',
+        source: '/api/airtable/:table*',
+        destination: '/api/airtable/:table*',
       },
     ];
   },
