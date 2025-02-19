@@ -67,7 +67,9 @@ export default function CopilotChatPage() {
       // Log context being sent
       console.log('Sending context:', {
         url: context.url,
-        contentLength: context.pageContent?.length || 0,
+        contentLength: typeof context.pageContent === 'string' 
+          ? context.pageContent.length 
+          : context.pageContent?.pageContent?.length || 0,
         wallet: context.wallet
       });
 
