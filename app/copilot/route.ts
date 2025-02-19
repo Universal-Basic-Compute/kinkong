@@ -2,6 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifySubscription } from '@/utils/subscription';
 import { askKinKongCopilot } from '@/utils/kinkong-copilot';
 
+export async function GET() {
+  return NextResponse.json(
+    { message: 'KinKong Copilot API endpoint' },
+    { 
+      status: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+      }
+    }
+  );
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Parse request
@@ -48,13 +62,13 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Add OPTIONS handler for CORS
+// Update OPTIONS handler to include GET method
 export async function OPTIONS() {
   return new NextResponse(null, {
     status: 204,
     headers: {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization'
     }
   });
