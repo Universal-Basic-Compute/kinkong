@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Anthropic } from '@anthropic-ai/sdk';
+import Anthropic from '@anthropic-ai/sdk';
 
 // Initialize Anthropic client with API key
 const client = new Anthropic({
@@ -53,17 +53,11 @@ Current Context:
 `;
     }
 
-    // Get response from Claude
-    const response = await client.messages.create({
+    // Get response from Claude using the correct method
+    const response = await client.complete({
       model: "claude-3-5-sonnet-20241022",
-      max_tokens: 4096,
-      messages: [{
-        role: 'user',
-        content: [{
-          type: 'text',
-          text: `${SYSTEM_PROMPT}\n\n${contextString}\nUser Question: ${message}`
-        }]
-      }]
+      max_tokens_to_sample: 4096,
+      prompt: `\n\nHuman: ${SYSTEM_PROMPT}\n\n${contextString}\nUser Question: ${message}\n\nAssistant:`,
     });
 
     // Log interaction for monitoring
@@ -71,25 +65,23 @@ Current Context:
       timestamp: new Date().toISOString(),
       message,
       contextProvided: !!context,
-      responseLength: response.content.length
+      responseLength: response.completion.length
     });
-
-    const responseText = response.content[0].text;
 
     // Create thought record in Airtable
     await createThought({
       type: 'COPILOT_INTERACTION',
       content: message,
-      response: responseText,
+      response: response.completion,
       context: context || {}
     });
 
     // Return response
     return NextResponse.json({
-      response: responseText,
+      response: response.completion,
       metadata: {
-        model: response.model,
-        role: response.role
+        model: "claude-3-5-sonnet-20241022",
+        prompt_tokens: response.stop_reason === 'max_tokens' ? 4096 : undefined
       }
     });
 

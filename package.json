@@ -13,7 +13,7 @@
     "snapshot": "ts-node scripts/take-snapshot.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.8.0",
+    "@anthropic-ai/sdk": "^0.10.2",
     "@heroicons/react": "^2.2.0",
     "@solana/spl-token": "0.3.11",
     "@solana/wallet-adapter-base": "0.9.23",
