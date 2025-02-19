@@ -72,21 +72,15 @@ Current Context:
 URL: ${context?.url || 'Not provided'}
 Page Content: ${context?.pageContent || 'Not provided'}`,
         messages: [
-          // Include conversation history with correct format
+          // Include conversation history
           ...conversationHistory.map(msg => ({
             role: msg.role === 'user' ? 'user' : 'assistant',
-            content: [{
-              type: "text",
-              text: msg.content
-            }]
+            content: msg.content
           })),
           // Add the current message
           {
             role: 'user',
-            content: [{
-              type: "text",
-              text: message
-            }]
+            content: message
           }
         ]
       })
