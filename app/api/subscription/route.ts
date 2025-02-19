@@ -52,8 +52,12 @@ export async function POST(request: NextRequest) {
       ? tx.transaction.message.getAccountKeys()
       : tx.transaction.message.staticAccountKeys;
       
+    // Create PublicKey from strategy wallet address
+    const strategyWallet = new PublicKey(process.env.STRATEGY_WALLET!);
+    
+    // Compare PublicKeys using base58 strings
     const receiverIndex = accountKeys.findIndex(
-      key => key.equals(new PublicKey(process.env.STRATEGY_WALLET!))
+      key => key.toBase58() === strategyWallet.toBase58()
     );
 
     if (receiverIndex === -1) {
