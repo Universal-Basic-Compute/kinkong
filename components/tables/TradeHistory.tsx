@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 
 interface Trade {
   id: string;
-  timestamp: string;
+  createdAt: string;
   token: string;
   type: 'BUY' | 'SELL';
   amount: number;
@@ -61,7 +61,7 @@ export function TradeHistory({ userOnly = false }: TradeHistoryProps) {
           {trades.map((trade) => (
             <tr key={trade.id} className="hover:bg-gold/5">
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                {new Date(trade.timestamp).toLocaleString()}
+                {new Date(trade.createdAt).toLocaleString()}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{trade.token}</td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">
