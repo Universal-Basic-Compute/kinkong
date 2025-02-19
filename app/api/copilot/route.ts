@@ -65,7 +65,11 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         model: "claude-3-sonnet-20240229",
         max_tokens: 1024,
-        system: COPILOT_PROMPT,
+        system: `${COPILOT_PROMPT}
+
+Current Context:
+URL: ${context?.url || 'Not provided'}
+Page Content: ${context?.pageContent || 'Not provided'}`,
         messages: [
           // Include conversation history
           ...conversationHistory.map(msg => ({
