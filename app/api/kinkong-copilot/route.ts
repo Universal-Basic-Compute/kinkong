@@ -59,7 +59,10 @@ Current Context:
       max_tokens: 4096,
       messages: [{
         role: 'user',
-        content: `${SYSTEM_PROMPT}\n\n${contextString}\nUser Question: ${message}`
+        content: [{
+          type: 'text',
+          text: `${SYSTEM_PROMPT}\n\n${contextString}\nUser Question: ${message}`
+        }]
       }]
     });
 
