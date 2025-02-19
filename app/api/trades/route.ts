@@ -5,7 +5,7 @@ export async function GET() {
   try {
     const tradesTable = getTable('TRADES');
     const trades = await tradesTable.select({
-      sort: [{ field: 'timestamp', direction: 'desc' }],
+      sort: [{ field: 'createdAt', direction: 'desc' }],
       maxRecords: 50 // Limit to most recent 50 trades
     }).all();
 

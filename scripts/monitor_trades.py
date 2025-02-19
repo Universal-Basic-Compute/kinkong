@@ -241,12 +241,13 @@ async def process_trade_batches():
                     try:
                         success = execute_trade_with_phantom(trade['id'])
                         if success:
-                            update_signal_status(
-                                trade['id'],
-                                'ACTIVE',
-                                'Trade executed in batch',
-                                trade['fields'].get('entryPrice')
-                            )
+                            trades_table.update(trade_id, {
+                                'status': new_status,
+                                'exitReason': reason,
+                                'exitPrice': exit_price,
+                                'lastUpdateTime': datetime.now(timezone.utc).isoformat(),
+                                'actualReturn': calculate_pnl(trade_id, exit_price)
+                            })
                     except Exception as e:
                         print(f"Failed to execute entry trade: {e}")
                         entry_queue.append(trade)  # Put back in queue
