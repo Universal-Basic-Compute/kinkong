@@ -1,93 +1,94 @@
 {
-  "timestamp": "2025-02-19T00:08:27.423384",
+  "timestamp": "2025-02-19T16:58:30.795650",
   "token": "ARC",
   "analyses": {
     "SCALP": {
       "timeframe": "SCALP",
-      "signal": "BUY",
+      "signal": "HOLD",
       "confidence": 65,
-      "reasoning": "Price showing bullish divergence on 15m with increasing buy volume. EMA20 crossing above EMA50 suggesting short-term momentum shift. Multiple green candles forming support.",
+      "reasoning": "Price is showing consolidation after recent upward movement. EMA20 and EMA50 are showing bullish cross but momentum is slowing. Volume profile is decreasing indicating potential exhaustion of recent move.",
       "key_levels": {
         "support": [
-          0.1466,
-          0.15
+          0.175,
+          0.17
         ],
         "resistance": [
-          0.1712,
-          0.165
+          0.19,
+          0.196
+        ]
+      },
+      "risk_reward_ratio": 1.5,
+      "reassess_conditions": null
+    },
+    "INTRADAY": {
+      "timeframe": "INTRADAY",
+      "signal": "BUY",
+      "confidence": 75,
+      "reasoning": "Strong upward momentum with price above both EMAs. Recent volume spike supports bullish move. Price showing higher lows and higher highs pattern.",
+      "key_levels": {
+        "support": [
+          0.165,
+          0.145
+        ],
+        "resistance": [
+          0.19,
+          0.196
         ]
       },
       "risk_reward_ratio": 2.1,
       "reassess_conditions": null
     },
-    "INTRADAY": {
-      "timeframe": "INTRADAY",
-      "signal": "SELL",
-      "confidence": 80,
-      "reasoning": "Strong bearish trend on 1H chart with both EMAs pointing down. Significant volume on selling pressure. Price making lower lows and lower highs consistently.",
-      "key_levels": {
-        "support": [
-          0.1466,
-          0.14
-        ],
-        "resistance": [
-          0.17,
-          0.18
-        ]
-      },
-      "risk_reward_ratio": 3.5,
-      "reassess_conditions": null
-    },
     "SWING": {
       "timeframe": "SWING",
       "signal": "SELL",
-      "confidence": 90,
-      "reasoning": "Clear bearish trend on 4H chart with sharp decline from 0.40 to 0.15. Death cross formation with EMA20 below EMA50. High selling volume indicating strong bearish momentum.",
+      "confidence": 80,
+      "reasoning": "Clear downtrend on 7D chart with both EMAs sloping downward. Price making lower lows and lower highs. Recent bounce might be temporary relief rally.",
       "key_levels": {
         "support": [
-          0.14,
-          0.12
+          0.145,
+          0.135
         ],
         "resistance": [
-          0.2,
-          0.25
+          0.25,
+          0.3
         ]
       },
-      "risk_reward_ratio": 4.2,
+      "risk_reward_ratio": 3.2,
       "reassess_conditions": null
     },
     "POSITION": {
       "timeframe": "POSITION",
       "signal": "SELL",
-      "confidence": 95,
-      "reasoning": "Massive bearish trend on daily chart showing -64.21% decline. Both EMAs trending down strongly with no signs of reversal. Volume profile supports continued downward movement.",
+      "confidence": 85,
+      "reasoning": "Strong bearish trend on 30D timeframe. Significant price depreciation from ATH. EMAs in bearish alignment with consistent downward slope.",
       "key_levels": {
         "support": [
-          0.1371,
+          0.137,
           0.12
         ],
         "resistance": [
-          0.2939,
-          0.35
+          0.4,
+          0.5
         ]
       },
-      "risk_reward_ratio": 5.0,
+      "risk_reward_ratio": 4.0,
       "reassess_conditions": null
     },
     "overall": {
       "primary_trend": "BEARISH",
-      "timeframe_alignment": "MIXED",
-      "best_timeframe": "POSITION",
+      "timeframe_alignment": "CONFLICTING",
+      "best_timeframe": "INTRADAY",
       "key_observations": [
-        "Strong bearish trend across higher timeframes",
-        "Potential short-term bounce on scalp timeframe",
-        "High volume supporting downward movement",
-        "Significant price depreciation of -64.21% on monthly chart"
+        "Long-term trend remains bearish",
+        "Short-term bullish momentum emerging",
+        "Volume increasing on recent bounce",
+        "Price at critical resistance levels",
+        "Timeframe conflict suggests careful position sizing"
       ],
       "recommended_action": {
-        "signal": "SELL",
-        "timeframe": "POSITION",
-        "reasoning": "The overwhelming bearish pressure across higher timeframes suggests maintaining short positions is optimal. While scalp timeframe shows potential bounce, the larger trend remains strongly bearish with significant momentum."
+        "signal": "SCALP_LONG",
+        "timeframe": "INTRADAY",
+        "reasoning": "While longer timeframes show bearish structure, immediate price action suggests opportunity for short-term long positions with tight stops. Focus on intraday moves with strict risk management."
       }
     }
   }

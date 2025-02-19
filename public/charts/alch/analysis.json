@@ -1,93 +1,93 @@
 {
-  "timestamp": "2025-02-19T00:07:10.363575",
+  "timestamp": "2025-02-19T16:57:24.513283",
   "token": "ALCH",
   "analyses": {
     "SCALP": {
       "timeframe": "SCALP",
       "signal": "BUY",
-      "confidence": 75,
-      "reasoning": "Strong bullish momentum on 15m chart with EMA20 crossing above EMA50. Multiple green candles showing buying pressure with increasing volume support.",
+      "confidence": 65,
+      "reasoning": "Price showing bullish momentum with higher lows and increasing volume. EMA20 crossing above EMA50 indicating short-term strength. Recent green candles suggest buying pressure.",
       "key_levels": {
         "support": [
-          0.0174,
-          0.017
+          0.0175,
+          0.018
         ],
         "resistance": [
-          0.0183,
-          0.0185
+          0.0187,
+          0.0198
+        ]
+      },
+      "risk_reward_ratio": 2.1,
+      "reassess_conditions": null
+    },
+    "INTRADAY": {
+      "timeframe": "INTRADAY",
+      "signal": "BUY",
+      "confidence": 75,
+      "reasoning": "Strong uptrend with clear higher lows and higher highs. Both EMAs trending upward with good volume support. Price above both EMAs showing bullish control.",
+      "key_levels": {
+        "support": [
+          0.016,
+          0.0175
+        ],
+        "resistance": [
+          0.0186,
+          0.0198
         ]
       },
       "risk_reward_ratio": 2.5,
       "reassess_conditions": null
     },
-    "INTRADAY": {
-      "timeframe": "INTRADAY",
+    "SWING": {
+      "timeframe": "SWING",
       "signal": "HOLD",
-      "confidence": 60,
-      "reasoning": "Price consolidating between EMAs with mixed signals. Recent bounce from support but showing some resistance at EMA20.",
+      "confidence": 55,
+      "reasoning": "Price showing potential reversal from downtrend with recent higher lows, but EMAs still bearish. Needs confirmation of trend change.",
       "key_levels": {
         "support": [
-          0.0165,
-          0.016
+          0.016,
+          0.0175
         ],
         "resistance": [
-          0.018,
-          0.0185
+          0.0266,
+          0.023
         ]
       },
       "risk_reward_ratio": 1.8,
       "reassess_conditions": null
     },
-    "SWING": {
-      "timeframe": "SWING",
-      "signal": "SELL",
-      "confidence": 85,
-      "reasoning": "Strong downtrend on 4H chart with both EMAs pointing down. Price well below both moving averages with -25.56% weekly performance.",
-      "key_levels": {
-        "support": [
-          0.016,
-          0.015
-        ],
-        "resistance": [
-          0.02,
-          0.022
-        ]
-      },
-      "risk_reward_ratio": 3.0,
-      "reassess_conditions": null
-    },
     "POSITION": {
       "timeframe": "POSITION",
       "signal": "SELL",
-      "confidence": 90,
-      "reasoning": "Severe bearish trend on daily chart with -79.01% monthly decline. Both EMAs trending down sharply with no signs of reversal.",
+      "confidence": 80,
+      "reasoning": "Strong downtrend on daily chart with both EMAs declining sharply. Significant price depreciation from ATH with consistent selling pressure.",
       "key_levels": {
         "support": [
           0.016,
-          0.014
+          0.0186
         ],
         "resistance": [
-          0.025,
-          0.03
+          0.0371,
+          0.1232
         ]
       },
-      "risk_reward_ratio": 4.0,
+      "risk_reward_ratio": 3.2,
       "reassess_conditions": null
     },
     "overall": {
       "primary_trend": "BEARISH",
       "timeframe_alignment": "MIXED",
-      "best_timeframe": "SCALP",
+      "best_timeframe": "INTRADAY",
       "key_observations": [
-        "Long-term trend is strongly bearish",
-        "Short-term bounce potential on lower timeframes",
-        "Volume profile showing accumulation at current levels",
-        "Significant resistance overhead from longer timeframes"
+        "Long-term downtrend still intact",
+        "Short-term bullish reversal potential",
+        "Increasing volume on recent upward moves",
+        "Price consolidating above key support"
       ],
       "recommended_action": {
-        "signal": "SCALP_LONG",
-        "timeframe": "SCALP",
-        "reasoning": "While longer timeframes are bearish, scalp opportunities exist for quick profits on the current bounce. Tight stops required due to overall bearish trend."
+        "signal": "BUY",
+        "timeframe": "INTRADAY",
+        "reasoning": "While long-term trend remains bearish, strong short-term bullish momentum and increasing volume suggest profitable intraday long opportunities with tight risk management"
       }
     }
   }

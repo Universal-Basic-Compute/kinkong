@@ -1,48 +1,48 @@
 {
-  "timestamp": "2025-02-19T00:10:09.071251",
+  "timestamp": "2025-02-19T17:00:19.043450",
   "token": "GOAT",
   "analyses": {
     "SCALP": {
       "timeframe": "SCALP",
-      "signal": "BUY",
+      "signal": "SELL",
       "confidence": 75,
-      "reasoning": "Price showing bullish momentum on 15m chart with higher lows and higher highs. EMA20 crossing above EMA50 with increasing volume support.",
+      "reasoning": "Price showing clear downward momentum on 15m chart with EMA20 crossing below EMA50. Multiple red candles forming with decreasing volume suggests continued downward pressure.",
       "key_levels": {
         "support": [
-          0.0948,
-          0.0935
+          0.0951,
+          0.0945
         ],
         "resistance": [
-          0.0972,
-          0.098
+          0.0973,
+          0.0982
         ]
       },
-      "risk_reward_ratio": 2.5,
+      "risk_reward_ratio": 2.1,
       "reassess_conditions": null
     },
     "INTRADAY": {
       "timeframe": "INTRADAY",
       "signal": "HOLD",
       "confidence": 60,
-      "reasoning": "Price attempting to stabilize after significant decline. EMAs showing bearish crossover but price forming potential bottom pattern.",
+      "reasoning": "Price consolidating between EMAs with mixed signals. While overall trend is slightly bullish on 1H timeframe, momentum appears to be weakening with declining volume.",
       "key_levels": {
         "support": [
           0.0899,
           0.092
         ],
         "resistance": [
-          0.1008,
-          0.1
+          0.0999,
+          0.102
         ]
       },
-      "risk_reward_ratio": 1.8,
+      "risk_reward_ratio": 1.5,
       "reassess_conditions": null
     },
     "SWING": {
       "timeframe": "SWING",
       "signal": "SELL",
       "confidence": 85,
-      "reasoning": "Strong downtrend on 4H chart with consistently lower highs and lower lows. EMAs in bearish alignment with significant volume selling pressure.",
+      "reasoning": "Strong bearish trend on 4H chart with price below both EMAs. -17.83% decline over 7 days with consistent selling pressure and increasing volume on down moves.",
       "key_levels": {
         "support": [
           0.0899,
@@ -60,35 +60,34 @@
       "timeframe": "POSITION",
       "signal": "SELL",
       "confidence": 90,
-      "reasoning": "Clear bearish trend on daily chart with price down 62.92% from ATH. EMAs showing strong bearish momentum with no signs of reversal.",
+      "reasoning": "Clear bearish market structure on daily chart with -62.86% decline. Price well below declining EMAs with no signs of reversal. High volume selling indicates strong bearish conviction.",
       "key_levels": {
         "support": [
           0.0899,
           0.08
         ],
         "resistance": [
-          0.4977,
-          0.25
+          0.1588,
+          0.2
         ]
       },
-      "risk_reward_ratio": 4.0,
+      "risk_reward_ratio": 4.5,
       "reassess_conditions": null
     },
     "overall": {
       "primary_trend": "BEARISH",
-      "timeframe_alignment": "MIXED",
-      "best_timeframe": "SCALP",
+      "timeframe_alignment": "ALIGNED",
+      "best_timeframe": "POSITION",
       "key_observations": [
-        "Strong bearish trend on higher timeframes",
-        "Potential short-term bounce opportunity on lower timeframes",
-        "High volume selling pressure on swing timeframe",
-        "Significant price depreciation from ATH",
-        "Mixed signals between short and long timeframes"
+        "Strong bearish alignment across multiple timeframes",
+        "High volume on downward moves indicates seller conviction",
+        "Price consistently below key EMAs on all timeframes",
+        "No clear signs of trend reversal or significant support"
       ],
       "recommended_action": {
-        "signal": "SCALP_LONG",
-        "timeframe": "SCALP",
-        "reasoning": "While longer timeframes remain bearish, scalp opportunities exist for quick profits on bounces. Tight stops required due to overall bearish market structure."
+        "signal": "SELL",
+        "timeframe": "POSITION",
+        "reasoning": "All timeframes show strong bearish momentum with aligned EMAs and price action. Position trades offer best risk/reward with clear trend direction."
       }
     }
   }

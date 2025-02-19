@@ -59,7 +59,7 @@ export default function CopilotChatPage() {
       const userMessage: Message = {
         role: 'user',
         content: input,
-        timestamp: new Date().toISOString()
+        createdAt: new Date().toISOString()
       };
       setMessages(prev => [...prev, userMessage]);
       setInput('');

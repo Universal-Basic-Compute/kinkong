@@ -1,93 +1,93 @@
 {
-  "timestamp": "2025-02-19T00:07:59.825064",
+  "timestamp": "2025-02-19T16:58:07.899580",
   "token": "USDT",
   "analyses": {
     "SCALP": {
       "timeframe": "SCALP",
-      "signal": "SELL",
-      "confidence": 75,
-      "reasoning": "Price showing consistent bearish momentum with declining EMAs. Multiple red candles forming with lower lows and lower highs. Volume declining indicating potential continuation of downward movement.",
+      "signal": "HOLD",
+      "confidence": 65,
+      "reasoning": "Price is showing consolidation after recent upward movement. EMA20 and EMA50 are in a slight bullish cross but momentum is slowing. Volume is relatively stable.",
       "key_levels": {
         "support": [
-          0.9992,
-          0.9988
+          0.9996,
+          0.9995
         ],
         "resistance": [
-          0.9997,
-          1.0
+          1.0,
+          1.0002
         ]
       },
-      "risk_reward_ratio": 2.5,
+      "risk_reward_ratio": 1.5,
       "reassess_conditions": null
     },
     "INTRADAY": {
       "timeframe": "INTRADAY",
-      "signal": "SELL",
-      "confidence": 85,
-      "reasoning": "Strong bearish trend on 24H timeframe with price below both EMA20 and EMA50. Clear downward channel formation with consistent selling pressure and increasing bearish momentum.",
+      "signal": "BUY",
+      "confidence": 75,
+      "reasoning": "Upward trend forming with higher lows and higher highs. EMA crossover occurred with good volume support. Price above both EMAs indicating bullish momentum.",
       "key_levels": {
         "support": [
-          0.999,
-          0.9985
+          0.9994,
+          0.9992
         ],
         "resistance": [
           1.0,
           1.0005
         ]
       },
-      "risk_reward_ratio": 3.0,
+      "risk_reward_ratio": 2.1,
       "reassess_conditions": null
     },
     "SWING": {
       "timeframe": "SWING",
-      "signal": "HOLD",
-      "confidence": 60,
-      "reasoning": "Price recently broke below key support level at 1.0000. EMAs starting to cross bearishly but showing some consolidation. Volume profile relatively stable indicating potential ranging behavior.",
+      "signal": "SELL",
+      "confidence": 70,
+      "reasoning": "Downward trend visible over 7-day period. EMAs showing bearish cross with declining volume. Recent recovery attempt lacks conviction.",
       "key_levels": {
         "support": [
-          0.9985,
-          0.9975
+          0.9975,
+          0.996
         ],
         "resistance": [
-          1.0,
-          1.0007
+          1.0007,
+          1.0015
         ]
       },
-      "risk_reward_ratio": 1.5,
+      "risk_reward_ratio": 1.8,
       "reassess_conditions": null
     },
     "POSITION": {
       "timeframe": "POSITION",
       "signal": "HOLD",
-      "confidence": 70,
-      "reasoning": "Long-term trend remains neutral with price maintaining stability near the 1.0000 level. EMAs showing minimal deviation indicating strong price stability over 30D period.",
+      "confidence": 80,
+      "reasoning": "Long-term stability around $1.00 mark. Very low volatility with tight ranging. EMAs flat indicating neutral trend.",
       "key_levels": {
         "support": [
-          0.995,
-          0.99
+          0.9935,
+          0.992
         ],
         "resistance": [
-          1.005,
-          1.01
+          1.0057,
+          1.0075
         ]
       },
-      "risk_reward_ratio": 1.0,
+      "risk_reward_ratio": 1.2,
       "reassess_conditions": null
     },
     "overall": {
-      "primary_trend": "BEARISH",
+      "primary_trend": "NEUTRAL",
       "timeframe_alignment": "MIXED",
       "best_timeframe": "INTRADAY",
       "key_observations": [
-        "Short-term bearish momentum is strong",
-        "Price consistently trading below key 1.0000 level",
-        "Volume profile showing distribution pattern",
-        "Long-term stability remains intact despite short-term weakness"
+        "Strong price stability around $1.00 peg",
+        "Significant liquidity depth",
+        "Mixed signals across timeframes",
+        "Short-term bullish momentum vs medium-term bearish pressure"
       ],
       "recommended_action": {
-        "signal": "SELL",
+        "signal": "BUY",
         "timeframe": "INTRADAY",
-        "reasoning": "Strong bearish momentum on shorter timeframes with clear technical breakdown below 1.0000 support level. Best risk-reward ratio for short-term trades while maintaining awareness of long-term stability."
+        "reasoning": "Best risk-reward ratio with clear support levels and developing upward momentum on intraday chart. Position sizing should be conservative due to mixed signals on other timeframes."
       }
     }
   }

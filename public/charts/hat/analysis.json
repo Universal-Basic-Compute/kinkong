@@ -1,77 +1,77 @@
 {
-  "timestamp": "2025-02-19T00:08:53.094723",
+  "timestamp": "2025-02-19T16:59:12.889893",
   "token": "HAT",
   "analyses": {
     "SCALP": {
       "timeframe": "SCALP",
-      "signal": "HOLD",
-      "confidence": 65,
-      "reasoning": "Price showing slight consolidation after recent drop. EMA20 and EMA50 both declining but momentum slowing. Volume profile decreasing suggesting exhaustion of selling pressure.",
+      "signal": "SELL",
+      "confidence": 75,
+      "reasoning": "Price showing consistent bearish momentum with declining EMA20/50 crossover. Multiple red candles forming with increasing selling volume.",
       "key_levels": {
         "support": [
-          0.0078,
+          0.0081,
           0.008
         ],
         "resistance": [
-          0.0084,
-          0.0086
-        ]
-      },
-      "risk_reward_ratio": 1.5,
-      "reassess_conditions": null
-    },
-    "INTRADAY": {
-      "timeframe": "INTRADAY",
-      "signal": "SELL",
-      "confidence": 80,
-      "reasoning": "Strong bearish trend with consistent lower highs and lower lows. EMA crossover bearish with increasing downward momentum. Volume spikes on downward moves indicating selling pressure.",
-      "key_levels": {
-        "support": [
-          0.0078,
-          0.008
-        ],
-        "resistance": [
-          0.009,
-          0.0095
-        ]
-      },
-      "risk_reward_ratio": 2.0,
-      "reassess_conditions": null
-    },
-    "SWING": {
-      "timeframe": "SWING",
-      "signal": "SELL",
-      "confidence": 85,
-      "reasoning": "Clear bearish trend over 7-day period with sharp decline from 0.0162 to 0.0082. EMAs showing strong bearish crossover and widening spread. No signs of trend reversal.",
-      "key_levels": {
-        "support": [
-          0.0078,
-          0.0085
-        ],
-        "resistance": [
-          0.01,
-          0.012
+          0.0085,
+          0.0088
         ]
       },
       "risk_reward_ratio": 2.5,
       "reassess_conditions": null
     },
-    "POSITION": {
-      "timeframe": "POSITION",
+    "INTRADAY": {
+      "timeframe": "INTRADAY",
       "signal": "SELL",
-      "confidence": 90,
-      "reasoning": "Severe downtrend on 30D chart with -86.37% decline. Both EMAs pointing sharply downward with no signs of support or reversal. Significant bearish market structure.",
+      "confidence": 85,
+      "reasoning": "Clear downtrend with lower highs and lower lows. EMA20 crossing below EMA50 indicating strong bearish momentum. High volume selloff visible.",
       "key_levels": {
         "support": [
           0.0078,
-          0.0082
+          0.0076
         ],
         "resistance": [
-          0.015,
-          0.02
+          0.0092,
+          0.0095
         ]
       },
       "risk_reward_ratio": 3.0,
+      "reassess_conditions": null
+    },
+    "SWING": {
+      "timeframe": "SWING",
+      "signal": "SELL",
+      "confidence": 90,
+      "reasoning": "Significant downtrend over 7-day period with -32.40% decline. EMAs showing strong bearish divergence with no signs of reversal.",
+      "key_levels": {
+        "support": [
+          0.0078,
+          0.0075
+        ],
+        "resistance": [
+          0.0162,
+          0.014
+        ]
+      },
+      "risk_reward_ratio": 4.0,
+      "reassess_conditions": null
+    },
+    "POSITION": {
+      "timeframe": "POSITION",
+      "signal": "SELL",
+      "confidence": 95,
+      "reasoning": "Massive -84.52% decline over 30 days. Strong bearish trend with consistently declining EMAs and high selling volume.",
+      "key_levels": {
+        "support": [
+          0.0078,
+          0.0065
+        ],
+        "resistance": [
+          0.0655,
+          0.05
+        ]
+      },
+      "risk_reward_ratio": 5.0,
       "reassess_conditions": null
     },
     "overall": {
@@ -79,16 +79,16 @@
       "timeframe_alignment": "ALIGNED",
       "best_timeframe": "POSITION",
       "key_observations": [
-        "All timeframes show strong bearish alignment",
-        "Significant -86.37% decline over 30 days",
-        "Volume profile suggests continued selling pressure",
-        "No significant support levels being respected",
-        "EMAs bearish across all timeframes"
+        "All timeframes showing strong bearish alignment",
+        "Significant volume on selloffs",
+        "No clear signs of trend reversal",
+        "Price well below all EMAs",
+        "Continuous lower highs and lower lows"
       ],
       "recommended_action": {
         "signal": "SELL",
         "timeframe": "POSITION",
-        "reasoning": "Strong bearish alignment across all timeframes with no signs of reversal. Position trades offer best risk/reward given the strong trend and clear market direction."
+        "reasoning": "Strong bearish trend across all timeframes with high confidence levels and favorable risk/reward ratios. No signs of reversal or support."
       }
     }
   }

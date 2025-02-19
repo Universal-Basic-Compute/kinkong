@@ -1,56 +1,56 @@
 {
-  "timestamp": "2025-02-19T00:06:45.455020",
+  "timestamp": "2025-02-19T16:57:00.422492",
   "token": "GRIFFAIN",
   "analyses": {
     "SCALP": {
       "timeframe": "SCALP",
-      "signal": "BUY",
+      "signal": "SELL",
       "confidence": 75,
-      "reasoning": "Short-term upward momentum with bullish EMA crossover. Price making higher lows and higher highs in the last 6 hours. Increasing volume supporting the upward move.",
+      "reasoning": "Price showing weakness with bearish EMA cross on 15m, declining volume, and recent rejection at 0.0928 resistance",
       "key_levels": {
         "support": [
-          0.0877,
-          0.079
+          0.0859,
+          0.084
         ],
         "resistance": [
-          0.0927,
+          0.0928,
           0.095
         ]
       },
-      "risk_reward_ratio": 2.5,
+      "risk_reward_ratio": 2.1,
       "reassess_conditions": null
     },
     "INTRADAY": {
       "timeframe": "INTRADAY",
       "signal": "HOLD",
       "confidence": 60,
-      "reasoning": "Price showing signs of bottoming after significant decline. EMA20 starting to flatten but still below EMA50. Need confirmation of trend reversal.",
+      "reasoning": "Price in consolidation phase after uptrend, EMA20 flattening out, decreasing volume suggests indecision",
       "key_levels": {
         "support": [
           0.079,
           0.085
         ],
         "resistance": [
-          0.0978,
-          0.1
+          0.0928,
+          0.095
         ]
       },
-      "risk_reward_ratio": 1.8,
+      "risk_reward_ratio": 1.5,
       "reassess_conditions": null
     },
     "SWING": {
       "timeframe": "SWING",
       "signal": "SELL",
       "confidence": 85,
-      "reasoning": "Strong downtrend on 7D chart with consistently lower highs and lower lows. Both EMAs sloping downward with significant bearish momentum.",
+      "reasoning": "Strong downtrend on 4H with bearish EMA cross, significant price decline from 0.1897 ATH, consistent bearish volume",
       "key_levels": {
         "support": [
           0.079,
           0.07
         ],
         "resistance": [
-          0.12,
-          0.15
+          0.1,
+          0.12
         ]
       },
       "risk_reward_ratio": 3.2,
@@ -60,7 +60,7 @@
       "timeframe": "POSITION",
       "signal": "SELL",
       "confidence": 90,
-      "reasoning": "Severe bearish trend on 30D timeframe with -83.59% decline. No signs of long-term trend reversal. EMAs in strong bearish configuration.",
+      "reasoning": "Clear bearish trend on daily chart, -83.84% decline from ATH, EMAs in strong bearish alignment, no signs of reversal",
       "key_levels": {
         "support": [
           0.07,
@@ -76,19 +76,19 @@
     },
     "overall": {
       "primary_trend": "BEARISH",
-      "timeframe_alignment": "MIXED",
-      "best_timeframe": "SCALP",
+      "timeframe_alignment": "ALIGNED",
+      "best_timeframe": "POSITION",
       "key_observations": [
-        "Long-term trend is strongly bearish",
-        "Short-term bounce potential on scalp timeframe",
-        "Volume profile showing potential short-term accumulation",
-        "Major support at $0.0790 (ATL)",
-        "Risk of continued downward pressure from higher timeframes"
+        "Significant bearish trend across all timeframes",
+        "Volume declining indicating potential exhaustion",
+        "Price showing -83.84% decline from ATH",
+        "EMAs in bearish alignment on all timeframes",
+        "No significant bullish reversal signals"
       ],
       "recommended_action": {
-        "signal": "SCALP_LONG",
-        "timeframe": "SCALP",
-        "reasoning": "While longer timeframes remain bearish, scalp opportunities exist for quick profits on the bounce from oversold conditions. Tight stops required due to overall bearish market structure."
+        "signal": "SELL",
+        "timeframe": "POSITION",
+        "reasoning": "Strong bearish alignment across all timeframes with no signs of reversal. Position trades offer best risk/reward in current market conditions."
       }
     }
   }

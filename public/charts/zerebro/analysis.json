@@ -1,55 +1,55 @@
 {
-  "timestamp": "2025-02-19T00:06:20.207322",
+  "timestamp": "2025-02-19T16:56:37.174845",
   "token": "ZEREBRO",
   "analyses": {
     "SCALP": {
       "timeframe": "SCALP",
-      "signal": "BUY",
+      "signal": "SELL",
       "confidence": 75,
-      "reasoning": "Strong upward momentum on 15m chart with higher lows forming. EMA20 crossing above EMA50 indicating bullish short-term trend. Volume supporting price action with consistent buying pressure.",
+      "reasoning": "Price showing bearish momentum with declining EMA20/50 crossover. Recent rejection at 0.0344 resistance with increasing selling volume.",
       "key_levels": {
         "support": [
-          0.0316,
-          0.0287
+          0.0327,
+          0.032
         ],
         "resistance": [
-          0.0341,
+          0.0344,
           0.035
         ]
       },
-      "risk_reward_ratio": 2.5,
+      "risk_reward_ratio": 2.1,
       "reassess_conditions": null
     },
     "INTRADAY": {
       "timeframe": "INTRADAY",
       "signal": "HOLD",
       "confidence": 60,
-      "reasoning": "Price recovering from recent dip but showing mixed signals. EMA20 and EMA50 in tight range suggesting consolidation. Volume profile showing declining trend.",
+      "reasoning": "Short-term uptrend forming but showing signs of exhaustion. EMA20/50 showing bullish crossover but momentum slowing.",
       "key_levels": {
         "support": [
           0.0287,
           0.03
         ],
         "resistance": [
-          0.0342,
+          0.0346,
           0.036
         ]
       },
-      "risk_reward_ratio": 1.8,
+      "risk_reward_ratio": 1.5,
       "reassess_conditions": null
     },
     "SWING": {
       "timeframe": "SWING",
       "signal": "SELL",
       "confidence": 85,
-      "reasoning": "Clear downtrend on 4H chart with lower highs and lower lows. Both EMAs pointing downward with significant bearish momentum. -35.53% decline showing strong selling pressure.",
+      "reasoning": "Strong downtrend on 7D chart with both EMAs declining. Significant price drop from 0.0522 ATH with consistent selling pressure.",
       "key_levels": {
         "support": [
           0.0287,
           0.025
         ],
         "resistance": [
-          0.0571,
+          0.04,
           0.045
         ]
       },
@@ -60,34 +60,34 @@
       "timeframe": "POSITION",
       "signal": "SELL",
       "confidence": 90,
-      "reasoning": "Severe bearish trend on daily chart with -78.46% decline. Strong downward momentum with EMAs in bearish alignment. No signs of trend reversal yet.",
+      "reasoning": "Clear bearish trend on 30D timeframe. Price down 80.86% from ATH with declining EMAs and sustained selling pressure.",
       "key_levels": {
         "support": [
           0.0287,
           0.02
         ],
         "resistance": [
-          0.2388,
-          0.1
+          0.05,
+          0.075
         ]
       },
-      "risk_reward_ratio": 4.0,
+      "risk_reward_ratio": 4.5,
       "reassess_conditions": null
     },
     "overall": {
       "primary_trend": "BEARISH",
-      "timeframe_alignment": "MIXED",
-      "best_timeframe": "SCALP",
+      "timeframe_alignment": "ALIGNED",
+      "best_timeframe": "POSITION",
       "key_observations": [
-        "Strong bearish trend on higher timeframes",
-        "Potential short-term bullish reversal on lower timeframes",
-        "Significant price depreciation from ATH",
-        "Volume profile showing signs of accumulation at current levels"
+        "Strong bearish trend across all major timeframes",
+        "Significant volume decline indicating potential seller exhaustion",
+        "Key support at 0.0287 being tested multiple times",
+        "80%+ drawdown from ATH showing severe bearish market structure"
       ],
       "recommended_action": {
-        "signal": "SCALP_LONG",
-        "timeframe": "SCALP",
-        "reasoning": "While longer timeframes remain bearish, scalp opportunities exist on the 15m chart for quick profits. Tight stop losses recommended due to overall market context."
+        "signal": "SELL",
+        "timeframe": "POSITION",
+        "reasoning": "All timeframes showing strong bearish alignment with declining EMAs and consistent selling pressure. Position trades offer best risk/reward for current market conditions."
       }
     }
   }
