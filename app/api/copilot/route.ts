@@ -18,16 +18,23 @@ interface MessageRecord extends FieldSet {
   context?: string;
 }
 
+interface PageContent {
+  url?: string;
+  pageContent?: string;
+}
+
+interface CopilotContext {
+  url?: string;
+  pageContent?: string | PageContent;
+  marketSentiment?: string;
+  portfolioValue?: number;
+  topHoldings?: string[];
+  recentTrades?: string;
+}
+
 interface CopilotRequest {
   message: string;
-  context?: {
-    url?: string;
-    pageContent?: string | object;
-    marketSentiment?: string;
-    portfolioValue?: number;
-    topHoldings?: string[];
-    recentTrades?: string;
-  };
+  context?: CopilotContext;
 }
 
 interface CopilotError extends Error {
@@ -87,7 +94,7 @@ export async function POST(request: NextRequest) {
         pageContentType: typeof context.pageContent,
         isNestedObject: typeof context.pageContent === 'object',
         nestedContent: typeof context.pageContent === 'object' 
-          ? typeof context.pageContent.pageContent 
+          ? typeof (context.pageContent as PageContent)?.pageContent 
           : 'n/a'
       });
     }
@@ -148,7 +155,7 @@ URL: ${context?.url || 'Not provided'}
 
 Page Content:
 ${typeof context?.pageContent === 'object' 
-  ? context.pageContent.pageContent || JSON.stringify(context.pageContent, null, 2)
+  ? (context.pageContent as PageContent)?.pageContent || JSON.stringify(context.pageContent, null, 2)
   : context?.pageContent || 'Not provided'}`;
 
         // Log formatted system prompt (truncated)
