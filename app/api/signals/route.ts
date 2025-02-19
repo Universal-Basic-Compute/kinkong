@@ -129,7 +129,6 @@ export async function POST(request: Request) {
           reason,
           url: url || '',
           wallet,
-          createdAt: parseAndFormatDate(new Date()),
         },
       },
     ]);
