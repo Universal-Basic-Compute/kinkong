@@ -1,4 +1,6 @@
-interface CopilotContext {
+export interface CopilotContext {
+  url?: string;
+  pageContent?: string;
   marketSentiment?: string;
   portfolioValue?: number;
   topHoldings?: string[];
