@@ -4,7 +4,10 @@ import type { Record as AirtableRecord, FieldSet } from 'airtable';
 
 // Use a different name for our dictionary type to avoid confusion
 type HistoryDictionary = {
-  [date: string]: { createdAt: string; value: number };
+  [date: string]: { 
+    createdAt: string;
+    value: number 
+  };
 };
 
 interface TradeRecord extends FieldSet {
