@@ -1,6 +1,12 @@
-export async function askKinKongCopilot(message: string, context?: any) {
+export interface CopilotContext {
+  url?: string;
+  pageContent?: string;
+  wallet?: string;
+}
+
+export async function askKinKongCopilot(message: string, context?: CopilotContext) {
   try {
-    // Simplify the context structure to match what the API expects
+    // Use the typed context directly
     const requestBody = {
       message,
       context: {
