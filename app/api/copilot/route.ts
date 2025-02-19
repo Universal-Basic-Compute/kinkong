@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     // Save user message
     await messagesTable.create([{
       fields: {
-        createdAt: new Date().toISOString(),
+        createdAt: new Date().toISOString().split('.')[0]+"Z",  // Format: "2024-03-14T15:30:00Z"
         role: 'user',
         content: message,
         wallet: context?.wallet || '',
@@ -96,7 +96,7 @@ Page Content: ${context?.pageContent || 'Not provided'}`,
     // Save assistant message
     await messagesTable.create([{
       fields: {
-        createdAt: new Date().toISOString(),
+        createdAt: new Date().toISOString().split('.')[0]+"Z",  // Format: "2024-03-14T15:30:00Z"
         role: 'assistant',
         content: assistantMessage,
         wallet: context?.wallet || '',
