@@ -91,6 +91,7 @@ export interface Message {
   content: string;
   code: string;
   context?: string; // Changed to string since Airtable stores as text
+  wallet?: string; // Optional wallet address
 }
 
 export interface Subscription {
