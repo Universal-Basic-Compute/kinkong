@@ -33,13 +33,13 @@ export default function CopilotChatPage() {
   }, [messages]);
 
   async function checkSubscription() {
-    if (!publicKey) {
+    if (!code) {
       setSubscription(null);
       return;
     }
 
     try {
-      const result = await verifySubscription(publicKey.toString());
+      const result = await verifySubscription(code);
       setSubscription(result);
     } catch (err) {
       console.error('Error checking subscription:', err);
