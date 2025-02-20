@@ -12,13 +12,11 @@ if project_root not in sys.path:
     sys.path.append(project_root)
 
 def get_x_sentiment_prompt():
-    """Read the X sentiment prompt from file"""
-    prompt_path = project_root / 'prompts' / 'x_sentiment.py'
+    """Read the X sentiment prompt from markdown file"""
+    prompt_path = project_root / 'prompts' / 'x-sentiment.md'
     try:
         with open(prompt_path, 'r') as f:
-            content = f.read()
-            # Extract the prompt string from the file content
-            prompt = content.split('X_SENTIMENT_PROMPT = """')[1].split('"""')[0]
+            prompt = f.read()
             return prompt
     except Exception as e:
         print(f"Error reading prompt file: {e}")
