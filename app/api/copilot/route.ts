@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       const records = await messagesTable.select({
         filterByFormula: `{wallet}='${wallet}'`,
         sort: [{ field: 'createdAt', direction: 'desc' }],
-        maxRecords: 10
+        maxRecords: 30
       }).all();
 
       messageHistory = records.map(record => ({
