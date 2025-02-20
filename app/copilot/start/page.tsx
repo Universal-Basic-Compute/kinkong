@@ -121,7 +121,12 @@ export default function CopilotStartPage() {
                   </div>
                   <div className="flex-1">
                     <h3 className="font-semibold mb-2">{step.title}</h3>
-                    <p className="text-gray-400 text-sm">{step.content}</p>
+                    <p className="text-gray-400 text-sm">
+                      {typeof step.content === 'string' 
+                        ? step.content 
+                        : step.content
+                      }
+                    </p>
                     {step.code && (
                       <pre className="mt-2 p-3 bg-black/50 rounded-lg overflow-x-auto text-sm">
                         <code>{step.code}</code>
