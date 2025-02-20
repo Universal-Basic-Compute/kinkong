@@ -19,6 +19,7 @@ type BaseNavItem = {
 type GroupNavItem = BaseNavItem & {
   isGroup: true;
   byLine?: string;
+  isDisabled?: boolean;
 };
 
 type LinkNavItem = BaseNavItem & {
@@ -72,6 +73,7 @@ const Header = () => {
     {
       label: 'Shares Management',
       isGroup: true,
+      isDisabled: true,
       subItems: [
         { 
           label: 'Coming Soon',
@@ -84,6 +86,7 @@ const Header = () => {
     {
       label: 'Learn-to-Earn',
       isGroup: true,
+      isDisabled: true,
       subItems: [
         { 
           label: 'Coming Soon',
@@ -111,11 +114,15 @@ const Header = () => {
             {navItems.map((item: NavItem) => (
               <div key={item.label} className="relative group">
                 {item.isGroup ? (
-                  <div className="flex flex-col justify-center -mt-1">
-                    <div className="text-gray-300 cursor-default px-2 py-1 flex items-center font-medium tracking-wide">
+                  <div className={`flex flex-col justify-center -mt-1 ${item.isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                    <div className={`text-gray-300 cursor-default px-2 py-1 flex items-center font-medium tracking-wide ${
+                      item.isDisabled ? 'text-gray-500' : ''
+                    }`}>
                       {item.label}
                       <svg 
-                        className="w-4 h-4 ml-1 transform group-hover:rotate-180 transition-transform duration-200" 
+                        className={`w-4 h-4 ml-1 transform group-hover:rotate-180 transition-transform duration-200 ${
+                          item.isDisabled ? 'opacity-50' : ''
+                        }`} 
                         fill="none" 
                         stroke="currentColor" 
                         viewBox="0 0 24 24"
