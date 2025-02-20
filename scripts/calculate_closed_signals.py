@@ -408,11 +408,10 @@ def calculate_closed_signals():
                 # Simulate trade with actual price data
                 results = simulate_trade(prices, fields)
                 
-                # Update signal with results - only fields in Signal interface
+                # Update signal with results - only update fields that exist in Airtable
                 update_data = {
                     'exitPrice': results['exitPrice'],
-                    'actualReturn': round(results['actualReturn'], 2),
-                    'success': results['success']
+                    'actualReturn': round(results['actualReturn'], 2)
                 }
                 
                 signals_table.update(signal_id, update_data)
@@ -420,7 +419,7 @@ def calculate_closed_signals():
                 print(f"\n✅ Updated signal {signal_id}:")
                 print(f"Exit Price: ${results['exitPrice']:.4f}")
                 print(f"Actual Return: {results['actualReturn']:.2f}%")
-                print(f"Success: {'✅' if results['success'] else '❌'}")  # Updated logging
+                print(f"Success: {'✅' if results['actualReturn'] > 0 else '❌'}")  # Just for logging
                 print(f"Time to Exit: {results['timeToExit']} minutes")
                 
             except Exception as e:
