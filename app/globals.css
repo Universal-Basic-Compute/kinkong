@@ -14,8 +14,47 @@
   }
 }
 
+@keyframes whiteGlow {
+  0% {
+    text-shadow: 
+      0 0 7px rgba(255, 255, 255, 0.3),
+      0 0 10px rgba(255, 255, 255, 0.2),
+      0 0 21px rgba(255, 255, 255, 0.1);
+  }
+  50% {
+    text-shadow: 
+      0 0 10px rgba(255, 255, 255, 0.4),
+      0 0 15px rgba(255, 255, 255, 0.3),
+      0 0 30px rgba(255, 255, 255, 0.2);
+  }
+  100% {
+    text-shadow: 
+      0 0 7px rgba(255, 255, 255, 0.3),
+      0 0 10px rgba(255, 255, 255, 0.2),
+      0 0 21px rgba(255, 255, 255, 0.1);
+  }
+}
+
 .animate-glow {
   animation: glow 2s ease-in-out infinite;
+}
+
+.white-glow-text {
+  color: white;
+  font-weight: bold;
+  animation: whiteGlow 3s ease-in-out infinite;
+  background: linear-gradient(
+    to right,
+    #FFFFFF 20%,
+    #F8F8F8 40%,
+    #F0F0F0 60%,
+    #FFFFFF 80%
+  );
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
 }
 
 :root {
