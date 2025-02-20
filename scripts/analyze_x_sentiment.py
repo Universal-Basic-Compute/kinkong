@@ -11,8 +11,13 @@ project_root = str(Path(__file__).parent.parent.absolute())
 if project_root not in sys.path:
     sys.path.append(project_root)
 
-# Get the project root directory
-project_root = Path(__file__).parent.parent.absolute()
+# Force reload environment variables at script start
+load_dotenv(override=True)
+
+# Debug print to verify environment loading
+print("Environment check:")
+print(f"ANTHROPIC_API_KEY present: {bool(os.getenv('ANTHROPIC_API_KEY'))}")
+print(f"ANTHROPIC_API_KEY starts with: {os.getenv('ANTHROPIC_API_KEY', '')[:8]}...")
 
 def get_x_sentiment_prompt():
     """Read the X sentiment prompt from file"""
@@ -88,6 +93,8 @@ def analyze_x_sentiment(content: str):
         print(f"\n❌ Error analyzing X sentiment: {e}")
         if 'message' in locals():
             print("Raw API response:", message.content[0].text)
+        if 'client' in locals():
+            print("Client initialized with key starting:", api_key[:8])
         return None
 
 if __name__ == "__main__":
