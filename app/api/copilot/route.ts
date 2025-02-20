@@ -3,27 +3,27 @@ import { rateLimit } from '@/utils/rate-limit';
 import { getTable } from '@/backend/src/airtable/tables';
 import { COPILOT_PROMPT } from '@/prompts/copilot';
 
-// Helper function to get next block start time
-function getNextBlockTime(): string {
+// Helper function to get hours until next block
+function getHoursUntilNext(): number {
   const now = new Date();
   const currentBlock = Math.floor(now.getUTCHours() / 8);
   const nextBlockStart = new Date(now);
   nextBlockStart.setUTCHours((currentBlock + 1) * 8, 0, 0, 0);
   
-  // Format time as HH:00 UTC
-  return `${nextBlockStart.getUTCHours().toString().padStart(2, '0')}:00 UTC`;
+  const hoursRemaining = Math.ceil((nextBlockStart.getTime() - now.getTime()) / (1000 * 60 * 60));
+  return hoursRemaining;
 }
 
 const RATE_LIMIT_MESSAGES = [
-  `Time for a quick break! 🎯 Hit my message limit for this 8-hour block. Want 5x more chats? [Premium awaits](https://swarmtrade.ai/copilot)! 🚀\n\nKinKong will be back at ${getNextBlockTime()}! 🕒`,
+  `Time for a quick break! 🎯 Hit my message limit. Want 5x more chats? [Premium awaits](https://swarmtrade.ai/copilot)! 🚀\n\nKinKong will be back in ${getHoursUntilNext()} hours! 🕒`,
   
-  `Whew, what a chat! 💬 Need to recharge for a bit. Get unlimited trading insights with [premium](https://swarmtrade.ai/copilot) ✨\n\nKinKong will be back at ${getNextBlockTime()}! 🕒`,
+  `Whew, what a chat! 💬 Need to recharge for a bit. Get unlimited trading insights with [premium](https://swarmtrade.ai/copilot) ✨\n\nKinKong will be back in ${getHoursUntilNext()} hours! 🕒`,
   
-  `Hold that thought! 🤔 Message limit reached for this block. Ready for non-stop alpha? Join [premium gang](https://swarmtrade.ai/copilot) 💪\n\nKinKong will be back at ${getNextBlockTime()}! 🕒`,
+  `Hold that thought! 🤔 Message limit reached. Ready for non-stop alpha? Join [premium gang](https://swarmtrade.ai/copilot) 💪\n\nKinKong will be back in ${getHoursUntilNext()} hours! 🕒`,
   
-  `Taking a breather! 😅 Max messages hit for this block. Unlock 24/7 trading wisdom - [upgrade here](https://swarmtrade.ai/copilot) 🎓\n\nKinKong will be back at ${getNextBlockTime()}! 🕒`,
+  `Taking a breather! 😅 Max messages hit. Unlock 24/7 trading wisdom - [upgrade here](https://swarmtrade.ai/copilot) 🎓\n\nKinKong will be back in ${getHoursUntilNext()} hours! 🕒`,
   
-  `Energy check! ⚡ Need to rest my circuits until next block. Want unlimited trading convos? [Premium's calling](https://swarmtrade.ai/copilot) 🌟\n\nKinKong will be back at ${getNextBlockTime()}! 🕒`
+  `Energy check! ⚡ Need to rest my circuits. Want unlimited trading convos? [Premium's calling](https://swarmtrade.ai/copilot) 🌟\n\nKinKong will be back in ${getHoursUntilNext()} hours! 🕒`
 ];
 
 // Initialize global rate limiter
