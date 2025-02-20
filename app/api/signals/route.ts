@@ -104,8 +104,8 @@ export async function POST(request: Request) {
       url
     } = body;
 
-    if (!token || !direction || !timeframe || !confidence || !reason || !wallet) {
-      console.log('Missing required fields:', { token, direction, reason, wallet });
+    if (!token || !direction || !timeframe || !confidence || !reason) {
+      console.log('Missing required fields:', { token, direction, timeframe, confidence, reason });
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
