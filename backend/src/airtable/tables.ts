@@ -1,8 +1,35 @@
 import base from './client';
 
-// Add Token type definition
+// Table interfaces
+export interface Portfolio {
+  token: string;
+  allocation: number;
+  lastUpdate: string;
+  usdValue?: number;
+}
+
+export interface PortfolioSnapshot {
+  timestamp: string;
+  totalValue: number;
+  holdings: {
+    token: string;
+    amount: number;
+    price: number;
+    value: number;
+  }[];
+}
+
+export interface Trade {
+  createdAt: string;  // ISO 8601 UTC format
+  token: string;
+  action: 'BUY' | 'SELL';
+  amount: number;
+  price: number;
+  lastUpdateTime?: string;  // ISO 8601 UTC format
+}
+
 export interface Token {
-  symbol: string;
+  symbol: string;  // Changed from token to symbol
   name: string;
   mint: string;
   isActive: boolean;
@@ -15,6 +42,65 @@ export interface Token {
   price7dAvg: number;
   volumeOnUpDay: boolean;
   priceChange24h: number;
+}
+
+export interface Signal {
+  createdAt: string;
+  token: string;
+  type: 'BUY' | 'SELL';
+  timeframe: 'SCALP' | 'INTRADAY' | 'SWING' | 'POSITION';
+  entryPrice?: number;
+  targetPrice?: number;
+  stopLoss?: number;
+  confidence: 'LOW' | 'MEDIUM' | 'HIGH';
+  reason: string;
+  url?: string;
+  expectedReturn?: number;
+  actualReturn?: number;
+  accuracy?: number;
+  wallet?: string;
+  code?: string;
+}
+
+export interface MarketSentiment {
+  weekStartDate: string;
+  weekEndDate: string;
+  classification: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+  confidence: number;
+  totalTokens: number;
+  tokensAbove7dAvg: number;
+  weeklyVolume: number;
+  prevWeekVolume: number;
+  upDayVolume: number;
+  totalVolume: number;
+  solPerformance: number;
+  aiTokensPerformance: number;
+  notes: string;
+}
+
+export interface Message {
+  createdAt: string;
+  role: 'user' | 'assistant';
+  content: string;
+  code: string;
+  context?: string;
+  wallet?: string;
+}
+
+export interface Subscription {
+  code: string;
+  startDate: string;
+  endDate: string;
+  status: 'ACTIVE' | 'EXPIRED' | 'CANCELLED';
+  amount: number;
+  signature: string;
+  wallet?: string;
+}
+
+export interface Thought {
+  type: 'TECHNICAL_ANALYSIS' | 'REALLOCATION' | 'SIGNAL';
+  content: string;
+  context: Record<string, any>;
 }
 
 export const TABLES = {
