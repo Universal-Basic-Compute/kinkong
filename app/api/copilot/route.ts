@@ -148,15 +148,12 @@ export async function POST(request: NextRequest) {
       length: apiKey.length
     });
 
-    const requestBody = await request.json();
-    const { message, wallet } = requestBody;
-    
     // Get context data
     const contextData = await getContextData();
     
     // Prepare full context
     const fullContext = {
-      request: requestBody,  // Contains everything from the request
+      request: requestBody,
       signals: contextData.signals,
       marketSentiment: contextData.marketSentiment
     };
