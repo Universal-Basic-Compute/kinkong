@@ -8,6 +8,15 @@ export const runtime = 'edge';
 
 // Add dynamic configuration
 export const dynamic = 'force-dynamic';
+
+// Helper function to count token mentions
+function countTokenMentions(content: string): number {
+  // Match $SYMBOL or $symbol pattern, must be 2-10 chars after $
+  const tokenPattern = /\$[A-Za-z]{2,10}\b/g;
+  const matches = content.match(tokenPattern);
+  return matches ? matches.length : 0;
+}
+
 import { COPILOT_PROMPT } from '@/prompts/copilot';
 import { spawn } from 'child_process';
 import { promisify } from 'util';
@@ -334,26 +343,28 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Log each condition separately
-    const conditions = {
+    // Split content into posts (assuming posts are separated by newlines)
+    const posts = bodyContent.split('\n\n').filter(post => post.trim());
+    
+    // Count posts with token mentions
+    const postsWithTokens = posts.filter(post => countTokenMentions(post) > 0).length;
+
+    console.log('Token mention analysis:', {
+      totalPosts: posts.length,
+      postsWithTokens,
       hasTwitterInBody: bodyContent.includes('twitter.com'),
-      hasLowerXInBody: bodyContent.includes('x.com'),
-      hasUpperXInBody: bodyContent.includes('X.com'),
+      hasXInBody: bodyContent.includes('x.com') || bodyContent.includes('X.com'),
       hasXUrl: requestBody.url === 'x.com'
-    };
+    });
 
-    console.log('X content detection conditions:', conditions);
+    const isXContent = (bodyContent.includes('twitter.com') || 
+                       bodyContent.includes('x.com') || 
+                       bodyContent.includes('X.com') ||
+                       requestBody.url === 'x.com');
 
-    const isXContent = conditions.hasTwitterInBody || 
-                      conditions.hasLowerXInBody ||
-                      conditions.hasUpperXInBody ||
-                      conditions.hasXUrl;
-
-    console.log('Final isXContent result:', isXContent);
-
-    // If X content, analyze sentiment
-    if (isXContent) {
-      console.log('📊 Starting X sentiment analysis...');
+    // Only analyze if it's X content AND has enough token mentions
+    if (isXContent && postsWithTokens >= 2) {
+      console.log('📊 Starting X sentiment analysis - found multiple posts with token mentions');
       
       const sentiment = await analyzeXSentiment(bodyContent);
       
