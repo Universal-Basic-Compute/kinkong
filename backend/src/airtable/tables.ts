@@ -1,4 +1,4 @@
-const { base } = require('./client');
+import { base } from './client';
 
 // Table interfaces (keep these for TypeScript)
 interface TableTypes {
@@ -97,7 +97,7 @@ interface TableTypes {
   };
 }
 
-const TABLES = {
+export const TABLES = {
   PORTFOLIO: 'PORTFOLIO',
   TRADES: 'TRADES', 
   TOKENS: 'TOKENS',
@@ -111,7 +111,7 @@ const TABLES = {
   SENTIMENT_ANALYSIS: 'SENTIMENT_ANALYSIS'
 } as const;
 
-function getTable(tableName: string) {
+export function getTable(tableName: string) {
   if (!tableName) {
     throw new Error('Table name is required');
   }
@@ -119,8 +119,4 @@ function getTable(tableName: string) {
   return base.table(tableName);
 }
 
-// Export for CommonJS
-module.exports = { TABLES, getTable };
-
-// Export types for TypeScript
 export type { TableTypes };
