@@ -1,0 +1,97 @@
+{
+  "tokens": [
+    {
+      "symbol": "UBC",
+      "sentiment": "MIXED",
+      "confidence": 75,
+      "mentions": 7,
+      "key_topics": [
+        "High trading volume",
+        "Partnership with Anthropic",
+        "Technical indicators showing overbought",
+        "AI integration"
+      ],
+      "latest_news": [
+        "Partnership announcement with Anthropic_AI",
+        "24h volume up 156% to $2.5M",
+        "TVL at $890K"
+      ]
+    },
+    {
+      "symbol": "COMPUTE",
+      "sentiment": "BULLISH",
+      "confidence": 65,
+      "mentions": 3,
+      "key_topics": [
+        "New token launch",
+        "Breaking out on volume",
+        "Decentralized compute focus"
+      ],
+      "latest_news": [
+        "Initial launch at $0.85",
+        "Launch volume $1.2M",
+        "Backed by MonkeVentures"
+      ]
+    },
+    {
+      "symbol": "AGENT",
+      "sentiment": "NEUTRAL",
+      "confidence": 60,
+      "mentions": 1,
+      "key_topics": [
+        "Consolidation phase",
+        "Accumulation"
+      ],
+      "latest_news": [
+        "Currently in consolidation pattern"
+      ]
+    }
+  ],
+  "domains": [
+    {
+      "name": "AI",
+      "sentiment": "BULLISH",
+      "confidence": 85,
+      "trending_topics": [
+        "Decentralized compute networks",
+        "Token-gated AI models",
+        "On-chain inference",
+        "AI model integration"
+      ],
+      "key_developments": [
+        "UBC-Anthropic partnership",
+        "Growing trading volume in AI tokens",
+        "New token launches in the sector"
+      ]
+    },
+    {
+      "name": "DeFi",
+      "sentiment": "NEUTRAL",
+      "confidence": 60,
+      "trending_topics": [
+        "Trading volume metrics",
+        "TVL growth"
+      ],
+      "key_developments": [
+        "Jupiter Exchange activity increasing",
+        "New token listings"
+      ]
+    }
+  ],
+  "ecosystem": {
+    "sentiment": "BULLISH",
+    "confidence": 70,
+    "key_observations": [
+      "Strong focus on AI token development",
+      "Major partnerships forming",
+      "Institutional interest growing",
+      "High trading activity"
+    ],
+    "emerging_trends": [
+      "AI-focused token proliferation",
+      "Compute resource tokenization",
+      "Cross-chain AI partnerships",
+      "Breakpoint 2024 announcement indicating continued ecosystem growth"
+    ]
+  }
+}
