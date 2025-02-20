@@ -318,7 +318,7 @@ export async function calculateClosedSignals(): Promise<void> {
 }
 
 // For direct script execution
-if (require.main === module) {
+if (import.meta.url === import.meta.main) {
   console.log("\n🚀 Starting closed signals calculation...");
   calculateClosedSignals().catch(console.error);
 }
