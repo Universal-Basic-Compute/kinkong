@@ -101,8 +101,7 @@ export async function POST(request: NextRequest) {
     });
 
     const requestBody = await request.json();
-    const message = requestBody.message;
-    const wallet = requestBody.wallet;
+    const { message, body, wallet } = requestBody;
     const bodyContent = JSON.stringify(requestBody);
 
     let systemPrompt = COPILOT_PROMPT;
@@ -125,7 +124,7 @@ export async function POST(request: NextRequest) {
             role: 'user',
             content: message
           }],
-          system: systemPrompt
+          system: `${systemPrompt}\n\nPage Content:\n${bodyContent}`
         }),
         signal: controller.signal
       });
