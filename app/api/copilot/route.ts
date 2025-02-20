@@ -14,6 +14,11 @@ interface CopilotRequest {
   wallet?: string; // Optional wallet address for history tracking
 }
 
+interface HistoryMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const requestBody = await request.json();
@@ -26,7 +31,7 @@ export async function POST(request: NextRequest) {
     const bodyContent = JSON.stringify(requestBody);
 
     // Get message history if wallet is provided
-    let messageHistory = [];
+    let messageHistory: HistoryMessage[] = [];
     if (wallet) {
       const messagesTable = getTable('MESSAGES');
       const records = await messagesTable.select({
@@ -36,8 +41,8 @@ export async function POST(request: NextRequest) {
       }).all();
 
       messageHistory = records.map(record => ({
-        role: record.get('role'),
-        content: record.get('content')
+        role: record.get('role') as 'user' | 'assistant',
+        content: record.get('content') as string
       })).reverse(); // Reverse to get chronological order
     }
 
