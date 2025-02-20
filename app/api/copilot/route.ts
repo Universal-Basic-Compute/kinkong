@@ -140,6 +140,16 @@ export async function POST(request: NextRequest) {
       historyLength: messageHistory.length
     });
 
+    // Get recent signals
+    const recentSignals = await getRecentSignals();
+    console.log('📊 Recent signals fetched:', recentSignals.length);
+
+    // Format signals for context
+    const signalsContext = recentSignals.map(signal => 
+      `${signal.createdAt}: ${signal.token} ${signal.type} (${signal.timeframe}, ${signal.confidence})`
+      + (signal.actualReturn !== undefined ? ` - Return: ${signal.actualReturn.toFixed(2)}%` : '')
+    ).join('\n');
+
     // Build messages array for Claude
     const messages = [
       ...messageHistory,
@@ -149,8 +159,11 @@ export async function POST(request: NextRequest) {
       }
     ];
 
-    // Simple system prompt
+    // Build system prompt with signals
     const systemPrompt = `${COPILOT_PROMPT}
+
+Recent Trading Signals:
+${signalsContext}
 
 Current Page Content:
 ${bodyContent}`;
@@ -158,7 +171,8 @@ ${bodyContent}`;
     // Log formatted prompt
     console.log('📋 System Prompt:', {
       length: systemPrompt.length,
-      preview: systemPrompt.slice(0, 200) + '...'
+      preview: systemPrompt.slice(0, 200) + '...',
+      signalsCount: recentSignals.length
     });
 
     // Make Anthropic API call
