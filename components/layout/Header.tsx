@@ -33,7 +33,7 @@ const Header = () => {
 
   const navItems: NavItem[] = [
     { 
-      label: 'Managed Trading',
+      label: 'KinKong Trading',
       isGroup: true,
       subItems: [
         { 
@@ -52,6 +52,11 @@ const Header = () => {
           description: 'Trading history and analytics'
         },
         { 
+          label: 'Signals', 
+          href: '/signals',
+          description: 'Trading signals and setups'
+        },
+        { 
           label: 'Strategy', 
           href: '/strategy',
           description: 'Portfolio strategy and settings'
@@ -63,23 +68,6 @@ const Header = () => {
           isGlowing: true
         }
       ]
-    },
-    {
-      label: 'Active Trading',
-      isGroup: true,
-      subItems: [
-        { 
-          label: 'Signals', 
-          href: '/signals',
-          description: 'Trading signals and setups'
-        },
-        { 
-          label: 'Coming Soon',
-          href: '#',
-          description: 'Active trading features coming soon'
-        }
-      ],
-      byLine: 'by 🏹 RobinHood Agent'
     },
     {
       label: 'Shares Management',
