@@ -364,3 +364,56 @@ async function getDexScreenerData(mint: string, retries = 3) {
   }
   return {};
 }
+import { getTokenData } from '../airtable/tokens';
+
+interface MarketClassification {
+  sentiment: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+  confidence: number;
+  reasons: string[];
+}
+
+export async function analyzeMarketSentiment(): Promise<MarketClassification> {
+  try {
+    // Get token data
+    const tokens = await getTokenData();
+    
+    // Calculate metrics
+    const tokensAbove7dAvg = tokens.filter(t => t.price > t.price7dAvg).length;
+    const volumeOnUpDays = tokens.filter(t => t.volumeOnUpDay).length;
+    
+    // Determine sentiment
+    let sentiment: 'BULLISH' | 'BEARISH' | 'NEUTRAL' = 'NEUTRAL';
+    let confidence = 0;
+    const reasons: string[] = [];
+
+    if (tokensAbove7dAvg > tokens.length * 0.6) {
+      sentiment = 'BULLISH';
+      confidence += 20;
+      reasons.push(`${tokensAbove7dAvg}/${tokens.length} tokens above 7d average`);
+    } else if (tokensAbove7dAvg < tokens.length * 0.4) {
+      sentiment = 'BEARISH';
+      confidence += 20;
+      reasons.push(`Only ${tokensAbove7dAvg}/${tokens.length} tokens above 7d average`);
+    }
+
+    if (volumeOnUpDays > tokens.length * 0.6) {
+      if (sentiment === 'BULLISH') confidence += 20;
+      sentiment = 'BULLISH';
+      reasons.push('Majority of volume on up days');
+    } else if (volumeOnUpDays < tokens.length * 0.4) {
+      if (sentiment === 'BEARISH') confidence += 20;
+      sentiment = 'BEARISH';
+      reasons.push('Majority of volume on down days');
+    }
+
+    return {
+      sentiment,
+      confidence: Math.min(confidence, 100),
+      reasons
+    };
+
+  } catch (error) {
+    console.error('Failed to analyze market sentiment:', error);
+    throw error;
+  }
+}

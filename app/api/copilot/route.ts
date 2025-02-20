@@ -44,7 +44,6 @@ async function analyzeXSentiment(content: string) {
       {
         env: {
           ...process.env,
-          X_SENTIMENT_PROMPT: X_SENTIMENT_PROMPT,
           CONTENT: content
         },
         encoding: 'utf-8'
