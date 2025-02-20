@@ -3,6 +3,18 @@ import { rateLimit } from '@/utils/rate-limit';
 import { getTable } from '@/backend/src/airtable/tables';
 import { COPILOT_PROMPT } from '@/prompts/copilot';
 
+const RATE_LIMIT_MESSAGES = [
+  `Time for a quick break! 🎯 Hit my message limit for now. Want 10x more chats? Premium awaits at swarmtrade.ai/copilot! 🚀`,
+  
+  `Whew, what a chat! 💬 Need to recharge for a bit. Get unlimited trading insights with premium - swarmtrade.ai/copilot ✨`,
+  
+  `Hold that thought! 🤔 Message limit reached. Ready for non-stop alpha? Join premium gang: swarmtrade.ai/copilot 💪`,
+  
+  `Taking a breather! 😅 Max messages hit. Unlock 24/7 trading wisdom with premium: swarmtrade.ai/copilot 🎓`,
+  
+  `Energy check! ⚡ Need to rest my circuits. Want unlimited trading convos? Premium's calling: swarmtrade.ai/copilot 🌟`
+];
+
 // Initialize global rate limiter
 const rateLimiter = rateLimit({
   interval: 60 * 1000, // 1 minute
@@ -120,20 +132,8 @@ export async function POST(request: NextRequest) {
       const stream = new ReadableStream({
         start(controller) {
           const encoder = new TextEncoder();
-          const message = `Hey there! 👋 Looks like you've reached your message limit for now.
-
-I love chatting with you, but I need to manage my energy to help everyone effectively! 🔋
-
-Want to keep our conversation going? Upgrade to premium at swarmtrade.ai/copilot for:
-• 100 messages every 4 hours (10x more than free tier)
-• Priority response time
-• Advanced trading insights
-• Custom portfolio analysis
-
-See you there! 🚀
-
-- KinKong`;
-          controller.enqueue(encoder.encode(message));
+          const randomMessage = RATE_LIMIT_MESSAGES[Math.floor(Math.random() * RATE_LIMIT_MESSAGES.length)];
+          controller.enqueue(encoder.encode(randomMessage));
           controller.close();
         }
       });
