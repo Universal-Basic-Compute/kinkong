@@ -1,10 +1,11 @@
 import Airtable from 'airtable';
-import dotenv from 'dotenv';
 import { config } from 'dotenv';
 import fetch from 'node-fetch';
 
 // Load environment variables
 config();
+
+// Interfaces
 
 interface SignalFields {
   token: string;

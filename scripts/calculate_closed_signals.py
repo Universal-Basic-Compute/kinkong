@@ -320,10 +320,8 @@ def simulate_trade(prices: list, signal_data: dict) -> dict:
         'success': success
     }
 
-def calculate_closed_signals():
-    """Calculate metrics for all closed signals that haven't been evaluated yet"""
-    try:
-        load_dotenv()
+export async function calculateClosedSignals() {
+  try {
         
         # Verify Birdeye API key
         birdeye_api_key = os.getenv('BIRDEYE_API_KEY')
@@ -432,7 +430,8 @@ def calculate_closed_signals():
         print(f"\n❌ Error: {e}")
         raise
 
-# Only run if called directly (not imported)
-if __name__ == "__main__":
-    print("\n🚀 Starting closed signals calculation...")
-    calculate_closed_signals()
+// For direct script execution
+if (typeof require !== 'undefined' && require.main === module) {
+  console.log("\n🚀 Starting closed signals calculation...");
+  calculateClosedSignals().catch(console.error);
+}
