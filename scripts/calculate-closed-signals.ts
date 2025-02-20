@@ -204,6 +204,7 @@ export async function calculateClosedSignals(): Promise<void> {
       actualReturn: number;
       exitPrice: number;
       success: boolean;
+      timeToExit: number;
     }> = [];
 
     // Initialize Airtable
@@ -285,7 +286,8 @@ export async function calculateClosedSignals(): Promise<void> {
           type: fields.type,
           actualReturn: results.actualReturn,
           exitPrice: results.exitPrice,
-          success: results.success
+          success: results.success,
+          timeToExit: results.timeToExit
         });
 
       } catch (error) {
@@ -301,9 +303,10 @@ export async function calculateClosedSignals(): Promise<void> {
           `${signal.token} ${signal.type}:\n` +
           `• Return: ${signal.actualReturn.toFixed(2)}%\n` +
           `• Exit: $${signal.exitPrice.toFixed(4)}\n` +
+          `• Time: ${signal.timeToExit} minutes\n` +
           `• Result: ${signal.success ? '✅ Win' : '❌ Loss'}\n`
         ).join('\n')
-      }`;
+      }\n🔍 View all signals at [SwarmTrade](https://swarmtrade.ai/signals)`;
 
       await sendTelegramMessage(message);
       console.log('📱 Telegram notification sent');
