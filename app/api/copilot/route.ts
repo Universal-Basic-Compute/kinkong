@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { COPILOT_PROMPT } from '@/prompts/copilot';
 import { rateLimit } from '@/utils/rate-limit';
 import { getTable } from '@/backend/src/airtable/tables';
+import { config } from 'dotenv';
+import { resolve } from 'path';
+
+// Force reload environment variables at the start of each request
+config({ path: resolve(process.cwd(), '.env'), override: true });
 
 const limiter = rateLimit({
   interval: 60 * 1000, // 1 minute
@@ -21,6 +26,20 @@ interface HistoryMessage {
 
 export async function POST(request: NextRequest) {
   try {
+    // Verify API key is present
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      console.error('ANTHROPIC_API_KEY not found in environment');
+      throw new Error('API key configuration missing');
+    }
+
+    // Log key presence (safely)
+    console.log('API Key check:', {
+      present: !!apiKey,
+      prefix: apiKey.substring(0, 7),
+      length: apiKey.length
+    });
+
     const requestBody = await request.json();
     
     // Extract message and wallet from body
@@ -112,9 +131,10 @@ ${bodyContent}`;
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'x-api-key': process.env.ANTHROPIC_API_KEY || '',
+        'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
-        'content-type': 'application/json'
+        'content-type': 'application/json',
+        'anthropic-beta': 'messages-2024-01-01'
       },
       body: JSON.stringify({
         model: "claude-3-5-sonnet-20241022",
@@ -131,6 +151,12 @@ ${bodyContent}`;
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Anthropic API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText
+      });
       throw new Error(`Failed to get copilot response: ${response.status}`);
     }
 
@@ -190,7 +216,8 @@ ${bodyContent}`;
   } catch (error) {
     console.error('❌ Copilot error:', {
       name: error instanceof Error ? error.name : 'Unknown',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
     });
     
     return new NextResponse(
