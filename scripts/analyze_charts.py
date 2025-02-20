@@ -513,7 +513,6 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
             'targetPrice': target_price,
             'stopLoss': stop_loss,
             'confidence': confidence_level,
-            'wallet': os.getenv('STRATEGY_WALLET', ''),
             'reason': reason_text,  # Just the raw reasoning text
             'createdAt': current_time,
             'expiryDate': expiry_date.isoformat().replace('+00:00', 'Z'),
