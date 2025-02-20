@@ -112,11 +112,11 @@ export default function CopilotStartPage() {
                 onClick={() => setActiveStep(index + 1)}
               >
                 <div className="flex items-start space-x-4">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                    activeStep === index + 1 
-                      ? 'bg-gold text-black' 
-                      : 'bg-gray-800 text-gray-400'
-                  }`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold 
+                    ${activeStep === index + 1 
+                      ? 'bg-gradient-to-br from-gold via-amber-500 to-yellow-500 text-black animate-pulse shadow-lg shadow-gold/20' 
+                      : 'bg-black/30 text-gray-400 border border-gold/20'
+                    } transition-all duration-300`}>
                     {index + 1}
                   </div>
                   <div className="flex-1">
