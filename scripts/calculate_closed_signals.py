@@ -320,7 +320,7 @@ def simulate_trade(prices: list, signal_data: dict) -> dict:
         'success': success
     }
 
-def calculate_closed_signals():
+export async function calculateClosedSignals() {
     """Calculate metrics for all closed signals that haven't been evaluated yet"""
     try:
         load_dotenv()
