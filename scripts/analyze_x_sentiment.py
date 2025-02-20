@@ -161,10 +161,8 @@ def analyze_x_sentiment(content: str):
 
     except Exception as e:
         print(f"\n❌ Error analyzing X sentiment: {e}")
-        if 'message' in locals():
-            print("Raw API response:", message.content[0].text)
-        if 'client' in locals():
-            print("Client initialized with key starting:", api_key[:8])
+        if 'response' in locals():
+            print("Raw API response:", response.text)
         return None
 
 if __name__ == "__main__":
