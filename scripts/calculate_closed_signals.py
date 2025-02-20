@@ -432,6 +432,8 @@ def calculate_closed_signals():
         print(f"\n❌ Error: {e}")
         raise
 
-if __name__ == "__main__":
-    print("\n🚀 Starting closed signals calculation...")
-    calculate_closed_signals()
+// Only run if called directly (not imported)
+if (require.main === module) {
+    console.log("\n🚀 Starting closed signals calculation...");
+    calculateClosedSignals().catch(console.error);
+}
