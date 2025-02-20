@@ -36,11 +36,10 @@ export async function POST(request: NextRequest) {
       const messagesTable = getTable('MESSAGES');
       
       // Debug log before query
-      console.log('🔍 Fetching messages for wallet:', wallet);
+      console.log('🔍 Fetching messages...');
       
       try {
         const records = await messagesTable.select({
-          filterByFormula: `{wallet}='${wallet}'`,
           sort: [{ field: 'createdAt', direction: 'desc' }],
           maxRecords: 30
         }).all();
