@@ -1,5 +1,10 @@
 'use client';
 
+// Add environment variables check
+if (!process.env.NEXT_PUBLIC_HELIUS_RPC_URL || !process.env.NEXT_PUBLIC_SUBSCRIPTION_WALLET) {
+  throw new Error('Missing required environment variables: NEXT_PUBLIC_HELIUS_RPC_URL and/or NEXT_PUBLIC_SUBSCRIPTION_WALLET');
+}
+
 import { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { Connection, PublicKey, LAMPORTS_PER_SOL, Transaction, SystemProgram } from '@solana/web3.js';
@@ -44,17 +49,9 @@ export default function CopilotSubscriptionPage() {
       setIsProcessing(true);
       setError(null);
 
-      // Validate environment variables
-      const rpcUrl = process.env.NEXT_PUBLIC_HELIUS_RPC_URL;
-      const subscriptionWallet = process.env.NEXT_PUBLIC_SUBSCRIPTION_WALLET;
-
-      if (!rpcUrl || !subscriptionWallet) {
-        throw new Error('Missing configuration');
-      }
-
       // Create subscription payment transaction
-      const connection = new Connection(rpcUrl);
-      const subscriptionPubkey = new PublicKey(subscriptionWallet);
+      const connection = new Connection(process.env.NEXT_PUBLIC_HELIUS_RPC_URL!);
+      const subscriptionPubkey = new PublicKey(process.env.NEXT_PUBLIC_SUBSCRIPTION_WALLET!);
 
       const transaction = new Transaction().add(
         SystemProgram.transfer({

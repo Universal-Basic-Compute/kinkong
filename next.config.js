@@ -4,6 +4,10 @@ const nextConfig = {
   images: {
     domains: ['localhost', 'vercel.app'],
   },
+  env: {
+    NEXT_PUBLIC_HELIUS_RPC_URL: process.env.NEXT_PUBLIC_HELIUS_RPC_URL,
+    NEXT_PUBLIC_SUBSCRIPTION_WALLET: process.env.NEXT_PUBLIC_SUBSCRIPTION_WALLET
+  },
   async rewrites() {
     return [
       {
