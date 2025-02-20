@@ -88,7 +88,6 @@ interface Signal {
   targetPrice?: number;
   stopLoss?: number;
   confidence: 'LOW' | 'MEDIUM' | 'HIGH';
-  wallet: string;
   reason: string;
   url?: string;
   actualReturn?: number;

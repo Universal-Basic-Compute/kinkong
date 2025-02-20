@@ -100,9 +100,8 @@ export async function POST(request: Request) {
       targetPrice,
       stopLoss,
       confidence,
-      reason, 
-      url, 
-      wallet 
+      reason,
+      url
     } = body;
 
     if (!token || !direction || !timeframe || !confidence || !reason || !wallet) {
@@ -127,8 +126,7 @@ export async function POST(request: Request) {
           stopLoss: stopLoss || null,
           confidence,
           reason,
-          url: url || '',
-          wallet,
+          url: url || ''
         },
       },
     ]);

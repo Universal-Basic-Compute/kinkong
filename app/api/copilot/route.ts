@@ -14,7 +14,6 @@ interface FormattedSignal {
   targetPrice?: number;
   stopLoss?: number;
   confidence: 'LOW' | 'MEDIUM' | 'HIGH';
-  wallet: string;
   reason: string;
   url?: string;
   expectedReturn?: number;
@@ -181,7 +180,6 @@ export async function POST(request: NextRequest) {
     ${returns}
     Reason: ${signal.reason}
     ${signal.url ? `URL: ${signal.url}` : ''}
-    Wallet: ${signal.wallet}
   `.trim();
     }).join('\n\n');
 
