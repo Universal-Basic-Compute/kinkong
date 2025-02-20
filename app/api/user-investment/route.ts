@@ -1,4 +1,4 @@
-import { getTable } from '@/backend/src/airtable/tables';
+const { getTable, TABLES } = require('../backend/src/airtable/tables');
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {

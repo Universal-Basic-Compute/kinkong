@@ -1,6 +1,6 @@
-import base from './client';
+const { base } = require('./client');
 
-// Table interfaces
+// Table interfaces (keep these for TypeScript)
 export interface Portfolio {
   token: string;
   allocation: number;
@@ -103,7 +103,7 @@ export interface Thought {
   context: Record<string, any>;
 }
 
-export const TABLES = {
+const TABLES = {
   PORTFOLIO: 'PORTFOLIO',
   TRADES: 'TRADES', 
   TOKENS: 'TOKENS',
@@ -117,7 +117,7 @@ export const TABLES = {
   SENTIMENT_ANALYSIS: 'SENTIMENT_ANALYSIS'
 } as const;
 
-export function getTable(tableName: string) {
+function getTable(tableName) {
   if (!tableName) {
     throw new Error('Table name is required');
   }
@@ -125,10 +125,6 @@ export function getTable(tableName: string) {
   return base.table(tableName);
 }
 
-// For CommonJS compatibility - only export runtime values
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { 
-    TABLES, 
-    getTable
-  };
-}
+// Export for both CommonJS and TypeScript
+module.exports = { TABLES, getTable };
+module.exports.default = { TABLES, getTable };
