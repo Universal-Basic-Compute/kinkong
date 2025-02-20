@@ -61,6 +61,11 @@ def analyze_x_sentiment(content: str):
         if not api_key:
             raise ValueError("ANTHROPIC_API_KEY not found in environment variables")
 
+        # Get system prompt
+        system_prompt = read_system_prompt()
+        if not system_prompt:
+            raise ValueError("Failed to read system prompt")
+
         # Initialize Claude client
         client = anthropic.Client(api_key=api_key)
 
@@ -68,7 +73,7 @@ def analyze_x_sentiment(content: str):
         message = client.messages.create(
             model="claude-3-5-sonnet-20241022",
             max_tokens=4096,
-            system=SYSTEM_PROMPT,
+            system=system_prompt,
             messages=[{
                 "role": "user",
                 "content": f"Analyze this X.com content for crypto sentiment:\n\n{content}"
