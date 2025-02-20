@@ -42,9 +42,6 @@ def analyze_x_sentiment(content: str):
         if not system_prompt:
             raise ValueError("Failed to load X sentiment prompt")
 
-        # Debug the key
-        print(f"API Key from .env: {api_key[:8]}...{api_key[-4:]}")
-        
         # Create client with explicit API key
         client = anthropic.Client(
             api_key=api_key,
@@ -80,24 +77,31 @@ def analyze_x_sentiment(content: str):
             print("\n📊 Sentiment Analysis Results:")
             print(json.dumps(analysis, indent=2))
             
-            # Convert confidence values to integers if they're strings
+            # Convert confidence values to integers
             if analysis.get('ecosystem'):
                 try:
-                    analysis['ecosystem']['confidence'] = int(analysis['ecosystem']['confidence'])
+                    analysis['ecosystem']['confidence'] = int(str(analysis['ecosystem']['confidence']).rstrip('%'))
                 except (ValueError, TypeError):
                     analysis['ecosystem']['confidence'] = 0
                     
             if analysis.get('tokens'):
                 for token in analysis['tokens']:
                     try:
-                        token['confidence'] = int(token['confidence'])
+                        token['confidence'] = int(str(token['confidence']).rstrip('%'))
                     except (ValueError, TypeError):
                         token['confidence'] = 0
                     try:
-                        token['mentions'] = int(token['mentions'])
+                        token['mentions'] = int(token.get('mentions', 0))
                     except (ValueError, TypeError):
                         token['mentions'] = 0
             
+            if analysis.get('domains'):
+                for domain in analysis['domains']:
+                    try:
+                        domain['confidence'] = int(str(domain['confidence']).rstrip('%'))
+                    except (ValueError, TypeError):
+                        domain['confidence'] = 0
+
             # Log key metrics
             if analysis.get('ecosystem'):
                 print("\n📈 Key Metrics:")
