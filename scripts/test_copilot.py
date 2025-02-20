@@ -31,7 +31,7 @@ def test_copilot():
             'message': 'Analyze these X posts for market sentiment and trends',
             'body': x_content,
             'wallet': 'TestWallet123',  # Optional test wallet
-            'source': 'x.com'  # Indicate content is from X
+            'url': 'x.com'  # Indicate content is from X
         }
 
         print('\n🚀 Testing Copilot API with X.com content')
