@@ -236,10 +236,16 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify({
           model: "claude-3-5-sonnet-20241022",
           max_tokens: 1024,
-          messages: [{
-            role: 'user',
-            content: message
-          }],
+          messages: [
+            ...contextData.conversationHistory.map(msg => ({
+              role: msg.role,
+              content: msg.content
+            })),
+            {
+              role: 'user',
+              content: message
+            }
+          ],
           system: `${systemPrompt}\n\nPage Content:\n${bodyContent}`
         }),
         signal: controller.signal
@@ -250,6 +256,17 @@ export async function POST(request: NextRequest) {
       if (!response.ok) {
         throw new Error(`Anthropic API error: ${response.status}`);
       }
+
+      console.log('Sending messages to Claude:', {
+        historyCount: contextData.conversationHistory.length,
+        messages: [
+          ...contextData.conversationHistory.map(msg => ({
+            role: msg.role,
+            contentPreview: msg.content.substring(0, 50) + '...'
+          })),
+          { role: 'user', contentPreview: message.substring(0, 50) + '...' }
+        ]
+      });
 
       const data = await response.json();
       const assistantMessage = data.content[0].text;
