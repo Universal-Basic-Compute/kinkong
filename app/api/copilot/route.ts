@@ -3,6 +3,12 @@ import { rateLimit } from '@/utils/rate-limit';
 import { getTable } from '@/backend/src/airtable/tables';
 import { COPILOT_PROMPT } from '@/prompts/copilot';
 
+// Initialize rate limiter
+const rateLimiter = rateLimit({
+  interval: 60 * 1000, // 1 minute
+  uniqueTokenPerInterval: 500
+});
+
 export async function POST(request: NextRequest) {
   try {
     await rateLimiter.check(5, 'copilot_api');
