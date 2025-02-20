@@ -168,12 +168,14 @@ export default function CopilotStartPage() {
           <p className="text-gray-400 mb-4">
             Having trouble installing the extension? Join our community for support.
           </p>
-          <Link 
-            href="https://t.me/your_telegram_group"
+          <a 
+            href="https://t.me/ubc_portal"
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-gold hover:text-gold/80 transition-colors duration-200"
           >
             Join Telegram Community →
-          </Link>
+          </a>
         </div>
       </div>
     </div>
