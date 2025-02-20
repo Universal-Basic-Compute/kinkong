@@ -74,24 +74,55 @@ def analyze_x_sentiment(content: str):
             }]
         )
 
-        # Parse the response
-        analysis = json.loads(message.content[0].text)
+        # Get the response text
+        response_text = message.content[0].text
         
-        print("\n📊 Sentiment Analysis Results:")
-        print(json.dumps(analysis, indent=2))
+        # Clean the response text to ensure it's valid JSON
+        # Remove any potential markdown code block indicators
+        response_text = response_text.replace('```json', '').replace('```', '').strip()
         
-        # Log key metrics
-        if analysis.get('ecosystem'):
-            print("\n📈 Key Metrics:")
-            print(f"Overall Sentiment: {analysis['ecosystem']['sentiment']}")
-            print(f"Confidence: {analysis['ecosystem']['confidence']}%")
+        try:
+            # Parse the response
+            analysis = json.loads(response_text)
             
-        if analysis.get('tokens'):
-            print(f"\n💰 Analyzed Tokens: {len(analysis['tokens'])}")
-            for token in analysis['tokens']:
-                print(f"- {token['symbol']}: {token['sentiment']} ({token['confidence']}% confidence)")
+            print("\n📊 Sentiment Analysis Results:")
+            print(json.dumps(analysis, indent=2))
+            
+            # Convert confidence values to integers if they're strings
+            if analysis.get('ecosystem'):
+                try:
+                    analysis['ecosystem']['confidence'] = int(analysis['ecosystem']['confidence'])
+                except (ValueError, TypeError):
+                    analysis['ecosystem']['confidence'] = 0
+                    
+            if analysis.get('tokens'):
+                for token in analysis['tokens']:
+                    try:
+                        token['confidence'] = int(token['confidence'])
+                    except (ValueError, TypeError):
+                        token['confidence'] = 0
+                    try:
+                        token['mentions'] = int(token['mentions'])
+                    except (ValueError, TypeError):
+                        token['mentions'] = 0
+            
+            # Log key metrics
+            if analysis.get('ecosystem'):
+                print("\n📈 Key Metrics:")
+                print(f"Overall Sentiment: {analysis['ecosystem']['sentiment']}")
+                print(f"Confidence: {analysis['ecosystem']['confidence']}%")
+                
+            if analysis.get('tokens'):
+                print(f"\n💰 Analyzed Tokens: {len(analysis['tokens'])}")
+                for token in analysis['tokens']:
+                    print(f"- {token['symbol']}: {token['sentiment']} ({token['confidence']}% confidence)")
 
-        return analysis
+            return analysis
+
+        except json.JSONDecodeError as e:
+            print(f"\n❌ Error parsing JSON response: {e}")
+            print("Raw response:", response_text)
+            return None
 
     except Exception as e:
         print(f"\n❌ Error analyzing X sentiment: {e}")
