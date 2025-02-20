@@ -154,7 +154,7 @@ const TOKENS = [
   }
 ];
 
-interface TokenData extends FieldSet {
+interface TokenData {
   symbol: string;
   name: string;
   mint: string;
