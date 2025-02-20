@@ -35,29 +35,23 @@ def get_x_sentiment_prompt():
 def analyze_x_sentiment(content: str):
     """Analyze X.com content for crypto sentiment"""
     try:
-        # Load environment variables
-        load_dotenv()
-        
         # Get API key
         api_key = os.getenv('ANTHROPIC_API_KEY')
         if not api_key:
             raise ValueError("ANTHROPIC_API_KEY not found in environment variables")
 
-        # Get the prompt
-        system_prompt = get_x_sentiment_prompt()
-        if not system_prompt:
-            raise ValueError("Failed to load X sentiment prompt")
-            
-        # Get content from environment or use passed content
-        content = os.getenv('CONTENT', content)
+        # Debug the key
+        print(f"API Key from .env: {api_key[:8]}...{api_key[-4:]}")
+        
+        # Create client with explicit API key
+        client = anthropic.Client(
+            api_key=api_key,
+        )
 
         print("\n🤖 Sending content to Claude for analysis...")
         print("Content length:", len(content))
         print("\nContent sample:")
         print(content[:500] + "..." if len(content) > 500 else content)
-
-        # Initialize Claude client
-        client = anthropic.Client(api_key=api_key)
 
         # Create the message
         message = client.messages.create(
