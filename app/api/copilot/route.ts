@@ -488,21 +488,24 @@ ${bodyContent}`;
       // Clear timeout since request completed
       clearTimeout(timeoutId);
 
-    // Log API response status
-    console.log('✅ Anthropic API Response:', {
-      status: response.status,
-      ok: response.ok
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Anthropic API error:', {
+      // Log API response status
+      console.log('✅ Anthropic API Response:', {
         status: response.status,
-        statusText: response.statusText,
-        error: errorText
+        ok: response.ok
       });
-      throw new Error(`Failed to get copilot response: ${response.status}`);
-    }
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Anthropic API error:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText
+        });
+        throw new Error(`Failed to get copilot response: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const assistantMessage = data.content[0].text;
     } catch (error) {
       // Clear timeout on error
       clearTimeout(timeoutId);
