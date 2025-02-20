@@ -1,14 +1,14 @@
 const { base } = require('./client');
 
 // Table interfaces (keep these for TypeScript)
-export interface Portfolio {
+type Portfolio = {
   token: string;
   allocation: number;
   lastUpdate: string;
   usdValue?: number;
 }
 
-export interface PortfolioSnapshot {
+type PortfolioSnapshot = {
   timestamp: string;
   totalValue: number;
   holdings: {
@@ -19,7 +19,7 @@ export interface PortfolioSnapshot {
   }[];
 }
 
-export interface Trade {
+type Trade = {
   createdAt: string;  // ISO 8601 UTC format
   token: string;
   action: 'BUY' | 'SELL';
@@ -28,7 +28,7 @@ export interface Trade {
   lastUpdateTime?: string;  // ISO 8601 UTC format
 }
 
-export interface Token {
+type Token = {
   symbol: string;  // Changed from token to symbol
   name: string;
   mint: string;
@@ -44,7 +44,7 @@ export interface Token {
   priceChange24h: number;
 }
 
-export interface Signal {
+type Signal = {
   createdAt: string;
   token: string;
   type: 'BUY' | 'SELL';
@@ -62,7 +62,7 @@ export interface Signal {
   code?: string;
 }
 
-export interface MarketSentiment {
+type MarketSentiment = {
   weekStartDate: string;
   weekEndDate: string;
   classification: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
@@ -78,7 +78,7 @@ export interface MarketSentiment {
   notes: string;
 }
 
-export interface Message {
+type Message = {
   createdAt: string;
   role: 'user' | 'assistant';
   content: string;
@@ -87,7 +87,7 @@ export interface Message {
   wallet?: string;
 }
 
-export interface Subscription {
+type Subscription = {
   code: string;
   startDate: string;
   endDate: string;
@@ -97,7 +97,7 @@ export interface Subscription {
   wallet?: string;
 }
 
-export interface Thought {
+type Thought = {
   type: 'TECHNICAL_ANALYSIS' | 'REALLOCATION' | 'SIGNAL';
   content: string;
   context: Record<string, any>;
@@ -115,7 +115,7 @@ const TABLES = {
   MESSAGES: 'MESSAGES',
   THOUGHTS: 'THOUGHTS',
   SENTIMENT_ANALYSIS: 'SENTIMENT_ANALYSIS'
-} as const;
+};
 
 function getTable(tableName) {
   if (!tableName) {
@@ -125,6 +125,18 @@ function getTable(tableName) {
   return base.table(tableName);
 }
 
-// Export for both CommonJS and TypeScript
-module.exports = { TABLES, getTable };
-module.exports.default = { TABLES, getTable };
+// Export for CommonJS
+module.exports = { 
+  TABLES, 
+  getTable,
+  // Also export types for TypeScript
+  Portfolio,
+  PortfolioSnapshot,
+  Trade,
+  Token,
+  Signal,
+  MarketSentiment,
+  Message,
+  Subscription,
+  Thought
+};
