@@ -1,4 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+// Add timeout configuration
+export const maxDuration = 30; // 30 seconds timeout
+
+// Add runtime configuration 
+export const runtime = 'edge';
+
+// Add dynamic configuration
+export const dynamic = 'force-dynamic';
 import { COPILOT_PROMPT } from '@/prompts/copilot';
 import { spawn } from 'child_process';
 import { promisify } from 'util';
@@ -506,21 +515,30 @@ ${bodyContent}`;
       signalsCount: recentSignals.length
     });
 
-    // Make Anthropic API call
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: "claude-3-5-sonnet-20241022",
-        max_tokens: 1024,
-        messages: messages,
-        system: systemPrompt
-      })
-    });
+    // Create AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 seconds
+
+    try {
+      // Make Anthropic API call with timeout
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: "claude-3-5-sonnet-20241022",
+          max_tokens: 1024,
+          messages: messages,
+          system: systemPrompt
+        }),
+        signal: controller.signal // Add abort signal
+      });
+
+      // Clear timeout since request completed
+      clearTimeout(timeoutId);
 
     // Log API response status
     console.log('✅ Anthropic API Response:', {
@@ -536,6 +554,28 @@ ${bodyContent}`;
         error: errorText
       });
       throw new Error(`Failed to get copilot response: ${response.status}`);
+    }
+    } catch (error) {
+      // Clear timeout on error
+      clearTimeout(timeoutId);
+
+      // Handle timeout specifically
+      if (error.name === 'AbortError') {
+        return new NextResponse(
+          JSON.stringify({ 
+            error: 'Request timeout after 30 seconds',
+            details: 'The request took too long to complete'
+          }),
+          { 
+            status: 408,
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+      }
+
+      throw error; // Re-throw other errors
     }
 
     const data = await response.json();
