@@ -117,23 +117,33 @@ export async function POST(request: NextRequest) {
     // Check wallet-specific rate limit
     const isUnderLimit = await checkWalletMessageLimit(wallet);
     if (!isUnderLimit) {
-      return new NextResponse(
-        JSON.stringify({ 
-          error: 'Rate limit exceeded',
-          details: 'Maximum messages reached for your tier. Subscribe for increased limits.',
-          subscription: {
-            free: '10 messages per 4 hours',
-            premium: '100 messages per 4 hours'
-          }
-        }),
-        { 
-          status: 429,
-          headers: { 
-            'Content-Type': 'application/json',
-            'Retry-After': '14400' // 4 hours in seconds
-          }
+      const stream = new ReadableStream({
+        start(controller) {
+          const encoder = new TextEncoder();
+          const message = `Hey there! 👋 Looks like you've reached your message limit for now.
+
+I love chatting with you, but I need to manage my energy to help everyone effectively! 🔋
+
+Want to keep our conversation going? Upgrade to premium at swarmtrade.ai/copilot for:
+• 100 messages every 4 hours (10x more than free tier)
+• Priority response time
+• Advanced trading insights
+• Custom portfolio analysis
+
+See you there! 🚀
+
+- KinKong`;
+          controller.enqueue(encoder.encode(message));
+          controller.close();
         }
-      );
+      });
+
+      return new Response(stream, {
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+          'Cache-Control': 'no-cache'
+        }
+      });
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
