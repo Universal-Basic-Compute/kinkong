@@ -15,7 +15,6 @@ export default function CopilotPage() {
 
   // Add subscription constants
   const SUBSCRIPTION_COST = 3.5; // SOL
-  const SUBSCRIPTION_WALLET = new PublicKey(process.env.NEXT_PUBLIC_SUBSCRIPTION_WALLET!);
 
   const features = [
     {
@@ -92,16 +91,32 @@ export default function CopilotPage() {
     setError(null);
 
     try {
+      // Validate subscription wallet address
+      const subscriptionWalletAddress = process.env.NEXT_PUBLIC_SUBSCRIPTION_WALLET;
+      if (!subscriptionWalletAddress) {
+        throw new Error('Subscription wallet not configured');
+      }
+
+      let subscriptionWallet: PublicKey;
+      try {
+        subscriptionWallet = new PublicKey(subscriptionWalletAddress);
+      } catch (err) {
+        console.error('Invalid subscription wallet address:', err);
+        throw new Error('Invalid subscription wallet configuration');
+      }
+
       // Create connection
-      const connection = new Connection(
-        process.env.NEXT_PUBLIC_HELIUS_RPC_URL!,
-        'confirmed'
-      );
+      const rpcUrl = process.env.NEXT_PUBLIC_HELIUS_RPC_URL;
+      if (!rpcUrl) {
+        throw new Error('RPC URL not configured');
+      }
+      
+      const connection = new Connection(rpcUrl, 'confirmed');
 
       // Create transfer instruction
       const transferInstruction = SystemProgram.transfer({
         fromPubkey: publicKey,
-        toPubkey: SUBSCRIPTION_WALLET,
+        toPubkey: subscriptionWallet,
         lamports: SUBSCRIPTION_COST * LAMPORTS_PER_SOL
       });
 
