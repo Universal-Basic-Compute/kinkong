@@ -129,20 +129,32 @@ export async function POST(request: NextRequest) {
     // Build initial system prompt
     let systemPrompt = COPILOT_PROMPT;
 
-    // Check if content is from X.com
-    const isXContent = bodyContent.includes('twitter.com') || 
-                      bodyContent.includes('x.com') ||
-                      bodyContent.includes('X.com') ||  // Add case variation
-                      requestBody.url === 'x.com';   // Check url field
-
-    // Log the check
-    console.log('Content source check:', {
-      isXContent,
-      hasTwitter: bodyContent.includes('twitter.com'),
-      hasXcom: bodyContent.includes('x.com'),
-      hasXComCaps: bodyContent.includes('X.com'),
-      url: requestBody.url
+    // Add detailed logging around the X content check
+    console.log('\nDebug X content detection:', {
+      requestBody: {
+        message: requestBody.message,
+        url: requestBody.url,
+        bodyLength: bodyContent.length,
+        bodyPreview: bodyContent.substring(0, 100) + '...'
+      }
     });
+
+    // Log each condition separately
+    const conditions = {
+      hasTwitterInBody: bodyContent.includes('twitter.com'),
+      hasLowerXInBody: bodyContent.includes('x.com'),
+      hasUpperXInBody: bodyContent.includes('X.com'),
+      hasXUrl: requestBody.url === 'x.com'
+    };
+
+    console.log('X content detection conditions:', conditions);
+
+    const isXContent = conditions.hasTwitterInBody || 
+                      conditions.hasLowerXInBody ||
+                      conditions.hasUpperXInBody ||
+                      conditions.hasXUrl;
+
+    console.log('Final isXContent result:', isXContent);
 
     // Get message history if wallet is provided
     let messageHistory: HistoryMessage[] = [];
@@ -238,10 +250,13 @@ export async function POST(request: NextRequest) {
 
     // If X content, analyze sentiment
     if (isXContent) {
-      console.log('📊 Analyzing X.com sentiment...');
+      console.log('📊 Starting X sentiment analysis...');
       const sentiment = await analyzeXSentiment(bodyContent);
       if (sentiment) {
-        console.log('X Sentiment Analysis:', sentiment);
+        console.log('✅ X Sentiment Analysis completed:', sentiment);
+      } else {
+        console.log('❌ X sentiment analysis failed or returned no results');
+      }
         systemPrompt = `${systemPrompt}\n\nX.com Sentiment Analysis:\n${JSON.stringify(sentiment, null, 2)}`;
       }
     }
