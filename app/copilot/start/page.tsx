@@ -1,29 +1,143 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { WalletConnect } from '@/components/wallet/WalletConnect';
 
-export default function CopilotStartPage() {
-  const [activeStep, setActiveStep] = useState(1);
+export default function CopilotPage() {
+  const { connected } = useWallet();
 
-  const steps = [
-    {
-      title: "Download the extension files", 
-      content: (
-        <div>
-          Download the KinKong Copilot extension files{' '}
-          <a 
-            href="https://github.com/Universal-Basic-Compute/kinkong-copilot/archive/refs/heads/main.zip"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gold hover:text-gold/80 underline"
-          >
-            here
-          </a>.
+  return (
+    <main className="min-h-screen pt-20 px-4">
+      <div className="max-w-6xl mx-auto space-y-12">
+        {/* Hero Section */}
+        <div className="text-center space-y-6">
+          <h1 className="text-5xl font-bold">
+            Meet <span className="white-glow-text">KinKong Copilot</span>
+          </h1>
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            Your AI-powered trading assistant that helps you make smarter decisions in the Solana ecosystem.
+          </p>
+          <div className="flex justify-center gap-4">
+            {connected ? (
+              <Link 
+                href="/copilot/chat"
+                className="px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 animate-pulse"
+              >
+                Start Chatting
+              </Link>
+            ) : (
+              <WalletConnect />
+            )}
+            <Link
+              href="/copilot/start"
+              className="px-8 py-4 bg-black/30 border border-gold/20 text-gold font-bold rounded-lg hover:bg-black/50 transition-all duration-200"
+            >
+              Installation Guide
+            </Link>
+          </div>
         </div>
-      ),
-      code: null
-    },
+
+        {/* Features Grid */}
+        <div className="grid md:grid-cols-3 gap-6">
+          {[
+            {
+              icon: "🧠",
+              title: "AI-Powered Analysis",
+              description: "Get real-time market insights and trading opportunities powered by advanced AI models."
+            },
+            {
+              icon: "📊",
+              title: "Technical Analysis",
+              description: "Instant chart analysis, support/resistance levels, and pattern recognition."
+            },
+            {
+              icon: "🎯",
+              title: "Trading Signals",
+              description: "Receive high-confidence trading signals with specific entry and exit points."
+            },
+            {
+              icon: "⚡",
+              title: "Real-time Alerts",
+              description: "Never miss a trading opportunity with instant market movement notifications."
+            },
+            {
+              icon: "📈",
+              title: "Portfolio Insights",
+              description: "Get personalized recommendations to optimize your trading portfolio."
+            },
+            {
+              icon: "🛡️",
+              title: "Risk Management",
+              description: "Smart position sizing and risk assessment for every trade."
+            }
+          ].map((feature, i) => (
+            <div key={i} className="bg-black/30 border border-gold/20 rounded-lg p-6 hover:bg-black/40 transition-all duration-200">
+              <div className="text-4xl mb-4">{feature.icon}</div>
+              <h3 className="text-xl font-bold mb-2 text-gold">{feature.title}</h3>
+              <p className="text-gray-400">{feature.description}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* How It Works Section */}
+        <div className="space-y-8">
+          <h2 className="text-3xl font-bold text-center">How It Works</h2>
+          <div className="grid md:grid-cols-4 gap-6">
+            {[
+              {
+                step: "1",
+                title: "Connect Wallet",
+                description: "Link your Solana wallet to get started"
+              },
+              {
+                step: "2",
+                title: "Subscribe",
+                description: "Choose your subscription plan"
+              },
+              {
+                step: "3",
+                title: "Install Extension",
+                description: "Add KinKong Copilot to Chrome"
+              },
+              {
+                step: "4",
+                title: "Start Trading",
+                description: "Get AI-powered trading assistance"
+              }
+            ].map((step, i) => (
+              <div key={i} className="text-center space-y-4">
+                <div className="w-12 h-12 rounded-full bg-orange-500 text-white font-bold text-xl flex items-center justify-center mx-auto">
+                  {step.step}
+                </div>
+                <h3 className="text-xl font-bold">{step.title}</h3>
+                <p className="text-gray-400">{step.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* CTA Section */}
+        <div className="bg-gradient-to-r from-orange-500/10 to-gold/10 rounded-lg p-8 text-center space-y-6">
+          <h2 className="text-3xl font-bold">Ready to Trade Smarter?</h2>
+          <p className="text-xl text-gray-300">
+            Join thousands of traders using KinKong Copilot to make better trading decisions.
+          </p>
+          {connected ? (
+            <Link 
+              href="/copilot/chat"
+              className="inline-block px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200"
+            >
+              Start Using Copilot
+            </Link>
+          ) : (
+            <WalletConnect />
+          )}
+        </div>
+      </div>
+    </main>
+  );
+}
     {
       title: "Extract the ZIP file",
       content: "Extract the downloaded ZIP file to a folder on your computer.",
