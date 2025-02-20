@@ -3,11 +3,33 @@ import { rateLimit } from '@/utils/rate-limit';
 import { getTable } from '@/backend/src/airtable/tables';
 import { COPILOT_PROMPT } from '@/prompts/copilot';
 
-// Initialize rate limiter
+// Initialize global rate limiter
 const rateLimiter = rateLimit({
   interval: 60 * 1000, // 1 minute
   uniqueTokenPerInterval: 500
 });
+
+// Helper function to check wallet message count
+async function checkWalletMessageLimit(wallet: string): Promise<boolean> {
+  try {
+    const messagesTable = getTable('MESSAGES');
+    const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString();
+
+    // Query messages from this wallet in last 4 hours
+    const records = await messagesTable.select({
+      filterByFormula: `AND(
+        {wallet}='${wallet}',
+        IS_AFTER({createdAt}, '${fourHoursAgo}')
+      )`
+    }).all();
+
+    console.log(`Found ${records.length} messages for wallet ${wallet} in last 4 hours`);
+    return records.length < 10; // Return true if under limit
+  } catch (error) {
+    console.error('Error checking wallet message limit:', error);
+    throw error;
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
