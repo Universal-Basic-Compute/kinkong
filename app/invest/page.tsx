@@ -23,7 +23,7 @@ interface Investment {
   amount: number;
   solscanUrl: string;
   date: string;
-  username: string;
+  username?: string;
   wallet: string;
 }
 
@@ -33,7 +33,6 @@ const validateInvestment = (inv: any): inv is Investment => {
     typeof inv.amount === 'number' &&
     typeof inv.solscanUrl === 'string' &&
     typeof inv.date === 'string' &&
-    typeof inv.username === 'string' &&
     typeof inv.wallet === 'string'
   );
 };
@@ -218,7 +217,7 @@ export default function Invest() {
                 <tbody>
                   {investments.filter(validateInvestment).map((investment) => (
                     <tr key={investment.investmentId} className="border-b border-gold/10 hover:bg-gold/5">
-                      <td className="px-4 py-2">{investment.username}</td>
+                      <td className="px-4 py-2">{investment.username || 'Anonymous'}</td>
                       <td className="px-4 py-2 text-right">
                         {typeof investment.amount === 'number' 
                           ? `${investment.amount.toLocaleString('en-US')} USDC`
