@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { verifySubscription } from '@/utils/subscription';
 import { getTable } from '@/backend/src/airtable/tables';
 import { Connection, PublicKey, LAMPORTS_PER_SOL, Transaction, SystemProgram } from '@solana/web3.js';
@@ -15,6 +15,7 @@ if (!process.env.NEXT_PUBLIC_HELIUS_RPC_URL || !process.env.NEXT_PUBLIC_SUBSCRIP
 export default function CopilotSubscriptionPage() {
   const { publicKey, signTransaction, connected } = useWallet();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const code = searchParams.get('code');
   const [subscriptionStatus, setSubscriptionStatus] = useState<'active' | 'inactive' | 'loading'>('loading');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -125,8 +126,9 @@ export default function CopilotSubscriptionPage() {
       // Create subscription record
       await createSubscription(signature, publicKey.toString(), code || '');
       
-      // Update status
+      // Update status and redirect
       setSubscriptionStatus('active');
+      router.push('/copilot/start');
       
     } catch (err) {
       console.error('Subscription error:', err);
