@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { COPILOT_PROMPT } from '@/prompts/copilot';
 import { rateLimit } from '@/utils/rate-limit';
+import { getTable } from '@/backend/src/airtable/tables';
 
 const limiter = rateLimit({
   interval: 60 * 1000, // 1 minute
@@ -10,6 +11,7 @@ const limiter = rateLimit({
 interface CopilotRequest {
   message: string;
   body: string;
+  wallet?: string; // Optional wallet address for history tracking
 }
 
 export async function POST(request: NextRequest) {
@@ -46,6 +48,15 @@ export async function POST(request: NextRequest) {
       historyLength: messageHistory.length
     });
 
+    // Build messages array for Claude
+    const messages = [
+      ...messageHistory,
+      {
+        role: 'user',
+        content: message
+      }
+    ];
+
     // Simple system prompt
     const systemPrompt = `${COPILOT_PROMPT}
 
@@ -69,12 +80,7 @@ ${bodyContent}`;
       body: JSON.stringify({
         model: "claude-3-5-sonnet-20241022",
         max_tokens: 1024,
-        messages: [
-          {
-            role: 'user',
-            content: message
-          }
-        ],
+        messages: messages,
         system: systemPrompt
       })
     });
