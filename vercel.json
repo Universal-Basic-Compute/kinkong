@@ -12,6 +12,10 @@
     {
       "path": "/api/cron/market-sentiment",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/calculate-signals",
+      "schedule": "0 */2 * * *"
     }
   ]
 }
