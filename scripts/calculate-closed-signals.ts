@@ -2,7 +2,7 @@ import Airtable from 'airtable';
 import { config } from 'dotenv';
 import fetch from 'node-fetch';
 
-// Load environment variables
+// Initialize environment variables
 config();
 
 // Interfaces
