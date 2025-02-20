@@ -11,19 +11,8 @@ project_root = str(Path(__file__).parent.parent.absolute())
 if project_root not in sys.path:
     sys.path.append(project_root)
 
-def read_system_prompt():
-    """Read system prompt from TypeScript file"""
-    try:
-        prompt_path = Path(project_root) / 'prompts' / 'x-sentiment.ts'
-        with open(prompt_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-            # Extract the string content between backticks
-            start = content.find('`') + 1
-            end = content.rfind('`')
-            return content[start:end]
-    except Exception as e:
-        print(f"Error reading system prompt: {e}")
-        return None
+# Import the prompt directly
+from prompts.x_sentiment import X_SENTIMENT_PROMPT
 
 def analyze_x_sentiment(content: str):
     """Analyze X.com content for crypto sentiment"""
@@ -36,12 +25,10 @@ def analyze_x_sentiment(content: str):
         if not api_key:
             raise ValueError("ANTHROPIC_API_KEY not found in environment variables")
 
-        # Get X sentiment prompt from environment
-        system_prompt = os.getenv('X_SENTIMENT_PROMPT')
-        if not system_prompt:
-            raise ValueError("X_SENTIMENT_PROMPT not found in environment")
+        # Use imported prompt
+        system_prompt = X_SENTIMENT_PROMPT
             
-        # Get content from environment
+        # Get content from environment or use passed content
         content = os.getenv('CONTENT', content)
 
         print("\n🤖 Sending content to Claude for analysis...")
