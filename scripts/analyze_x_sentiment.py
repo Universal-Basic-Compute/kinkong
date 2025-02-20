@@ -12,22 +12,42 @@ if project_root not in sys.path:
     sys.path.append(project_root)
 
 def get_x_sentiment_prompt():
-    """Read the X sentiment prompt from markdown file"""
-    prompt_path = project_root / 'prompts' / 'x-sentiment.md'
-    try:
-        print(f"Looking for prompt at: {prompt_path}")  # Debug print
-        if not prompt_path.exists():
-            print(f"❌ Prompt file not found at {prompt_path}")
-            return None
-            
-        with open(prompt_path, 'r') as f:
-            prompt = f.read()
-            print("✅ Prompt loaded successfully")
-            print("Prompt length:", len(prompt))
-            return prompt
-    except Exception as e:
-        print(f"Error reading prompt file: {e}")
-        return None
+    """Get the X sentiment prompt"""
+    return """You are an expert crypto sentiment analyst specializing in Solana ecosystem analysis.
+
+Analyze the provided X.com content and extract:
+1. Mentioned tokens and their sentiment
+2. Domain-specific trends (DeFi, Gaming, AI, etc.)
+3. Overall ecosystem sentiment
+
+Format your response as JSON:
+{
+    "tokens": [
+        {
+            "symbol": "string",
+            "sentiment": "BULLISH | BEARISH | NEUTRAL",
+            "confidence": 0-100,
+            "mentions": number,
+            "key_topics": ["string"],
+            "latest_news": ["string"]
+        }
+    ],
+    "domains": [
+        {
+            "name": "string",
+            "sentiment": "BULLISH | BEARISH | NEUTRAL",
+            "confidence": 0-100,
+            "trending_topics": ["string"],
+            "key_developments": ["string"]
+        }
+    ],
+    "ecosystem": {
+        "sentiment": "BULLISH | BEARISH | NEUTRAL",
+        "confidence": 0-100,
+        "key_observations": ["string"],
+        "emerging_trends": ["string"]
+    }
+}"""
 
 def analyze_x_sentiment(content: str):
     """Analyze X.com content for crypto sentiment"""
