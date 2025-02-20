@@ -371,6 +371,13 @@ interface MarketClassification {
   sentiment: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
   confidence: number;
   reasons: string[];
+  metrics: {
+    tokensAbove7dAvg: number;
+    totalTokens: number;
+    volumeGrowth: number;
+    percentVolumeOnUpDays: number;
+    aiVsSolPerformance: number;
+  };
 }
 
 export async function analyzeMarketSentiment(): Promise<MarketClassification> {
@@ -380,37 +387,56 @@ export async function analyzeMarketSentiment(): Promise<MarketClassification> {
     
     // Calculate metrics
     const tokensAbove7dAvg = tokens.filter(t => t.price > t.price7dAvg).length;
+    const totalTokens = tokens.length;
     const volumeOnUpDays = tokens.filter(t => t.volumeOnUpDay).length;
     
+    // Calculate volume growth (simplified example)
+    const volumeGrowth = 0; // You may want to implement actual volume growth calculation
+    
+    // Calculate AI vs SOL performance
+    const solToken = tokens.find(t => t.symbol === 'SOL');
+    const aiTokens = tokens.filter(t => t.symbol !== 'SOL');
+    const solPerformance = solToken?.priceChange24h || 0;
+    const aiPerformance = aiTokens.reduce((sum, t) => sum + (t.priceChange24h || 0), 0) / aiTokens.length;
+    const aiVsSolPerformance = aiPerformance - solPerformance;
+
     // Determine sentiment
     let sentiment: 'BULLISH' | 'BEARISH' | 'NEUTRAL' = 'NEUTRAL';
     let confidence = 0;
     const reasons: string[] = [];
 
-    if (tokensAbove7dAvg > tokens.length * 0.6) {
+    if (tokensAbove7dAvg > totalTokens * 0.6) {
       sentiment = 'BULLISH';
       confidence += 20;
-      reasons.push(`${tokensAbove7dAvg}/${tokens.length} tokens above 7d average`);
-    } else if (tokensAbove7dAvg < tokens.length * 0.4) {
+      reasons.push(`${tokensAbove7dAvg}/${totalTokens} tokens above 7d average`);
+    } else if (tokensAbove7dAvg < totalTokens * 0.4) {
       sentiment = 'BEARISH';
       confidence += 20;
-      reasons.push(`Only ${tokensAbove7dAvg}/${tokens.length} tokens above 7d average`);
+      reasons.push(`Only ${tokensAbove7dAvg}/${totalTokens} tokens above 7d average`);
     }
 
-    if (volumeOnUpDays > tokens.length * 0.6) {
+    if (volumeOnUpDays > totalTokens * 0.6) {
       if (sentiment === 'BULLISH') confidence += 20;
       sentiment = 'BULLISH';
       reasons.push('Majority of volume on up days');
-    } else if (volumeOnUpDays < tokens.length * 0.4) {
+    } else if (volumeOnUpDays < totalTokens * 0.4) {
       if (sentiment === 'BEARISH') confidence += 20;
       sentiment = 'BEARISH';
       reasons.push('Majority of volume on down days');
     }
 
+    // Return with metrics
     return {
       sentiment,
       confidence: Math.min(confidence, 100),
-      reasons
+      reasons,
+      metrics: {
+        tokensAbove7dAvg,
+        totalTokens,
+        volumeGrowth,
+        percentVolumeOnUpDays: (volumeOnUpDays / totalTokens) * 100,
+        aiVsSolPerformance
+      }
     };
 
   } catch (error) {
