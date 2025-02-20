@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { NextRequest, NextResponse } from 'next/server';
 import { rateLimit } from '@/utils/rate-limit';
 import { getTable } from '@/backend/src/airtable/tables';
 import { Signal } from '@/backend/src/airtable/tables';
