@@ -93,6 +93,7 @@ interface CopilotRequest {
   message: string;
   body: string;
   wallet?: string; // Optional wallet address for history tracking
+  url?: string;    // URL field for content source
 }
 
 interface HistoryMessage {
@@ -132,7 +133,7 @@ export async function POST(request: NextRequest) {
     const isXContent = bodyContent.includes('twitter.com') || 
                       bodyContent.includes('x.com') ||
                       bodyContent.includes('X.com') ||  // Add case variation
-                      requestBody.source === 'x.com';   // Check source field explicitly
+                      requestBody.url === 'x.com';   // Check url field
 
     // Log the check
     console.log('Content source check:', {
@@ -140,7 +141,7 @@ export async function POST(request: NextRequest) {
       hasTwitter: bodyContent.includes('twitter.com'),
       hasXcom: bodyContent.includes('x.com'),
       hasXComCaps: bodyContent.includes('X.com'),
-      source: requestBody.source
+      url: requestBody.url
     });
 
     // Get message history if wallet is provided
