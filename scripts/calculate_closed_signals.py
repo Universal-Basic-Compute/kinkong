@@ -320,7 +320,7 @@ def simulate_trade(prices: list, signal_data: dict) -> dict:
         'success': success
     }
 
-export async function calculateClosedSignals() {
+def calculate_closed_signals():
     """Calculate metrics for all closed signals that haven't been evaluated yet"""
     try:
         load_dotenv()
@@ -432,8 +432,7 @@ export async function calculateClosedSignals() {
         print(f"\n❌ Error: {e}")
         raise
 
-// Only run if called directly (not imported)
-if (require.main === module) {
-    console.log("\n🚀 Starting closed signals calculation...");
-    calculateClosedSignals().catch(console.error);
-}
+# Only run if called directly (not imported)
+if __name__ == "__main__":
+    print("\n🚀 Starting closed signals calculation...")
+    calculate_closed_signals()
