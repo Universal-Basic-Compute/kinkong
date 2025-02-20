@@ -12,7 +12,6 @@ interface SignalRecord extends FieldSet {
   targetPrice?: number;
   stopLoss?: number;
   confidence: 'LOW' | 'MEDIUM' | 'HIGH';
-  wallet: string;
   reason: string;
   url?: string;
   success?: boolean;
@@ -51,7 +50,6 @@ export async function GET() {
         stopLoss: record.get('stopLoss') ? Number(record.get('stopLoss')) : undefined,
         confidence: record.get('confidence') as 'LOW' | 'MEDIUM' | 'HIGH' || 'MEDIUM', // Default to MEDIUM if missing
         success: record.get('success') as boolean | null,
-        wallet: record.get('wallet') as string,
         reason: record.get('reason') as string || '',
         url: record.get('url') as string || undefined,
         actualReturn: record.get('actualReturn') ? Number(record.get('actualReturn')) : null,
