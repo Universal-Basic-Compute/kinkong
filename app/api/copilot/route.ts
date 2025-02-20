@@ -4,15 +4,15 @@ import { getTable } from '@/backend/src/airtable/tables';
 import { COPILOT_PROMPT } from '@/prompts/copilot';
 
 const RATE_LIMIT_MESSAGES = [
-  `Time for a quick break! 🎯 Hit my message limit for now. Want 10x more chats? Premium awaits at swarmtrade.ai/copilot! 🚀`,
+  `Time for a quick break! 🎯 Hit my message limit for now. Want 10x more chats? [Premium awaits](https://swarmtrade.ai/copilot)! 🚀`,
   
-  `Whew, what a chat! 💬 Need to recharge for a bit. Get unlimited trading insights with premium - swarmtrade.ai/copilot ✨`,
+  `Whew, what a chat! 💬 Need to recharge for a bit. Get unlimited trading insights with [premium](https://swarmtrade.ai/copilot) ✨`,
   
-  `Hold that thought! 🤔 Message limit reached. Ready for non-stop alpha? Join premium gang: swarmtrade.ai/copilot 💪`,
+  `Hold that thought! 🤔 Message limit reached. Ready for non-stop alpha? Join [premium gang](https://swarmtrade.ai/copilot) 💪`,
   
-  `Taking a breather! 😅 Max messages hit. Unlock 24/7 trading wisdom with premium: swarmtrade.ai/copilot 🎓`,
+  `Taking a breather! 😅 Max messages hit. Unlock 24/7 trading wisdom - [upgrade here](https://swarmtrade.ai/copilot) 🎓`,
   
-  `Energy check! ⚡ Need to rest my circuits. Want unlimited trading convos? Premium's calling: swarmtrade.ai/copilot 🌟`
+  `Energy check! ⚡ Need to rest my circuits. Want unlimited trading convos? [Premium's calling](https://swarmtrade.ai/copilot) 🌟`
 ];
 
 // Initialize global rate limiter
