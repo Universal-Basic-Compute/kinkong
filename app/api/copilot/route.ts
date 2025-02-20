@@ -5,12 +5,21 @@ import { getTable } from '@/backend/src/airtable/tables';
 import { Signal } from '@/backend/src/airtable/tables';
 
 interface FormattedSignal {
+  id: string;
+  createdAt: string;
   token: string;
   type: 'BUY' | 'SELL';
-  timeframe: string;
-  confidence: string;
+  timeframe: 'SCALP' | 'INTRADAY' | 'SWING' | 'POSITION';
+  entryPrice?: number;
+  targetPrice?: number;
+  stopLoss?: number;
+  confidence: 'LOW' | 'MEDIUM' | 'HIGH';
+  wallet: string;
+  reason: string;
+  url?: string;
+  expectedReturn?: number;
   actualReturn?: number;
-  createdAt: string;
+  accuracy?: number;
 }
 
 async function getRecentSignals(): Promise<FormattedSignal[]> {
@@ -24,12 +33,21 @@ async function getRecentSignals(): Promise<FormattedSignal[]> {
       .all();
 
     return records.map(record => ({
+      id: record.id,
+      createdAt: record.get('createdAt') as string,
       token: record.get('token') as string,
       type: record.get('type') as 'BUY' | 'SELL',
-      timeframe: record.get('timeframe') as string,
-      confidence: record.get('confidence') as string,
+      timeframe: record.get('timeframe') as 'SCALP' | 'INTRADAY' | 'SWING' | 'POSITION',
+      entryPrice: record.get('entryPrice') as number | undefined,
+      targetPrice: record.get('targetPrice') as number | undefined,
+      stopLoss: record.get('stopLoss') as number | undefined,
+      confidence: record.get('confidence') as 'LOW' | 'MEDIUM' | 'HIGH',
+      wallet: record.get('wallet') as string,
+      reason: record.get('reason') as string,
+      url: record.get('url') as string | undefined,
+      expectedReturn: record.get('expectedReturn') as number | undefined,
       actualReturn: record.get('actualReturn') as number | undefined,
-      createdAt: record.get('createdAt') as string
+      accuracy: record.get('accuracy') as number | undefined
     }));
   } catch (error) {
     console.error('Error fetching recent signals:', error);
@@ -145,10 +163,27 @@ export async function POST(request: NextRequest) {
     console.log('📊 Recent signals fetched:', recentSignals.length);
 
     // Format signals for context
-    const signalsContext = recentSignals.map(signal => 
-      `${signal.createdAt}: ${signal.token} ${signal.type} (${signal.timeframe}, ${signal.confidence})`
-      + (signal.actualReturn !== undefined ? ` - Return: ${signal.actualReturn.toFixed(2)}%` : '')
-    ).join('\n');
+    const signalsContext = recentSignals.map(signal => {
+      const prices = [
+        signal.entryPrice ? `Entry: $${signal.entryPrice.toFixed(4)}` : null,
+        signal.targetPrice ? `Target: $${signal.targetPrice.toFixed(4)}` : null,
+        signal.stopLoss ? `Stop: $${signal.stopLoss.toFixed(4)}` : null
+      ].filter(Boolean).join(', ');
+
+      const returns = [
+        signal.expectedReturn !== undefined ? `Expected: ${signal.expectedReturn.toFixed(2)}%` : null,
+        signal.actualReturn !== undefined ? `Actual: ${signal.actualReturn.toFixed(2)}%` : null,
+        signal.accuracy !== undefined ? `Accuracy: ${signal.accuracy.toFixed(2)}%` : null
+      ].filter(Boolean).join(', ');
+
+      return `${signal.createdAt}: ${signal.token} ${signal.type} (${signal.timeframe}, ${signal.confidence})
+    ${prices}
+    ${returns}
+    Reason: ${signal.reason}
+    ${signal.url ? `URL: ${signal.url}` : ''}
+    Wallet: ${signal.wallet}
+  `.trim();
+    }).join('\n\n');
 
     // Build messages array for Claude
     const messages = [
@@ -162,7 +197,8 @@ export async function POST(request: NextRequest) {
     // Build system prompt with signals
     const systemPrompt = `${COPILOT_PROMPT}
 
-Recent Trading Signals:
+Recent Trading Signals (Last 25):
+--------------------------------
 ${signalsContext}
 
 Current Page Content:
