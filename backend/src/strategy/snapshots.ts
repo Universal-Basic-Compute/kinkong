@@ -251,7 +251,8 @@ export async function recordPortfolioSnapshot() {
         ? ((totalVolumeThisWeek - totalVolumePrevWeek) / totalVolumePrevWeek) * 100 
         : 0,
       percentVolumeOnUpDays: (volumeOnUpDays / totalVolumeDays) * 100,
-      aiVsSolPerformance: aiPerformance - solPerformance
+      aiVsSolPerformance: aiPerformance - solPerformance,
+      totalTokens: tokens.length  // Add total tokens count
     };
 
     const classification = classifyMarket(notificationMetrics);
