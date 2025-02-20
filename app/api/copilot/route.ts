@@ -2,6 +2,40 @@ import { NextRequest, NextResponse } from 'next/server';
 import { COPILOT_PROMPT } from '@/prompts/copilot';
 import { rateLimit } from '@/utils/rate-limit';
 import { getTable } from '@/backend/src/airtable/tables';
+import { Signal } from '@/backend/src/airtable/tables';
+
+interface FormattedSignal {
+  token: string;
+  type: 'BUY' | 'SELL';
+  timeframe: string;
+  confidence: string;
+  actualReturn?: number;
+  createdAt: string;
+}
+
+async function getRecentSignals(): Promise<FormattedSignal[]> {
+  try {
+    const signalsTable = getTable('SIGNALS');
+    const records = await signalsTable
+      .select({
+        maxRecords: 25,
+        sort: [{ field: 'createdAt', direction: 'desc' }]
+      })
+      .all();
+
+    return records.map(record => ({
+      token: record.get('token') as string,
+      type: record.get('type') as 'BUY' | 'SELL',
+      timeframe: record.get('timeframe') as string,
+      confidence: record.get('confidence') as string,
+      actualReturn: record.get('actualReturn') as number | undefined,
+      createdAt: record.get('createdAt') as string
+    }));
+  } catch (error) {
+    console.error('Error fetching recent signals:', error);
+    return [];
+  }
+}
 import { config } from 'dotenv';
 import { resolve } from 'path';
 
