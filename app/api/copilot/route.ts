@@ -67,7 +67,6 @@ async function getRecentSignals(): Promise<FormattedSignal[]> {
       targetPrice: record.get('targetPrice') as number | undefined,
       stopLoss: record.get('stopLoss') as number | undefined,
       confidence: record.get('confidence') as 'LOW' | 'MEDIUM' | 'HIGH',
-      wallet: record.get('wallet') as string,
       reason: record.get('reason') as string,
       url: record.get('url') as string | undefined,
       expectedReturn: record.get('expectedReturn') as number | undefined,
