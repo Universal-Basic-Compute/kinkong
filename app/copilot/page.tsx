@@ -14,7 +14,7 @@ export default function CopilotPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Add subscription constants
-  const SUBSCRIPTION_COST = 3.5; // SOL
+  const SUBSCRIPTION_COST = 1.5; // SOL
 
   const features = [
     {
@@ -74,7 +74,7 @@ export default function CopilotPage() {
         "Custom trading strategies",
         "Direct ecosystem integration"
       ],
-      price: "3.5 SOL / 3 months",
+      price: "1.5 SOL / 3 months",
       action: () => handlePremiumSubscription(),
       buttonText: "Upgrade to Premium", 
       buttonStyle: "bg-gradient-to-r from-darkred to-gold text-black"
