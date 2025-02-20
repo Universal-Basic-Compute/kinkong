@@ -84,6 +84,7 @@ interface WeeklyAnalysis {
     volumeGrowth: number;
     percentVolumeOnUpDays: number;
     aiVsSolPerformance: number;
+    totalTokens: number;
   };
 }
 
