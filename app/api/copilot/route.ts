@@ -37,13 +37,13 @@ const rateLimiter = rateLimit({
 });
 
 // Helper function to check wallet message limit
-async function checkWalletMessageLimit(wallet: string): Promise<boolean> {
+async function checkMessageLimit(code: string): Promise<boolean> {
   try {
-    // First check if wallet has active subscription
+    // First check if code has active subscription
     const subscriptionsTable = getTable('SUBSCRIPTIONS');
     const subscriptions = await subscriptionsTable.select({
       filterByFormula: `AND(
-        {wallet}='${wallet}',
+        {code}='${code}',
         {status}='ACTIVE',
         {endDate}>=TODAY()
       )`
@@ -62,18 +62,18 @@ async function checkWalletMessageLimit(wallet: string): Promise<boolean> {
 
     const messagesTable = getTable('MESSAGES');
     
-    // Query messages from this wallet in current 8-hour block
+    // Query messages from this code in current 8-hour block
     const records = await messagesTable.select({
       filterByFormula: `AND(
-        {wallet}='${wallet}',
+        {code}='${code}',
         IS_AFTER({createdAt}, '${blockStart.toISOString()}'),
         IS_BEFORE({createdAt}, '${blockEnd.toISOString()}')
       )`
     }).all();
 
-    console.log(`Found ${records.length} messages for wallet ${wallet} in current block`);
+    console.log(`Found ${records.length} messages for code ${code} in current block`);
     console.log(`Current block: ${blockNumber} (${blockStart.toISOString()} - ${blockEnd.toISOString()})`);
-    console.log(`Wallet has active subscription: ${subscriptions.length > 0}`);
+    console.log(`Code has active subscription: ${subscriptions.length > 0}`);
     console.log(`Message limit: ${messageLimit}`);
     console.log(`Messages used in current block: ${records.length}`);
     console.log(`Time until next block: ${new Date(blockEnd).getTime() - now.getTime()}ms`);
@@ -139,12 +139,12 @@ export async function POST(request: NextRequest) {
     await rateLimiter.check(5, 'copilot_api');
 
     const requestBody = await request.json();
-    const { message, wallet } = requestBody;
+    const { message, code } = requestBody;
 
-    // Validate wallet address
-    if (!wallet) {
+    // Validate code
+    if (!code) {
       return new NextResponse(
-        JSON.stringify({ error: 'Wallet address required' }),
+        JSON.stringify({ error: 'Code required' }),
         { 
           status: 400,
           headers: { 'Content-Type': 'application/json' }
@@ -152,8 +152,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check wallet-specific rate limit
-    const isUnderLimit = await checkWalletMessageLimit(wallet);
+    // Check code-specific rate limit
+    const isUnderLimit = await checkMessageLimit(code);
     if (!isUnderLimit) {
       const stream = new ReadableStream({
         start(controller) {
@@ -238,12 +238,12 @@ export async function POST(request: NextRequest) {
         }
       });
 
-      if (wallet) {
+      if (code) {
         const messagesTable = getTable('MESSAGES');
         await messagesTable.create([
           {
             fields: {
-              wallet,
+              code,
               role: 'user',
               content: message,
               createdAt: new Date().toISOString()
@@ -251,7 +251,7 @@ export async function POST(request: NextRequest) {
           },
           {
             fields: {
-              wallet,
+              code,
               role: 'assistant',
               content: assistantMessage,
               createdAt: new Date().toISOString()
