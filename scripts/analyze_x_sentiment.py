@@ -11,8 +11,21 @@ project_root = str(Path(__file__).parent.parent.absolute())
 if project_root not in sys.path:
     sys.path.append(project_root)
 
-# Import the prompt directly
-from prompts.x_sentiment import X_SENTIMENT_PROMPT
+# Get the project root directory
+project_root = Path(__file__).parent.parent.absolute()
+
+def get_x_sentiment_prompt():
+    """Read the X sentiment prompt from file"""
+    prompt_path = project_root / 'prompts' / 'x_sentiment.py'
+    try:
+        with open(prompt_path, 'r') as f:
+            content = f.read()
+            # Extract the prompt string from the file content
+            prompt = content.split('X_SENTIMENT_PROMPT = """')[1].split('"""')[0]
+            return prompt
+    except Exception as e:
+        print(f"Error reading prompt file: {e}")
+        return None
 
 def analyze_x_sentiment(content: str):
     """Analyze X.com content for crypto sentiment"""
@@ -25,8 +38,10 @@ def analyze_x_sentiment(content: str):
         if not api_key:
             raise ValueError("ANTHROPIC_API_KEY not found in environment variables")
 
-        # Use imported prompt
-        system_prompt = X_SENTIMENT_PROMPT
+        # Get the prompt
+        system_prompt = get_x_sentiment_prompt()
+        if not system_prompt:
+            raise ValueError("Failed to load X sentiment prompt")
             
         # Get content from environment or use passed content
         content = os.getenv('CONTENT', content)
