@@ -14,7 +14,13 @@ export const runtime = 'edge';
 // Add dynamic configuration
 export const dynamic = 'force-dynamic';
 
-// Helper function to count token mentions
+// Initialize rate limiter
+const limiter = rateLimit({
+  interval: 60 * 1000, // 1 minute
+  uniqueTokenPerInterval: 500
+});
+
+// Helper functions
 function countTokenMentions(content: string): number {
   // Match $SYMBOL or $symbol pattern, must be 2-10 chars after $
   const tokenPattern = /\$[A-Za-z]{2,10}\b/g;
@@ -24,8 +30,7 @@ function countTokenMentions(content: string): number {
 
 async function getLatestMarketSentiment() {
   try {
-    try {
-      const table = getTable('MARKET_SENTIMENT');
+    const table = getTable('MARKET_SENTIMENT');
       const records = await table
         .select({
           maxRecords: 1,
@@ -59,7 +64,6 @@ async function runBackgroundSentiment(content: string) {
   try {
     console.log('🔄 Running background sentiment analysis...');
     
-    // Make direct API call to Anthropic
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -104,7 +108,6 @@ async function runBackgroundSentiment(content: string) {
   }
 }
 
-// Helper function to store sentiment analysis in Airtable
 async function storeSentimentAnalysis(analysis: any) {
   try {
     const table = getTable('SENTIMENT_ANALYSIS');
@@ -183,6 +186,7 @@ interface FormattedSignal {
   accuracy?: number;
 }
 
+// Helper function to get recent signals
 async function getRecentSignals(): Promise<FormattedSignal[]> {
   try {
     const signalsTable = getTable('SIGNALS');
