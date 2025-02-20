@@ -79,7 +79,7 @@ def analyze_x_sentiment(content: str):
         analysis = json.loads(message.content[0].text)
         
         # Save analysis as thought
-        createThought({
+        create_thought({
             'type': 'X_SENTIMENT',
             'content': json.dumps(analysis, indent=2),
             'context': {
