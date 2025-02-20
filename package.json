@@ -10,7 +10,8 @@
     "analyze-sentiment": "ts-node scripts/analyze-market-sentiment.ts",
     "fetch-tokens": "ts-node scripts/fetch-token-data.ts",
     "reallocation": "ts-node scripts/execute-reallocation.ts",
-    "snapshot": "ts-node scripts/take-snapshot.ts"
+    "snapshot": "ts-node scripts/take-snapshot.ts",
+    "calculate-signals": "ts-node scripts/calculate-closed-signals.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.10.2",
