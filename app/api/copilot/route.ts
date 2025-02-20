@@ -139,25 +139,36 @@ ${bodyContent}`;
 
     // Save messages to history if wallet provided
     if (wallet) {
-      const messagesTable = getTable('MESSAGES');
-      await messagesTable.create([
-        {
-          fields: {
-            wallet,
-            role: 'user',
-            content: message,
-            createdAt: new Date().toISOString()
+      try {
+        console.log('💾 Saving messages to history for wallet:', wallet);
+        const messagesTable = getTable('MESSAGES');
+        
+        const messagesToCreate = [
+          {
+            fields: {
+              wallet,
+              role: 'user',
+              content: message,
+              createdAt: new Date().toISOString()
+            }
+          },
+          {
+            fields: {
+              wallet,
+              role: 'assistant', 
+              content: assistantMessage,
+              createdAt: new Date().toISOString()
+            }
           }
-        },
-        {
-          fields: {
-            wallet,
-            role: 'assistant',
-            content: assistantMessage,
-            createdAt: new Date().toISOString()
-          }
-        }
-      ]);
+        ];
+
+        console.log('Creating messages:', messagesToCreate);
+        const result = await messagesTable.create(messagesToCreate);
+        console.log('Messages saved:', result);
+
+      } catch (error) {
+        console.error('Failed to save messages:', error);
+      }
     }
 
     // Create stream response
