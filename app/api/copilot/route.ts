@@ -95,6 +95,7 @@ async function getContextData(code: string) {
         sort: [{ field: 'createdAt', direction: 'desc' }]
       })
       .all();
+    console.log(`📊 Found ${signals.length} signals`);
 
     // Get latest market sentiment
     const sentimentTable = getTable('MARKET_SENTIMENT');
@@ -104,8 +105,10 @@ async function getContextData(code: string) {
         sort: [{ field: 'weekEndDate', direction: 'desc' }]
       })
       .firstPage();
+    console.log('🎯 Market sentiment found:', !!sentiment.length);
 
     // Get recent messages for this code
+    console.log(`🔍 Fetching messages for code: ${code}`);
     const messagesTable = getTable('MESSAGES');
     const messages = await messagesTable
       .select({
@@ -114,6 +117,12 @@ async function getContextData(code: string) {
         sort: [{ field: 'createdAt', direction: 'desc' }]
       })
       .all();
+    console.log(`💬 Found ${messages.length} messages for code ${code}`);
+    console.log('Message details:', messages.map(m => ({
+      role: m.get('role'),
+      createdAt: m.get('createdAt'),
+      contentPreview: (m.get('content') as string).substring(0, 50) + '...'
+    })));
 
     return {
       signals: signals.map(record => ({
@@ -143,7 +152,7 @@ async function getContextData(code: string) {
       })).reverse() // Reverse to get chronological order
     };
   } catch (error) {
-    console.error('Error fetching context data:', error);
+    console.error('❌ Error fetching context data:', error);
     return { signals: [], marketSentiment: null, conversationHistory: [] };
   }
 }
