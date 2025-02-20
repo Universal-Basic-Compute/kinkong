@@ -270,6 +270,7 @@ ${signalsContext}
 
 Current Page Content:
 ${bodyContent}`;
+    }
 
     // Log formatted prompt
     console.log('📋 System Prompt:', {
