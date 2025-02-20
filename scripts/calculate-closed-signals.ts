@@ -5,7 +5,7 @@ import fetch from 'node-fetch';
 // Initialize environment variables
 config();
 
-// Interfaces
+// Interfaces and exports
 
 interface SignalFields {
   token: string;
@@ -40,7 +40,7 @@ interface TokenRecord {
   };
 }
 
-async function getHistoricalPrices(
+export async function getHistoricalPrices(
   tokenMint: string,
   startTime: Date,
   endTime: Date
@@ -96,7 +96,7 @@ async function getHistoricalPrices(
   }
 }
 
-function simulateTrade(prices: PriceData[], signalData: SignalFields): TradeResult {
+export function simulateTrade(prices: PriceData[], signalData: SignalFields): TradeResult {
   const entryPrice = signalData.entryPrice;
   const targetPrice = signalData.targetPrice;
   const stopLoss = signalData.stopLoss;
@@ -155,7 +155,7 @@ function simulateTrade(prices: PriceData[], signalData: SignalFields): TradeResu
   };
 }
 
-async function calculateClosedSignals() {
+export async function calculateClosedSignals(): Promise<void> {
   try {
     // Verify environment variables
     if (!process.env.BIRDEYE_API_KEY) {
@@ -253,6 +253,8 @@ async function calculateClosedSignals() {
   }
 }
 
-// Run the script
-console.log("\n🚀 Starting closed signals calculation...");
-calculateClosedSignals().catch(console.error);
+// For direct script execution, use ES modules check
+if (import.meta.url === import.meta.main) {
+  console.log("\n🚀 Starting closed signals calculation...");
+  calculateClosedSignals().catch(console.error);
+}
