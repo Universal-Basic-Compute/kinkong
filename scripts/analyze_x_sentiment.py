@@ -11,13 +11,18 @@ project_root = str(Path(__file__).parent.parent.absolute())
 if project_root not in sys.path:
     sys.path.append(project_root)
 
-# Force reload environment variables at script start
-load_dotenv(override=True)
-
-# Debug print to verify environment loading
-print("Environment check:")
-print(f"ANTHROPIC_API_KEY present: {bool(os.getenv('ANTHROPIC_API_KEY'))}")
-print(f"ANTHROPIC_API_KEY starts with: {os.getenv('ANTHROPIC_API_KEY', '')[:8]}...")
+def get_x_sentiment_prompt():
+    """Read the X sentiment prompt from file"""
+    prompt_path = project_root / 'prompts' / 'x_sentiment.py'
+    try:
+        with open(prompt_path, 'r') as f:
+            content = f.read()
+            # Extract the prompt string from the file content
+            prompt = content.split('X_SENTIMENT_PROMPT = """')[1].split('"""')[0]
+            return prompt
+    except Exception as e:
+        print(f"Error reading prompt file: {e}")
+        return None
 
 def get_x_sentiment_prompt():
     """Read the X sentiment prompt from file"""
