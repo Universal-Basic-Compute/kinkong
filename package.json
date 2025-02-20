@@ -2,7 +2,6 @@
   "name": "kinkong",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -12,7 +11,7 @@
     "fetch-tokens": "ts-node scripts/fetch-token-data.ts",
     "reallocation": "ts-node scripts/execute-reallocation.ts",
     "snapshot": "ts-node scripts/take-snapshot.ts",
-    "calculate-signals": "node --experimental-specifier-resolution=node --loader ts-node/esm scripts/calculate-closed-signals.ts"
+    "calculate-signals": "ts-node scripts/calculate-closed-signals.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.10.2",
