@@ -150,15 +150,14 @@ export async function POST(request: NextRequest) {
     });
 
     const requestBody = await request.json();
-    const { message, body, wallet } = requestBody;
+    const { message, wallet } = requestBody;
     
     // Get context data
     const contextData = await getContextData();
     
     // Prepare full context
     const fullContext = {
-      pageContent: body,
-      requestData: requestBody,
+      request: requestBody,  // Contains everything from the request
       signals: contextData.signals,
       marketSentiment: contextData.marketSentiment
     };
