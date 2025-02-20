@@ -191,6 +191,26 @@ export async function POST(request: NextRequest) {
 
     console.log('Final isXContent result:', isXContent);
 
+    // If X content, analyze sentiment
+    if (isXContent) {
+      console.log('📊 Starting X sentiment analysis...');
+      
+      const sentiment = await analyzeXSentiment(bodyContent);
+      
+      if (sentiment) {
+        console.log('✅ X Sentiment Analysis completed:', sentiment);
+        systemPrompt = `${systemPrompt}
+
+=== X.COM SENTIMENT ANALYSIS ===
+${JSON.stringify(sentiment, null, 2)}
+===============================
+
+`;
+      } else {
+        console.log('❌ X sentiment analysis failed or returned no results');
+      }
+    }
+
     // Get message history if wallet is provided
     let messageHistory: HistoryMessage[] = [];
     if (wallet) {
