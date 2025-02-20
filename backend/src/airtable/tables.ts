@@ -41,5 +41,5 @@ export function getTable(tableName: string) {
 
 // For CommonJS compatibility
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { TABLES, getTable, Token };
+  module.exports = { TABLES, getTable };
 }
