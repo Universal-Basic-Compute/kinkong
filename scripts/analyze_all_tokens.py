@@ -79,8 +79,15 @@ async def get_active_tokens():
             
         airtable = Airtable(base_id, 'TOKENS', api_key)
         
+        # Add exclusion to the formula
         records = airtable.get_all(
-            formula="AND({isActive}=1, NOT({mint}=''))"
+            formula="AND(" +
+                "{isActive}=1, " +
+                "NOT({mint}=''), " +
+                "NOT({symbol}='UBC'), " +
+                "NOT({symbol}='COMPUTE'), " +
+                "NOT({symbol}='USDT')" +
+            ")"
         )
         
         tokens = [{
@@ -88,7 +95,7 @@ async def get_active_tokens():
             'mint': record['fields']['mint']
         } for record in records]
         
-        print(f"Found {len(tokens)} active tokens")
+        print(f"Found {len(tokens)} active tokens (excluding UBC, COMPUTE, USDT)")
         return tokens
         
     except Exception as e:
