@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { COPILOT_PROMPT } from '@/prompts/copilot';
-import { X_SENTIMENT_PROMPT } from '@/prompts/x-sentiment';
 import { spawn } from 'child_process';
 import { promisify } from 'util';
 const exec = promisify(require('child_process').exec);
