@@ -1,5 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { COPILOT_PROMPT } from '@/prompts/copilot';
+import { spawn } from 'child_process';
+import { promisify } from 'util';
+const exec = promisify(require('child_process').exec);
+
+async function analyzeXSentiment(content: string) {
+  try {
+    // Call the Python script
+    const { stdout, stderr } = await exec(
+      `python scripts/analyze_x_sentiment.py`,
+      {
+        input: content,
+        encoding: 'utf-8'
+      }
+    );
+
+    if (stderr) {
+      console.error('X sentiment analysis error:', stderr);
+      return null;
+    }
+
+    return JSON.parse(stdout);
+  } catch (error) {
+    console.error('Failed to analyze X sentiment:', error);
+    return null;
+  }
+}
 import { rateLimit } from '@/utils/rate-limit';
 import { getTable } from '@/backend/src/airtable/tables';
 import { Signal } from '@/backend/src/airtable/tables';
@@ -99,6 +125,22 @@ export async function POST(request: NextRequest) {
     
     // Stringify the whole body
     const bodyContent = JSON.stringify(requestBody);
+
+    // Check if content is from X.com
+    const isXContent = bodyContent.includes('twitter.com') || 
+                      bodyContent.includes('x.com');
+
+    // If X content, analyze sentiment
+    if (isXContent) {
+      console.log('📊 Analyzing X.com sentiment...');
+      const sentiment = await analyzeXSentiment(bodyContent);
+      if (sentiment) {
+        console.log('X Sentiment Analysis:', sentiment);
+        
+        // Add sentiment to system prompt
+        systemPrompt = `${systemPrompt}\n\nX.com Sentiment Analysis:\n${JSON.stringify(sentiment, null, 2)}`;
+      }
+    }
 
     // Get message history if wallet is provided
     let messageHistory: HistoryMessage[] = [];
