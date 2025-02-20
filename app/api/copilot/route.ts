@@ -3,16 +3,27 @@ import { rateLimit } from '@/utils/rate-limit';
 import { getTable } from '@/backend/src/airtable/tables';
 import { COPILOT_PROMPT } from '@/prompts/copilot';
 
+// Helper function to get next block start time
+function getNextBlockTime(): string {
+  const now = new Date();
+  const currentBlock = Math.floor(now.getUTCHours() / 8);
+  const nextBlockStart = new Date(now);
+  nextBlockStart.setUTCHours((currentBlock + 1) * 8, 0, 0, 0);
+  
+  // Format time as HH:00 UTC
+  return `${nextBlockStart.getUTCHours().toString().padStart(2, '0')}:00 UTC`;
+}
+
 const RATE_LIMIT_MESSAGES = [
-  `Time for a quick break! 🎯 Hit my message limit for now. Want 10x more chats? [Premium awaits](https://swarmtrade.ai/copilot)! 🚀`,
+  `Time for a quick break! 🎯 Hit my message limit for this 8-hour block. Want 5x more chats? [Premium awaits](https://swarmtrade.ai/copilot)! 🚀\n\nKinKong will be back at ${getNextBlockTime()}! 🕒`,
   
-  `Whew, what a chat! 💬 Need to recharge for a bit. Get unlimited trading insights with [premium](https://swarmtrade.ai/copilot) ✨`,
+  `Whew, what a chat! 💬 Need to recharge for a bit. Get unlimited trading insights with [premium](https://swarmtrade.ai/copilot) ✨\n\nKinKong will be back at ${getNextBlockTime()}! 🕒`,
   
-  `Hold that thought! 🤔 Message limit reached. Ready for non-stop alpha? Join [premium gang](https://swarmtrade.ai/copilot) 💪`,
+  `Hold that thought! 🤔 Message limit reached for this block. Ready for non-stop alpha? Join [premium gang](https://swarmtrade.ai/copilot) 💪\n\nKinKong will be back at ${getNextBlockTime()}! 🕒`,
   
-  `Taking a breather! 😅 Max messages hit. Unlock 24/7 trading wisdom - [upgrade here](https://swarmtrade.ai/copilot) 🎓`,
+  `Taking a breather! 😅 Max messages hit for this block. Unlock 24/7 trading wisdom - [upgrade here](https://swarmtrade.ai/copilot) 🎓\n\nKinKong will be back at ${getNextBlockTime()}! 🕒`,
   
-  `Energy check! ⚡ Need to rest my circuits. Want unlimited trading convos? [Premium's calling](https://swarmtrade.ai/copilot) 🌟`
+  `Energy check! ⚡ Need to rest my circuits until next block. Want unlimited trading convos? [Premium's calling](https://swarmtrade.ai/copilot) 🌟\n\nKinKong will be back at ${getNextBlockTime()}! 🕒`
 ];
 
 // Initialize global rate limiter
@@ -34,23 +45,34 @@ async function checkWalletMessageLimit(wallet: string): Promise<boolean> {
       )`
     }).firstPage();
 
-    // If has active subscription, allow 100 messages per 4 hours
-    const messageLimit = subscriptions.length > 0 ? 100 : 10;
+    // If has active subscription, allow 100 messages per block
+    const messageLimit = subscriptions.length > 0 ? 100 : 20;
+
+    // Calculate current 8-hour block
+    const now = new Date();
+    const blockNumber = Math.floor(now.getUTCHours() / 8);
+    const blockStart = new Date(now);
+    blockStart.setUTCHours(blockNumber * 8, 0, 0, 0); // Start of current 8-hour block
+    const blockEnd = new Date(blockStart);
+    blockEnd.setUTCHours(blockStart.getUTCHours() + 8); // End of current 8-hour block
 
     const messagesTable = getTable('MESSAGES');
-    const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString();
-
-    // Query messages from this wallet in last 4 hours
+    
+    // Query messages from this wallet in current 8-hour block
     const records = await messagesTable.select({
       filterByFormula: `AND(
         {wallet}='${wallet}',
-        IS_AFTER({createdAt}, '${fourHoursAgo}')
+        IS_AFTER({createdAt}, '${blockStart.toISOString()}'),
+        IS_BEFORE({createdAt}, '${blockEnd.toISOString()}')
       )`
     }).all();
 
-    console.log(`Found ${records.length} messages for wallet ${wallet} in last 4 hours`);
+    console.log(`Found ${records.length} messages for wallet ${wallet} in current block`);
+    console.log(`Current block: ${blockNumber} (${blockStart.toISOString()} - ${blockEnd.toISOString()})`);
     console.log(`Wallet has active subscription: ${subscriptions.length > 0}`);
     console.log(`Message limit: ${messageLimit}`);
+    console.log(`Messages used in current block: ${records.length}`);
+    console.log(`Time until next block: ${new Date(blockEnd).getTime() - now.getTime()}ms`);
 
     return records.length < messageLimit; // Return true if under limit
   } catch (error) {
