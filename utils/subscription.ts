@@ -9,9 +9,9 @@ interface SubscriptionResponse {
   error?: string;
 }
 
-export async function verifySubscription(wallet: string): Promise<SubscriptionResponse> {
+export async function verifySubscription(code: string): Promise<SubscriptionResponse> {
   try {
-    const response = await fetch(`/api/subscription?wallet=${wallet}`);
+    const response = await fetch(`/api/subscription?code=${code}`);
     if (!response.ok) throw new Error('Failed to verify subscription');
     return await response.json();
   } catch (error) {
@@ -20,7 +20,7 @@ export async function verifySubscription(wallet: string): Promise<SubscriptionRe
   }
 }
 
-export async function createSubscription(signature: string, wallet: string) {
+export async function createSubscription(signature: string, wallet: string, code: string) {
   try {
     const response = await fetch('/api/subscription', {
       method: 'POST',
@@ -29,7 +29,8 @@ export async function createSubscription(signature: string, wallet: string) {
       },
       body: JSON.stringify({
         signature,
-        wallet
+        wallet,
+        code
       })
     });
 

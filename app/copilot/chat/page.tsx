@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { askKinKongCopilot } from '@/utils/copilot';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { verifySubscription } from '@/utils/subscription';
@@ -14,6 +15,8 @@ interface Message {
 
 export default function CopilotChatPage() {
   const { publicKey, connected } = useWallet();
+  const searchParams = useSearchParams();
+  const code = searchParams.get('code');
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);

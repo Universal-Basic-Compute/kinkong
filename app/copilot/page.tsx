@@ -21,17 +21,17 @@ export default function CopilotSubscriptionPage() {
 
   useEffect(() => {
     checkSubscription();
-  }, [publicKey]);
+  }, [code]);
 
   async function checkSubscription() {
-    if (!publicKey) {
+    if (!code) {
       setSubscriptionStatus('inactive');
       return;
     }
 
     try {
       setSubscriptionStatus('loading');
-      const result = await verifySubscription(publicKey.toString());
+      const result = await verifySubscription(code);
       setSubscriptionStatus(result.active ? 'active' : 'inactive');
     } catch (err) {
       console.error('Error checking subscription:', err);

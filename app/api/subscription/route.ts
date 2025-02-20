@@ -28,9 +28,9 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json();
-    const { signature, wallet } = body;
+    const { signature, wallet, code } = body;
 
-    if (!signature || !wallet) {
+    if (!signature || !wallet || !code) {
       return NextResponse.json(
         { error: 'Missing required parameters' },
         { status: 400 }
@@ -103,6 +103,7 @@ export async function POST(request: NextRequest) {
       {
         fields: {
           wallet,
+          code,
           startDate: startDate.toISOString(),
           endDate: endDate.toISOString(),
           amount: SUBSCRIPTION_COST,
@@ -119,7 +120,8 @@ export async function POST(request: NextRequest) {
         id: record[0].id,
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
-        status: 'ACTIVE'
+        status: 'ACTIVE',
+        code
       }
     });
 
@@ -136,11 +138,11 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const wallet = searchParams.get('wallet');
+    const code = searchParams.get('code');
 
-    if (!wallet) {
+    if (!code) {
       return NextResponse.json(
-        { error: 'Wallet address required' },
+        { error: 'Code required' },
         { status: 400 }
       );
     }
@@ -149,7 +151,7 @@ export async function GET(request: NextRequest) {
     const subscriptionsTable = getTable('SUBSCRIPTIONS');
     const records = await subscriptionsTable.select({
       filterByFormula: `AND(
-        {wallet}='${wallet}',
+        {code}='${code}',
         {status}='ACTIVE',
         {endDate}>=TODAY()
       )`
