@@ -1,16 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { COPILOT_PROMPT } from '@/prompts/copilot';
+import { X_SENTIMENT_PROMPT } from '@/prompts/x-sentiment';
 import { spawn } from 'child_process';
 import { promisify } from 'util';
 const exec = promisify(require('child_process').exec);
 
 async function analyzeXSentiment(content: string) {
   try {
-    // Call the Python script
+    // Call the Python script with the correct prompt
     const { stdout, stderr } = await exec(
       `python scripts/analyze_x_sentiment.py`,
       {
-        input: content,
+        env: {
+          ...process.env,
+          X_SENTIMENT_PROMPT: X_SENTIMENT_PROMPT,
+          CONTENT: content
+        },
         encoding: 'utf-8'
       }
     );
@@ -251,10 +256,19 @@ export async function POST(request: NextRequest) {
     // If X content, analyze sentiment
     if (isXContent) {
       console.log('📊 Starting X sentiment analysis...');
+      console.log('Using X sentiment prompt:', X_SENTIMENT_PROMPT.substring(0, 100) + '...');
+      
       const sentiment = await analyzeXSentiment(bodyContent);
+      
       if (sentiment) {
         console.log('✅ X Sentiment Analysis completed:', sentiment);
-        systemPrompt = `${systemPrompt}\n\nX.com Sentiment Analysis:\n${JSON.stringify(sentiment, null, 2)}`;
+        systemPrompt = `${systemPrompt}
+
+=== X.COM SENTIMENT ANALYSIS ===
+${JSON.stringify(sentiment, null, 2)}
+===============================
+
+`;
       } else {
         console.log('❌ X sentiment analysis failed or returned no results');
       }

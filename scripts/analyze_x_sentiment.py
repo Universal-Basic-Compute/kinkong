@@ -39,10 +39,13 @@ def analyze_x_sentiment(content: str):
         if not api_key:
             raise ValueError("ANTHROPIC_API_KEY not found in environment variables")
 
-        # Get system prompt
-        system_prompt = read_system_prompt()
+        # Get X sentiment prompt from environment
+        system_prompt = os.getenv('X_SENTIMENT_PROMPT')
         if not system_prompt:
-            raise ValueError("Failed to read system prompt")
+            raise ValueError("X_SENTIMENT_PROMPT not found in environment")
+            
+        # Get content from environment
+        content = os.getenv('CONTENT', content)
 
         print("\n🤖 Sending content to Claude for analysis...")
         print("Content length:", len(content))
