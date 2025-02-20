@@ -1,4 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { rateLimit } from '@/utils/rate-limit';
+import { getTable } from '@/backend/src/airtable/tables';
+import { Signal } from '@/backend/src/airtable/tables';
+import { COPILOT_PROMPT } from '@/prompts/copilot';
+import { X_SENTIMENT_PROMPT } from '@/prompts/x-sentiment';
 
 // Add timeout configuration
 export const maxDuration = 30; // 30 seconds timeout
@@ -17,7 +22,6 @@ function countTokenMentions(content: string): number {
   return matches ? matches.length : 0;
 }
 
-import { COPILOT_PROMPT } from '@/prompts/copilot';
 async function getLatestMarketSentiment() {
   try {
     try {
