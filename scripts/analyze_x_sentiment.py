@@ -24,29 +24,23 @@ def get_x_sentiment_prompt():
         print(f"Error reading prompt file: {e}")
         return None
 
-def get_x_sentiment_prompt():
-    """Read the X sentiment prompt from file"""
-    prompt_path = project_root / 'prompts' / 'x_sentiment.py'
-    try:
-        with open(prompt_path, 'r') as f:
-            content = f.read()
-            # Extract the prompt string from the file content
-            prompt = content.split('X_SENTIMENT_PROMPT = """')[1].split('"""')[0]
-            return prompt
-    except Exception as e:
-        print(f"Error reading prompt file: {e}")
-        return None
-
 def analyze_x_sentiment(content: str):
     """Analyze X.com content for crypto sentiment"""
     try:
+        print("\n🔍 Starting X sentiment analysis...")
+        
         # Get API key
         api_key = os.getenv('ANTHROPIC_API_KEY')
+        print("API key present:", bool(api_key))
+        
         if not api_key:
             raise ValueError("ANTHROPIC_API_KEY not found in environment variables")
 
+        print("Getting prompt...")
         # Get the prompt
         system_prompt = get_x_sentiment_prompt()
+        print("Prompt loaded:", bool(system_prompt))
+        
         if not system_prompt:
             raise ValueError("Failed to load X sentiment prompt")
 
