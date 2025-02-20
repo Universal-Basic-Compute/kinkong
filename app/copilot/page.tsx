@@ -1,75 +1,179 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { verifySubscription } from '@/utils/subscription';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { WalletConnect } from '@/components/wallet/WalletConnect';
 
 export default function CopilotPage() {
-  const { publicKey, connected } = useWallet();
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { connected } = useWallet();
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  useEffect(() => {
+  const features = [
+    {
+      title: "Technical Analysis Integration",
+      description: "Access KinKong's real-time technical analysis and trading signals",
+      icon: "📊"
+    },
+    {
+      title: "Market Sentiment Analysis", 
+      description: "Get instant insights from social media, news, and on-chain data",
+      icon: "🎯"
+    },
+    {
+      title: "Community Alpha Access",
+      description: "Tap into the collective intelligence of the UBC community",
+      icon: "👥"
+    },
+    {
+      title: "UBC Ecosystem Integration",
+      description: "Direct access to UBC news, updates, and cross-swarm intelligence",
+      icon: "🌐"
+    },
+    {
+      title: "Trading Signals",
+      description: "Real-time alerts and trading opportunities across multiple timeframes",
+      icon: "💡"
+    },
+    {
+      title: "AI-Powered Insights",
+      description: "Advanced analysis combining multiple data sources and strategies",
+      icon: "🤖"
+    }
+  ];
+
+  const tiers = [
+    {
+      name: "Free Tier",
+      description: "Get started with basic access",
+      features: [
+        "20 messages per 8-hour block",
+        "Basic technical analysis",
+        "Standard response time",
+        "Public signals access"
+      ],
+      action: () => router.push('/copilot/start'),
+      buttonText: "Start Free",
+      buttonStyle: "bg-gray-800 hover:bg-gray-700"
+    },
+    {
+      name: "Premium Tier",
+      description: "Full access to KinKong intelligence",
+      features: [
+        "100 messages per 8-hour block",
+        "Advanced technical analysis",
+        "Priority response time",
+        "Exclusive alpha signals",
+        "Custom trading strategies",
+        "Direct ecosystem integration"
+      ],
+      price: "3 SOL",
+      action: () => handlePremiumSubscription(),
+      buttonText: "Upgrade to Premium",
+      buttonStyle: "bg-gradient-to-r from-darkred to-gold text-black"
+    }
+  ];
+
+  async function handlePremiumSubscription() {
     if (!connected) {
-      setIsLoading(false);
-      return;
+      return; // Wallet connect modal will show automatically
     }
 
-    checkSubscription();
-  }, [connected, publicKey]);
-
-  async function checkSubscription() {
+    setIsProcessing(true);
     try {
-      setIsLoading(true);
-      setError(null);
-
-      // If no subscription, redirect to subscription page
-      router.push('/copilot/start');
-
-    } catch (err) {
-      console.error('Error checking subscription:', err);
-      setError(err instanceof Error ? err.message : 'Failed to check subscription');
+      // Payment processing logic will go here
+      router.push('/copilot/chat');
+    } catch (error) {
+      console.error('Subscription error:', error);
     } finally {
-      setIsLoading(false);
+      setIsProcessing(false);
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-xl font-bold mb-2">Loading...</div>
-          <div className="text-gray-400">Checking subscription status</div>
+  return (
+    <div className="min-h-screen pt-20 px-4">
+      <div className="max-w-6xl mx-auto space-y-16">
+        {/* Hero Section */}
+        <div className="text-center space-y-6">
+          <h1 className="text-4xl md:text-5xl font-bold">
+            KinKong <span className="white-glow-text">Copilot</span>
+          </h1>
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            Your AI-powered trading assistant with direct access to KinKong's intelligence
+            and the UBC ecosystem's collective wisdom.
+          </p>
         </div>
-      </div>
-    );
-  }
 
-  if (!connected) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Connect Your Wallet</h1>
+        {/* Features Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {features.map((feature, index) => (
+            <div 
+              key={index}
+              className="p-6 bg-black/30 border border-gold/20 rounded-lg hover:border-gold/40 transition-all"
+            >
+              <div className="text-3xl mb-4">{feature.icon}</div>
+              <h3 className="text-xl font-bold mb-2 text-gold">{feature.title}</h3>
+              <p className="text-gray-400">{feature.description}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Pricing Tiers */}
+        <div className="grid md:grid-cols-2 gap-8">
+          {tiers.map((tier, index) => (
+            <div 
+              key={index}
+              className="p-8 bg-black/30 border border-gold/20 rounded-lg hover:border-gold/40 transition-all"
+            >
+              <h3 className="text-2xl font-bold mb-2">{tier.name}</h3>
+              <p className="text-gray-400 mb-4">{tier.description}</p>
+              {tier.price && (
+                <div className="text-xl font-bold text-gold mb-4">{tier.price}</div>
+              )}
+              <ul className="space-y-2 mb-6">
+                {tier.features.map((feature, i) => (
+                  <li key={i} className="flex items-center text-gray-300">
+                    <span className="text-gold mr-2">✓</span> {feature}
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={tier.action}
+                disabled={isProcessing}
+                className={`w-full py-3 px-6 rounded-lg font-semibold transition-all
+                  ${tier.buttonStyle}
+                  ${isProcessing ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}`}
+              >
+                {isProcessing ? 'Processing...' : tier.buttonText}
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Wallet Connection */}
+        {!connected && (
+          <div className="text-center">
+            <WalletConnect />
+          </div>
+        )}
+
+        {/* Bottom CTA */}
+        <div className="text-center pb-8">
           <p className="text-gray-400">
-            Please connect your wallet to access KinKong Copilot
+            Join our{' '}
+            <a 
+              href="https://t.me/ubc_portal" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-gold hover:text-gold/80"
+            >
+              Telegram community
+            </a>
+            {' '}for support and updates
           </p>
         </div>
       </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Error</h1>
-          <p className="text-red-400">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
-  return null; // Will redirect to /copilot/start
+    </div>
+  );
 }
