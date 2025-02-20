@@ -2,6 +2,38 @@ import Airtable from 'airtable';
 import { config } from 'dotenv';
 import fetch from 'node-fetch';
 
+// Add Telegram sending function
+async function sendTelegramMessage(message: string) {
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+
+  if (!botToken || !chatId) {
+    console.log('❌ Telegram configuration missing');
+    return;
+  }
+
+  try {
+    const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: message,
+        parse_mode: 'Markdown'
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Telegram API error: ${response.status}`);
+    }
+  } catch (error) {
+    console.error('❌ Failed to send Telegram message:', error);
+  }
+}
+
 // Initialize environment variables
 config();
 
@@ -166,6 +198,14 @@ export async function calculateClosedSignals(): Promise<void> {
       throw new Error("Missing Airtable configuration");
     }
 
+    let calculatedSignals: Array<{
+      token: string;
+      type: string;
+      actualReturn: number;
+      exitPrice: number;
+      success: boolean;
+    }> = [];
+
     // Initialize Airtable
     const base = new Airtable({ apiKey: process.env.KINKONG_AIRTABLE_API_KEY })
       .base(process.env.KINKONG_AIRTABLE_BASE_ID);
@@ -239,10 +279,34 @@ export async function calculateClosedSignals(): Promise<void> {
         console.log(`Success: ${results.success ? '✅' : '❌'}`);
         console.log(`Time to Exit: ${results.timeToExit} minutes`);
 
+        // After successful update, add to calculated signals
+        calculatedSignals.push({
+          token: fields.token,
+          type: fields.type,
+          actualReturn: results.actualReturn,
+          exitPrice: results.exitPrice,
+          success: results.success
+        });
+
       } catch (error) {
         console.error(`❌ Error processing signal ${signal.id}:`, error);
         continue;
       }
+    }
+
+    // If any signals were calculated, send Telegram notification
+    if (calculatedSignals.length > 0) {
+      const message = `🎯 *Signal Results Update*\n\n${
+        calculatedSignals.map(signal => 
+          `${signal.token} ${signal.type}:\n` +
+          `• Return: ${signal.actualReturn.toFixed(2)}%\n` +
+          `• Exit: $${signal.exitPrice.toFixed(4)}\n` +
+          `• Result: ${signal.success ? '✅ Win' : '❌ Loss'}\n`
+        ).join('\n')
+      }`;
+
+      await sendTelegramMessage(message);
+      console.log('📱 Telegram notification sent');
     }
 
     console.log("\n✅ Finished processing signals");
