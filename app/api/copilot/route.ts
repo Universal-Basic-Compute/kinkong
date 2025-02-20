@@ -5,6 +5,38 @@ import { spawn } from 'child_process';
 import { promisify } from 'util';
 const exec = promisify(require('child_process').exec);
 
+async function getLatestMarketSentiment() {
+  try {
+    const table = getTable('MARKET_SENTIMENT');
+    const records = await table
+      .select({
+        maxRecords: 1,
+        sort: [{ field: 'weekEndDate', direction: 'desc' }]
+      })
+      .firstPage();
+
+    if (records.length === 0) {
+      return null;
+    }
+
+    const sentiment = records[0].fields;
+    return {
+      classification: sentiment.classification,
+      confidence: sentiment.confidence,
+      tokensAbove7dAvg: sentiment.tokensAbove7dAvg,
+      totalTokens: sentiment.totalTokens,
+      weeklyVolume: sentiment.weeklyVolume,
+      prevWeekVolume: sentiment.prevWeekVolume,
+      solPerformance: sentiment.solPerformance,
+      aiTokensPerformance: sentiment.aiTokensPerformance,
+      notes: sentiment.notes
+    };
+  } catch (error) {
+    console.error('Error fetching market sentiment:', error);
+    return null;
+  }
+}
+
 async function analyzeXSentiment(content: string) {
   try {
     // Call the Python script with the correct prompt
@@ -274,14 +306,29 @@ ${JSON.stringify(sentiment, null, 2)}
       }
     }
 
-    // Add signals and content to system prompt
+    // Get market sentiment
+    const marketSentiment = await getLatestMarketSentiment();
+
+    // Add signals, sentiment and content to system prompt
     systemPrompt = `${systemPrompt}
 
 Recent Trading Signals (Last 25):
 --------------------------------
 ${signalsContext}
 
-Current Page Content:
+${marketSentiment ? `=== CURRENT MARKET SENTIMENT ===
+Classification: ${marketSentiment.classification}
+Confidence: ${marketSentiment.confidence}%
+Market Health:
+- ${marketSentiment.tokensAbove7dAvg}/${marketSentiment.totalTokens} tokens above 7d avg
+- Volume: ${(marketSentiment.weeklyVolume / marketSentiment.prevWeekVolume - 1) * 100}% WoW
+Performance:
+- SOL: ${marketSentiment.solPerformance}%
+- AI Tokens: ${marketSentiment.aiTokensPerformance}%
+Analysis: ${marketSentiment.notes}
+==============================
+
+` : ''}Current Page Content:
 ${bodyContent}`;
 
     // Log formatted prompt
