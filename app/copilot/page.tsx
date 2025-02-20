@@ -19,14 +19,23 @@ export default function CopilotSubscriptionPage() {
   const code = searchParams.get('code');
   const [subscriptionStatus, setSubscriptionStatus] = useState<'active' | 'inactive' | 'loading'>('loading');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isCheckingSubscription, setIsCheckingSubscription] = useState(false);
+  const [confirmingTx, setConfirmingTx] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [linkSuccess, setLinkSuccess] = useState(false);
+  const [subscription, setSubscription] = useState<{active: boolean; expiresAt?: string} | null>(null);
 
   const SUBSCRIPTION_COST = 1.5; // SOL
   const SUBSCRIPTION_DURATION = '3 months';
 
   useEffect(() => {
     checkSubscription();
+    return () => {
+      // Cleanup any pending state updates
+      setIsProcessing(false);
+      setConfirmingTx(false);
+      setError(null);
+    };
   }, [code]);
 
   async function checkSubscription() {
@@ -36,12 +45,43 @@ export default function CopilotSubscriptionPage() {
     }
 
     try {
+      setIsCheckingSubscription(true);
       setSubscriptionStatus('loading');
       const result = await verifySubscription(code);
       setSubscriptionStatus(result.active ? 'active' : 'inactive');
+      setSubscription(result);
     } catch (err) {
       console.error('Error checking subscription:', err);
       setSubscriptionStatus('inactive');
+      setSubscription(null);
+    } finally {
+      setIsCheckingSubscription(false);
+    }
+  }
+
+  async function createSubscription(signature: string, wallet: string, code: string | null) {
+    try {
+      const response = await fetch('/api/subscription', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          signature,
+          wallet,
+          code
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create subscription');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Subscription creation error:', error);
+      throw error;
     }
   }
 
@@ -95,38 +135,38 @@ export default function CopilotSubscriptionPage() {
       setIsProcessing(true);
       setError(null);
 
-      // Create subscription payment transaction
+      // Check balance
       const connection = new Connection(process.env.NEXT_PUBLIC_HELIUS_RPC_URL!);
-      const subscriptionPubkey = new PublicKey(process.env.NEXT_PUBLIC_SUBSCRIPTION_WALLET!);
+      const balance = await connection.getBalance(publicKey);
+      if (balance < LAMPORTS_PER_SOL * SUBSCRIPTION_COST) {
+        setError(`Insufficient balance. Need ${SUBSCRIPTION_COST} SOL`);
+        return;
+      }
 
+      const subscriptionPubkey = new PublicKey(process.env.NEXT_PUBLIC_SUBSCRIPTION_WALLET!);
       const transaction = new Transaction().add(
         SystemProgram.transfer({
           fromPubkey: publicKey,
           toPubkey: subscriptionPubkey,
-          lamports: LAMPORTS_PER_SOL * SUBSCRIPTION_COST // Convert SOL to lamports
+          lamports: LAMPORTS_PER_SOL * SUBSCRIPTION_COST
         })
       );
 
-      // Get latest blockhash
       const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = publicKey;
 
-      // Sign and send transaction
       const signedTx = await signTransaction(transaction);
       const signature = await connection.sendRawTransaction(signedTx.serialize());
       
-      // Wait for confirmation
+      setConfirmingTx(true);
       await connection.confirmTransaction({
         signature,
         blockhash,
         lastValidBlockHeight
       });
 
-      // Create subscription record
       await createSubscription(signature, publicKey.toString(), code || '');
-      
-      // Update status and redirect
       setSubscriptionStatus('active');
       router.push('/copilot/start');
       
@@ -135,6 +175,7 @@ export default function CopilotSubscriptionPage() {
       setError(err instanceof Error ? err.message : 'Failed to process subscription');
     } finally {
       setIsProcessing(false);
+      setConfirmingTx(false);
     }
   }
 
@@ -230,14 +271,22 @@ export default function CopilotSubscriptionPage() {
               ) : (
                 <button
                   onClick={handleSubscribe}
-                  disabled={isProcessing}
+                  disabled={isProcessing || confirmingTx || !connected}
                   className={`w-full py-3 px-6 rounded-lg text-center font-semibold
-                    ${isProcessing 
+                    ${isProcessing || confirmingTx
                       ? 'bg-gray-700 cursor-not-allowed' 
+                      : !connected
+                      ? 'bg-gray-700 cursor-not-allowed'
                       : 'bg-gold hover:bg-gold/80 text-black'
                     } transition-colors duration-200`}
                 >
-                  {isProcessing ? 'Processing...' : 'Subscribe Now'}
+                  {isProcessing 
+                    ? 'Processing...' 
+                    : confirmingTx
+                    ? 'Confirming Transaction...'
+                    : !connected
+                    ? 'Connect Wallet to Subscribe'
+                    : 'Subscribe Now'}
                 </button>
               )}
 
