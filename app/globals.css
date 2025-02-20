@@ -36,7 +36,7 @@
 }
 
 @keyframes orangeGlow {
-  from, to {
+  0%, 100% {
     text-shadow: 
       0 0 7px rgba(249, 115, 22, 0.3),
       0 0 10px rgba(249, 115, 22, 0.2),
