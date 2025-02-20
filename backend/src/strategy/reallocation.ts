@@ -1,6 +1,6 @@
-const { base } = require('./client');
+import { base } from '../airtable/client';
 
-const TABLES = {
+export const TABLES = {
   PORTFOLIO: 'PORTFOLIO',
   TRADES: 'TRADES', 
   TOKENS: 'TOKENS',
@@ -14,7 +14,7 @@ const TABLES = {
   SENTIMENT_ANALYSIS: 'SENTIMENT_ANALYSIS'
 };
 
-function getTable(tableName) {
+export function getTable(tableName: string) {
   if (!tableName) {
     throw new Error('Table name is required');
   }

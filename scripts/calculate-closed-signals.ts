@@ -1,6 +1,7 @@
 import Airtable from 'airtable';
 import { config } from 'dotenv';
 import fetch from 'node-fetch';
+import Airtable from 'airtable';
 
 // Add Telegram sending function
 async function sendTelegramMessage(message: string) {
