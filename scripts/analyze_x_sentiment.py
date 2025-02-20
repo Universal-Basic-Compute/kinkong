@@ -40,6 +40,11 @@ def analyze_x_sentiment(content: str):
         if not api_key:
             raise ValueError("ANTHROPIC_API_KEY not found in environment variables")
 
+        # Get the prompt
+        system_prompt = get_x_sentiment_prompt()
+        if not system_prompt:
+            raise ValueError("Failed to load X sentiment prompt")
+
         # Debug the key
         print(f"API Key from .env: {api_key[:8]}...{api_key[-4:]}")
         
