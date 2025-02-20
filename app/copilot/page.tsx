@@ -4,11 +4,18 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletConnect } from '@/components/wallet/WalletConnect';
+import { Connection, PublicKey, LAMPORTS_PER_SOL, Transaction, SystemProgram } from '@solana/web3.js';
+import { createSubscription } from '@/utils/subscription';
 
 export default function CopilotPage() {
   const router = useRouter();
-  const { connected } = useWallet();
+  const { connected, publicKey, sendTransaction } = useWallet();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Add subscription constants
+  const SUBSCRIPTION_COST = 3.5; // SOL
+  const SUBSCRIPTION_WALLET = new PublicKey(process.env.NEXT_PUBLIC_SUBSCRIPTION_WALLET!);
 
   const features = [
     {
@@ -76,16 +83,57 @@ export default function CopilotPage() {
   ];
 
   async function handlePremiumSubscription() {
-    if (!connected) {
-      return; // Wallet connect modal will show automatically
+    if (!connected || !publicKey) {
+      // The WalletConnect component will show the connect modal
+      return;
     }
 
     setIsProcessing(true);
+    setError(null);
+
     try {
-      // Payment processing logic will go here
-      router.push('/copilot/chat');
-    } catch (error) {
-      console.error('Subscription error:', error);
+      // Create connection
+      const connection = new Connection(
+        process.env.NEXT_PUBLIC_HELIUS_RPC_URL!,
+        'confirmed'
+      );
+
+      // Create transfer instruction
+      const transferInstruction = SystemProgram.transfer({
+        fromPubkey: publicKey,
+        toPubkey: SUBSCRIPTION_WALLET,
+        lamports: SUBSCRIPTION_COST * LAMPORTS_PER_SOL
+      });
+
+      // Create transaction
+      const transaction = new Transaction().add(transferInstruction);
+      
+      // Get latest blockhash
+      const { blockhash } = await connection.getLatestBlockhash();
+      transaction.recentBlockhash = blockhash;
+      transaction.feePayer = publicKey;
+
+      // Send transaction
+      const signature = await sendTransaction(transaction, connection);
+      console.log('Payment sent:', signature);
+
+      // Wait for confirmation
+      const confirmation = await connection.confirmTransaction(signature);
+      
+      if (confirmation.value.err) {
+        throw new Error('Transaction failed');
+      }
+
+      // Create subscription record
+      const code = Math.random().toString(36).substring(2, 15);
+      await createSubscription(signature, publicKey.toString(), code);
+
+      // Redirect to chat with code
+      router.push(`/copilot/chat?code=${code}`);
+
+    } catch (err) {
+      console.error('Subscription error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to process subscription');
     } finally {
       setIsProcessing(false);
     }
@@ -121,6 +169,11 @@ export default function CopilotPage() {
 
         {/* Pricing Tiers */}
         <div className="grid md:grid-cols-2 gap-8">
+          {error && (
+            <div className="md:col-span-2 p-4 bg-red-900/50 border border-red-500 rounded-lg text-center text-red-200">
+              {error}
+            </div>
+          )}
           {tiers.map((tier, index) => (
             <div 
               key={index}
