@@ -18,36 +18,33 @@ function countTokenMentions(content: string): number {
 }
 
 import { COPILOT_PROMPT } from '@/prompts/copilot';
-import { spawn } from 'child_process';
-import { promisify } from 'util';
-const exec = promisify(require('child_process').exec);
-
 async function getLatestMarketSentiment() {
   try {
-    const table = getTable('MARKET_SENTIMENT');
-    const records = await table
-      .select({
-        maxRecords: 1,
-        sort: [{ field: 'weekEndDate', direction: 'desc' }]
-      })
-      .firstPage();
+    try {
+      const table = getTable('MARKET_SENTIMENT');
+      const records = await table
+        .select({
+          maxRecords: 1,
+          sort: [{ field: 'weekEndDate', direction: 'desc' }]
+        })
+        .firstPage();
 
-    if (records.length === 0) {
-      return null;
-    }
+      if (records.length === 0) {
+        return null;
+      }
 
-    const sentiment = records[0].fields;
-    return {
-      classification: sentiment.classification,
-      confidence: sentiment.confidence,
-      tokensAbove7dAvg: sentiment.tokensAbove7dAvg,
-      totalTokens: sentiment.totalTokens,
-      weeklyVolume: sentiment.weeklyVolume,
-      prevWeekVolume: sentiment.prevWeekVolume,
-      solPerformance: sentiment.solPerformance,
-      aiTokensPerformance: sentiment.aiTokensPerformance,
-      notes: sentiment.notes
-    };
+      const sentiment = records[0].fields;
+      return {
+        classification: sentiment.classification,
+        confidence: sentiment.confidence,
+        tokensAbove7dAvg: sentiment.tokensAbove7dAvg,
+        totalTokens: sentiment.totalTokens,
+        weeklyVolume: sentiment.weeklyVolume,
+        prevWeekVolume: sentiment.prevWeekVolume,
+        solPerformance: sentiment.solPerformance,
+        aiTokensPerformance: sentiment.aiTokensPerformance,
+        notes: sentiment.notes
+      };
   } catch (error) {
     console.error('Error fetching market sentiment:', error);
     return null;
