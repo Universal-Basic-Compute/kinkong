@@ -11,9 +11,6 @@ project_root = str(Path(__file__).parent.parent.absolute())
 if project_root not in sys.path:
     sys.path.append(project_root)
 
-from backend.src.airtable.tables import getTable
-from backend.src.airtable.thoughts import createThought as create_thought
-
 def read_system_prompt():
     """Read system prompt from TypeScript file"""
     try:
