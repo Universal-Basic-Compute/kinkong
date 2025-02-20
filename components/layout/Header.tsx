@@ -25,6 +25,8 @@ type GroupNavItem = BaseNavItem & {
 type LinkNavItem = BaseNavItem & {
   isGroup: false;
   href: string;
+  isGlowing?: boolean;
+  customClass?: string;
 };
 
 type NavItem = GroupNavItem | LinkNavItem;
@@ -138,7 +140,8 @@ const Header = () => {
                   <Link
                     href={item.href}
                     className={`text-gray-300 hover:text-gold transition-colors duration-200 font-medium tracking-wide px-2 py-1 flex items-center
-                      ${item.subItems.some(si => si.isGlowing) ? 'electric-title' : ''}`}
+                      ${item.isGlowing ? 'electric-title' : ''}
+                      ${item.customClass || ''}`}
                   >
                     {item.label}
                     {item.subItems.length > 0 && (
