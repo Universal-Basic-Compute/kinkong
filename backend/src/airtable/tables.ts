@@ -127,5 +127,17 @@ export function getTable(tableName: string) {
 
 // For CommonJS compatibility
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { TABLES, getTable };
+  module.exports = { 
+    TABLES, 
+    getTable,
+    Portfolio,
+    Trade,
+    Token,
+    Signal,
+    MarketSentiment,
+    Message,
+    Subscription,
+    Thought,
+    PortfolioSnapshot
+  };
 }

@@ -261,11 +261,18 @@ export async function executeReallocation() {
 
     const tokens: Token[] = tokenRecords.map(record => ({
       symbol: record.get('symbol') as string || record.get('name') as string,
+      name: record.get('name') as string,
       mint: record.get('mint') as string,
       isActive: true,
       volume7d: record.get('volume7d') as number,
       liquidity: record.get('liquidity') as number,
-      priceChange24h: record.get('priceChange24h') as number
+      volumeGrowth: record.get('volumeGrowth') as number || 0,
+      pricePerformance: record.get('pricePerformance') as number || 0,
+      holderCount: record.get('holderCount') as number || 0,
+      price: record.get('price') as number || 0,
+      price7dAvg: record.get('price7dAvg') as number || 0,
+      volumeOnUpDay: record.get('volumeOnUpDay') as boolean || false,
+      priceChange24h: record.get('priceChange24h') as number || 0
     }));
 
     const tokenScores = await calculateTokenScores(tokens);
