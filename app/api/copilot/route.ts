@@ -271,47 +271,63 @@ ${signalsContext}
 Current Page Content:
 ${bodyContent}`;
 
-    // Log formatted prompt
-    console.log('📋 System Prompt:', {
-      length: systemPrompt.length,
-      preview: systemPrompt.slice(0, 200) + '...',
-      signalsCount: recentSignals.length
-    });
+        // Log formatted prompt
+        console.log('📋 System Prompt:', {
+          length: systemPrompt.length,
+          preview: systemPrompt.slice(0, 200) + '...',
+          signalsCount: recentSignals.length
+        });
 
-    // Make Anthropic API call
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: "claude-3-5-sonnet-20241022",
-        max_tokens: 1024,
-        messages: messages,
-        system: systemPrompt
-      })
-    });
+        // Make Anthropic API call
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'content-type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: "claude-3-5-sonnet-20241022",
+            max_tokens: 1024,
+            messages: messages,
+            system: systemPrompt
+          })
+        });
 
-    // Log API response status
-    console.log('✅ Anthropic API Response:', {
-      status: response.status,
-      ok: response.ok
-    });
+        // Log API response status
+        console.log('✅ Anthropic API Response:', {
+          status: response.status,
+          ok: response.ok
+        });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Anthropic API error:', {
-        status: response.status,
-        statusText: response.statusText,
-        error: errorText
-      });
-      throw new Error(`Failed to get copilot response: ${response.status}`);
-    }
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Anthropic API error:', {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorText
+          });
+          throw new Error(`Failed to get copilot response: ${response.status}`);
+        }
 
-    const data = await response.json();
-    const assistantMessage = data.content[0].text;
+        const data = await response.json();
+        const assistantMessage = data.content[0].text;
+
+        // Create stream response
+        const stream = new ReadableStream({
+          start(controller) {
+            const encoder = new TextEncoder();
+            controller.enqueue(encoder.encode(assistantMessage));
+            controller.close();
+          }
+        });
+
+        return new Response(stream, {
+          headers: {
+            'Content-Type': 'text/plain; charset=utf-8',
+            'Cache-Control': 'no-cache'
+          }
+        });
 
     // Save messages to history if wallet provided
     if (wallet) {
@@ -347,29 +363,13 @@ ${bodyContent}`;
       }
     }
 
-    // Create stream response
-    const stream = new ReadableStream({
-      start(controller) {
-        const encoder = new TextEncoder();
-        controller.enqueue(encoder.encode(assistantMessage));
-        controller.close();
-      }
-    });
-
-    return new Response(stream, {
-      headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
-        'Cache-Control': 'no-cache'
-      }
-    });
-
   } catch (error) {
     console.error('❌ Copilot error:', {
       name: error instanceof Error ? error.name : 'Unknown',
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined
     });
-    
+            
     return new NextResponse(
       JSON.stringify({ 
         error: 'Failed to process request',
