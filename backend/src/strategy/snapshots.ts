@@ -1,5 +1,5 @@
 import { getTable } from '../airtable/tables';
-import { getTokenData } from '../airtable/tokens';
+import { getTokenData as getAirtableTokenData } from '../airtable/tokens';
 import { getCurrentPortfolio } from './portfolio';
 import { getTokenPrices } from '../utils/jupiter';
 import fetch from 'node-fetch';
@@ -376,7 +376,7 @@ interface MarketClassification {
 export async function analyzeMarketSentiment(): Promise<MarketClassification> {
   try {
     // Get token data
-    const tokens = await getTokenData();
+    const tokens = await getAirtableTokenData();
     
     // Calculate metrics
     const tokensAbove7dAvg = tokens.filter(t => t.price > t.price7dAvg).length;
