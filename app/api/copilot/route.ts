@@ -54,64 +54,22 @@ async function getLatestMarketSentiment() {
   }
 }
 
-async function analyzeXSentiment(content: string) {
+async function runBackgroundSentiment(content: string) {
   try {
-    // Verify API key is present
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      console.error('ANTHROPIC_API_KEY not found in environment');
-      throw new Error('API key configuration missing');
-    }
-
-    // X sentiment analysis prompt
-    const systemPrompt = `You are an expert crypto sentiment analyst specializing in Solana ecosystem analysis.
-
-Analyze the provided X.com content and extract:
-1. Mentioned tokens and their sentiment
-2. Domain-specific trends (DeFi, Gaming, AI, etc.)
-3. Overall ecosystem sentiment
-
-Format your response as JSON:
-{
-    "tokens": [
-        {
-            "symbol": "string",
-            "sentiment": "BULLISH | BEARISH | NEUTRAL",
-            "confidence": 0-100,
-            "mentions": number,
-            "key_topics": ["string"],
-            "latest_news": ["string"]
-        }
-    ],
-    "domains": [
-        {
-            "name": "string",
-            "sentiment": "BULLISH | BEARISH | NEUTRAL",
-            "confidence": 0-100,
-            "trending_topics": ["string"],
-            "key_developments": ["string"]
-        }
-    ],
-    "ecosystem": {
-        "sentiment": "BULLISH | BEARISH | NEUTRAL",
-        "confidence": 0-100,
-        "key_observations": ["string"],
-        "emerging_trends": ["string"]
-    }
-}`;
-
+    console.log('🔄 Running background sentiment analysis...');
+    
     // Make direct API call to Anthropic
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'x-api-key': apiKey,
+        'x-api-key': process.env.ANTHROPIC_API_KEY!,
         'anthropic-version': '2023-06-01',
         'content-type': 'application/json'
       },
       body: JSON.stringify({
         model: "claude-3-5-sonnet-20241022",
         max_tokens: 4096,
-        system: systemPrompt,
+        system: X_SENTIMENT_PROMPT,
         messages: [{
           role: 'user',
           content: `Analyze this X.com content for crypto sentiment:\n\n${content}`
@@ -120,55 +78,28 @@ Format your response as JSON:
     });
 
     if (!response.ok) {
-      console.error('Anthropic API error:', response.status, await response.text());
-      return null;
+      console.error('Anthropic API error:', response.status);
+      return;
     }
 
     const data = await response.json();
-    const responseText = data.content[0].text;
+    const sentiment = data.content[0].text;
 
-    // Clean the response text to ensure it's valid JSON
-    const cleanedResponse = responseText
-      .replace(/```json/g, '')
-      .replace(/```/g, '')
-      .trim();
-
-    try {
-      // Parse the response
-      const analysis = JSON.parse(cleanedResponse);
-
-      // Convert confidence values to integers
-      if (analysis.ecosystem) {
-        analysis.ecosystem.confidence = parseInt(String(analysis.ecosystem.confidence).replace('%', ''));
-      }
-
-      if (analysis.tokens) {
-        analysis.tokens.forEach((token: any) => {
-          token.confidence = parseInt(String(token.confidence).replace('%', ''));
-          token.mentions = parseInt(token.mentions || '0');
-        });
-      }
-
-      if (analysis.domains) {
-        analysis.domains.forEach((domain: any) => {
-          domain.confidence = parseInt(String(domain.confidence).replace('%', ''));
-        });
-      }
-
-      // Store in Airtable if needed
-      await storeSentimentAnalysis(analysis);
-
-      return analysis;
-
-    } catch (parseError) {
-      console.error('Error parsing sentiment analysis:', parseError);
-      console.log('Raw response:', responseText);
-      return null;
+    if (sentiment) {
+      // Store in Airtable
+      const table = getTable('SENTIMENT_ANALYSIS');
+      await table.create([{
+        fields: {
+          content: sentiment,
+          createdAt: new Date().toISOString(),
+          source: 'X_ANALYSIS'
+        }
+      }]);
+      console.log('✅ Background sentiment analysis completed and stored');
     }
 
   } catch (error) {
-    console.error('Failed to analyze X sentiment:', error);
-    return null;
+    console.error('Error in background sentiment analysis:', error);
   }
 }
 
@@ -282,12 +213,6 @@ async function getRecentSignals(): Promise<FormattedSignal[]> {
     return [];
   }
 }
-import { config } from 'dotenv';
-import { resolve } from 'path';
-
-// Force reload environment variables at the start of each request
-config({ path: resolve(process.cwd(), '.env'), override: true });
-
 const limiter = rateLimit({
   interval: 60 * 1000, // 1 minute
   uniqueTokenPerInterval: 500
@@ -343,43 +268,21 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Split content into posts (assuming posts are separated by newlines)
+    // Check for X content and token mentions
     const posts = bodyContent.split('\n\n').filter(post => post.trim());
-    
-    // Count posts with token mentions
     const postsWithTokens = posts.filter(post => countTokenMentions(post) > 0).length;
-
-    console.log('Token mention analysis:', {
-      totalPosts: posts.length,
-      postsWithTokens,
-      hasTwitterInBody: bodyContent.includes('twitter.com'),
-      hasXInBody: bodyContent.includes('x.com') || bodyContent.includes('X.com'),
-      hasXUrl: requestBody.url === 'x.com'
-    });
-
     const isXContent = (bodyContent.includes('twitter.com') || 
                        bodyContent.includes('x.com') || 
                        bodyContent.includes('X.com') ||
                        requestBody.url === 'x.com');
 
-    // Only analyze if it's X content AND has enough token mentions
+    // If it's X content with tokens, trigger background analysis
     if (isXContent && postsWithTokens >= 2) {
-      console.log('📊 Starting X sentiment analysis - found multiple posts with token mentions');
-      
-      const sentiment = await analyzeXSentiment(bodyContent);
-      
-      if (sentiment) {
-        console.log('✅ X Sentiment Analysis completed:', sentiment);
-        systemPrompt = `${systemPrompt}
-
-=== X.COM SENTIMENT ANALYSIS ===
-${JSON.stringify(sentiment, null, 2)}
-===============================
-
-`;
-      } else {
-        console.log('❌ X sentiment analysis failed or returned no results');
-      }
+      console.log('📊 Triggering background X sentiment analysis');
+      // Fire and forget - don't await
+      runBackgroundSentiment(bodyContent).catch(error => 
+        console.error('Background sentiment analysis error:', error)
+      );
     }
 
     // Get message history if wallet is provided
