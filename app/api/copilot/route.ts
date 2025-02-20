@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { rateLimit } from '@/utils/rate-limit';
 import { getTable } from '@/backend/src/airtable/tables';
 import { Signal } from '@/backend/src/airtable/tables';
 import { COPILOT_PROMPT } from '@/prompts/copilot';
 import { X_SENTIMENT_PROMPT } from '@/prompts/x-sentiment';
 
-// Route configuration exports must be first
+// Route configuration exports
 export const maxDuration = 30; // 30 seconds timeout
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
-// Initialize rate limiter
-const limiter = rateLimit({
+// Initialize rate limiter with a unique name
+const rateLimiter = rateLimit({
   interval: 60 * 1000, // 1 minute
   uniqueTokenPerInterval: 500
 });
@@ -161,10 +162,6 @@ async function storeSentimentAnalysis(analysis: any) {
     console.error('Error storing sentiment analysis:', error);
   }
 }
-import { rateLimit } from '@/utils/rate-limit';
-import { getTable } from '@/backend/src/airtable/tables';
-import { Signal } from '@/backend/src/airtable/tables';
-
 interface FormattedSignal {
   id: string;
   createdAt: string;
@@ -214,10 +211,6 @@ async function getRecentSignals(): Promise<FormattedSignal[]> {
     return [];
   }
 }
-const limiter = rateLimit({
-  interval: 60 * 1000, // 1 minute
-  uniqueTokenPerInterval: 500
-});
 
 interface CopilotRequest {
   message: string;
@@ -233,6 +226,9 @@ interface HistoryMessage {
 
 export async function POST(request: NextRequest) {
   try {
+    // Use rateLimiter instead of limiter
+    await rateLimiter.check(5, 'copilot_api'); // Allow 5 requests per minute per token
+
     // Verify API key is present
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
