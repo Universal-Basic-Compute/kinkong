@@ -63,10 +63,18 @@ function classifyMarket(metrics: WeeklyAnalysis['metrics']): MarketClassificatio
     reasons.push('Mixed signals with no clear direction');
   }
 
+  // Return with metrics included
   return {
     sentiment,
     confidence,
-    reasons
+    reasons,
+    metrics: {
+      tokensAbove7dAvg: Math.round(metrics.percentAboveAvg * metrics.totalTokens / 100),
+      totalTokens: metrics.totalTokens,
+      volumeGrowth: metrics.volumeGrowth,
+      percentVolumeOnUpDays: metrics.percentVolumeOnUpDays,
+      aiVsSolPerformance: metrics.aiVsSolPerformance
+    }
   };
 }
 
