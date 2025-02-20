@@ -78,44 +78,50 @@ def store_sentiment_analysis(analysis):
         if analysis.get('tokens'):
             for token in analysis['tokens']:
                 record = {
-                    'type': 'TOKEN',
-                    'symbol': token['symbol'],
-                    'sentiment': token['sentiment'],
-                    'confidence': token['confidence'],
-                    'mentions': token.get('mentions', 0),
-                    'key_topics': ', '.join(token.get('key_topics', [])),
-                    'latest_news': ', '.join(token.get('latest_news', [])),
-                    'createdAt': datetime.now(timezone.utc).isoformat()
+                    'fields': {
+                        'type': 'TOKEN',
+                        'symbol': token['symbol'],
+                        'sentiment': token['sentiment'],
+                        'confidence': token['confidence'],
+                        'mentions': token.get('mentions', 0),
+                        'key_topics': ', '.join(token.get('key_topics', [])),
+                        'latest_news': ', '.join(token.get('latest_news', [])),
+                        'createdAt': datetime.now(timezone.utc).isoformat()
+                    }
                 }
-                sentiment_table.create(record)
+                sentiment_table.insert(record['fields'])
                 print(f"Created TOKEN sentiment record for {token['symbol']}")
 
         # Store domain sentiments
         if analysis.get('domains'):
             for domain in analysis['domains']:
                 record = {
-                    'type': 'DOMAIN',
-                    'name': domain['name'],
-                    'sentiment': domain['sentiment'],
-                    'confidence': domain['confidence'],
-                    'trending_topics': ', '.join(domain.get('trending_topics', [])),
-                    'key_developments': ', '.join(domain.get('key_developments', [])),
-                    'createdAt': datetime.now(timezone.utc).isoformat()
+                    'fields': {
+                        'type': 'DOMAIN',
+                        'name': domain['name'],
+                        'sentiment': domain['sentiment'],
+                        'confidence': domain['confidence'],
+                        'trending_topics': ', '.join(domain.get('trending_topics', [])),
+                        'key_developments': ', '.join(domain.get('key_developments', [])),
+                        'createdAt': datetime.now(timezone.utc).isoformat()
+                    }
                 }
-                sentiment_table.create(record)
+                sentiment_table.insert(record['fields'])
                 print(f"Created DOMAIN sentiment record for {domain['name']}")
 
         # Store ecosystem sentiment
         if analysis.get('ecosystem'):
             record = {
-                'type': 'ECOSYSTEM',
-                'sentiment': analysis['ecosystem']['sentiment'],
-                'confidence': analysis['ecosystem']['confidence'],
-                'key_observations': ', '.join(analysis['ecosystem'].get('key_observations', [])),
-                'emerging_trends': ', '.join(analysis['ecosystem'].get('emerging_trends', [])),
-                'createdAt': datetime.now(timezone.utc).isoformat()
+                'fields': {
+                    'type': 'ECOSYSTEM',
+                    'sentiment': analysis['ecosystem']['sentiment'],
+                    'confidence': analysis['ecosystem']['confidence'],
+                    'key_observations': ', '.join(analysis['ecosystem'].get('key_observations', [])),
+                    'emerging_trends': ', '.join(analysis['ecosystem'].get('emerging_trends', [])),
+                    'createdAt': datetime.now(timezone.utc).isoformat()
+                }
             }
-            sentiment_table.create(record)
+            sentiment_table.insert(record['fields'])
             print("Created ECOSYSTEM sentiment record")
 
         return True
