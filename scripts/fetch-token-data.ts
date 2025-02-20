@@ -351,9 +351,9 @@ async function main() {
 
     // Create CSV content
     const csvContent = [
-      'symbol,description,mint,isActive,volume7d,liquidity,volumeGrowth,pricePerformance,holderCount',
+      'symbol,name,mint,isActive,volume7d,liquidity,volumeGrowth,pricePerformance,holderCount',
       ...tokenData.map(token => 
-        `${token.symbol},${token.description},${token.mint},${token.isActive},${token.volume7d},${token.liquidity},${token.volumeGrowth},${token.pricePerformance},${token.holderCount}`
+        `${token.symbol},${token.name},${token.mint},${token.isActive},${token.volume7d},${token.liquidity},${token.volumeGrowth},${token.pricePerformance},${token.holderCount}`
       )
     ].join('\n');
 
