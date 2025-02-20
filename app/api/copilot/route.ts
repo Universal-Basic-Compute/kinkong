@@ -11,7 +11,40 @@ const rateLimiter = rateLimit({
 
 export async function POST(request: NextRequest) {
   try {
+    // Global rate limit check
     await rateLimiter.check(5, 'copilot_api');
+
+    const requestBody = await request.json();
+    const { message, wallet } = requestBody;
+
+    // Validate wallet address
+    if (!wallet) {
+      return new NextResponse(
+        JSON.stringify({ error: 'Wallet address required' }),
+        { 
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Check wallet-specific rate limit
+    const isUnderLimit = await checkWalletMessageLimit(wallet);
+    if (!isUnderLimit) {
+      return new NextResponse(
+        JSON.stringify({ 
+          error: 'Rate limit exceeded',
+          details: 'Maximum 10 messages per wallet per 4 hours'
+        }),
+        { 
+          status: 429,
+          headers: { 
+            'Content-Type': 'application/json',
+            'Retry-After': '14400' // 4 hours in seconds
+          }
+        }
+      );
+    }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
