@@ -34,16 +34,51 @@ export async function POST(request: NextRequest) {
     let messageHistory: HistoryMessage[] = [];
     if (wallet) {
       const messagesTable = getTable('MESSAGES');
-      const records = await messagesTable.select({
-        filterByFormula: `{wallet}='${wallet}'`,
-        sort: [{ field: 'createdAt', direction: 'desc' }],
-        maxRecords: 30
-      }).all();
+      
+      // Debug log before query
+      console.log('🔍 Fetching messages for wallet:', wallet);
+      
+      try {
+        const records = await messagesTable.select({
+          filterByFormula: `{wallet}='${wallet}'`,
+          sort: [{ field: 'createdAt', direction: 'desc' }],
+          maxRecords: 30
+        }).all();
 
-      messageHistory = records.map(record => ({
-        role: record.get('role') as 'user' | 'assistant',
-        content: record.get('content') as string
-      })).reverse(); // Reverse to get chronological order
+        // Debug log after query
+        console.log('📝 Found records:', {
+          count: records.length,
+          firstRecord: records[0] ? {
+            id: records[0].id,
+            fields: records[0].fields
+          } : null
+        });
+
+        messageHistory = records.map(record => {
+          // Debug each record mapping
+          const role = record.fields.role;
+          const content = record.fields.content;
+          
+          console.log('Message record:', {
+            role,
+            contentPreview: content?.substring(0, 50)
+          });
+
+          return {
+            role: role as 'user' | 'assistant',
+            content: content
+          };
+        }).reverse();
+
+        // Debug final history
+        console.log('📚 Final message history:', {
+          length: messageHistory.length,
+          firstMessage: messageHistory[0]
+        });
+
+      } catch (error) {
+        console.error('❌ Error fetching message history:', error);
+      }
     }
 
     // Simple logging
