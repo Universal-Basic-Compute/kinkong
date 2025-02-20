@@ -9,7 +9,19 @@ export default function CopilotStartPage() {
   const steps = [
     {
       title: "Download the extension files",
-      content: "Download the KinKong Copilot extension files from our GitHub repository.",
+      content: (
+        <div>
+          Download the KinKong Copilot extension files from our{' '}
+          <a 
+            href="https://github.com/Universal-Basic-Compute/kinkong-copilot/archive/refs/heads/main.zip"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gold hover:text-gold/80 underline"
+          >
+            GitHub repository
+          </a>.
+        </div>
+      ),
       code: null
     },
     {
@@ -19,7 +31,20 @@ export default function CopilotStartPage() {
     },
     {
       title: "Open Chrome Extensions",
-      content: "Open Chrome and navigate to chrome://extensions/ or click on the puzzle piece icon and select 'Manage Extensions'.",
+      content: (
+        <div>
+          Open Chrome and navigate to{' '}
+          <a 
+            href="chrome://extensions"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gold hover:text-gold/80 underline"
+          >
+            chrome://extensions
+          </a>
+          {' '}or click on the puzzle piece icon and select 'Manage Extensions'.
+        </div>
+      ),
       code: null
     },
     {
