@@ -16,16 +16,34 @@ export async function POST(request: NextRequest) {
   try {
     const requestBody = await request.json();
     
-    // Extract message from body
+    // Extract message and wallet from body
     const message = requestBody.message;
+    const wallet = requestBody.wallet;
     
     // Stringify the whole body
     const bodyContent = JSON.stringify(requestBody);
 
+    // Get message history if wallet is provided
+    let messageHistory = [];
+    if (wallet) {
+      const messagesTable = getTable('MESSAGES');
+      const records = await messagesTable.select({
+        filterByFormula: `{wallet}='${wallet}'`,
+        sort: [{ field: 'createdAt', direction: 'desc' }],
+        maxRecords: 10
+      }).all();
+
+      messageHistory = records.map(record => ({
+        role: record.get('role'),
+        content: record.get('content')
+      })).reverse(); // Reverse to get chronological order
+    }
+
     // Simple logging
     console.log('📝 Copilot Request:', {
       message: message,
-      bodyLength: bodyContent.length
+      bodyLength: bodyContent.length,
+      historyLength: messageHistory.length
     });
 
     // Simple system prompt
@@ -73,6 +91,29 @@ ${bodyContent}`;
 
     const data = await response.json();
     const assistantMessage = data.content[0].text;
+
+    // Save messages to history if wallet provided
+    if (wallet) {
+      const messagesTable = getTable('MESSAGES');
+      await messagesTable.create([
+        {
+          fields: {
+            wallet,
+            role: 'user',
+            content: message,
+            createdAt: new Date().toISOString()
+          }
+        },
+        {
+          fields: {
+            wallet,
+            role: 'assistant',
+            content: assistantMessage,
+            createdAt: new Date().toISOString()
+          }
+        }
+      ]);
+    }
 
     // Create stream response
     const stream = new ReadableStream({

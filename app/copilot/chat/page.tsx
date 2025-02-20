@@ -66,8 +66,8 @@ export default function CopilotChatPage() {
       setMessages(prev => [...prev, userMessage]);
       setInput('');
 
-      // Get streaming response
-      const response = await askKinKongCopilot(input);
+      // Get streaming response with wallet address
+      const response = await askKinKongCopilot(input, publicKey.toString());
     
       // Add assistant message
       const assistantMessage: Message = {

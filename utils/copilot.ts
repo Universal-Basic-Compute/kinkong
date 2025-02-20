@@ -1,8 +1,9 @@
-export async function askKinKongCopilot(message: string) {
+export async function askKinKongCopilot(message: string, wallet?: string) {
   try {
     const requestBody = {
       message,
-      body: document.body.innerText
+      body: document.body.innerText,
+      wallet // Add wallet address if provided
     };
 
     const response = await fetch('/api/copilot', {
