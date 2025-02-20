@@ -1,4 +1,5 @@
-import Airtable from 'airtable';
+const Airtable = require('airtable');
+
 console.log('⚙️ Initializing Airtable client...', {
   hasApiKey: !!process.env.KINKONG_AIRTABLE_API_KEY,
   hasBaseId: !!process.env.KINKONG_AIRTABLE_BASE_ID,
@@ -23,7 +24,7 @@ const base = new Airtable({
 console.log('Airtable client configured successfully');
 
 // Add a test function to verify the client
-export const testConnection = async () => {
+const testConnection = async () => {
   try {
     const table = base.table('Investments');
     await table.select().firstPage();
@@ -35,9 +36,13 @@ export const testConnection = async () => {
   }
 };
 
-export const getTable = (tableName: string) => {
+const getTable = (tableName) => {
   console.log('Getting table:', tableName);
   return base.table(tableName);
 };
 
-export default base;
+module.exports = {
+  default: base,
+  testConnection,
+  getTable
+};
