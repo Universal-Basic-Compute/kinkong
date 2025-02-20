@@ -69,7 +69,7 @@ export default function CopilotStartPage() {
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header Section */}
         <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold text-gold">
+          <h1 className="text-4xl font-bold white-glow-text">
             Get Started with KinKong Copilot
           </h1>
           <p className="text-gray-400 max-w-2xl mx-auto">
