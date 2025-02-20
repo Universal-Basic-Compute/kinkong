@@ -3,17 +3,7 @@ import { useState, useEffect } from 'react';
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import { WalletConnect } from '@/components/wallet/WalletConnect';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { 
-  Connection,
-  PublicKey, 
-  Transaction 
-} from '@solana/web3.js';
-
-import { 
-  getAssociatedTokenAddress, 
-  createAssociatedTokenAccountInstruction,
-  createTransferInstruction 
-} from '@solana/spl-token';
+import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 
 const USDC_MINT = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'); // Mainnet USDC
 const TREASURY_WALLET = new PublicKey('FnWyN4t1aoZWFjEEBxopMaAgk5hjL5P3K65oc2T9FBJY');
@@ -86,6 +76,13 @@ export default function Invest() {
         { commitment: 'confirmed' }
       );
         
+      // Dynamically import SPL Token functions
+      const { 
+        getAssociatedTokenAddress, 
+        createAssociatedTokenAccountInstruction,
+        createTransferInstruction 
+      } = await import('@solana/spl-token');
+
       // Get user's USDC token account
       console.log('Getting user token account...');
       const userTokenAccount = await getAssociatedTokenAddress(
