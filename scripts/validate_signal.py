@@ -74,7 +74,7 @@ def validate_signal(
         reqs = TIMEFRAME_REQS[strategy_timeframe]
         costs = TradeCosts()
         
-        # Extract prices from signal
+        # Extract prices from signal (no wallet validation)
         entry_price = float(signal_data.get('entryPrice', 0))
         target_price = float(signal_data.get('targetPrice', 0))
         stop_loss_price = float(signal_data.get('stopLoss', 0))
