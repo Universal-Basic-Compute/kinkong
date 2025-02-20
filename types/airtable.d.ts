@@ -19,7 +19,7 @@ declare module 'airtable' {
     }): Query<TFields>;
     find(id: string): Promise<Record<TFields>>;
     create(records: Array<{fields: Partial<TFields>}>): Promise<Array<Record<TFields>>>;
-    update(records: Array<{id: string; fields: Partial<TFields>}>): Promise<Array<Record<TFields>>>;
+    update(recordId: string, fields: Partial<TFields>): Promise<Record<TFields>>;
     destroy(ids: string[]): Promise<Array<Record<TFields>>>;
   }
 
