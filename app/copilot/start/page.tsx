@@ -8,17 +8,17 @@ export default function CopilotStartPage() {
 
   const steps = [
     {
-      title: "Download the extension files",
+      title: "Download the extension files", 
       content: (
         <div>
-          Download the KinKong Copilot extension files from our{' '}
+          Download the KinKong Copilot extension files{' '}
           <a 
             href="https://github.com/Universal-Basic-Compute/kinkong-copilot/archive/refs/heads/main.zip"
             target="_blank"
             rel="noopener noreferrer"
             className="text-gold hover:text-gold/80 underline"
           >
-            GitHub repository
+            here
           </a>.
         </div>
       ),
