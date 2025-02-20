@@ -1,11 +1,10 @@
-const dotenv = require('dotenv');
-const fs = require('fs');
-const path = require('path');
-const { getTable } = require('../backend/src/airtable/tables');
+import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
+import { getTable, TABLES } from '../backend/src/airtable/tables';
+import fetch from 'node-fetch';
 
-// Only import node-fetch if fetch is not available globally
-const nodeFetch = require('node-fetch');
-const fetchImpl = globalThis.fetch || nodeFetch;
+const fetchImpl = globalThis.fetch || fetch;
 
 // Add debug logging BEFORE config
 console.log('Current working directory:', process.cwd());
