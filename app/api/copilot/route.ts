@@ -130,7 +130,18 @@ export async function POST(request: NextRequest) {
 
     // Check if content is from X.com
     const isXContent = bodyContent.includes('twitter.com') || 
-                      bodyContent.includes('x.com');
+                      bodyContent.includes('x.com') ||
+                      bodyContent.includes('X.com') ||  // Add case variation
+                      requestBody.source === 'x.com';   // Check source field explicitly
+
+    // Log the check
+    console.log('Content source check:', {
+      isXContent,
+      hasTwitter: bodyContent.includes('twitter.com'),
+      hasXcom: bodyContent.includes('x.com'),
+      hasXComCaps: bodyContent.includes('X.com'),
+      source: requestBody.source
+    });
 
     // Get message history if wallet is provided
     let messageHistory: HistoryMessage[] = [];
