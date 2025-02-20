@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "analyze-sentiment": "ts-node scripts/analyze-market-sentiment.ts",
-    "fetch-tokens": "ts-node scripts/fetch-token-data.ts",
+    "fetch-tokens": "ts-node --transpile-only scripts/fetch-token-data.ts",
     "reallocation": "ts-node scripts/execute-reallocation.ts",
     "snapshot": "ts-node scripts/take-snapshot.ts",
     "calculate-signals": "ts-node scripts/calculate-closed-signals.ts"

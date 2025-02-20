@@ -1,10 +1,9 @@
-import dotenv from 'dotenv';
-import fs from 'fs';
-import path from 'path';
-import { getTable } from '../backend/src/airtable/tables';
-import { FieldSet } from 'airtable';
-import fetch from 'node-fetch';
-import { Response } from 'node-fetch';
+const dotenv = require('dotenv');
+const fs = require('fs');
+const path = require('path');
+const { getTable } = require('../backend/src/airtable/tables');
+const { FieldSet } = require('airtable');
+const fetch = require('node-fetch');
 
 // Add debug logging BEFORE config
 console.log('Current working directory:', process.cwd());
