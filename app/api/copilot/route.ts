@@ -5,13 +5,9 @@ import { Signal } from '@/backend/src/airtable/tables';
 import { COPILOT_PROMPT } from '@/prompts/copilot';
 import { X_SENTIMENT_PROMPT } from '@/prompts/x-sentiment';
 
-// Add timeout configuration
+// Route configuration exports must be first
 export const maxDuration = 30; // 30 seconds timeout
-
-// Add runtime configuration 
 export const runtime = 'edge';
-
-// Add dynamic configuration
 export const dynamic = 'force-dynamic';
 
 // Initialize rate limiter
