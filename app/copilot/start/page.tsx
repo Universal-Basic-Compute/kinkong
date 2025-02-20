@@ -1,10 +1,12 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletConnect } from '@/components/wallet/WalletConnect';
 
 export default function CopilotStartPage() {
+  const { connected } = useWallet();
   const [activeStep, setActiveStep] = useState(1);
 
   const steps = [
@@ -67,7 +69,7 @@ export default function CopilotStartPage() {
 
   return (
     <div className="min-h-screen pt-20 px-4">
-
+      <div className="max-w-4xl mx-auto space-y-8">
         {/* Features Grid */}
         <div className="grid md:grid-cols-3 gap-6">
           {[
@@ -165,10 +167,9 @@ export default function CopilotStartPage() {
           )}
         </div>
       </div>
-    </main>
+    </div>
   );
 }
-    {
       title: "Extract the ZIP file",
       content: "Extract the downloaded ZIP file to a folder on your computer.",
       code: null
