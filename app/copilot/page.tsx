@@ -68,9 +68,9 @@ export default function CopilotPage() {
         "Custom trading strategies",
         "Direct ecosystem integration"
       ],
-      price: "3 SOL",
+      price: "3.5 SOL / 3 months",
       action: () => handlePremiumSubscription(),
-      buttonText: "Upgrade to Premium",
+      buttonText: "Upgrade to Premium", 
       buttonStyle: "bg-gradient-to-r from-darkred to-gold text-black"
     }
   ];
@@ -124,20 +124,22 @@ export default function CopilotPage() {
           {tiers.map((tier, index) => (
             <div 
               key={index}
-              className="p-8 bg-black/30 border border-gold/20 rounded-lg hover:border-gold/40 transition-all"
+              className="p-8 bg-black/30 border border-gold/20 rounded-lg hover:border-gold/40 transition-all flex flex-col"
             >
-              <h3 className="text-2xl font-bold mb-2">{tier.name}</h3>
-              <p className="text-gray-400 mb-4">{tier.description}</p>
-              {tier.price && (
-                <div className="text-xl font-bold text-gold mb-4">{tier.price}</div>
-              )}
-              <ul className="space-y-2 mb-6">
-                {tier.features.map((feature, i) => (
-                  <li key={i} className="flex items-center text-gray-300">
-                    <span className="text-gold mr-2">✓</span> {feature}
-                  </li>
-                ))}
-              </ul>
+              <div className="flex-1">
+                <h3 className="text-2xl font-bold mb-2">{tier.name}</h3>
+                <p className="text-gray-400 mb-4">{tier.description}</p>
+                {tier.price && (
+                  <div className="text-xl font-bold text-gold mb-4">{tier.price}</div>
+                )}
+                <ul className="space-y-2 mb-6">
+                  {tier.features.map((feature, i) => (
+                    <li key={i} className="flex items-center text-gray-300">
+                      <span className="text-gold mr-2">✓</span> {feature}
+                    </li>
+                  ))}
+                </ul>
+              </div>
               <button
                 onClick={tier.action}
                 disabled={isProcessing}
