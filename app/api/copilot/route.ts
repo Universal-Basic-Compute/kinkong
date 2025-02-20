@@ -261,7 +261,8 @@ export async function POST(request: NextRequest) {
               code,
               role: 'user',
               content: message,
-              createdAt: new Date().toISOString()
+              createdAt: new Date().toISOString(),
+              wallet: requestBody.wallet || null // Store wallet if provided
             }
           },
           {
@@ -269,7 +270,8 @@ export async function POST(request: NextRequest) {
               code,
               role: 'assistant',
               content: assistantMessage,
-              createdAt: new Date().toISOString()
+              createdAt: new Date().toISOString(),
+              wallet: requestBody.wallet || null // Store wallet if provided
             }
           }
         ]);

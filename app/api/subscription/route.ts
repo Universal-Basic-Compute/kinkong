@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
   try {
     // Parse request body
     const body = await request.json();
-    const { signature, code } = body;
+    const { signature, code, wallet } = body; // Make wallet optional
 
     if (!signature || !code) {
       return NextResponse.json(
@@ -49,7 +49,8 @@ export async function POST(request: NextRequest) {
           endDate: endDate.toISOString(),
           amount: SUBSCRIPTION_COST,
           signature,
-          status: 'ACTIVE'
+          status: 'ACTIVE',
+          wallet: wallet || null // Store wallet if provided
         }
       }
     ]);
@@ -62,7 +63,8 @@ export async function POST(request: NextRequest) {
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
         status: 'ACTIVE',
-        code
+        code,
+        wallet: wallet || null
       }
     });
 

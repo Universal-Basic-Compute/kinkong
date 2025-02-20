@@ -100,6 +100,7 @@ export interface Subscription {
   status: 'ACTIVE' | 'EXPIRED' | 'CANCELLED';
   amount: number;
   signature: string;
+  wallet?: string; // Optional wallet address
 }
 
 export interface Thought {
