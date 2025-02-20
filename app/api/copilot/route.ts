@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { rateLimit } from '@/utils/rate-limit';
 import { getTable } from '@/backend/src/airtable/tables';
+import { getTable } from '@/backend/src/airtable/tables';
 import { COPILOT_PROMPT } from '@/prompts/copilot';
 
 // Initialize global rate limiter
@@ -44,6 +45,54 @@ async function checkWalletMessageLimit(wallet: string): Promise<boolean> {
   } catch (error) {
     console.error('Error checking wallet message limit:', error);
     throw error;
+  }
+}
+
+async function getContextData() {
+  try {
+    // Get last 25 signals
+    const signalsTable = getTable('SIGNALS');
+    const signals = await signalsTable
+      .select({
+        maxRecords: 25,
+        sort: [{ field: 'createdAt', direction: 'desc' }]
+      })
+      .all();
+
+    // Get latest market sentiment
+    const sentimentTable = getTable('MARKET_SENTIMENT');
+    const sentiment = await sentimentTable
+      .select({
+        maxRecords: 1,
+        sort: [{ field: 'weekEndDate', direction: 'desc' }]
+      })
+      .firstPage();
+
+    return {
+      signals: signals.map(record => ({
+        token: record.get('token'),
+        type: record.get('type'),
+        timeframe: record.get('timeframe'),
+        confidence: record.get('confidence'),
+        reason: record.get('reason'),
+        createdAt: record.get('createdAt'),
+        actualReturn: record.get('actualReturn'),
+        success: record.get('success')
+      })),
+      marketSentiment: sentiment.length > 0 ? {
+        classification: sentiment[0].get('classification'),
+        confidence: sentiment[0].get('confidence'),
+        tokensAbove7dAvg: sentiment[0].get('tokensAbove7dAvg'),
+        totalTokens: sentiment[0].get('totalTokens'),
+        solPerformance: sentiment[0].get('solPerformance'),
+        aiTokensPerformance: sentiment[0].get('aiTokensPerformance'),
+        notes: sentiment[0].get('notes'),
+        weekEndDate: sentiment[0].get('weekEndDate')
+      } : null
+    };
+  } catch (error) {
+    console.error('Error fetching context data:', error);
+    return { signals: [], marketSentiment: null };
   }
 }
 
@@ -102,7 +151,19 @@ export async function POST(request: NextRequest) {
 
     const requestBody = await request.json();
     const { message, body, wallet } = requestBody;
-    const bodyContent = JSON.stringify(requestBody);
+    
+    // Get context data
+    const contextData = await getContextData();
+    
+    // Prepare full context
+    const fullContext = {
+      pageContent: body,
+      requestData: requestBody,
+      signals: contextData.signals,
+      marketSentiment: contextData.marketSentiment
+    };
+
+    const bodyContent = JSON.stringify(fullContext);
 
     let systemPrompt = COPILOT_PROMPT;
 
