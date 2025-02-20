@@ -474,24 +474,31 @@ ${JSON.stringify(sentiment, null, 2)}
       }
     ];
 
-    // If X content, analyze sentiment
-    if (isXContent) {
-      console.log('📊 Starting X sentiment analysis...');
-      
-      const sentiment = await analyzeXSentiment(bodyContent);
-      
-      if (sentiment) {
-        console.log('✅ X Sentiment Analysis completed:', sentiment);
-        systemPrompt = `${systemPrompt}
-
-=== X.COM SENTIMENT ANALYSIS ===
-${JSON.stringify(sentiment, null, 2)}
-===============================
-
-`;
-      } else {
-        console.log('❌ X sentiment analysis failed or returned no results');
+    // Add helper function to run sentiment analysis in background
+    async function runBackgroundSentiment(content: string) {
+      try {
+        console.log('🔄 Running background sentiment analysis...');
+        const sentiment = await analyzeXSentiment(content);
+        
+        if (sentiment) {
+          // Store in Airtable
+          await storeSentimentAnalysis(sentiment);
+          console.log('✅ Background sentiment analysis completed and stored');
+        } else {
+          console.log('❌ Background sentiment analysis failed');
+        }
+      } catch (error) {
+        console.error('Error in background sentiment analysis:', error);
       }
+    }
+
+    // If it's X content with tokens, trigger background analysis
+    if (isXContent && postsWithTokens >= 2) {
+      console.log('📊 Triggering background X sentiment analysis');
+      // Fire and forget - don't await
+      runBackgroundSentiment(bodyContent).catch(error => 
+        console.error('Background sentiment analysis error:', error)
+      );
     }
 
     // Get market sentiment
