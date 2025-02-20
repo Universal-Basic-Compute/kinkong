@@ -28,50 +28,14 @@ export default function CopilotStartPage() {
       code: null
     },
     {
-      title: "Extract the ZIP file",
-      content: "Extract the downloaded ZIP file to a folder on your computer.",
-      code: null
-    },
-    {
-      title: "Open Chrome Extensions",
-      content: (
-        <div>
-          Open Chrome and navigate to{' '}
-          <a 
-            href="chrome://extensions"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gold hover:text-gold/80 underline"
-          >
-            chrome://extensions
-          </a>
-          {' '}or click on the puzzle piece icon and select 'Manage Extensions'.
-        </div>
-      ),
-      code: null
-    },
-    {
-      title: "Enable Developer Mode",
-      content: "Toggle 'Developer mode' in the top right corner of the extensions page.",
-      code: null
-    },
-    {
-      title: "Load Unpacked Extension",
-      content: "Click 'Load unpacked' and select the folder where you extracted the extension files.",
-      code: null
-    },
-    {
-      title: "Pin the Extension",
-      content: "Click the puzzle piece icon in Chrome and pin KinKong Copilot for easy access.",
-      code: null
     }
   ];
 
   return (
     <div className="min-h-screen pt-20 px-4">
       <div className="max-w-4xl mx-auto space-y-8">
-        {/* Features Grid */}
-        <div className="grid md:grid-cols-3 gap-6">
+        {/* Header Section */}
+        <div className="text-center space-y-4">
           {[
             {
               icon: "🧠",
