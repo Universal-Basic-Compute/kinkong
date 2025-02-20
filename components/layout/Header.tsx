@@ -73,6 +73,14 @@ const Header = () => {
       ]
     },
     {
+      label: 'KinKong Copilot',
+      isGroup: false,
+      href: '/copilot',
+      subItems: [],
+      isGlowing: true,
+      customClass: 'text-orange-500 animate-pulse'
+    },
+    {
       label: 'Shares Management',
       isGroup: true,
       isDisabled: true,
