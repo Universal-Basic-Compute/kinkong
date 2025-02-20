@@ -70,7 +70,7 @@ export default function CopilotChatPage() {
       setInput('');
 
       // Get streaming response with wallet address
-      const response = await askKinKongCopilot(input, publicKey.toString());
+      const response = await askKinKongCopilot(input, code || '');
     
       // Add assistant message
       const assistantMessage: Message = {
