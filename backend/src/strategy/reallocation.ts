@@ -1,25 +1,131 @@
-import { Token, getTable } from '../airtable/tables';
-import { getTokenPrice } from '../utils/prices';
+const { base } = require('./client');
 
-interface TokenScore {
-  symbol: string;
-  baseScore: number;
-  volumeScore: number;
-  priceScore: number;
-  liquidityScore: number;
-  finalScore: number;
-  currentAllocation: number;
-  targetAllocation: number;
+const TABLES = {
+  PORTFOLIO: 'PORTFOLIO',
+  TRADES: 'TRADES', 
+  TOKENS: 'TOKENS',
+  SIGNALS: 'SIGNALS',
+  REPORTS: 'REPORTS',
+  PORTFOLIO_SNAPSHOTS: 'PORTFOLIO_SNAPSHOTS',
+  INVESTMENTS: 'INVESTMENTS',
+  MARKET_SENTIMENT: 'MARKET_SENTIMENT',
+  MESSAGES: 'MESSAGES',
+  THOUGHTS: 'THOUGHTS',
+  SENTIMENT_ANALYSIS: 'SENTIMENT_ANALYSIS'
+};
+
+function getTable(tableName) {
+  if (!tableName) {
+    throw new Error('Table name is required');
+  }
+  console.log('Getting table:', tableName);
+  return base.table(tableName);
 }
 
-interface TradeOrder {
+module.exports = { TABLES, getTable };
+
+// Type definitions remain for TypeScript but don't affect runtime
+interface Portfolio {
+  token: string;
+  allocation: number;
+  lastUpdate: string;
+  usdValue?: number;
+}
+
+interface PortfolioSnapshot {
+  timestamp: string;
+  totalValue: number;
+  holdings: {
+    token: string;
+    amount: number;
+    price: number;
+    value: number;
+  }[];
+}
+
+interface Trade {
+  createdAt: string;  // ISO 8601 UTC format
   token: string;
   action: 'BUY' | 'SELL';
   amount: number;
-  reason: string;
+  price: number;
+  lastUpdateTime?: string;  // ISO 8601 UTC format
 }
 
-function normalizeScore(value: number, allValues: number[]): number {
+interface Token {
+  symbol: string;  // Changed from token to symbol
+  name: string;
+  mint: string;
+  isActive: boolean;
+  volume7d: number;
+  liquidity: number;
+  volumeGrowth: number;
+  pricePerformance: number;
+  holderCount: number;
+  price: number;
+  price7dAvg: number;
+  volumeOnUpDay: boolean;
+  priceChange24h: number;
+}
+
+interface Signal {
+  createdAt: string;
+  token: string;
+  type: 'BUY' | 'SELL';
+  timeframe: 'SCALP' | 'INTRADAY' | 'SWING' | 'POSITION';
+  entryPrice?: number;
+  targetPrice?: number;
+  stopLoss?: number;
+  confidence: 'LOW' | 'MEDIUM' | 'HIGH';
+  reason: string;
+  url?: string;
+  expectedReturn?: number;
+  actualReturn?: number;
+  accuracy?: number;
+  wallet?: string;
+  code?: string;
+}
+
+interface MarketSentiment {
+  weekStartDate: string;
+  weekEndDate: string;
+  classification: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+  confidence: number;
+  totalTokens: number;
+  tokensAbove7dAvg: number;
+  weeklyVolume: number;
+  prevWeekVolume: number;
+  upDayVolume: number;
+  totalVolume: number;
+  solPerformance: number;
+  aiTokensPerformance: number;
+  notes: string;
+}
+
+interface Message {
+  createdAt: string;
+  role: 'user' | 'assistant';
+  content: string;
+  code: string;
+  context?: string;
+  wallet?: string;
+}
+
+interface Subscription {
+  code: string;
+  startDate: string;
+  endDate: string;
+  status: 'ACTIVE' | 'EXPIRED' | 'CANCELLED';
+  amount: number;
+  signature: string;
+  wallet?: string;
+}
+
+interface Thought {
+  type: 'TECHNICAL_ANALYSIS' | 'REALLOCATION' | 'SIGNAL';
+  content: string;
+  context: Record<string, any>;
+}
   const min = Math.min(...allValues);
   const max = Math.max(...allValues);
   if (max === min) return 50; // Default to middle if all values are the same
