@@ -2,15 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { verifySubscription } from '@/utils/subscription';
-import { getTable } from '@/backend/src/airtable/tables';
-import { Connection, PublicKey, LAMPORTS_PER_SOL, Transaction, SystemProgram } from '@solana/web3.js';
-
-// Add environment variables check
-if (!process.env.NEXT_PUBLIC_HELIUS_RPC_URL || !process.env.NEXT_PUBLIC_SUBSCRIPTION_WALLET) {
-  throw new Error('Missing required environment variables: NEXT_PUBLIC_HELIUS_RPC_URL and/or NEXT_PUBLIC_SUBSCRIPTION_WALLET');
-}
 
 export default function CopilotSubscriptionPage() {
   const { publicKey, signTransaction, connected } = useWallet();
