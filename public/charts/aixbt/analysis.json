@@ -1,94 +1,94 @@
 {
-  "timestamp": "2025-02-19T16:59:56.072026",
+  "timestamp": "2025-02-20T12:21:16.548940",
   "token": "AIXBT",
   "analyses": {
     "SCALP": {
       "timeframe": "SCALP",
-      "signal": "SELL",
+      "signal": "BUY",
       "confidence": 75,
-      "reasoning": "Price showing weakness below both EMAs with declining momentum. Recent rejection at EMA20 and increased selling volume suggests continued downward pressure.",
+      "reasoning": "Strong bullish momentum on 15m chart with price breaking above EMA20/50. Increasing volume supporting the move. Recent green candles showing buyer control.",
       "key_levels": {
         "support": [
-          0.1761,
+          0.186,
+          0.1808
+        ],
+        "resistance": [
+          0.1977,
+          0.2
+        ]
+      },
+      "risk_reward_ratio": 2.5,
+      "reassess_conditions": null
+    },
+    "INTRADAY": {
+      "timeframe": "INTRADAY",
+      "signal": "BUY",
+      "confidence": 65,
+      "reasoning": "Uptrend forming on 1H chart with higher lows. EMA crossover bullish. Volume increasing on upward moves.",
+      "key_levels": {
+        "support": [
+          0.1682,
           0.175
         ],
         "resistance": [
-          0.1812,
-          0.1894
+          0.1977,
+          0.21
         ]
       },
       "risk_reward_ratio": 2.1,
       "reassess_conditions": null
     },
-    "INTRADAY": {
-      "timeframe": "INTRADAY",
-      "signal": "HOLD",
-      "confidence": 60,
-      "reasoning": "Price consolidating between EMAs with slight bullish bias. However, momentum is weakening and volume profile shows distribution.",
-      "key_levels": {
-        "support": [
-          0.1581,
-          0.167
-        ],
-        "resistance": [
-          0.185,
-          0.1894
-        ]
-      },
-      "risk_reward_ratio": 1.5,
-      "reassess_conditions": null
-    },
     "SWING": {
       "timeframe": "SWING",
-      "signal": "SELL",
-      "confidence": 85,
-      "reasoning": "Strong bearish trend with price below both EMAs. Significant downward momentum with -26.13% decline. No signs of reversal yet.",
+      "signal": "HOLD",
+      "confidence": 40,
+      "reasoning": "Downtrend showing potential reversal signs but EMAs still bearish. Need more confirmation of trend change.",
       "key_levels": {
         "support": [
           0.1581,
-          0.15
+          0.17
         ],
         "resistance": [
           0.22,
           0.2789
         ]
       },
-      "risk_reward_ratio": 3.2,
+      "risk_reward_ratio": 1.8,
       "reassess_conditions": null
     },
     "POSITION": {
       "timeframe": "POSITION",
       "signal": "SELL",
-      "confidence": 90,
-      "reasoning": "Extremely bearish long-term trend with -72.79% decline. Both EMAs pointing sharply down with increasing bearish momentum. No support levels holding.",
+      "confidence": 80,
+      "reasoning": "Strong bearish trend on daily chart. EMAs pointing down with significant space between them. -73.90% decline showing sustained selling pressure.",
       "key_levels": {
         "support": [
-          0.15,
-          0.1
+          0.1581,
+          0.14
         ],
         "resistance": [
           0.3,
           0.4
         ]
       },
-      "risk_reward_ratio": 4.5,
+      "risk_reward_ratio": 3.0,
       "reassess_conditions": null
     },
     "overall": {
       "primary_trend": "BEARISH",
-      "timeframe_alignment": "ALIGNED",
-      "best_timeframe": "POSITION",
+      "timeframe_alignment": "MIXED",
+      "best_timeframe": "SCALP",
       "key_observations": [
-        "All timeframes showing bearish alignment",
-        "Significant decline across all periods",
-        "Volume profile suggests continued selling pressure",
-        "No clear reversal signals on any timeframe",
-        "Lower highs and lower lows consistently forming"
+        "Long-term trend remains bearish",
+        "Short-term bullish reversal potential",
+        "Volume increasing on recent upward moves",
+        "Price finding support at $0.1581",
+        "Conflicting signals between timeframes indicate careful position sizing"
       ],
       "recommended_action": {
-        "signal": "SELL",
-        "timeframe": "POSITION",
-        "reasoning": "Strong bearish trend alignment across all timeframes with no signs of reversal. Position trades offer best risk/reward given the clear directional momentum."
+        "signal": "BUY",
+        "timeframe": "SCALP",
+        "reasoning": "While longer-term trend is bearish, short-term momentum and volume suggest profitable scalp opportunities on the long side. Tight stops recommended due to overall bearish market structure."
       }
     }
   }

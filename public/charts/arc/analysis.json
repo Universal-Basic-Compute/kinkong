@@ -1,20 +1,20 @@
 {
-  "timestamp": "2025-02-19T16:58:30.795650",
+  "timestamp": "2025-02-20T12:19:40.105399",
   "token": "ARC",
   "analyses": {
     "SCALP": {
       "timeframe": "SCALP",
       "signal": "HOLD",
       "confidence": 65,
-      "reasoning": "Price is showing consolidation after recent upward movement. EMA20 and EMA50 are showing bullish cross but momentum is slowing. Volume profile is decreasing indicating potential exhaustion of recent move.",
+      "reasoning": "Price showing consolidation after recent surge, with EMAs providing dynamic support. Volatility decreasing with tight range formation between 0.2236-0.2259. Volume spikes suggesting potential breakout preparation.",
       "key_levels": {
         "support": [
-          0.175,
-          0.17
+          0.2236,
+          0.22
         ],
         "resistance": [
-          0.19,
-          0.196
+          0.2345,
+          0.24
         ]
       },
       "risk_reward_ratio": 1.5,
@@ -24,15 +24,15 @@
       "timeframe": "INTRADAY",
       "signal": "BUY",
       "confidence": 75,
-      "reasoning": "Strong upward momentum with price above both EMAs. Recent volume spike supports bullish move. Price showing higher lows and higher highs pattern.",
+      "reasoning": "Strong uptrend with higher lows and higher highs. EMA20 crossed above EMA50, bullish momentum confirmed. Volume supporting price action with steady accumulation.",
       "key_levels": {
         "support": [
-          0.165,
-          0.145
+          0.215,
+          0.2
         ],
         "resistance": [
-          0.19,
-          0.196
+          0.2345,
+          0.25
         ]
       },
       "risk_reward_ratio": 2.1,
@@ -40,55 +40,54 @@
     },
     "SWING": {
       "timeframe": "SWING",
-      "signal": "SELL",
-      "confidence": 80,
-      "reasoning": "Clear downtrend on 7D chart with both EMAs sloping downward. Price making lower lows and lower highs. Recent bounce might be temporary relief rally.",
+      "signal": "HOLD",
+      "confidence": 60,
+      "reasoning": "Price showing potential reversal from downtrend, with recent bounce from lows. EMAs still bearish but price action suggesting bottom formation. Volume profile improving.",
       "key_levels": {
         "support": [
-          0.145,
-          0.135
+          0.1452,
+          0.1677
         ],
         "resistance": [
-          0.25,
+          0.2633,
           0.3
         ]
       },
-      "risk_reward_ratio": 3.2,
+      "risk_reward_ratio": 2.5,
       "reassess_conditions": null
     },
     "POSITION": {
       "timeframe": "POSITION",
       "signal": "SELL",
-      "confidence": 85,
-      "reasoning": "Strong bearish trend on 30D timeframe. Significant price depreciation from ATH. EMAs in bearish alignment with consistent downward slope.",
+      "confidence": 80,
+      "reasoning": "Clear downtrend on monthly timeframe, with both EMAs pointing down. Significant price depreciation from ATH with consistent selling pressure. Recovery requires substantial market structure change.",
       "key_levels": {
         "support": [
-          0.137,
-          0.12
+          0.1371,
+          0.1
         ],
         "resistance": [
-          0.4,
-          0.5
+          0.3,
+          0.4
         ]
       },
-      "risk_reward_ratio": 4.0,
+      "risk_reward_ratio": 3.0,
       "reassess_conditions": null
     },
     "overall": {
       "primary_trend": "BEARISH",
-      "timeframe_alignment": "CONFLICTING",
+      "timeframe_alignment": "MIXED",
       "best_timeframe": "INTRADAY",
       "key_observations": [
-        "Long-term trend remains bearish",
-        "Short-term bullish momentum emerging",
-        "Volume increasing on recent bounce",
-        "Price at critical resistance levels",
-        "Timeframe conflict suggests careful position sizing"
+        "Short-term bullish momentum developing against longer-term bearish trend",
+        "Volume profile improving on lower timeframes",
+        "Significant resistance overhead from longer timeframe downtrend",
+        "Risk management crucial due to conflicting signals across timeframes"
       ],
       "recommended_action": {
-        "signal": "SCALP_LONG",
+        "signal": "BUY",
         "timeframe": "INTRADAY",
-        "reasoning": "While longer timeframes show bearish structure, immediate price action suggests opportunity for short-term long positions with tight stops. Focus on intraday moves with strict risk management."
+        "reasoning": "Best risk-reward setup exists in intraday timeframe with clear momentum and support levels, while managing exposure against longer-term bearish trend"
       }
     }
   }

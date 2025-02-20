@@ -1,19 +1,19 @@
 {
-  "timestamp": "2025-02-19T16:56:37.174845",
+  "timestamp": "2025-02-20T12:17:50.780700",
   "token": "ZEREBRO",
   "analyses": {
     "SCALP": {
       "timeframe": "SCALP",
       "signal": "SELL",
       "confidence": 75,
-      "reasoning": "Price showing bearish momentum with declining EMA20/50 crossover. Recent rejection at 0.0344 resistance with increasing selling volume.",
+      "reasoning": "Recent bearish rejection at 0.0338 resistance, EMA20/50 bearish cross, declining volume profile",
       "key_levels": {
         "support": [
-          0.0327,
-          0.032
+          0.0302,
+          0.0315
         ],
         "resistance": [
-          0.0344,
+          0.0338,
           0.035
         ]
       },
@@ -24,15 +24,15 @@
       "timeframe": "INTRADAY",
       "signal": "HOLD",
       "confidence": 60,
-      "reasoning": "Short-term uptrend forming but showing signs of exhaustion. EMA20/50 showing bullish crossover but momentum slowing.",
+      "reasoning": "Price consolidating between EMAs, decreased volatility, neutral volume pattern",
       "key_levels": {
         "support": [
-          0.0287,
-          0.03
+          0.0302,
+          0.032
         ],
         "resistance": [
-          0.0346,
-          0.036
+          0.0363,
+          0.034
         ]
       },
       "risk_reward_ratio": 1.5,
@@ -42,15 +42,15 @@
       "timeframe": "SWING",
       "signal": "SELL",
       "confidence": 85,
-      "reasoning": "Strong downtrend on 7D chart with both EMAs declining. Significant price drop from 0.0522 ATH with consistent selling pressure.",
+      "reasoning": "Strong downtrend with -27.26% decline, bearish EMA alignment, consistent selling pressure",
       "key_levels": {
         "support": [
           0.0287,
-          0.025
+          0.03
         ],
         "resistance": [
-          0.04,
-          0.045
+          0.0485,
+          0.04
         ]
       },
       "risk_reward_ratio": 3.2,
@@ -60,15 +60,15 @@
       "timeframe": "POSITION",
       "signal": "SELL",
       "confidence": 90,
-      "reasoning": "Clear bearish trend on 30D timeframe. Price down 80.86% from ATH with declining EMAs and sustained selling pressure.",
+      "reasoning": "Severe downtrend (-80.75%), strong bearish momentum, declining volume profile",
       "key_levels": {
         "support": [
           0.0287,
-          0.02
+          0.025
         ],
         "resistance": [
-          0.05,
-          0.075
+          0.2388,
+          0.1
         ]
       },
       "risk_reward_ratio": 4.5,
@@ -79,15 +79,16 @@
       "timeframe_alignment": "ALIGNED",
       "best_timeframe": "POSITION",
       "key_observations": [
-        "Strong bearish trend across all major timeframes",
-        "Significant volume decline indicating potential seller exhaustion",
-        "Key support at 0.0287 being tested multiple times",
-        "80%+ drawdown from ATH showing severe bearish market structure"
+        "All timeframes show bearish momentum",
+        "Significant price deterioration across all periods",
+        "Volume profile showing consistent selling pressure",
+        "Strong resistance levels established from previous highs",
+        "No clear signs of trend reversal"
       ],
       "recommended_action": {
         "signal": "SELL",
-        "timeframe": "POSITION",
-        "reasoning": "All timeframes showing strong bearish alignment with declining EMAs and consistent selling pressure. Position trades offer best risk/reward for current market conditions."
+        "timeframe": "SWING",
+        "reasoning": "Strong bearish alignment across all timeframes with optimal risk-reward setup in swing timeframe"
       }
     }
   }

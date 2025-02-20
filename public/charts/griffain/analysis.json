@@ -1,20 +1,20 @@
 {
-  "timestamp": "2025-02-19T16:57:00.422492",
+  "timestamp": "2025-02-20T12:18:12.557043",
   "token": "GRIFFAIN",
   "analyses": {
     "SCALP": {
       "timeframe": "SCALP",
       "signal": "SELL",
       "confidence": 75,
-      "reasoning": "Price showing weakness with bearish EMA cross on 15m, declining volume, and recent rejection at 0.0928 resistance",
+      "reasoning": "Recent rejection at $0.0964 with increasing selling volume. EMAs showing bearish crossover after recent price spike. RSI indicating overbought conditions.",
       "key_levels": {
         "support": [
-          0.0859,
-          0.084
+          0.0888,
+          0.0847
         ],
         "resistance": [
-          0.0928,
-          0.095
+          0.0964,
+          0.098
         ]
       },
       "risk_reward_ratio": 2.1,
@@ -24,15 +24,15 @@
       "timeframe": "INTRADAY",
       "signal": "HOLD",
       "confidence": 60,
-      "reasoning": "Price in consolidation phase after uptrend, EMA20 flattening out, decreasing volume suggests indecision",
+      "reasoning": "Price showing consolidation after recent pump. EMAs starting to flatten out. Volume profile decreasing, suggesting potential accumulation phase.",
       "key_levels": {
         "support": [
-          0.079,
-          0.085
+          0.081,
+          0.0879
         ],
         "resistance": [
-          0.0928,
-          0.095
+          0.0964,
+          0.1
         ]
       },
       "risk_reward_ratio": 1.5,
@@ -42,15 +42,15 @@
       "timeframe": "SWING",
       "signal": "SELL",
       "confidence": 85,
-      "reasoning": "Strong downtrend on 4H with bearish EMA cross, significant price decline from 0.1897 ATH, consistent bearish volume",
+      "reasoning": "Strong downtrend evident with -38.80% decline. Both EMAs sloping downward with significant bearish pressure. No signs of trend reversal yet.",
       "key_levels": {
         "support": [
           0.079,
-          0.07
+          0.085
         ],
         "resistance": [
-          0.1,
-          0.12
+          0.1753,
+          0.15
         ]
       },
       "risk_reward_ratio": 3.2,
@@ -60,18 +60,18 @@
       "timeframe": "POSITION",
       "signal": "SELL",
       "confidence": 90,
-      "reasoning": "Clear bearish trend on daily chart, -83.84% decline from ATH, EMAs in strong bearish alignment, no signs of reversal",
+      "reasoning": "Massive -81.88% decline from ATH. Clear bearish market structure with consistent lower highs and lower lows. EMAs showing strong bearish alignment.",
       "key_levels": {
         "support": [
-          0.07,
-          0.05
+          0.079,
+          0.07
         ],
         "resistance": [
-          0.15,
-          0.2
+          0.6509,
+          0.2109
         ]
       },
-      "risk_reward_ratio": 4.0,
+      "risk_reward_ratio": 4.5,
       "reassess_conditions": null
     },
     "overall": {
@@ -79,16 +79,16 @@
       "timeframe_alignment": "ALIGNED",
       "best_timeframe": "POSITION",
       "key_observations": [
-        "Significant bearish trend across all timeframes",
-        "Volume declining indicating potential exhaustion",
-        "Price showing -83.84% decline from ATH",
-        "EMAs in bearish alignment on all timeframes",
-        "No significant bullish reversal signals"
+        "Significant downtrend across all timeframes",
+        "Recent small pump showing signs of weakness",
+        "Volume profile suggesting distribution phase",
+        "Strong resistance levels established from previous price action",
+        "No significant bullish reversal patterns visible"
       ],
       "recommended_action": {
         "signal": "SELL",
-        "timeframe": "POSITION",
-        "reasoning": "Strong bearish alignment across all timeframes with no signs of reversal. Position trades offer best risk/reward in current market conditions."
+        "timeframe": "SWING",
+        "reasoning": "Strong bearish alignment across all timeframes with clear downtrend continuation signals. Recent pump appears to be a temporary deviation from the primary trend."
       }
     }
   }

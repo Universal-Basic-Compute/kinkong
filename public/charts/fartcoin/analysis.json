@@ -1,94 +1,93 @@
 {
-  "timestamp": "2025-02-19T17:00:40.592932",
+  "timestamp": "2025-02-20T12:21:58.639824",
   "token": "FARTCOIN",
   "analyses": {
     "SCALP": {
       "timeframe": "SCALP",
-      "signal": "SELL",
-      "confidence": 75,
-      "reasoning": "Price showing bearish momentum with declining EMA20/50 crossover. Recent rejection at $0.315 resistance with increasing selling volume.",
+      "signal": "BUY",
+      "confidence": 85,
+      "reasoning": "Strong bullish momentum with consecutive green candles, price above both EMAs, increasing volume supporting the move",
       "key_levels": {
         "support": [
-          0.3047,
-          0.308
+          0.335,
+          0.33
         ],
         "resistance": [
-          0.315,
-          0.3265
+          0.346,
+          0.35
         ]
       },
-      "risk_reward_ratio": 2.1,
+      "risk_reward_ratio": 2.5,
       "reassess_conditions": null
     },
     "INTRADAY": {
       "timeframe": "INTRADAY",
-      "signal": "HOLD",
-      "confidence": 60,
-      "reasoning": "Price consolidating between EMAs with declining momentum. Volume profile showing distribution pattern.",
+      "signal": "BUY",
+      "confidence": 75,
+      "reasoning": "Clear trend reversal from earlier lows, strong momentum with price breaking above EMAs, though volume declining",
       "key_levels": {
         "support": [
-          0.2776,
-          0.3
+          0.32,
+          0.31
         ],
         "resistance": [
-          0.3381,
-          0.34
+          0.346,
+          0.36
         ]
       },
-      "risk_reward_ratio": 1.5,
+      "risk_reward_ratio": 2.0,
       "reassess_conditions": null
     },
     "SWING": {
       "timeframe": "SWING",
-      "signal": "SELL",
-      "confidence": 85,
-      "reasoning": "Strong downtrend with lower lows and lower highs. EMA50 acting as dynamic resistance with bearish cross below EMA20.",
-      "key_levels": {
-        "support": [
-          0.2732,
-          0.29
-        ],
-        "resistance": [
-          0.45,
-          0.5
-        ]
-      },
-      "risk_reward_ratio": 3.2,
-      "reassess_conditions": null
-    },
-    "POSITION": {
-      "timeframe": "POSITION",
-      "signal": "SELL",
-      "confidence": 90,
-      "reasoning": "Massive downtrend from ATH with -81.30% decline. No signs of trend reversal with bearish EMAs and declining volume.",
+      "signal": "HOLD",
+      "confidence": 60,
+      "reasoning": "Despite recent bounce, still in overall downtrend with both EMAs pointing down, needs more confirmation of reversal",
       "key_levels": {
         "support": [
           0.2732,
           0.25
         ],
         "resistance": [
+          0.4,
+          0.45
+        ]
+      },
+      "risk_reward_ratio": 1.5,
+      "reassess_conditions": null
+    },
+    "POSITION": {
+      "timeframe": "POSITION",
+      "signal": "SELL",
+      "confidence": 90,
+      "reasoning": "Strong bearish trend with -77.60% decline, both EMAs declining sharply, no signs of long-term reversal yet",
+      "key_levels": {
+        "support": [
+          0.2732,
+          0.2
+        ],
+        "resistance": [
           0.6,
           1.0
         ]
       },
-      "risk_reward_ratio": 4.5,
+      "risk_reward_ratio": 3.0,
       "reassess_conditions": null
     },
     "overall": {
       "primary_trend": "BEARISH",
-      "timeframe_alignment": "ALIGNED",
-      "best_timeframe": "POSITION",
+      "timeframe_alignment": "MIXED",
+      "best_timeframe": "SCALP",
       "key_observations": [
-        "All timeframes showing bearish alignment",
-        "Significant volume decline across timeframes",
-        "No clear support levels holding",
-        "EMAs bearishly crossed on all timeframes",
-        "Price making consistent lower lows and lower highs"
+        "Short-term bullish momentum against longer-term bearish trend",
+        "Volume supporting short-term reversal",
+        "Major resistance at previous support levels",
+        "Risk of bull trap due to overall bearish market structure"
       ],
       "recommended_action": {
-        "signal": "SELL",
-        "timeframe": "POSITION",
-        "reasoning": "Strong bearish trend across all timeframes with no signs of reversal. Best to maintain short positions or stay out of market until clear reversal signals emerge."
+        "signal": "BUY",
+        "timeframe": "SCALP",
+        "reasoning": "Best risk-reward for quick scalp trades while maintaining caution due to larger bearish trend"
       }
     }
   }

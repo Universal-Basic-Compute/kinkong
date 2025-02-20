@@ -1,94 +1,94 @@
 {
-  "timestamp": "2025-02-19T16:59:33.851233",
+  "timestamp": "2025-02-20T12:20:55.198444",
   "token": "VIRTUAL",
   "analyses": {
     "SCALP": {
       "timeframe": "SCALP",
-      "signal": "SELL",
-      "confidence": 75,
-      "reasoning": "Sharp bearish momentum with EMA20 crossing below EMA50, consistent red candles showing strong selling pressure, declining volume indicating potential continuation",
-      "key_levels": {
-        "support": [
-          0.9779,
-          0.9445
-        ],
-        "resistance": [
-          1.0035,
-          1.0278
-        ]
-      },
-      "risk_reward_ratio": 2.1,
-      "reassess_conditions": null
-    },
-    "INTRADAY": {
-      "timeframe": "INTRADAY",
-      "signal": "HOLD",
-      "confidence": 60,
-      "reasoning": "Price consolidating between EMAs, reduced volatility, but overall bearish bias from higher timeframes suggests caution",
-      "key_levels": {
-        "support": [
-          0.9445,
-          0.92
-        ],
-        "resistance": [
-          1.0,
-          1.0643
-        ]
-      },
-      "risk_reward_ratio": 1.5,
-      "reassess_conditions": null
-    },
-    "SWING": {
-      "timeframe": "SWING",
-      "signal": "SELL",
+      "signal": "BUY",
       "confidence": 85,
-      "reasoning": "Strong downtrend with consistent lower highs and lower lows, EMAs showing bearish cross and significant price decay over the past week",
+      "reasoning": "Strong bullish momentum with consecutive green candles, EMA20 crossing above EMA50, increasing volume supporting price action",
       "key_levels": {
         "support": [
-          0.9445,
-          0.9
+          1.025,
+          1.015
         ],
         "resistance": [
-          1.2403,
-          1.496
+          1.0472,
+          1.05
         ]
       },
       "risk_reward_ratio": 3.2,
       "reassess_conditions": null
     },
+    "INTRADAY": {
+      "timeframe": "INTRADAY",
+      "signal": "BUY",
+      "confidence": 75,
+      "reasoning": "Recovery from recent dip, bullish divergence forming, EMAs beginning to curl upward with increasing momentum",
+      "key_levels": {
+        "support": [
+          0.9854,
+          0.965
+        ],
+        "resistance": [
+          1.0472,
+          1.06
+        ]
+      },
+      "risk_reward_ratio": 2.8,
+      "reassess_conditions": null
+    },
+    "SWING": {
+      "timeframe": "SWING",
+      "signal": "HOLD",
+      "confidence": 60,
+      "reasoning": "Still in downtrend but showing signs of potential reversal, needs confirmation of trend change",
+      "key_levels": {
+        "support": [
+          0.9333,
+          0.85
+        ],
+        "resistance": [
+          1.2,
+          1.3
+        ]
+      },
+      "risk_reward_ratio": 1.5,
+      "reassess_conditions": null
+    },
     "POSITION": {
       "timeframe": "POSITION",
       "signal": "SELL",
-      "confidence": 90,
-      "reasoning": "Major bearish trend with -17.35% monthly decline, price well below both EMAs, significant volume showing strong sell-side pressure",
+      "confidence": 70,
+      "reasoning": "Bearish trend on higher timeframe, EMAs showing downward slope, significant price depreciation from ATH",
       "key_levels": {
         "support": [
           0.6226,
           0.5
         ],
         "resistance": [
-          1.2153,
-          3.4457
+          1.5,
+          2.0
         ]
       },
-      "risk_reward_ratio": 4.5,
+      "risk_reward_ratio": 2.1,
       "reassess_conditions": null
     },
     "overall": {
       "primary_trend": "BEARISH",
-      "timeframe_alignment": "ALIGNED",
-      "best_timeframe": "SWING",
+      "timeframe_alignment": "MIXED",
+      "best_timeframe": "SCALP",
       "key_observations": [
-        "All timeframes showing bearish momentum",
-        "Significant price deterioration across multiple timeframes",
-        "Volume profile supports bearish continuation",
-        "Key support at $0.9445 being tested",
-        "EMAs aligned bearishly across most timeframes"
+        "Short-term bullish momentum emerging",
+        "Long-term bearish trend still intact",
+        "Volume increasing on recent price action",
+        "Key resistance at $1.0472 (recent ATH)",
+        "Multiple timeframe conflict suggests careful position sizing"
       ],
       "recommended_action": {
-        "signal": "SELL",
-        "timeframe": "SWING",
-        "reasoning": "Strong bearish alignment across all timeframes with optimal risk-reward ratio on swing trades, supported by technical indicators and volume profile"
+        "signal": "BUY",
+        "timeframe": "SCALP",
+        "reasoning": "Strong short-term momentum with clear risk levels makes scalp trades most favorable in current market conditions"
       }
     }
   }

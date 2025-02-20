@@ -1,93 +1,94 @@
 {
-  "timestamp": "2025-02-19T17:01:23.740080",
+  "timestamp": "2025-02-20T12:22:43.484660",
   "token": "UBC",
   "analyses": {
     "SCALP": {
       "timeframe": "SCALP",
-      "signal": "BUY",
+      "signal": "SELL",
       "confidence": 75,
-      "reasoning": "Strong bullish momentum with increasing volume, EMA20 crossing above EMA50, recent green candle showing buying pressure",
+      "reasoning": "Strong bearish momentum on 15m chart with EMA20 crossing below EMA50. Multiple red candles showing sustained selling pressure. Volume spike confirms bearish movement.",
       "key_levels": {
         "support": [
-          0.00152,
-          0.0015
+          0.00148,
+          0.00145
         ],
         "resistance": [
-          0.00158,
-          0.0016
+          0.00155,
+          0.00158
         ]
       },
-      "risk_reward_ratio": 2.5,
+      "risk_reward_ratio": 2.1,
       "reassess_conditions": null
     },
     "INTRADAY": {
       "timeframe": "INTRADAY",
-      "signal": "BUY",
-      "confidence": 85,
-      "reasoning": "Clear uptrend with higher lows and higher highs, strong bullish EMA configuration, sustained buying volume",
+      "signal": "HOLD",
+      "confidence": 60,
+      "reasoning": "Price consolidating in a tight range after recent decline. EMA20 and EMA50 showing potential for mean reversion. Volume profile suggests decreasing selling pressure.",
       "key_levels": {
         "support": [
-          0.00145,
-          0.0014
+          0.00148,
+          0.00145
         ],
         "resistance": [
-          0.0016,
-          0.00165
+          0.00156,
+          0.0016
         ]
       },
-      "risk_reward_ratio": 3.0,
+      "risk_reward_ratio": 1.5,
       "reassess_conditions": null
     },
     "SWING": {
       "timeframe": "SWING",
-      "signal": "HOLD",
-      "confidence": 60,
-      "reasoning": "Price showing recovery from recent downtrend, but EMAs still bearish, needs confirmation of trend reversal",
+      "signal": "SELL",
+      "confidence": 85,
+      "reasoning": "Clear downtrend on 4H chart with lower highs and lower lows. EMA20 below EMA50 indicating strong bearish momentum. Volume declining but price continues downward trajectory.",
       "key_levels": {
         "support": [
           0.0013,
           0.00125
         ],
         "resistance": [
-          0.0018,
-          0.002
+          0.0017,
+          0.0018
         ]
       },
-      "risk_reward_ratio": 1.8,
+      "risk_reward_ratio": 3.2,
       "reassess_conditions": null
     },
     "POSITION": {
       "timeframe": "POSITION",
       "signal": "SELL",
       "confidence": 90,
-      "reasoning": "Strong bearish trend with -88.23% decline, consistent lower highs and lower lows, bearish EMA cross",
+      "reasoning": "Strong bearish trend on daily chart with -87.73% decline. Both EMAs showing steep downward slope. No signs of reversal or bottoming pattern yet.",
       "key_levels": {
         "support": [
           0.0013,
           0.001
         ],
         "resistance": [
-          0.0022,
+          0.002,
           0.0025
         ]
       },
-      "risk_reward_ratio": 4.0,
+      "risk_reward_ratio": 4.5,
       "reassess_conditions": null
     },
     "overall": {
       "primary_trend": "BEARISH",
-      "timeframe_alignment": "MIXED",
-      "best_timeframe": "INTRADAY",
+      "timeframe_alignment": "ALIGNED",
+      "best_timeframe": "POSITION",
       "key_observations": [
-        "Strong long-term bearish trend on position timeframe",
-        "Short-term bullish reversal potential on lower timeframes",
-        "Increasing volume supporting recent price action",
-        "Significant price recovery from ATL of 0.00130"
+        "All timeframes showing bearish alignment",
+        "Significant -87.73% decline on position timeframe",
+        "Decreasing volume might signal potential exhaustion",
+        "No clear reversal signals across any timeframe",
+        "Strong resistance levels established above current price"
       ],
       "recommended_action": {
-        "signal": "BUY",
-        "timeframe": "INTRADAY",
-        "reasoning": "While long-term trend remains bearish, strong short-term bullish momentum and volume suggest profitable intraday long opportunities with tight risk management"
+        "signal": "SELL",
+        "timeframe": "POSITION",
+        "reasoning": "Strong bearish trend across all timeframes with no signs of reversal. Position trades offer best risk/reward ratio given the clear directional movement."
       }
     }
   }

@@ -1,20 +1,20 @@
 {
-  "timestamp": "2025-02-19T17:01:45.969426",
+  "timestamp": "2025-02-20T12:23:04.915512",
   "token": "COMPUTE",
   "analyses": {
     "SCALP": {
       "timeframe": "SCALP",
       "signal": "BUY",
-      "confidence": 65,
-      "reasoning": "Short-term bullish momentum with EMA20 crossing above EMA50, increasing volume with green candles showing buying pressure",
+      "confidence": 85,
+      "reasoning": "Strong bullish momentum with consecutive green candles, EMA20/50 showing positive crossover, increasing volume supporting the move",
       "key_levels": {
         "support": [
-          0.00012,
-          0.00011
+          0.00016,
+          0.00015
         ],
         "resistance": [
-          0.00014,
-          0.00015
+          0.00018,
+          0.00019
         ]
       },
       "risk_reward_ratio": 2.5,
@@ -22,56 +22,56 @@
     },
     "INTRADAY": {
       "timeframe": "INTRADAY",
-      "signal": "SELL",
-      "confidence": 75,
-      "reasoning": "Strong bearish trend with both EMAs declining, significant selling volume and consistent red candles",
+      "signal": "BUY",
+      "confidence": 80,
+      "reasoning": "Clear uptrend formation with higher highs and higher lows, strong buying pressure indicated by volume spikes, EMAs trending upward",
       "key_levels": {
         "support": [
-          0.00012,
-          0.00011
+          0.00014,
+          0.00013
         ],
         "resistance": [
-          0.00016,
-          0.00018
+          0.00018,
+          0.0002
         ]
       },
-      "risk_reward_ratio": 3.0,
+      "risk_reward_ratio": 2.1,
       "reassess_conditions": null
     },
     "SWING": {
       "timeframe": "SWING",
-      "signal": "SELL",
-      "confidence": 85,
-      "reasoning": "Clear downtrend over 7 days, EMAs showing strong bearish momentum, declining volume indicating seller exhaustion",
+      "signal": "HOLD",
+      "confidence": 60,
+      "reasoning": "Recent downtrend showing signs of reversal, but EMAs still bearish. Current bounce needs confirmation for trend reversal",
       "key_levels": {
         "support": [
           0.0001,
-          8e-05
+          0.00015
         ],
         "resistance": [
           0.0003,
-          0.0004
+          0.00035
         ]
       },
-      "risk_reward_ratio": 4.0,
+      "risk_reward_ratio": 1.8,
       "reassess_conditions": null
     },
     "POSITION": {
       "timeframe": "POSITION",
       "signal": "SELL",
-      "confidence": 90,
-      "reasoning": "Massive downtrend from ATH, -99.99% decline, no signs of trend reversal, bearish EMAs",
+      "confidence": 75,
+      "reasoning": "Long-term downtrend intact, significant price depreciation (-97.68%), EMAs in bearish configuration",
       "key_levels": {
         "support": [
-          5e-05,
-          1e-05
+          0.0001,
+          5e-05
         ],
         "resistance": [
           0.001,
-          0.01
+          0.005
         ]
       },
-      "risk_reward_ratio": 5.0,
+      "risk_reward_ratio": 1.2,
       "reassess_conditions": null
     },
     "overall": {
@@ -79,15 +79,15 @@
       "timeframe_alignment": "MIXED",
       "best_timeframe": "SCALP",
       "key_observations": [
-        "Severe long-term downtrend",
-        "Possible short-term bounce opportunity",
-        "Low liquidity increases volatility risk",
-        "Volume profile showing possible accumulation at lows"
+        "Short-term bullish momentum developing",
+        "Long-term trend remains bearish",
+        "Volume increasing on recent price action",
+        "Potential short-term trading opportunity while maintaining long-term caution"
       ],
       "recommended_action": {
-        "signal": "HOLD",
+        "signal": "BUY",
         "timeframe": "SCALP",
-        "reasoning": "While long-term trend is bearish, potential short-term scalp opportunities exist. However, extreme caution advised due to low liquidity and high volatility."
+        "reasoning": "Strong short-term momentum with supporting volume and technical indicators, but maintain tight stops due to overall bearish market structure"
       }
     }
   }
