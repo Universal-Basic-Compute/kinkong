@@ -2,7 +2,6 @@ const dotenv = require('dotenv');
 const fs = require('fs');
 const path = require('path');
 const { getTable } = require('../backend/src/airtable/tables');
-const { FieldSet } = require('airtable');
 const fetch = require('node-fetch');
 
 // Add debug logging BEFORE config

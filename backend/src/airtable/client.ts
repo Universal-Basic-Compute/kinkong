@@ -1,4 +1,4 @@
-const Airtable = require('airtable');
+import Airtable from 'airtable';
 
 console.log('⚙️ Initializing Airtable client...', {
   hasApiKey: !!process.env.KINKONG_AIRTABLE_API_KEY,
@@ -7,7 +7,6 @@ console.log('⚙️ Initializing Airtable client...', {
   cwd: process.cwd(),
 });
 
-// Check for required environment variables
 if (!process.env.KINKONG_AIRTABLE_API_KEY) {
   throw new Error('KINKONG_AIRTABLE_API_KEY is not defined');
 }
@@ -16,15 +15,13 @@ if (!process.env.KINKONG_AIRTABLE_BASE_ID) {
   throw new Error('KINKONG_AIRTABLE_BASE_ID is not defined');
 }
 
-// Configure Airtable client with additional logging
 console.log('Configuring Airtable client...');
 const base = new Airtable({
   apiKey: process.env.KINKONG_AIRTABLE_API_KEY
 }).base(process.env.KINKONG_AIRTABLE_BASE_ID);
 console.log('Airtable client configured successfully');
 
-// Add a test function to verify the client
-const testConnection = async () => {
+export async function testConnection() {
   try {
     const table = base.table('Investments');
     await table.select().firstPage();
@@ -34,15 +31,16 @@ const testConnection = async () => {
     console.error('Airtable connection test failed:', error);
     throw error;
   }
-};
+}
 
-const getTable = (tableName) => {
+export function getTable(tableName: string) {
   console.log('Getting table:', tableName);
   return base.table(tableName);
-};
+}
 
-module.exports = {
-  default: base,
-  testConnection,
-  getTable
-};
+export default base;
+
+// For CommonJS compatibility
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { default: base, testConnection, getTable };
+}
