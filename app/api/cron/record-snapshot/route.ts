@@ -81,15 +81,12 @@ export async function GET(req: Request) {
 
     // Update current portfolio
     for (const holding of formattedHoldings) {
-      await portfolioTable.update([{
-        id: holding.token, // Using mint as ID
-        fields: {
-          amount: holding.amount,
-          price: holding.price,
-          value: holding.value,
-          lastUpdate: timestamp
-        }
-      }]);
+      await portfolioTable.update(holding.token, {
+        amount: holding.amount,
+        price: holding.price,
+        value: holding.value,
+        lastUpdate: timestamp
+      });
     }
 
     // Create snapshot
