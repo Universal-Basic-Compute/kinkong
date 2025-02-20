@@ -6,16 +6,23 @@ from datetime import datetime
 import json
 from dotenv import load_dotenv
 
-# Get absolute path to project root
-project_root = str(Path(__file__).parent.parent.absolute())
+# Get absolute path to project root and .env file
+project_root = Path(__file__).parent.parent.absolute()
+env_path = project_root / '.env'
 
-# Add to Python path if not already there
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
+# Force reload environment variables from project root .env
+load_dotenv(dotenv_path=env_path, override=True)
 
-# Load .env from project root explicitly
-env_path = Path(project_root) / '.env'
-load_dotenv(env_path)
+# Get API key after forcing env reload
+api_key = os.getenv('ANTHROPIC_API_KEY')
+if api_key:
+    print(f"API key ends with: ...{api_key[-4:]}")  # Show last 4 chars for verification
+else:
+    print("Warning: ANTHROPIC_API_KEY not found in environment")
+
+# Add project root to Python path if not already there
+if str(project_root) not in sys.path:
+    sys.path.append(str(project_root))
 
 def get_x_sentiment_prompt():
     """Get the X sentiment prompt"""
