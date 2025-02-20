@@ -209,7 +209,8 @@ export default function Invest() {
                 <thead>
                   <tr className="border-b border-gold/20">
                     <th className="px-4 py-2 text-left">Username</th>
-                    <th className="px-4 py-2 text-right">Amount</th>
+                    <th className="px-4 py-2 text-right">Initial Investment</th>
+                    <th className="px-4 py-2 text-right">Return</th>
                     <th className="px-4 py-2 text-left">Date</th>
                     <th className="px-4 py-2 text-left">Transaction</th>
                   </tr>
@@ -222,6 +223,9 @@ export default function Invest() {
                         {typeof investment.amount === 'number' 
                           ? `${investment.amount.toLocaleString('en-US')} USDC`
                           : 'N/A'}
+                      </td>
+                      <td className="px-4 py-2 text-right text-gray-400 italic">
+                        Coming soon
                       </td>
                       <td className="px-4 py-2">
                         {investment.date 
