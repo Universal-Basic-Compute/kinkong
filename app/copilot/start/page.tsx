@@ -69,8 +69,8 @@ export default function CopilotStartPage() {
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header Section */}
         <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold white-glow-text">
-            Get Started with KinKong Copilot
+          <h1 className="text-4xl font-bold">
+            Get Started with <span className="white-glow-text">KinKong Copilot</span>
           </h1>
           <p className="text-gray-400 max-w-2xl mx-auto">
             Follow these steps to install the developer version of KinKong Copilot while we prepare for the Chrome Web Store release.
