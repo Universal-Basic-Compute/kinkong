@@ -15,8 +15,15 @@ def get_x_sentiment_prompt():
     """Read the X sentiment prompt from markdown file"""
     prompt_path = project_root / 'prompts' / 'x-sentiment.md'
     try:
+        print(f"Looking for prompt at: {prompt_path}")  # Debug print
+        if not prompt_path.exists():
+            print(f"❌ Prompt file not found at {prompt_path}")
+            return None
+            
         with open(prompt_path, 'r') as f:
             prompt = f.read()
+            print("✅ Prompt loaded successfully")
+            print("Prompt length:", len(prompt))
             return prompt
     except Exception as e:
         print(f"Error reading prompt file: {e}")
