@@ -4,39 +4,69 @@ import Link from 'next/link';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletConnect } from '@/components/wallet/WalletConnect';
 
-export default function CopilotPage() {
-  const { connected } = useWallet();
+export default function CopilotStartPage() {
+  const [activeStep, setActiveStep] = useState(1);
+
+  const steps = [
+    {
+      title: "Download the extension files",
+      content: (
+        <div>
+          Download the KinKong Copilot extension files{' '}
+          <a 
+            href="https://github.com/Universal-Basic-Compute/kinkong-copilot/archive/refs/heads/main.zip"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gold hover:text-gold/80 underline"
+          >
+            here
+          </a>.
+        </div>
+      ),
+      code: null
+    },
+    {
+      title: "Extract the ZIP file",
+      content: "Extract the downloaded ZIP file to a folder on your computer.",
+      code: null
+    },
+    {
+      title: "Open Chrome Extensions",
+      content: (
+        <div>
+          Open Chrome and navigate to{' '}
+          <a 
+            href="chrome://extensions"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gold hover:text-gold/80 underline"
+          >
+            chrome://extensions
+          </a>
+          {' '}or click on the puzzle piece icon and select 'Manage Extensions'.
+        </div>
+      ),
+      code: null
+    },
+    {
+      title: "Enable Developer Mode",
+      content: "Toggle 'Developer mode' in the top right corner of the extensions page.",
+      code: null
+    },
+    {
+      title: "Load Unpacked Extension",
+      content: "Click 'Load unpacked' and select the folder where you extracted the extension files.",
+      code: null
+    },
+    {
+      title: "Pin the Extension",
+      content: "Click the puzzle piece icon in Chrome and pin KinKong Copilot for easy access.",
+      code: null
+    }
+  ];
 
   return (
-    <main className="min-h-screen pt-20 px-4">
-      <div className="max-w-6xl mx-auto space-y-12">
-        {/* Hero Section */}
-        <div className="text-center space-y-6">
-          <h1 className="text-5xl font-bold">
-            Meet <span className="white-glow-text">KinKong Copilot</span>
-          </h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Your AI-powered trading assistant that helps you make smarter decisions in the Solana ecosystem.
-          </p>
-          <div className="flex justify-center gap-4">
-            {connected ? (
-              <Link 
-                href="/copilot/chat"
-                className="px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 animate-pulse"
-              >
-                Start Chatting
-              </Link>
-            ) : (
-              <WalletConnect />
-            )}
-            <Link
-              href="/copilot/start"
-              className="px-8 py-4 bg-black/30 border border-gold/20 text-gold font-bold rounded-lg hover:bg-black/50 transition-all duration-200"
-            >
-              Installation Guide
-            </Link>
-          </div>
-        </div>
+    <div className="min-h-screen pt-20 px-4">
 
         {/* Features Grid */}
         <div className="grid md:grid-cols-3 gap-6">
