@@ -377,15 +377,46 @@ export async function POST(request: NextRequest) {
     async function runBackgroundSentiment(content: string) {
       try {
         console.log('🔄 Running background sentiment analysis...');
-        const sentiment = await analyzeXSentiment(content);
         
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'x-api-key': process.env.ANTHROPIC_API_KEY!,
+            'anthropic-version': '2023-06-01',
+            'content-type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: "claude-3-5-sonnet-20241022",
+            max_tokens: 4096,
+            system: X_SENTIMENT_PROMPT,
+            messages: [{
+              role: 'user',
+              content: `Analyze this X.com content for crypto sentiment:\n\n${content}`
+            }]
+          })
+        });
+
+        if (!response.ok) {
+          console.error('Anthropic API error:', response.status);
+          return;
+        }
+
+        const data = await response.json();
+        const sentiment = data.content[0].text;
+
         if (sentiment) {
           // Store in Airtable
-          await storeSentimentAnalysis(sentiment);
+          const table = getTable('SENTIMENT_ANALYSIS');
+          await table.create([{
+            fields: {
+              content: sentiment,
+              createdAt: new Date().toISOString(),
+              source: 'X_ANALYSIS'
+            }
+          }]);
           console.log('✅ Background sentiment analysis completed and stored');
-        } else {
-          console.log('❌ Background sentiment analysis failed');
         }
+
       } catch (error) {
         console.error('Error in background sentiment analysis:', error);
       }
