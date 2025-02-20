@@ -65,6 +65,8 @@ export interface Signal {
   expectedReturn?: number;
   actualReturn?: number;
   accuracy?: number;
+  wallet?: string;
+  code?: string;
 }
 
 export interface MarketSentiment {
