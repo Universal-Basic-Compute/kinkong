@@ -1,20 +1,25 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useSearchParams } from 'next/navigation';
+import { verifySubscription } from '@/utils/subscription';
+import { getTable } from '@/backend/src/airtable/tables';
+import { Connection, PublicKey, LAMPORTS_PER_SOL, Transaction, SystemProgram } from '@solana/web3.js';
+
 // Add environment variables check
 if (!process.env.NEXT_PUBLIC_HELIUS_RPC_URL || !process.env.NEXT_PUBLIC_SUBSCRIPTION_WALLET) {
   throw new Error('Missing required environment variables: NEXT_PUBLIC_HELIUS_RPC_URL and/or NEXT_PUBLIC_SUBSCRIPTION_WALLET');
 }
 
-import { useState, useEffect } from 'react';
-import { useWallet } from '@solana/wallet-adapter-react';
-import { Connection, PublicKey, LAMPORTS_PER_SOL, Transaction, SystemProgram } from '@solana/web3.js';
-import { verifySubscription, createSubscription } from '@/utils/subscription';
-
 export default function CopilotSubscriptionPage() {
   const { publicKey, signTransaction, connected } = useWallet();
+  const searchParams = useSearchParams();
+  const code = searchParams.get('code');
   const [subscriptionStatus, setSubscriptionStatus] = useState<'active' | 'inactive' | 'loading'>('loading');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [linkSuccess, setLinkSuccess] = useState(false);
 
   const SUBSCRIPTION_COST = 1.5; // SOL
   const SUBSCRIPTION_DURATION = '3 months';
@@ -36,6 +41,46 @@ export default function CopilotSubscriptionPage() {
     } catch (err) {
       console.error('Error checking subscription:', err);
       setSubscriptionStatus('inactive');
+    }
+  }
+
+  async function handleLinkWallet() {
+    if (!publicKey || !code) return;
+
+    try {
+      setIsProcessing(true);
+      setError(null);
+      setLinkSuccess(false);
+
+      // First check if wallet has an active subscription
+      const subscriptionsTable = getTable('SUBSCRIPTIONS');
+      const existingSubscriptions = await subscriptionsTable.select({
+        filterByFormula: `AND(
+          {wallet}='${publicKey.toString()}',
+          {status}='ACTIVE',
+          {endDate}>=TODAY()
+        )`
+      }).firstPage();
+
+      if (existingSubscriptions.length === 0) {
+        setError('No active subscription found for this wallet');
+        return;
+      }
+
+      // Update the subscription with the new code
+      const subscription = existingSubscriptions[0];
+      await subscriptionsTable.update(subscription.id, {
+        code: code
+      });
+
+      setLinkSuccess(true);
+      setTimeout(() => setLinkSuccess(false), 3000); // Clear success message after 3 seconds
+
+    } catch (err) {
+      console.error('Error linking wallet:', err);
+      setError(err instanceof Error ? err.message : 'Failed to link wallet');
+    } finally {
+      setIsProcessing(false);
     }
   }
 
@@ -78,7 +123,7 @@ export default function CopilotSubscriptionPage() {
       });
 
       // Create subscription record
-      await createSubscription(signature, publicKey.toString());
+      await createSubscription(signature, publicKey.toString(), code || '');
       
       // Update status
       setSubscriptionStatus('active');
@@ -94,6 +139,35 @@ export default function CopilotSubscriptionPage() {
   return (
     <div className="min-h-screen pt-20 px-4">
       <div className="max-w-4xl mx-auto">
+        {/* Add Link Wallet button if code is present */}
+        {code && !linkSuccess && (
+          <div className="absolute top-24 right-4">
+            <button
+              onClick={handleLinkWallet}
+              disabled={!connected || isProcessing}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold
+                ${isProcessing 
+                  ? 'bg-gray-700 cursor-not-allowed' 
+                  : 'bg-gold hover:bg-gold/80 text-black'
+                } transition-colors duration-200`}
+            >
+              {isProcessing ? 'Linking...' : 'Link Wallet'}
+            </button>
+            {error && (
+              <div className="absolute top-full right-0 mt-2 text-xs text-red-400 bg-red-900/30 p-2 rounded-lg border border-red-500/20 whitespace-nowrap">
+                {error}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Show success message when link is successful */}
+        {linkSuccess && (
+          <div className="absolute top-24 right-4 px-4 py-2 bg-green-900/30 text-green-400 rounded-lg border border-green-500/20 text-sm">
+            Wallet linked successfully ✨
+          </div>
+        )}
+
         <div className="bg-black/50 border border-gold/20 rounded-lg p-8">
           <h1 className="text-3xl font-bold mb-6 text-gold">
             KinKong Copilot Subscription
