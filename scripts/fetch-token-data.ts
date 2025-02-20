@@ -2,7 +2,10 @@ const dotenv = require('dotenv');
 const fs = require('fs');
 const path = require('path');
 const { getTable } = require('../backend/src/airtable/tables');
-const fetch = require('node-fetch');
+
+// Only import node-fetch if fetch is not available globally
+const nodeFetch = require('node-fetch');
+const fetchImpl = globalThis.fetch || nodeFetch;
 
 // Add debug logging BEFORE config
 console.log('Current working directory:', process.cwd());
@@ -174,7 +177,7 @@ async function getDexScreenerData(mint: string, retries = 3): Promise<DexScreene
     try {
       console.log(`Attempting to fetch DexScreener data for ${mint} (attempt ${i + 1}/${retries})...`);
       
-      const response = await fetch(`${DEXSCREENER_API}/${mint}`);
+      const response = await fetchImpl(`${DEXSCREENER_API}/${mint}`);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
