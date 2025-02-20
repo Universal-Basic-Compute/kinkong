@@ -467,9 +467,10 @@ ${bodyContent}`;
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 seconds
 
+    let response;
     try {
       // Make Anthropic API call with timeout
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
           'x-api-key': apiKey,
@@ -504,8 +505,31 @@ ${bodyContent}`;
         throw new Error(`Failed to get copilot response: ${response.status}`);
       }
 
-      const data = await response.json();
-      const assistantMessage = data.content[0].text;
+    } catch (error) {
+      // Clear timeout on error
+      clearTimeout(timeoutId);
+
+      // Handle timeout specifically
+      if (error instanceof Error && error.name === 'AbortError') {
+        return new NextResponse(
+          JSON.stringify({ 
+            error: 'Request timeout after 30 seconds',
+            details: 'The request took too long to complete'
+          }),
+          { 
+            status: 408,
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+      }
+
+      throw error; // Re-throw other errors
+    }
+
+    const data = await response.json();
+    const assistantMessage = data.content[0].text;
     } catch (error) {
       // Clear timeout on error
       clearTimeout(timeoutId);
