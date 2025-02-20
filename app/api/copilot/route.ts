@@ -306,7 +306,6 @@ ${JSON.stringify(sentiment, null, 2)}
     // If X content, analyze sentiment
     if (isXContent) {
       console.log('📊 Starting X sentiment analysis...');
-      console.log('Using X sentiment prompt:', X_SENTIMENT_PROMPT.substring(0, 100) + '...');
       
       const sentiment = await analyzeXSentiment(bodyContent);
       
