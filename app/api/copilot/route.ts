@@ -85,7 +85,7 @@ async function checkMessageLimit(code: string): Promise<boolean> {
   }
 }
 
-async function getContextData() {
+async function getContextData(code: string) {
   try {
     // Get last 25 signals
     const signalsTable = getTable('SIGNALS');
@@ -104,6 +104,16 @@ async function getContextData() {
         sort: [{ field: 'weekEndDate', direction: 'desc' }]
       })
       .firstPage();
+
+    // Get recent messages for this code
+    const messagesTable = getTable('MESSAGES');
+    const messages = await messagesTable
+      .select({
+        filterByFormula: `{code}='${code}'`,
+        maxRecords: 10, // Last 10 messages
+        sort: [{ field: 'createdAt', direction: 'desc' }]
+      })
+      .all();
 
     return {
       signals: signals.map(record => ({
@@ -125,11 +135,16 @@ async function getContextData() {
         aiTokensPerformance: sentiment[0].get('aiTokensPerformance'),
         notes: sentiment[0].get('notes'),
         weekEndDate: sentiment[0].get('weekEndDate')
-      } : null
+      } : null,
+      conversationHistory: messages.map(record => ({
+        role: record.get('role'),
+        content: record.get('content'),
+        createdAt: record.get('createdAt')
+      })).reverse() // Reverse to get chronological order
     };
   } catch (error) {
     console.error('Error fetching context data:', error);
-    return { signals: [], marketSentiment: null };
+    return { signals: [], marketSentiment: null, conversationHistory: [] };
   }
 }
 
@@ -185,7 +200,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Get context data
-    const contextData = await getContextData();
+    const contextData = await getContextData(code);
     
     // Prepare full context
     const fullContext = {
