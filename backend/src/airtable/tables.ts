@@ -125,19 +125,10 @@ export function getTable(tableName: string) {
   return base.table(tableName);
 }
 
-// For CommonJS compatibility
+// For CommonJS compatibility - only export runtime values
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { 
     TABLES, 
-    getTable,
-    Portfolio,
-    Trade,
-    Token,
-    Signal,
-    MarketSentiment,
-    Message,
-    Subscription,
-    Thought,
-    PortfolioSnapshot
+    getTable
   };
 }
