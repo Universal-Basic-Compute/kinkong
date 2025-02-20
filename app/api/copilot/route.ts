@@ -3,7 +3,7 @@ import { rateLimit } from '@/utils/rate-limit';
 import { getTable } from '@/backend/src/airtable/tables';
 import { Signal } from '@/backend/src/airtable/tables';
 import { COPILOT_PROMPT } from '@/prompts/copilot';
-import { X_SENTIMENT_PROMPT } from '@/prompts/x-sentiment';
+import { X_SENTIMENT_PROMPT } from '@/app/prompts/x-sentiment';
 
 // Route configuration exports
 export const maxDuration = 30; // 30 seconds timeout
