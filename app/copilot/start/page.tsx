@@ -112,11 +112,24 @@ export default function CopilotStartPage() {
         {/* Download Button */}
         <div className="text-center">
           <a 
-            href="https://github.com/yourusername/kinkong-copilot/archive/refs/heads/main.zip"
+            href="https://github.com/Universal-Basic-Compute/kinkong-copilot/archive/refs/heads/main.zip"
             className="inline-block px-8 py-4 bg-gold hover:bg-gold/80 text-black font-bold rounded-lg transition-colors duration-200"
+            target="_blank"
+            rel="noopener noreferrer"
           >
             Download Extension Files
           </a>
+          <div className="mt-2 text-sm text-gray-400">
+            Or visit the{' '}
+            <a 
+              href="https://github.com/Universal-Basic-Compute/kinkong-copilot"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gold hover:text-gold/80 underline"
+            >
+              GitHub repository
+            </a>
+          </div>
         </div>
 
         {/* Support Section */}
