@@ -89,8 +89,17 @@ export interface Message {
   createdAt: string;
   role: 'user' | 'assistant';
   content: string;
-  wallet?: string;
+  code: string;
   context?: string; // Changed to string since Airtable stores as text
+}
+
+export interface Subscription {
+  code: string;
+  startDate: string;
+  endDate: string;
+  status: 'ACTIVE' | 'EXPIRED' | 'CANCELLED';
+  amount: number;
+  signature: string;
 }
 
 export interface Thought {

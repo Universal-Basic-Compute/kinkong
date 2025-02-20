@@ -23,71 +23,13 @@ function validateEnvironment(): { rpcUrl: string; strategyWallet: string } {
 
 export async function POST(request: NextRequest) {
   try {
-    // Get validated environment variables
-    const { rpcUrl, strategyWallet } = validateEnvironment();
-
     // Parse request body
     const body = await request.json();
-    const { signature, wallet, code } = body;
+    const { signature, code } = body;
 
-    if (!signature || !wallet || !code) {
+    if (!signature || !code) {
       return NextResponse.json(
         { error: 'Missing required parameters' },
-        { status: 400 }
-      );
-    }
-
-    // Initialize Solana connection with validated RPC URL
-    const connection = new Connection(rpcUrl);
-
-    // Verify transaction
-    const tx = await connection.getTransaction(signature, {
-      maxSupportedTransactionVersion: 0
-    });
-
-    if (!tx) {
-      return NextResponse.json(
-        { error: 'Transaction not found' },
-        { status: 404 }
-      );
-    }
-
-    // Verify transaction details
-    const postBalances = tx.meta?.postBalances || [];
-    const preBalances = tx.meta?.preBalances || [];
-
-    // Create PublicKey from validated strategy wallet address
-    const strategyWalletPubkey = new PublicKey(strategyWallet);
-
-    // Get account keys safely
-    let receiverIndex = -1;
-    const accountKeys = tx.transaction.message.getAccountKeys?.() || 
-      ('staticAccountKeys' in tx.transaction.message 
-        ? tx.transaction.message.staticAccountKeys 
-        : []);
-
-    // Find receiver index using loop
-    for (let i = 0; i < accountKeys.length; i++) {
-      if (accountKeys[i].toBase58() === strategyWalletPubkey.toBase58()) {
-        receiverIndex = i;
-        break;
-      }
-    }
-
-    if (receiverIndex === -1) {
-      return NextResponse.json(
-        { error: 'Invalid receiver' },
-        { status: 400 }
-      );
-    }
-
-    // Calculate SOL amount transferred
-    const solTransferred = (postBalances[receiverIndex] - preBalances[receiverIndex]) / 1e9;
-
-    // Verify amount
-    if (solTransferred < SUBSCRIPTION_COST) {
-      return NextResponse.json(
-        { error: 'Insufficient payment amount' },
         { status: 400 }
       );
     }
@@ -102,7 +44,6 @@ export async function POST(request: NextRequest) {
     const record = await subscriptionsTable.create([
       {
         fields: {
-          wallet,
           code,
           startDate: startDate.toISOString(),
           endDate: endDate.toISOString(),

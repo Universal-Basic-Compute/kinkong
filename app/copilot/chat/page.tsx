@@ -88,13 +88,13 @@ export default function CopilotChatPage() {
     }
   }
 
-  if (!connected) {
+  if (!code) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Connect Your Wallet</h1>
+          <h1 className="text-2xl font-bold mb-4">Access Code Required</h1>
           <p className="text-gray-400">
-            Please connect your wallet to use KinKong Copilot
+            Please provide a valid access code to use KinKong Copilot
           </p>
         </div>
       </div>

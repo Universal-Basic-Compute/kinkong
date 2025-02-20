@@ -19,17 +19,17 @@ export function rateLimit(options: RateLimitOptions = {}) {
   });
 
   return {
-    check: (limit: number, token: string): Promise<RateLimitResult> =>
+    check: (limit: number, code: string): Promise<RateLimitResult> =>
       new Promise((resolve, reject) => {
-        const tokenCount = tokenCache.get(token) || [0];
+        const tokenCount = tokenCache.get(code) || [0];
         const currentUsage = tokenCount[0];
         const currentTime = Date.now();
         
         // Get TTL by checking remaining time
-        const ttl = Math.max(0, (tokenCache.getRemainingTTL(token) || 0));
+        const ttl = Math.max(0, (tokenCache.getRemainingTTL(code) || 0));
 
         if (currentUsage === 0) {
-          tokenCache.set(token, [1]);
+          tokenCache.set(code, [1]);
           return resolve({
             success: true,
             limit,
@@ -39,7 +39,7 @@ export function rateLimit(options: RateLimitOptions = {}) {
         }
 
         if (currentUsage < limit) {
-          tokenCache.set(token, [currentUsage + 1]);
+          tokenCache.set(code, [currentUsage + 1]);
           return resolve({
             success: true,
             limit,
