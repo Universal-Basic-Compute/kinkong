@@ -44,6 +44,11 @@ def analyze_x_sentiment(content: str):
         if not system_prompt:
             raise ValueError("Failed to read system prompt")
 
+        print("\n🤖 Sending content to Claude for analysis...")
+        print("Content length:", len(content))
+        print("\nContent sample:")
+        print(content[:500] + "..." if len(content) > 500 else content)
+
         # Initialize Claude client
         client = anthropic.Client(api_key=api_key)
 
@@ -61,6 +66,20 @@ def analyze_x_sentiment(content: str):
         # Parse the response
         analysis = json.loads(message.content[0].text)
         
+        print("\n📊 Sentiment Analysis Results:")
+        print(json.dumps(analysis, indent=2))
+        
+        # Log key metrics
+        if analysis.get('ecosystem'):
+            print("\n📈 Key Metrics:")
+            print(f"Overall Sentiment: {analysis['ecosystem']['sentiment']}")
+            print(f"Confidence: {analysis['ecosystem']['confidence']}%")
+            
+        if analysis.get('tokens'):
+            print(f"\n💰 Analyzed Tokens: {len(analysis['tokens'])}")
+            for token in analysis['tokens']:
+                print(f"- {token['symbol']}: {token['sentiment']} ({token['confidence']}% confidence)")
+
         # Save analysis as thought
         create_thought({
             'type': 'X_SENTIMENT',
@@ -71,10 +90,13 @@ def analyze_x_sentiment(content: str):
             }
         })
 
+        print("\n✅ Analysis saved to Airtable")
         return analysis
 
     except Exception as e:
-        print(f"Error analyzing X sentiment: {e}")
+        print(f"\n❌ Error analyzing X sentiment: {e}")
+        if 'message' in locals():
+            print("Raw API response:", message.content[0].text)
         return None
 
 if __name__ == "__main__":
