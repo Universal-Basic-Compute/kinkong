@@ -126,21 +126,12 @@ export async function POST(request: NextRequest) {
     // Stringify the whole body
     const bodyContent = JSON.stringify(requestBody);
 
+    // Build initial system prompt
+    let systemPrompt = COPILOT_PROMPT;
+
     // Check if content is from X.com
     const isXContent = bodyContent.includes('twitter.com') || 
                       bodyContent.includes('x.com');
-
-    // If X content, analyze sentiment
-    if (isXContent) {
-      console.log('📊 Analyzing X.com sentiment...');
-      const sentiment = await analyzeXSentiment(bodyContent);
-      if (sentiment) {
-        console.log('X Sentiment Analysis:', sentiment);
-        
-        // Add sentiment to system prompt
-        systemPrompt = `${systemPrompt}\n\nX.com Sentiment Analysis:\n${JSON.stringify(sentiment, null, 2)}`;
-      }
-    }
 
     // Get message history if wallet is provided
     let messageHistory: HistoryMessage[] = [];
@@ -234,22 +225,17 @@ export async function POST(request: NextRequest) {
       }
     ];
 
-    // Build initial system prompt
-    let systemPrompt = COPILOT_PROMPT;
-
-    // Add X.com sentiment analysis if applicable
+    // If X content, analyze sentiment
     if (isXContent) {
       console.log('📊 Analyzing X.com sentiment...');
       const sentiment = await analyzeXSentiment(bodyContent);
       if (sentiment) {
         console.log('X Sentiment Analysis:', sentiment);
-        
-        // Add sentiment to system prompt
         systemPrompt = `${systemPrompt}\n\nX.com Sentiment Analysis:\n${JSON.stringify(sentiment, null, 2)}`;
       }
     }
 
-    // Add signals and content
+    // Add signals and content to system prompt
     systemPrompt = `${systemPrompt}
 
 Recent Trading Signals (Last 25):
