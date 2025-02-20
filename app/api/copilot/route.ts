@@ -38,27 +38,178 @@ async function getLatestMarketSentiment() {
 
 async function analyzeXSentiment(content: string) {
   try {
-    // Call the Python script with the correct prompt
-    const { stdout, stderr } = await exec(
-      `python scripts/analyze_x_sentiment.py`,
-      {
-        env: {
-          ...process.env,
-          CONTENT: content
-        },
-        encoding: 'utf-8'
-      }
-    );
+    // Verify API key is present
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      console.error('ANTHROPIC_API_KEY not found in environment');
+      throw new Error('API key configuration missing');
+    }
 
-    if (stderr) {
-      console.error('X sentiment analysis error:', stderr);
+    // X sentiment analysis prompt
+    const systemPrompt = `You are an expert crypto sentiment analyst specializing in Solana ecosystem analysis.
+
+Analyze the provided X.com content and extract:
+1. Mentioned tokens and their sentiment
+2. Domain-specific trends (DeFi, Gaming, AI, etc.)
+3. Overall ecosystem sentiment
+
+Format your response as JSON:
+{
+    "tokens": [
+        {
+            "symbol": "string",
+            "sentiment": "BULLISH | BEARISH | NEUTRAL",
+            "confidence": 0-100,
+            "mentions": number,
+            "key_topics": ["string"],
+            "latest_news": ["string"]
+        }
+    ],
+    "domains": [
+        {
+            "name": "string",
+            "sentiment": "BULLISH | BEARISH | NEUTRAL",
+            "confidence": 0-100,
+            "trending_topics": ["string"],
+            "key_developments": ["string"]
+        }
+    ],
+    "ecosystem": {
+        "sentiment": "BULLISH | BEARISH | NEUTRAL",
+        "confidence": 0-100,
+        "key_observations": ["string"],
+        "emerging_trends": ["string"]
+    }
+}`;
+
+    // Make direct API call to Anthropic
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: "claude-3-5-sonnet-20241022",
+        max_tokens: 4096,
+        system: systemPrompt,
+        messages: [{
+          role: 'user',
+          content: `Analyze this X.com content for crypto sentiment:\n\n${content}`
+        }]
+      })
+    });
+
+    if (!response.ok) {
+      console.error('Anthropic API error:', response.status, await response.text());
       return null;
     }
 
-    return JSON.parse(stdout);
+    const data = await response.json();
+    const responseText = data.content[0].text;
+
+    // Clean the response text to ensure it's valid JSON
+    const cleanedResponse = responseText
+      .replace(/```json/g, '')
+      .replace(/```/g, '')
+      .trim();
+
+    try {
+      // Parse the response
+      const analysis = JSON.parse(cleanedResponse);
+
+      // Convert confidence values to integers
+      if (analysis.ecosystem) {
+        analysis.ecosystem.confidence = parseInt(String(analysis.ecosystem.confidence).replace('%', ''));
+      }
+
+      if (analysis.tokens) {
+        analysis.tokens.forEach((token: any) => {
+          token.confidence = parseInt(String(token.confidence).replace('%', ''));
+          token.mentions = parseInt(token.mentions || '0');
+        });
+      }
+
+      if (analysis.domains) {
+        analysis.domains.forEach((domain: any) => {
+          domain.confidence = parseInt(String(domain.confidence).replace('%', ''));
+        });
+      }
+
+      // Store in Airtable if needed
+      await storeSentimentAnalysis(analysis);
+
+      return analysis;
+
+    } catch (parseError) {
+      console.error('Error parsing sentiment analysis:', parseError);
+      console.log('Raw response:', responseText);
+      return null;
+    }
+
   } catch (error) {
     console.error('Failed to analyze X sentiment:', error);
     return null;
+  }
+}
+
+// Helper function to store sentiment analysis in Airtable
+async function storeSentimentAnalysis(analysis: any) {
+  try {
+    const table = getTable('SENTIMENT_ANALYSIS');
+    
+    // Store token sentiments
+    if (analysis.tokens) {
+      for (const token of analysis.tokens) {
+        await table.create([{
+          fields: {
+            type: 'TOKEN',
+            symbol: token.symbol,
+            sentiment: token.sentiment,
+            confidence: token.confidence,
+            mentions: token.mentions,
+            key_topics: token.key_topics.join(', '),
+            latest_news: token.latest_news.join(', '),
+            createdAt: new Date().toISOString()
+          }
+        }]);
+      }
+    }
+
+    // Store domain sentiments
+    if (analysis.domains) {
+      for (const domain of analysis.domains) {
+        await table.create([{
+          fields: {
+            type: 'DOMAIN',
+            name: domain.name,
+            sentiment: domain.sentiment,
+            confidence: domain.confidence,
+            trending_topics: domain.trending_topics.join(', '),
+            key_developments: domain.key_developments.join(', '),
+            createdAt: new Date().toISOString()
+          }
+        }]);
+      }
+    }
+
+    // Store ecosystem sentiment
+    if (analysis.ecosystem) {
+      await table.create([{
+        fields: {
+          type: 'ECOSYSTEM',
+          sentiment: analysis.ecosystem.sentiment,
+          confidence: analysis.ecosystem.confidence,
+          key_observations: analysis.ecosystem.key_observations.join(', '),
+          emerging_trends: analysis.ecosystem.emerging_trends.join(', '),
+          createdAt: new Date().toISOString()
+        }
+      }]);
+    }
+
+  } catch (error) {
+    console.error('Error storing sentiment analysis:', error);
   }
 }
 import { rateLimit } from '@/utils/rate-limit';
