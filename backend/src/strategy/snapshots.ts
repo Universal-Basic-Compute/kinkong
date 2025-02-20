@@ -1,4 +1,5 @@
 import { getTable } from '../airtable/tables';
+import { getTokenData } from '../airtable/tokens';
 import { getCurrentPortfolio } from './portfolio';
 import { getTokenPrices } from '../utils/jupiter';
 import fetch from 'node-fetch';
