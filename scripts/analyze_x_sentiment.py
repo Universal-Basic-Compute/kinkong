@@ -2,9 +2,10 @@ import sys
 from pathlib import Path
 import os
 import requests
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 from dotenv import load_dotenv
+from airtable import Airtable
 
 # Get absolute path to project root and .env file
 project_root = Path(__file__).parent.parent.absolute()
@@ -61,6 +62,67 @@ Format your response as JSON:
         "emerging_trends": ["string"]
     }
 }"""
+
+def store_sentiment_analysis(analysis):
+    """Store sentiment analysis results in Airtable"""
+    try:
+        base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
+        api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
+        
+        if not base_id or not api_key:
+            raise ValueError("Missing Airtable configuration")
+            
+        sentiment_table = Airtable(base_id, 'SENTIMENT_ANALYSIS', api_key)
+        
+        # Store token sentiments
+        if analysis.get('tokens'):
+            for token in analysis['tokens']:
+                record = {
+                    'type': 'TOKEN',
+                    'symbol': token['symbol'],
+                    'sentiment': token['sentiment'],
+                    'confidence': token['confidence'],
+                    'mentions': token.get('mentions', 0),
+                    'key_topics': ', '.join(token.get('key_topics', [])),
+                    'latest_news': ', '.join(token.get('latest_news', [])),
+                    'createdAt': datetime.now(timezone.utc).isoformat()
+                }
+                sentiment_table.create(record)
+                print(f"Created TOKEN sentiment record for {token['symbol']}")
+
+        # Store domain sentiments
+        if analysis.get('domains'):
+            for domain in analysis['domains']:
+                record = {
+                    'type': 'DOMAIN',
+                    'name': domain['name'],
+                    'sentiment': domain['sentiment'],
+                    'confidence': domain['confidence'],
+                    'trending_topics': ', '.join(domain.get('trending_topics', [])),
+                    'key_developments': ', '.join(domain.get('key_developments', [])),
+                    'createdAt': datetime.now(timezone.utc).isoformat()
+                }
+                sentiment_table.create(record)
+                print(f"Created DOMAIN sentiment record for {domain['name']}")
+
+        # Store ecosystem sentiment
+        if analysis.get('ecosystem'):
+            record = {
+                'type': 'ECOSYSTEM',
+                'sentiment': analysis['ecosystem']['sentiment'],
+                'confidence': analysis['ecosystem']['confidence'],
+                'key_observations': ', '.join(analysis['ecosystem'].get('key_observations', [])),
+                'emerging_trends': ', '.join(analysis['ecosystem'].get('emerging_trends', [])),
+                'createdAt': datetime.now(timezone.utc).isoformat()
+            }
+            sentiment_table.create(record)
+            print("Created ECOSYSTEM sentiment record")
+
+        return True
+
+    except Exception as e:
+        print(f"Error storing sentiment analysis: {e}")
+        return False
 
 def analyze_x_sentiment(content: str):
     """Analyze X.com content for crypto sentiment"""
@@ -158,6 +220,13 @@ def analyze_x_sentiment(content: str):
                 print(f"\n💰 Analyzed Tokens: {len(analysis['tokens'])}")
                 for token in analysis['tokens']:
                     print(f"- {token['symbol']}: {token['sentiment']} ({token['confidence']}% confidence)")
+
+            # Store results in Airtable
+            store_success = store_sentiment_analysis(analysis)
+            if store_success:
+                print("\n✅ Stored sentiment analysis in Airtable")
+            else:
+                print("\n❌ Failed to store sentiment analysis")
 
             return analysis
 
