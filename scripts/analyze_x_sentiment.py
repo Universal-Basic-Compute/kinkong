@@ -88,7 +88,7 @@ def analyze_x_sentiment(content: str):
         print("\nContent sample:")
         print(content[:500] + "..." if len(content) > 500 else content)
 
-        # Create the message
+        # Create the message with correct headers
         message = client.messages.create(
             model="claude-3-5-sonnet-20241022",
             max_tokens=4096,
@@ -96,7 +96,12 @@ def analyze_x_sentiment(content: str):
             messages=[{
                 "role": "user",
                 "content": f"Analyze this X.com content for crypto sentiment:\n\n{content}"
-            }]
+            }],
+            headers={
+                'x-api-key': api_key,
+                'anthropic-version': '2023-06-01',
+                'content-type': 'application/json'
+            }
         )
 
         # Get the response text
