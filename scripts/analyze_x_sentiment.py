@@ -83,17 +83,6 @@ def analyze_x_sentiment(content: str):
             for token in analysis['tokens']:
                 print(f"- {token['symbol']}: {token['sentiment']} ({token['confidence']}% confidence)")
 
-        # Save analysis as thought
-        create_thought({
-            'type': 'X_SENTIMENT',
-            'content': json.dumps(analysis, indent=2),
-            'context': {
-                'source': 'x.com',
-                'timestamp': datetime.now().isoformat()
-            }
-        })
-
-        print("\n✅ Analysis saved to Airtable")
         return analysis
 
     except Exception as e:
