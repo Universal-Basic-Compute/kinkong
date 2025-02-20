@@ -9,9 +9,22 @@ const rateLimiter = rateLimit({
   uniqueTokenPerInterval: 500
 });
 
-// Helper function to check wallet message count
+// Helper function to check wallet message limit
 async function checkWalletMessageLimit(wallet: string): Promise<boolean> {
   try {
+    // First check if wallet has active subscription
+    const subscriptionsTable = getTable('SUBSCRIPTIONS');
+    const subscriptions = await subscriptionsTable.select({
+      filterByFormula: `AND(
+        {wallet}='${wallet}',
+        {status}='ACTIVE',
+        {endDate}>=TODAY()
+      )`
+    }).firstPage();
+
+    // If has active subscription, allow 100 messages per 4 hours
+    const messageLimit = subscriptions.length > 0 ? 100 : 10;
+
     const messagesTable = getTable('MESSAGES');
     const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString();
 
@@ -24,7 +37,10 @@ async function checkWalletMessageLimit(wallet: string): Promise<boolean> {
     }).all();
 
     console.log(`Found ${records.length} messages for wallet ${wallet} in last 4 hours`);
-    return records.length < 10; // Return true if under limit
+    console.log(`Wallet has active subscription: ${subscriptions.length > 0}`);
+    console.log(`Message limit: ${messageLimit}`);
+
+    return records.length < messageLimit; // Return true if under limit
   } catch (error) {
     console.error('Error checking wallet message limit:', error);
     throw error;
@@ -56,7 +72,11 @@ export async function POST(request: NextRequest) {
       return new NextResponse(
         JSON.stringify({ 
           error: 'Rate limit exceeded',
-          details: 'Maximum 10 messages per wallet per 4 hours'
+          details: 'Maximum messages reached for your tier. Subscribe for increased limits.',
+          subscription: {
+            free: '10 messages per 4 hours',
+            premium: '100 messages per 4 hours'
+          }
         }),
         { 
           status: 429,
