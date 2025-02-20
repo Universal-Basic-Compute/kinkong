@@ -508,7 +508,7 @@ ${bodyContent}`;
       clearTimeout(timeoutId);
 
       // Handle timeout specifically
-      if (error.name === 'AbortError') {
+      if (error instanceof Error && error.name === 'AbortError') {
         return new NextResponse(
           JSON.stringify({ 
             error: 'Request timeout after 30 seconds',
