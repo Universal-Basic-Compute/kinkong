@@ -9,8 +9,8 @@ project_root = str(Path(__file__).parent.parent.absolute())
 if project_root not in sys.path:
     sys.path.append(project_root)
 
-from backend.src.airtable.tables import getTable
-from analyze_x_sentiment import analyze_x_sentiment
+# Import the function directly from the script
+from scripts.analyze_x_sentiment import analyze_x_sentiment
 
 def test_x_sentiment():
     try:
