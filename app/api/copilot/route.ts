@@ -234,8 +234,23 @@ export async function POST(request: NextRequest) {
       }
     ];
 
-    // Build system prompt with signals
-    const systemPrompt = `${COPILOT_PROMPT}
+    // Build initial system prompt
+    let systemPrompt = COPILOT_PROMPT;
+
+    // Add X.com sentiment analysis if applicable
+    if (isXContent) {
+      console.log('📊 Analyzing X.com sentiment...');
+      const sentiment = await analyzeXSentiment(bodyContent);
+      if (sentiment) {
+        console.log('X Sentiment Analysis:', sentiment);
+        
+        // Add sentiment to system prompt
+        systemPrompt = `${systemPrompt}\n\nX.com Sentiment Analysis:\n${JSON.stringify(sentiment, null, 2)}`;
+      }
+    }
+
+    // Add signals and content
+    systemPrompt = `${systemPrompt}
 
 Recent Trading Signals (Last 25):
 --------------------------------
