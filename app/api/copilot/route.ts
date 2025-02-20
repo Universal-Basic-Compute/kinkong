@@ -3,27 +3,31 @@ import { rateLimit } from '@/utils/rate-limit';
 import { getTable } from '@/backend/src/airtable/tables';
 import { COPILOT_PROMPT } from '@/prompts/copilot';
 
-// Helper function to get hours until next block
-function getHoursUntilNext(): number {
+// Helper function to get hours until next block with proper formatting
+function getHoursUntilNext(): string {
   const now = new Date();
   const currentBlock = Math.floor(now.getUTCHours() / 8);
   const nextBlockStart = new Date(now);
   nextBlockStart.setUTCHours((currentBlock + 1) * 8, 0, 0, 0);
   
   const hoursRemaining = Math.ceil((nextBlockStart.getTime() - now.getTime()) / (1000 * 60 * 60));
-  return hoursRemaining;
+  
+  // Handle special cases
+  if (hoursRemaining <= 0) return "1 hour"; // Prevent 0 hours
+  if (hoursRemaining === 1) return "1 hour";
+  return `${hoursRemaining} hours`;
 }
 
 const RATE_LIMIT_MESSAGES = [
-  `Time for a quick break! 🎯 Hit my message limit. Want more trading insights? [Premium awaits](https://swarmtrade.ai/copilot)! 🚀\n\nKinKong will be back in ${getHoursUntilNext()} hours! 🕒`,
+  `Time for a quick break! 🎯 Hit my message limit. Want more trading insights? [Premium awaits](https://swarmtrade.ai/copilot)! 🚀\n\nKinKong will be back in ${getHoursUntilNext()}! 🕒`,
   
-  `Whew, what a chat! 💬 Need to recharge for a bit. Get more trading insights with [premium](https://swarmtrade.ai/copilot) ✨\n\nKinKong will be back in ${getHoursUntilNext()} hours! 🕒`,
+  `Whew, what a chat! 💬 Need to recharge for a bit. Get more trading insights with [premium](https://swarmtrade.ai/copilot) ✨\n\nKinKong will be back in ${getHoursUntilNext()}! 🕒`,
   
-  `Hold that thought! 🤔 Message limit reached. Want more trading chats? Join [premium](https://swarmtrade.ai/copilot) 💪\n\nKinKong will be back in ${getHoursUntilNext()} hours! 🕒`,
+  `Hold that thought! 🤔 Message limit reached. Want more trading chats? Join [premium](https://swarmtrade.ai/copilot) 💪\n\nKinKong will be back in ${getHoursUntilNext()}! 🕒`,
   
-  `Taking a breather! 😅 Max messages hit. Want more trading time? [Upgrade here](https://swarmtrade.ai/copilot) 🎓\n\nKinKong will be back in ${getHoursUntilNext()} hours! 🕒`,
+  `Taking a breather! 😅 Max messages hit. Want more trading time? [Upgrade here](https://swarmtrade.ai/copilot) 🎓\n\nKinKong will be back in ${getHoursUntilNext()}! 🕒`,
   
-  `Energy check! ⚡ Need to rest my circuits. Want more trading convos? [Premium's calling](https://swarmtrade.ai/copilot) 🌟\n\nKinKong will be back in ${getHoursUntilNext()} hours! 🕒`
+  `Energy check! ⚡ Need to rest my circuits. Want more trading convos? [Premium's calling](https://swarmtrade.ai/copilot) 🌟\n\nKinKong will be back in ${getHoursUntilNext()}! 🕒`
 ];
 
 // Initialize global rate limiter
