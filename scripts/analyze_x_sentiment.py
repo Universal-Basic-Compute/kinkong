@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 import os
-import anthropic
+import requests
 from datetime import datetime
 import json
 from dotenv import load_dotenv
@@ -62,7 +62,6 @@ def analyze_x_sentiment(content: str):
         
         # Get API key
         api_key = os.getenv('ANTHROPIC_API_KEY')
-        # Show last 4 characters of key instead of first 8
         print("API key present:", bool(api_key))
         if api_key:
             print(f"API key ends with: ...{api_key[-4:]}")
@@ -74,33 +73,37 @@ def analyze_x_sentiment(content: str):
         # Get the prompt
         system_prompt = get_x_sentiment_prompt()
         print("Prompt loaded:", bool(system_prompt))
-        
-        if not system_prompt:
-            raise ValueError("Failed to load X sentiment prompt")
-
-        # Create client with explicit API key
-        client = anthropic.Client(
-            api_key=api_key,
-        )
 
         print("\n🤖 Sending content to Claude for analysis...")
         print("Content length:", len(content))
         print("\nContent sample:")
         print(content[:500] + "..." if len(content) > 500 else content)
 
-        # Create the message without headers argument
-        message = client.messages.create(
-            model="claude-3-5-sonnet-20241022",
-            max_tokens=4096,
-            system=system_prompt,
-            messages=[{
-                "role": "user",
-                "content": f"Analyze this X.com content for crypto sentiment:\n\n{content}"
-            }]
+        # Make direct API call like in copilot route
+        response = requests.post(
+            'https://api.anthropic.com/v1/messages',
+            headers={
+                'x-api-key': api_key,
+                'anthropic-version': '2023-06-01',
+                'content-type': 'application/json'
+            },
+            json={
+                'model': 'claude-3-5-sonnet-20241022',
+                'max_tokens': 4096,
+                'system': system_prompt,
+                'messages': [{
+                    'role': 'user',
+                    'content': f"Analyze this X.com content for crypto sentiment:\n\n{content}"
+                }]
+            }
         )
 
-        # Get the response text
-        response_text = message.content[0].text
+        if not response.ok:
+            print(f"API error: {response.status_code} - {response.text}")
+            return None
+
+        data = response.json()
+        response_text = data['content'][0]['text']
         
         # Clean the response text to ensure it's valid JSON
         # Remove any potential markdown code block indicators
