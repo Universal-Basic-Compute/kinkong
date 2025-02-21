@@ -39,31 +39,22 @@ def get_token_price(token_mint: str) -> dict:
                     return {
                         'price': float(main_pair.get('priceUsd', 0)),
                         'volume24h': total_volume,
-                        'volume7d': total_volume * 7,  # Approximation
                         'liquidity': total_liquidity,
-                        'priceChange24h': float(main_pair.get('priceChange', {}).get('h24', 0)),
-                        'volumeGrowth': float(main_pair.get('volume', {}).get('h24', 0)) / float(main_pair.get('volume', {}).get('h6', 1)) - 1 if main_pair.get('volume', {}).get('h6') else 0,
-                        'pricePerformance': float(main_pair.get('priceChange', {}).get('h24', 0))
+                        'priceChange24h': float(main_pair.get('priceChange', {}).get('h24', 0))
                     }
         return {
             'price': 0,
             'volume24h': 0,
-            'volume7d': 0,
             'liquidity': 0,
-            'priceChange24h': 0,
-            'volumeGrowth': 0,
-            'pricePerformance': 0
+            'priceChange24h': 0
         }
     except Exception as e:
         print(f"Error getting metrics for {token_mint}: {e}")
         return {
             'price': 0,
             'volume24h': 0,
-            'volume7d': 0,
             'liquidity': 0,
-            'priceChange24h': 0,
-            'volumeGrowth': 0,
-            'pricePerformance': 0
+            'priceChange24h': 0
         }
 
 def record_portfolio_snapshot():
@@ -107,14 +98,12 @@ def record_portfolio_snapshot():
                 # Get current metrics
                 metrics = get_token_price(mint)
                 
-                # Create snapshot with all metrics
+                # Create snapshot with metrics
                 snapshot = {
                     'symbol': symbol,
                     'price': metrics['price'],
-                    'volume7d': metrics['volume7d'],
+                    'volume24h': metrics['volume24h'],
                     'liquidity': metrics['liquidity'],
-                    'volumeGrowth': metrics['volumeGrowth'],
-                    'pricePerformance': metrics['pricePerformance'],
                     'priceChange24h': metrics['priceChange24h'],
                     'createdAt': created_at,
                     'isActive': True
@@ -123,7 +112,7 @@ def record_portfolio_snapshot():
                 new_snapshots.append(snapshot)
                 print(f"\nProcessed {symbol}:")
                 print(f"Price: ${metrics['price']:.4f}")
-                print(f"7d Volume: ${metrics['volume7d']:,.2f}")
+                print(f"24h Volume: ${metrics['volume24h']:,.2f}")
                 print(f"Liquidity: ${metrics['liquidity']:,.2f}")
                 print(f"24h Change: {metrics['priceChange24h']:.2f}%")
                 
