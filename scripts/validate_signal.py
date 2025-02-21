@@ -78,7 +78,11 @@ def validate_signal(
         if signal_data.get('signal') != 'BUY':
             # Update signal as invalid (-1)
             if signal_id:
-                signals_table.update(signal_id, {'validated': -1})
+                try:
+                    signals_table.update(signal_id, {'validated': -1})
+                    print(f"✅ Updated signal {signal_id} as invalid (SELL)")
+                except Exception as e:
+                    print(f"❌ Failed to update signal validation status: {e}")
             return {
                 'valid': False,
                 'reason': 'Only BUY signals are currently supported',
