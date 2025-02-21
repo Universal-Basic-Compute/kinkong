@@ -1,4 +1,4 @@
-import { executeReallocation } from '../backend/src/strategy/reallocation';
+import { executeReallocation } from '../backend/src/strategy/reallocation.js';
 import dotenv from 'dotenv';
 import path from 'path';
 

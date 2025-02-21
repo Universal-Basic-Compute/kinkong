@@ -1,6 +1,12 @@
-const dotenv = require('dotenv');
-const path = require('path');
-const fs = require('fs');
+import dotenv from 'dotenv';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import { recordPortfolioSnapshot } from '../backend/src/strategy/snapshots.js';
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Force load the .env file from the project root
 const projectRoot = path.resolve(__dirname, '..');
@@ -15,7 +21,7 @@ console.log('🔧 Environment setup:', {
 // Force load the .env file
 const envConfig = dotenv.config({ 
     path: envPath,
-    override: true // This forces override of any existing env vars
+    override: true
 });
 
 if (envConfig.error) {
@@ -29,9 +35,6 @@ console.log('📝 Loaded environment variables:', {
     KINKONG_AIRTABLE_BASE_ID: process.env.KINKONG_AIRTABLE_BASE_ID ? '✅ Present' : '❌ Missing',
     parsed: envConfig.parsed ? Object.keys(envConfig.parsed) : []
 });
-
-// Only proceed with imports after env is loaded
-const { recordPortfolioSnapshot } = require('../backend/src/strategy/snapshots');
 
 async function main() {
     try {
