@@ -5,13 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build", 
     "start": "next start",
     "lint": "next lint",
     "analyze-sentiment": "ts-node scripts/analyze-market-sentiment.ts",
     "fetch-tokens": "ts-node --transpile-only scripts/fetch-token-data.ts",
     "reallocation": "ts-node scripts/execute-reallocation.ts",
-    "snapshot": "ts-node scripts/take-snapshot.ts",
+    "snapshot": "python scripts/take_snapshot.py",
     "calculate-signals": "ts-node scripts/calculate-closed-signals.ts"
   },
   "dependencies": {
