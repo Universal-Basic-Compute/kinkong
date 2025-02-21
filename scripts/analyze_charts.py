@@ -547,17 +547,13 @@ def process_signals_batch(token_analyses):
     
     for token_info, analyses in token_analyses:
         print(f"\n📊 Processing signals for {token_info['symbol']}...")
-        print(f"Analysis structure: {type(analyses)}")
-        print(f"Available timeframes: {list(analyses.keys())}")
         
         # Filter valid timeframes
         valid_timeframes = {}
         for tf, analysis in analyses.items():
-            # Skip the 'overall' key as it's not a timeframe
             if tf == 'overall':
                 continue
                 
-            # Check if timeframe is one of our standard timeframes
             if tf in STRATEGY_TIMEFRAMES:
                 valid_timeframes[tf] = analysis
                 print(f"Valid timeframe: {tf}")
@@ -569,15 +565,9 @@ def process_signals_batch(token_analyses):
         for timeframe, analysis in valid_timeframes.items():
             print(f"\n⏰ Processing {timeframe} timeframe...")
             
-            # Extract signal details
-            signal_type = None
-            confidence = 0
-            key_levels = None
-            
-            if isinstance(analysis, dict):
-                signal_type = analysis.get('signal')
-                confidence = analysis.get('confidence', 0)
-                key_levels = analysis.get('key_levels')
+            signal_type = analysis.get('signal')
+            confidence = analysis.get('confidence', 0)
+            key_levels = analysis.get('key_levels')
             
             print(f"Signal type: {signal_type}")
             print(f"Confidence: {confidence}")
@@ -586,14 +576,35 @@ def process_signals_batch(token_analyses):
             if signal_type and signal_type != 'HOLD' and confidence >= 60:
                 print("✅ Signal meets criteria for creation")
                 
-                # Safely get support and resistance levels
-                support_levels = key_levels.get('support', []) if key_levels else []
-                resistance_levels = key_levels.get('resistance', []) if key_levels else []
+                # Create signal with validation status = 0 (pending)
+                result = create_airtable_signal(
+                    analysis,
+                    timeframe,
+                    token_info,
+                    analyses,
+                    {'validated': 0}  # Set initial validation status
+                )
                 
-                # Only proceed if we have at least one level for each
-                if not support_levels or not resistance_levels:
-                    print("❌ Insufficient price levels")
-                    continue
+                if result:
+                    # Validate signal immediately
+                    validation_result = validate_signal(
+                        timeframe=timeframe,
+                        signal_data={
+                            'id': result['id'],
+                            'signal': signal_type,
+                            'entryPrice': float(result['fields'].get('entryPrice', 0)),
+                            'targetPrice': float(result['fields'].get('targetPrice', 0)),
+                            'stopLoss': float(result['fields'].get('stopLoss', 0))
+                        },
+                        token_info=token_info,
+                        market_data=get_dexscreener_data(token_info['mint'])
+                    )
+                    
+                    if validation_result['valid']:
+                        pending_signals.append(result)
+                        print(f"✅ Signal validated successfully")
+                    else:
+                        print(f"❌ Signal validation failed: {validation_result['reason']}")
                 
                 # For stop loss, use second level if available, otherwise calculate from first level
                 if signal_type == 'SELL':
