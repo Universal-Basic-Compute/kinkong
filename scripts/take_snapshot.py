@@ -70,7 +70,7 @@ def record_portfolio_snapshot():
             raise
             
         recent_snapshots = snapshots_table.get_all(
-            sort=[{'field': 'createdAt', 'direction': 'desc'}],
+            sort=['-createdAt'],  # Use minus sign for descending sort
             maxRecords=30
         )
         
