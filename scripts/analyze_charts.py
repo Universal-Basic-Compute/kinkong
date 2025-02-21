@@ -586,6 +586,30 @@ def process_signals_batch(token_analyses):
                 )
                 
                 if result:
+                    # Create trade record with the correct timeframe
+                    trades_table = Airtable(base_id, 'TRADES', api_key)
+                    trade_data = {
+                        'signalId': result['id'],
+                        'token': token_info['symbol'],
+                        'type': signal_type,
+                        'timeframe': timeframe,  # Use the actual timeframe!
+                        'status': 'PENDING',
+                        'amount': 0,
+                        'entryValue': 0,
+                        'activationTime': None,
+                        'entryPrice': float(result['fields']['entryPrice']),
+                        'stopLoss': float(result['fields']['stopLoss']),
+                        'targetPrice': float(result['fields']['targetPrice']),
+                        'expiryDate': result['fields']['expiryDate'],
+                        'exitPrice': None,
+                        'realizedPnl': None,
+                        'roi': None
+                    }
+                    
+                    # Add trade record
+                    trade_result = trades_table.insert(trade_data)
+                    print(f"\n✅ Created trade record: {trade_result['id']}")
+                    
                     # Validate signal immediately
                     validation_result = validate_signal(
                         timeframe=timeframe,  # Pass the actual timeframe name
@@ -603,7 +627,8 @@ def process_signals_batch(token_analyses):
                     if validation_result['valid']:
                         pending_signals.append({
                             'signal_id': result['id'],
-                            'timeframe': timeframe,  # Include timeframe in pending signal
+                            'trade_id': trade_result['id'],
+                            'timeframe': timeframe,
                             'token': token_info['symbol'],
                             'type': signal_type,
                             'confidence': confidence,
