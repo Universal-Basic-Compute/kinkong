@@ -2,6 +2,7 @@ import { getTable } from '../airtable/tables';
 import { getTokenData as getAirtableTokenData } from '../airtable/tokens';
 import { getCurrentPortfolio } from './portfolio';
 import { getTokenPrices } from '../utils/jupiter';
+import { calculateDailyPnl, calculateWeeklyPnl, calculateMonthlyPnl } from '../utils/pnl-calculations';
 import fetch from 'node-fetch';
 import Airtable from 'airtable';
 
