@@ -234,10 +234,16 @@ def check_pending_signals():
         
         signals_table = Airtable(base_id, 'SIGNALS', api_key)
         
-        # Get all pending signals
+        # Get only validated pending signals
         pending_signals = signals_table.get_all(
-            formula="AND(status='PENDING', expiryDate>=TODAY())"
+            formula="AND(" +
+                "status='PENDING', " +
+                "validated=1, " +  # Only validated signals
+                "expiryDate>=TODAY()" +
+            ")"
         )
+        
+        print(f"\nFound {len(pending_signals)} validated pending signals")
         
         for signal in pending_signals:
             signal_id = signal['id']
@@ -405,7 +411,58 @@ def check_signal_conditions():
     except Exception as e:
         print(f"Failed to check signal conditions: {e}")
 
+def revalidate_signals():
+    """Revalidate signals that need validation"""
+    try:
+        load_dotenv()
+        base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
+        api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
+        
+        signals_table = Airtable(base_id, 'SIGNALS', api_key)
+        tokens_table = Airtable(base_id, 'TOKENS', api_key)
+        
+        # Get signals needing validation
+        signals = signals_table.get_all(
+            formula="OR(" +
+                "validated=0, " +
+                "validated=BLANK()" +
+            ")"
+        )
+        
+        print(f"\nFound {len(signals)} signals to validate")
+        
+        for signal in signals:
+            try:
+                # Get token info
+                token_records = tokens_table.get_all(
+                    formula=f"{{symbol}}='{signal['fields']['token']}'"
+                )
+                
+                if not token_records:
+                    print(f"❌ No token info found for {signal['fields']['token']}")
+                    continue
+                    
+                token_info = token_records[0]['fields']
+                
+                # Validate signal
+                validation_result = validate_signal(
+                    timeframe=signal['fields']['timeframe'],
+                    signal_data=signal['fields'],
+                    token_info=token_info,
+                    market_data=get_dexscreener_data(token_info['mint'])
+                )
+                
+                print(f"Signal {signal['id']}: {'✅ Valid' if validation_result['valid'] else '❌ Invalid'}")
+                
+            except Exception as e:
+                print(f"❌ Error validating signal {signal['id']}: {e}")
+                continue
+                
+    except Exception as e:
+        print(f"❌ Error in revalidate_signals: {e}")
+
 if __name__ == "__main__":
-    # Run both checks
+    # Run all checks
     check_pending_signals()  # Check for signals to activate
     check_signal_conditions()  # Check active signals for completion
+    revalidate_signals()  # Revalidate pending signals
