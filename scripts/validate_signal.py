@@ -58,9 +58,19 @@ def validate_signal(
 ) -> Dict:
     """
     Validate if a signal should be executed based on technical merits and market conditions.
-    Status-independent validation.
+    Currently only validates BUY signals.
     """
     try:
+        # Skip SELL signals immediately
+        if signal_data.get('signal') != 'BUY':
+            return {
+                'valid': False,
+                'reason': 'Only BUY signals are currently supported',
+                'expected_profit': 0,
+                'costs': 0,
+                'risk_reward': 0
+            }
+
         # Map timeframe from chart (15m, 2h, 8h) to strategy timeframe
         timeframe_mapping = {
             '15m': 'SCALP',
@@ -88,67 +98,26 @@ def validate_signal(
                 'risk_reward': 0
             }
 
-        # Calculate potential profit and loss percentages
-        if signal_data.get('signal') == 'BUY':
-            potential_profit_pct = (target_price - entry_price) / entry_price
-            potential_loss_pct = (entry_price - stop_loss_price) / entry_price
-        else:  # SELL
-            potential_profit_pct = (entry_price - target_price) / entry_price
-            potential_loss_pct = (stop_loss_price - entry_price) / entry_price
+        # Calculate potential profit and loss percentages (BUY only)
+        potential_profit_pct = (target_price - entry_price) / entry_price
+        potential_loss_pct = (entry_price - stop_loss_price) / entry_price
 
-        # Calculate round-trip costs
+        # Calculate costs and expected profit
         max_costs = costs.get_max_roundtrip_cost()
-        
-        # Calculate expected profit after costs
         expected_profit = potential_profit_pct - max_costs
-        
-        # Calculate risk/reward ratio
         risk_reward = potential_profit_pct / potential_loss_pct if potential_loss_pct != 0 else 0
 
-        # Map timeframe to requirements
-        timeframe_mapping = {
-            '15m': 'SCALP',
-            '2h': 'INTRADAY', 
-            '8h': 'SWING'
-        }
-        strategy_timeframe = timeframe_mapping.get(timeframe, 'INTRADAY')
-        reqs = TIMEFRAME_REQS[strategy_timeframe]
-
-        # Different validation rules for BUY vs SELL
-        if signal_data.get('signal') == 'BUY':
-            validations = [
-                (expected_profit >= reqs.min_target, 
-                 f"Expected profit ({expected_profit:.1%}) below minimum target ({reqs.min_target:.1%})"),
-                
-                (potential_loss_pct <= reqs.stop_loss,
-                 f"Stop loss ({potential_loss_pct:.1%}) exceeds maximum ({reqs.stop_loss:.1%})"),
-                
-                (risk_reward >= 1.5,
-                 f"Risk/Reward ratio ({risk_reward:.2f}) below minimum (1.5)")
-            ]
-        else:  # SELL signal
-            price_change_24h = market_data.get('price_change_24h', 0) if market_data else 0
+        # Validation rules for BUY signals
+        validations = [
+            (expected_profit >= reqs.min_target, 
+             f"Expected profit ({expected_profit:.1%}) below minimum target ({reqs.min_target:.1%})"),
             
-            # If price is already dropping significantly, be more lenient
-            if price_change_24h < -5:
-                validations = [
-                    (expected_profit >= reqs.min_target * 0.5,  # Half the usual minimum target
-                     f"Expected profit ({expected_profit:.1%}) below emergency minimum target ({reqs.min_target * 0.5:.1%})"),
-                    
-                    (potential_loss_pct <= reqs.stop_loss * 1.5,
-                     f"Stop loss ({potential_loss_pct:.1%}) exceeds emergency maximum ({reqs.stop_loss * 1.5:.1%})")
-                ]
-            else:
-                validations = [
-                    (expected_profit >= reqs.min_target,  # Must meet minimum target
-                     f"Expected profit ({expected_profit:.1%}) below minimum target ({reqs.min_target:.1%})"),
-                    
-                    (potential_loss_pct <= reqs.stop_loss,
-                     f"Stop loss ({potential_loss_pct:.1%}) exceeds maximum ({reqs.stop_loss:.1%})"),
-                    
-                    (risk_reward >= 1.5,
-                     f"Risk/Reward ratio ({risk_reward:.2f}) below minimum (1.5)")
-                ]
+            (potential_loss_pct <= reqs.stop_loss,
+             f"Stop loss ({potential_loss_pct:.1%}) exceeds maximum ({reqs.stop_loss:.1%})"),
+            
+            (risk_reward >= 1.5,
+             f"Risk/Reward ratio ({risk_reward:.2f}) below minimum (1.5)")
+        ]
 
         # Add liquidity check if market data available
         if market_data and market_data.get('liquidity'):
