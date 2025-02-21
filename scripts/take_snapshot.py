@@ -91,7 +91,10 @@ def calculate_additional_metrics(snapshots_table: Airtable, token_symbol: str, d
         # Get SOL comparison with same sort parameters
         sol_snapshots = snapshots_table.get_all(
             filterByFormula="{symbol}='SOL'",
-            sort=sort_params  # Reuse the same sort parameters
+            sort=[{
+                'field': 'createdAt',
+                'direction': 'desc'
+            }]
         )
         
         sol_prices = [float(snap['fields'].get('price', 0)) for snap in sol_snapshots]
