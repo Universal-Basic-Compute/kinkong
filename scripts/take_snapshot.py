@@ -61,10 +61,9 @@ def calculate_additional_metrics(snapshots_table: Airtable, token_symbol: str, d
             }
         ]
 
-        # Get recent snapshots for this token
+        # Get recent snapshots for this token with simplified formula
         recent_snapshots = snapshots_table.get_all(
-            filterByFormula=f"AND({{symbol}}='{token_symbol}', " +
-                    f"IS_AFTER({{createdAt}}, DATEADD(NOW(), -{days}, 'days')))",
+            filterByFormula=f"{{symbol}}='{token_symbol}'",
             sort=sort_params  # Use defined sort parameters
         )
 
@@ -86,10 +85,8 @@ def calculate_additional_metrics(snapshots_table: Airtable, token_symbol: str, d
         volatility = calculate_volatility(prices)
 
         # Get SOL comparison with same sort parameters
-        # Get SOL comparison using same sort parameters
         sol_snapshots = snapshots_table.get_all(
-            filterByFormula=f"AND({{symbol}}='SOL', " +
-                    f"IS_AFTER({{createdAt}}, DATEADD(NOW(), -{days}, 'days')))",
+            filterByFormula="{symbol}='SOL'",
             sort=sort_params  # Reuse the same sort parameters
         )
         
