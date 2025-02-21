@@ -31,7 +31,10 @@ def calculate_additional_metrics(snapshots_table: Airtable, token_symbol: str, d
         recent_snapshots = snapshots_table.get_all(
             formula=f"AND({{symbol}}='{token_symbol}', " +
                     f"IS_AFTER({{createdAt}}, DATEADD(NOW(), -{days}, 'days')))",
-            sort=[{'field': 'createdAt', 'direction': 'desc'}]
+            sort=[{
+                'field': 'createdAt',
+                'direction': 'desc'
+            }]
         )
 
         if not recent_snapshots:
@@ -51,7 +54,10 @@ def calculate_additional_metrics(snapshots_table: Airtable, token_symbol: str, d
         sol_snapshots = snapshots_table.get_all(
             formula=f"AND({{symbol}}='SOL', " +
                     f"IS_AFTER({{createdAt}}, DATEADD(NOW(), -{days}, 'days')))",
-            sort=[{'field': 'createdAt', 'direction': 'desc'}]
+            sort=[{
+                'field': 'createdAt',
+                'direction': 'desc'
+            }]
         )
         
         if sol_snapshots:
