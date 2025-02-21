@@ -53,14 +53,19 @@ def calculate_price_trend(prices: List[float]) -> float:
 def calculate_additional_metrics(snapshots_table: Airtable, token_symbol: str, days: int = 7) -> Optional[Dict]:
     """Calculate additional metrics from historical snapshots"""
     try:
+        # Build query parameters
+        formula = f"AND({{symbol}}='{token_symbol}', IS_AFTER({{createdAt}}, DATEADD(NOW(), -{days}, 'days')))"
+        sort_param = [{'field': 'createdAt', 'direction': 'desc'}]
+        
+        # Debug print query details
+        print(f"\nQuery for {token_symbol}:")
+        print(f"Formula: {formula}")
+        print(f"Sort: {sort_param}")
+        
         # Get recent snapshots for this token
         recent_snapshots = snapshots_table.get_all(
-            formula=f"AND({{symbol}}='{token_symbol}', " +
-                    f"IS_AFTER({{createdAt}}, DATEADD(NOW(), -{days}, 'days')))",
-            sort=[{
-                'field': 'createdAt',
-                'direction': 'desc'
-            }]
+            formula=formula,
+            sort=sort_param
         )
 
         if not recent_snapshots:
