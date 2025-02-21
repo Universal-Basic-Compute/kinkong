@@ -55,16 +55,19 @@ def calculate_additional_metrics(snapshots_table: Airtable, token_symbol: str, d
     try:
         # Get recent snapshots for this token
         formula = f"AND({{symbol}}='{token_symbol}', IS_AFTER({{createdAt}}, DATEADD(NOW(), -{days}, 'days')))"
-
-        # Use select() instead of get_all()
-        recent_snapshots = snapshots_table.select(
-            filterByFormula=formula,
-            sort=[{'field': 'createdAt', 'direction': 'desc'}]
-        ).all()
+        
+        # Use get_all() with correct sort parameters
+        recent_snapshots = snapshots_table.get_all(
+            formula=formula,
+            sort=[{
+                'field': 'createdAt',
+                'direction': 'desc'
+            }]
+        )
 
         print(f"\nProcessing {token_symbol}:")
         print(f"Formula: {formula}")
-        print("Sort:", [{'field': 'createdAt', 'direction': 'desc'}])
+        print("Sort parameters:", [{'field': 'createdAt', 'direction': 'desc'}])
 
         if not recent_snapshots:
             print(f"No snapshots found for {token_symbol}")
@@ -82,10 +85,13 @@ def calculate_additional_metrics(snapshots_table: Airtable, token_symbol: str, d
         volatility = calculate_volatility(prices)
 
         # Get SOL comparison with same sort parameters
-        sol_snapshots = snapshots_table.select(
-            filterByFormula="{symbol}='SOL'",
-            sort=[{'field': 'createdAt', 'direction': 'desc'}]
-        ).all()
+        sol_snapshots = snapshots_table.get_all(
+            formula="{symbol}='SOL'",
+            sort=[{
+                'field': 'createdAt',
+                'direction': 'desc'
+            }]
+        )
         
         sol_prices = [float(snap['fields'].get('price', 0)) for snap in sol_snapshots]
         sol_trend = calculate_price_trend(sol_prices) if sol_prices else 0
