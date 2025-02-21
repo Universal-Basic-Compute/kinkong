@@ -834,35 +834,29 @@ if __name__ == "__main__":
     main()
 def process_valid_signals(pending_signals):
     """Process signals that have passed validation"""
-    # Map timeframes to strategy types
-    timeframe_mapping = {
-        '15m': 'SCALP',     # 15-minute chart for 6-hour trades
-        '1H': 'INTRADAY',   # 1-hour chart for 24-hour trades
-        '4H': 'SWING',      # 4-hour chart for 7-day trades
-        '1D': 'POSITION'    # Daily chart for 30-day trades
-    }
-    
     processed_signals = []
     
     for signal in pending_signals:
         try:
-            print(f"\nCreating signal for {signal['token_info']['symbol']}...")
+            print(f"\nCreating trade for {signal['token']} - {signal['timeframe']}...")
+            
+            # Create trade with specific timeframe
             result = create_airtable_signal(
                 signal,
-                signal['timeframe'],
+                signal['timeframe'],  # Use the specific timeframe
                 signal['token_info']
             )
             
             if result:
-                print("✅ Signal created successfully")
+                print(f"✅ Trade created successfully for {signal['timeframe']}")
                 processed_signals.append({
-                    'token': signal['token_info']['symbol'],
+                    'token': signal['token'],
                     'timeframe': signal['timeframe'],
-                    'signal': signal['signal'],
+                    'signal': signal['type'],
                     'confidence': signal['confidence']
                 })
             else:
-                print("❌ Failed to create signal")
+                print(f"❌ Failed to create trade for {signal['timeframe']}")
                 
         except Exception as e:
             print(f"❌ Error processing signal: {e}")
