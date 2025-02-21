@@ -53,14 +53,19 @@ def calculate_price_trend(prices: List[float]) -> float:
 def calculate_additional_metrics(snapshots_table: Airtable, token_symbol: str, days: int = 7) -> Optional[Dict]:
     """Calculate additional metrics from historical snapshots"""
     try:
+        # Define sort parameters correctly
+        sort_params = [
+            {
+                'field': 'createdAt',
+                'direction': 'desc'  # Must be exactly 'desc'
+            }
+        ]
+
         # Get recent snapshots for this token
         recent_snapshots = snapshots_table.get_all(
             filterByFormula=f"AND({{symbol}}='{token_symbol}', " +
                     f"IS_AFTER({{createdAt}}, DATEADD(NOW(), -{days}, 'days')))",
-            sort=[{
-                'field': 'createdAt',
-                'direction': 'desc'
-            }]
+            sort=sort_params  # Use defined sort parameters
         )
 
         print(f"\nProcessing {token_symbol}:")
@@ -81,13 +86,11 @@ def calculate_additional_metrics(snapshots_table: Airtable, token_symbol: str, d
         volatility = calculate_volatility(prices)
 
         # Get SOL comparison with same sort parameters
+        # Get SOL comparison using same sort parameters
         sol_snapshots = snapshots_table.get_all(
             filterByFormula=f"AND({{symbol}}='SOL', " +
                     f"IS_AFTER({{createdAt}}, DATEADD(NOW(), -{days}, 'days')))",
-            sort=[{
-                'field': 'createdAt',
-                'direction': 'desc'
-            }]
+            sort=sort_params  # Reuse the same sort parameters
         )
         
         sol_prices = [float(snap['fields'].get('price', 0)) for snap in sol_snapshots]
