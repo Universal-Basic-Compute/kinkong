@@ -59,7 +59,7 @@ def calculate_additional_metrics(snapshots_table: Airtable, token_symbol: str, d
                     f"IS_AFTER({{createdAt}}, DATEADD(NOW(), -{days}, 'days')))",
             sort=[{
                 'field': 'createdAt',
-                'direction': 'desc'
+                'direction': 'desc'  # Must be 'desc' or 'asc'
             }]
         )
 
