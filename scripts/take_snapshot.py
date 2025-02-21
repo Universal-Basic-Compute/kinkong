@@ -49,57 +49,81 @@ def record_portfolio_snapshot():
         if not base_id or not api_key:
             raise ValueError("Missing Airtable configuration")
             
-        # Get active tokens
-        tokens_table = Airtable(base_id, 'TOKENS', api_key)
-        tokens = tokens_table.get_all(
-            formula="{isActive}=1"
+        # Get last 30 token snapshots
+        snapshots_table = Airtable(base_id, 'TOKEN_SNAPSHOTS', api_key)
+        
+        # Debug: Print API credentials
+        print("\n🔑 Checking credentials:")
+        print(f"Base ID: {base_id}")
+        print(f"API Key: {api_key[:4]}...{api_key[-4:]}")
+        
+        try:
+            # Test API connection
+            test_record = snapshots_table.get_all(maxRecords=1)
+            if test_record:
+                print("✅ Successfully connected to Airtable")
+                print("Sample record fields:", list(test_record[0]['fields'].keys()))
+            else:
+                print("⚠️ Connected but no records found")
+        except Exception as e:
+            print(f"❌ Connection test failed: {e}")
+            raise
+            
+        recent_snapshots = snapshots_table.get_all(
+            sort=[{'field': 'createdAt', 'direction': 'desc'}],
+            maxRecords=30
         )
         
-        print(f"\nFound {len(tokens)} active tokens")
+        print(f"\nFetched {len(recent_snapshots)} recent snapshots")
+        
+        # Remove duplicates keeping most recent for each symbol
+        unique_tokens = {}
+        for snapshot in recent_snapshots:
+            symbol = snapshot['fields'].get('symbol')  # Changed from token to symbol
+            if symbol and symbol not in unique_tokens:
+                unique_tokens[symbol] = snapshot['fields']
+        
+        print(f"\nFound {len(unique_tokens)} unique tokens")
         
         # Current timestamp
         created_at = datetime.now(timezone.utc).isoformat()
         
-        # Process each token
-        snapshots = []
+        # Create new snapshots
+        new_snapshots = []
         total_value = 0
         
-        for token in tokens:
+        for symbol, fields in unique_tokens.items():
             try:
-                fields = token['fields']
-                symbol = fields.get('symbol')
-                mint = fields.get('mint')
-                
-                print(f"\nProcessing {symbol}...")
-                
                 # Get current price
-                price = get_token_price(mint)
+                price = get_token_price(fields['mint'])
                 
                 # Create snapshot
                 snapshot = {
-                    'token': symbol,
-                    'mint': mint,
+                    'symbol': symbol,  # Changed from token to symbol
+                    'mint': fields['mint'],
                     'createdAt': created_at,
                     'price': price,
                     'isActive': True
                 }
                 
-                snapshots.append(snapshot)
-                print(f"Price: ${price:.4f}")
+                new_snapshots.append(snapshot)
+                print(f"\nProcessed {symbol}: ${price:.4f}")
+                
+                # Add to total value if we have allocation data
+                if 'allocation' in fields:
+                    total_value += price * float(fields['allocation'])
                 
             except Exception as e:
-                print(f"Error processing {fields.get('symbol')}: {e}")
+                print(f"Error processing {symbol}: {e}")
                 continue
         
-        # Save snapshots to Airtable
-        snapshots_table = Airtable(base_id, 'TOKEN_SNAPSHOTS', api_key)
-        
-        for snapshot in snapshots:
+        # Save new snapshots to Airtable
+        for snapshot in new_snapshots:
             try:
                 snapshots_table.insert(snapshot)
-                print(f"✅ Saved snapshot for {snapshot['token']}")
+                print(f"✅ Saved snapshot for {snapshot['symbol']}")
             except Exception as e:
-                print(f"Failed to save snapshot for {snapshot['token']}: {e}")
+                print(f"Failed to save snapshot for {snapshot['symbol']}: {e}")
         
         # Create portfolio snapshot
         portfolio_snapshots_table = Airtable(base_id, 'PORTFOLIO_SNAPSHOTS', api_key)
@@ -107,17 +131,17 @@ def record_portfolio_snapshot():
         portfolio_snapshot = {
             'createdAt': created_at,
             'totalValue': total_value,
-            'holdings': json.dumps(snapshots)
+            'holdings': json.dumps(new_snapshots)
         }
         
         portfolio_snapshots_table.insert(portfolio_snapshot)
         print(f"\n✅ Portfolio snapshot recorded at {created_at}")
         print(f"Total Value: ${total_value:,.2f}")
-        print(f"Tokens: {len(snapshots)}")
+        print(f"Tokens: {len(new_snapshots)}")
         
         return {
             'totalValue': total_value,
-            'snapshots': snapshots
+            'snapshots': new_snapshots
         }
         
     except Exception as e:
