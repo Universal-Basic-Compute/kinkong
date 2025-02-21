@@ -540,6 +540,14 @@ def process_signals_batch(token_analyses):
     print("\n🔄 Starting signals batch processing...")
     print(f"Received {len(token_analyses)} token analyses to process")
     
+    # Get Airtable configuration
+    base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
+    api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
+    
+    if not base_id or not api_key:
+        print("❌ Missing Airtable configuration")
+        return []
+    
     # Standard timeframes for all analysis
     STRATEGY_TIMEFRAMES = ['SCALP', 'INTRADAY', 'SWING', 'POSITION']
     
