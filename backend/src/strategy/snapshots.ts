@@ -187,25 +187,39 @@ export async function recordPortfolioSnapshot() {
       return sum + (holding.allocation * (tokenSnapshot?.price || 0));
     }, 0);
 
-    // Save portfolio snapshot
+    // Create snapshot record
     const portfolioSnapshotsTable = getTable('PORTFOLIO_SNAPSHOTS');
-    await portfolioSnapshotsTable.create([{
+    const snapshot = {
       fields: {
         timestamp,
         totalValue,
-        holdingsJson: JSON.stringify(portfolio.map(holding => {
+        holdings: JSON.stringify(portfolio.map(holding => {
           const tokenSnapshot = snapshots.find(s => s.token === holding.token);
           return {
             token: holding.token,
-            amount: holding.allocation,
+            allocation: holding.allocation,
+            usdValue: holding.allocation * (tokenSnapshot?.price || 0),
             price: tokenSnapshot?.price || 0,
-            value: holding.allocation * (tokenSnapshot?.price || 0)
+            volume24h: tokenSnapshot?.volume24h || 0,
+            unrealizedPnl: 0 // Will be calculated later
           };
-        }))
+        })),
+        dailyPnl: calculateDailyPnl(portfolio),
+        weeklyPnl: calculateWeeklyPnl(portfolio),
+        monthlyPnl: calculateMonthlyPnl(portfolio)
       }
-    }]);
+    };
 
-    console.log('Successfully recorded all snapshots');
+    // Save to Airtable
+    await portfolioSnapshotsTable.create([snapshot]);
+
+    console.log(`✅ Portfolio snapshot recorded with value: $${totalValue}`);
+    console.log('Portfolio metrics:', {
+      totalValue,
+      dailyPnl: snapshot.fields.dailyPnl,
+      weeklyPnl: snapshot.fields.weeklyPnl,
+      monthlyPnl: snapshot.fields.monthlyPnl
+    });
 
     // Calculate metrics from snapshots
     let tokensAboveAvg = 0;
