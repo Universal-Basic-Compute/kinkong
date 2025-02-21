@@ -135,8 +135,19 @@ def monitor_active_trades():
                 token = trade['fields'].get('token')
                 timeframe = trade['fields'].get('timeframe')  # Should be SCALP, INTRADAY, etc.
                 
-                # Skip if not due for check based on timeframe
-                last_check = datetime.fromisoformat(trade['fields'].get('createdAt', '').replace('Z', '+00:00'))
+                # Add safer timestamp parsing
+                created_at = trade['fields'].get('createdAt')
+                if not created_at:
+                    print(f"⚠️ Missing creation timestamp for {token} trade, using current time")
+                    last_check = datetime.now(timezone.utc)
+                else:
+                    try:
+                        last_check = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                    except (ValueError, AttributeError):
+                        print(f"⚠️ Invalid timestamp format for {token} trade, using current time")
+                        last_check = datetime.now(timezone.utc)
+
+                # Check if due for monitoring
                 check_interval = timeframe_check_intervals.get(timeframe, timedelta(minutes=15))
                 if datetime.now(timezone.utc) - last_check < check_interval:
                     print(f"Skipping {token} check - Not due yet for {timeframe} timeframe")
