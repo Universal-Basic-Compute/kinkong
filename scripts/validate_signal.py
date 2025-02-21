@@ -72,11 +72,14 @@ def validate_signal(
         
         # Skip SELL signals immediately
         if signal_data.get('signal') != 'BUY':
-            # Update signal as invalid (-1)
+            # Update signal as invalid (-1) IMMEDIATELY after checking signal type
             if signal_id:
                 try:
+                    print(f"Updating signal {signal_id} as invalid (SELL signal)")
                     signals_table.update(signal_id, {'validated': -1})
-                    print(f"✅ Updated signal {signal_id} as invalid (SELL)")
+                    print(f"✅ Updated signal {signal_id} validation status to -1")
+                except Exception as e:
+                    print(f"❌ Failed to update signal validation status: {e}")
                 except Exception as e:
                     print(f"❌ Failed to update signal validation status: {e}")
             return {
