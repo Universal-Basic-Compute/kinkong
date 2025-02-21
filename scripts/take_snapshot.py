@@ -59,18 +59,19 @@ def calculate_additional_metrics(snapshots_table: Airtable, token_symbol: str, d
                     f"IS_AFTER({{createdAt}}, DATEADD(NOW(), -{days}, 'days')))",
             sort=[{
                 'field': 'createdAt',
-                'direction': 'desc'  # Must be 'desc' or 'asc'
+                'direction': 'desc'
             }]
         )
 
         if not recent_snapshots:
+            print(f"No snapshots found for {token_symbol}")
             return None
 
         # Extract and validate data
         volumes = [float(snap['fields'].get('volume24h', 0)) for snap in recent_snapshots]
         prices = [float(snap['fields'].get('price', 0)) for snap in recent_snapshots]
 
-        # Calculate metrics with improved methods
+        # Calculate metrics
         volume7d = sum(volumes)
         volume_growth = calculate_volume_growth(volumes)
         price7dAvg = sum(prices) / len(prices) if prices else 0
@@ -93,11 +94,11 @@ def calculate_additional_metrics(snapshots_table: Airtable, token_symbol: str, d
 
         return {
             'volume7d': volume7d,
-            'volumeGrowth': volume_growth * 100,  # Convert to percentage
+            'volumeGrowth': volume_growth * 100,
             'price7dAvg': price7dAvg,
-            'priceTrend': price_trend * 100,      # Convert to percentage
-            'vsSolPerformance': vs_sol_performance * 100,  # Convert to percentage
-            'priceVolatility': calculate_volatility(prices)
+            'priceTrend': price_trend * 100,
+            'vsSolPerformance': vs_sol_performance * 100,
+            'priceVolatility': volatility
         }
     except Exception as e:
         print(f"Error calculating additional metrics for {token_symbol}: {e}")
