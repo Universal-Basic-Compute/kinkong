@@ -234,7 +234,8 @@ async def analyze_token(token):
                                         'symbol': token['symbol'],
                                         'mint': token['mint']
                                     },
-                                    analyses
+                                    analyses,
+                                    {'validated': 0}  # Add initial validation status
                                 )
                 
                 print("Analysis result type:", type(analyses))

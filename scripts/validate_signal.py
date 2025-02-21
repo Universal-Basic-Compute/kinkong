@@ -61,8 +61,18 @@ def validate_signal(
     Currently only validates BUY signals.
     """
     try:
+        # Get Airtable connection
+        base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
+        api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
+        signals_table = Airtable(base_id, 'SIGNALS', api_key)
+
+        signal_id = signal_data.get('id')
+        
         # Skip SELL signals immediately
         if signal_data.get('signal') != 'BUY':
+            # Update signal as invalid (-1)
+            if signal_id:
+                signals_table.update(signal_id, {'validated': -1})
             return {
                 'valid': False,
                 'reason': 'Only BUY signals are currently supported',
@@ -147,6 +157,9 @@ def validate_signal(
         }
 
     except Exception as e:
+        # Mark as invalid on error
+        if signal_id:
+            signals_table.update(signal_id, {'validated': -1})
         return {
             'valid': False,
             'reason': f'Validation error: {str(e)}',

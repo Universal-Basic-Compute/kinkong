@@ -413,7 +413,7 @@ Analyze each timeframe in sequence, considering how they relate to each other:
         print(f"Failed to analyze charts: {e}")
         raise
 
-def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
+def create_airtable_signal(analysis, timeframe, token_info, analyses=None, additional_fields=None):
     try:
         print(f"\nCreating Airtable signal for {token_info['symbol']}...")
         
@@ -516,8 +516,13 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None):
             'reason': reason_text,  # Just the raw reasoning text
             'createdAt': current_time,
             'expiryDate': expiry_date.isoformat().replace('+00:00', 'Z'),
-            'expectedReturn': round(expected_return, 2)
+            'expectedReturn': round(expected_return, 2),
+            'validated': 0  # Default to pending validation
         }
+
+        # Add any additional fields
+        if additional_fields:
+            signal_data.update(additional_fields)
 
         print("\nSending to Airtable:", json.dumps(signal_data, indent=2))
         response = airtable.insert(signal_data)
