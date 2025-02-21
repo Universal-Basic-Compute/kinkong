@@ -15,6 +15,62 @@ if str(project_root) not in sys.path:
 # Force load environment variables from project root .env
 load_dotenv(dotenv_path=project_root / '.env', override=True)
 
+def calculate_volatility(prices: List[float], window: int = 24) -> float:
+    """Calculate price volatility as standard deviation of returns"""
+    if len(prices) < 2:
+        return 0
+    returns = [(prices[i] - prices[i-1])/prices[i-1] for i in range(1, len(prices))]
+    return (np.std(returns) * np.sqrt(252)) * 100  # Annualized volatility in percentage
+
+def calculate_additional_metrics(snapshots_table: Airtable, token_symbol: str, days: int = 7) -> Optional[Dict]:
+    """Calculate additional metrics from historical snapshots"""
+    try:
+        # Get recent snapshots for this token
+        recent_snapshots = snapshots_table.get_all(
+            formula=f"AND({{symbol}}='{token_symbol}', " +
+                    f"IS_AFTER({{createdAt}}, DATEADD(NOW(), -{days}, 'days')))",
+            sort=[{'field': 'createdAt', 'direction': 'desc'}]
+        )
+
+        if not recent_snapshots:
+            return None
+
+        # Calculate volume trend
+        volumes = [float(snap['fields'].get('volume24h', 0)) for snap in recent_snapshots]
+        volume7d = sum(volumes)
+        volume_growth = (volumes[0] - volumes[-1]) / volumes[-1] if len(volumes) > 1 and volumes[-1] > 0 else 0
+
+        # Calculate price trend
+        prices = [float(snap['fields'].get('price', 0)) for snap in recent_snapshots]
+        price7dAvg = sum(prices) / len(prices) if prices else 0
+        price_trend = (prices[0] - prices[-1]) / prices[-1] if len(prices) > 1 and prices[-1] > 0 else 0
+
+        # Get SOL performance for comparison
+        sol_snapshots = snapshots_table.get_all(
+            formula=f"AND({{symbol}}='SOL', " +
+                    f"IS_AFTER({{createdAt}}, DATEADD(NOW(), -{days}, 'days')))",
+            sort=[{'field': 'createdAt', 'direction': 'desc'}]
+        )
+        
+        if sol_snapshots:
+            sol_prices = [float(snap['fields'].get('price', 0)) for snap in sol_snapshots]
+            sol_performance = (sol_prices[0] - sol_prices[-1]) / sol_prices[-1] if len(sol_prices) > 1 and sol_prices[-1] > 0 else 0
+            vs_sol_performance = price_trend - sol_performance
+        else:
+            vs_sol_performance = 0
+
+        return {
+            'volume7d': volume7d,
+            'volumeGrowth': volume_growth * 100,  # Convert to percentage
+            'price7dAvg': price7dAvg,
+            'priceTrend': price_trend * 100,      # Convert to percentage
+            'vsSolPerformance': vs_sol_performance * 100,  # Convert to percentage
+            'priceVolatility': calculate_volatility(prices)
+        }
+    except Exception as e:
+        print(f"Error calculating additional metrics for {token_symbol}: {e}")
+        return None
+
 def get_token_price(token_mint: str) -> dict:
     """Get current token metrics from DexScreener"""
     try:
@@ -98,7 +154,10 @@ def record_portfolio_snapshot():
                 # Get current metrics
                 metrics = get_token_price(mint)
                 
-                # Create snapshot with metrics
+                # Calculate additional metrics
+                additional_metrics = calculate_additional_metrics(snapshots_table, symbol)
+                
+                # Create snapshot with all metrics
                 snapshot = {
                     'symbol': symbol,
                     'price': metrics['price'],
@@ -109,12 +168,29 @@ def record_portfolio_snapshot():
                     'isActive': True
                 }
                 
+                # Add additional metrics if available
+                if additional_metrics:
+                    snapshot.update({
+                        'volume7d': additional_metrics['volume7d'],
+                        'volumeGrowth': additional_metrics['volumeGrowth'],
+                        'price7dAvg': additional_metrics['price7dAvg'],
+                        'priceTrend': additional_metrics['priceTrend'],
+                        'vsSolPerformance': additional_metrics['vsSolPerformance'],
+                        'priceVolatility': additional_metrics['priceVolatility']
+                    })
+                
                 new_snapshots.append(snapshot)
                 print(f"\nProcessed {symbol}:")
                 print(f"Price: ${metrics['price']:.4f}")
                 print(f"24h Volume: ${metrics['volume24h']:,.2f}")
                 print(f"Liquidity: ${metrics['liquidity']:,.2f}")
                 print(f"24h Change: {metrics['priceChange24h']:.2f}%")
+                
+                if additional_metrics:
+                    print(f"7d Volume: ${additional_metrics['volume7d']:,.2f}")
+                    print(f"Volume Growth: {additional_metrics['volumeGrowth']:.1f}%")
+                    print(f"vs SOL: {additional_metrics['vsSolPerformance']:.1f}%")
+                    print(f"Volatility: {additional_metrics['priceVolatility']:.1f}%")
                 
                 # Add to total value if we have allocation data
                 if 'allocation' in token['fields']:
