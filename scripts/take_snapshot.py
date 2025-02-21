@@ -58,7 +58,7 @@ def record_portfolio_snapshot():
         print(f"\nFound {len(tokens)} active tokens")
         
         # Current timestamp
-        timestamp = datetime.now(timezone.utc).isoformat()
+        created_at = datetime.now(timezone.utc).isoformat()
         
         # Process each token
         snapshots = []
@@ -79,7 +79,7 @@ def record_portfolio_snapshot():
                 snapshot = {
                     'token': symbol,
                     'mint': mint,
-                    'timestamp': timestamp,
+                    'createdAt': created_at,
                     'price': price,
                     'isActive': True
                 }
@@ -105,13 +105,13 @@ def record_portfolio_snapshot():
         portfolio_snapshots_table = Airtable(base_id, 'PORTFOLIO_SNAPSHOTS', api_key)
         
         portfolio_snapshot = {
-            'timestamp': timestamp,
+            'createdAt': created_at,
             'totalValue': total_value,
             'holdings': json.dumps(snapshots)
         }
         
         portfolio_snapshots_table.insert(portfolio_snapshot)
-        print(f"\n✅ Portfolio snapshot recorded at {timestamp}")
+        print(f"\n✅ Portfolio snapshot recorded at {created_at}")
         print(f"Total Value: ${total_value:,.2f}")
         print(f"Tokens: {len(snapshots)}")
         
