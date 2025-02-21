@@ -1,11 +1,13 @@
 import sys
 from pathlib import Path
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
 from airtable import Airtable
 import requests
 import json
+import numpy as np
+from typing import List, Optional, Dict
 
 # Get the project root (parent of scripts directory)
 project_root = Path(__file__).parent.parent
