@@ -606,6 +606,15 @@ def process_signals_batch(token_analyses):
                     else:
                         print(f"❌ Signal validation failed: {validation_result['reason']}")
                 
+                # Extract support and resistance levels from key_levels
+                support_levels = key_levels.get('support', []) if key_levels else []
+                resistance_levels = key_levels.get('resistance', []) if key_levels else []
+                
+                # Verify we have required levels
+                if not support_levels or not resistance_levels:
+                    print("❌ Missing required price levels")
+                    continue
+                
                 # For stop loss, use second level if available, otherwise calculate from first level
                 if signal_type == 'SELL':
                     entry_price = resistance_levels[0]
