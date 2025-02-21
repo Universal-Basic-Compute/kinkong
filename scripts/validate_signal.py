@@ -75,10 +75,7 @@ def validate_signal(
             # Update signal as invalid (-1)
             if signal_id:
                 try:
-                    signals_table.update(signal_id, {
-                        'validated': -1,
-                        'validationReason': 'Only BUY signals are currently supported'
-                    })
+                    signals_table.update(signal_id, {'validated': -1})
                     print(f"✅ Updated signal {signal_id} as invalid (SELL)")
                 except Exception as e:
                     print(f"❌ Failed to update signal validation status: {e}")
@@ -181,18 +178,11 @@ def validate_signal(
             'risk_reward': risk_reward
         }
 
-        # Update Airtable with successful validation
+        # Update Airtable with just the validated field
         if signal_id:
             try:
-                update_data = {
-                    'validated': 1,
-                    'validationReason': result['reason'],
-                    'expectedProfit': result['expected_profit'],
-                    'tradingCosts': result['costs'],
-                    'riskRewardRatio': result['risk_reward']
-                }
-                signals_table.update(signal_id, update_data)
-                print(f"✅ Updated signal {signal_id} as valid")
+                signals_table.update(signal_id, {'validated': 1 if result['valid'] else -1})
+                print(f"✅ Updated signal {signal_id} validation status: {1 if result['valid'] else -1}")
             except Exception as e:
                 print(f"❌ Failed to update signal validation status: {e}")
 
@@ -202,10 +192,7 @@ def validate_signal(
         # Mark as invalid on error
         if signal_id:
             try:
-                signals_table.update(signal_id, {
-                    'validated': -1,
-                    'validationReason': f'Validation error: {str(e)}'
-                })
+                signals_table.update(signal_id, {'validated': -1})
                 print(f"✅ Updated signal {signal_id} as invalid (error)")
             except Exception as update_error:
                 print(f"❌ Failed to update signal validation status: {update_error}")
