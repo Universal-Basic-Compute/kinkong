@@ -18,11 +18,37 @@ if str(project_root) not in sys.path:
 load_dotenv(dotenv_path=project_root / '.env', override=True)
 
 def calculate_volatility(prices: List[float], window: int = 24) -> float:
-    """Calculate price volatility as standard deviation of returns"""
+    """Calculate price volatility as standard deviation of returns, filtering outliers"""
     if len(prices) < 2:
         return 0
-    returns = [(prices[i] - prices[i-1])/prices[i-1] for i in range(1, len(prices))]
-    return (np.std(returns) * np.sqrt(252)) * 100  # Annualized volatility in percentage
+    returns = []
+    for i in range(1, len(prices)):
+        if prices[i-1] > 0:  # Avoid division by zero
+            ret = (prices[i] - prices[i-1])/prices[i-1]
+            # Filter outliers
+            if abs(ret) < 1.0:  # Max 100% change per period
+                returns.append(ret)
+    return (np.std(returns) * np.sqrt(252)) * 100 if returns else 0
+
+def calculate_volume_growth(volumes: List[float]) -> float:
+    """Calculate volume growth comparing recent vs old averages"""
+    if len(volumes) < 2:
+        return 0
+    # Compare average of last 3 days vs first 3 days
+    recent_avg = sum(volumes[:3]) / min(3, len(volumes))
+    old_avg = sum(volumes[-3:]) / min(3, len(volumes))
+    return (recent_avg - old_avg) / old_avg if old_avg > 0 else 0
+
+def calculate_price_trend(prices: List[float]) -> float:
+    """Calculate price trend using exponential moving average"""
+    if len(prices) < 2:
+        return 0
+    # Use exponential moving average
+    alpha = 0.2  # Smoothing factor
+    ema = prices[0]
+    for price in prices[1:]:
+        ema = alpha * price + (1 - alpha) * ema
+    return (ema - prices[-1]) / prices[-1] if prices[-1] > 0 else 0
 
 def calculate_additional_metrics(snapshots_table: Airtable, token_symbol: str, days: int = 7) -> Optional[Dict]:
     """Calculate additional metrics from historical snapshots"""
@@ -40,17 +66,18 @@ def calculate_additional_metrics(snapshots_table: Airtable, token_symbol: str, d
         if not recent_snapshots:
             return None
 
-        # Calculate volume trend
+        # Extract and validate data
         volumes = [float(snap['fields'].get('volume24h', 0)) for snap in recent_snapshots]
-        volume7d = sum(volumes)
-        volume_growth = (volumes[0] - volumes[-1]) / volumes[-1] if len(volumes) > 1 and volumes[-1] > 0 else 0
-
-        # Calculate price trend
         prices = [float(snap['fields'].get('price', 0)) for snap in recent_snapshots]
-        price7dAvg = sum(prices) / len(prices) if prices else 0
-        price_trend = (prices[0] - prices[-1]) / prices[-1] if len(prices) > 1 and prices[-1] > 0 else 0
 
-        # Get SOL performance for comparison
+        # Calculate metrics with improved methods
+        volume7d = sum(volumes)
+        volume_growth = calculate_volume_growth(volumes)
+        price7dAvg = sum(prices) / len(prices) if prices else 0
+        price_trend = calculate_price_trend(prices)
+        volatility = calculate_volatility(prices)
+
+        # Get SOL comparison
         sol_snapshots = snapshots_table.get_all(
             formula=f"AND({{symbol}}='SOL', " +
                     f"IS_AFTER({{createdAt}}, DATEADD(NOW(), -{days}, 'days')))",
@@ -60,12 +87,9 @@ def calculate_additional_metrics(snapshots_table: Airtable, token_symbol: str, d
             }]
         )
         
-        if sol_snapshots:
-            sol_prices = [float(snap['fields'].get('price', 0)) for snap in sol_snapshots]
-            sol_performance = (sol_prices[0] - sol_prices[-1]) / sol_prices[-1] if len(sol_prices) > 1 and sol_prices[-1] > 0 else 0
-            vs_sol_performance = price_trend - sol_performance
-        else:
-            vs_sol_performance = 0
+        sol_prices = [float(snap['fields'].get('price', 0)) for snap in sol_snapshots]
+        sol_trend = calculate_price_trend(sol_prices) if sol_prices else 0
+        vs_sol_performance = price_trend - sol_trend if price_trend is not None else 0
 
         return {
             'volume7d': volume7d,
