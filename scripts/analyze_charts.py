@@ -579,7 +579,7 @@ def process_signals_batch(token_analyses):
                 # Create signal with validation status = 0 (pending)
                 result = create_airtable_signal(
                     analysis,
-                    timeframe,
+                    timeframe,  # Pass the actual timeframe name
                     token_info,
                     analyses,
                     {'validated': 0}  # Set initial validation status
@@ -588,7 +588,7 @@ def process_signals_batch(token_analyses):
                 if result:
                     # Validate signal immediately
                     validation_result = validate_signal(
-                        timeframe=timeframe,
+                        timeframe=timeframe,  # Pass the actual timeframe name
                         signal_data={
                             'id': result['id'],
                             'signal': signal_type,
@@ -601,74 +601,23 @@ def process_signals_batch(token_analyses):
                     )
                     
                     if validation_result['valid']:
-                        pending_signals.append(result)
-                        print(f"✅ Signal validated successfully")
+                        pending_signals.append({
+                            'signal_id': result['id'],
+                            'timeframe': timeframe,  # Include timeframe in pending signal
+                            'token': token_info['symbol'],
+                            'type': signal_type,
+                            'confidence': confidence,
+                            'token_info': token_info
+                        })
+                        print(f"✅ Signal validated successfully for {timeframe}")
                     else:
-                        print(f"❌ Signal validation failed: {validation_result['reason']}")
-                
-                # Extract support and resistance levels from key_levels
-                support_levels = key_levels.get('support', []) if key_levels else []
-                resistance_levels = key_levels.get('resistance', []) if key_levels else []
-                
-                # Verify we have required levels
-                if not support_levels or not resistance_levels:
-                    print("❌ Missing required price levels")
-                    continue
-                
-                # For stop loss, use second level if available, otherwise calculate from first level
-                if signal_type == 'SELL':
-                    entry_price = resistance_levels[0]
-                    target_price = support_levels[0]
-                    stop_loss = support_levels[1] if len(support_levels) > 1 else support_levels[0] * 1.05  # 5% above support
-                else:  # BUY
-                    entry_price = support_levels[0]
-                    target_price = resistance_levels[0]
-                    stop_loss = resistance_levels[1] if len(resistance_levels) > 1 else resistance_levels[0] * 0.95  # 5% below resistance
-                
-                # Create signal data with key levels and reasoning
-                signal_data = {
-                    'timeframe': timeframe,
-                    'signal': signal_type,
-                    'confidence': confidence,
-                    'token_info': token_info,
-                    'key_levels': key_levels,
-                    'entryPrice': entry_price,
-                    'targetPrice': target_price,
-                    'stopLoss': stop_loss,
-                    'reasoning': analysis.get('reasoning', '')  # Add reasoning
-                }
-                
-                # Validate signal
-                print("Validating signal...")
-                validation_result = validate_signal(
-                    timeframe=timeframe,
-                    signal_data=signal_data,
-                    token_info=token_info,
-                    market_data=get_dexscreener_data(token_info['mint'])
-                )
-                
-                print(f"Validation result: {validation_result}")
-                
-                if validation_result['valid']:
-                    print("✅ Signal validated, adding to pending signals")
-                    pending_signals.append(signal_data)
-                else:
-                    print(f"❌ Signal validation failed: {validation_result['reason']}")
-            else:
-                print("❌ Signal did not meet criteria:")
-                if not signal_type:
-                    print("- No signal type")
-                if signal_type == 'HOLD':
-                    print("- HOLD signal")
-                if confidence < 60:
-                    print(f"- Low confidence ({confidence})")
-    
-    print(f"\n📝 Collected {len(pending_signals)} valid signals")
-    
+                        print(f"❌ Signal validation failed for {timeframe}: {validation_result['reason']}")
+
+    # Process validated signals
     if pending_signals:
-        print("\n🚀 Processing valid signals...")
+        print(f"\n🔄 Processing {len(pending_signals)} validated signals...")
         results = process_valid_signals(pending_signals)
-        print(f"✅ Created {len(results)} signals")
+        print(f"✅ Created {len(results)} trades")
         return results
     else:
         print("\n⚠️ No valid signals to process")
