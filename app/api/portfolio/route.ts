@@ -1,13 +1,9 @@
 import { Connection, PublicKey } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { NextResponse } from 'next/server';
-import { getTokenPrices } from '@/backend/src/utils/jupiter';
-
-import { getTable } from '@/backend/src/airtable/tables';
-
-const DEXSCREENER_API = 'https://api.dexscreener.com/latest/dex/tokens';
 
 const TREASURY_WALLET = new PublicKey('FnWyN4t1aoZWFjEEBxopMaAgk5hjL5P3K65oc2T9FBJY');
+const DEXSCREENER_API = 'https://api.dexscreener.com/latest/dex/tokens';
 
 interface TokenBalance {
   mint: string;
@@ -24,6 +20,7 @@ export async function GET() {
       throw new Error('RPC URL not configured');
     }
 
+    // Create RPC connection
     const connection = new Connection(process.env.NEXT_PUBLIC_HELIUS_RPC_URL);
 
     // Get all token accounts
@@ -92,14 +89,15 @@ export async function GET() {
       });
 
       return NextResponse.json(balancesWithUSD);
+
     } catch (priceError) {
       console.error('Error fetching prices:', priceError);
-      // Return the balances without USD values instead of throwing
       return NextResponse.json(nonZeroBalances.map(balance => ({
         ...balance,
         usdValue: 0
       })));
     }
+
   } catch (error) {
     console.error('Failed to fetch portfolio:', error);
     return NextResponse.json(
