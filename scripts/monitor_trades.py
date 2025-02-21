@@ -12,20 +12,33 @@ from datetime import datetime, timezone
 import asyncio
 from collections import deque
 
-# Rate limits
-PRICE_CHECK_LIMIT = 5  # Calls per second
-TRADE_BATCH_SIZE = 10  # Max trades per batch
-BATCH_INTERVAL = 300   # Seconds between batches (5 minutes)
+# Rate limits and safety thresholds
+PRICE_CHECK_LIMIT = 5      # Calls per second
+TRADE_BATCH_SIZE = 10      # Max trades per batch
+BATCH_INTERVAL = 300       # Seconds between batches (5 minutes)
+MAX_RETRIES = 3           # Maximum retry attempts
+PRICE_CHANGE_LIMIT = 0.10  # Maximum 10% price change for safety
+ERROR_COOLDOWN = 60       # Seconds to wait after error
 
-# Trade queues
+# Trade queues and state
 entry_queue = deque()
 exit_queue = deque()
 last_batch_time = datetime.now()
+execution_attempts = {}    # Track retry attempts
+last_known_prices = {}    # Cache recent prices
 
 @sleep_and_retry
 @limits(calls=PRICE_CHECK_LIMIT, period=1)
-def rate_limited_price_check(token_symbol):
-    """Rate limited price check with token lookup using DexScreener"""
+def rate_limited_price_check(token_symbol, validate_change=True):
+    """
+    Rate limited price check with token lookup using DexScreener
+    
+    Args:
+        token_symbol: Token symbol to check
+        validate_change: Whether to validate price change vs last known price
+    Returns:
+        float: Current price if valid, None if error or invalid
+    """
     try:
         # First get token mint from Airtable
         base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
@@ -70,6 +83,17 @@ def rate_limited_price_check(token_symbol):
             main_pair = max(sol_pairs, key=lambda x: float(x.get('liquidity', {}).get('usd', 0)))
             price = float(main_pair.get('priceUsd', 0))
             
+            # Validate price change if enabled
+            if validate_change and token_symbol in last_known_prices:
+                last_price = last_known_prices[token_symbol]
+                price_change = abs(price - last_price) / last_price
+                
+                if price_change > PRICE_CHANGE_LIMIT:
+                    print(f"⚠️ Suspicious price change for {token_symbol}: {price_change:.1%}")
+                    return None
+                    
+            # Cache valid price
+            last_known_prices[token_symbol] = price
             print(f"Got price for {token_symbol}: ${price}")
             return price
             
@@ -249,14 +273,28 @@ async def process_trade_batches():
                 
                 for trade in entry_batch:
                     try:
-                        success = execute_trade_with_phantom(trade['id'])
+                        trade_id = trade['id']
+                        attempts = execution_attempts.get(trade_id, 0)
+                    
+                        if attempts >= MAX_RETRIES:
+                            print(f"❌ Max retries exceeded for trade {trade_id}")
+                            continue
+                        
+                        success = execute_trade_with_phantom(trade_id)
                         if success:
                             # Update trade status
-                            trades_table.update(trade['id'], {
+                            trades_table.update(trade_id, {
                                 'status': 'ACTIVE',
                                 'lastUpdateTime': datetime.now(timezone.utc).isoformat(),
-                                'executionPrice': get_token_price(trade['fields']['token'])
+                                'executionPrice': get_token_price(trade['fields']['token']),
+                                'executionAttempts': attempts + 1
                             })
+                            # Clear retry counter on success
+                            execution_attempts.pop(trade_id, None)
+                        else:
+                            # Increment retry counter
+                            execution_attempts[trade_id] = attempts + 1
+                            entry_queue.append(trade)  # Requeue for retry
                     except Exception as e:
                         print(f"Failed to execute entry trade: {e}")
                         entry_queue.append(trade)  # Put back in queue
