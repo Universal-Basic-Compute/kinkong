@@ -1,5 +1,7 @@
 from typing import Dict, Optional
 from dataclasses import dataclass
+from airtable import Airtable
+import os
 
 @dataclass
 class TradeCosts:
@@ -150,15 +152,31 @@ def validate_signal(
         # Check all validations
         for is_valid, reason in validations:
             if not is_valid:
-                return {
+                result = {
                     'valid': False,
                     'reason': reason,
                     'expected_profit': expected_profit,
                     'costs': max_costs,
                     'risk_reward': risk_reward
                 }
+                # Update Airtable with failed validation
+                if signal_id:
+                    try:
+                        update_data = {
+                            'validated': -1,
+                            'validationReason': reason,
+                            'expectedProfit': expected_profit,
+                            'tradingCosts': max_costs,
+                            'riskRewardRatio': risk_reward
+                        }
+                        signals_table.update(signal_id, update_data)
+                        print(f"✅ Updated signal {signal_id} as invalid: {reason}")
+                    except Exception as e:
+                        print(f"❌ Failed to update signal validation status: {e}")
+                return result
 
-        return {
+        # All validations passed
+        result = {
             'valid': True,
             'reason': 'Signal meets all requirements',
             'expected_profit': expected_profit,
@@ -166,14 +184,31 @@ def validate_signal(
             'risk_reward': risk_reward
         }
 
+        # Update Airtable with successful validation
+        if signal_id:
+            try:
+                update_data = {
+                    'validated': 1,
+                    'validationReason': result['reason'],
+                    'expectedProfit': result['expected_profit'],
+                    'tradingCosts': result['costs'],
+                    'riskRewardRatio': result['risk_reward']
+                }
+                signals_table.update(signal_id, update_data)
+                print(f"✅ Updated signal {signal_id} as valid")
+            except Exception as e:
+                print(f"❌ Failed to update signal validation status: {e}")
+
+        return result
+
     except Exception as e:
         # Mark as invalid on error
         if signal_id:
-            signals_table.update(signal_id, {'validated': -1})
-        # Mark as invalid on error
-        if signal_id:
             try:
-                signals_table.update(signal_id, {'validated': -1})
+                signals_table.update(signal_id, {
+                    'validated': -1,
+                    'validationReason': f'Validation error: {str(e)}'
+                })
                 print(f"✅ Updated signal {signal_id} as invalid (error)")
             except Exception as update_error:
                 print(f"❌ Failed to update signal validation status: {update_error}")
