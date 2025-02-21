@@ -69,19 +69,16 @@ def validate_signal(
         signals_table = Airtable(base_id, 'SIGNALS', api_key)
 
         signal_id = signal_data.get('id')
-        # Get Airtable connection
-        base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
-        api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
-        signals_table = Airtable(base_id, 'SIGNALS', api_key)
-
-        signal_id = signal_data.get('id')
         
         # Skip SELL signals immediately
         if signal_data.get('signal') != 'BUY':
             # Update signal as invalid (-1)
             if signal_id:
                 try:
-                    signals_table.update(signal_id, {'validated': -1})
+                    signals_table.update(signal_id, {
+                        'validated': -1,
+                        'validationReason': 'Only BUY signals are currently supported'
+                    })
                     print(f"✅ Updated signal {signal_id} as invalid (SELL)")
                 except Exception as e:
                     print(f"❌ Failed to update signal validation status: {e}")
