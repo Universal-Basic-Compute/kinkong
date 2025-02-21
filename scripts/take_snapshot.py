@@ -49,60 +49,40 @@ def record_portfolio_snapshot():
         if not base_id or not api_key:
             raise ValueError("Missing Airtable configuration")
             
-        # Get last 30 token snapshots
-        snapshots_table = Airtable(base_id, 'TOKEN_SNAPSHOTS', api_key)
-        
-        # Debug: Print API credentials
-        print("\n🔑 Checking credentials:")
-        print(f"Base ID: {base_id}")
-        print(f"API Key: {api_key[:4]}...{api_key[-4:]}")
-        
-        try:
-            # Test API connection
-            test_record = snapshots_table.get_all(maxRecords=1)
-            if test_record:
-                print("✅ Successfully connected to Airtable")
-                print("Sample record fields:", list(test_record[0]['fields'].keys()))
-            else:
-                print("⚠️ Connected but no records found")
-        except Exception as e:
-            print(f"❌ Connection test failed: {e}")
-            raise
-            
-        recent_snapshots = snapshots_table.get_all(
-            sort=['-createdAt'],  # Use minus sign for descending sort
-            maxRecords=30
+        # Get active tokens from TOKENS table first
+        tokens_table = Airtable(base_id, 'TOKENS', api_key)
+        active_tokens = tokens_table.get_all(
+            formula="{isActive}=1"
         )
         
-        print(f"\nFetched {len(recent_snapshots)} recent snapshots")
-        
-        # Remove duplicates keeping most recent for each symbol
-        unique_tokens = {}
-        for snapshot in recent_snapshots:
-            symbol = snapshot['fields'].get('symbol')  # Changed from token to symbol
-            if symbol and symbol not in unique_tokens:
-                unique_tokens[symbol] = snapshot['fields']
-        
-        print(f"\nFound {len(unique_tokens)} unique tokens")
+        print(f"\nFound {len(active_tokens)} active tokens")
         
         # Current timestamp
         created_at = datetime.now(timezone.utc).isoformat()
+        
+        # Create snapshots table connection
+        snapshots_table = Airtable(base_id, 'TOKEN_SNAPSHOTS', api_key)
         
         # Create new snapshots
         new_snapshots = []
         total_value = 0
         
-        for symbol, fields in unique_tokens.items():
+        for token in active_tokens:
             try:
-                # Get current price
-                price = get_token_price(fields['mint'])
+                symbol = token['fields'].get('symbol')
+                mint = token['fields'].get('mint')
                 
-                # Create snapshot
+                if not symbol or not mint:
+                    continue
+                
+                # Get current price
+                price = get_token_price(mint)
+                
+                # Create snapshot with only necessary fields
                 snapshot = {
-                    'symbol': symbol,  # Changed from token to symbol
-                    'mint': fields['mint'],
-                    'createdAt': created_at,
+                    'symbol': symbol,
                     'price': price,
+                    'createdAt': created_at,
                     'isActive': True
                 }
                 
@@ -110,8 +90,8 @@ def record_portfolio_snapshot():
                 print(f"\nProcessed {symbol}: ${price:.4f}")
                 
                 # Add to total value if we have allocation data
-                if 'allocation' in fields:
-                    total_value += price * float(fields['allocation'])
+                if 'allocation' in token['fields']:
+                    total_value += price * float(token['fields']['allocation'])
                 
             except Exception as e:
                 print(f"Error processing {symbol}: {e}")
