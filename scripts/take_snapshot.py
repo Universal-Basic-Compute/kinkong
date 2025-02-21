@@ -15,8 +15,8 @@ if str(project_root) not in sys.path:
 # Force load environment variables from project root .env
 load_dotenv(dotenv_path=project_root / '.env', override=True)
 
-def get_token_price(token_mint: str) -> float:
-    """Get current token price from DexScreener"""
+def get_token_price(token_mint: str) -> dict:
+    """Get current token metrics from DexScreener"""
     try:
         url = f"https://api.dexscreener.com/latest/dex/tokens/{token_mint}"
         response = requests.get(url, headers={
@@ -31,11 +31,40 @@ def get_token_price(token_mint: str) -> float:
                 sol_pairs = [p for p in data['pairs'] if p.get('chainId') == 'solana']
                 if sol_pairs:
                     main_pair = max(sol_pairs, key=lambda x: float(x.get('liquidity', {}).get('usd', 0)))
-                    return float(main_pair.get('priceUsd', 0))
-        return 0
+                    
+                    # Calculate total volume and liquidity across all pairs
+                    total_volume = sum(float(p.get('volume', {}).get('h24', 0)) for p in sol_pairs)
+                    total_liquidity = sum(float(p.get('liquidity', {}).get('usd', 0)) for p in sol_pairs)
+                    
+                    return {
+                        'price': float(main_pair.get('priceUsd', 0)),
+                        'volume24h': total_volume,
+                        'volume7d': total_volume * 7,  # Approximation
+                        'liquidity': total_liquidity,
+                        'priceChange24h': float(main_pair.get('priceChange', {}).get('h24', 0)),
+                        'volumeGrowth': float(main_pair.get('volume', {}).get('h24', 0)) / float(main_pair.get('volume', {}).get('h6', 1)) - 1 if main_pair.get('volume', {}).get('h6') else 0,
+                        'pricePerformance': float(main_pair.get('priceChange', {}).get('h24', 0))
+                    }
+        return {
+            'price': 0,
+            'volume24h': 0,
+            'volume7d': 0,
+            'liquidity': 0,
+            'priceChange24h': 0,
+            'volumeGrowth': 0,
+            'pricePerformance': 0
+        }
     except Exception as e:
-        print(f"Error getting price for {token_mint}: {e}")
-        return 0
+        print(f"Error getting metrics for {token_mint}: {e}")
+        return {
+            'price': 0,
+            'volume24h': 0,
+            'volume7d': 0,
+            'liquidity': 0,
+            'priceChange24h': 0,
+            'volumeGrowth': 0,
+            'pricePerformance': 0
+        }
 
 def record_portfolio_snapshot():
     """Record current portfolio state to Airtable"""
@@ -75,23 +104,32 @@ def record_portfolio_snapshot():
                 if not symbol or not mint:
                     continue
                 
-                # Get current price
-                price = get_token_price(mint)
+                # Get current metrics
+                metrics = get_token_price(mint)
                 
-                # Create snapshot with only necessary fields
+                # Create snapshot with all metrics
                 snapshot = {
                     'symbol': symbol,
-                    'price': price,
+                    'price': metrics['price'],
+                    'volume7d': metrics['volume7d'],
+                    'liquidity': metrics['liquidity'],
+                    'volumeGrowth': metrics['volumeGrowth'],
+                    'pricePerformance': metrics['pricePerformance'],
+                    'priceChange24h': metrics['priceChange24h'],
                     'createdAt': created_at,
                     'isActive': True
                 }
                 
                 new_snapshots.append(snapshot)
-                print(f"\nProcessed {symbol}: ${price:.4f}")
+                print(f"\nProcessed {symbol}:")
+                print(f"Price: ${metrics['price']:.4f}")
+                print(f"7d Volume: ${metrics['volume7d']:,.2f}")
+                print(f"Liquidity: ${metrics['liquidity']:,.2f}")
+                print(f"24h Change: {metrics['priceChange24h']:.2f}%")
                 
                 # Add to total value if we have allocation data
                 if 'allocation' in token['fields']:
-                    total_value += price * float(token['fields']['allocation'])
+                    total_value += metrics['price'] * float(token['fields']['allocation'])
                 
             except Exception as e:
                 print(f"Error processing {symbol}: {e}")
