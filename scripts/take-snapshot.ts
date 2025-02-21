@@ -1,6 +1,6 @@
-import dotenv from 'dotenv';
-import path from 'path';
-import fs from 'fs';
+const dotenv = require('dotenv');
+const path = require('path');
+const fs = require('fs');
 
 // Force load the .env file from the project root
 const projectRoot = path.resolve(__dirname, '..');
@@ -31,7 +31,7 @@ console.log('📝 Loaded environment variables:', {
 });
 
 // Only proceed with imports after env is loaded
-import { recordPortfolioSnapshot } from '../backend/src/strategy/snapshots';
+const { recordPortfolioSnapshot } = require('../backend/src/strategy/snapshots');
 
 async function main() {
     try {
