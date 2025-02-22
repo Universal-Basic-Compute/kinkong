@@ -92,16 +92,15 @@ export function TradeHistory({ userOnly = false }: TradeHistoryProps) {
         </thead>
         <tbody className="divide-y divide-gold/10">
           {trades.map((trade) => {
-            const date = new Date(trade.createdAt);
-            const formattedDate = !isNaN(date.getTime()) 
-              ? date.toLocaleString('en-US', {
+            const formattedDate = trade.createdAt 
+              ? new Date(trade.createdAt.replace(' ', 'T')).toLocaleString('en-US', {
                   month: 'short',
                   day: 'numeric',
                   hour: '2-digit',
                   minute: '2-digit',
                   hour12: false
                 })
-              : 'Invalid date';
+              : '-';
 
             return (
               <tr key={trade.id} className="hover:bg-gold/5">
