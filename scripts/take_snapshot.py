@@ -385,14 +385,14 @@ async def get_enhanced_token_metrics(token_mint: str) -> Dict:
         else:
             print("WARNING: No Birdeye API key found")
 
-        # Define endpoints with correct parameters
-        base_url = "https://public-api.birdeye.so/public"  # Changed to public API path
+        # Define endpoints
+        base_url = "https://public-api.birdeye.so/defi"
         endpoints = {
-            'price': f"{base_url}/price_history?address={token_mint}&address_type=token&type=1H&time_from={day_ago}&time_to={now}",
-            'depth': f"{base_url}/orderbook_analysis?address={token_mint}&address_type=token",
-            'info': f"{base_url}/token_metadata?address={token_mint}&address_type=token",
-            'trades': f"{base_url}/latest_trades?address={token_mint}&address_type=token&limit=100",
-            'pool': f"{base_url}/pool_info?address={token_mint}&address_type=token"
+            'price': f"{base_url}/price_volume/single?address={token_mint}&type=24h",
+            'depth': f"{base_url}/orderbook?address={token_mint}",
+            'info': f"{base_url}/token_info?address={token_mint}",
+            'trades': f"{base_url}/trades?address={token_mint}",
+            'pool': f"{base_url}/pool_stats?address={token_mint}"
         }
 
         print(f"\nFetching metrics for token {token_mint}")
