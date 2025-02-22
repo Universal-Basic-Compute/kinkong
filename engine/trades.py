@@ -596,9 +596,12 @@ class TradeExecutor:
                     await self.handle_failed_trade(trade['id'], "Failed to get quote")
                     return False
 
+                # Use Jupiter quote API endpoint
+                quote_url = "https://quote-api.jup.ag/v6/quote"
+                
                 async with aiohttp.ClientSession() as session:
                     try:
-                        async with session.get(url, params=params) as response:
+                        async with session.get(quote_url, params=params) as response:
                             if not response.ok:
                                 self.logger.error(f"Failed to get Jupiter quote: {response.status}")
                                 self.logger.error(f"Response text: {await response.text()}")
