@@ -534,12 +534,9 @@ class TradeExecutor:
                             address_lookup_table_accounts=tx.message.address_table_lookups
                         )
                         
-                        # Sign message
-                        signature = self.wallet_keypair.sign_message(bytes(new_message))
-                        self.logger.info("Signed versioned message")
-                        
-                        # Create final versioned transaction
-                        final_tx = VersionedTransaction(message=new_message, signatures=[signature])
+                        # Create and sign versioned transaction
+                        final_tx = VersionedTransaction(message=new_message, signatures=[])
+                        final_tx.sign([self.wallet_keypair])
                         
                     else:
                         # Handle legacy transaction
@@ -552,16 +549,9 @@ class TradeExecutor:
                             payer=tx.message.account_keys[0]
                         )
                         
-                        # Sign message
-                        signature = self.wallet_keypair.sign_message(bytes(new_message))
-                        self.logger.info("Signed legacy message")
-                        
-                        # Create final legacy transaction with blockhash
-                        final_tx = Transaction(
-                            signatures=[signature],
-                            message=new_message,
-                            recent_blockhash=blockhash_hash  # Pass blockhash here instead
-                        )
+                        # Create transaction with message and blockhash, then sign it
+                        final_tx = Transaction(new_message, blockhash_hash)
+                        final_tx.sign([self.wallet_keypair])
 
                     # Send transaction
                     self.logger.info("Sending transaction...")
