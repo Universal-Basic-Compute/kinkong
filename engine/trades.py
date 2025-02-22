@@ -371,25 +371,28 @@ class TradeExecutor:
                 # Create keypair from bytes
                 wallet_keypair = Keypair.from_bytes(private_key_bytes)
                 
-                # Get USDC ATA using Solders types
+                # Convert string addresses to Solders Pubkey
                 usdc_mint = Pubkey.from_string(USDC_MINT)
                 wallet_pubkey = wallet_keypair.pubkey()
-                
-                # Get the ATA address
-                from spl.token.constants import ASSOCIATED_TOKEN_PROGRAM_ID
+                token_program = Pubkey.from_string(str(TOKEN_PROGRAM_ID))
+                associated_token_program = Pubkey.from_string("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL")
+
+                # Calculate the ATA address using Solders types
                 seeds = [
                     bytes(wallet_pubkey),
-                    bytes(TOKEN_PROGRAM_ID),
+                    bytes(token_program),
                     bytes(usdc_mint)
                 ]
-                usdc_ata, _ = Pubkey.find_program_address(
+                
+                # Use Solders create_program_address
+                usdc_ata = Pubkey.create_program_address(
                     seeds,
-                    ASSOCIATED_TOKEN_PROGRAM_ID
+                    associated_token_program
                 )
                 
                 try:
-                    # Get balance using the correct Pubkey format
-                    balance_response = await client.get_token_account_balance(usdc_ata)
+                    # Get balance using string representation
+                    balance_response = await client.get_token_account_balance(str(usdc_ata))
                     
                     if not balance_response or not balance_response.value:
                         self.logger.error("Failed to get USDC balance")
