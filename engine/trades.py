@@ -323,136 +323,54 @@ class TradeExecutor:
 
             # Execute validated swap with calculated amount
             success, transaction_bytes = await self.jupiter.execute_validated_swap(
-                input_token="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",  # USDC
+                input_token="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
                 output_token=signal['fields']['mint'],
-                amount=trade_amount_usd,  # Use calculated amount
-                min_amount=5.0,          # Minimum 5 USDC
-                max_slippage=1.0         # Maximum 1% slippage
+                amount=trade_amount_usd,
+                min_amount=5.0,
+                max_slippage=1.0
             )
             
             if not success or not transaction_bytes:
                 await self.handle_failed_trade(trade['id'], "Swap validation failed")
                 return False
 
-            # Initialize Solana client
-            client = AsyncClient("https://api.mainnet-beta.solana.com")
-            
-            try:
-                # Get fresh blockhash
-                blockhash = await client.get_latest_blockhash()
-                if not blockhash or not blockhash.value:
-                    raise Exception("Failed to get recent blockhash")
-
-                # Deserialize original transaction
-                original_transaction = Transaction.from_bytes(transaction_bytes)
-
-                # Convert CompiledInstructions to Instructions
-                instructions = []
-                for compiled_instruction in original_transaction.message.instructions:
-                    program_id = original_transaction.message.account_keys[compiled_instruction.program_id_index]
-                    header = original_transaction.message.header
-                    account_keys = original_transaction.message.account_keys
-                    
-                    writable_signers = header.num_required_signatures - header.num_readonly_signed_accounts
-                    total_non_signers = len(account_keys) - header.num_required_signatures
-                    writable_non_signers = total_non_signers - header.num_readonly_unsigned_accounts
-                    
-                    account_metas = []
-                    for idx in compiled_instruction.accounts:
-                        pubkey = account_keys[idx]
-                        is_signer = idx < header.num_required_signatures
-                        if is_signer:
-                            is_writable = idx < writable_signers
-                        else:
-                            non_signer_idx = idx - header.num_required_signatures
-                            is_writable = non_signer_idx < writable_non_signers
-                        
-                        account_meta = AccountMeta(
-                            pubkey=pubkey,
-                            is_signer=is_signer,
-                            is_writable=is_writable
-                        )
-                        account_metas.append(account_meta)
-                    
-                    instruction = Instruction(
-                        program_id=program_id,
-                        accounts=account_metas,
-                        data=compiled_instruction.data
-                    )
-                    instructions.append(instruction)
-
-                # Create new message with converted instructions
-                new_message = Message.new_with_blockhash(
-                    instructions,
-                    self.wallet_keypair.pubkey(),
-                    blockhash.value.blockhash
-                )
-
-                # Create and sign new transaction
-                new_transaction = Transaction.new_unsigned(message=new_message)
-                new_transaction.sign(
-                    [self.wallet_keypair],
-                    new_transaction.message.recent_blockhash
-                )
-
-                logger.info("Sending transaction to network...")
-
-                # Send transaction with retry logic
-                max_retries = 3
-                for attempt in range(max_retries):
-                    try:
-                        result = await client.send_transaction(
-                            new_transaction,
-                            opts=TxOpts(
-                                skip_preflight=False,
-                                preflight_commitment="confirmed",
-                                max_retries=2
-                            )
-                        )
-                        
-                        if result.value:
-                            transaction_url = f"https://solscan.io/tx/{result.value}"
-                            logger.info(f"✅ Transaction successful!")
-                            logger.info(f"Transaction signature: {result.value}")
-                            logger.info(f"View on Solscan: {transaction_url}")
-                            
-                            # Update trade record
-                            transaction_url = f"https://solscan.io/tx/{result.value}"
-                            self.trades_table.update(trade['id'], {
-                                'status': 'EXECUTED',
-                                'signature': str(result.value),  # Convert Signature to string
-                                'amount': trade_amount_usd,  # Use actual amount
-                                'price': float(signal['fields']['entryPrice']),
-                                'transactionUrl': transaction_url  # Add transaction URL
-                            })
-                            
-                            # Send notification
-                            message = f"🦍 KinKong Trade Alert\n\n"
-                            message += f"Token: ${signal['fields']['token']}\n"
-                            message += f"Action: {signal['fields']['type']}\n"
-                            message += f"Amount: ${trade_amount_usd:.2f} USDC\n"
-                            message += f"Entry Price: ${float(signal['fields']['entryPrice']):.4f}\n"
-                            message += f"Target: ${float(signal['fields']['targetPrice']):.4f}\n"
-                            message += f"Stop Loss: ${float(signal['fields']['stopLoss']):.4f}\n"
-                            message += f"Timeframe: {signal['fields']['timeframe']}\n\n"
-                            message += f"🔗 View Transaction:\n{transaction_url}"
-                            
-                            from scripts.analyze_charts import send_telegram_message
-                            send_telegram_message(message)
-                            
-                            return True
-                            
-                    except Exception as e:
-                        if attempt == max_retries - 1:
-                            raise
-                        logger.warning(f"Attempt {attempt + 1} failed, retrying...")
-                        await asyncio.sleep(1)
-
-                await self.handle_failed_trade(trade['id'], "Transaction failed to send")
+            # Prepare transaction
+            transaction = await self.jupiter.prepare_transaction(transaction_bytes)
+            if not transaction:
+                await self.handle_failed_trade(trade['id'], "Failed to prepare transaction")
                 return False
 
-            finally:
-                await client.close()
+            # Execute transaction
+            signature = await self.jupiter.execute_trade_with_retries(transaction)
+            if not signature:
+                await self.handle_failed_trade(trade['id'], "Transaction failed")
+                return False
+
+            # Update trade record
+            transaction_url = f"https://solscan.io/tx/{signature}"
+            self.trades_table.update(trade['id'], {
+                'status': 'EXECUTED',
+                'signature': signature,
+                'amount': trade_amount_usd,
+                'price': float(signal['fields']['entryPrice']),
+                'transactionUrl': transaction_url
+            })
+            
+            # Send notification
+            message = f"🦍 KinKong Trade Alert\n\n"
+            message += f"Token: ${signal['fields']['token']}\n"
+            message += f"Action: {signal['fields']['type']}\n"
+            message += f"Amount: ${trade_amount_usd:.2f} USDC\n"
+            message += f"Entry Price: ${float(signal['fields']['entryPrice']):.4f}\n"
+            message += f"Target: ${float(signal['fields']['targetPrice']):.4f}\n"
+            message += f"Stop Loss: ${float(signal['fields']['stopLoss']):.4f}\n"
+            message += f"Timeframe: {signal['fields']['timeframe']}\n\n"
+            message += f"🔗 View Transaction:\n{transaction_url}"
+            
+            from scripts.analyze_charts import send_telegram_message
+            send_telegram_message(message)
+            
+            return True
 
         except Exception as e:
             logger.error(f"Trade execution failed: {e}")

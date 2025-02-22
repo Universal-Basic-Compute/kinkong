@@ -408,6 +408,106 @@ async def execute_test_trade():
         logger.error(f"Test trade failed: {e}")
         raise
 
+    async def execute_trade_with_retries(self, transaction: Transaction, max_retries: int = 3) -> Optional[str]:
+        """Execute a trade transaction with retries and return signature if successful"""
+        client = AsyncClient("https://api.mainnet-beta.solana.com")
+        try:
+            for attempt in range(max_retries):
+                try:
+                    result = await client.send_transaction(
+                        transaction,
+                        opts=TxOpts(
+                            skip_preflight=False,
+                            preflight_commitment="confirmed",
+                            max_retries=2
+                        )
+                    )
+                    
+                    if result.value:
+                        self.logger.info(f"✅ Transaction successful!")
+                        self.logger.info(f"Transaction signature: {result.value}")
+                        return str(result.value)
+                        
+                except Exception as e:
+                    if attempt == max_retries - 1:
+                        raise
+                    self.logger.warning(f"Attempt {attempt + 1} failed, retrying...")
+                    await asyncio.sleep(1)
+            return None
+        finally:
+            await client.close()
+
+    async def prepare_transaction(self, transaction_bytes: bytes) -> Optional[Transaction]:
+        """Prepare a transaction from bytes with fresh blockhash"""
+        try:
+            client = AsyncClient("https://api.mainnet-beta.solana.com")
+            try:
+                # Get fresh blockhash
+                blockhash = await client.get_latest_blockhash()
+                if not blockhash or not blockhash.value:
+                    raise Exception("Failed to get recent blockhash")
+
+                # Deserialize original transaction
+                original_transaction = Transaction.from_bytes(transaction_bytes)
+
+                # Convert CompiledInstructions to Instructions
+                instructions = []
+                for compiled_instruction in original_transaction.message.instructions:
+                    program_id = original_transaction.message.account_keys[compiled_instruction.program_id_index]
+                    header = original_transaction.message.header
+                    account_keys = original_transaction.message.account_keys
+                    
+                    writable_signers = header.num_required_signatures - header.num_readonly_signed_accounts
+                    total_non_signers = len(account_keys) - header.num_required_signatures
+                    writable_non_signers = total_non_signers - header.num_readonly_unsigned_accounts
+                    
+                    account_metas = []
+                    for idx in compiled_instruction.accounts:
+                        pubkey = account_keys[idx]
+                        is_signer = idx < header.num_required_signatures
+                        if is_signer:
+                            is_writable = idx < writable_signers
+                        else:
+                            non_signer_idx = idx - header.num_required_signatures
+                            is_writable = non_signer_idx < writable_non_signers
+                        
+                        account_meta = AccountMeta(
+                            pubkey=pubkey,
+                            is_signer=is_signer,
+                            is_writable=is_writable
+                        )
+                        account_metas.append(account_meta)
+                    
+                    instruction = Instruction(
+                        program_id=program_id,
+                        accounts=account_metas,
+                        data=compiled_instruction.data
+                    )
+                    instructions.append(instruction)
+
+                # Create new message with converted instructions
+                new_message = Message.new_with_blockhash(
+                    instructions,
+                    self.wallet_keypair.pubkey(),
+                    blockhash.value.blockhash
+                )
+
+                # Create and sign new transaction
+                new_transaction = Transaction.new_unsigned(message=new_message)
+                new_transaction.sign(
+                    [self.wallet_keypair],
+                    new_transaction.message.recent_blockhash
+                )
+
+                return new_transaction
+
+            finally:
+                await client.close()
+
+        except Exception as e:
+            self.logger.error(f"Error preparing transaction: {e}")
+            return None
+
 if __name__ == "__main__":
     try:
         asyncio.run(execute_test_trade())
