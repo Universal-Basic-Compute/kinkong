@@ -7,6 +7,7 @@ import logging
 from dotenv import load_dotenv
 from solders.keypair import Keypair
 from solders.transaction import Transaction
+from solders.message import Message
 from solana.rpc.async_api import AsyncClient
 import base58
 
@@ -103,25 +104,31 @@ async def test_usdc_usdt_swap():
             if not transaction_bytes:
                 raise Exception("Failed to get transaction")
             
-            # Deserialize and sign transaction
-            transaction = Transaction.from_bytes(transaction_bytes)
-            
             # Get fresh blockhash
             blockhash = await client.get_latest_blockhash()
             if not blockhash or not blockhash.value:
                 raise Exception("Failed to get recent blockhash")
             
-            # Update transaction with new blockhash
-            transaction.message.recent_blockhash = blockhash.value.blockhash
+            # Create new transaction with fresh blockhash
+            transaction = Transaction.from_bytes(transaction_bytes)
+            new_transaction = Transaction(
+                signatures=transaction.signatures,
+                message=Message(
+                    header=transaction.message.header,
+                    account_keys=transaction.message.account_keys,
+                    recent_blockhash=blockhash.value.blockhash,
+                    instructions=transaction.message.instructions
+                )
+            )
             
             # Sign transaction
-            transaction.sign([wallet_keypair])
+            new_transaction.sign([wallet_keypair])
             
             logger.info("Sending transaction to network...")
             
             # Send transaction
             result = await client.send_transaction(
-                transaction,
+                new_transaction,
                 opts={
                     "skip_preflight": False,
                     "preflight_commitment": "confirmed",
