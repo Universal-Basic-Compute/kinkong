@@ -9,6 +9,13 @@ from dotenv import load_dotenv
 import json
 import logging
 from typing import List, Dict, Optional
+from solana.rpc.async_api import AsyncClient
+from solana.transaction import Transaction
+from solana.keypair import Keypair
+from spl.token.instructions import get_associated_token_account
+import base58
+from decimal import Decimal
+import aiohttp
 
 # Get absolute path to project root and .env file
 project_root = Path(__file__).parent.parent.absolute()
@@ -122,6 +129,56 @@ class TradeExecutor:
             logger.error(f"Error checking entry conditions: {e}")
             return False
 
+    async def create_buy_transaction(
+        self,
+        client: AsyncClient,
+        token_mint: str,
+        amount: float,
+        wallet_keypair: Keypair
+    ) -> Transaction:
+        """Create a buy transaction using Jupiter SDK"""
+        try:
+            # Get the ATA for the token
+            token_account = get_associated_token_account(
+                owner_public_key=wallet_keypair.public_key,
+                mint_public_key=token_mint
+            )
+
+            # Use Jupiter API to get the swap route
+            route_url = f"https://quote-api.jup.ag/v6/quote"
+            params = {
+                "inputMint": "So11111111111111111111111111111111111111112",  # SOL
+                "outputMint": token_mint,
+                "amount": str(int(amount * 1e9)),  # Convert to lamports
+                "slippageBps": 100  # 1% slippage
+            }
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(route_url, params=params) as response:
+                    route_data = await response.json()
+
+            # Get the transaction data
+            swap_url = "https://quote-api.jup.ag/v6/swap"
+            swap_data = {
+                "quoteResponse": route_data,
+                "userPublicKey": str(wallet_keypair.public_key),
+                "wrapUnwrapSOL": True
+            }
+
+            async with aiohttp.ClientSession() as session:
+                async with session.post(swap_url, json=swap_data) as response:
+                    transaction_data = await response.json()
+
+            # Create and sign transaction
+            transaction = Transaction.deserialize(base58.b58decode(transaction_data['swapTransaction']))
+            transaction.sign(wallet_keypair)
+
+            return transaction
+
+        except Exception as e:
+            self.logger.error(f"Error creating buy transaction: {e}")
+            raise
+
     def get_current_price(self, token_mint: str) -> Optional[float]:
         """Get current token price from Birdeye or DexScreener"""
         try:
@@ -183,10 +240,40 @@ class TradeExecutor:
             )
             
             if existing_trades:
-                logger.warning(f"Trade already exists for signal {signal['id']}")
+                self.logger.warning(f"Trade already exists for signal {signal['id']}")
                 return False
 
-            # Create trade record
+            # Get token mint from TOKENS table
+            tokens_table = Airtable(self.base_id, 'TOKENS', self.api_key)
+            token_records = tokens_table.get_all(
+                formula=f"{{token}}='{signal['fields']['token']}'"
+            )
+            
+            if not token_records:
+                self.logger.error(f"Token {signal['fields']['token']} not found in TOKENS table")
+                return False
+                
+            token_mint = token_records[0]['fields'].get('mint')
+            if not token_mint:
+                self.logger.error(f"No mint address found for token {signal['fields']['token']}")
+                return False
+
+            # Initialize Solana client
+            client = AsyncClient("https://api.mainnet-beta.solana.com")
+
+            # Load wallet from private key
+            private_key = os.getenv('SOLANA_PRIVATE_KEY')
+            if not private_key:
+                self.logger.error("SOLANA_PRIVATE_KEY not found in environment variables")
+                return False
+                
+            wallet_keypair = Keypair.from_secret_key(base58.b58decode(private_key))
+
+            # Calculate trade amount (example: use 5% of wallet SOL balance)
+            wallet_balance = await client.get_balance(wallet_keypair.public_key)
+            trade_amount = wallet_balance.value * 0.05  # 5% of wallet balance
+
+            # Create trade record first as PENDING
             trade_data = {
                 'signalId': signal['id'],
                 'token': signal['fields']['token'],
@@ -197,22 +284,59 @@ class TradeExecutor:
                 'targetPrice': float(signal['fields']['targetPrice']),
                 'stopLoss': float(signal['fields']['stopLoss']),
                 'createdAt': datetime.now(timezone.utc).isoformat(),
-                'amount': 0,  # Will be updated after execution
-                'entryValue': 0  # Will be updated after execution
+                'amount': trade_amount,
+                'entryValue': trade_amount * float(signal['fields']['entryPrice'])
             }
             
-            # Create trade record
             trade = self.trades_table.insert(trade_data)
-            logger.info(f"Created trade record: {trade['id']}")
-        
-            # TODO: Implement actual trade execution logic here
-            # This would integrate with your trading infrastructure
-        
-            return True
+            self.logger.info(f"Created trade record: {trade['id']}")
+
+            # Execute the trade
+            try:
+                # Create and send transaction
+                transaction = await self.create_buy_transaction(
+                    client,
+                    token_mint,
+                    trade_amount,
+                    wallet_keypair
+                )
+                
+                result = await client.send_transaction(transaction)
+                
+                if result.value:
+                    # Update trade record with transaction URL and status
+                    transaction_url = f"https://solscan.io/tx/{result.value}"
+                    self.trades_table.update(trade['id'], {
+                        'status': 'EXECUTED',
+                        'transactionUrl': transaction_url,
+                        'executedAt': datetime.now(timezone.utc).isoformat()
+                    })
+                    
+                    self.logger.info(f"Trade executed successfully: {transaction_url}")
+                    return True
+                else:
+                    self.logger.error("Transaction failed")
+                    self.trades_table.update(trade['id'], {
+                        'status': 'FAILED',
+                        'error': 'Transaction failed'
+                    })
+                    return False
+
+            except Exception as e:
+                self.logger.error(f"Error executing transaction: {e}")
+                self.trades_table.update(trade['id'], {
+                    'status': 'FAILED',
+                    'error': str(e)
+                })
+                return False
 
         except Exception as e:
-            logger.error(f"Error executing trade: {e}")
+            self.logger.error(f"Error executing trade: {e}")
             return False
+
+        finally:
+            if 'client' in locals():
+                await client.close()
 
     async def monitor_signals(self):
         """Main loop to monitor signals and execute trades"""
