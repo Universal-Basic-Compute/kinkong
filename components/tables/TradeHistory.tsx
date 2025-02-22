@@ -43,6 +43,35 @@ export function TradeHistory({ userOnly = false }: TradeHistoryProps) {
   if (isLoading) return <div>Loading trades...</div>;
   if (error) return <div>Error: {error}</div>;
 
+  function getTokenClass(token: string): string {
+    const upperToken = token.toUpperCase();
+    switch (upperToken) {
+      case 'UBC':
+        return 'metallic-text-ubc';
+      case 'COMPUTE':
+        return 'metallic-text-compute';
+      case 'SOL':
+        return 'metallic-text-sol';
+      default:
+        return 'metallic-text-argent';
+    }
+  }
+
+  function formatTokenSymbol(token: string): string {
+    return token.startsWith('$') ? token : `$${token}`;
+  }
+
+  function getStatusColor(status: string): string {
+    switch (status.toLowerCase()) {
+      case 'executed':
+        return 'bg-yellow-900/50 text-yellow-400';
+      case 'closed':
+        return 'bg-green-900/50 text-green-400';
+      default:
+        return 'bg-gray-900/50 text-gray-400';
+    }
+  }
+
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full bg-black/50 rounded-lg">
@@ -50,7 +79,6 @@ export function TradeHistory({ userOnly = false }: TradeHistoryProps) {
           <tr className="border-b border-gold/20">
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Time</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Token</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Type</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Amount</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Price</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Value</th>
@@ -58,37 +86,45 @@ export function TradeHistory({ userOnly = false }: TradeHistoryProps) {
           </tr>
         </thead>
         <tbody className="divide-y divide-gold/10">
-          {trades.map((trade) => (
-            <tr key={trade.id} className="hover:bg-gold/5">
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                {new Date(trade.createdAt).toLocaleString()}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{trade.token}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm">
-                <span className={`px-2 py-1 rounded-full text-xs ${
-                  trade.type === 'BUY' ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'
-                }`}>
-                  {trade.type}
-                </span>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                {(trade.amount ?? 0).toLocaleString(undefined, { maximumFractionDigits: 4 })}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                ${(trade.price ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                ${(trade.value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm">
-                <span className={`px-2 py-1 rounded-full text-xs ${
-                  trade.status === 'SUCCESS' ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'
-                }`}>
-                  {trade.status}
-                </span>
-              </td>
-            </tr>
-          ))}
+          {trades.map((trade) => {
+            const date = new Date(trade.createdAt);
+            const formattedDate = !isNaN(date.getTime()) 
+              ? date.toLocaleString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: false
+                })
+              : 'Invalid date';
+
+            return (
+              <tr key={trade.id} className="hover:bg-gold/5">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                  {formattedDate}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <span className={getTokenClass(trade.token)}>
+                    {formatTokenSymbol(trade.token)}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                  {(trade.amount ?? 0).toLocaleString(undefined, { maximumFractionDigits: 4 })}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                  ${(trade.price ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                  ${(trade.value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(trade.status)}`}>
+                    {trade.status}
+                  </span>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
