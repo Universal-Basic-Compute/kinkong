@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import requests
 from airtable import Airtable
 from dotenv import load_dotenv
+import asyncio
 from typing import List, Dict, Optional
 from datetime import timedelta
 import logging
