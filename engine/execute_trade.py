@@ -67,8 +67,7 @@ class JupiterTradeExecutor:
         try:
             # Get token ATA
             token_ata = get_associated_token_address(
-                # Convert explicitly to Pubkey
-                owner=Pubkey.from_string(str(self.wallet_keypair.pubkey())),
+                owner=self.wallet_keypair.pubkey(),  # Use pubkey directly from keypair
                 mint=Pubkey.from_string(token_mint)
             )
             
@@ -76,8 +75,8 @@ class JupiterTradeExecutor:
             client = AsyncClient("https://api.mainnet-beta.solana.com")
             
             try:
-                # Get balance
-                response = await client.get_token_account_balance(str(token_ata))  # Convert to string
+                # Get balance - convert token_ata to string for RPC call
+                response = await client.get_token_account_balance(str(token_ata))
                 if response and response.value:
                     balance = float(response.value.amount) / 1e6  # Convert from decimals
                     self.logger.info(f"Token balance: {balance:.4f}")
