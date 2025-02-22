@@ -51,20 +51,6 @@ function getTimeframeEmoji(timeframe: Signal['timeframe']): string {
   }
 }
 
-function getTokenClass(token: string): string {
-  const upperToken = token.toUpperCase();
-  switch (upperToken) {
-    case 'UBC':
-      return 'metallic-text-ubc';
-    case 'COMPUTE':
-      return 'metallic-text-compute';
-    case 'SOL':
-      return 'metallic-text-sol';
-    default:
-      return 'metallic-text-argent';
-  }
-}
-
 function getRelativeTime(timestamp: string): string {
   const now = new Date();
   const date = new Date(timestamp);
