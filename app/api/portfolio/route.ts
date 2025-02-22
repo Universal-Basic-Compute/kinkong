@@ -1,19 +1,39 @@
 import { Connection, PublicKey } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { NextResponse } from 'next/server';
+import { getTable } from '@/backend/src/airtable/tables';
 
 const KNOWN_TOKENS = {
   USDC: {
     mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-    price: 1.00,  // USDC is pegged to USD
-    image: "https://s2.coinmarketcap.com/static/img/coins/64x64/3408.png"
+    price: 1.00
   },
   USDT: {
     mint: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
-    price: 1.00,  // USDT is pegged to USD
-    image: "https://s2.coinmarketcap.com/static/img/coins/64x64/825.png"
+    price: 1.00
   }
 };
+
+async function getTokensMetadata() {
+  try {
+    const tokensTable = getTable('TOKENS');
+    const records = await tokensTable.select().all();
+    
+    return records.reduce((acc, record) => {
+      const fields = record.fields;
+      acc[fields.mint] = {
+        name: fields.name || fields.token,
+        token: fields.token,
+        image: fields.image,
+        mint: fields.mint
+      };
+      return acc;
+    }, {} as Record<string, {name: string; token: string; image: string; mint: string}>);
+  } catch (error) {
+    console.error('Failed to fetch tokens metadata:', error);
+    return {};
+  }
+}
 
 async function getJupiterPrice(mint: string): Promise<number> {
   try {
@@ -119,16 +139,18 @@ export async function GET() {
         }
       }
 
-      // Add USD values
+      // Fetch tokens metadata first
+      const tokensMetadata = await getTokensMetadata();
+      console.log('Tokens metadata loaded:', Object.keys(tokensMetadata).length, 'tokens');
+
+      // Add USD values and metadata
       const balancesWithUSD = await Promise.all(nonZeroBalances.map(async balance => {
         let price = 0;
-        let imageUrl = null;
         
-        // Check if it's a known token first
+        // Check if it's a known token first (for price override)
         const knownToken = Object.values(KNOWN_TOKENS).find(t => t.mint === balance.mint);
         if (knownToken) {
           price = knownToken.price;
-          imageUrl = knownToken.image;
         } else {
           // Try DexScreener price first
           price = priceMap[balance.mint] || 0;
@@ -141,21 +163,32 @@ export async function GET() {
         }
 
         const usdValue = balance.uiAmount * price;
-            
-        console.log(`Token ${balance.token || balance.mint}:`, {
+        
+        // Get metadata from our tokens table
+        const metadata = tokensMetadata[balance.mint] || {
+          name: balance.token || balance.mint,
+          token: balance.token || balance.mint,
+          image: '', // Default empty if not found
+          mint: balance.mint
+        };
+
+        console.log(`Token ${metadata.token}:`, {
           uiAmount: balance.uiAmount,
           price,
           usdValue,
           isStablecoin: !!knownToken,
           source: knownToken ? 'fixed' : (price === priceMap[balance.mint] ? 'dexscreener' : 'jupiter'),
-          imageUrl
+          metadata
         });
 
         return {
           ...balance,
           usdValue,
           price,
-          imageUrl
+          name: metadata.name,
+          token: metadata.token,
+          imageUrl: metadata.image,
+          mint: balance.mint
         };
       }));
 
