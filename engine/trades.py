@@ -538,10 +538,10 @@ class TradeExecutor:
                         tx = Transaction.from_bytes(transaction_bytes)
                         self.logger.info("Deserialized legacy transaction")
                         
-                        # Create new legacy message using existing message components
+                        # Create new legacy message with only required parameters
                         new_message = Message(
-                            account_keys=tx.message.account_keys,
                             instructions=tx.message.instructions,
+                            payer=tx.message.account_keys[0],  # Use first account as payer
                             recent_blockhash=blockhash_hash
                         )
 
