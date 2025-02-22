@@ -414,24 +414,30 @@ class TradeExecutor:
                 quote_params = {
                     "inputMint": USDC_MINT,
                     "outputMint": signal['fields']['mint'],
-                    "amount": str(int(trade_amount_usd * 1e6)),  # Convert to string
+                    "amount": str(int(trade_amount_usd * 1e6)),
                     "slippageBps": 100
                 }
+
+                self.logger.info(f"Requesting Jupiter quote with params: {json.dumps(quote_params)}")
 
                 async with aiohttp.ClientSession() as session:
                     try:
                         async with session.get(quote_url, params=quote_params) as response:
                             if not response.ok:
                                 self.logger.error(f"Failed to get Jupiter quote: {response.status}")
+                                self.logger.error(f"Response text: {await response.text()}")
                                 await self.handle_failed_trade(trade['id'], "Failed to get quote")
                                 return False
                                 
-                            quote_data = await response.json()
+                            response_text = await response.text()
+                            self.logger.info(f"Raw quote response: {response_text}")
                             
-                            # Validate quote response
-                            if not isinstance(quote_data, dict):
-                                self.logger.error("Invalid quote response format")
-                                await self.handle_failed_trade(trade['id'], "Invalid quote format")
+                            try:
+                                quote_data = json.loads(response_text)
+                            except json.JSONDecodeError as e:
+                                self.logger.error(f"Failed to parse quote response: {e}")
+                                self.logger.error(f"Response text causing error: {response_text}")
+                                await self.handle_failed_trade(trade['id'], "Invalid quote response")
                                 return False
 
                         # Get transaction data
@@ -442,35 +448,29 @@ class TradeExecutor:
                             "wrapUnwrapSOL": False
                         }
                         
-                        # Validate swap data before sending
-                        try:
-                            json.dumps(swap_data)  # Test JSON serialization
-                        except Exception as e:
-                            self.logger.error(f"Invalid swap data format: {e}")
-                            await self.handle_failed_trade(trade['id'], "Invalid swap data")
-                            return False
+                        self.logger.info(f"Requesting swap with data: {json.dumps(swap_data)}")
 
                         async with session.post(swap_url, json=swap_data) as response:
                             if not response.ok:
                                 self.logger.error(f"Failed to get swap transaction: {response.status}")
+                                self.logger.error(f"Response text: {await response.text()}")
                                 await self.handle_failed_trade(trade['id'], "Failed to get swap transaction")
                                 return False
                                 
-                            transaction_data = await response.json()
+                            response_text = await response.text()
+                            self.logger.info(f"Raw swap response: {response_text}")
                             
-                            # Validate transaction response
-                            if not isinstance(transaction_data, dict) or 'swapTransaction' not in transaction_data:
-                                self.logger.error("Invalid transaction response format")
-                                await self.handle_failed_trade(trade['id'], "Invalid transaction format")
+                            try:
+                                transaction_data = json.loads(response_text)
+                            except json.JSONDecodeError as e:
+                                self.logger.error(f"Failed to parse swap response: {e}")
+                                self.logger.error(f"Response text causing error: {response_text}")
+                                await self.handle_failed_trade(trade['id'], "Invalid swap response")
                                 return False
 
-                    except json.JSONDecodeError as e:
-                        self.logger.error(f"JSON parsing error: {e}")
-                        await self.handle_failed_trade(trade['id'], "Invalid JSON response")
-                        return False
                     except Exception as e:
-                        self.logger.error(f"API request error: {e}")
-                        await self.handle_failed_trade(trade['id'], str(e))
+                        self.logger.error(f"API request error: {str(e)}")
+                        await self.handle_failed_trade(trade['id'], f"API request failed: {str(e)}")
                         return False
 
                 # Sign and send transaction
