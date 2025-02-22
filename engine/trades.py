@@ -356,34 +356,15 @@ class TradeExecutor:
         except Exception as e:
             self.logger.error(f"Error updating failed trade status: {e}")
 
-    async def get_jupiter_quote(self, input_token: str, output_token: str, amount: float) -> Optional[Dict]:
-        """Get quote from Jupiter with improved validation and error handling"""
+    async def get_jupiter_quote(self, input_token: str, output_token: str, amount: int) -> Optional[Dict]:
+        """Get quote from Jupiter"""
         try:
-            # Minimum trade amount in USD
-            MIN_TRADE_USD = 1.0
-            
-            # Get current price to validate minimum amount
-            price = await self.get_token_price(output_token)
-            if not price:
-                self.logger.error(f"Could not get price for token {output_token}")
-                return None
-                
-            # Calculate USD value of trade
-            trade_value_usd = amount * price
-            if trade_value_usd < MIN_TRADE_USD:
-                self.logger.error(f"Trade value ${trade_value_usd:.2f} below minimum ${MIN_TRADE_USD}")
-                return None
-
-            # Convert amount to proper decimals (USDC uses 6)
-            amount_raw = int(amount * 1e6)
-            
-            # Build parameters
+            # Build parameters - amount should already be in raw form with proper decimals
             params = {
                 "inputMint": str(input_token),
                 "outputMint": str(output_token),
-                "amount": str(amount_raw),
-                "slippageBps": "100",
-                # Remove platformFeeBps to reduce restrictions
+                "amount": str(amount),  # Already in raw form
+                "slippageBps": "100"
             }
             
             self.logger.info(f"Requesting Jupiter quote:")
@@ -583,20 +564,38 @@ class TradeExecutor:
             
             # Execute trade using Jupiter API
             try:
-                # Calculate trade amount (3% of balance)
-                trade_amount_usd = min(balance_amount * 0.03, 1000)  # Cap at $1000
-                trade_amount_usd = max(trade_amount_usd, 10)  # Minimum $10
-                
-                # Get Jupiter quote
-                quote_url = "https://quote-api.jup.ag/v6/quote"
-                quote_params = {
-                    "inputMint": USDC_MINT,
-                    "outputMint": signal['fields']['mint'],
-                    "amount": str(int(trade_amount_usd * 1e6)),
-                    "slippageBps": 100
-                }
+                # Get current token price first
+                token_price = await self.get_token_price(signal['fields']['mint'])
+                if not token_price:
+                    self.logger.error("Could not get token price for amount calculation")
+                    return False
 
-                self.logger.info(f"Requesting Jupiter quote with params: {json.dumps(quote_params)}")
+                # Calculate USD value we want to trade (3% of USDC balance, min $10, max $1000)
+                trade_amount_usd = min(balance_amount * 0.03, 1000)
+                trade_amount_usd = max(trade_amount_usd, 10)
+
+                # Convert USD amount to token amount
+                token_amount = trade_amount_usd / token_price
+            
+                # Convert to proper decimals for Jupiter quote
+                amount_raw = int(trade_amount_usd * 1e6)  # USDC has 6 decimals
+
+                self.logger.info(f"Trade calculation:")
+                self.logger.info(f"Token price: ${token_price}")
+                self.logger.info(f"Trade USD value: ${trade_amount_usd:.2f}")
+                self.logger.info(f"Token amount: {token_amount:.8f}")
+                self.logger.info(f"Raw amount (USDC decimals): {amount_raw}")
+
+                # Get Jupiter quote with proper amount
+                quote = await self.get_jupiter_quote(
+                    USDC_MINT,
+                    signal['fields']['mint'],
+                    amount_raw  # Pass raw amount with decimals
+                )
+
+                if not quote:
+                    await self.handle_failed_trade(trade['id'], "Failed to get quote")
+                    return False
 
                 async with aiohttp.ClientSession() as session:
                     try:
