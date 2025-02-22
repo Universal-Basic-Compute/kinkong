@@ -314,6 +314,7 @@ if os.name == 'nt':  # Windows
 
 async def execute_test_trade():
     """Test function to execute a small USDC -> SOL trade"""
+    test_logger = setup_logging()
     try:
         # Initialize executor
         executor = JupiterTradeExecutor()
@@ -347,14 +348,14 @@ async def execute_test_trade():
         if not transaction_bytes:
             raise Exception("Failed to get transaction")
             
-        logger.info("✅ Successfully generated swap transaction")
-        logger.info(f"Transaction size: {len(transaction_bytes)} bytes")
+        test_logger.info("✅ Successfully generated swap transaction")
+        test_logger.info(f"Transaction size: {len(transaction_bytes)} bytes")
         
         # Note: Actual transaction signing and sending would go here
         # But we're just testing the Jupiter API integration for now
         
     except Exception as e:
-        logger.error(f"Test trade failed: {e}")
+        test_logger.error(f"Test trade failed: {e}")
         raise
 
 class JupiterTradeExecutor:
