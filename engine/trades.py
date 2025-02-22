@@ -517,24 +517,20 @@ class TradeExecutor:
                     if not blockhash_response or not blockhash_response.value:
                         raise Exception("Failed to get recent blockhash")
                     
-                    # Get blockhash string directly from response
-                    recent_blockhash = blockhash_response.value.blockhash  # Use the string directly
-                    self.logger.info(f"Got recent blockhash: {recent_blockhash}")
-
-                    # Create Hash object from string if needed
-                    blockhash_hash = Hash.from_string(recent_blockhash)
-                    self.logger.info(f"Created Hash object: {blockhash_hash}")
+                    # Get blockhash - it's already a Hash object
+                    blockhash_hash = blockhash_response.value.blockhash
+                    self.logger.info(f"Got blockhash: {str(blockhash_hash)}")
 
                     if is_versioned:
                         # Handle versioned transaction
                         tx = VersionedTransaction.from_bytes(transaction_bytes)
                         self.logger.info("Deserialized versioned transaction")
                         
-                        # Create new message with Hash object
+                        # Use Hash object directly
                         new_message = MessageV0(
                             header=tx.message.header,
                             account_keys=tx.message.account_keys,
-                            recent_blockhash=blockhash_hash,  # Use Hash object
+                            recent_blockhash=blockhash_hash,  # Already a Hash object
                             instructions=tx.message.instructions,
                             address_table_lookups=tx.message.address_table_lookups
                         )
@@ -543,11 +539,11 @@ class TradeExecutor:
                         tx = Transaction.from_bytes(transaction_bytes)
                         self.logger.info("Deserialized legacy transaction")
                         
-                        # Create new message with Hash object
+                        # Use Hash object directly
                         new_message = Message(
                             header=tx.message.header,
                             account_keys=tx.message.account_keys,
-                            recent_blockhash=blockhash_hash,  # Use Hash object
+                            recent_blockhash=blockhash_hash,  # Already a Hash object
                             instructions=tx.message.instructions
                         )
 
