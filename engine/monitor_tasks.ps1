@@ -11,7 +11,8 @@ $currentTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 
 Write-Host "KinKong Tasks Status" -ForegroundColor Cyan
 Write-Host "===================" -ForegroundColor Cyan
-Write-Host "Time: $currentTime`n"
+Write-Host "Time: $currentTime" -ForegroundColor White
+Write-Host ""
 
 Write-Host "Task Status:" -ForegroundColor Yellow
 Write-Host "-----------" -ForegroundColor Yellow
@@ -32,7 +33,8 @@ Get-ScheduledTask -TaskName "KinKong_*" | ForEach-Object {
         default { "White" }
     }
 
-    Write-Host "`nTask: " -NoNewline
+    Write-Host ""
+    Write-Host "Task: " -NoNewline
     Write-Host $task.TaskName -ForegroundColor Cyan
     Write-Host "State: " -NoNewline
     Write-Host $state -ForegroundColor $stateColor
@@ -41,7 +43,8 @@ Get-ScheduledTask -TaskName "KinKong_*" | ForEach-Object {
     Write-Host "Last Result: $lastResult"
 }
 
-Write-Host "`nLog Files:" -ForegroundColor Yellow
+Write-Host ""
+Write-Host "Log Files:" -ForegroundColor Yellow
 Write-Host "----------" -ForegroundColor Yellow
 
 # Check and display log files
@@ -60,7 +63,8 @@ foreach ($logFile in $logFiles) {
         $lastWrite = (Get-Item $path).LastWriteTime
         $lastLines = Get-Content $path -Tail 3
 
-        Write-Host "`n$logFile:" -ForegroundColor Cyan
+        Write-Host ""
+        Write-Host "$logFile:" -ForegroundColor Cyan
         Write-Host "Size: $([math]::Round($size/1KB, 2)) KB"
         Write-Host "Last Modified: $lastWrite"
         Write-Host "Last entries:"
@@ -68,12 +72,14 @@ foreach ($logFile in $logFiles) {
             Write-Host "  $line" -ForegroundColor DarkGray
         }
     } else {
-        Write-Host "`n$logFile:" -ForegroundColor Cyan
+        Write-Host ""
+        Write-Host "$logFile:" -ForegroundColor Cyan
         Write-Host "File not found" -ForegroundColor Red
     }
 }
 
-Write-Host "`nPress any key to refresh..." -ForegroundColor Yellow
+Write-Host ""
+Write-Host "Press any key to refresh..." -ForegroundColor Yellow
 $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
 
 # Refresh display
