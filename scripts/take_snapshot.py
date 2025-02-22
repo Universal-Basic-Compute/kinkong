@@ -629,9 +629,9 @@ async def record_portfolio_snapshot():
         for snapshot in new_snapshots:
             try:
                 snapshots_table.insert(snapshot)
-                print(f"✅ Saved snapshot for {snapshot['symbol']}")
+                print(f"✅ Saved snapshot for {snapshot['token']}")
             except Exception as e:
-                print(f"Failed to save snapshot for {snapshot['symbol']}: {e}")
+                print(f"Failed to save snapshot for {snapshot['token']}: {e}")
         
         # Create portfolio snapshot
         portfolio_snapshots_table = Airtable(base_id, 'PORTFOLIO_SNAPSHOTS', api_key)
