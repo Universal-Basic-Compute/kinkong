@@ -386,7 +386,7 @@ export function SignalHistory() {
                 {getRelativeTime(signal.createdAt)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">
-                <span className={getTokenClass(signal.token)}>
+                <span className={getTokenClass(signal.token)}>  
                   {formatTokenSymbol(signal.token)}
                 </span>
               </td>
