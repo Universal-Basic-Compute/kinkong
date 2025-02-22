@@ -59,8 +59,8 @@ def calculate_additional_metrics(snapshots_table: Airtable, token_symbol: str, d
         # Create the filter formula
         filter_formula = f"AND({{symbol}}='{token_symbol}', IS_AFTER({{createdAt}}, DATEADD(NOW(), -{days}, 'days')))"
         
-        # Create complete URL with parameters - note the actual sort values
-        url = f"{base_url}?filterByFormula={filter_formula}&sort%5B0%5D%5Bfield%5D=createdAt&sort%5B0%5D%5Bdirection%5D=desc"
+        # Create complete URL with parameters - simplified sort parameters
+        url = f"{base_url}?filterByFormula={filter_formula}&sort%5Bfield%5D=createdAt&sort%5Bdirection%5D=desc"
         
         # Make request with headers
         headers = {
