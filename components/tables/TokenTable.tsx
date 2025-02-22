@@ -1,6 +1,16 @@
 'use client';
 import { useEffect, useState } from 'react';
 
+const TokenLetterCircle = ({ token }: { token: string }) => {
+  const letter = (token || '?').charAt(0).toUpperCase();
+  
+  return (
+    <div className="w-6 h-6 rounded-full bg-gold/20 flex items-center justify-center text-gold font-semibold">
+      {letter}
+    </div>
+  );
+};
+
 interface TokenMetadata {
   name: string;
   token: string;
@@ -160,12 +170,18 @@ export const TokenTable = ({ showAllTokens = false }: TokenTableProps) => {
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 hover:opacity-80"
                   >
-                    {metadata.image && (
+                    {metadata.image ? (
                       <img 
                         src={metadata.image} 
                         alt={metadata.token}
                         className="w-6 h-6 rounded-full"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.nextElementSibling?.style.display = 'flex';
+                        }}
                       />
+                    ) : (
+                      <TokenLetterCircle token={metadata.token} />
                     )}
                     <div>
                       <div className={getTokenClass(metadata.token)}>
