@@ -276,7 +276,7 @@ class TradeExecutor:
         try:
             self.trades_table.update(trade_id, {
                 'status': 'FAILED',
-                'notes': error_message  # Changed from errorMessage to notes
+                'errorMessage': error_message  # Changed back to errorMessage from notes
             })
         except Exception as e:
             self.logger.error(f"Error updating failed trade status: {e}")
@@ -331,9 +331,9 @@ class TradeExecutor:
                 # Create new transaction with fresh blockhash
                 original_transaction = Transaction.from_bytes(transaction_bytes)
                 new_message = Message.new_with_blockhash(
-                    instructions=original_transaction.message.instructions,
-                    payer=self.wallet_keypair.pubkey(),
-                    recent_blockhash=blockhash.value.blockhash
+                    original_transaction.message.instructions,
+                    self.wallet_keypair.pubkey(),
+                    blockhash.value.blockhash
                 )
                 new_transaction = Transaction.new_unsigned(new_message)
                 new_transaction.sign([self.wallet_keypair])
