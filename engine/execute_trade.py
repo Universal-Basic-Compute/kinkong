@@ -111,13 +111,16 @@ class JupiterTradeExecutor:
                 "quoteResponse": quote_data,
                 "userPublicKey": wallet_address,
                 "wrapAndUnwrapSol": False,
-                "asLegacyTransaction": True,
+                "asLegacyTransaction": True,  # Force legacy transaction format
                 "dynamicComputeUnitLimit": True,
                 "prioritizationFeeLamports": {
                     "priorityLevelWithMaxLamports": {
                         "maxLamports": 10000000,
                         "priorityLevel": "high"
                     }
+                },
+                "dynamicSlippage": {
+                    "maxBps": 100  # 1% max slippage
                 }
             }
             
@@ -140,6 +143,12 @@ class JupiterTradeExecutor:
                     try:
                         transaction_bytes = base64.b64decode(transaction_base64)
                         logger.info(f"Transaction bytes length: {len(transaction_bytes)}")
+                        
+                        # Log dynamic slippage report if available
+                        if 'dynamicSlippageReport' in transaction_data:
+                            logger.info("Dynamic Slippage Report:")
+                            logger.info(json.dumps(transaction_data['dynamicSlippageReport'], indent=2))
+                        
                         return transaction_bytes
                         
                     except Exception as e:
