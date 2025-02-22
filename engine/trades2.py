@@ -282,9 +282,9 @@ class TradeExecutor:
             self.logger.error(f"Error updating failed trade status: {e}")
 
     async def execute_trade(self, signal: Dict) -> bool:
-        """Execute a trade for a signal using Jupiter"""
+        """Execute a trade for a signal"""
         try:
-            self.logger.info(f"\nExecuting trade for signal {signal['id']}")
+            logger.info("🚀 Starting trade execution...")
             
             # Create trade record first
             trade_data = {
@@ -302,19 +302,15 @@ class TradeExecutor:
             trade = self.trades_table.insert(trade_data)
             self.logger.info(f"Created trade record: {trade['id']}")
 
-            # Constants
-            USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
-            amount = 10.0  # Start with $10 USDC trades
-            
-            # Execute swap via Jupiter
+            # Execute validated swap
             success, transaction_bytes = await self.jupiter.execute_validated_swap(
-                input_token=USDC_MINT,
+                input_token="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",  # USDC
                 output_token=signal['fields']['mint'],
-                amount=amount,
-                min_amount=5.0,  # Minimum $5 USDC
-                max_slippage=1.0  # Maximum 1% slippage
+                amount=10.0,          # 10 USDC
+                min_amount=5.0,       # Minimum 5 USDC
+                max_slippage=1.0      # Maximum 1% slippage
             )
-
+            
             if not success or not transaction_bytes:
                 await self.handle_failed_trade(trade['id'], "Swap validation failed")
                 return False
@@ -334,32 +330,21 @@ class TradeExecutor:
                 # Convert CompiledInstructions to Instructions
                 instructions = []
                 for compiled_instruction in original_transaction.message.instructions:
-                    # Get the program id from the accounts list
                     program_id = original_transaction.message.account_keys[compiled_instruction.program_id_index]
-                    
-                    # Get header info
                     header = original_transaction.message.header
                     account_keys = original_transaction.message.account_keys
                     
-                    # Calculate writable thresholds
                     writable_signers = header.num_required_signatures - header.num_readonly_signed_accounts
                     total_non_signers = len(account_keys) - header.num_required_signatures
                     writable_non_signers = total_non_signers - header.num_readonly_unsigned_accounts
                     
-                    # Convert accounts to AccountMeta objects
                     account_metas = []
                     for idx in compiled_instruction.accounts:
                         pubkey = account_keys[idx]
-                        
-                        # Determine if account is signer
                         is_signer = idx < header.num_required_signatures
-                        
-                        # Determine if account is writable based on its position
                         if is_signer:
-                            # For signers, check if within writable signers range
                             is_writable = idx < writable_signers
                         else:
-                            # For non-signers, adjust index and check against writable non-signers
                             non_signer_idx = idx - header.num_required_signatures
                             is_writable = non_signer_idx < writable_non_signers
                         
@@ -370,7 +355,6 @@ class TradeExecutor:
                         )
                         account_metas.append(account_meta)
                     
-                    # Create new Instruction with AccountMeta objects
                     instruction = Instruction(
                         program_id=program_id,
                         accounts=account_metas,
@@ -380,67 +364,77 @@ class TradeExecutor:
 
                 # Create new message with converted instructions
                 new_message = Message.new_with_blockhash(
-                    instructions,  # List of uncompiled Instructions
+                    instructions,
                     self.wallet_keypair.pubkey(),
                     blockhash.value.blockhash
                 )
 
-                # Create new unsigned transaction with the message
+                # Create and sign new transaction
                 new_transaction = Transaction.new_unsigned(message=new_message)
-
-                # Sign transaction with both keypair and blockhash
                 new_transaction.sign(
                     [self.wallet_keypair],
-                    new_transaction.message.recent_blockhash  # Pass the blockhash
+                    new_transaction.message.recent_blockhash
                 )
 
-                # Send transaction
-                result = await client.send_transaction(
-                    new_transaction,
-                    opts=TxOpts(
-                        skip_preflight=False,
-                        preflight_commitment="confirmed",
-                        max_retries=3
-                    )
-                )
+                logger.info("Sending transaction to network...")
 
-                if result.value:
-                    # Update trade record with success
-                    transaction_url = f"https://solscan.io/tx/{result.value}"
-                    self.trades_table.update(trade['id'], {
-                        'status': 'EXECUTED',
-                        'signature': result.value,
-                        'amount': amount,
-                        'price': float(signal['fields']['entryPrice']),
-                        'value': amount
-                    })
-                    
-                    self.logger.info(f"Trade executed successfully: {transaction_url}")
-                    
-                    # Update notification with more details and gorilla emoji
-                    message = f"🦍 KinKong Trade Alert\n\n"
-                    message += f"Token: ${signal['fields']['token']}\n"
-                    message += f"Action: {signal['fields']['type']}\n"
-                    message += f"Amount: ${amount:.2f} USDC\n"
-                    message += f"Entry Price: ${float(signal['fields']['entryPrice']):.4f}\n"
-                    message += f"Target: ${float(signal['fields']['targetPrice']):.4f}\n"
-                    message += f"Stop Loss: ${float(signal['fields']['stopLoss']):.4f}\n"
-                    message += f"Timeframe: {signal['fields']['timeframe']}\n\n"
-                    message += f"🔗 View Transaction:\n{transaction_url}"
-                    
-                    from scripts.analyze_charts import send_telegram_message
-                    send_telegram_message(message)
-                    
-                    return True
-                else:
-                    await self.handle_failed_trade(trade['id'], "Transaction failed to confirm")
-                    return False
+                # Send transaction with retry logic
+                max_retries = 3
+                for attempt in range(max_retries):
+                    try:
+                        result = await client.send_transaction(
+                            new_transaction,
+                            opts=TxOpts(
+                                skip_preflight=False,
+                                preflight_commitment="confirmed",
+                                max_retries=2
+                            )
+                        )
+                        
+                        if result.value:
+                            transaction_url = f"https://solscan.io/tx/{result.value}"
+                            logger.info(f"✅ Transaction successful!")
+                            logger.info(f"Transaction signature: {result.value}")
+                            logger.info(f"View on Solscan: {transaction_url}")
+                            
+                            # Update trade record
+                            self.trades_table.update(trade['id'], {
+                                'status': 'EXECUTED',
+                                'signature': str(result.value),  # Convert Signature to string
+                                'amount': 10.0,  # Fixed amount for now
+                                'price': float(signal['fields']['entryPrice'])
+                            })
+                            
+                            # Send notification
+                            message = f"🦍 KinKong Trade Alert\n\n"
+                            message += f"Token: ${signal['fields']['token']}\n"
+                            message += f"Action: {signal['fields']['type']}\n"
+                            message += f"Amount: $10.00 USDC\n"
+                            message += f"Entry Price: ${float(signal['fields']['entryPrice']):.4f}\n"
+                            message += f"Target: ${float(signal['fields']['targetPrice']):.4f}\n"
+                            message += f"Stop Loss: ${float(signal['fields']['stopLoss']):.4f}\n"
+                            message += f"Timeframe: {signal['fields']['timeframe']}\n\n"
+                            message += f"🔗 View Transaction:\n{transaction_url}"
+                            
+                            from scripts.analyze_charts import send_telegram_message
+                            send_telegram_message(message)
+                            
+                            return True
+                            
+                    except Exception as e:
+                        if attempt == max_retries - 1:
+                            raise
+                        logger.warning(f"Attempt {attempt + 1} failed, retrying...")
+                        await asyncio.sleep(1)
+
+                await self.handle_failed_trade(trade['id'], "Transaction failed to send")
+                return False
 
             finally:
                 await client.close()
 
         except Exception as e:
-            self.logger.error(f"Trade execution failed: {e}")
+            logger.error(f"Trade execution failed: {e}")
             if 'trade' in locals():
                 await self.handle_failed_trade(trade['id'], str(e))
             return False
