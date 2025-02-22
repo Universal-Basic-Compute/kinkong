@@ -282,56 +282,43 @@ class TradeExecutor:
             self.logger.error(f"Error calculating trade amount: {e}")
             raise
 
-    def get_current_price(self, token_mint: str) -> Optional[float]:
-        """Get current token price from Birdeye or DexScreener"""
+    async def get_token_price(self, token_mint: str) -> Optional[float]:
+        """Get current token price from Birdeye API"""
         try:
-            # First try Birdeye
-            birdeye_url = f"https://public-api.birdeye.so/public/price?address={token_mint}"
-            birdeye_headers = {
+            url = f"https://public-api.birdeye.so/public/price?address={token_mint}"
+            headers = {
                 'x-api-key': os.getenv('BIRDEYE_API_KEY'),
                 'accept': 'application/json'
             }
             
-            response = requests.get(birdeye_url, headers=birdeye_headers)
-            if response.status_code == 200:
-                data = response.json()
-                if data.get('success'):
-                    return float(data['data']['value'])
-        
-            # If Birdeye fails, try DexScreener
-            logger.info(f"Falling back to DexScreener for {token_mint}")
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers=headers) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        if data.get('success'):
+                            return float(data['data']['value'])
+                            
+                    self.logger.error(f"Failed to get price from Birdeye: {await response.text()}")
+                    
+            # Fallback to DexScreener
+            self.logger.info(f"Falling back to DexScreener for {token_mint}")
             dexscreener_url = f"https://api.dexscreener.com/latest/dex/tokens/{token_mint}"
-            dexscreener_headers = {
-                'User-Agent': 'Mozilla/5.0',
-                'Accept': 'application/json'
-            }
             
-            response = requests.get(dexscreener_url, headers=dexscreener_headers)
-            if response.ok:
-                data = response.json()
-                
-                if not data.get('pairs'):
-                    logger.warning(f"No pairs found for token {token_mint}")
-                    return None
-                    
-                # Get all Solana pairs
-                sol_pairs = [p for p in data['pairs'] if p.get('chainId') == 'solana']
-                if not sol_pairs:
-                    logger.warning(f"No Solana pairs found for token {token_mint}")
-                    return None
-                    
-                # Get the most liquid pair
-                main_pair = max(sol_pairs, key=lambda x: float(x.get('liquidity', {}).get('usd', 0) or 0))
-                price = float(main_pair.get('priceUsd', 0))
-                
-                logger.info(f"Got price from DexScreener: ${price:.4f}")
-                return price
-
-            logger.warning(f"Failed to get price from both APIs for {token_mint}")
+            async with aiohttp.ClientSession() as session:
+                async with session.get(dexscreener_url) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        pairs = data.get('pairs', [])
+                        if pairs:
+                            # Use most liquid pair
+                            best_pair = max(pairs, key=lambda x: float(x.get('liquidity', {}).get('usd', 0) or 0))
+                            return float(best_pair.get('priceUsd', 0))
+                            
+            self.logger.error(f"Could not get price for {token_mint}")
             return None
-
+            
         except Exception as e:
-            logger.error(f"Error getting price: {e}")
+            self.logger.error(f"Error getting token price: {str(e)}")
             return None
 
     async def handle_failed_trade(self, trade_id: str, error_message: str):
@@ -344,41 +331,96 @@ class TradeExecutor:
             self.logger.error(f"Error updating failed trade status: {e}")
 
     async def get_jupiter_quote(self, input_token: str, output_token: str, amount: float) -> Optional[Dict]:
-        """Get quote from Jupiter"""
+        """Get quote from Jupiter with improved validation and error handling"""
         try:
-            url = "https://quote-api.jup.ag/v6/quote"
+            # Minimum trade amount in USD
+            MIN_TRADE_USD = 1.0
+            
+            # Get current price to validate minimum amount
+            price = await self.get_token_price(output_token)
+            if not price:
+                self.logger.error(f"Could not get price for token {output_token}")
+                return None
+                
+            # Calculate USD value of trade
+            trade_value_usd = amount * price
+            if trade_value_usd < MIN_TRADE_USD:
+                self.logger.error(f"Trade value ${trade_value_usd:.2f} below minimum ${MIN_TRADE_USD}")
+                return None
+
+            # Convert amount to proper decimals (USDC uses 6)
+            amount_raw = int(amount * 1e6)
+            
+            # Build parameters
             params = {
-                "inputMint": str(input_token),  # Ensure string
-                "outputMint": str(output_token),  # Ensure string
-                "amount": str(int(amount)),  # Convert to integer then string
-                "slippageBps": "100",  # Convert to string
-                "platformFeeBps": "0"  # Convert to string
+                "inputMint": str(input_token),
+                "outputMint": str(output_token),
+                "amount": str(amount_raw),
+                "slippageBps": "100",
+                # Remove platformFeeBps to reduce restrictions
             }
             
-            self.logger.info(f"Requesting Jupiter quote with params: {json.dumps(params, indent=2)}")
+            self.logger.info(f"Requesting Jupiter quote:")
+            self.logger.info(f"Input token: {input_token}")
+            self.logger.info(f"Output token: {output_token}")
+            self.logger.info(f"Amount: {amount} (raw: {amount_raw})")
+            self.logger.info(f"USD value: ${trade_value_usd:.2f}")
+            
+            url = "https://quote-api.jup.ag/v6/quote"
             
             async with aiohttp.ClientSession() as session:
-                # Convert params to query string manually to ensure proper formatting
-                query_params = "&".join(f"{k}={v}" for k, v in params.items())
-                full_url = f"{url}?{query_params}"
-                
-                async with session.get(full_url) as response:
+                async with session.get(url, params=params) as response:
+                    response_text = await response.text()
+                    
                     if not response.ok:
-                        self.logger.error(f"Jupiter API error: {response.status}")
-                        self.logger.error(f"Response: {await response.text()}")
+                        self.logger.error(f"Jupiter API error {response.status}: {response_text}")
+                        
+                        # Check for specific error conditions
+                        try:
+                            error_data = json.loads(response_text)
+                            error_message = error_data.get('error', '')
+                            
+                            if "Could not find any route" in error_message:
+                                self.logger.error("No liquidity route found. Possible reasons:")
+                                self.logger.error("- Insufficient liquidity in pools")
+                                self.logger.error("- Token pair not supported")
+                                self.logger.error("- Amount too small or too large")
+                            
+                        except json.JSONDecodeError:
+                            pass
+                            
                         return None
                         
-                    data = await response.json()
+                    try:
+                        data = json.loads(response_text)
+                    except json.JSONDecodeError:
+                        self.logger.error(f"Invalid JSON response: {response_text}")
+                        return None
+                    
                     if not data.get('success'):
                         self.logger.error(f"Jupiter API returned error: {data.get('error')}")
                         return None
                         
                     quote_data = data.get('data', {})
-                    self.logger.info(f"Got quote data: {json.dumps(quote_data, indent=2)}")
+                    
+                    # Validate quote data
+                    if not quote_data.get('outAmount'):
+                        self.logger.error("Quote missing output amount")
+                        return None
+                        
+                    self.logger.info("Quote received successfully:")
+                    self.logger.info(f"Input amount: {quote_data.get('inAmount')}")
+                    self.logger.info(f"Output amount: {quote_data.get('outAmount')}")
+                    self.logger.info(f"Price impact: {quote_data.get('priceImpactPct')}%")
+                    
                     return quote_data
                     
         except Exception as e:
-            self.logger.error(f"Error getting Jupiter quote: {e}")
+            self.logger.error(f"Error getting Jupiter quote: {str(e)}")
+            if hasattr(e, '__traceback__'):
+                import traceback
+                self.logger.error("Traceback:")
+                traceback.print_tb(e.__traceback__)
             return None
 
     async def get_jupiter_transaction(self, quote_data: dict) -> Optional[bytes]:
