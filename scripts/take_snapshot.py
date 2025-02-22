@@ -416,39 +416,76 @@ async def get_enhanced_token_metrics(token_mint: str) -> Dict:
 def get_token_price(token_mint: str) -> dict:
     """Get current token metrics from Birdeye"""
     try:
-        url = f"https://public-api.birdeye.so/defi/price?address={token_mint}"
-        response = requests.get(url, headers={
-            "X-API-KEY": os.getenv('BIRDEYE_API_KEY'),
-            "x-chain": "solana",
-            "accept": "application/json"
-        })
+        url = f"https://api.dexscreener.com/latest/dex/tokens/{token_mint}"
+        headers = {
+            'User-Agent': 'Mozilla/5.0',
+            'Accept': 'application/json'
+        }
+        
+        print(f"\nFetching DexScreener data for {token_mint}")
+        response = requests.get(url, headers=headers)
         
         if response.ok:
             data = response.json()
-            if data.get('pairs'):
-                # Get most liquid Solana pair
-                sol_pairs = [p for p in data['pairs'] if p.get('chainId') == 'solana']
-                if sol_pairs:
-                    main_pair = max(sol_pairs, key=lambda x: float(x.get('liquidity', {}).get('usd', 0)))
-                    
-                    # Calculate total volume and liquidity across all pairs
-                    total_volume = sum(float(p.get('volume', {}).get('h24', 0)) for p in sol_pairs)
-                    total_liquidity = sum(float(p.get('liquidity', {}).get('usd', 0)) for p in sol_pairs)
-                    
-                    return {
-                        'price': float(main_pair.get('priceUsd', 0)),
-                        'volume24h': total_volume,
-                        'liquidity': total_liquidity,
-                        'priceChange24h': float(main_pair.get('priceChange', {}).get('h24', 0))
-                    }
-        return {
-            'price': 0,
-            'volume24h': 0,
-            'liquidity': 0,
-            'priceChange24h': 0
-        }
+            
+            if not data.get('pairs'):
+                print(f"No pairs found for token {token_mint}")
+                return {
+                    'price': 0,
+                    'volume24h': 0,
+                    'liquidity': 0,
+                    'priceChange24h': 0
+                }
+                
+            # Get all Solana pairs
+            sol_pairs = [p for p in data['pairs'] if p.get('chainId') == 'solana']
+            if not sol_pairs:
+                print(f"No Solana pairs found for token {token_mint}")
+                return {
+                    'price': 0,
+                    'volume24h': 0,
+                    'liquidity': 0,
+                    'priceChange24h': 0
+                }
+            
+            # Get the most liquid pair
+            main_pair = max(sol_pairs, key=lambda x: float(x.get('liquidity', {}).get('usd', 0) or 0))
+            
+            # Calculate totals across all pairs
+            total_volume = sum(float(p.get('volume', {}).get('h24', 0) or 0) for p in sol_pairs)
+            total_liquidity = sum(float(p.get('liquidity', {}).get('usd', 0) or 0) for p in sol_pairs)
+            
+            # Get price and change from main pair
+            price = float(main_pair.get('priceUsd', 0) or 0)
+            price_change = float(main_pair.get('priceChange', {}).get('h24', 0) or 0)
+            
+            print(f"Found {len(sol_pairs)} Solana pairs")
+            print(f"Price: ${price:.4f}")
+            print(f"24h Volume: ${total_volume:,.2f}")
+            print(f"Liquidity: ${total_liquidity:,.2f}")
+            print(f"24h Change: {price_change:.2f}%")
+            
+            return {
+                'price': price,
+                'volume24h': total_volume,
+                'liquidity': total_liquidity,
+                'priceChange24h': price_change
+            }
+            
+        else:
+            print(f"DexScreener API error: {response.status_code}")
+            print(f"Response: {response.text}")
+            return {
+                'price': 0,
+                'volume24h': 0,
+                'liquidity': 0,
+                'priceChange24h': 0
+            }
+            
     except Exception as e:
         print(f"Error getting metrics for {token_mint}: {e}")
+        if 'response' in locals():
+            print(f"Response: {response.text}")
         return {
             'price': 0,
             'volume24h': 0,
