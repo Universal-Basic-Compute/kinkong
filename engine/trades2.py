@@ -35,6 +35,7 @@ from airtable import Airtable
 from dotenv import load_dotenv
 from solders.transaction import Transaction
 from solders.message import Message
+from solders.instruction import AccountMeta, Instruction
 from solana.rpc.types import TxOpts
 import json
 import logging
