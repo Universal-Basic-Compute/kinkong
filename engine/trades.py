@@ -348,18 +348,22 @@ class TradeExecutor:
         try:
             url = "https://quote-api.jup.ag/v6/quote"
             params = {
-                "inputMint": input_token,
-                "outputMint": output_token,
-                "amount": str(int(amount * 1e6)),  # Convert to USDC decimals
-                "slippageBps": 100,  # 1% slippage
-                "onlyDirectRoutes": True,
-                "platformFeeBps": 0
+                "inputMint": str(input_token),  # Ensure string
+                "outputMint": str(output_token),  # Ensure string
+                "amount": str(int(amount)),  # Convert to integer then string
+                "slippageBps": "100",  # Convert to string
+                "onlyDirectRoutes": "true",  # String "true" instead of boolean True
+                "platformFeeBps": "0"  # Convert to string
             }
             
             self.logger.info(f"Requesting Jupiter quote with params: {json.dumps(params, indent=2)}")
             
             async with aiohttp.ClientSession() as session:
-                async with session.get(url, params=params) as response:
+                # Convert params to query string manually to ensure proper formatting
+                query_params = "&".join(f"{k}={v}" for k, v in params.items())
+                full_url = f"{url}?{query_params}"
+                
+                async with session.get(full_url) as response:
                     if not response.ok:
                         self.logger.error(f"Jupiter API error: {response.status}")
                         self.logger.error(f"Response: {await response.text()}")
