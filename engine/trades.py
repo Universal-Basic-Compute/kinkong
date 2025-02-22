@@ -829,6 +829,7 @@ if __name__ == "__main__":
     async def get_usdc_balance(self, wallet_address: str) -> float:
         """Get USDC balance for wallet"""
         try:
+            # First try Birdeye API
             url = "https://public-api.birdeye.so/v1/wallet/token_balance"
             params = {
                 "wallet": wallet_address,
@@ -839,18 +840,43 @@ if __name__ == "__main__":
                 "accept": "application/json"
             }
             
+            self.logger.info(f"Checking USDC balance for {wallet_address}")
+            
             async with aiohttp.ClientSession() as session:
                 async with session.get(url, params=params, headers=headers) as response:
-                    if not response.ok:
-                        self.logger.error(f"Balance API error: {response.status}")
-                        return 0
-                        
-                    data = await response.json()
-                    if not data.get('success'):
-                        self.logger.error("Balance API returned error")
-                        return 0
-                        
-                    return float(data['data']['uiAmount'])
+                    if response.status == 200:
+                        data = await response.json()
+                        if data.get('success'):
+                            balance = float(data['data']['uiAmount'])
+                            self.logger.info(f"USDC Balance: ${balance:,.2f}")
+                            return balance
+                            
+                    self.logger.error(f"Birdeye API error: {await response.text()}")
+            
+            # Fallback to RPC call
+            try:
+                client = AsyncClient("https://api.mainnet-beta.solana.com")
+                
+                # Get USDC ATA
+                usdc_ata = get_associated_token_address(
+                    owner=Pubkey.from_string(wallet_address),
+                    mint=Pubkey.from_string(USDC_MINT)
+                )
+                
+                # Get token balance
+                response = await client.get_token_account_balance(usdc_ata)
+                if response and response.value:
+                    balance = float(response.value.amount) / 1e6  # Convert from decimals
+                    self.logger.info(f"USDC Balance (RPC): ${balance:,.2f}")
+                    return balance
+                    
+            except Exception as e:
+                self.logger.error(f"RPC balance check failed: {e}")
+            finally:
+                if 'client' in locals():
+                    await client.close()
+                    
+            return 0
                     
         except Exception as e:
             self.logger.error(f"Balance check error: {str(e)}")
