@@ -172,6 +172,7 @@ class TokenSnapshotTaker:
             volume_growth = await self.calculate_volume_growth(token_name, volume24h, volume7d)
             
             metrics = {
+                'volume7d': volume7d,  # Add volume7d to metrics
                 'volumeGrowth': volume_growth
             }
             
@@ -225,16 +226,7 @@ class TokenSnapshotTaker:
                     calculated_metrics = await self.calculate_metrics(token, snapshot)
                     
                     # Update snapshot with calculated metrics
-                    snapshot.update({
-                        'token': token_name,
-                        'price': metrics['price'],
-                        'volume24h': metrics['volume24h'],
-                        'liquidity': metrics['liquidity'],
-                        'priceChange24h': metrics['priceChange24h'],
-                        'createdAt': created_at,
-                        'isActive': True,
-                        **calculated_metrics  # Add calculated metrics
-                    })
+                    snapshot.update(calculated_metrics)  # Just add the new metrics to existing snapshot
                     
                     # Save snapshot
                     self.snapshots_table.insert(snapshot)
