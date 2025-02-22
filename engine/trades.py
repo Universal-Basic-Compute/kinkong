@@ -478,6 +478,12 @@ class TradeExecutor:
                 self.logger.error(f"Could not get current price for {token_mint}")
                 return False
                 
+            # Calculate USD value
+            usd_value = balance * current_price
+            self.logger.info(f"Balance: {balance:.8f} {trade['fields'].get('token')}")
+            self.logger.info(f"Current price: ${current_price:.4f}")
+            self.logger.info(f"USD Value: ${usd_value:.2f}")
+
             # If balance has significant value (> $1), proceed with trade
             if usd_value > 1.0:
                 # Execute sell order with minimum $1 threshold
