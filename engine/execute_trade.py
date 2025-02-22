@@ -190,16 +190,20 @@ class JupiterTradeExecutor:
                 traceback.print_tb(e.__traceback__)
             return 0
 
-    async def get_jupiter_quote(self, input_token: str, output_token: str, amount: float) -> Optional[Dict]:
+    async def get_jupiter_quote(
+        self, 
+        input_token: str, 
+        output_token: str, 
+        amount: int,  # Now expects raw amount
+        is_raw: bool = True
+    ) -> Optional[Dict]:
         """Get quote from Jupiter API v1"""
         try:
-            amount_raw = int(amount * 1e6)  # Convert USD amount to USDC decimals
-            
             base_url = "https://api.jup.ag/swap/v1/quote"
             params = {
                 "inputMint": str(input_token),
                 "outputMint": str(output_token),
-                "amount": str(amount_raw),
+                "amount": str(amount),  # Use raw amount directly
                 "slippageBps": "100"
             }
             
@@ -210,8 +214,7 @@ class JupiterTradeExecutor:
             
             self.logger.info("\nJupiter Quote Request:")
             self.logger.info(f"URL: {url}")
-            self.logger.info(f"Amount USD: ${amount:.2f}")
-            self.logger.info(f"Amount Raw: {amount_raw}")
+            self.logger.info(f"Amount Raw: {amount}")
             
             async with aiohttp.ClientSession() as session:
                 async with session.get(url) as response:
@@ -244,9 +247,9 @@ class JupiterTradeExecutor:
         input_token: str,
         output_token: str,
         amount: float,
-        min_amount: float = 1.0,  # Now in USD
+        min_amount: float = 1.0,  # Minimum USD value
         max_slippage: float = 1.0
-    ) -> tuple[bool, Optional[bytes]]:  # Modified to return transaction bytes
+    ) -> tuple[bool, Optional[bytes]]:
         """Execute swap with validation"""
         try:
             # Get current price to calculate USD value
@@ -264,11 +267,13 @@ class JupiterTradeExecutor:
                 self.logger.error(f"USD value ${usd_value:.2f} below minimum ${min_amount}")
                 return False, None
 
-            # Convert amount to USDC decimals (6) for Jupiter API
-            amount_raw = int(usd_value * 1e6)  # Convert USD value to USDC raw amount
+            # Convert amount to raw token amount using appropriate decimals
+            # WBTC uses 8 decimals, USDC uses 6
+            decimals = 8 if input_token != "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" else 6
+            amount_raw = int(amount * (10 ** decimals))  # Convert to raw amount with proper decimals
             
-            # Get quote with proper amount
-            quote = await self.get_jupiter_quote(input_token, output_token, usd_value)  # Pass USD value
+            # Get quote with raw token amount
+            quote = await self.get_jupiter_quote(input_token, output_token, amount_raw, is_raw=True)
             if not quote:
                 return False, None
 
