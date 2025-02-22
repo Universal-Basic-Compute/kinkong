@@ -401,6 +401,7 @@ class TradeExecutor:
                 "quoteResponse": quote_data,
                 "userPublicKey": self.wallet_address,
                 "wrapAndUnwrapSol": False,
+                "asLegacyTransaction": True,  # Force legacy transaction format
                 "dynamicComputeUnitLimit": True,
                 "prioritizationFeeLamports": {
                     "priorityLevelWithMaxLamports": {
