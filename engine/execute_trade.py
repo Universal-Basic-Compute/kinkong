@@ -431,7 +431,8 @@ class JupiterTradeExecutor:
                     header=message.header,
                     account_keys=message.account_keys,
                     recent_blockhash=fresh_blockhash,
-                    instructions=message.instructions
+                    instructions=message.instructions,
+                    address_table_lookups=[]  # Add empty address table lookups if none present
                 )
                 
                 # Create new transaction with updated message
