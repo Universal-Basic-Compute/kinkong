@@ -38,6 +38,9 @@ def setup_logging():
 if os.name == 'nt':  # Windows
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
+# Create module-level logger for non-class functions
+logger = setup_logging()
+
 class JupiterTradeExecutor:
     def __init__(self):
         load_dotenv()
@@ -203,40 +206,40 @@ class JupiterTradeExecutor:
             async with aiohttp.ClientSession(connector=connector) as session:
                 async with session.get(url, params=params) as response:
                     response_text = await response.text()
-                    logger.info(f"Response Status: {response.status}")
-                    logger.info(f"Raw Response: {response_text}")
+                    self.logger.info(f"Response Status: {response.status}")
+                    self.logger.info(f"Raw Response: {response_text}")
                     
                     if not response.ok:
-                        logger.error(f"Jupiter API error: {response.status}")
-                        logger.error(f"Response headers: {dict(response.headers)}")
-                        logger.error(f"Response body: {response_text}")
+                        self.logger.error(f"Jupiter API error: {response.status}")
+                        self.logger.error(f"Response headers: {dict(response.headers)}")
+                        self.logger.error(f"Response body: {response_text}")
                         return None
                         
                     try:
                         data = json.loads(response_text)
                     except json.JSONDecodeError as e:
-                        logger.error(f"Failed to parse JSON response: {e}")
-                        logger.error(f"Invalid JSON: {response_text}")
+                        self.logger.error(f"Failed to parse JSON response: {e}")
+                        self.logger.error(f"Invalid JSON: {response_text}")
                         return None
                     
                     # Vérifier que les champs requis sont présents
                     if not all(key in data for key in ['inputMint', 'outputMint', 'inAmount', 'outAmount']):
-                        logger.error("Missing required fields in response")
-                        logger.error(f"Response data: {json.dumps(data, indent=2)}")
+                        self.logger.error("Missing required fields in response")
+                        self.logger.error(f"Response data: {json.dumps(data, indent=2)}")
                         return None
                     
-                    logger.info("Quote received successfully:")
-                    logger.info(f"Input amount: {data['inAmount']}")
-                    logger.info(f"Output amount: {data['outAmount']}")
-                    logger.info(f"Price impact: {data.get('priceImpactPct', 'N/A')}%")
+                    self.logger.info("Quote received successfully:")
+                    self.logger.info(f"Input amount: {data['inAmount']}")
+                    self.logger.info(f"Output amount: {data['outAmount']}")
+                    self.logger.info(f"Price impact: {data.get('priceImpactPct', 'N/A')}%")
                     
                     return data
                     
         except Exception as e:
-            logger.error(f"Error getting Jupiter quote: {str(e)}")
+            self.logger.error(f"Error getting Jupiter quote: {str(e)}")
             if hasattr(e, '__traceback__'):
                 import traceback
-                logger.error("Traceback:")
+                self.logger.error("Traceback:")
                 traceback.print_tb(e.__traceback__)
             return None
 
@@ -266,39 +269,39 @@ class JupiterTradeExecutor:
                 }
             }
             
-            logger.info(f"Requesting swap transaction with data: {json.dumps(swap_data, indent=2)}")
+            self.logger.info(f"Requesting swap transaction with data: {json.dumps(swap_data, indent=2)}")
             
             async with aiohttp.ClientSession() as session:
                 async with session.post(url, json=swap_data) as response:
                     if not response.ok:
-                        logger.error(f"Jupiter API error: {response.status}")
-                        logger.error(f"Response: {await response.text()}")
+                        self.logger.error(f"Jupiter API error: {response.status}")
+                        self.logger.error(f"Response: {await response.text()}")
                         return None
                         
                     transaction_data = await response.json()
                     
                     transaction_base64 = transaction_data.get('swapTransaction')
                     if not transaction_base64:
-                        logger.error("No transaction data in response")
+                        self.logger.error("No transaction data in response")
                         return None
 
                     try:
                         transaction_bytes = base64.b64decode(transaction_base64)
-                        logger.info(f"Transaction bytes length: {len(transaction_bytes)}")
+                        self.logger.info(f"Transaction bytes length: {len(transaction_bytes)}")
                         
                         # Log dynamic slippage report if available
                         if 'dynamicSlippageReport' in transaction_data:
-                            logger.info("Dynamic Slippage Report:")
-                            logger.info(json.dumps(transaction_data['dynamicSlippageReport'], indent=2))
+                            self.logger.info("Dynamic Slippage Report:")
+                            self.logger.info(json.dumps(transaction_data['dynamicSlippageReport'], indent=2))
                         
                         return transaction_bytes
                         
                     except Exception as e:
-                        logger.error(f"Invalid transaction format: {e}")
+                        self.logger.error(f"Invalid transaction format: {e}")
                         return None
 
         except Exception as e:
-            logger.error(f"Error getting swap transaction: {e}")
+            self.logger.error(f"Error getting swap transaction: {e}")
             return None
 
 async def execute_test_trade():
