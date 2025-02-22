@@ -340,6 +340,21 @@ def calculate_additional_metrics(snapshots_table: Airtable, token_name: str, day
         print(f"Error calculating additional metrics for {token_name}: {e}")
         return None
 
+async def validate_token_address(token_mint: str) -> bool:
+    """Validate if token address exists on Solana"""
+    try:
+        # First try DexScreener API as a fallback
+        url = f"https://api.dexscreener.com/latest/dex/tokens/{token_mint}"
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    return bool(data.get('pairs'))
+        return False
+    except Exception as e:
+        print(f"Error validating token address: {e}")
+        return False
+
 async def get_enhanced_token_metrics(token_mint: str) -> Dict:
     """Get comprehensive token metrics from Birdeye"""
     try:
@@ -347,10 +362,20 @@ async def get_enhanced_token_metrics(token_mint: str) -> Dict:
         if os.name == 'nt':
             asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
             
+        # Validate token first
+        if not await validate_token_address(token_mint):
+            print(f"Invalid or non-existent token address: {token_mint}")
+            return {}
+
+        # Calculate time parameters
+        now = int(datetime.now().timestamp())
+        day_ago = now - (24 * 60 * 60)  # 24 hours ago
+            
         headers = {
             "X-API-KEY": os.getenv('BIRDEYE_API_KEY'),
             "x-chain": "solana",
-            "accept": "application/json"
+            "accept": "application/json",
+            "User-Agent": "Mozilla/5.0"
         }
         
         # Debug print API key (last 4 chars)
@@ -360,14 +385,14 @@ async def get_enhanced_token_metrics(token_mint: str) -> Dict:
         else:
             print("WARNING: No Birdeye API key found")
 
-        # Define endpoints
-        base_url = "https://public-api.birdeye.so/defi"
+        # Define endpoints with correct parameters
+        base_url = "https://public-api.birdeye.so/public"  # Changed to public API path
         endpoints = {
-            'price': f"{base_url}/history_price?address={token_mint}&type=1h",
-            'depth': f"{base_url}/orderbook?address={token_mint}",
-            'info': f"{base_url}/token_info?address={token_mint}",
-            'trades': f"{base_url}/trades?address={token_mint}",
-            'pool': f"{base_url}/pool_stats?address={token_mint}"
+            'price': f"{base_url}/price_history?address={token_mint}&address_type=token&type=1H&time_from={day_ago}&time_to={now}",
+            'depth': f"{base_url}/orderbook_analysis?address={token_mint}&address_type=token",
+            'info': f"{base_url}/token_metadata?address={token_mint}&address_type=token",
+            'trades': f"{base_url}/latest_trades?address={token_mint}&address_type=token&limit=100",
+            'pool': f"{base_url}/pool_info?address={token_mint}&address_type=token"
         }
 
         print(f"\nFetching metrics for token {token_mint}")
@@ -376,7 +401,8 @@ async def get_enhanced_token_metrics(token_mint: str) -> Dict:
         async with aiohttp.ClientSession() as session:
             tasks = []
             for endpoint_name, url in endpoints.items():
-                print(f"Requesting {endpoint_name} data from: {url}")
+                print(f"\nRequesting {endpoint_name} data from: {url}")
+                print(f"Headers: {headers}")
                 tasks.append(session.get(url, headers=headers))
             
             responses = await asyncio.gather(*tasks)
