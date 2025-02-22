@@ -1,28 +1,51 @@
 import sys
 from pathlib import Path
 import os
+
+# Get absolute path to project root
+project_root = Path(__file__).parent.parent.absolute()
+
+# Add project root to Python path
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
+# Debug prints
+print("\nCurrent working directory:", os.getcwd())
+print("Project root:", project_root)
+print("Python path:", sys.path)
+
+# Now try the import
+try:
+    from execute_trade import JupiterTradeExecutor
+except ImportError as e:
+    print(f"\nImport failed: {e}")
+    print("\nTrying alternate import path...")
+    try:
+        from engine.execute_trade import JupiterTradeExecutor
+    except ImportError as e:
+        print(f"Alternate import also failed: {e}")
+        raise
+
+import os
 from datetime import datetime, timezone
 import asyncio
 import requests
+import aiohttp
 from airtable import Airtable
 from dotenv import load_dotenv
+from solders.transaction import Transaction
+from solders.message import Message
+from solders.instruction import AccountMeta, Instruction
+from solana.rpc.types import TxOpts
 import json
 import logging
 from typing import List, Dict, Optional
 from solders.keypair import Keypair
 from solders.pubkey import Pubkey
-from solders.transaction import Transaction, VersionedTransaction
-from solders.message import Message, MessageV0
-from solders.instruction import Instruction
-from solders.hash import Hash
 from solana.rpc.async_api import AsyncClient
 from solana.rpc import types
 from solana.rpc.commitment import Commitment
 import base58
-import base64
-import urllib.parse
-from solana.rpc.async_api import AsyncClient
-from solders.pubkey import Pubkey
 from spl.token.constants import TOKEN_PROGRAM_ID
 from spl.token.instructions import get_associated_token_address
 
@@ -30,7 +53,6 @@ def setup_logging():
     """Configure logging with a single handler"""
     logger = logging.getLogger(__name__)
     
-    # Only add handler if none exist to avoid duplicates
     if not logger.handlers:
         handler = logging.StreamHandler()
         formatter = logging.Formatter(
@@ -40,10 +62,7 @@ def setup_logging():
         handler.setFormatter(formatter)
         logger.addHandler(handler)
         
-    # Force logging level to INFO
     logger.setLevel(logging.INFO)
-    
-    # Ensure parent loggers don't filter our messages
     logger.propagate = False
     
     return logger
@@ -60,14 +79,6 @@ def get_associated_token_address(owner: Pubkey, mint: Pubkey) -> Pubkey:
         bytes(mint)
     ]
     return Pubkey.find_program_address(seeds, TOKEN_PROGRAM_ID)[0]
-import json
-from spl.token.instructions import get_associated_token_address
-import base58
-from decimal import Decimal
-import aiohttp
-
-# Solana USDC mint address
-USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
 
 # Get absolute path to project root and .env file
 project_root = Path(__file__).parent.parent.absolute()
@@ -99,6 +110,9 @@ class TradeExecutor:
         self.trades_table = Airtable(self.base_id, 'TRADES', self.api_key)
         self.logger = setup_logging()
         
+        # Initialize Jupiter trade executor
+        self.jupiter = JupiterTradeExecutor()
+        
         # Initialize wallet during class initialization
         try:
             private_key = os.getenv('STRATEGY_WALLET_PRIVATE_KEY')
@@ -114,7 +128,6 @@ class TradeExecutor:
             self.logger.error(f"Failed to initialize wallet: {e}")
             self.wallet_keypair = None
             self.wallet_address = None
-
 
     async def get_active_buy_signals(self) -> List[Dict]:
         """Get all non-expired BUY signals"""
@@ -166,7 +179,7 @@ class TradeExecutor:
                 logger.warning(f"Trade already exists for signal {signal['id']}")
                 return False
 
-            # Get current price from Birdeye API
+            # Get current price from DexScreener API
             token_mint = signal['fields'].get('mint')
             if not token_mint:
                 logger.warning(f"No mint address for signal {signal['id']}")
@@ -220,99 +233,6 @@ class TradeExecutor:
             logger.error(f"Error checking entry conditions: {e}")
             return False
 
-    async def create_buy_transaction(
-        self,
-        client: AsyncClient,
-        token_mint: str,
-        amount: float,
-        wallet_keypair: Keypair
-    ) -> Transaction:
-        """Create a buy transaction using Jupiter SDK"""
-        try:
-            # Get the ATA for the token
-            token_account = get_associated_token_address(
-                owner=wallet_keypair.public_key,
-                mint=Pubkey.from_string(token_mint)
-            )
-
-            # Use Jupiter API to get the swap route
-            route_url = f"https://quote-api.jup.ag/v6/quote"
-            params = {
-                "inputMint": USDC_MINT,  # Changed from SOL to USDC
-                "outputMint": token_mint,
-                "amount": str(int(amount * 1e6)),  # Convert to USDC decimals
-                "slippageBps": 100  # 1% slippage
-            }
-            
-            async with aiohttp.ClientSession() as session:
-                async with session.get(route_url, params=params) as response:
-                    route_data = await response.json()
-
-            # Get the transaction data
-            swap_url = "https://quote-api.jup.ag/v6/swap"
-            swap_data = {
-                "quoteResponse": route_data,
-                "userPublicKey": str(wallet_keypair.public_key),
-                "wrapUnwrapSOL": False  # Changed to False since we're using USDC
-            }
-
-            async with aiohttp.ClientSession() as session:
-                async with session.post(swap_url, json=swap_data) as response:
-                    transaction_data = await response.json()
-
-            # Create and sign transaction
-            transaction = Transaction.deserialize(base58.b58decode(transaction_data['swapTransaction']))
-            transaction.sign(wallet_keypair)
-
-            return transaction
-
-        except Exception as e:
-            self.logger.error(f"Failed to create buy transaction: {e}")
-            raise
-
-    async def calculate_trade_amount(
-        self,
-        client: AsyncClient,
-        wallet_keypair: Keypair,
-        entry_price: float
-    ) -> float:
-        """Calculate trade amount with 3% allocation, min $10, max $1000"""
-        try:
-            # Get USDC token account
-            usdc_ata = get_associated_token_address(
-                owner=wallet_keypair.public_key,
-                mint=Pubkey.from_string(USDC_MINT)
-            )
-            
-            # Get USDC balance
-            token_balance = await client.get_token_account_balance(usdc_ata)
-            if not token_balance:
-                self.logger.error("Failed to get USDC balance")
-                return 0
-                
-            # Calculate wallet value in USD (USDC balance is already in USD)
-            wallet_value_usd = float(token_balance.value.amount) / 10**6  # Convert from decimals
-            
-            # Calculate 3% of wallet value
-            trade_value_usd = wallet_value_usd * 0.03
-            
-            # Apply min/max constraints
-            trade_value_usd = max(10.0, min(1000.0, trade_value_usd))
-            
-            # Convert to token amount based on entry price
-            token_amount = trade_value_usd / entry_price
-            
-            self.logger.info(f"Trade calculation:")
-            self.logger.info(f"USDC balance: ${wallet_value_usd:.2f}")
-            self.logger.info(f"Trade value: ${trade_value_usd:.2f}")
-            self.logger.info(f"Token amount: {token_amount:.4f}")
-            
-            return token_amount
-
-        except Exception as e:
-            self.logger.error(f"Error calculating trade amount: {e}")
-            raise
-
     async def get_token_price(self, token_mint: str) -> Optional[float]:
         """Get current token price from Birdeye API"""
         try:
@@ -361,406 +281,184 @@ class TradeExecutor:
         except Exception as e:
             self.logger.error(f"Error updating failed trade status: {e}")
 
-    async def get_jupiter_quote(self, input_token: str, output_token: str, amount: float) -> Optional[Dict]:
-        """Get quote from Jupiter with proper amount handling"""
-        try:
-            # Convert amount to proper decimals (USDC has 6 decimals)
-            amount_raw = int(amount * 1e6)  # Convert to USDC decimals
-            
-            params = {
-                "inputMint": str(input_token),
-                "outputMint": str(output_token),
-                "amount": str(amount_raw),
-                "slippageBps": "100",
-                "onlyDirectRoutes": "false",  # Allow indirect routes
-                "asLegacyTransaction": "true"  # Force legacy transaction format
-            }
-            
-            url = "https://quote-api.jup.ag/v6/quote"
-            
-            self.logger.info("\nJupiter Quote Request:")
-            self.logger.info(f"Input Token: {input_token}")
-            self.logger.info(f"Output Token: {output_token}")
-            self.logger.info(f"Amount USD: ${amount:.2f}")
-            self.logger.info(f"Amount Raw: {amount_raw}")
-            self.logger.info(f"Full URL: {url}?{urllib.parse.urlencode(params)}")
-            
-            async with aiohttp.ClientSession() as session:
-                try:
-                    async with session.get(url, params=params) as response:
-                        # Log raw response
-                        response_text = await response.text()
-                        self.logger.info(f"Response Status: {response.status}")
-                        self.logger.info(f"Raw Response: {response_text}")
-                        
-                        if not response.ok:
-                            self.logger.error(f"Jupiter API HTTP error: {response.status}")
-                            self.logger.error(f"Response headers: {dict(response.headers)}")
-                            self.logger.error(f"Response body: {response_text}")
-                            return None
-                            
-                        try:
-                            data = json.loads(response_text)
-                        except json.JSONDecodeError as e:
-                            self.logger.error(f"Failed to parse JSON response: {e}")
-                            self.logger.error(f"Invalid JSON: {response_text}")
-                            return None
-                        
-                        # Log parsed response
-                        self.logger.info(f"Parsed Response: {json.dumps(data, indent=2)}")
-                        
-                        if not data.get('success'):
-                            error_msg = data.get('error', 'No error message provided')
-                            self.logger.error(f"Jupiter API returned error: {error_msg}")
-                            
-                            # Check specific error conditions
-                            if "Could not find any route" in str(error_msg):
-                                self.logger.error("No liquidity route found - possible reasons:")
-                                self.logger.error("- Insufficient liquidity in pools")
-                                self.logger.error("- Token pair not supported")
-                                self.logger.error("- Amount too small or too large")
-                                self.logger.error(f"Attempted amount: {amount}")
-                            return None
-                            
-                        quote_data = data.get('data', {})
-                        
-                        # Validate quote data
-                        if not quote_data.get('outAmount'):
-                            self.logger.error("Quote missing output amount")
-                            self.logger.error(f"Quote data: {json.dumps(quote_data, indent=2)}")
-                            return None
-                        
-                        # Log successful quote details    
-                        self.logger.info("Quote received successfully:")
-                        self.logger.info(f"Input amount: {quote_data.get('inAmount')}")
-                        self.logger.info(f"Output amount: {quote_data.get('outAmount')}")
-                        self.logger.info(f"Price impact: {quote_data.get('priceImpactPct')}%")
-                        
-                        return quote_data
-                        
-                except aiohttp.ClientError as e:
-                    self.logger.error(f"HTTP request failed: {str(e)}")
-                    return None
-                
-        except Exception as e:
-            self.logger.error(f"Error getting Jupiter quote: {str(e)}")
-            if hasattr(e, '__traceback__'):
-                import traceback
-                self.logger.error("Traceback:")
-                traceback.print_tb(e.__traceback__)
-            return None
-            
-        finally:
-            if 'client' in locals():
-                await client.close()
-
-    async def get_jupiter_transaction(self, quote_data: dict) -> Optional[bytes]:
-        """Get swap transaction from Jupiter"""
-        try:
-            url = "https://quote-api.jup.ag/v6/swap"
-            swap_data = {
-                "quoteResponse": quote_data,
-                "userPublicKey": self.wallet_address,
-                "wrapAndUnwrapSol": False,
-                "asLegacyTransaction": True,  # Force legacy transaction format
-                "dynamicComputeUnitLimit": True,
-                "prioritizationFeeLamports": {
-                    "priorityLevelWithMaxLamports": {
-                        "maxLamports": 10000000,
-                        "priorityLevel": "high"
-                    }
-                }
-            }
-            
-            self.logger.info(f"Requesting swap transaction with data: {json.dumps(swap_data, indent=2)}")
-            
-            async with aiohttp.ClientSession() as session:
-                async with session.post(url, json=swap_data) as response:
-                    if not response.ok:
-                        self.logger.error(f"Jupiter API error: {response.status}")
-                        self.logger.error(f"Response: {await response.text()}")
-                        return None
-                        
-                    transaction_data = await response.json()
-                    
-                    # Get transaction data
-                    transaction_base64 = transaction_data.get('swapTransaction')
-                    if not transaction_base64:
-                        self.logger.error("No transaction data in response")
-                        return None
-
-                    # Decode and validate transaction
-                    try:
-                        transaction_bytes = base64.b64decode(transaction_base64)
-                        self.logger.info(f"Transaction bytes length: {len(transaction_bytes)}")
-                        
-                        # Deserialize as legacy transaction
-                        Transaction.from_bytes(transaction_bytes)
-                        return transaction_bytes
-                        
-                    except Exception as e:
-                        self.logger.error(f"Invalid transaction format: {e}")
-                        return None
-
-        except Exception as e:
-            self.logger.error(f"Error getting swap transaction: {e}")
-            return None
-
     async def execute_trade(self, signal: Dict) -> bool:
         """Execute a trade for a signal"""
         try:
-            self.logger.info(f"\nExecuting trade for signal {signal['id']}")
+            logger.info("🚀 Starting trade execution...")
             
-            # Validate wallet first
-            if not self.wallet_keypair or not self.wallet_address:
-                self.logger.error("No wallet configured")
-                return False
-                
-            # Get USDC balance first
-            balance = await self.get_usdc_balance(self.wallet_address)
+            # Create trade record first
+            trade_data = {
+                'signalId': signal['id'],
+                'token': signal['fields']['token'],
+                'createdAt': datetime.now(timezone.utc).isoformat(),
+                'type': signal['fields']['type'],
+                'status': 'PENDING',
+                'timeframe': signal['fields']['timeframe'],
+                'entryPrice': float(signal['fields']['entryPrice']),
+                'targetPrice': float(signal['fields']['targetPrice']),
+                'stopLoss': float(signal['fields']['stopLoss']),
+                'transactionUrl': ''  # Initialize empty, will be updated after execution
+            }
+            
+            trade = self.trades_table.insert(trade_data)
+            self.logger.info(f"Created trade record: {trade['id']}")
+
+            # Calculate trade amount (3% of balance, min $10, max $1000)
+            balance = await self.jupiter.get_token_balance("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v")  # USDC balance
             if balance <= 0:
-                self.logger.error("Could not get USDC balance")
+                logger.error("Could not get USDC balance")
+                await self.handle_failed_trade(trade['id'], "Failed to get USDC balance")
                 return False
             if balance < 10:
-                self.logger.error(f"Insufficient USDC balance: ${balance:.2f}")
+                logger.error(f"Insufficient USDC balance: ${balance:.2f}")
+                await self.handle_failed_trade(trade['id'], "Insufficient USDC balance")
                 return False
-                
-            # Get current token price
-            token_price = await self.get_token_price(signal['fields']['mint'])
-            if not token_price:
-                self.logger.error("Could not get token price")
-                return False
-                
-            # Calculate trade amount (3% of balance, min $10, max $1000)
-            trade_amount_usd = min(balance * 0.03, 1000)
-            trade_amount_usd = max(trade_amount_usd, 10)
-            
-            self.logger.info(f"\nTrade calculation:")
-            self.logger.info(f"USDC balance: ${balance:.2f}")
-            self.logger.info(f"Trade amount: ${trade_amount_usd:.2f}")
-            self.logger.info(f"Token price: ${token_price:.4f}")
 
-            # Create trade record BEFORE execution
-            try:
-                trade_data = {
-                    'signalId': signal['id'],
-                    'token': signal['fields']['token'],
-                    'createdAt': datetime.now(timezone.utc).isoformat(),
-                    'type': signal['fields']['type'],  # BUY or SELL
-                    'amount': 0,  # Will be updated after execution
-                    'price': float(signal['fields']['entryPrice']),
-                    'status': 'PENDING',
-                    'timeframe': signal['fields']['timeframe'],
-                    'entryPrice': float(signal['fields']['entryPrice']),
-                    'targetPrice': float(signal['fields']['targetPrice']),
-                    'stopLoss': float(signal['fields']['stopLoss'])
-                }
-                
-                trade = self.trades_table.insert(trade_data)
-                self.logger.info(f"Created trade record: {trade['id']}")
-                
-            except Exception as e:
-                self.logger.error(f"Failed to create trade record: {e}")
+            trade_amount_usd = min(balance * 0.03, 1000)  # 3% of balance, max $1000
+            trade_amount_usd = max(trade_amount_usd, 10)  # Minimum $10
+
+            logger.info(f"\nTrade calculation:")
+            logger.info(f"USDC balance: ${balance:.2f}")
+            logger.info(f"Trade amount: ${trade_amount_usd:.2f}")
+
+            # Execute validated swap with calculated amount
+            success, transaction_bytes = await self.jupiter.execute_validated_swap(
+                input_token="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",  # USDC
+                output_token=signal['fields']['mint'],
+                amount=trade_amount_usd,  # Use calculated amount
+                min_amount=5.0,          # Minimum 5 USDC
+                max_slippage=1.0         # Maximum 1% slippage
+            )
+            
+            if not success or not transaction_bytes:
+                await self.handle_failed_trade(trade['id'], "Swap validation failed")
                 return False
 
             # Initialize Solana client
             client = AsyncClient("https://api.mainnet-beta.solana.com")
             
-            # Execute trade using Jupiter API
             try:
-                # Get current token price first
-                token_price = await self.get_token_price(signal['fields']['mint'])
-                if not token_price:
-                    self.logger.error("Could not get token price for amount calculation")
-                    return False
+                # Get fresh blockhash
+                blockhash = await client.get_latest_blockhash()
+                if not blockhash or not blockhash.value:
+                    raise Exception("Failed to get recent blockhash")
 
-                # Calculate USD value we want to trade (3% of USDC balance, min $10, max $1000)
-                trade_amount_usd = min(balance * 0.03, 1000)
-                trade_amount_usd = max(trade_amount_usd, 10)
+                # Deserialize original transaction
+                original_transaction = Transaction.from_bytes(transaction_bytes)
 
-                # Convert USD amount to token amount
-                token_amount = trade_amount_usd / token_price
-            
-                # Convert to proper decimals for Jupiter quote
-                amount_raw = int(trade_amount_usd * 1e6)  # USDC has 6 decimals
+                # Convert CompiledInstructions to Instructions
+                instructions = []
+                for compiled_instruction in original_transaction.message.instructions:
+                    program_id = original_transaction.message.account_keys[compiled_instruction.program_id_index]
+                    header = original_transaction.message.header
+                    account_keys = original_transaction.message.account_keys
+                    
+                    writable_signers = header.num_required_signatures - header.num_readonly_signed_accounts
+                    total_non_signers = len(account_keys) - header.num_required_signatures
+                    writable_non_signers = total_non_signers - header.num_readonly_unsigned_accounts
+                    
+                    account_metas = []
+                    for idx in compiled_instruction.accounts:
+                        pubkey = account_keys[idx]
+                        is_signer = idx < header.num_required_signatures
+                        if is_signer:
+                            is_writable = idx < writable_signers
+                        else:
+                            non_signer_idx = idx - header.num_required_signatures
+                            is_writable = non_signer_idx < writable_non_signers
+                        
+                        account_meta = AccountMeta(
+                            pubkey=pubkey,
+                            is_signer=is_signer,
+                            is_writable=is_writable
+                        )
+                        account_metas.append(account_meta)
+                    
+                    instruction = Instruction(
+                        program_id=program_id,
+                        accounts=account_metas,
+                        data=compiled_instruction.data
+                    )
+                    instructions.append(instruction)
 
-                self.logger.info(f"Trade calculation:")
-                self.logger.info(f"Token price: ${token_price}")
-                self.logger.info(f"Trade USD value: ${trade_amount_usd:.2f}")
-                self.logger.info(f"Token amount: {token_amount:.8f}")
-                self.logger.info(f"Raw amount (USDC decimals): {amount_raw}")
-
-                # Get Jupiter quote with proper amount
-                quote = await self.get_jupiter_quote(
-                    USDC_MINT,
-                    signal['fields']['mint'],
-                    amount_raw  # Pass raw amount with decimals
+                # Create new message with converted instructions
+                new_message = Message.new_with_blockhash(
+                    instructions,
+                    self.wallet_keypair.pubkey(),
+                    blockhash.value.blockhash
                 )
 
-                if not quote:
-                    await self.handle_failed_trade(trade['id'], "Failed to get quote")
-                    return False
+                # Create and sign new transaction
+                new_transaction = Transaction.new_unsigned(message=new_message)
+                new_transaction.sign(
+                    [self.wallet_keypair],
+                    new_transaction.message.recent_blockhash
+                )
 
-                # Use Jupiter quote API endpoint
-                quote_url = "https://quote-api.jup.ag/v6/quote"
-                
-                async with aiohttp.ClientSession() as session:
+                logger.info("Sending transaction to network...")
+
+                # Send transaction with retry logic
+                max_retries = 3
+                for attempt in range(max_retries):
                     try:
-                        # Build quote request parameters
-                        quote_params = {
-                            "inputMint": USDC_MINT,
-                            "outputMint": signal['fields']['mint'],
-                            "amount": str(int(trade_amount_usd * 1e6)),
-                            "slippageBps": "100"
-                        }
+                        result = await client.send_transaction(
+                            new_transaction,
+                            opts=TxOpts(
+                                skip_preflight=False,
+                                preflight_commitment="confirmed",
+                                max_retries=2
+                            )
+                        )
                         
-                        async with session.get(quote_url, params=quote_params) as response:
-                            if not response.ok:
-                                self.logger.error(f"Failed to get Jupiter quote: {response.status}")
-                                self.logger.error(f"Response text: {await response.text()}")
-                                await self.handle_failed_trade(trade['id'], "Failed to get quote")
-                                return False
-                                
-                            response_text = await response.text()
-                            self.logger.info(f"Raw quote response: {response_text}")
+                        if result.value:
+                            transaction_url = f"https://solscan.io/tx/{result.value}"
+                            logger.info(f"✅ Transaction successful!")
+                            logger.info(f"Transaction signature: {result.value}")
+                            logger.info(f"View on Solscan: {transaction_url}")
                             
-                            try:
-                                quote_data = json.loads(response_text)
-                            except json.JSONDecodeError as e:
-                                self.logger.error(f"Failed to parse quote response: {e}")
-                                self.logger.error(f"Response text causing error: {response_text}")
-                                await self.handle_failed_trade(trade['id'], "Invalid quote response")
-                                return False
-
-                        # Get transaction data
-                        swap_url = "https://quote-api.jup.ag/v6/swap"
-                        swap_data = {
-                            "quoteResponse": quote_data,
-                            "userPublicKey": self.wallet_address,
-                            "wrapUnwrapSOL": False
-                        }
-                        
-                        self.logger.info(f"Requesting swap with data: {json.dumps(swap_data)}")
-
-                        async with session.post(swap_url, json=swap_data) as response:
-                            if not response.ok:
-                                self.logger.error(f"Failed to get swap transaction: {response.status}")
-                                self.logger.error(f"Response text: {await response.text()}")
-                                await self.handle_failed_trade(trade['id'], "Failed to get swap transaction")
-                                return False
-                                
-                            response_text = await response.text()
-                            self.logger.info(f"Raw swap response: {response_text}")
+                            # Update trade record
+                            transaction_url = f"https://solscan.io/tx/{result.value}"
+                            self.trades_table.update(trade['id'], {
+                                'status': 'EXECUTED',
+                                'signature': str(result.value),  # Convert Signature to string
+                                'amount': trade_amount_usd,  # Use actual amount
+                                'price': float(signal['fields']['entryPrice']),
+                                'transactionUrl': transaction_url  # Add transaction URL
+                            })
                             
-                            try:
-                                transaction_data = json.loads(response_text)
-                            except json.JSONDecodeError as e:
-                                self.logger.error(f"Failed to parse swap response: {e}")
-                                self.logger.error(f"Response text causing error: {response_text}")
-                                await self.handle_failed_trade(trade['id'], "Invalid swap response")
-                                return False
-
+                            # Send notification
+                            message = f"🦍 KinKong Trade Alert\n\n"
+                            message += f"Token: ${signal['fields']['token']}\n"
+                            message += f"Action: {signal['fields']['type']}\n"
+                            message += f"Amount: ${trade_amount_usd:.2f} USDC\n"
+                            message += f"Entry Price: ${float(signal['fields']['entryPrice']):.4f}\n"
+                            message += f"Target: ${float(signal['fields']['targetPrice']):.4f}\n"
+                            message += f"Stop Loss: ${float(signal['fields']['stopLoss']):.4f}\n"
+                            message += f"Timeframe: {signal['fields']['timeframe']}\n\n"
+                            message += f"🔗 View Transaction:\n{transaction_url}"
+                            
+                            from scripts.analyze_charts import send_telegram_message
+                            send_telegram_message(message)
+                            
+                            return True
+                            
                     except Exception as e:
-                        self.logger.error(f"API request error: {str(e)}")
-                        await self.handle_failed_trade(trade['id'], f"API request failed: {str(e)}")
-                        return False
+                        if attempt == max_retries - 1:
+                            raise
+                        logger.warning(f"Attempt {attempt + 1} failed, retrying...")
+                        await asyncio.sleep(1)
 
-                # Get Jupiter quote and transaction
-                quote = await self.get_jupiter_quote(USDC_MINT, signal['fields']['mint'], trade_amount_usd)
-                if not quote:
-                    await self.handle_failed_trade(trade['id'], "Failed to get quote")
-                    return False
-
-                transaction_bytes = await self.get_jupiter_transaction(quote)
-                if not transaction_bytes:
-                    await self.handle_failed_trade(trade['id'], "Failed to get transaction")
-                    return False
-
-                # Create and sign transaction
-                try:
-                    # Always deserialize as legacy transaction since we requested it
-                    transaction = Transaction.from_bytes(transaction_bytes)
-                    
-                    # Get fresh blockhash
-                    blockhash = await client.get_latest_blockhash()
-                    if not blockhash or not blockhash.value:
-                        raise Exception("Failed to get recent blockhash")
-                    
-                    # Update transaction with new blockhash
-                    transaction.message.recent_blockhash = blockhash.value.blockhash
-                    
-                    # Sign transaction
-                    transaction.sign([self.wallet_keypair])
-
-                    # Send transaction
-                    result = await client.send_transaction(
-                        transaction,
-                        opts={
-                            "skip_preflight": False,
-                            "preflight_commitment": "confirmed",
-                            "max_retries": 3
-                        }
-                    )
-                    
-                    self.logger.info(f"Transaction sent: {result.value}")
-                    return True
-
-                except Exception as e:
-                    self.logger.error(f"Transaction processing error: {str(e)}")
-                    if hasattr(e, '__traceback__'):
-                        import traceback
-                        self.logger.error("Traceback:")
-                        traceback.print_tb(e.__traceback__)
-                    await self.handle_failed_trade(trade['id'], str(e))
-                    return False
-
-                # Update trade record with success
-                if result.value:
-                    transaction_url = f"https://solscan.io/tx/{result.value}"
-                    self.trades_table.update(trade['id'], {
-                        'status': 'EXECUTED',
-                        'signature': result.value,
-                        'amount': trade_amount_usd / float(signal['fields']['entryPrice']),
-                        'price': float(signal['fields']['entryPrice']),
-                        'value': trade_amount_usd
-                    })
-                    
-                    self.logger.info(f"Trade executed successfully: {transaction_url}")
-                    
-                    # Send notification
-                    message = f"🤖 Trade Executed\n\n"
-                    message += f"Token: ${signal['fields']['token']}\n"
-                    message += f"Type: {signal['fields']['type']}\n"
-                    message += f"Amount: ${trade_amount_usd:.2f}\n"
-                    message += f"Transaction: {transaction_url}"
-                    
-                    from scripts.analyze_charts import send_telegram_message
-                    send_telegram_message(message)
-                    
-                    return True
-
-            except Exception as e:
-                self.logger.error(f"Transaction error: {str(e)}")
-                if hasattr(e, '__traceback__'):
-                    import traceback
-                    self.logger.error("Traceback:")
-                    traceback.print_tb(e.__traceback__)
-                await self.handle_failed_trade(trade['id'], str(e))
+                await self.handle_failed_trade(trade['id'], "Transaction failed to send")
                 return False
 
             finally:
-                if 'client' in locals():
-                    await client.close()
+                await client.close()
 
         except Exception as e:
-            self.logger.error(f"Trade execution failed: {e}")
+            logger.error(f"Trade execution failed: {e}")
             if 'trade' in locals():
                 await self.handle_failed_trade(trade['id'], str(e))
             return False
-
-        finally:
-            if 'client' in locals():
-                await client.close()
 
     async def monitor_signals(self):
         """Main loop to monitor signals and execute trades"""
