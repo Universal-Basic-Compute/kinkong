@@ -20,31 +20,6 @@ const STRATEGY_INFO = {
 • Liquidity-aware position management`
 };
 
-interface TokenInfo {
-  token: string;
-  name: string;
-  mint: string;
-  volume7d: number;
-  liquidity: number;
-  volumeGrowth: number;
-  pricePerformance: number;
-}
-
-function getTokenClass(token: string): string {
-  const upperToken = token.toUpperCase();
-  switch (upperToken) {
-    case 'UBC':
-      return 'metallic-text-ubc';
-    case 'COMPUTE':
-      return 'metallic-text-compute';
-    case 'SOL':
-      return 'metallic-text-sol';
-    default:
-      return 'metallic-text-argent';
-  }
-}
-
-
 export default function Portfolio() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -54,20 +29,6 @@ export default function Portfolio() {
     change7d: number;
     history: Array<{timestamp: string; value: number}>;
   } | null>(null);
-  const [tokens, setTokens] = useState<TokenInfo[]>([]);
-  const [isTokensLoading, setIsTokensLoading] = useState(true);
-  const [tokenError, setTokenError] = useState<string | null>(null);
-
-  function getChangeClass(value: number | undefined) {
-    if (!value) return '';
-    return value >= 0 ? 'text-green-400' : 'text-red-400';
-  }
-
-  function formatChange(value: number | undefined) {
-    if (!value) return '0.00';
-    return value.toFixed(2);
-  }
-
 
   useEffect(() => {
     async function fetchMetrics() {
@@ -86,32 +47,40 @@ export default function Portfolio() {
     fetchMetrics();
   }, []);
 
-  useEffect(() => {
-    async function fetchTokens() {
-      try {
-        const response = await fetch('/api/tokens');
-        if (!response.ok) throw new Error('Failed to fetch tokens');
-        const data = await response.json();
-        setTokens(data);
-      } catch (err) {
-        setTokenError(err instanceof Error ? err.message : 'Failed to load tokens');
-      } finally {
-        setIsTokensLoading(false);
-      }
-    }
-
-    fetchTokens();
-  }, []);
-
   return (
-    <main className="min-h-screen p-4 max-w-7xl mx-auto">
-      <h1 className="text-4xl font-bold mb-8">KinKong Portfolio</h1>
+    <div className="min-h-screen bg-black">
+      <main className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gold mb-2">Portfolio Dashboard</h1>
+          <p className="text-gray-400">Real-time portfolio tracking and analysis</p>
+        </div>
 
-      <div className="grid grid-cols-1 gap-8">
+        {/* Portfolio Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
+            <h3 className="text-xl font-semibold text-gold mb-2">Total Value</h3>
+            <p className="text-2xl font-bold">
+              ${metrics?.totalValue?.toLocaleString() || '0.00'}
+            </p>
+          </div>
+          <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
+            <h3 className="text-xl font-semibold text-gold mb-2">24h Change</h3>
+            <p className={`text-2xl font-bold ${(metrics?.change24h || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+              {(metrics?.change24h || 0).toFixed(2)}%
+            </p>
+          </div>
+          <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
+            <h3 className="text-xl font-semibold text-gold mb-2">7d Change</h3>
+            <p className={`text-2xl font-bold ${(metrics?.change7d || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+              {(metrics?.change7d || 0).toFixed(2)}%
+            </p>
+          </div>
+        </div>
+
         {/* Current Allocation */}
-        <section>
+        <section className="mb-8">
           <div className="flex items-center gap-2 mb-4">
-            <h2 className="text-2xl font-bold">Current Allocation</h2>
+            <h2 className="text-2xl font-bold text-gold">Current Allocation</h2>
             <div className="group relative">
               <div className="cursor-help text-gray-400 border border-gray-400 rounded-full w-4 h-4 flex items-center justify-center text-xs">
                 i
@@ -121,8 +90,8 @@ export default function Portfolio() {
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="bg-black/30 p-6 rounded-lg border border-gold/20 min-h-[400px]">
               <AllocationChart />
             </div>
             <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
@@ -131,12 +100,10 @@ export default function Portfolio() {
           </div>
         </section>
 
-        {/* Portfolio Stats - Hidden for now */}
-
         {/* Performance Chart */}
         <section>
           <div className="flex items-center gap-2 mb-4">
-            <h2 className="text-2xl font-bold">Portfolio Performance</h2>
+            <h2 className="text-2xl font-bold text-gold">Portfolio Performance</h2>
             <div className="group relative">
               <div className="cursor-help text-gray-400 border border-gray-400 rounded-full w-4 h-4 flex items-center justify-center text-xs">
                 i
@@ -146,17 +113,21 @@ export default function Portfolio() {
               </div>
             </div>
           </div>
-          <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
+          <div className="bg-black/30 p-6 rounded-lg border border-gold/20 min-h-[400px]">
             {isLoading ? (
-              <div className="text-center py-8">Loading chart data...</div>
+              <div className="flex items-center justify-center h-[400px]">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gold"></div>
+              </div>
             ) : error ? (
-              <div className="text-center py-8 text-red-400">Error loading chart: {error}</div>
+              <div className="flex items-center justify-center h-[400px] text-red-400">
+                Error loading chart: {error}
+              </div>
             ) : (
               <PerformanceChart data={metrics?.history || []} />
             )}
           </div>
         </section>
-      </div>
-    </main>
+      </main>
+    </div>
   )
 }
