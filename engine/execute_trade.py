@@ -399,45 +399,26 @@ class JupiterTradeExecutor:
                 self.logger.debug(f"Transaction bytes (hex): {transaction_bytes.hex()}")
                 
                 try:
-                    # First try to deserialize as VersionedTransaction
-                    transaction = VersionedTransaction.deserialize(transaction_bytes)
-                    self.logger.info("Successfully deserialized as VersionedTransaction")
+                    # Use the correct deserialization method for versioned transactions
+                    transaction = VersionedTransaction.from_bytes(transaction_bytes)
+                    self.logger.info("Successfully deserialized versioned transaction")
                     
-                    # Update blockhash for versioned transaction
+                    # Update blockhash
                     transaction.message.set_recent_blockhash(blockhash_response.value.blockhash)
                     
-                    # Sign versioned transaction
+                    # Sign transaction
                     transaction.sign([self.wallet_keypair])
                     
+                    self.logger.info("Transaction prepared successfully")
+                    return transaction
+
                 except Exception as e:
-                    self.logger.debug(f"VersionedTransaction deserialization failed: {e}")
-                    try:
-                        # Fallback to legacy Transaction
-                        transaction = Transaction.from_bytes(transaction_bytes)
-                        self.logger.info("Successfully deserialized as legacy Transaction")
-                        
-                        # Update blockhash for legacy transaction
-                        # Get the underlying message
-                        message = transaction.message
-                        # Set the blockhash on the message
-                        message.set_recent_blockhash(blockhash_response.value.blockhash)
-                        
-                        # Sign legacy transaction
-                        transaction.sign(self.wallet_keypair)
-                        
-                    except Exception as e:
-                        self.logger.error(f"Both deserialization attempts failed: {e}")
-                        raise
+                    self.logger.error(f"Failed to prepare transaction: {e}")
+                    if hasattr(e, '__traceback__'):
+                        self.logger.error("Traceback:")
+                        traceback.print_tb(e.__traceback__)
+                    return None
 
-                self.logger.info("Transaction prepared successfully")
-                return transaction
-
-            except Exception as e:
-                self.logger.error(f"Error preparing transaction: {e}")
-                if hasattr(e, '__traceback__'):
-                    self.logger.error("Traceback:")
-                    traceback.print_tb(e.__traceback__)
-                return None
             finally:
                 await client.close()
 
