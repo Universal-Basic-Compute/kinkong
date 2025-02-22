@@ -17,6 +17,9 @@ import base58
 from decimal import Decimal
 import aiohttp
 
+# Solana USDC mint address
+USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+
 # Get absolute path to project root and .env file
 project_root = Path(__file__).parent.parent.absolute()
 env_path = project_root / '.env'
@@ -147,9 +150,9 @@ class TradeExecutor:
             # Use Jupiter API to get the swap route
             route_url = f"https://quote-api.jup.ag/v6/quote"
             params = {
-                "inputMint": "So11111111111111111111111111111111111111112",  # SOL
+                "inputMint": USDC_MINT,  # Changed from SOL to USDC
                 "outputMint": token_mint,
-                "amount": str(int(amount * 1e9)),  # Convert to lamports
+                "amount": str(int(amount * 1e6)),  # Convert to USDC decimals
                 "slippageBps": 100  # 1% slippage
             }
             
@@ -162,7 +165,7 @@ class TradeExecutor:
             swap_data = {
                 "quoteResponse": route_data,
                 "userPublicKey": str(wallet_keypair.public_key),
-                "wrapUnwrapSOL": True
+                "wrapUnwrapSOL": False  # Changed to False since we're using USDC
             }
 
             async with aiohttp.ClientSession() as session:
@@ -187,16 +190,20 @@ class TradeExecutor:
     ) -> float:
         """Calculate trade amount with 3% allocation, min $10, max $1000"""
         try:
-            # Get wallet SOL balance
-            wallet_balance = await client.get_balance(wallet_keypair.public_key)
+            # Get USDC token account
+            usdc_ata = get_associated_token_account(
+                owner_public_key=wallet_keypair.public_key,
+                mint_public_key=USDC_MINT
+            )
             
-            # Get SOL price
-            sol_price = await self.get_current_price("So11111111111111111111111111111111111111112")
-            if not sol_price:
-                raise ValueError("Could not get SOL price")
+            # Get USDC balance
+            token_balance = await client.get_token_account_balance(usdc_ata)
+            if not token_balance:
+                self.logger.error("Could not get USDC balance")
+                return 0
                 
-            # Calculate wallet value in USD
-            wallet_value_usd = (wallet_balance.value / 1e9) * sol_price  # Convert lamports to SOL
+            # Calculate wallet value in USD (USDC balance is already in USD)
+            wallet_value_usd = float(token_balance.value.amount) / 10**6  # Convert from decimals
             
             # Calculate 3% of wallet value
             trade_value_usd = wallet_value_usd * 0.03
@@ -207,15 +214,15 @@ class TradeExecutor:
             # Convert to token amount based on entry price
             token_amount = trade_value_usd / entry_price
             
-            logger.info(f"Trade calculation:")
-            logger.info(f"Wallet value: ${wallet_value_usd:.2f}")
-            logger.info(f"Trade value: ${trade_value_usd:.2f}")
-            logger.info(f"Token amount: {token_amount:.4f}")
+            self.logger.info(f"Trade calculation:")
+            self.logger.info(f"USDC balance: ${wallet_value_usd:.2f}")
+            self.logger.info(f"Trade value: ${trade_value_usd:.2f}")
+            self.logger.info(f"Token amount: {token_amount:.4f}")
             
             return token_amount
 
         except Exception as e:
-            logger.error(f"Error calculating trade amount: {e}")
+            self.logger.error(f"Error calculating trade amount: {e}")
             raise
 
     def get_current_price(self, token_mint: str) -> Optional[float]:
@@ -332,10 +339,16 @@ class TradeExecutor:
                     return False
                 
                 wallet_keypair = Keypair.from_secret_key(base58.b58decode(private_key))
-                # Validate wallet balance
-                balance = await client.get_balance(wallet_keypair.public_key)
-                if balance.value < 1000000:  # 0.001 SOL minimum
-                    self.logger.error("Insufficient wallet balance")
+                
+                # Check USDC balance instead of SOL
+                usdc_ata = get_associated_token_account(
+                    owner_public_key=wallet_keypair.public_key,
+                    mint_public_key=USDC_MINT
+                )
+                usdc_balance = await client.get_token_account_balance(usdc_ata)
+                
+                if not usdc_balance or float(usdc_balance.value.amount) / 1e6 < 10:  # Minimum $10 USDC
+                    self.logger.error("Insufficient USDC balance")
                     return False
             except Exception as e:
                 self.logger.error(f"Wallet initialization failed: {e}")
