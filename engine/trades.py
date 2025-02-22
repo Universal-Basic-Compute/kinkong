@@ -479,70 +479,52 @@ class TradeExecutor:
                         await self.handle_failed_trade(trade['id'], f"API request failed: {str(e)}")
                         return False
 
+                # Import required types from latest solana-py
+                from solana.transaction import Transaction, TransactionVersion
+                from solana.rpc.commitment import Commitment
+                from solana.rpc import types
+                from solana.keypair import Keypair
+
                 # Decode base64 transaction
                 transaction_base64 = transaction_data['swapTransaction']
                 transaction_bytes = base64.b64decode(transaction_base64)
                 self.logger.info(f"Decoded transaction bytes length: {len(transaction_bytes)}")
 
-                # Check first byte to determine transaction type
-                is_versioned = transaction_bytes[0] >= 0x80
-                self.logger.info(f"Transaction type: {'versioned' if is_versioned else 'legacy'}")
-
                 try:
+                    # Determine transaction version from first byte
+                    is_versioned = transaction_bytes[0] >= 0x80
+                    self.logger.info(f"Transaction type: {'versioned' if is_versioned else 'legacy'}")
+
+                    # Get fresh blockhash
+                    blockhash_response = await client.get_latest_blockhash()
+                    if not blockhash_response or not blockhash_response.value:
+                        raise Exception("Failed to get recent blockhash")
+                    recent_blockhash = blockhash_response.value.blockhash
+                    self.logger.info(f"Got recent blockhash: {recent_blockhash}")
+
                     if is_versioned:
-                        # Handle versioned transaction (v0)
-                        from solders.transaction import VersionedTransaction
-                        versioned_tx = VersionedTransaction.from_bytes(transaction_bytes)
+                        # Handle versioned transaction
+                        tx = Transaction.deserialize_versioned(transaction_bytes)
                         self.logger.info("Deserialized versioned transaction")
                     else:
-                        # Handle legacy transaction with workaround
-                        from solders.transaction import Transaction as SoldersTransaction
-                        from solders.message import Message
-                        from solders.instruction import Instruction
-                        from solders.pubkey import Pubkey
+                        # Handle legacy transaction
+                        tx = Transaction.deserialize(transaction_bytes)
+                        self.logger.info("Deserialized legacy transaction")
 
-                        # Convert transaction bytes to Message first
-                        message = Message.from_bytes(transaction_bytes[1:])  # Skip version byte
-                        self.logger.info("Parsed legacy transaction message")
+                    # Update blockhash
+                    tx.recent_blockhash = recent_blockhash
 
-                        # Get fresh blockhash
-                        blockhash_response = await client.get_latest_blockhash()
-                        if not blockhash_response or not blockhash_response.value:
-                            raise Exception("Failed to get recent blockhash")
-                        recent_blockhash = blockhash_response.value.blockhash
-                        self.logger.info(f"Got recent blockhash: {recent_blockhash}")
+                    # Sign transaction
+                    tx.sign(wallet_keypair)
+                    self.logger.info("Signed transaction")
 
-                        # Create new message with updated blockhash
-                        new_message = Message(
-                            header=message.header,
-                            account_keys=[Pubkey.from_bytes(bytes(key)) for key in message.account_keys],
-                            recent_blockhash=recent_blockhash,
-                            instructions=[
-                                Instruction(
-                                    program_id=ix.program_id,
-                                    accounts=ix.accounts,
-                                    data=ix.data
-                                ) for ix in message.instructions
-                            ]
-                        )
-
-                        # Sign message
-                        signature = wallet_keypair.sign_message(bytes(new_message))
-                        self.logger.info("Signed legacy message")
-
-                        # Create transaction
-                        transaction = SoldersTransaction(
-                            message=new_message,
-                            signatures=[signature]
-                        )
-
-                    # Send transaction (common for both types)
+                    # Send transaction
                     self.logger.info("Sending transaction...")
                     result = await client.send_transaction(
-                        transaction,
+                        tx,
                         opts=types.TxOpts(
                             skip_preflight=False,
-                            preflight_commitment="confirmed",
+                            preflight_commitment=Commitment("confirmed"),
                             max_retries=3
                         )
                     )
