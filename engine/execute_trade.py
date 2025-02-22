@@ -273,45 +273,80 @@ class JupiterTradeExecutor:
             return False
 
     async def execute_trade_with_retries(self, transaction: Transaction, max_retries: int = 3) -> Optional[str]:
-        """Execute a trade transaction with optimized sending options"""
+        """Execute a trade transaction with optimized sending and rate limit handling"""
         client = AsyncClient("https://api.mainnet-beta.solana.com")
         try:
             for attempt in range(max_retries):
                 try:
+                    # Calculate exponential backoff delay
+                    delay = (2 ** attempt) * 1.5  # 1.5s, 3s, 6s
+                    
                     # Send with optimized options
                     result = await client.send_transaction(
                         transaction,
                         opts=TxOpts(
-                            skip_preflight=True,  # Skip preflight for faster sending
-                            max_retries=2,  # Allow RPC retries
+                            skip_preflight=True,
+                            max_retries=2,
                             preflight_commitment="confirmed"
                         )
                     )
                     
-                    if result.value:
-                        # Wait for confirmation
-                        confirmation = await client.confirm_transaction(
-                            result.value,
-                            commitment="finalized"
-                        )
-                        
-                        if confirmation.value.err:
-                            self.logger.error(f"Transaction failed: {confirmation.value.err}")
-                            self.logger.error(f"View transaction: https://solscan.io/tx/{result.value}")
-                            if attempt < max_retries - 1:
-                                continue
-                            return None
-                        
-                        self.logger.info(f"✅ Transaction successful!")
-                        self.logger.info(f"View transaction: https://solscan.io/tx/{result.value}")
-                        return str(result.value)
+                    if not result.value:
+                        self.logger.error("No transaction signature returned")
+                        await asyncio.sleep(delay)
+                        continue
+                    
+                    # Wait before confirmation check to avoid rate limits
+                    await asyncio.sleep(1)
+                    
+                    try:
+                        # Confirm with retries
+                        for confirm_attempt in range(3):
+                            try:
+                                confirmation = await client.confirm_transaction(
+                                    result.value,
+                                    commitment="finalized"
+                                )
+                                
+                                if confirmation.value.err:
+                                    self.logger.error(f"Transaction failed: {confirmation.value.err}")
+                                    self.logger.error(f"View transaction: https://solscan.io/tx/{result.value}")
+                                    break
+                                
+                                self.logger.info(f"✅ Transaction successful!")
+                                self.logger.info(f"View transaction: https://solscan.io/tx/{result.value}")
+                                return str(result.value)
+                                
+                            except Exception as confirm_error:
+                                if "429" in str(confirm_error):  # Rate limit error
+                                    await asyncio.sleep(delay)
+                                    continue
+                                raise
+                                
+                    except Exception as e:
+                        self.logger.error(f"Confirmation error: {e}")
+                        if attempt < max_retries - 1:
+                            await asyncio.sleep(delay)
+                            continue
+                        raise
                         
                 except Exception as e:
+                    if "429" in str(e):  # Rate limit error
+                        self.logger.warning(f"Rate limit hit, waiting {delay}s before retry...")
+                        await asyncio.sleep(delay)
+                        continue
+                        
                     if attempt == max_retries - 1:
                         raise
-                    self.logger.warning(f"Attempt {attempt + 1} failed, retrying...")
-                    await asyncio.sleep(1)
+                    self.logger.warning(f"Attempt {attempt + 1} failed, retrying in {delay}s...")
+                    await asyncio.sleep(delay)
+                    
             return None
+            
+        except Exception as e:
+            self.logger.error(f"Failed to execute transaction: {e}")
+            return None
+            
         finally:
             await client.close()
 
