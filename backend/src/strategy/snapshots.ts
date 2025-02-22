@@ -3,10 +3,6 @@ import { getTable } from '../airtable/tables';
 import { getTokenData as getAirtableTokenData } from '../airtable/tokens';
 import { getCurrentPortfolio } from './portfolio';
 
-// Initialize Airtable with environment variables
-const airtable = new Airtable({
-  apiKey: process.env.KINKONG_AIRTABLE_API_KEY
-}).base(process.env.KINKONG_AIRTABLE_BASE_ID!);
 import { getTokenPrices } from '../utils/jupiter';
 import { calculateDailyPnl, calculateWeeklyPnl, calculateMonthlyPnl } from '../utils/pnl-calculations';
 import fetch from 'node-fetch';
@@ -130,7 +126,8 @@ export async function recordPortfolioSnapshot() {
     
     // Get token prices and metrics
     console.log('Fetching token data...');
-    const tokens = await getTable('TOKENS').select({
+    const tokensTable = getTable('TOKENS');
+    const records = await tokensTable.select({
       filterByFormula: '{isActive} = 1'
     }).all();
 
@@ -139,7 +136,11 @@ export async function recordPortfolioSnapshot() {
 
     // Create snapshots for each token
     const snapshots: TokenSnapshot[] = [];
-    for (const token of tokens) {
+    console.log(`Found ${records.length} active tokens`);
+
+    // Create snapshots for each token
+    const snapshots: TokenSnapshot[] = [];
+    for (const token of records) {
       try {
         // Get DexScreener data for current metrics
         const dexScreenerData = await getDexScreenerData(token.get('mint') as string);
@@ -173,6 +174,11 @@ export async function recordPortfolioSnapshot() {
     const snapshotsTable = getTable('TOKEN_SNAPSHOTS');
     for (const snapshot of snapshots) {
       try {
+        console.log('Creating token snapshot in Airtable...', {
+          table: 'TOKEN_SNAPSHOTS',
+          token: snapshot.token,
+          timestamp: snapshot.timestamp
+        });
         await snapshotsTable.create([{
           fields: {
             token: snapshot.token,
@@ -223,7 +229,12 @@ export async function recordPortfolioSnapshot() {
     };
 
     // Save to Airtable
-    await portfolioSnapshotsTable.create([snapshot]);
+    console.log('Creating portfolio snapshot in Airtable...', {
+      table: 'PORTFOLIO_SNAPSHOTS',
+      timestamp,
+      totalValue: portfolioSnapshot.fields.totalValue
+    });
+    await portfolioSnapshotsTable.create([portfolioSnapshot]);
 
     console.log(`✅ Portfolio snapshot recorded with value: $${totalValue}`);
     console.log('Portfolio metrics:', {
