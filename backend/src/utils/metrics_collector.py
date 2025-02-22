@@ -78,9 +78,9 @@ class BirdeyeEndpoints:
 @dataclass
 class MetricsResponse:
     """Structured response with validation"""
-    price_metrics: Dict
-    trade_metrics: Dict
-    trader_metrics: Dict
+    price: Dict
+    trade: Dict
+    traders: Dict
     timestamp: str
     success: bool
     error: Optional[str] = None
@@ -92,8 +92,14 @@ class MetricsResponse:
 
     def validate_metrics(self):
         """Ensure all required fields are present"""
+        metric_mapping = {
+            MetricType.PRICE: 'price',
+            MetricType.TRADE: 'trade',
+            MetricType.TRADER: 'traders'
+        }
+        
         for metric_type in MetricType:
-            actual = getattr(self, f"{metric_type.value}_metrics")
+            actual = getattr(self, metric_mapping[metric_type])
             default = METRIC_DEFAULTS[metric_type]
             self._ensure_fields(actual, default)
 
