@@ -379,16 +379,15 @@ class TradeExecutor:
                 trade_data = {
                     'signalId': signal['id'],
                     'token': signal['fields']['token'],
-                    'type': signal['fields']['type'],
-                    'timeframe': signal['fields']['timeframe'],
+                    'createdAt': datetime.now(timezone.utc).isoformat(),
+                    'type': signal['fields']['type'],  # BUY or SELL
+                    'amount': 0,  # Will be updated after execution
+                    'price': float(signal['fields']['entryPrice']),
                     'status': 'PENDING',
+                    'timeframe': signal['fields']['timeframe'],
                     'entryPrice': float(signal['fields']['entryPrice']),
                     'targetPrice': float(signal['fields']['targetPrice']),
-                    'stopLoss': float(signal['fields']['stopLoss']),
-                    'createdAt': datetime.now(timezone.utc).isoformat(),
-                    'action': signal['fields']['type'],
-                    'amount': 0,
-                    'price': float(signal['fields']['entryPrice'])
+                    'stopLoss': float(signal['fields']['stopLoss'])
                 }
                 
                 trade = self.trades_table.insert(trade_data)
@@ -452,7 +451,7 @@ class TradeExecutor:
                         'status': 'EXECUTED',
                         'signature': result.value,
                         'amount': trade_amount_usd / float(signal['fields']['entryPrice']),
-                        'price': float(signal['fields']['entryPrice']),
+                        'price': float(signal['fields']['entryPrice']), 
                         'value': trade_amount_usd,
                         'lastUpdateTime': datetime.now(timezone.utc).isoformat()
                     })
