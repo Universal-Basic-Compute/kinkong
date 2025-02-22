@@ -13,6 +13,11 @@ import logging
 load_dotenv()
 
 # Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 logger = logging.getLogger(__name__)
 
 class TokenSnapshotTaker:
@@ -26,6 +31,8 @@ class TokenSnapshotTaker:
             os.getenv('KINKONG_AIRTABLE_API_KEY')
         )
         self.birdeye_api_key = os.getenv('BIRDEYE_API_KEY')
+        # Initialize logger
+        self.logger = logging.getLogger(__name__)
 
     def get_active_tokens(self) -> List[Dict]:
         """Get all active tokens from Airtable"""
