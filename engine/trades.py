@@ -123,21 +123,51 @@ class TradeExecutor:
             return False
 
     def get_current_price(self, token_mint: str) -> Optional[float]:
-        """Get current token price from Birdeye"""
+        """Get current token price from Birdeye or DexScreener"""
         try:
-            url = f"https://public-api.birdeye.so/public/price?address={token_mint}"
-            headers = {
+            # First try Birdeye
+            birdeye_url = f"https://public-api.birdeye.so/public/price?address={token_mint}"
+            birdeye_headers = {
                 'x-api-key': os.getenv('BIRDEYE_API_KEY'),
                 'accept': 'application/json'
             }
             
-            response = requests.get(url, headers=headers)
+            response = requests.get(birdeye_url, headers=birdeye_headers)
             if response.status_code == 200:
                 data = response.json()
                 if data.get('success'):
                     return float(data['data']['value'])
+        
+            # If Birdeye fails, try DexScreener
+            logger.info(f"Falling back to DexScreener for {token_mint}")
+            dexscreener_url = f"https://api.dexscreener.com/latest/dex/tokens/{token_mint}"
+            dexscreener_headers = {
+                'User-Agent': 'Mozilla/5.0',
+                'Accept': 'application/json'
+            }
             
-            logger.warning(f"Failed to get price for {token_mint}")
+            response = requests.get(dexscreener_url, headers=dexscreener_headers)
+            if response.ok:
+                data = response.json()
+                
+                if not data.get('pairs'):
+                    logger.warning(f"No pairs found for token {token_mint}")
+                    return None
+                    
+                # Get all Solana pairs
+                sol_pairs = [p for p in data['pairs'] if p.get('chainId') == 'solana']
+                if not sol_pairs:
+                    logger.warning(f"No Solana pairs found for token {token_mint}")
+                    return None
+                    
+                # Get the most liquid pair
+                main_pair = max(sol_pairs, key=lambda x: float(x.get('liquidity', {}).get('usd', 0) or 0))
+                price = float(main_pair.get('priceUsd', 0))
+                
+                logger.info(f"Got price from DexScreener: ${price:.4f}")
+                return price
+
+            logger.warning(f"Failed to get price from both APIs for {token_mint}")
             return None
 
         except Exception as e:
