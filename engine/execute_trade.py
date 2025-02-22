@@ -397,9 +397,17 @@ class JupiterTradeExecutor:
                 # Extract the message components
                 message = original_tx.message
                 
+                # Get the static account keys
+                static_accounts = message.static_account_keys()
+                if not static_accounts:
+                    raise Exception("No static accounts found in message")
+                    
+                # The first account in static_accounts is the fee payer
+                payer = static_accounts[0]
+                
                 # Recompile message with fresh blockhash
                 new_message = MessageV0.try_compile(
-                    payer=message.header.payer,
+                    payer=payer,  # Use first account as payer
                     recent_blockhash=fresh_blockhash,
                     instructions=message.instructions,
                     address_lookup_table_accounts=message.address_lookup_table_accounts
