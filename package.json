@@ -12,7 +12,8 @@
     "reallocation": "ts-node scripts/execute-reallocation.ts",
     "snapshot": "python scripts/take_snapshot.py",
     "calculate-signals": "ts-node scripts/calculate-closed-signals.ts",
-    "wallet-snapshot": "python engine/wallet_snapshots.py"
+    "wallet-snapshot": "python engine/wallet_snapshots.py",
+    "token-search": "python engine/tokens.py"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.10.2",
