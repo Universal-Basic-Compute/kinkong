@@ -226,7 +226,7 @@ class TradeExecutor:
         try:
             self.trades_table.update(trade_id, {
                 'status': 'FAILED',
-                'errorMessage': error_message
+                'notes': error_message  # Changed from errorMessage to notes
             })
         except Exception as e:
             self.logger.error(f"Error updating failed trade status: {e}")
@@ -278,10 +278,15 @@ class TradeExecutor:
                 if not blockhash or not blockhash.value:
                     raise Exception("Failed to get recent blockhash")
 
-                # Deserialize and sign transaction
-                transaction = Transaction.from_bytes(transaction_bytes)
-                transaction.message.recent_blockhash = blockhash.value.blockhash
-                transaction.sign([self.wallet_keypair])
+                # Create new transaction with fresh blockhash
+                original_transaction = Transaction.from_bytes(transaction_bytes)
+                new_message = Message.new_with_blockhash(
+                    instructions=original_transaction.message.instructions,
+                    payer=self.wallet_keypair.pubkey(),
+                    recent_blockhash=blockhash.value.blockhash
+                )
+                new_transaction = Transaction.new_unsigned(new_message)
+                new_transaction.sign([self.wallet_keypair])
 
                 # Send transaction
                 result = await client.send_transaction(
