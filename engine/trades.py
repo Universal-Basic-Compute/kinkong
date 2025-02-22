@@ -342,9 +342,9 @@ class TradeExecutor:
                 wallet_keypair = Keypair.from_secret_key(base58.b58decode(private_key))
                 
                 # Check USDC balance instead of SOL
-                usdc_ata = get_associated_token_account(
-                    owner_public_key=wallet_keypair.public_key,
-                    mint_public_key=USDC_MINT
+                usdc_ata = get_associated_token_address(
+                    owner=wallet_keypair.public_key,
+                    mint=Pubkey.from_string(USDC_MINT)
                 )
                 usdc_balance = await client.get_token_account_balance(usdc_ata)
                 
