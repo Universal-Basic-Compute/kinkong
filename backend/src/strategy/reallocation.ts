@@ -126,6 +126,8 @@ interface Thought {
   content: string;
   context: Record<string, any>;
 }
+
+function normalizeScore(value: number, allValues: number[]): number {
   const min = Math.min(...allValues);
   const max = Math.max(...allValues);
   if (max === min) return 50; // Default to middle if all values are the same
