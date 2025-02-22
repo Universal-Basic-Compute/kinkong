@@ -21,7 +21,7 @@ schtasks /delete /tn "KinKong_Trades" /f 2>nul
 
 REM Common task settings
 set TASK_SETTINGS=/NP /RL HIGHEST /RU "%USERNAME%" /IT
-set ERROR_SETTINGS=/F /V1 /Z
+set ERROR_SETTINGS=/V1 /Z
 
 REM Create new tasks with enhanced configuration
 echo Creating new tasks...
