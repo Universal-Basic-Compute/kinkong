@@ -598,9 +598,13 @@ class TradeExecutor:
                         tx = Transaction.from_bytes(transaction_bytes)
                         self.logger.info("Deserialized legacy transaction")
                         
-                        # 2. Créer une nouvelle transaction avec le blockhash en premier argument
-                        final_tx = Transaction(recent_blockhash=blockhash_hash, message=tx.message)
-                        final_tx.sign([self.wallet_keypair])
+                        # 2. Créer une nouvelle transaction avec les keypairs, le message et le blockhash
+                        final_tx = Transaction(
+                            from_keypairs=[self.wallet_keypair],
+                            message=tx.message,
+                            recent_blockhash=blockhash_hash
+                        )
+                        # La signature est déjà incluse via from_keypairs, pas besoin de sign() explicite
 
                     # Send transaction
                     self.logger.info("Sending transaction...")
