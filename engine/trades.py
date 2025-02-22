@@ -543,6 +543,27 @@ class TradeExecutor:
 
             # Execute trade if amount is significant
             if trade_value >= 1.0:
+                # Add debug logging before swap
+                self.logger.info(f"🔍 Pre-swap validation:")
+                self.logger.info(f"Token amount: {token_amount}")
+                self.logger.info(f"Expected USD value: ${trade_value:.2f}")
+
+                # Validate the amount isn't unreasonably large
+                if trade_value > 1000:  # Add safety check for large trades
+                    self.logger.warning(f"⚠️ Trade value ${trade_value:.2f} seems unusually large!")
+                    self.logger.warning("Original trade details:")
+                    self.logger.warning(f"Entry amount: {trade['fields'].get('amount')}")
+                    self.logger.warning(f"Entry price: ${trade['fields'].get('price', 0):.4f}")
+                    
+                    # Cap the trade value at the original investment + reasonable profit
+                    original_value = float(trade['fields'].get('value', 0))
+                    max_value = original_value * 3  # Allow up to 200% profit
+                    if trade_value > max_value:
+                        adjusted_token_amount = max_value / current_price
+                        self.logger.warning(f"Adjusting trade amount from {token_amount:.8f} to {adjusted_token_amount:.8f}")
+                        token_amount = adjusted_token_amount
+                        trade_value = max_value
+
                 success, transaction_bytes = await self.jupiter.execute_validated_swap(
                     input_token=token_mint,
                     output_token="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",  # USDC
