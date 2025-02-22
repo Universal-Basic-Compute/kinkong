@@ -34,6 +34,7 @@ import aiohttp
 from airtable import Airtable
 from dotenv import load_dotenv
 from solders.transaction import Transaction
+from solders.message import Message
 from solana.rpc.types import TxOpts
 import json
 import logging
@@ -290,7 +291,7 @@ class TradeExecutor:
 
                 # Send transaction
                 result = await client.send_transaction(
-                    transaction,
+                    new_transaction,
                     opts=TxOpts(
                         skip_preflight=False,
                         preflight_commitment="confirmed",
