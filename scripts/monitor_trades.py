@@ -64,20 +64,20 @@ def rate_limited_price_check(token_name, validate_change=True):
             'Accept': 'application/json'
         }
         
-        print(f"Requesting DexScreener data for {token_symbol} ({token_mint})")
+        print(f"Requesting DexScreener data for {token_name} ({token_mint})")
         response = requests.get(url, headers=headers)
         
         if response.ok:
             data = response.json()
             
             if not data.get('pairs'):
-                print(f"No pairs found for {token_symbol}")
+                print(f"No pairs found for {token_name}")
                 return None
                 
             # Get the most liquid Solana pair
             sol_pairs = [p for p in data['pairs'] if p.get('chainId') == 'solana']
             if not sol_pairs:
-                print(f"No Solana pairs found for {token_symbol}")
+                print(f"No Solana pairs found for {token_name}")
                 return None
                 
             main_pair = max(sol_pairs, key=lambda x: float(x.get('liquidity', {}).get('usd', 0)))
