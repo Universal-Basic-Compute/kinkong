@@ -344,8 +344,10 @@ class TradeExecutor:
             self.logger.error(f"Error updating failed trade status: {e}")
 
     async def get_jupiter_transaction(self, quote_data: dict, max_retries: int = 3) -> Optional[bytes]:
-        """Get complete transaction data from Jupiter with retries"""
+        """Get complete transaction data from Jupiter with retries and validation"""
         self.logger.info("Requesting swap transaction from Jupiter...")
+        
+        MIN_TRANSACTION_LENGTH = 500  # Ajusté selon vos observations (551 vs 675 bytes)
         
         for attempt in range(max_retries):
             try:
@@ -357,6 +359,9 @@ class TradeExecutor:
                         "wrapUnwrapSOL": False
                     }
                     
+                    # Log request data
+                    self.logger.info(f"Swap request data: {json.dumps(swap_data, indent=2)}")
+                    
                     async with session.post(swap_url, json=swap_data) as response:
                         if not response.ok:
                             self.logger.error(f"Jupiter API error: {response.status}")
@@ -364,38 +369,60 @@ class TradeExecutor:
                             continue
                             
                         response_text = await response.text()
-                        self.logger.info(f"Raw swap response: {response_text}")
+                        self.logger.info(f"Raw swap response length: {len(response_text)}")
                         
                         try:
                             transaction_data = json.loads(response_text)
                         except json.JSONDecodeError as e:
                             self.logger.error(f"Failed to parse swap response: {e}")
+                            self.logger.error(f"Invalid JSON response: {response_text[:200]}...")
                             continue
 
-                        # Get transaction bytes
+                        # Get and validate transaction bytes
                         transaction_base64 = transaction_data.get('swapTransaction')
                         if not transaction_base64:
                             self.logger.error("No transaction data in response")
                             continue
                             
-                        # Decode base64
-                        transaction_bytes = base64.b64decode(transaction_base64)
+                        self.logger.info(f"Base64 transaction length: {len(transaction_base64)}")
                         
-                        # Verify minimum transaction length
-                        MIN_TRANSACTION_LENGTH = 100  # Adjust this based on your needs
-                        if len(transaction_bytes) < MIN_TRANSACTION_LENGTH:
-                            self.logger.warning(f"Transaction seems truncated: {len(transaction_bytes)} bytes")
+                        # Decode base64
+                        try:
+                            transaction_bytes = base64.b64decode(transaction_base64)
+                        except Exception as e:
+                            self.logger.error(f"Failed to decode base64 transaction: {e}")
                             continue
-                            
-                        self.logger.info(f"Got transaction: {len(transaction_bytes)} bytes")
+                        
+                        # Validate transaction length
+                        if len(transaction_bytes) < MIN_TRANSACTION_LENGTH:
+                            self.logger.warning(
+                                f"Transaction seems truncated: {len(transaction_bytes)} bytes "
+                                f"(minimum expected: {MIN_TRANSACTION_LENGTH})"
+                            )
+                            if attempt < max_retries - 1:
+                                self.logger.info("Retrying to get complete transaction...")
+                                await asyncio.sleep(1 * (attempt + 1))  # Exponential backoff
+                                continue
+                        
+                        # Log transaction details for debugging
+                        self.logger.info(f"Transaction bytes length: {len(transaction_bytes)}")
+                        self.logger.info(f"First few bytes: {transaction_bytes[:20].hex()}")
+                        
+                        # Validate transaction format
+                        if transaction_bytes[0] >= 0x80:  # Versioned transaction
+                            self.logger.info("Detected versioned transaction format")
+                        else:
+                            self.logger.info("Detected legacy transaction format")
+                        
                         return transaction_bytes
 
             except Exception as e:
                 self.logger.error(f"Error getting transaction (attempt {attempt + 1}): {e}")
                 if attempt < max_retries - 1:
-                    await asyncio.sleep(1 * (attempt + 1))  # Exponential backoff
+                    await asyncio.sleep(1 * (attempt + 1))
                 continue
                 
+        self.logger.error("Failed to get valid transaction after all retries")
         return None
 
     async def execute_trade(self, signal: Dict) -> bool:
