@@ -194,7 +194,6 @@ class JupiterTradeExecutor:
                 async with session.get(url) as response:
                     response_text = await response.text()
                     self.logger.info(f"Response Status: {response.status}")
-                    self.logger.info(f"Raw Response: {response_text}")
                     
                     if not response.ok:
                         self.logger.error(f"Jupiter API error: {response.status}")
@@ -202,13 +201,19 @@ class JupiterTradeExecutor:
                         
                     data = json.loads(response_text)
                     
-                    # V6 API returns data in a different structure
-                    if not data.get('data'):
-                        self.logger.error("No quote data in response")
-                        self.logger.error(f"Response: {data}")
+                    # La réponse est déjà la donnée dont nous avons besoin
+                    if not data:
+                        self.logger.error("Empty response from Jupiter API")
                         return None
-                        
-                    return data['data']
+
+                    # Log quote details
+                    self.logger.info(f"Quote received:")
+                    self.logger.info(f"Input Amount: {data['inAmount']}")
+                    self.logger.info(f"Output Amount: {data['outAmount']}")
+                    self.logger.info(f"Price Impact: {data['priceImpactPct']}%")
+                    self.logger.info(f"Route Plan: {json.dumps(data['routePlan'], indent=2)}")
+                    
+                    return data  # Retourner directement la réponse
                     
         except Exception as e:
             self.logger.error(f"Error getting Jupiter quote: {str(e)}")
