@@ -270,73 +270,114 @@ class TradeExecutor:
             logger.error(f"Error getting price: {e}")
             return None
 
+    async def handle_failed_trade(self, trade_id: str, error_message: str):
+        """Handle failed trade updates"""
+        try:
+            self.trades_table.update(trade_id, {
+                'status': 'FAILED',
+                'error': error_message,
+                'failedAt': datetime.now(timezone.utc).isoformat()
+            })
+        except Exception as e:
+            self.logger.error(f"Failed to update failed trade status: {e}")
+
     async def execute_trade(self, signal: Dict) -> bool:
         """Execute a trade for a signal"""
         try:
-            # First check if trade already exists for this signal
-            existing_trades = self.trades_table.get_all(
-                formula=f"{{signalId}} = '{signal['id']}'"
-            )
-            
+            # First check if trade already exists
+            try:
+                existing_trades = self.trades_table.get_all(
+                    formula=f"{{signalId}} = '{signal['id']}'"
+                )
+            except Exception as e:
+                self.logger.error(f"Failed to check existing trades: {e}")
+                return False
+
             if existing_trades:
                 self.logger.warning(f"Trade already exists for signal {signal['id']}")
                 return False
 
-            # Get token mint from TOKENS table
-            tokens_table = Airtable(self.base_id, 'TOKENS', self.api_key)
-            token_records = tokens_table.get_all(
-                formula=f"{{token}}='{signal['fields']['token']}'"
-            )
-            
+            # Get token mint with error handling
+            try:
+                tokens_table = Airtable(self.base_id, 'TOKENS', self.api_key)
+                token_records = tokens_table.get_all(
+                    formula=f"{{token}}='{signal['fields']['token']}'"
+                )
+            except Exception as e:
+                self.logger.error(f"Failed to fetch token data: {e}")
+                return False
+
             if not token_records:
                 self.logger.error(f"Token {signal['fields']['token']} not found in TOKENS table")
                 return False
-                
+
             token_mint = token_records[0]['fields'].get('mint')
             if not token_mint:
                 self.logger.error(f"No mint address found for token {signal['fields']['token']}")
                 return False
 
-            # Initialize Solana client
-            client = AsyncClient("https://api.mainnet-beta.solana.com")
-
-            # Load wallet from private key
-            private_key = os.getenv('STRATEGY_WALLET_PRIVATE_KEY')
-            if not private_key:
-                self.logger.error("STRATEGY_WALLET_PRIVATE_KEY not found in environment variables")
-                return False
-                
-            wallet_keypair = Keypair.from_secret_key(base58.b58decode(private_key))
-
-            # Calculate trade amount
-            entry_price = float(signal['fields']['entryPrice'])
-            trade_amount = await self.calculate_trade_amount(
-                client,
-                wallet_keypair,
-                entry_price
-            )
-            
-            # Create trade record first as PENDING
-            trade_data = {
-                'signalId': signal['id'],
-                'token': signal['fields']['token'],
-                'type': 'BUY',
-                'timeframe': signal['fields']['timeframe'],
-                'status': 'PENDING',
-                'entryPrice': entry_price,
-                'targetPrice': float(signal['fields']['targetPrice']),
-                'stopLoss': float(signal['fields']['stopLoss']),
-                'createdAt': datetime.now(timezone.utc).isoformat(),
-                'amount': trade_amount,
-                'entryValue': trade_amount * entry_price
-            }
-            
-            trade = self.trades_table.insert(trade_data)
-            self.logger.info(f"Created trade record: {trade['id']}")
-
-            # Execute the trade
+            # Initialize Solana client with error handling
             try:
-                # Create and send transaction
+                client = AsyncClient("https://api.mainnet-beta.solana.com")
+                await client.is_connected()  # Test connection
+            except Exception as e:
+                self.logger.error(f"Failed to initialize Solana client: {e}")
+                return False
+
+            # Load wallet with validation
+            try:
+                private_key = os.getenv('STRATEGY_WALLET_PRIVATE_KEY')
+                if not private_key:
+                    self.logger.error("STRATEGY_WALLET_PRIVATE_KEY not found")
+                    return False
+                
+                wallet_keypair = Keypair.from_secret_key(base58.b58decode(private_key))
+                # Validate wallet balance
+                balance = await client.get_balance(wallet_keypair.public_key)
+                if balance.value < 1000000:  # 0.001 SOL minimum
+                    self.logger.error("Insufficient wallet balance")
+                    return False
+            except Exception as e:
+                self.logger.error(f"Wallet initialization failed: {e}")
+                return False
+
+            # Calculate trade amount with validation
+            try:
+                entry_price = float(signal['fields']['entryPrice'])
+                trade_amount = await self.calculate_trade_amount(
+                    client,
+                    wallet_keypair,
+                    entry_price
+                )
+                if trade_amount <= 0:
+                    self.logger.error("Invalid trade amount calculated")
+                    return False
+            except Exception as e:
+                self.logger.error(f"Trade amount calculation failed: {e}")
+                return False
+
+            # Create trade record with error handling
+            try:
+                trade_data = {
+                    'signalId': signal['id'],
+                    'token': signal['fields']['token'],
+                    'type': 'BUY',
+                    'timeframe': signal['fields']['timeframe'],
+                    'status': 'PENDING',
+                    'entryPrice': entry_price,
+                    'targetPrice': float(signal['fields']['targetPrice']),
+                    'stopLoss': float(signal['fields']['stopLoss']),
+                    'createdAt': datetime.now(timezone.utc).isoformat(),
+                    'amount': trade_amount,
+                    'entryValue': trade_amount * entry_price
+                }
+                trade = self.trades_table.insert(trade_data)
+            except Exception as e:
+                self.logger.error(f"Failed to create trade record: {e}")
+                return False
+
+            # Execute transaction with proper cleanup
+            try:
                 transaction = await self.create_buy_transaction(
                     client,
                     token_mint,
@@ -347,34 +388,31 @@ class TradeExecutor:
                 result = await client.send_transaction(transaction)
                 
                 if result.value:
-                    # Update trade record with transaction URL and status
                     transaction_url = f"https://solscan.io/tx/{result.value}"
-                    self.trades_table.update(trade['id'], {
-                        'status': 'EXECUTED',
-                        'transactionUrl': transaction_url,
-                        'executedAt': datetime.now(timezone.utc).isoformat()
-                    })
+                    try:
+                        self.trades_table.update(trade['id'], {
+                            'status': 'EXECUTED',
+                            'transactionUrl': transaction_url,
+                            'executedAt': datetime.now(timezone.utc).isoformat()
+                        })
+                    except Exception as e:
+                        self.logger.error(f"Failed to update trade status: {e}")
+                        # Don't return False here as trade was executed
                     
                     self.logger.info(f"Trade executed successfully: {transaction_url}")
                     return True
                 else:
-                    self.logger.error("Transaction failed")
-                    self.trades_table.update(trade['id'], {
-                        'status': 'FAILED',
-                        'error': 'Transaction failed'
-                    })
+                    self.logger.error("Transaction failed with no error")
+                    await self.handle_failed_trade(trade['id'], "Transaction failed with no error")
                     return False
 
             except Exception as e:
-                self.logger.error(f"Error executing transaction: {e}")
-                self.trades_table.update(trade['id'], {
-                    'status': 'FAILED',
-                    'error': str(e)
-                })
+                self.logger.error(f"Transaction execution failed: {e}")
+                await self.handle_failed_trade(trade['id'], str(e))
                 return False
 
         except Exception as e:
-            self.logger.error(f"Error executing trade: {e}")
+            self.logger.error(f"Unexpected error in execute_trade: {e}")
             return False
 
         finally:
