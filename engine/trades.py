@@ -222,9 +222,9 @@ class TradeExecutor:
 
             entry_price = float(signal['fields'].get('entryPrice', 0))
             
-            # Check if price is within 1% of entry price
+            # Check if price is within 1.5% of entry price
             price_diff = abs(current_price - entry_price) / entry_price
-            meets_conditions = price_diff <= 0.01
+            meets_conditions = price_diff <= 0.015
 
             logger.info(f"Signal {signal['id']} entry check:")
             logger.info(f"Entry price: {entry_price}")
