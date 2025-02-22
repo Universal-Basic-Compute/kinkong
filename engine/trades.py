@@ -10,6 +10,19 @@ import json
 import logging
 from typing import List, Dict, Optional
 
+# Get absolute path to project root and .env file
+project_root = Path(__file__).parent.parent.absolute()
+env_path = project_root / '.env'
+
+# Load environment variables with explicit path
+load_dotenv(dotenv_path=env_path)
+
+# Add debug prints
+print("\nEnvironment variables loaded from:", env_path)
+print(f"AIRTABLE_BASE_ID: {'✓' if os.getenv('KINKONG_AIRTABLE_BASE_ID') else '✗'}")
+print(f"AIRTABLE_API_KEY: {'✓' if os.getenv('KINKONG_AIRTABLE_API_KEY') else '✗'}")
+print(f"BIRDEYE_API_KEY: {'✓' if os.getenv('BIRDEYE_API_KEY') else '✗'}")
+
 # Add project root to Python path
 project_root = str(Path(__file__).parent.parent.absolute())
 if project_root not in sys.path:
