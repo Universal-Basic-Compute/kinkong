@@ -221,7 +221,7 @@ class MarketSentimentAnalyzer:
                 "classification": sentiment,
                 "confidence": confidence,
                 "bullishSignals": bullish_signals,
-                "notes": reasons,
+                "notes": "\n".join(reasons),  # Join array into single string with line breaks
                 "timestamp": datetime.now(timezone.utc).isoformat()
             }
             
