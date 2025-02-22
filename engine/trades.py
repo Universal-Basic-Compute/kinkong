@@ -335,7 +335,7 @@ class TradeExecutor:
             success, transaction_bytes = await self.jupiter.execute_validated_swap(
                 input_token="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
                 output_token=signal['fields']['mint'],
-                amount=trade_amount_usd,
+                amount=trade_value,  # Using USD value for swap
                 min_amount=5.0,
                 max_slippage=1.0
             )
@@ -361,7 +361,8 @@ class TradeExecutor:
             self.trades_table.update(trade['id'], {
                 'status': 'EXECUTED',
                 'txSignature': signature,  # Changed to 'txSignature'
-                'amount': trade_amount_usd,
+                'amount': token_amount,  # Token amount
+                'value': trade_value,    # USD value
                 'price': float(signal['fields']['entryPrice']),
                 'transactionUrl': transaction_url,
                 'executedAt': datetime.now(timezone.utc).isoformat()
@@ -591,6 +592,7 @@ class TradeExecutor:
                 'realizedPnl': realized_pnl,
                 'roi': roi,
                 'exitValue': exit_value,
+                'exitAmount': token_amount,  # Token amount at exit
             }
 
             if signature:
