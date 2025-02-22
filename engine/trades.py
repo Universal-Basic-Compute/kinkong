@@ -291,7 +291,7 @@ class TradeExecutor:
         try:
             logger.info("🚀 Starting trade execution...")
             
-            # Create trade record first
+            # Create trade record first with expiryDate from signal
             trade_data = {
                 'signalId': signal['id'],
                 'token': signal['fields']['token'],
@@ -302,6 +302,7 @@ class TradeExecutor:
                 'entryPrice': float(signal['fields']['entryPrice']),
                 'targetPrice': float(signal['fields']['targetPrice']),
                 'stopLoss': float(signal['fields']['stopLoss']),
+                'expiryDate': signal['fields']['expiryDate'],  # Add expiryDate from signal
                 'transactionUrl': ''  # Initialize empty, will be updated after execution
             }
             
