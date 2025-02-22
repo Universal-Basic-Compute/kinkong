@@ -36,11 +36,40 @@ class WalletSnapshotTaker:
             "accept": "application/json"
         }
 
-        response = requests.get(url, params=params, headers=headers)
-        if not response.ok:
-            raise Exception(f"Birdeye API error: {response.status_code}")
-        
-        return response.json()
+        try:
+            response = requests.get(url, params=params, headers=headers)
+            response.raise_for_status()
+            data = response.json()
+            
+            # Debug logging
+            print(f"Raw API response for {token_mint}:", json.dumps(data, indent=2))
+            
+            if not data.get('success'):
+                raise Exception(f"API returned success=false: {data.get('message', 'No error message')}")
+                
+            token_data = data.get('data', {})
+            if not token_data:
+                raise Exception("No data returned from API")
+                
+            # Extract values with proper fallbacks
+            return {
+                'success': True,
+                'data': {
+                    'tokenBalance': float(token_data.get('balance', 0)),
+                    'price': float(token_data.get('value', 0)),
+                    'tokenValue': float(token_data.get('valueUSD', 0))
+                }
+            }
+            
+        except requests.exceptions.RequestException as e:
+            print(f"HTTP Request failed for {token_mint}: {str(e)}")
+            return {'success': False, 'error': str(e)}
+        except (KeyError, TypeError, ValueError) as e:
+            print(f"Data parsing error for {token_mint}: {str(e)}")
+            return {'success': False, 'error': str(e)}
+        except Exception as e:
+            print(f"Unexpected error for {token_mint}: {str(e)}")
+            return {'success': False, 'error': str(e)}
 
     def take_snapshot(self):
         """Take a snapshot of wallet holdings"""
