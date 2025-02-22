@@ -773,7 +773,7 @@ def main():
                 'mint': token_record.get('mint')
             }
             
-            print(f"\n📊 Processing token {i}/{len(tokens)}: {token_info['symbol']}")
+            print(f"\n📊 Processing token {i}/{len(tokens)}: {token_info['token']}")
             
             # Get chart paths for this token
             chart_paths = [
