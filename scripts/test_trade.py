@@ -119,13 +119,31 @@ async def test_usdc_usdt_swap():
                 # Get the program id from the accounts list
                 program_id = original_transaction.message.account_keys[compiled_instruction.program_id_index]
                 
+                # Get header info
+                header = original_transaction.message.header
+                account_keys = original_transaction.message.account_keys
+                
+                # Calculate writable thresholds
+                writable_signers = header.num_required_signatures - header.num_readonly_signed_accounts
+                total_non_signers = len(account_keys) - header.num_required_signatures
+                writable_non_signers = total_non_signers - header.num_readonly_unsigned_accounts
+                
                 # Convert accounts to AccountMeta objects
                 account_metas = []
                 for idx in compiled_instruction.accounts:
-                    pubkey = original_transaction.message.account_keys[idx]
-                    # Check if account is signer or writable in the original message header
-                    is_signer = idx < original_transaction.message.header.num_required_signatures
-                    is_writable = idx < original_transaction.message.header.num_required_write_locks
+                    pubkey = account_keys[idx]
+                    
+                    # Determine if account is signer
+                    is_signer = idx < header.num_required_signatures
+                    
+                    # Determine if account is writable based on its position
+                    if is_signer:
+                        # For signers, check if within writable signers range
+                        is_writable = idx < writable_signers
+                    else:
+                        # For non-signers, adjust index and check against writable non-signers
+                        non_signer_idx = idx - header.num_required_signatures
+                        is_writable = non_signer_idx < writable_non_signers
                     
                     account_meta = AccountMeta(
                         pubkey=pubkey,
@@ -137,7 +155,7 @@ async def test_usdc_usdt_swap():
                 # Create new Instruction with AccountMeta objects
                 instruction = Instruction(
                     program_id=program_id,
-                    accounts=account_metas,  # List of AccountMeta
+                    accounts=account_metas,
                     data=compiled_instruction.data
                 )
                 instructions.append(instruction)
