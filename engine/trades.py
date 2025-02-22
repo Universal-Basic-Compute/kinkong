@@ -392,12 +392,21 @@ class TradeExecutor:
     async def check_exit_conditions(self, trade: Dict) -> Optional[str]:
         """Check if trade should be closed and return exit reason if so"""
         try:
-            # Get current price
-            token_mint = trade['fields'].get('mint')
-            if not token_mint:
-                self.logger.warning(f"No mint address for trade {trade['id']}")
+            # Get token mint from TOKENS table
+            tokens_table = Airtable(self.base_id, 'TOKENS', self.api_key)
+            token_records = tokens_table.get_all(
+                formula=f"{{token}}='{trade['fields'].get('token')}'")
+            
+            if not token_records:
+                self.logger.warning(f"No token record found for {trade['fields'].get('token')}")
                 return None
                 
+            token_mint = token_records[0]['fields'].get('mint')
+            if not token_mint:
+                self.logger.warning(f"No mint address found for {trade['fields'].get('token')}")
+                return None
+
+            # Get current price using mint address
             current_price = await self.get_token_price(token_mint)
             if not current_price:
                 self.logger.warning(f"Could not get current price for {token_mint}")
@@ -410,12 +419,13 @@ class TradeExecutor:
             
             # Calculate time elapsed
             time_elapsed = datetime.now(timezone.utc) - created_at
-            max_duration = timedelta(days=45)  # Extended to 45 days to ensure 30+ day positions have some buffer
+            max_duration = timedelta(days=45)  # Extended to 45 days
         
             # Check conditions
             price_change_pct = (current_price - entry_price) / entry_price * 100
         
             self.logger.info(f"\nChecking exit conditions for trade {trade['id']}:")
+            self.logger.info(f"Token: {trade['fields'].get('token')} ({token_mint})")
             self.logger.info(f"Current price: ${current_price:.4f}")
             self.logger.info(f"Entry price: ${entry_price:.4f}")
             self.logger.info(f"Target price: ${target_price:.4f}")
