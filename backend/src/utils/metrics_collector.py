@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict, Optional, List, Any
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import logging
@@ -6,6 +6,55 @@ import aiohttp
 import json
 import os
 import asyncio
+from enum import Enum
+
+class MetricType(Enum):
+    PRICE = 'price'
+    TRADE = 'trade'
+    TRADER = 'trader'
+
+METRIC_DEFAULTS = {
+    MetricType.PRICE: {
+        'current': 0,
+        'changePercent': 0,
+        'volumeUSD': 0,
+        'updateTime': ''
+    },
+    MetricType.TRADE: {
+        'volume': {'amount24h': 0, 'change': 0},
+        'trades': {'count24h': 0, 'avgSize': 0},
+        'price': {'high24h': 0, 'low24h': 0},
+        'market': {'depthBid': 0, 'depthAsk': 0},
+        'analysis': {'volatility24h': 0, 'momentum24h': 0}
+    },
+    MetricType.TRADER: {
+        'totalVolume': 0,
+        'buyVolume': 0,
+        'sellVolume': 0,
+        'uniqueTraders': 0,
+        'newTraders': 0
+    }
+}
+
+@dataclass
+class ApiConfig:
+    """API configuration settings"""
+    base_url: str = "https://public-api.birdeye.so/defi"
+    timeout: int = 30
+    max_retries: int = 3
+    retry_delay: int = 1
+
+class MetricsError(Exception):
+    """Base exception for metrics collection"""
+    pass
+
+class ApiError(MetricsError):
+    """API related errors"""
+    pass
+
+class ValidationError(MetricsError):
+    """Data validation errors"""
+    pass
 
 @dataclass
 class BirdeyeEndpoints:
@@ -26,13 +75,50 @@ class BirdeyeEndpoints:
 
 @dataclass
 class MetricsResponse:
-    """Structured response object"""
+    """Structured response with validation"""
     price_metrics: Dict
     trade_metrics: Dict
     trader_metrics: Dict
     timestamp: str
     success: bool
     error: Optional[str] = None
+
+    def __post_init__(self):
+        """Validate response data"""
+        self.validate_metrics()
+        self.normalize_values()
+
+    def validate_metrics(self):
+        """Ensure all required fields are present"""
+        for metric_type in MetricType:
+            actual = getattr(self, f"{metric_type.value}_metrics")
+            default = METRIC_DEFAULTS[metric_type]
+            self._ensure_fields(actual, default)
+
+    def _ensure_fields(self, actual: Dict, default: Dict):
+        """Recursively ensure all default fields exist"""
+        for key, value in default.items():
+            if key not in actual:
+                actual[key] = value
+            elif isinstance(value, dict):
+                self._ensure_fields(actual[key], value)
+
+    def normalize_values(self):
+        """Convert and normalize numeric values"""
+        for metric_type in MetricType:
+            metrics = getattr(self, f"{metric_type.value}_metrics")
+            self._normalize_dict_values(metrics)
+
+    def _normalize_dict_values(self, data: Dict):
+        """Recursively normalize numeric values"""
+        for key, value in data.items():
+            if isinstance(value, dict):
+                self._normalize_dict_values(value)
+            elif isinstance(value, (str, float, int)):
+                try:
+                    data[key] = float(value)
+                except (ValueError, TypeError):
+                    pass
 
 def setup_logging():
     """Configure logging"""
