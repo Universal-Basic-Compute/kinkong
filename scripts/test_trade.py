@@ -170,8 +170,11 @@ async def test_usdc_usdt_swap():
             # Create new unsigned transaction with the message
             new_transaction = Transaction.new_unsigned(message=new_message)
 
-            # Sign transaction
-            new_transaction.sign([wallet_keypair])
+            # Sign transaction with both keypair and blockhash
+            new_transaction.sign(
+                [wallet_keypair],
+                new_transaction.message.recent_blockhash  # Pass the blockhash
+            )
 
             logger.info("Sending transaction to network...")
 
