@@ -122,12 +122,6 @@ class JupiterTradeExecutor:
                 self.logger.error(f"Amount {amount} below minimum {min_amount}")
                 return False
                 
-            # Check input token balance
-            balance = await self.get_token_balance(input_token)
-            if balance < amount:
-                self.logger.error(f"Insufficient balance: {balance:.4f} < {amount:.4f}")
-                return False
-                
             # Get and validate quote
             quote = await self.get_jupiter_quote(input_token, output_token, amount)
             if not quote:
