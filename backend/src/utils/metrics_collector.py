@@ -259,33 +259,28 @@ class TokenMetricsCollector:
     async def get_token_metrics(self, token_mint: str) -> MetricsResponse:
         """Get comprehensive token metrics"""
         try:
-            self.logger.info(f"Starting metrics collection for token: {token_mint}")
-            
             # Make API requests
             price_data = await self._make_request(BirdeyeEndpoints.price_volume(token_mint))
-            self.logger.info(f"Raw price data: {json.dumps(price_data, indent=2)}")
-            
             trade_data = await self._make_request(BirdeyeEndpoints.trade_data(token_mint))
-            self.logger.info(f"Raw trade data: {json.dumps(trade_data, indent=2)}")
-            
             trader_data = await self._make_request(BirdeyeEndpoints.top_traders(token_mint))
-            self.logger.info(f"Raw trader data: {json.dumps(trader_data, indent=2)}")
 
-            # Create response
+            # Extract metrics using the dedicated methods
+            price_metrics = self._extract_price_metrics(price_data)
+            trade_metrics = self._extract_trade_metrics(trade_data or {})
+            
+            # Create response with extracted metrics
             response = MetricsResponse(
-                price_metrics=price_data,
-                trade_metrics=trade_data or METRIC_DEFAULTS[MetricType.TRADE],
+                price_metrics=price_metrics,  # Use extracted metrics instead of raw data
+                trade_metrics=trade_metrics,
                 trader_metrics=trader_data or METRIC_DEFAULTS[MetricType.TRADER],
                 timestamp=datetime.now(timezone.utc).isoformat(),
                 success=True
             )
             
-            self.logger.info(f"Created metrics response: {json.dumps(response.__dict__, indent=2)}")
             return response
 
         except Exception as e:
             self.logger.error(f"Error collecting metrics: {str(e)}", exc_info=True)
-            self.logger.error(f"Stack trace:", exc_info=True)
             return MetricsResponse(
                 price_metrics=METRIC_DEFAULTS[MetricType.PRICE],
                 trade_metrics=METRIC_DEFAULTS[MetricType.TRADE],
