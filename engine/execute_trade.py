@@ -310,25 +310,31 @@ class JupiterTradeExecutor:
     async def get_jupiter_transaction(self, quote_data: dict, wallet_address: str) -> Optional[bytes]:
         """Get swap transaction from Jupiter v1 API with optimizations"""
         try:
-            # Use new v1 endpoint
             url = "https://api.jup.ag/swap/v1/swap"
             
+            # Construct the request body according to v1 API spec
             swap_data = {
-                "quoteResponse": quote_data,
                 "userPublicKey": wallet_address,
-                "apiKey": os.getenv('JUPITER_API_KEY', ''),
+                "wrapAndUnwrapSol": True,  # Auto wrap/unwrap SOL
+                "useSharedAccounts": True,  # Use shared program accounts for better routing
                 
-                # Dynamic compute unit optimization
-                "computeUnitPriceMicroLamports": "auto",
+                # Add API key if available
+                "trackingAccount": os.getenv('JUPITER_API_KEY', ''),
                 
-                # Priority fee optimization
-                "priorityFee": {
-                    "mode": "auto",
-                    "maxPriorityFeeLamports": 10000000  # 0.01 SOL max
+                # Enable dynamic compute unit and slippage optimization
+                "dynamicComputeUnitLimit": True,
+                "dynamicSlippage": True,
+                
+                # Priority fee settings
+                "prioritizationFeeLamports": {
+                    "priorityLevelWithMaxLamports": {
+                        "priorityLevel": "medium",
+                        "maxLamports": 10000000  # 0.01 SOL max
+                    }
                 },
                 
-                # Optional: Add Jito tip for better transaction landing
-                # "jitoTipLamports": 1000000  # Uncomment if using Jito RPC
+                # Quote response from previous call
+                "quoteResponse": quote_data
             }
             
             self.logger.info("Requesting optimized swap transaction...")
@@ -351,13 +357,7 @@ class JupiterTradeExecutor:
                         self.logger.error(f"Invalid JSON response: {e}")
                         return None
                 
-                    # Log optimization reports if available
-                    if 'computeUnits' in transaction_data:
-                        self.logger.info(f"Compute Units: {transaction_data['computeUnits']}")
-                
-                    if 'priorityFeeLamports' in transaction_data:
-                        self.logger.info(f"Priority Fee: {transaction_data['priorityFeeLamports']} lamports")
-                
+                    # Get the base64 encoded transaction
                     transaction_base64 = transaction_data.get('swapTransaction')
                     if not transaction_base64:
                         self.logger.error("No transaction data in response")
@@ -366,6 +366,13 @@ class JupiterTradeExecutor:
                     try:
                         transaction_bytes = base64.b64decode(transaction_base64)
                         self.logger.info(f"Transaction bytes length: {len(transaction_bytes)}")
+                        
+                        # Log additional transaction info
+                        if 'lastValidBlockHeight' in transaction_data:
+                            self.logger.info(f"Last valid block height: {transaction_data['lastValidBlockHeight']}")
+                        if 'prioritizationFeeLamports' in transaction_data:
+                            self.logger.info(f"Priority fee: {transaction_data['prioritizationFeeLamports']} lamports")
+                        
                         return transaction_bytes
                         
                     except Exception as e:
