@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 import os
+import asyncio
 from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
 from airtable import Airtable
@@ -441,7 +442,7 @@ def get_token_price(token_mint: str) -> dict:
             'priceChange24h': 0
         }
 
-def record_portfolio_snapshot():
+async def record_portfolio_snapshot():
     """Record current portfolio state to Airtable"""
     try:
         print("\n📸 Taking portfolio snapshot...")
@@ -602,7 +603,7 @@ def record_portfolio_snapshot():
 
 if __name__ == "__main__":
     try:
-        record_portfolio_snapshot()
+        asyncio.run(record_portfolio_snapshot())
     except Exception as e:
         print(f"Fatal error: {e}")
         sys.exit(1)
