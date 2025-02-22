@@ -3,6 +3,7 @@ import json
 import aiohttp
 import asyncio
 import base58
+import base64
 from datetime import datetime
 import logging
 from typing import Dict, Optional
