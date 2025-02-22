@@ -27,28 +27,28 @@ Write-Host "Creating new tasks..."
 # Create the tasks
 $tasks = @(
     @{
-        Name = "KinKong_WalletSnapshot"
-        Script = "wallet_snapshots.py"
-        Schedule = "Daily"
-        StartTime = "00:00"
-    },
-    @{
         Name = "KinKong_TokenSnapshot"
         Script = "token_snapshots.py"
-        Schedule = "Every6Hours"
-        StartTime = "00:00"
+        Schedule = "Every4Hours"
+        StartTime = "00:00"  # Starts at midnight, then every 4 hours
     },
     @{
         Name = "KinKong_Signals"
         Script = "signals.py"
-        Schedule = "Every6Hours"
-        StartTime = "00:05"
+        Schedule = "Every4Hours"
+        StartTime = "00:05"  # 5 minutes after token snapshot
     },
     @{
         Name = "KinKong_Trades"
         Script = "trades.py"
-        Schedule = "Every30Minutes"
-        StartTime = "00:00"
+        Schedule = "Every4Hours"
+        StartTime = "00:10"  # 5 minutes after signals
+    },
+    @{
+        Name = "KinKong_WalletSnapshot"
+        Script = "wallet_snapshots.py"
+        Schedule = "Every4Hours"
+        StartTime = "00:15"  # 5 minutes after trades
     }
 )
 
@@ -57,14 +57,8 @@ foreach ($task in $tasks) {
     
     # Create trigger based on schedule type
     switch ($task.Schedule) {
-        "Daily" {
-            $trigger = New-ScheduledTaskTrigger -Daily -At $task.StartTime
-        }
-        "Every6Hours" {
-            $trigger = New-ScheduledTaskTrigger -Once -At $task.StartTime -RepetitionInterval (New-TimeSpan -Hours 6)
-        }
-        "Every30Minutes" {
-            $trigger = New-ScheduledTaskTrigger -Once -At $task.StartTime -RepetitionInterval (New-TimeSpan -Minutes 30)
+        "Every4Hours" {
+            $trigger = New-ScheduledTaskTrigger -Once -At $task.StartTime -RepetitionInterval (New-TimeSpan -Hours 4)
         }
     }
 
