@@ -579,62 +579,43 @@ class TradeExecutor:
                 from solders.transaction import Transaction, VersionedTransaction
                 from solders.message import Message, MessageV0
                 from solders.instruction import Instruction
-                from solders.hash import Hash
-                from solders.keypair import Keypair
-                from solders.pubkey import Pubkey
-                from solders.system_program import ID as SYS_PROGRAM_ID
-
-                # Decode base64 transaction
-                transaction_base64 = transaction_data['swapTransaction']
-                transaction_bytes = base64.b64decode(transaction_base64)
-                self.logger.info(f"Decoded transaction bytes length: {len(transaction_bytes)}")
+                # Get transaction data with validation
+                transaction_bytes = await self.get_jupiter_transaction(quote_data)
+                if not transaction_bytes:
+                    self.logger.error("Failed to get valid transaction data from Jupiter")
+                    await self.handle_failed_trade(trade['id'], "Invalid transaction data")
+                    return False
 
                 try:
-                    # Get fresh blockhash first
+                    # Get fresh blockhash
                     blockhash_response = await client.get_latest_blockhash()
                     if not blockhash_response or not blockhash_response.value:
                         raise Exception("Failed to get recent blockhash")
                     
-                    # Get blockhash - it's already a Hash object
                     blockhash_hash = blockhash_response.value.blockhash
-                    self.logger.info(f"Got blockhash: {str(blockhash_hash)}")
-
-                    # Determine transaction version from first byte
+                    
+                    # Determine transaction version and deserialize
                     is_versioned = transaction_bytes[0] >= 0x80
-                    self.logger.info(f"Transaction type: {'versioned' if is_versioned else 'legacy'}")
-
+                    
                     if is_versioned:
-                        # Handle versioned transaction
                         tx = VersionedTransaction.from_bytes(transaction_bytes)
-                        self.logger.info("Deserialized versioned transaction")
-                        
-                        # Create new versioned message using existing message components
                         new_message = MessageV0.try_compile(
                             payer=tx.message.account_keys[0],
                             recent_blockhash=blockhash_hash,
                             instructions=tx.message.instructions,
                             address_lookup_table_accounts=tx.message.address_table_lookups
                         )
-                        
-                        # Create and sign versioned transaction
                         final_tx = VersionedTransaction(message=new_message, signatures=[])
                         final_tx.sign([self.wallet_keypair])
-                        
                     else:
-                        # 1. Désérialiser la transaction legacy (sans blockhash)
                         tx = Transaction.from_bytes(transaction_bytes)
-                        self.logger.info("Deserialized legacy transaction")
-                        
-                        # 2. Créer une nouvelle transaction avec les keypairs, le message et le blockhash
                         final_tx = Transaction(
                             from_keypairs=[self.wallet_keypair],
                             message=tx.message,
                             recent_blockhash=blockhash_hash
                         )
-                        # La signature est déjà incluse via from_keypairs, pas besoin de sign() explicite
 
                     # Send transaction
-                    self.logger.info("Sending transaction...")
                     result = await client.send_transaction(
                         final_tx,
                         opts={
@@ -643,6 +624,7 @@ class TradeExecutor:
                             "max_retries": 3
                         }
                     )
+                    
                     self.logger.info(f"Transaction sent: {result.value}")
                     return True
 
