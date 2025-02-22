@@ -371,7 +371,7 @@ def generate_chart(df, config, support_levels=None):
                 fontsize=14,
                 fontweight='bold')
 
-        # Price statistics - Remove the $ symbol from the string formatting
+        # Price statistics - Remove the $ token from the string formatting
         stats_text = (
             f"Current: {current_price:.4f} ({price_change:+.2f}%) | "
             f"ATH: {ath:.4f} | ATL: {atl:.4f} | "
@@ -383,7 +383,7 @@ def generate_chart(df, config, support_levels=None):
                 color='#ffd700',
                 fontsize=11)
 
-        # Volume statistics - Format the number without $ symbol
+        # Volume statistics - Format the number without $ token
         volume_text = f"Avg Volume: {avg_volume:,.2f} | Candles: {len(df)}"
         fig.text(0.5, 0.90,
                 volume_text,
@@ -424,7 +424,7 @@ def generate_chart(df, config, support_levels=None):
                 color='#808080',
                 fontsize=8)
 
-        # Create token-specific directory from the symbol in config title
+        # Create token-specific directory from the token in config title
         token = config['title'].split('/')[0].strip()
         charts_dir = os.path.join('public', 'charts', token.lower())
         os.makedirs(charts_dir, exist_ok=True)

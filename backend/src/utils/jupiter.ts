@@ -5,9 +5,9 @@ const JUPITER_PRICE_API = 'https://price.jup.ag/v4/price';
 interface JupiterPriceResponse {
   data: {
     id: string;
-    mintSymbol: string;
+    minttoken: string;
     vsToken: string;
-    vsTokenSymbol: string;
+    vsTokentoken: string;
     price: number;
   }
 }

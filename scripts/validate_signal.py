@@ -268,9 +268,9 @@ if __name__ == "__main__":
         if all_records:
             print("Sample record fields:", list(all_records[0]['fields'].keys()))
         
-        # Then try with just the symbol filter
-        symbol_filter = f"{{symbol}}='{fields['token']}'"  # Use symbol field name
-        print(f"\nTrying filter: {symbol_filter}")
+        # Then try with just the token filter
+        token_filter = f"{{token}}='{fields['token']}'"  # Use token field name
+        print(f"\nTrying filter: {token_filter}")
         token_records = tokens_table.get_all(
             formula=f"{{token}}='{fields['token']}'"
         )
@@ -279,7 +279,7 @@ if __name__ == "__main__":
             print(f"No records found for token {fields['token']}")
             continue
             
-        print(f"Found {len(token_records)} records with matching symbol")
+        print(f"Found {len(token_records)} records with matching token")
             
         token_info = token_records[0]['fields']
         

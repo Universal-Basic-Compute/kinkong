@@ -435,7 +435,7 @@ def revalidate_signals():
             try:
                 # Get token info
                 token_records = tokens_table.get_all(
-                    formula=f"{{symbol}}='{signal['fields']['token']}'"
+                    formula=f"{{token}}='{signal['fields']['token']}'"
                 )
                 
                 if not token_records:

@@ -82,72 +82,72 @@ const TOKENS = [
     mint: '0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b'
   },
   {
-    symbol: 'AI16Z',
+    token: 'AI16Z',
     name: 'ai16z',
     mint: 'HeLp6NuQkmYB4pYWo2zYs22mESHXPQYzXbB8n4V98jwC'
   },
   {
-    symbol: 'FARTCOIN',
+    token: 'FARTCOIN',
     name: 'Fartcoin',
     mint: '9BB6NFEcjBCtnNLFko2FqVQBq8HHM13kCyYcdQbgpump'
   },
   {
-    symbol: 'AIXBT',
+    token: 'AIXBT',
     name: 'aixbt by Virtuals',
     mint: '0x4F9Fd6Be4a90f2620860d680c0d4d5Fb53d1A825'
   },
   {
-    symbol: 'GRIFFAIN',
+    token: 'GRIFFAIN',
     name: 'test griffain.com',
     mint: 'KENJSUYLASHUMfHyy5o4Hp2FdNqZg1AsUPhfH2kYvEP'
   },
   {
-    symbol: 'GOAT',
+    token: 'GOAT',
     name: 'Goatseus Maximus',
     mint: 'CzLSujWBLFsSjncfkh59rUFqvafWcY5tzedWJSuypump'
   },
   {
-    symbol: 'ARC',
+    token: 'ARC',
     name: 'AI Rig Complex',
     mint: '61V8vBaqAGMpgDQi4JcAwo1dmBGHsyhzodcPqnEVpump'
   },
   {
-    symbol: 'ZEREBRO',
+    token: 'ZEREBRO',
     name: 'zerebro',
     mint: '8x5VqbHA8D7NkD52uNuS5nnt3PwA8pLD34ymskeSo2Wn'
   },
   {
-    symbol: 'GAME',
+    token: 'GAME',
     name: 'GAME by Virtuals',
     mint: '0x1C4CcA7C5DB003824208aDDA61Bd749e55F463a3'
   },
   {
-    symbol: 'ALCH',
+    token: 'ALCH',
     name: 'Alchemist AI',
     mint: 'HNg5PYJmtqcmzXrv6S9zP1CDKk5BgDuyFBxbvNApump'
   },
   {
-    symbol: 'HAT',
+    token: 'HAT',
     name: 'TOP HAT',
     mint: 'AxGAbdFtdbj2oNXa4dKqFvwHzgFtW9mFHWmd7vQfpump'
   },
   {
-    symbol: 'AKA',
+    token: 'AKA',
     name: 'She Rises',
     mint: '4TwC4AiF1uUSHES2eBftGqemp6TqjEnKghqiH6dFpump'
   },
   {
-    symbol: 'USDT',
+    token: 'USDT',
     name: 'Tether USD',
     mint: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'
   },
   {
-    symbol: 'UBC',
+    token: 'UBC',
     name: 'UBC',
     mint: '9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump'
   },
   {
-    symbol: 'COMPUTE',
+    token: 'COMPUTE',
     name: 'Compute',
     mint: 'B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo'
   }
@@ -218,8 +218,8 @@ async function fetchTokenData(): Promise<TokenData[]> {
 
       // Find the main USDC or SOL pair with highest liquidity
       const mainPair = dexScreenerData.pairs.reduce((best: DexPair | null, current: DexPair) => {
-        const isValidQuote = current.quoteToken?.symbol === 'USDC' || 
-                            current.quoteToken?.symbol === 'SOL';
+        const isValidQuote = current.quoteToken?.token === 'USDC' || 
+                            current.quoteToken?.token === 'SOL';
         if (!isValidQuote) return best;
         return (!best || (current.liquidity?.usd || 0) > (best.liquidity?.usd || 0)) 
           ? current 
@@ -248,7 +248,7 @@ async function fetchTokenData(): Promise<TokenData[]> {
         sum + (pair.liquidity?.usd || 0), 0);
 
       tokenData.push({
-        symbol: token.symbol,
+        token: token.token,
         name: token.name,
         mint: token.mint,
         isActive: true,
@@ -264,7 +264,7 @@ async function fetchTokenData(): Promise<TokenData[]> {
       });
 
       console.log(`Processed ${token.token}:`, {
-        mainPair: mainPair?.quoteToken?.symbol,
+        mainPair: mainPair?.quoteToken?.token,
         price: currentPrice,
         price7dAvg: price7dAvg,
         volumeOnUpDay: volumeOnUpDay,
@@ -277,7 +277,7 @@ async function fetchTokenData(): Promise<TokenData[]> {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
     } catch (error) {
-      console.warn(`Warning: Error processing ${token.symbol}:`, error);
+      console.warn(`Warning: Error processing ${token.token}:`, error);
       // Continue with next token
       continue;
     }
@@ -323,7 +323,7 @@ async function updateAirtable(tokenData: TokenData[]) {
       console.log(`   Volume on Up Day: ${token.volumeOnUpDay ? 'Yes' : 'No'}`);
 
     } catch (error) {
-      console.error(`❌ Failed to create snapshot for ${token.symbol}:`, error);
+      console.error(`❌ Failed to create snapshot for ${token.token}:`, error);
       // Log more details about the error
       console.error('Error details:', {
         name: error instanceof Error ? error.name : 'Unknown',
@@ -350,9 +350,9 @@ async function main() {
 
     // Create CSV content
     const csvContent = [
-      'symbol,name,mint,isActive,volume7d,liquidity,volumeGrowth,pricePerformance,holderCount',
+      'token,name,mint,isActive,volume7d,liquidity,volumeGrowth,pricePerformance,holderCount',
       ...tokenData.map(token => 
-        `${token.symbol},${token.name},${token.mint},${token.isActive},${token.volume7d},${token.liquidity},${token.volumeGrowth},${token.pricePerformance},${token.holderCount}`
+        `${token.token},${token.name},${token.mint},${token.isActive},${token.volume7d},${token.liquidity},${token.volumeGrowth},${token.pricePerformance},${token.holderCount}`
       )
     ].join('\n');
 
@@ -364,7 +364,7 @@ async function main() {
     // Print summary
     console.log('\nToken Summary:');
     tokenData.forEach(token => {
-      console.log(`\n${token.symbol}:`);
+      console.log(`\n${token.token}:`);
       console.log(`  Volume (7d): $${(token.volume7d).toLocaleString()}`);
       console.log(`  Liquidity: $${(token.liquidity).toLocaleString()}`);
       console.log(`  Holders: ${token.holderCount.toLocaleString()}`);

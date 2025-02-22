@@ -304,7 +304,7 @@ def analyze_charts_with_claude(chart_paths, token_info=None):
         # Get market data and context
         market_data = get_dexscreener_data(token_info['mint'] if token_info else None)
         if not market_data:
-            print(f"Warning: No DexScreener data available for {token_info['symbol'] if token_info else 'token'}")
+            print(f"Warning: No DexScreener data available for {token_info['token'] if token_info else 'token'}")
             # Continue with analysis but without market data
             market_data = {
                 'price': 0,
@@ -342,7 +342,7 @@ Current Market Data:
 • Market Cap: ${market_data['market_cap']:,.2f}
 """
 
-        user_prompt = f"""I'm providing you with charts for {token_info['symbol'] if token_info else 'UBC'}/USD for a complete multi-timeframe analysis.
+        user_prompt = f"""I'm providing you with charts for {token_info['token'] if token_info else 'UBC'}/USD for a complete multi-timeframe analysis.
 
 {market_data_str}
 
@@ -415,7 +415,7 @@ Analyze each timeframe in sequence, considering how they relate to each other:
 
 def create_airtable_signal(analysis, timeframe, token_info, analyses=None, additional_fields=None):
     try:
-        print(f"\nCreating Airtable signal for {token_info['symbol']}...")
+        print(f"\nCreating Airtable signal for {token_info['token']}...")
         
         # Get current UTC timestamp in ISO format
         current_time = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
@@ -506,7 +506,7 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None, addit
 
         # Create signal record with just the reasoning text
         signal_data = {
-            'token': token_info['symbol'],
+            'token': token_info['token'],
             'type': signal_type,
             'timeframe': timeframe,
             'entryPrice': entry_price,
@@ -554,7 +554,7 @@ def process_signals_batch(token_analyses):
     pending_signals = []
     
     for token_info, analyses in token_analyses:
-        print(f"\n📊 Processing signals for {token_info['symbol']}...")
+        print(f"\n📊 Processing signals for {token_info['token']}...")
         
         # Filter valid timeframes
         valid_timeframes = {}
@@ -598,7 +598,7 @@ def process_signals_batch(token_analyses):
                     trades_table = Airtable(base_id, 'TRADES', api_key)
                     trade_data = {
                         'signalId': result['id'],
-                        'token': token_info['symbol'],
+                        'token': token_info['token'],
                         'type': signal_type,
                         'timeframe': timeframe,  # Use the actual timeframe!
                         'status': 'PENDING',
@@ -637,7 +637,7 @@ def process_signals_batch(token_analyses):
                             'signal_id': result['id'],
                             'trade_id': trade_result['id'],
                             'timeframe': timeframe,
-                            'token': token_info['symbol'],
+                            'token': token_info['token'],
                             'type': signal_type,
                             'confidence': confidence,
                             'token_info': token_info
@@ -689,7 +689,7 @@ def generate_signal(analyses, token_info):
     for timeframe, analysis in timeframe_analyses.items():
         if analysis and analysis.get('signal') != 'HOLD' and analysis.get('confidence', 0) >= 60:
             # Create unique signal identifier
-            signal_id = f"{token_info.get('symbol')}_{timeframe}_{analysis.get('signal')}_{datetime.now().strftime('%Y%m%d')}"
+            signal_id = f"{token_info.get('token')}_{timeframe}_{analysis.get('signal')}_{datetime.now().strftime('%Y%m%d')}"
             
             if signal_id not in processed_signals:
                 result = create_airtable_signal(analysis, timeframe, token_info, analyses)
@@ -704,7 +704,7 @@ def generate_signal(analyses, token_info):
     # Create detailed message
     overall = analyses.get('overall', {})
     
-    message = f"""🔄 {token_info.get('symbol')} Technical Analysis Update
+    message = f"""🔄 {token_info.get('token')} Technical Analysis Update
 
 Primary Trend: {overall.get('primary_trend', 'N/A')}
 Timeframe Alignment: {overall.get('timeframe_alignment', 'N/A')}
@@ -738,7 +738,7 @@ Best Timeframe: {overall.get('best_timeframe', 'N/A')}
     if high_confidence_signals:
         # Get paths to the three timeframe charts
         chart_paths = [
-            Path('public/charts') / token_info['symbol'].lower() / f"{token_info['symbol']}_{timeframe}_candles_trading_view.png"
+            Path('public/charts') / token_info['token'].lower() / f"{token_info['token']}_{timeframe}_candles_trading_view.png"
             for timeframe in ['15m', '2h', '8h']
         ]
         
@@ -768,7 +768,7 @@ def main():
         
         for i, token_record in enumerate(tokens, 1):
             token_info = {
-                'symbol': token_record.get('symbol'),
+                'token': token_record.get('token'),
                 'name': token_record.get('name'),
                 'mint': token_record.get('mint')
             }
@@ -777,7 +777,7 @@ def main():
             
             # Get chart paths for this token
             chart_paths = [
-                Path('public/charts') / token_info['symbol'].lower() / f"{token_info['symbol']}_{tf}_candles_trading_view.png"
+                Path('public/charts') / token_info['token'].lower() / f"{token_info['token']}_{tf}_candles_trading_view.png"
                 for tf in ['15m', '2h', '8h']
             ]
             
@@ -785,19 +785,19 @@ def main():
             existing_charts = [p for p in chart_paths if p.exists()]
             
             if not existing_charts:
-                print(f"❌ No charts found for {token_info['symbol']}")
+                print(f"❌ No charts found for {token_info['token']}")
                 continue
                 
             try:
                 # Analyze charts
                 analyses = analyze_charts_with_claude(existing_charts, token_info)
-                print(f"\n✅ Analysis completed for {token_info['symbol']}")
+                print(f"\n✅ Analysis completed for {token_info['token']}")
                 
                 # Add to batch for processing
                 all_analyses.append((token_info, analyses))
                 
             except Exception as e:
-                print(f"❌ Error analyzing {token_info['symbol']}: {e}")
+                print(f"❌ Error analyzing {token_info['token']}: {e}")
                 continue
         
         # Process all analyses in batch

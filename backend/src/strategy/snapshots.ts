@@ -140,7 +140,7 @@ export async function recordPortfolioSnapshot() {
 
         // Create snapshot
         const snapshot: TokenSnapshot = {
-          token: token.get('symbol') as string,
+          token: token.get('token') as string,
           mint: token.get('mint') as string,
           timestamp,
           price: Number(pair?.priceUsd || 0),
@@ -154,7 +154,7 @@ export async function recordPortfolioSnapshot() {
 
         snapshots.push(snapshot);
       } catch (error) {
-        console.error(`Error processing snapshot for ${token.get('symbol')}:`, error);
+        console.error(`Error processing snapshot for ${token.get('token')}:`, error);
       }
     }
 
@@ -419,8 +419,8 @@ export async function analyzeMarketSentiment(): Promise<MarketClassification> {
     const volumeGrowth = 0; // You may want to implement actual volume growth calculation
     
     // Calculate AI vs SOL performance
-    const solToken = tokens.find(t => t.symbol === 'SOL');
-    const aiTokens = tokens.filter(t => t.symbol !== 'SOL');
+    const solToken = tokens.find(t => t.token === 'SOL');
+    const aiTokens = tokens.filter(t => t.token !== 'SOL');
     const solPerformance = solToken?.priceChange24h || 0;
     const aiPerformance = aiTokens.reduce((sum, t) => sum + (t.priceChange24h || 0), 0) / aiTokens.length;
     const aiVsSolPerformance = aiPerformance - solPerformance;

@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import type { Record, FieldSet } from 'airtable';
 
 interface TokenRecord extends FieldSet {
-  symbol: string;
+  token: string;
   name: string;
   mint: string;
   volume7d: number;
@@ -24,7 +24,7 @@ export async function GET() {
       .all();
 
     const tokens = records.map((record: Record<TokenRecord>) => ({
-      symbol: record.get('symbol'),
+      token: record.get('token'),
       name: record.get('name'),
       mint: record.get('mint'),
       volume7d: record.get('volume7d'),

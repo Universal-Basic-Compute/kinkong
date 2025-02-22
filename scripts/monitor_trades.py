@@ -55,7 +55,7 @@ def rate_limited_price_check(token_name, validate_change=True):
             return None
             
         token_mint = token_records[0]['fields']['mint']
-        print(f"Found mint address for {token_symbol}: {token_mint}")
+        print(f"Found mint address for {token_name}: {token_mint}")
         
         # Use DexScreener API
         url = f"https://api.dexscreener.com/latest/dex/tokens/{token_mint}"
@@ -84,17 +84,17 @@ def rate_limited_price_check(token_name, validate_change=True):
             price = float(main_pair.get('priceUsd', 0))
             
             # Validate price change if enabled
-            if validate_change and token_symbol in last_known_prices:
-                last_price = last_known_prices[token_symbol]
+            if validate_change and token_name in last_known_prices:
+                last_price = last_known_prices[token_name]
                 price_change = abs(price - last_price) / last_price
                 
                 if price_change > PRICE_CHANGE_LIMIT:
-                    print(f"⚠️ Suspicious price change for {token_symbol}: {price_change:.1%}")
+                    print(f"⚠️ Suspicious price change for {token_name}: {price_change:.1%}")
                     return None
                     
             # Cache valid price
-            last_known_prices[token_symbol] = price
-            print(f"Got price for {token_symbol}: ${price}")
+            last_known_prices[token_name] = price
+            print(f"Got price for {token_name}: ${price}")
             return price
             
         else:
@@ -102,7 +102,7 @@ def rate_limited_price_check(token_name, validate_change=True):
             return None
         
     except Exception as e:
-        print(f"Error checking price for {token_symbol}: {e}")
+        print(f"Error checking price for {token_name}: {e}")
         return None
 
 def monitor_active_trades():

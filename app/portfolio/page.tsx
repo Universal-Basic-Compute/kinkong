@@ -21,7 +21,7 @@ const STRATEGY_INFO = {
 };
 
 interface TokenInfo {
-  symbol: string;
+  token: string;
   name: string;
   mint: string;
   volume7d: number;

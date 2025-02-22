@@ -1,7 +1,7 @@
 {
   "tokens": [
     {
-      "symbol": "UBC",
+      "token": "UBC",
       "sentiment": "MIXED",
       "confidence": 75,
       "mentions": 7,
@@ -18,7 +18,7 @@
       ]
     },
     {
-      "symbol": "COMPUTE",
+      "token": "COMPUTE",
       "sentiment": "BULLISH",
       "confidence": 65,
       "mentions": 3,
@@ -34,7 +34,7 @@
       ]
     },
     {
-      "symbol": "AGENT",
+      "token": "AGENT",
       "sentiment": "NEUTRAL",
       "confidence": 60,
       "mentions": 1,

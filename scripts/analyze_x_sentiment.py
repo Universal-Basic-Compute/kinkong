@@ -225,7 +225,7 @@ def analyze_x_sentiment(content: str):
             if analysis.get('tokens'):
                 print(f"\n💰 Analyzed Tokens: {len(analysis['tokens'])}")
                 for token in analysis['tokens']:
-                    print(f"- {token['symbol']}: {token['sentiment']} ({token['confidence']}% confidence)")
+                    print(f"- {token['token']}: {token['sentiment']} ({token['confidence']}% confidence)")
 
             # Store results in Airtable
             store_success = store_sentiment_analysis(analysis)

@@ -5,10 +5,10 @@ const DEXSCREENER_API = 'https://api.dexscreener.com/latest/dex/tokens';
 interface DexScreenerPair {
   baseToken: {
     address: string;
-    symbol: string;
+    token: string;
   };
   quoteToken: {
-    symbol: string;
+    token: string;
   };
   priceUsd: string;
   liquidity?: number;
@@ -22,7 +22,7 @@ export async function getTokenPrice(tokenIdentifier: string): Promise<number | n
       return 1;
     }
 
-    // If it's a symbol rather than a mint, try to get the mint from Airtable
+    // If it's a token rather than a mint, try to get the mint from Airtable
     let mint = tokenIdentifier;
     if (tokenIdentifier.length < 32) {
       const tokensTable = getTable('TOKENS');

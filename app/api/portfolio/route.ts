@@ -10,7 +10,7 @@ interface TokenBalance {
   amount: number;
   decimals: number;
   uiAmount: number;
-  symbol?: string;
+  token?: string;
   usdValue?: number;
 }
 
@@ -37,7 +37,7 @@ export async function GET() {
         amount: parsedInfo.tokenAmount.amount,
         decimals: parsedInfo.tokenAmount.decimals,
         uiAmount: parsedInfo.tokenAmount.uiAmount,
-        symbol: parsedInfo.symbol || undefined
+        token: parsedInfo.token || undefined
       };
     });
 
@@ -76,7 +76,7 @@ export async function GET() {
         const price = priceMap[balance.mint] || 0;
         const usdValue = balance.uiAmount * price;
           
-        console.log(`Token ${balance.symbol || balance.mint}:`, {
+        console.log(`Token ${balance.token || balance.mint}:`, {
           uiAmount: balance.uiAmount,
           price,
           usdValue

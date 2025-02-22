@@ -27,7 +27,7 @@ interface TableTypes {
     lastUpdateTime?: string;
   };
   Token: {
-    symbol: string;
+    token: string;
     name: string;
     mint: string;
     isActive: boolean;

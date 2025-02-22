@@ -26,8 +26,8 @@ export async function GET(request: Request) {
     ).length;
 
     // Calculate AI vs SOL performance
-    const solToken = tokens.find(t => t.get('symbol') === 'SOL');
-    const aiTokens = tokens.filter(t => t.get('symbol') !== 'SOL');
+    const solToken = tokens.find(t => t.get('token') === 'SOL');
+    const aiTokens = tokens.filter(t => t.get('token') !== 'SOL');
     const solPerformance = solToken?.get('priceChange24h') || 0;
     const aiPerformance = aiTokens.reduce((sum, t) => 
       sum + (t.get('priceChange24h') || 0), 0

@@ -11,7 +11,7 @@ import { BubbleChart } from '@/components/dashboard/BubbleChart';
 import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 
 interface TokenInfo {
-  symbol: string;
+  token: string;
   name: string;
   mint: string;
   volume7d: number;
@@ -137,9 +137,9 @@ export default function Dashboard() {
                               href={`https://solscan.io/token/${token.mint}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className={`font-medium ${getTokenClass(token.symbol)}`}
+                              className={`font-medium ${getTokenClass(token.token)}`}
                             >
-                              ${token.symbol}
+                              ${token.token}
                             </a>
                           </td>
                           <td className="px-4 py-2 text-gray-300">{token.name}</td>

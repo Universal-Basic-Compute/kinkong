@@ -19,7 +19,7 @@ const ALLOWED_TABLES = {
     'wallet', 'reason', 'expiryDate', 'actualReturn'
   ],
   'TOKENS': [
-    'symbol', 'name', 'mint', 'isActive', 'volume7d',
+    'token', 'name', 'mint', 'isActive', 'volume7d',
     'liquidity', 'priceChange24h'
   ],
   'TRADES': [

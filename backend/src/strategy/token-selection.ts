@@ -2,7 +2,7 @@ import { getTable } from '../airtable/tables';
 import type { Token } from '../airtable/tables';
 
 interface TokenMetrics {
-  symbol: string;
+  token: string;
   mint: string;
   volume7d: number;
   liquidity: number;
@@ -31,7 +31,7 @@ export async function selectInitialTokens(): Promise<TokenMetrics[]> {
     // 2. Filter and score tokens
     const tokens: TokenMetrics[] = records
       .map(record => ({
-        symbol: record.get('symbol') as string,
+        token: record.get('token') as string,
         mint: record.get('mint') as string,
         volume7d: record.get('volume7d') as number,
         liquidity: record.get('liquidity') as number,
@@ -80,7 +80,7 @@ export async function selectInitialTokens(): Promise<TokenMetrics[]> {
     await Promise.all(selectedTokens.map(token => 
       portfolioTable.create([{
         fields: {
-          token: token.symbol,
+          token: token.token,
           mint: token.mint,
           allocation: 0, // Initial allocation will be set by portfolio manager
           lastUpdate: new Date().toISOString(),

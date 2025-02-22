@@ -177,7 +177,7 @@ async function calculateTokenScores(tokens: Token[]): Promise<TokenScore[]> {
     );
 
     return {
-      symbol: token.symbol,
+      token: token.token,
       baseScore,
       volumeScore,
       priceScore,
@@ -385,7 +385,7 @@ export async function executeReallocation() {
 
     // 5. Update current allocations from portfolio
     for (const score of tokenScores) {
-      const portfolio = currentPortfolio.get(score.symbol);
+      const portfolio = currentPortfolio.get(score.token);
       if (portfolio) {
         // Calculate allocation percentage from USD value
         score.currentAllocation = (portfolio.usdValue / totalValue) * 100;
@@ -402,7 +402,7 @@ export async function executeReallocation() {
     const potentialOrders: TradeOrder[] = [];
 
     for (const score of tokenScores) {
-      const currentValue = currentPortfolio.get(score.symbol)?.usdValue || 0;
+      const currentValue = currentPortfolio.get(score.token)?.usdValue || 0;
       const currentPercentage = (currentValue / totalValue) * 100;
       
       // Calculate target value based on actual portfolio value
@@ -411,17 +411,17 @@ export async function executeReallocation() {
       
       // Only trade if adjustment > 3%
       if (Math.abs(difference) / totalValue * 100 > 3) {
-        const price = await getTokenPrice(score.symbol);
+        const price = await getTokenPrice(score.token);
         if (!price) {
-          console.log(`Skipping ${score.symbol} - no price available`);
+          console.log(`Skipping ${score.token} - no price available`);
           continue;
         }
 
-        console.log(`${score.symbol}: Current: ${currentPercentage.toFixed(2)}%, Target: ${(targetValue/totalValue*100).toFixed(2)}%, Difference: $${difference.toFixed(2)}`);
+        console.log(`${score.token}: Current: ${currentPercentage.toFixed(2)}%, Target: ${(targetValue/totalValue*100).toFixed(2)}%, Difference: $${difference.toFixed(2)}`);
 
         const tokenAmount = Math.abs(difference) / price;
         potentialOrders.push({
-          token: score.symbol,
+          token: score.token,
           action: difference > 0 ? 'BUY' : 'SELL',
           amount: tokenAmount,
           reason: `Reallocation: ${score.finalScore.toFixed(2)} score, ${difference > 0 ? 'increasing' : 'decreasing'} allocation`

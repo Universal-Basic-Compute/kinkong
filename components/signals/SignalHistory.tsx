@@ -18,7 +18,7 @@ export const signalEvents = {
   }
 };
 
-function formatTokenSymbol(token: string): string {
+function formatTokentoken(token: string): string {
   return token.startsWith('$') ? token : `$${token}`;
 }
 
@@ -391,7 +391,7 @@ export function SignalHistory() {
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">
                 <span className={getTokenClass(signal.token)}>
-                  {formatTokenSymbol(signal.token)}
+                  {formatTokentoken(signal.token)}
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">

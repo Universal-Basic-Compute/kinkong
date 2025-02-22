@@ -92,7 +92,7 @@ $UBC and $COMPUTE leading the way!
             if result.get('tokens'):
                 print(f"\n💰 Analyzed Tokens: {len(result['tokens'])}")
                 for token in result['tokens']:
-                    print(f"- {token['symbol']}: {token['sentiment']} ({token['confidence']}% confidence)")
+                    print(f"- {token['token']}: {token['sentiment']} ({token['confidence']}% confidence)")
 
             # Save result to file for reference
             output_file = Path(project_root) / 'test_results' / 'x_sentiment_test.json'

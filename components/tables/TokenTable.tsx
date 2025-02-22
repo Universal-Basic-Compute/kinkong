@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 
 interface TokenMetadata {
   name: string;
-  symbol: string;
+  token: string;
   image?: string;
 }
 
@@ -12,64 +12,64 @@ interface TokenBalance {
   amount: number;
   decimals: number;
   uiAmount: number;
-  symbol?: string;
+  token?: string;
   usdValue?: number;
 }
 
 const TOKEN_METADATA: Record<string, TokenMetadata> = {
   'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v': {
     name: 'USD Coin',
-    symbol: 'USDC',
+    token: 'USDC',
     image: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/logo.png'
   },
   'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB': {
     name: 'USDT',
-    symbol: 'USDT',
+    token: 'USDT',
     image: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB/logo.png'
   },
   'So11111111111111111111111111111111111111112': {
     name: 'Solana',
-    symbol: 'SOL',
+    token: 'SOL',
     image: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png'
   },
   'B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo': {
     name: 'Compute',
-    symbol: 'COMPUTE',
+    token: 'COMPUTE',
     image: 'https://dd.dexscreener.com/ds-data/tokens/solana/B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo.png?size=lg'
   },
   '9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump': {
     name: 'UBC',
-    symbol: 'UBC',
+    token: 'UBC',
     image: 'https://dd.dexscreener.com/ds-data/tokens/solana/9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump.png?size=lg'
   },
   '0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b': {
     name: 'Virtual Protocol',
-    symbol: 'VIRTUAL',
+    token: 'VIRTUAL',
     image: 'https://dd.dexscreener.com/ds-data/tokens/solana/virtual.png'
   },
   'HeLp6NuQkmYB4pYWo2zYs22mESHXPQYzXbB8n4V98jwC': {
     name: 'ai16z',
-    symbol: 'AI16Z',
+    token: 'AI16Z',
     image: 'https://dd.dexscreener.com/ds-data/tokens/solana/ai16z.png'
   },
   '0x4F9Fd6Be4a90f2620860d680c0d4d5Fb53d1A825': {
     name: 'aixbt by Virtuals',
-    symbol: 'AIXBT',
+    token: 'AIXBT',
     image: 'https://dd.dexscreener.com/ds-data/tokens/solana/aixbt.png'
   },
   'KENJSUYLASHUMfHyy5o4Hp2FdNqZg1AsUPhfH2kYvEP': {
     name: 'test griffain.com',
-    symbol: 'GRIFFAIN',
+    token: 'GRIFFAIN',
     image: 'https://dd.dexscreener.com/ds-data/tokens/solana/griffain.png'
   },
   'CzLSujWBLFsSjncfkh59rUFqvafWcY5tzedWJSuypump': {
     name: 'Goatseus Maximus',
-    symbol: 'GOAT',
+    token: 'GOAT',
     image: 'https://dd.dexscreener.com/ds-data/tokens/solana/goat.png'
   },
   '8x5VqbHA8D7NkD52uNuS5nnt3PwA8pLD34ymskeSo2Wn': {
     name: 'zerebro',
-    symbol: 'ZEREBRO',
+    token: 'ZEREBRO',
     image: 'https://dd.dexscreener.com/ds-data/tokens/solana/zerebro.png'
   }
 };
@@ -88,7 +88,7 @@ function getTokenClass(token: string): string {
   }
 }
 
-function formatTokenSymbol(token: string): string {
+function formatTokentoken(token: string): string {
   return token.startsWith('$') ? token : `$${token}`;
 }
 
@@ -147,8 +147,8 @@ export const TokenTable = ({ showAllTokens = false }: TokenTableProps) => {
             const usdValue = token.usdValue || 0;
             const percentage = totalValue > 0 ? (usdValue / totalValue * 100) : 0;
             const metadata = TOKEN_METADATA[token.mint] || {
-              name: token.symbol || token.mint.slice(0, 4),
-              symbol: token.symbol || token.mint.slice(0, 4),
+              name: token.token || token.mint.slice(0, 4),
+              token: token.token || token.mint.slice(0, 4),
             };
 
             return (
@@ -163,13 +163,13 @@ export const TokenTable = ({ showAllTokens = false }: TokenTableProps) => {
                     {metadata.image && (
                       <img 
                         src={metadata.image} 
-                        alt={metadata.symbol}
+                        alt={metadata.token}
                         className="w-6 h-6 rounded-full"
                       />
                     )}
                     <div>
-                      <div className={getTokenClass(metadata.symbol)}>
-                        {formatTokenSymbol(metadata.symbol)}
+                      <div className={getTokenClass(metadata.token)}>
+                        {formatTokentoken(metadata.token)}
                       </div>
                       <div className="text-xs text-gray-400">{metadata.name}</div>
                     </div>

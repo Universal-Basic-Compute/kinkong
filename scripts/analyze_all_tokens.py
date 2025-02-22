@@ -38,33 +38,33 @@ CHART_CONFIGS = [
         'timeframe': '15m',
         'strategy_timeframe': 'SCALP',
         'duration_hours': 6,  # SCALP: 6 hours
-        'title': '{symbol}/USD Scalp Analysis (6H)',
+        'title': '{token}/USD Scalp Analysis (6H)',
         'subtitle': '15-minute candles - Scalp Trading View',
-        'filename': '{symbol}_6h_scalp_15m_candles_trading_view.png'
+        'filename': '{token}_6h_scalp_15m_candles_trading_view.png'
     },
     {
         'timeframe': '1H',
         'strategy_timeframe': 'INTRADAY',
         'duration_hours': 24,  # INTRADAY: 24 hours
-        'title': '{symbol}/USD Intraday Analysis (24H)',
+        'title': '{token}/USD Intraday Analysis (24H)',
         'subtitle': '1-hour candles - Intraday Trading View',
-        'filename': '{symbol}_24h_intraday_1h_candles_trading_view.png'
+        'filename': '{token}_24h_intraday_1h_candles_trading_view.png'
     },
     {
         'timeframe': '4H',
         'strategy_timeframe': 'SWING',
         'duration_hours': 168,  # SWING: 7 days
-        'title': '{symbol}/USD Swing Analysis (7D)',
+        'title': '{token}/USD Swing Analysis (7D)',
         'subtitle': '4-hour candles - Swing Trading View',
-        'filename': '{symbol}_7d_swing_4h_candles_trading_view.png'
+        'filename': '{token}_7d_swing_4h_candles_trading_view.png'
     },
     {
         'timeframe': '1D',
         'strategy_timeframe': 'POSITION',
         'duration_hours': 720,  # POSITION: 30 days
-        'title': '{symbol}/USD Position Analysis (30D)',
+        'title': '{token}/USD Position Analysis (30D)',
         'subtitle': 'Daily candles - Position Trading View',
-        'filename': '{symbol}_30d_position_daily_candles_trading_view.png'
+        'filename': '{token}_30d_position_daily_candles_trading_view.png'
     }
 ]
 
@@ -84,14 +84,14 @@ async def get_active_tokens():
             formula="AND(" +
                 "{isActive}=1, " +
                 "NOT({mint}=''), " +
-                "NOT({symbol}='UBC'), " +
-                "NOT({symbol}='COMPUTE'), " +
-                "NOT({symbol}='USDT')" +
+                "NOT({token}='UBC'), " +
+                "NOT({token}='COMPUTE'), " +
+                "NOT({token}='USDT')" +
             ")"
         )
         
         tokens = [{
-            'symbol': record['fields'].get('symbol') or record['fields'].get('name'),
+            'token': record['fields'].get('token') or record['fields'].get('name'),
             'mint': record['fields']['mint']
         } for record in records]
         
@@ -110,7 +110,7 @@ async def analyze_token(token):
             print(f"\n🔄 Processing {token['token']}...")
             
             # Create token-specific directory
-            token_dir = Path('public/charts') / token['symbol'].lower()
+            token_dir = Path('public/charts') / token['token'].lower()
             token_dir.mkdir(parents=True, exist_ok=True)
             
             # Check for recent analysis
@@ -133,7 +133,7 @@ async def analyze_token(token):
                         all_charts_exist = True
                         
                         for config in CHART_CONFIGS:
-                            chart_filename = config['filename'].format(symbol=token['symbol'])
+                            chart_filename = config['filename'].format(token=token['token'])
                             chart_path = token_dir / chart_filename
                             if chart_path.exists():
                                 chart_paths.append(str(chart_path))
@@ -145,7 +145,7 @@ async def analyze_token(token):
                             print("All chart files present, using cached analysis")
                             return {
                                 'token_info': {
-                                    'symbol': token['symbol'],
+                                    'token': token['token'],
                                     'mint': token['mint']
                                 },
                                 'analyses': saved_analysis['analyses']
@@ -162,9 +162,9 @@ async def analyze_token(token):
                 # Format config for this token
                 token_config = {
                     **config,
-                    'title': config['title'].format(symbol=token['symbol']),
-                    'subtitle': config['subtitle'].format(symbol=token['symbol']),
-                    'filename': config['filename'].format(symbol=token['symbol'])
+                    'title': config['title'].format(token=token['token']),
+                    'subtitle': config['subtitle'].format(token=token['token']),
+                    'filename': config['filename'].format(token=token['token'])
                 }
                 
                 # Fetch data
@@ -175,7 +175,7 @@ async def analyze_token(token):
                 )
                 
                 if df is None or df.empty:
-                    print(f"No data available for {token['symbol']} - {config['timeframe']}")
+                    print(f"No data available for {token['token']} - {config['timeframe']}")
                     continue
                     
                 # Calculate support levels
@@ -192,19 +192,19 @@ async def analyze_token(token):
                     else:
                         print(f"Chart file not found at {chart_path}")
                 else:
-                    print(f"Failed to generate chart for {token['symbol']} - {config['timeframe']}")
+                    print(f"Failed to generate chart for {token['token']} - {config['timeframe']}")
             
             if not chart_paths:
-                print(f"No charts generated for {token['symbol']}")
+                print(f"No charts generated for {token['token']}")
                 return None
                 
             # Do analysis
-            print(f"\nAnalyzing charts for {token['symbol']}...")
+            print(f"\nAnalyzing charts for {token['token']}...")
             try:
                 analyses = analyze_charts_with_claude(
                     chart_paths,
                     token_info={
-                        'symbol': token['symbol'],
+                        'token': token['token'],
                         'mint': token['mint']
                     }
                 )
@@ -231,7 +231,7 @@ async def analyze_token(token):
                                     analysis,
                                     timeframe,  # Use the timeframe directly from the analysis
                                     {
-                                        'symbol': token['symbol'],
+                                        'token': token['token'],
                                         'mint': token['mint']
                                     },
                                     analyses,
@@ -242,7 +242,7 @@ async def analyze_token(token):
                 print("Analysis keys:", analyses.keys() if analyses else None)
                 
                 if not analyses:
-                    print(f"No analysis generated for {token['symbol']}")
+                    print(f"No analysis generated for {token['token']}")
                     return None
                 
                 # Convert ChartAnalysis objects to dictionaries
@@ -262,7 +262,7 @@ async def analyze_token(token):
                 with open(analysis_path, 'w') as f:
                     json.dump({
                         'timestamp': datetime.now().isoformat(),
-                        'token': token['symbol'],
+                        'token': token['token'],
                         'analyses': serializable_analyses
                     }, f, indent=2)
                 print(f"Saved analysis to {analysis_path}")
@@ -270,7 +270,7 @@ async def analyze_token(token):
                 # Return the analysis data
                 return {
                     'token_info': {
-                        'symbol': token['symbol'],
+                        'token': token['token'],
                         'mint': token['mint']
                     },
                     'analyses': serializable_analyses
@@ -283,7 +283,7 @@ async def analyze_token(token):
                 continue
                 
         except Exception as e:
-            print(f"Error processing {token['symbol']}: {e}")
+            print(f"Error processing {token['token']}: {e}")
             if attempt == retries - 1:
                 return None
             print(f"Attempt {attempt + 1} failed, retrying in 10s...")
@@ -310,7 +310,7 @@ async def main():
         # Filter tokens based on command line argument
         tokens = []
         if args.token:
-            tokens = [t for t in all_tokens if t['symbol'].upper() == args.token.upper()]
+            tokens = [t for t in all_tokens if t['token'].upper() == args.token.upper()]
             if not tokens:
                 print(f"Token {args.token} not found in active tokens")
                 return
@@ -324,18 +324,18 @@ async def main():
         total = len(tokens)
         
         for i, token in enumerate(tokens, 1):
-            print(f"\n=== Processing token {i}/{total}: {token['symbol']} ===")
+            print(f"\n=== Processing token {i}/{total}: {token['token']} ===")
             try:
                 result = await analyze_token(token)
                 if result:
-                    print(f"\n✅ Analysis completed for {token['symbol']}")
+                    print(f"\n✅ Analysis completed for {token['token']}")
                     print("Analysis structure:", type(result))
                     print("Analysis keys:", result.keys() if result else None)
                     analyses.append(result)
                 else:
-                    print(f"\n❌ No valid analysis for {token['symbol']}")
+                    print(f"\n❌ No valid analysis for {token['token']}")
             except Exception as e:
-                print(f"\n❌ Error analyzing {token['symbol']}: {str(e)}")
+                print(f"\n❌ Error analyzing {token['token']}: {str(e)}")
                 continue
                 
             print("\n" + "="*50)  # Visual separator between tokens
@@ -344,7 +344,7 @@ async def main():
         if analyses:
             print(f"\n🔄 Processing {len(analyses)} token analyses in batch...")
             from analyze_charts import process_signals_batch
-            print("\nAnalyses to process:", [a['token_info']['symbol'] for a in analyses])
+            print("\nAnalyses to process:", [a['token_info']['token'] for a in analyses])
             signals = process_signals_batch([
                 (a['token_info'], a['analyses']) for a in analyses
             ])

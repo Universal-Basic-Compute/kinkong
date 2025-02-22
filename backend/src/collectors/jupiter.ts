@@ -15,7 +15,7 @@ export async function getJupiterData(): Promise<Partial<Token>[]> {
       const data = await response.json();
       
       tokens.push({
-        symbol: record.get('symbol') as string,
+        token: record.get('token') as string,
         mint,
         liquidity: data.data[mint]?.liquidity || 0
       });

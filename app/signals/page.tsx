@@ -5,7 +5,7 @@ import { WalletConnect } from '@/components/wallet/WalletConnect'
 import { useState, useEffect } from 'react'
 
 interface TokenInfo {
-  symbol: string;
+  token: string;
   name: string;
   mint: string;
   volume7d: number;
@@ -126,7 +126,7 @@ export default function Signals() {
             <div>
               <h3 className="text-lg font-bold text-gold mb-2">Creating Quality Signals</h3>
               <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-line">
-                {`• Provide clear token symbol & direction
+                {`• Provide clear token token & direction
 • Include specific entry/exit prices
 • Back analysis with multiple indicators
 • Add reference links & charts
@@ -188,9 +188,9 @@ Regular updates to your active signals help maintain signal quality and improve 
                           href={`https://solscan.io/token/${token.mint}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className={`font-medium ${getTokenClass(token.symbol)}`}
+                          className={`font-medium ${getTokenClass(token.token)}`}
                         >
-                          {token.symbol}
+                          {token.token}
                         </a>
                       </td>
                       <td className="px-4 py-2 text-gray-300">{token.name}</td>

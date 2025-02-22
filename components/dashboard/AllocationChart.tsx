@@ -7,30 +7,30 @@ interface TokenBalance {
   amount: number;
   decimals: number;
   uiAmount: number;
-  symbol?: string;
+  token?: string;
   usdValue?: number;
 }
 
-const TOKEN_METADATA: Record<string, { name: string; symbol: string }> = {
+const TOKEN_METADATA: Record<string, { name: string; token: string }> = {
   'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v': {
     name: 'USD Coin',
-    symbol: 'USDC'
+    token: 'USDC'
   },
   'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB': {
     name: 'USDT',
-    symbol: 'USDT'
+    token: 'USDT'
   },
   'So11111111111111111111111111111111111111112': {
     name: 'Solana',
-    symbol: 'SOL'
+    token: 'SOL'
   },
   'B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo': {
     name: 'Compute',
-    symbol: 'COMPUTE'
+    token: 'COMPUTE'
   },
   '9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump': {
     name: 'UBC',
-    symbol: 'UBC'
+    token: 'UBC'
   }
 };
 
@@ -74,12 +74,12 @@ export function AllocationChart() {
     .filter(token => token.usdValue && token.usdValue > 0)
     .map(token => {
       const metadata = TOKEN_METADATA[token.mint] || {
-        name: token.symbol || token.mint.slice(0, 4),
-        symbol: token.symbol || token.mint.slice(0, 4)
+        name: token.token || token.mint.slice(0, 4),
+        token: token.token || token.mint.slice(0, 4)
       };
       
       return {
-        name: metadata.symbol,
+        name: metadata.token,
         fullName: metadata.name,
         value: token.usdValue || 0,
         percentage: ((token.usdValue || 0) / totalValue * 100).toFixed(1)

@@ -154,7 +154,7 @@ export function SignalForm() {
           value={formData.token}
           onChange={e => setFormData({...formData, token: e.target.value})}
           className="input-field"
-          placeholder="Enter token symbol"
+          placeholder="Enter token token"
           required
         />
       </div>

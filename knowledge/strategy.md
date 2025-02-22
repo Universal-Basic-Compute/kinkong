@@ -424,7 +424,7 @@ Note: Market condition (bull/bear) determined by weekly sentiment analysis
 
 3. Submission Process
    - Submit via #new-tokens channel
-   - Include token symbol, contract address, and basic metrics
+   - Include token token, contract address, and basic metrics
    - One submission per holder per week
 
 4. Risk Controls

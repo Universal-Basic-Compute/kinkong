@@ -1,4 +1,4 @@
-symbol,description,mint,isActive,volume7d,liquidity,volumeGrowth,pricePerformance,holderCount
+token,description,mint,isActive,volume7d,liquidity,volumeGrowth,pricePerformance,holderCount
 SOL,undefined,So11111111111111111111111111111111111111112,true,2897341214.1099997,105938697.23000003,-5.69,-5.69,0
 VIRTUAL,undefined,0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b,true,150687020.75000003,30865385.459999997,-7.42,-7.42,0
 AI16Z,undefined,HeLp6NuQkmYB4pYWo2zYs22mESHXPQYzXbB8n4V98jwC,true,89533789.38,7946739.260000001,-9.37,-9.37,0
