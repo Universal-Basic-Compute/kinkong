@@ -569,7 +569,7 @@ class TradeExecutor:
                     
                 transaction_url = f"https://solscan.io/tx/{signature}"
             else:
-                self.logger.info(f"Balance too small to trade (${usd_value:.2f})")
+                self.logger.info(f"Balance too small to trade (${trade_amount_usd:.2f})")
                 signature = None
                 transaction_url = None
 
@@ -600,7 +600,7 @@ class TradeExecutor:
                     'notes': f"Trade closed via {exit_reason} at ${current_price:.4f}"
                 })
             else:
-                update_data['notes'] = f"Closed with dust balance (${usd_value:.2f})"
+                update_data['notes'] = f"Closed with dust balance (${trade_amount_usd:.2f})"
 
             self.trades_table.update(trade['id'], update_data)
             
