@@ -181,76 +181,6 @@ if os.name == 'nt':  # Windows
                 traceback.print_tb(e.__traceback__)
             return None
 
-    async def execute_swap(
-        self,
-        input_token: str,
-        output_token: str,
-        amount: float
-    ) -> bool:
-        """Execute a token swap"""
-        try:
-            # Convert amount to proper decimals (USDC has 6 decimals)
-            amount_raw = int(amount * 1e6)
-            
-            params = {
-                "inputMint": str(input_token),
-                "outputMint": str(output_token),
-                "amount": str(amount_raw),
-                "slippageBps": "100",
-                "onlyDirectRoutes": "false",
-                "asLegacyTransaction": "true"
-            }
-            
-            url = "https://quote-api.jup.ag/v6/quote"
-            
-            self.logger.info("\nJupiter Quote Request:")
-            self.logger.info(f"Input Token: {input_token}")
-            self.logger.info(f"Output Token: {output_token}")
-            self.logger.info(f"Amount USD: ${amount:.2f}")
-            self.logger.info(f"Amount Raw: {amount_raw}")
-            self.logger.info(f"Full URL: {url}?{urllib.parse.urlencode(params)}")
-
-            connector = aiohttp.TCPConnector(family=socket.AF_INET)
-            
-            async with aiohttp.ClientSession(connector=connector) as session:
-                async with session.get(url, params=params) as response:
-                    response_text = await response.text()
-                    self.logger.info(f"Response Status: {response.status}")
-                    self.logger.info(f"Raw Response: {response_text}")
-                    
-                    if not response.ok:
-                        self.logger.error(f"Jupiter API error: {response.status}")
-                        self.logger.error(f"Response headers: {dict(response.headers)}")
-                        self.logger.error(f"Response body: {response_text}")
-                        return None
-                        
-                    try:
-                        data = json.loads(response_text)
-                    except json.JSONDecodeError as e:
-                        self.logger.error(f"Failed to parse JSON response: {e}")
-                        self.logger.error(f"Invalid JSON: {response_text}")
-                        return None
-                    
-                    # Vérifier que les champs requis sont présents
-                    if not all(key in data for key in ['inputMint', 'outputMint', 'inAmount', 'outAmount']):
-                        self.logger.error("Missing required fields in response")
-                        self.logger.error(f"Response data: {json.dumps(data, indent=2)}")
-                        return None
-                    
-                    self.logger.info("Quote received successfully:")
-                    self.logger.info(f"Input amount: {data['inAmount']}")
-                    self.logger.info(f"Output amount: {data['outAmount']}")
-                    self.logger.info(f"Price impact: {data.get('priceImpactPct', 'N/A')}%")
-                    
-                    return data
-                    
-        except Exception as e:
-            self.logger.error(f"Error getting Jupiter quote: {str(e)}")
-            if hasattr(e, '__traceback__'):
-                import traceback
-                self.logger.error("Traceback:")
-                traceback.print_tb(e.__traceback__)
-            return None
 
     async def get_jupiter_transaction(
         self, 
@@ -452,6 +382,90 @@ class JupiterTradeExecutor:
                 self.logger.error("Traceback:")
                 traceback.print_tb(e.__traceback__)
             return 0
+
+    async def execute_validated_swap(
+        self,
+        input_token: str,
+        output_token: str,
+        amount: float,
+        min_amount: float = 1.0,
+        max_slippage: float = 1.0
+    ) -> tuple[bool, Optional[bytes]]:  # Modified to return transaction bytes
+        """Execute swap with validation"""
+        try:
+            # Validate trade first
+            if not await self.validate_trade(
+                input_token,
+                output_token,
+                amount,
+                min_amount,
+                max_slippage
+            ):
+                return False, None
+
+            # Get quote
+            quote = await self.get_jupiter_quote(input_token, output_token, amount)
+            if not quote:
+                return False, None
+
+            # Get transaction bytes
+            transaction_bytes = await self.get_jupiter_transaction(quote, self.wallet_address)
+            if not transaction_bytes:
+                return False, None
+
+            return True, transaction_bytes
+            
+        except Exception as e:
+            self.logger.error(f"Validated swap failed: {e}")
+            return False, None
+
+    async def validate_trade(
+        self,
+        input_token: str,
+        output_token: str,
+        amount: float,
+        min_amount: float = 1.0,
+        max_slippage: float = 1.0
+    ) -> bool:
+        """Validate trade parameters before execution"""
+        try:
+            # Check minimum amount
+            if amount < min_amount:
+                self.logger.error(f"Amount {amount} below minimum {min_amount}")
+                return False
+                
+            # Get and validate quote
+            quote = await self.get_jupiter_quote(input_token, output_token, amount)
+            if not quote:
+                self.logger.error("Failed to get quote")
+                return False
+                
+            # Check slippage
+            if not await self.check_slippage(quote, max_slippage):
+                return False
+                
+            self.logger.info("Trade validation passed")
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Trade validation failed: {e}")
+            return False
+
+    async def check_slippage(self, quote_data: dict, max_slippage: float = 1.0) -> bool:
+        """Check if quote slippage is within acceptable range"""
+        try:
+            price_impact = float(quote_data.get('priceImpactPct', 0))
+            
+            if price_impact > max_slippage:
+                self.logger.warning(f"Price impact {price_impact:.2f}% exceeds max slippage {max_slippage}%")
+                return False
+                
+            self.logger.info(f"Price impact {price_impact:.2f}% within acceptable range")
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Error checking slippage: {e}")
+            return False
 
     async def execute_trade_with_retries(self, transaction: Transaction, max_retries: int = 3) -> Optional[str]:
         """Execute a trade transaction with retries and return signature if successful"""
