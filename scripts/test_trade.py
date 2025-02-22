@@ -109,14 +109,21 @@ async def test_usdc_usdt_swap():
             if not blockhash or not blockhash.value:
                 raise Exception("Failed to get recent blockhash")
 
-            # Deserialize transaction
-            transaction = Transaction.from_bytes(transaction_bytes)
+            # Deserialize original transaction
+            original_transaction = Transaction.from_bytes(transaction_bytes)
 
-            # Update blockhash directly on the transaction message
-            transaction.message.recent_blockhash = blockhash.value.blockhash
+            # Create new transaction with fresh blockhash
+            new_transaction = Transaction(
+                signatures=original_transaction.signatures,
+                message=Message(
+                    account_keys=original_transaction.message.account_keys,
+                    instructions=original_transaction.message.instructions,
+                    recent_blockhash=blockhash.value.blockhash
+                )
+            )
 
-            # Sign transaction
-            transaction.sign([wallet_keypair])
+            # Sign new transaction
+            new_transaction.sign([wallet_keypair])
 
             logger.info("Sending transaction to network...")
 
@@ -125,7 +132,7 @@ async def test_usdc_usdt_swap():
             for attempt in range(max_retries):
                 try:
                     result = await client.send_transaction(
-                        transaction,
+                        new_transaction,
                         opts={
                             "skip_preflight": False,
                             "preflight_commitment": "confirmed",
