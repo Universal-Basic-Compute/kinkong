@@ -594,18 +594,12 @@ class TradeExecutor:
                         final_tx.sign([self.wallet_keypair])
                         
                     else:
-                        # Handle legacy transaction - deserialize first
+                        # 1. Désérialiser la transaction legacy (sans blockhash)
                         tx = Transaction.from_bytes(transaction_bytes)
                         self.logger.info("Deserialized legacy transaction")
                         
-                        # Create new message without blockhash
-                        new_message = Message(
-                            instructions=tx.message.instructions,
-                            payer=tx.message.account_keys[0]
-                        )
-                        
-                        # Create new transaction with updated blockhash
-                        final_tx = Transaction(new_message, blockhash_hash)
+                        # 2. Créer une nouvelle transaction avec le message existant et le nouveau blockhash
+                        final_tx = Transaction(tx.message, blockhash_hash)
                         final_tx.sign([self.wallet_keypair])
 
                     # Send transaction
@@ -619,7 +613,6 @@ class TradeExecutor:
                         }
                     )
                     self.logger.info(f"Transaction sent: {result.value}")
-
                     return True
 
                 except Exception as e:
