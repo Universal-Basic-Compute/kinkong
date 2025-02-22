@@ -526,25 +526,23 @@ class TradeExecutor:
                         tx = VersionedTransaction.from_bytes(transaction_bytes)
                         self.logger.info("Deserialized versioned transaction")
                         
-                        # Use Hash object directly
-                        new_message = MessageV0(
-                            header=tx.message.header,
-                            account_keys=tx.message.account_keys,
-                            recent_blockhash=blockhash_hash,  # Already a Hash object
+                        # Create new versioned message using existing message components
+                        new_message = MessageV0.try_compile(
+                            payer=tx.message.account_keys[0],  # First account is usually the payer
+                            recent_blockhash=blockhash_hash,
                             instructions=tx.message.instructions,
-                            address_table_lookups=tx.message.address_table_lookups
+                            address_lookup_table_accounts=tx.message.address_table_lookups
                         )
                     else:
                         # Handle legacy transaction
                         tx = Transaction.from_bytes(transaction_bytes)
                         self.logger.info("Deserialized legacy transaction")
                         
-                        # Use Hash object directly
+                        # Create new legacy message using existing message components
                         new_message = Message(
-                            header=tx.message.header,
                             account_keys=tx.message.account_keys,
-                            recent_blockhash=blockhash_hash,  # Already a Hash object
-                            instructions=tx.message.instructions
+                            instructions=tx.message.instructions,
+                            recent_blockhash=blockhash_hash
                         )
 
                     # Sign message
