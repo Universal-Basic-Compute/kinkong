@@ -281,12 +281,16 @@ class TradeExecutor:
                     
                     self.logger.info(f"Trade executed successfully: {transaction_url}")
                     
-                    # Send notification
-                    message = f"🤖 Trade Executed\n\n"
+                    # Update notification with more details and gorilla emoji
+                    message = f"🦍 KinKong Trade Alert\n\n"
                     message += f"Token: ${signal['fields']['token']}\n"
-                    message += f"Type: {signal['fields']['type']}\n"
-                    message += f"Amount: ${amount:.2f}\n"
-                    message += f"Transaction: {transaction_url}"
+                    message += f"Action: {signal['fields']['type']}\n"
+                    message += f"Amount: ${amount:.2f} USDC\n"
+                    message += f"Entry Price: ${float(signal['fields']['entryPrice']):.4f}\n"
+                    message += f"Target: ${float(signal['fields']['targetPrice']):.4f}\n"
+                    message += f"Stop Loss: ${float(signal['fields']['stopLoss']):.4f}\n"
+                    message += f"Timeframe: {signal['fields']['timeframe']}\n\n"
+                    message += f"🔗 View Transaction:\n{transaction_url}"
                     
                     from scripts.analyze_charts import send_telegram_message
                     send_telegram_message(message)
