@@ -20,15 +20,25 @@ if str(project_root) not in sys.path:
 # Force load environment variables from project root .env
 load_dotenv(dotenv_path=project_root / '.env', override=True)
 
-def calculate_volatility(price_data: Dict) -> float:
+def calculate_volatility(price_data: List[float]) -> float:
     """Calculate price volatility with Parkinson's High-Low estimator"""
     try:
-        items = price_data.get('data', {}).get('items', [])
-        if not items:
-            return 0
-            
-        highs = [float(item['h']) for item in items]
-        lows = [float(item['l']) for item in items]
+        # Check if input is a list of prices
+        if isinstance(price_data, list):
+            if not price_data:
+                return 0
+                
+            # Convert list of prices to high/low format
+            highs = price_data
+            lows = price_data
+        else:
+            # Handle dict format from API
+            items = price_data.get('data', {}).get('items', [])
+            if not items:
+                return 0
+                
+            highs = [float(item['h']) for item in items]
+            lows = [float(item['l']) for item in items]
         
         # Parkinson's volatility estimator
         hl_ratios = [np.log(h/l)**2 for h, l in zip(highs, lows)]
@@ -333,6 +343,10 @@ def calculate_additional_metrics(snapshots_table: Airtable, token_symbol: str, d
 async def get_enhanced_token_metrics(token_mint: str) -> Dict:
     """Get comprehensive token metrics from Birdeye"""
     try:
+        # Set event loop policy for Windows
+        if os.name == 'nt':  # Windows
+            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+            
         headers = {
             "X-API-KEY": os.getenv('BIRDEYE_API_KEY'),
             "x-chain": "solana",
