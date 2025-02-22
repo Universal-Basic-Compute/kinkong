@@ -94,15 +94,15 @@ def calculate_additional_metrics(snapshots_table: Airtable, token_symbol: str, d
         price_trend = calculate_price_trend(prices)
         volatility = calculate_volatility(prices)
 
-        # Get SOL comparison with same sort parameters
-        sol_snapshots = snapshots_table.get_all(
-            formula="{symbol}='SOL'",
-            sort=[{
-                'field': 'createdAt',
-                'direction': 'desc'
-            }]
-        )
+        # Get SOL comparison with correct sort parameters
+        sol_url = f"{base_url}?filterByFormula={{symbol}}='SOL'&sort%5B0%5D%5Bfield%5D=createdAt&sort%5B0%5D%5Bdirection%5D=desc"
         
+        sol_response = requests.get(sol_url, headers=headers)
+        if not sol_response.ok:
+            print(f"Error fetching SOL data: {sol_response.status_code} - {sol_response.text}")
+            return None
+            
+        sol_snapshots = sol_response.json().get('records', [])
         sol_prices = [float(snap['fields'].get('price', 0)) for snap in sol_snapshots]
         sol_trend = calculate_price_trend(sol_prices) if sol_prices else 0
         vs_sol_performance = price_trend - sol_trend if price_trend is not None else 0
