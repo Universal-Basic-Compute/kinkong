@@ -59,7 +59,7 @@ class MarketSentimentAnalyzer:
             formula=f"AND({{token}}='{token}', IS_AFTER({{createdAt}}, '{seven_days_ago}'))"
         )
 
-    def analyze_price_action(self, active_tokens: List[Dict]) -> Tuple[bool, str]:
+    def analyze_price_action(self, active_tokens: List[Dict]) -> Tuple[bool, str, int, int]:
         """Check if >60% of AI tokens are above their 7-day average"""
         logger = logging.getLogger(__name__)
         logger.info("Analyzing price action...")
@@ -85,9 +85,9 @@ class MarketSentimentAnalyzer:
         is_bullish = percent_above > 60
         notes = f"{percent_above:.1f}% of tokens above 7d average"
         
-        return is_bullish, notes
+        return is_bullish, notes, total_tokens, tokens_above_avg
 
-    def analyze_volume(self, active_tokens: List[Dict]) -> Tuple[bool, str]:
+    def analyze_volume(self, active_tokens: List[Dict]) -> Tuple[bool, str, float, float]:
         """Check if weekly volume is higher than previous week"""
         total_volume_current = 0
         total_volume_previous = 0
@@ -114,9 +114,9 @@ class MarketSentimentAnalyzer:
         is_bullish = volume_growth > 0
         notes = f"Volume growth: {volume_growth:.1f}%"
         
-        return is_bullish, notes
+        return is_bullish, notes, total_volume_current, total_volume_previous
 
-    def analyze_volume_distribution(self, active_tokens: List[Dict]) -> Tuple[bool, str]:
+    def analyze_volume_distribution(self, active_tokens: List[Dict]) -> Tuple[bool, str, float]:
         """Check if >60% of volume is on up days"""
         total_up_volume = 0
         total_volume = 0
@@ -140,9 +140,9 @@ class MarketSentimentAnalyzer:
         is_bullish = up_volume_percent > 60
         notes = f"{up_volume_percent:.1f}% of volume on up days"
         
-        return is_bullish, notes
+        return is_bullish, notes, total_up_volume
 
-    def analyze_relative_strength(self, active_tokens: List[Dict]) -> Tuple[bool, str]:
+    def analyze_relative_strength(self, active_tokens: List[Dict]) -> Tuple[bool, str, float, float]:
         """Check if AI tokens are outperforming SOL"""
         # Get SOL performance
         sol_snapshots = self.get_weekly_snapshots('SOL')
@@ -176,7 +176,7 @@ class MarketSentimentAnalyzer:
         is_bullish = outperformance > 0
         notes = f"AI tokens vs SOL: {outperformance:+.1f}%"
         
-        return is_bullish, notes
+        return is_bullish, notes, sol_return, avg_ai_return
 
     async def calculate_sentiment(self) -> Dict:
         """Calculate overall market sentiment"""
@@ -184,11 +184,11 @@ class MarketSentimentAnalyzer:
             # Get active tokens
             active_tokens = self.tokens_table.get_all(formula="{isActive}=1")
             
-            # Run all analyses
-            price_bullish, price_notes = self.analyze_price_action(active_tokens)
-            volume_bullish, volume_notes = self.analyze_volume(active_tokens)
-            distribution_bullish, distribution_notes = self.analyze_volume_distribution(active_tokens)
-            strength_bullish, strength_notes = self.analyze_relative_strength(active_tokens)
+            # Run all analyses with additional return values
+            price_bullish, price_notes, total_tokens, tokens_above_avg = self.analyze_price_action(active_tokens)
+            volume_bullish, volume_notes, weekly_volume, prev_week_volume = self.analyze_volume(active_tokens)
+            distribution_bullish, distribution_notes, up_day_volume = self.analyze_volume_distribution(active_tokens)
+            strength_bullish, strength_notes, sol_performance, ai_tokens_performance = self.analyze_relative_strength(active_tokens)
             
             # Count bullish signals
             bullish_signals = sum([
@@ -222,7 +222,15 @@ class MarketSentimentAnalyzer:
                 "confidence": confidence,
                 "bullishSignals": bullish_signals,
                 "notes": "\n".join(reasons),  # Join array into single string with line breaks
-                "createdAt": datetime.now(timezone.utc).isoformat()
+                "createdAt": datetime.now(timezone.utc).isoformat(),
+                # Add new metrics
+                "totalTokens": total_tokens,
+                "tokensAbove7dAvg": tokens_above_avg,
+                "weeklyVolume": weekly_volume,
+                "prevWeekVolume": prev_week_volume,
+                "upDayVolume": up_day_volume,
+                "solPerformance": sol_performance,
+                "aiTokensPerformance": ai_tokens_performance
             }
             
             logger.info(f"\nMarket Sentiment Analysis:")
