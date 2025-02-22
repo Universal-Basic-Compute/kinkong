@@ -67,25 +67,24 @@ For optimal short-term results in the Solana ecosystem, KinKong implements a 4x 
 - Total round-trip costs: 2.8-6.4% (entry + exit combined)
 
 #### Trade Duration Windows
-- SCALP: 6 hours (one trading window to next)
-  * Minimum profit target: 15% (to cover worst-case 6.4% costs + margin)
-  * Typical target: 20-30%
+- SCALP: 6 hours
+  * Chart interval: 15-minute candles
+  * Analysis period: Last 6 hours
+  * Minimum profit target: 15%
   * Stop-loss: 10%
+  * Note: Allows for overlap between trading windows
 
 - INTRADAY: 24 hours
+  * Chart interval: 1-hour candles
+  * Analysis period: Last 24 hours
   * Minimum profit target: 20%
-  * Typical target: 25-40%
   * Stop-loss: 15%
 
 - SWING: 7 days
+  * Chart interval: 4-hour candles
+  * Analysis period: Last 7 days
   * Minimum profit target: 30%
-  * Typical target: 40-80%
   * Stop-loss: 20%
-
-- POSITION: 30 days
-  * Minimum profit target: 50%
-  * Typical target: 100%+
-  * Stop-loss: 25%
 
 #### Position Management
 - Check all open positions at each trading window

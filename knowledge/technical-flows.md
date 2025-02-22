@@ -45,9 +45,12 @@ Daily execution times (UTC):
 ## Process Details
 
 ### Signal Generation Steps
-1. Get active tokens from Airtable
+1. Get active tokens from TOKENS table
 2. For each token:
-   - Generate charts for all timeframes
+   - Generate charts for all timeframes:
+     * SCALP: 6H analysis (15m candles) - allows overlap between cycles
+     * INTRADAY: 24H analysis (1H candles)
+     * SWING: 7D analysis (4H candles)
    - Get Claude analysis
    - Validate signal requirements
    - Create PENDING signal if valid
