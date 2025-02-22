@@ -194,19 +194,24 @@ class JupiterTradeExecutor:
         input_token: str,
         output_token: str,
         amount: float,
-        min_amount: float = 1.0,
+        min_amount: float = 1.0,  # Now in USD
         max_slippage: float = 1.0
     ) -> tuple[bool, Optional[bytes]]:  # Modified to return transaction bytes
         """Execute swap with validation"""
         try:
+            # Get current price to calculate USD value
+            current_price = await self.get_token_price(input_token)
+            if not current_price:
+                self.logger.error(f"Could not get price for {input_token}")
+                return False, None
+
+            # Calculate USD value of trade
+            usd_value = amount * current_price
+            self.logger.info(f"Trade value: ${usd_value:.2f} USD")
+
             # Validate trade first
-            if not await self.validate_trade(
-                input_token,
-                output_token,
-                amount,
-                min_amount,
-                max_slippage
-            ):
+            if usd_value < min_amount:
+                self.logger.error(f"USD value ${usd_value:.2f} below minimum ${min_amount}")
                 return False, None
 
             # Get quote
