@@ -418,23 +418,22 @@ class JupiterTradeExecutor:
                 # Extract the message components
                 message = original_tx.message
                 
-                # In MessageV0, we need to access the lookup tables differently
-                if not message.account_keys:
-                    raise Exception("No accounts found in message")
-                    
+                # Preserve the original address table lookups
+                address_table_lookups = getattr(message, 'address_table_lookups', [])
+                
                 # Create new message with fresh blockhash
                 new_message = MessageV0(
                     header=message.header,
                     account_keys=message.account_keys,
                     recent_blockhash=fresh_blockhash,
                     instructions=message.instructions,
-                    address_table_lookups=[]  # Add empty address table lookups if none present
+                    address_table_lookups=address_table_lookups  # Use original lookups
                 )
                 
-                # Create new transaction with message and keypair
-                new_transaction = VersionedTransaction(
-                    message=new_message,
-                    keypairs=[self.wallet_keypair]  # Pass keypair directly in constructor
+                # Create new transaction
+                new_transaction = VersionedTransaction.from_message(
+                    new_message,
+                    [self.wallet_keypair]  # Pass keypair for signing
                 )
                 
                 self.logger.info("Successfully prepared versioned transaction with fresh blockhash")
