@@ -317,8 +317,8 @@ class JupiterTradeExecutor:
                 "quoteResponse": quote_data,
                 "userPublicKey": wallet_address,
                 "wrapAndUnwrapSol": False,
-                "asLegacyTransaction": False,  # Use versioned transactions
-                "useVersionedTransaction": True,  # Explicitly request versioned tx
+                "asLegacyTransaction": True,  # Changed to use legacy format
+                "useVersionedTransaction": False,  # Explicitly disable versioned tx
                 "dynamicComputeUnitLimit": True,
                 "prioritizationFeeLamports": {
                     "priorityLevelWithMaxLamports": {
@@ -367,7 +367,7 @@ class JupiterTradeExecutor:
             return None
 
     async def prepare_transaction(self, transaction_bytes: bytes) -> Optional[Transaction]:
-        """Prepare a versioned transaction from bytes with fresh blockhash"""
+        """Prepare a legacy transaction from bytes with fresh blockhash"""
         try:
             client = AsyncClient("https://api.mainnet-beta.solana.com")
             try:
@@ -376,15 +376,53 @@ class JupiterTradeExecutor:
                 if not blockhash or not blockhash.value:
                     raise Exception("Failed to get recent blockhash")
 
-                # Deserialize transaction using from_bytes
+                # Deserialize legacy transaction
                 original_transaction = Transaction.from_bytes(transaction_bytes)
 
-                # Create new transaction with fresh blockhash and signatures
-                new_transaction = Transaction.new_with_blockhash(
-                    message=original_transaction.message,
-                    blockhash=blockhash.value.blockhash,
-                    signers=[self.wallet_keypair]
+                # Extract instructions from original transaction
+                instructions = []
+                for compiled_instruction in original_transaction.message.instructions:
+                    # Get the program id from the accounts list
+                    program_id = original_transaction.message.account_keys[compiled_instruction.program_id_index]
+                    
+                    # Convert accounts to AccountMeta objects
+                    account_metas = []
+                    for idx in compiled_instruction.accounts:
+                        pubkey = original_transaction.message.account_keys[idx]
+                        is_signer = idx < original_transaction.message.header.num_required_signatures
+                        is_writable = (
+                            idx < original_transaction.message.header.num_required_signatures - 
+                            original_transaction.message.header.num_readonly_signed_accounts or
+                            (idx >= original_transaction.message.header.num_required_signatures and 
+                             idx < len(original_transaction.message.account_keys) - 
+                             original_transaction.message.header.num_readonly_unsigned_accounts)
+                        )
+                        
+                        account_meta = AccountMeta(
+                            pubkey=pubkey,
+                            is_signer=is_signer,
+                            is_writable=is_writable
+                        )
+                        account_metas.append(account_meta)
+                    
+                    # Create new Instruction
+                    instruction = Instruction(
+                        program_id=program_id,
+                        accounts=account_metas,
+                        data=compiled_instruction.data
+                    )
+                    instructions.append(instruction)
+
+                # Create new message with fresh blockhash
+                new_message = Message.new_with_blockhash(
+                    instructions=instructions,
+                    payer=self.wallet_keypair.pubkey(),
+                    blockhash=blockhash.value.blockhash
                 )
+
+                # Create and sign new transaction
+                new_transaction = Transaction.new_unsigned(message=new_message)
+                new_transaction.sign([self.wallet_keypair], new_message.recent_blockhash)
 
                 return new_transaction
 
