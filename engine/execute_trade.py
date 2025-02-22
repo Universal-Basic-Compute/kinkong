@@ -193,7 +193,7 @@ class JupiterTradeExecutor:
     async def get_jupiter_quote(self, input_token: str, output_token: str, amount: float) -> Optional[Dict]:
         """Get quote from Jupiter API v1"""
         try:
-            amount_raw = int(amount * 1e6)  # Convert to USDC decimals
+            amount_raw = int(amount * 1e6)  # Convert USD amount to USDC decimals
             
             base_url = "https://api.jup.ag/swap/v1/quote"
             params = {
@@ -264,8 +264,11 @@ class JupiterTradeExecutor:
                 self.logger.error(f"USD value ${usd_value:.2f} below minimum ${min_amount}")
                 return False, None
 
-            # Get quote
-            quote = await self.get_jupiter_quote(input_token, output_token, amount)
+            # Convert amount to USDC decimals (6) for Jupiter API
+            amount_raw = int(usd_value * 1e6)  # Convert USD value to USDC raw amount
+            
+            # Get quote with proper amount
+            quote = await self.get_jupiter_quote(input_token, output_token, usd_value)  # Pass USD value
             if not quote:
                 return False, None
 
