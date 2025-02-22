@@ -475,142 +475,77 @@ class TradeExecutor:
                         await self.handle_failed_trade(trade['id'], f"API request failed: {str(e)}")
                         return False
 
-                try:
-                    # Decode base64 transaction
-                    transaction_base64 = transaction_data['swapTransaction']
-                    transaction_bytes = base64.b64decode(transaction_base64)
-                    self.logger.info(f"Decoded transaction bytes length: {len(transaction_bytes)}")
+                # Decode base64 transaction
+                transaction_base64 = transaction_data['swapTransaction']
+                transaction_bytes = base64.b64decode(transaction_base64)
+                self.logger.info(f"Decoded transaction bytes length: {len(transaction_bytes)}")
 
-                    # Verify version byte (0x80 for v0)
-                    if transaction_bytes[0] != 0x80:
-                        raise ValueError(f"Invalid transaction version byte: {transaction_bytes[0]:02x}")
-                    self.logger.info("Verified transaction version (v0)")
+                # Verify version byte (0x80 for v0)
+                if transaction_bytes[0] != 0x80:
+                    raise ValueError(f"Invalid transaction version byte: {transaction_bytes[0]:02x}")
+                self.logger.info("Verified transaction version (v0)")
 
-                    # Import required Solders types
-                    from solders.transaction import VersionedTransaction
-                    from solders.message import MessageV0
-                    from solders.instruction import CompiledInstruction
-                    from solders.address_lookup_table import MessageAddressTableLookup
+                # Import required Solders types
+                from solders.transaction import VersionedTransaction
+                from solders.message import MessageV0
+                from solders.instruction import CompiledInstruction
+                from solders.address_lookup_table import MessageAddressTableLookup
 
-                    try:
-                        # Deserialize versioned transaction
-                        versioned_tx = VersionedTransaction.from_bytes(transaction_bytes)
-                        self.logger.info("Deserialized versioned transaction")
+                # Deserialize versioned transaction
+                versioned_tx = VersionedTransaction.from_bytes(transaction_bytes)
+                self.logger.info("Deserialized versioned transaction")
 
-                        # Get fresh blockhash
-                        blockhash_response = await client.get_latest_blockhash()
-                        if not blockhash_response or not blockhash_response.value:
-                            raise Exception("Failed to get recent blockhash")
-                        recent_blockhash = blockhash_response.value.blockhash
-                        self.logger.info(f"Got recent blockhash: {recent_blockhash}")
+                # Get fresh blockhash
+                blockhash_response = await client.get_latest_blockhash()
+                if not blockhash_response or not blockhash_response.value:
+                    raise Exception("Failed to get recent blockhash")
+                recent_blockhash = blockhash_response.value.blockhash
+                self.logger.info(f"Got recent blockhash: {recent_blockhash}")
 
-                        # Create new message preserving structure
-                        new_message = MessageV0(
-                            header=versioned_tx.message.header,
-                            account_keys=versioned_tx.message.account_keys,
-                            recent_blockhash=recent_blockhash,
-                            instructions=[
-                                CompiledInstruction(
-                                    program_id_index=ix.program_id_index,
-                                    accounts=ix.accounts,
-                                    data=ix.data
-                                ) for ix in versioned_tx.message.instructions
-                            ],
-                            address_table_lookups=[
-                                MessageAddressTableLookup(
-                                    account_key=lookup.account_key,
-                                    writable_indexes=lookup.writable_indexes,
-                                    readonly_indexes=lookup.readonly_indexes
-                                ) for lookup in versioned_tx.message.address_table_lookups
-                            ]
-                        )
+                # Create new message preserving structure
+                new_message = MessageV0(
+                    header=versioned_tx.message.header,
+                    account_keys=versioned_tx.message.account_keys,
+                    recent_blockhash=recent_blockhash,
+                    instructions=[
+                        CompiledInstruction(
+                            program_id_index=ix.program_id_index,
+                            accounts=ix.accounts,
+                            data=ix.data
+                        ) for ix in versioned_tx.message.instructions
+                    ],
+                    address_table_lookups=[
+                        MessageAddressTableLookup(
+                            account_key=lookup.account_key,
+                            writable_indexes=lookup.writable_indexes,
+                            readonly_indexes=lookup.readonly_indexes
+                        ) for lookup in versioned_tx.message.address_table_lookups
+                    ]
+                )
 
-                        # Sign the message
-                        signature = wallet_keypair.sign_message(bytes(new_message))
-                        self.logger.info("Signed message")
+                # Sign the message
+                signature = wallet_keypair.sign_message(bytes(new_message))
+                self.logger.info("Signed message")
 
-                        # Create new transaction
-                        transaction = VersionedTransaction(
-                            message=new_message,
-                            signatures=[signature]
-                        )
-                        self.logger.info("Created new versioned transaction")
+                # Create new transaction
+                transaction = VersionedTransaction(
+                    message=new_message,
+                    signatures=[signature]
+                )
+                self.logger.info("Created new versioned transaction")
 
-                        # Send transaction
-                        result = await client.send_transaction(
-                            transaction,
-                            opts=types.TxOpts(
-                                skip_preflight=False,
-                                preflight_commitment="confirmed",
-                                max_retries=3
-                            )
-                        )
-                        self.logger.info(f"Transaction sent: {result.value}")
-
-                        return True
-
-                    except Exception as e:
-                        self.logger.error(f"Transaction processing error: {str(e)}")
-                        if hasattr(e, '__traceback__'):
-                            import traceback
-                            self.logger.error("Traceback:")
-                            traceback.print_tb(e.__traceback__)
-                        await self.handle_failed_trade(trade['id'], str(e))
-                        return False
-
-                    # Fallback to legacy transaction handling
-                    from solana.transaction import Transaction
-                    solana_tx = Transaction.deserialize(transaction_bytes)
-                    
-                    # Convert to Solders format
-                    instructions = []
-                    for ix in solana_tx.message.instructions:
-                        program_id = Pubkey.from_string(str(ix.program_id))
-                        accounts = [Pubkey.from_string(str(acc)) for acc in ix.accounts]
-                        data = bytes(ix.data)
-                        instructions.append(Instruction(program_id, accounts, data))
-                    
-                    header = MessageHeader(
-                        num_required_signatures=len(solana_tx.signatures),
-                        num_readonly_signed_accounts=solana_tx.message.header.num_readonly_signed_accounts,
-                        num_readonly_unsigned_accounts=solana_tx.message.header.num_readonly_unsigned_accounts
+                # Send transaction
+                result = await client.send_transaction(
+                    transaction,
+                    opts=types.TxOpts(
+                        skip_preflight=False,
+                        preflight_commitment="confirmed",
+                        max_retries=3
                     )
-                    
-                    account_keys = [Pubkey.from_string(str(key)) for key in solana_tx.message.account_keys]
-                    
-                    message = MessageV0(
-                        header=header,
-                        account_keys=account_keys,
-                        recent_blockhash=recent_blockhash,
-                        instructions=instructions
-                    )
-                    
-                    signature = wallet_keypair.sign_message(bytes(message))
-                    transaction = VersionedTransaction(
-                        message=message,
-                        signatures=[signature]
-                    )
-                        
-                    self.logger.info("Created and signed new transaction")
-                    
-                    # Send transaction
-                    result = await client.send_transaction(
-                        transaction,
-                        opts=types.TxOpts(
-                            skip_preflight=False,
-                            preflight_commitment="confirmed"
-                        )
-                    )
-                    self.logger.info(f"Sent transaction: {result.value}")
+                )
+                self.logger.info(f"Transaction sent: {result.value}")
 
-                    except Exception as e:
-                        self.logger.error(f"Transaction error: {str(e)}")
-                        if hasattr(e, '__traceback__'):
-                            import traceback
-                            self.logger.error("Traceback:")
-                            traceback.print_tb(e.__traceback__)
-                        await self.handle_failed_trade(trade['id'], str(e))
-                        return False
+                return True
 
                     finally:
                         await client.close()
