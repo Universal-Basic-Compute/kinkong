@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from solders.keypair import Keypair
 from solders.transaction import Transaction
 from solders.message import Message
-from solders.instruction import Instruction
+from solders.instruction import AccountMeta, Instruction
 from solana.rpc.async_api import AsyncClient
 import base58
 
@@ -119,16 +119,25 @@ async def test_usdc_usdt_swap():
                 # Get the program id from the accounts list
                 program_id = original_transaction.message.account_keys[compiled_instruction.program_id_index]
                 
-                # Get the accounts for this instruction
-                accounts = [
-                    original_transaction.message.account_keys[idx]
-                    for idx in compiled_instruction.accounts
-                ]
+                # Convert accounts to AccountMeta objects
+                account_metas = []
+                for idx in compiled_instruction.accounts:
+                    pubkey = original_transaction.message.account_keys[idx]
+                    # Check if account is signer or writable in the original message header
+                    is_signer = idx < original_transaction.message.header.num_required_signatures
+                    is_writable = idx < original_transaction.message.header.num_required_write_locks
+                    
+                    account_meta = AccountMeta(
+                        pubkey=pubkey,
+                        is_signer=is_signer,
+                        is_writable=is_writable
+                    )
+                    account_metas.append(account_meta)
                 
-                # Create new Instruction
+                # Create new Instruction with AccountMeta objects
                 instruction = Instruction(
                     program_id=program_id,
-                    accounts=accounts,
+                    accounts=account_metas,  # List of AccountMeta
                     data=compiled_instruction.data
                 )
                 instructions.append(instruction)
