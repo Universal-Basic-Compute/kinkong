@@ -404,11 +404,11 @@ class TradeExecutor:
             
             # Calculate time elapsed
             time_elapsed = datetime.now(timezone.utc) - created_at
-            max_duration = timedelta(days=7)  # Maximum 7 days
-            
+            max_duration = timedelta(days=45)  # Extended to 45 days to ensure 30+ day positions have some buffer
+        
             # Check conditions
             price_change_pct = (current_price - entry_price) / entry_price * 100
-            
+        
             self.logger.info(f"\nChecking exit conditions for trade {trade['id']}:")
             self.logger.info(f"Current price: ${current_price:.4f}")
             self.logger.info(f"Entry price: ${entry_price:.4f}")
@@ -416,17 +416,17 @@ class TradeExecutor:
             self.logger.info(f"Stop loss: ${stop_loss:.4f}")
             self.logger.info(f"Price change: {price_change_pct:.2f}%")
             self.logger.info(f"Time elapsed: {time_elapsed.days}d {time_elapsed.seconds//3600}h")
-            
+        
             # Check take profit
             if current_price >= target_price:
                 return "TAKE_PROFIT"
-                
+            
             # Check stop loss
             if current_price <= stop_loss:
                 return "STOP_LOSS"
-                
-            # Check expiry
-            if time_elapsed >= max_duration:
+            
+            # Check expiry (only if price is below entry after 45 days)
+            if time_elapsed >= max_duration and current_price < entry_price:
                 return "EXPIRED"
                 
             return None
