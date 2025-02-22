@@ -399,7 +399,7 @@ class JupiterTradeExecutor:
                 
                 # Recompile message with fresh blockhash
                 new_message = MessageV0.try_compile(
-                    payer=message.payer,
+                    payer=message.header.payer,
                     recent_blockhash=fresh_blockhash,
                     instructions=message.instructions,
                     address_lookup_table_accounts=message.address_lookup_table_accounts
