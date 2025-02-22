@@ -49,12 +49,11 @@ class TradeExecutor:
         try:
             now = datetime.now(timezone.utc).isoformat()
             
-            # Get BUY signals that haven't expired and haven't been executed
+            # Get BUY signals that haven't expired
             signals = self.signals_table.get_all(
                 formula=f"AND("
                 f"{{type}}='BUY', "
-                f"IS_AFTER({{expiryDate}}, '{now}'), "
-                f"OR({{status}}='PENDING', {{status}}=''))"
+                f"IS_AFTER({{expiryDate}}, '{now}'))"
             )
             
             logger.info(f"Found {len(signals)} active BUY signals")
