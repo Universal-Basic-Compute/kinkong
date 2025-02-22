@@ -29,12 +29,12 @@ last_known_prices = {}    # Cache recent prices
 
 @sleep_and_retry
 @limits(calls=PRICE_CHECK_LIMIT, period=1)
-def rate_limited_price_check(token_symbol, validate_change=True):
+def rate_limited_price_check(token_name, validate_change=True):
     """
     Rate limited price check with token lookup using DexScreener
     
     Args:
-        token_symbol: Token symbol to check
+        token_name: Token name to check
         validate_change: Whether to validate price change vs last known price
     Returns:
         float: Current price if valid, None if error or invalid

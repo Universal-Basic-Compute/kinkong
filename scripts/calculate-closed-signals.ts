@@ -68,7 +68,7 @@ interface TradeResult {
 
 interface TokenRecord {
   fields: {
-    symbol: string;
+    token: string;
     mint: string;
   };
 }
@@ -245,7 +245,7 @@ export async function calculateClosedSignals(): Promise<void> {
 
         // Get token mint address
         const tokenRecords = await tokensTable.select({
-          filterByFormula: `{symbol}='${fields.token}'`
+          filterByFormula: `{token}='${fields.token}'`
         }).all() as TokenRecord[];
 
         if (!tokenRecords.length) {

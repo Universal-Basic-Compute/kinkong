@@ -38,7 +38,7 @@ Format your response as JSON:
 {
     "tokens": [
         {
-            "symbol": "string",
+            "token": "string",
             "sentiment": "BULLISH | BEARISH | NEUTRAL",
             "confidence": 0-100,
             "mentions": number,
