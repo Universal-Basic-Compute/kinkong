@@ -7,6 +7,7 @@ import requests
 import aiohttp
 from airtable import Airtable
 from dotenv import load_dotenv
+from engine.execute_trade import JupiterTradeExecutor
 import json
 import logging
 from typing import List, Dict, Optional
@@ -80,6 +81,9 @@ class TradeExecutor:
         self.trades_table = Airtable(self.base_id, 'TRADES', self.api_key)
         self.logger = setup_logging()
         
+        # Initialize Jupiter trade executor
+        self.jupiter = JupiterTradeExecutor()
+        
         # Initialize wallet during class initialization
         try:
             private_key = os.getenv('STRATEGY_WALLET_PRIVATE_KEY')
@@ -135,9 +139,8 @@ class TradeExecutor:
             return []
 
     def check_entry_conditions(self, signal: Dict) -> bool:
-        """Check if entry conditions are met for a signal"""
+        """Check if trade already exists for this signal"""
         try:
-            # First check if trade already exists for this signal
             existing_trades = self.trades_table.get_all(
                 formula=f"{{signalId}} = '{signal['id']}'"
             )
@@ -146,55 +149,7 @@ class TradeExecutor:
                 logger.warning(f"Trade already exists for signal {signal['id']}")
                 return False
 
-            # Get current price from Birdeye API
-            token_mint = signal['fields'].get('mint')
-            if not token_mint:
-                logger.warning(f"No mint address for signal {signal['id']}")
-                return False
-
-            # Use DexScreener API for current price
-            url = f"https://api.dexscreener.com/latest/dex/tokens/{token_mint}"
-            headers = {
-                'User-Agent': 'Mozilla/5.0',
-                'Accept': 'application/json'
-            }
-            
-            response = requests.get(url, headers=headers)
-            if not response.ok:
-                logger.error(f"DexScreener API error: {response.status_code}")
-                return False
-                
-            data = response.json()
-            if not data.get('pairs'):
-                logger.warning(f"No pairs found for token {token_mint}")
-                return False
-                
-            # Get most liquid Solana pair
-            sol_pairs = [p for p in data['pairs'] if p.get('chainId') == 'solana']
-            if not sol_pairs:
-                logger.warning(f"No Solana pairs found for {token_mint}")
-                return False
-                
-            main_pair = max(sol_pairs, key=lambda x: float(x.get('liquidity', {}).get('usd', 0) or 0))
-            current_price = float(main_pair.get('priceUsd', 0))
-            
-            if not current_price:
-                logger.error(f"Could not get current price for {token_mint}")
-                return False
-
-            entry_price = float(signal['fields'].get('entryPrice', 0))
-            
-            # Check if price is within 1% of entry price
-            price_diff = abs(current_price - entry_price) / entry_price
-            meets_conditions = price_diff <= 0.01
-
-            logger.info(f"Signal {signal['id']} entry check:")
-            logger.info(f"Entry price: {entry_price}")
-            logger.info(f"Current price: {current_price}")
-            logger.info(f"Price difference: {price_diff:.2%}")
-            logger.info(f"Meets conditions: {meets_conditions}")
-
-            return meets_conditions
+            return True
 
         except Exception as e:
             logger.error(f"Error checking entry conditions: {e}")
@@ -249,6 +204,105 @@ class TradeExecutor:
         except Exception as e:
             self.logger.error(f"Error updating failed trade status: {e}")
 
+    async def execute_trade(self, signal: Dict) -> bool:
+        """Execute a trade for a signal using Jupiter"""
+        try:
+            self.logger.info(f"\nExecuting trade for signal {signal['id']}")
+            
+            # Create trade record first
+            trade_data = {
+                'signalId': signal['id'],
+                'token': signal['fields']['token'],
+                'createdAt': datetime.now(timezone.utc).isoformat(),
+                'type': signal['fields']['type'],
+                'status': 'PENDING',
+                'timeframe': signal['fields']['timeframe'],
+                'entryPrice': float(signal['fields']['entryPrice']),
+                'targetPrice': float(signal['fields']['targetPrice']),
+                'stopLoss': float(signal['fields']['stopLoss'])
+            }
+            
+            trade = self.trades_table.insert(trade_data)
+            self.logger.info(f"Created trade record: {trade['id']}")
+
+            # Constants
+            USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+            amount = 10.0  # Start with $10 USDC trades
+            
+            # Execute swap via Jupiter
+            success, transaction_bytes = await self.jupiter.execute_validated_swap(
+                input_token=USDC_MINT,
+                output_token=signal['fields']['mint'],
+                amount=amount,
+                min_amount=5.0,  # Minimum $5 USDC
+                max_slippage=1.0  # Maximum 1% slippage
+            )
+
+            if not success or not transaction_bytes:
+                await self.handle_failed_trade(trade['id'], "Swap validation failed")
+                return False
+
+            # Initialize Solana client
+            client = AsyncClient("https://api.mainnet-beta.solana.com")
+            
+            try:
+                # Get fresh blockhash
+                blockhash = await client.get_latest_blockhash()
+                if not blockhash or not blockhash.value:
+                    raise Exception("Failed to get recent blockhash")
+
+                # Deserialize and sign transaction
+                transaction = Transaction.from_bytes(transaction_bytes)
+                transaction.message.recent_blockhash = blockhash.value.blockhash
+                transaction.sign([self.wallet_keypair])
+
+                # Send transaction
+                result = await client.send_transaction(
+                    transaction,
+                    opts=TxOpts(
+                        skip_preflight=False,
+                        preflight_commitment="confirmed",
+                        max_retries=3
+                    )
+                )
+
+                if result.value:
+                    # Update trade record with success
+                    transaction_url = f"https://solscan.io/tx/{result.value}"
+                    self.trades_table.update(trade['id'], {
+                        'status': 'EXECUTED',
+                        'signature': result.value,
+                        'amount': amount,
+                        'price': float(signal['fields']['entryPrice']),
+                        'value': amount
+                    })
+                    
+                    self.logger.info(f"Trade executed successfully: {transaction_url}")
+                    
+                    # Send notification
+                    message = f"🤖 Trade Executed\n\n"
+                    message += f"Token: ${signal['fields']['token']}\n"
+                    message += f"Type: {signal['fields']['type']}\n"
+                    message += f"Amount: ${amount:.2f}\n"
+                    message += f"Transaction: {transaction_url}"
+                    
+                    from scripts.analyze_charts import send_telegram_message
+                    send_telegram_message(message)
+                    
+                    return True
+                else:
+                    await self.handle_failed_trade(trade['id'], "Transaction failed to confirm")
+                    return False
+
+            finally:
+                await client.close()
+
+        except Exception as e:
+            self.logger.error(f"Trade execution failed: {e}")
+            if 'trade' in locals():
+                await self.handle_failed_trade(trade['id'], str(e))
+            return False
+
     async def monitor_signals(self):
         """Main loop to monitor signals and execute trades"""
         while True:
@@ -267,22 +321,18 @@ class TradeExecutor:
                         if self.check_entry_conditions(signal):
                             logger.info(f"Entry conditions met for signal {signal['id']}")
                             
-                            # Create trade record
-                            trade_data = {
-                                'signalId': signal['id'],
-                                'token': signal['fields']['token'],
-                                'createdAt': datetime.now(timezone.utc).isoformat(),
-                                'type': signal['fields']['type'],
-                                'status': 'PENDING',
-                                'timeframe': signal['fields']['timeframe'],
-                                'entryPrice': float(signal['fields']['entryPrice']),
-                                'targetPrice': float(signal['fields']['targetPrice']),
-                                'stopLoss': float(signal['fields']['stopLoss'])
-                            }
-                            
-                            trade = self.trades_table.insert(trade_data)
-                            logger.info(f"Created trade record: {trade['id']}")
-                            
+                            # Execute trade with timeout
+                            try:
+                                async with asyncio.timeout(30):  # 30 second timeout
+                                    if await self.execute_trade(signal):
+                                        logger.info(f"Successfully executed trade for signal {signal['id']}")
+                                    else:
+                                        logger.error(f"Failed to execute trade for signal {signal['id']}")
+                            except asyncio.TimeoutError:
+                                logger.error(f"Trade execution timed out for signal {signal['id']}")
+                            except Exception as e:
+                                logger.error(f"Error executing trade: {e}")
+                    
                     except Exception as e:
                         logger.error(f"Error processing signal {signal['id']}: {e}")
                         continue
