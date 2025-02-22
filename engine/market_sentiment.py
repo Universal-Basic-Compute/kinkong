@@ -159,7 +159,7 @@ class MarketSentimentAnalyzer:
             
         sol_return = ((sol_end_price - sol_start_price) / sol_start_price * 100)
         
-        # Calculate average AI token performance
+        # Calculate median AI token performance
         ai_returns = []
         for token in active_tokens:
             token_name = token['fields'].get('token')
@@ -175,17 +175,26 @@ class MarketSentimentAnalyzer:
                 
                 if start_price > 0:  # Avoid division by zero
                     token_return = ((end_price - start_price) / start_price * 100)
-                    ai_returns.append(token_return)
+                    # Filter out extreme values (e.g., > 1000% or < -90%)
+                    if -90 <= token_return <= 1000:
+                        ai_returns.append(token_return)
         
         if not ai_returns:
             return False, "No AI token data available", 0, 0
             
-        avg_ai_return = sum(ai_returns) / len(ai_returns)
-        outperformance = avg_ai_return - sol_return
+        # Calculate median instead of mean
+        ai_returns.sort()
+        mid = len(ai_returns) // 2
+        median_ai_return = (
+            ai_returns[mid] if len(ai_returns) % 2 
+            else (ai_returns[mid-1] + ai_returns[mid]) / 2
+        )
+        
+        outperformance = median_ai_return - sol_return
         is_bullish = outperformance > 0
         notes = f"AI tokens vs SOL: {outperformance:+.1f}%"
         
-        return is_bullish, notes, sol_return, avg_ai_return
+        return is_bullish, notes, sol_return, median_ai_return
 
     async def calculate_sentiment(self) -> Dict:
         """Calculate overall market sentiment"""
