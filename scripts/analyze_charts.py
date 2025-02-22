@@ -589,8 +589,7 @@ def process_signals_batch(token_analyses):
                     analysis,
                     timeframe,  # Pass the actual timeframe name
                     token_info,
-                    analyses,
-                    {'validated': 0}  # Set initial validation status
+                    analyses
                 )
                 
                 if result:
