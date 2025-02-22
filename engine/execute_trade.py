@@ -140,23 +140,26 @@ class JupiterTradeExecutor:
             return 0
 
     async def get_jupiter_quote(self, input_token: str, output_token: str, amount: float) -> Optional[Dict]:
-        """Get quote from Jupiter API v6"""
+        """Get quote from Jupiter API v1"""
         try:
-            # Convert amount to proper decimals (USDC has 6 decimals)
             amount_raw = int(amount * 1e6)  # Convert to USDC decimals
             
-            # Build URL with parameters
-            base_url = "https://quote-api.jup.ag/v6/quote"
+            # Use new Jupiter API endpoint
+            base_url = "https://api.jup.ag/swap/v1/quote"
             params = {
                 "inputMint": str(input_token),
                 "outputMint": str(output_token),
                 "amount": str(amount_raw),
-                "slippageBps": "100",  # 1% slippage
-                "onlyDirectRoutes": "false",
-                "asLegacyTransaction": "true"
+                "slippageBps": "100"
             }
             
             url = f"{base_url}?{urllib.parse.urlencode(params)}"
+            
+            # Get API key from environment
+            jupiter_api_key = os.getenv('JUPITER_API_KEY')
+            headers = {}
+            if jupiter_api_key:
+                headers['Authorization'] = f'Bearer {jupiter_api_key}'
             
             self.logger.info("\nJupiter Quote Request:")
             self.logger.info(f"URL: {url}")
@@ -164,27 +167,13 @@ class JupiterTradeExecutor:
             self.logger.info(f"Amount Raw: {amount_raw}")
             
             async with aiohttp.ClientSession() as session:
-                async with session.get(url) as response:
-                    response_text = await response.text()
-                    self.logger.info(f"Response Status: {response.status}")
-                    
+                async with session.get(url, headers=headers) as response:
                     if not response.ok:
                         self.logger.error(f"Jupiter API error: {response.status}")
+                        self.logger.error(f"Response: {await response.text()}")
                         return None
                         
-                    data = json.loads(response_text)
-                    
-                    if not data:
-                        self.logger.error("Empty response from Jupiter API")
-                        return None
-
-                    # Log quote details
-                    self.logger.info(f"Quote received:")
-                    self.logger.info(f"Input Amount: {data['inAmount']}")
-                    self.logger.info(f"Output Amount: {data['outAmount']}")
-                    self.logger.info(f"Price Impact: {data['priceImpactPct']}%")
-                    self.logger.info(f"Route Plan: {json.dumps(data['routePlan'], indent=2)}")
-                    
+                    data = await response.json()
                     return data
                     
         except Exception as e:
@@ -311,32 +300,47 @@ class JupiterTradeExecutor:
     async def get_jupiter_transaction(self, quote_data: dict, wallet_address: str) -> Optional[bytes]:
         """Get swap transaction from Jupiter"""
         try:
-            url = "https://quote-api.jup.ag/v6/swap"
+            # Use new Jupiter API endpoint
+            url = "https://api.jup.ag/swap/v1/swap"
+            
+            # Get API key from environment
+            jupiter_api_key = os.getenv('JUPITER_API_KEY')
+            if not jupiter_api_key:
+                self.logger.warning("No Jupiter API key found, using public endpoint with lower rate limits")
+            
+            headers = {
+                'Content-Type': 'application/json'
+            }
+            
+            # Add API key if available
+            if jupiter_api_key:
+                headers['Authorization'] = f'Bearer {jupiter_api_key}'
             
             swap_data = {
                 "quoteResponse": quote_data,
                 "userPublicKey": wallet_address,
-                "wrapAndUnwrapSol": False,
-                "asLegacyTransaction": True,  # Force legacy transaction format
-                "useVersionedTransaction": False,  # Explicitly disable versioned tx
-                "computeUnitPriceMicroLamports": 1000,  # Add compute unit price
-                "prioritizationFeeLamports": 1000,  # Reduce priority fee
-                "maxAccounts": 64,  # Limit number of accounts
-                "slippageBps": 100,  # 1% slippage
-                "useTokenLedger": False,  # Disable token ledger to reduce size
-                "destinationTokenAccount": "create"  # Create new token account if needed
+                "asLegacyTransaction": True,
+                "computeUnitPriceMicroLamports": 1000,
+                "slippageBps": 100
             }
             
-            self.logger.info(f"Requesting swap transaction with data: {json.dumps(swap_data, indent=2)}")
+            self.logger.info(f"Requesting swap transaction...")
+            self.logger.debug(f"Swap data: {json.dumps(swap_data, indent=2)}")
             
             async with aiohttp.ClientSession() as session:
-                async with session.post(url, json=swap_data) as response:
+                async with session.post(url, json=swap_data, headers=headers) as response:
+                    response_text = await response.text()
+                    
                     if not response.ok:
                         self.logger.error(f"Jupiter API error: {response.status}")
-                        self.logger.error(f"Response: {await response.text()}")
+                        self.logger.error(f"Response: {response_text}")
                         return None
                         
-                    transaction_data = await response.json()
+                    try:
+                        transaction_data = json.loads(response_text)
+                    except json.JSONDecodeError:
+                        self.logger.error(f"Invalid JSON response: {response_text}")
+                        return None
                     
                     transaction_base64 = transaction_data.get('swapTransaction')
                     if not transaction_base64:
@@ -346,28 +350,6 @@ class JupiterTradeExecutor:
                     try:
                         transaction_bytes = base64.b64decode(transaction_base64)
                         self.logger.info(f"Transaction bytes length: {len(transaction_bytes)}")
-                        
-                        if len(transaction_bytes) > 1232:  # Check raw transaction size
-                            self.logger.warning("Transaction too large, attempting to optimize...")
-                            # Try again with minimal configuration
-                            swap_data.update({
-                                "maxAccounts": 32,  # Further reduce accounts
-                                "useSharedAccounts": True,  # Use shared accounts where possible
-                                "wrapUnwrapSOL": False,  # Disable SOL wrapping
-                                "feeAccount": None  # Remove fee account
-                            })
-                            
-                            async with session.post(url, json=swap_data) as retry_response:
-                                if retry_response.ok:
-                                    retry_data = await retry_response.json()
-                                    transaction_bytes = base64.b64decode(retry_data['swapTransaction'])
-                                    self.logger.info(f"Optimized transaction bytes length: {len(transaction_bytes)}")
-                        
-                        # Log dynamic slippage report if available
-                        if 'dynamicSlippageReport' in transaction_data:
-                            self.logger.info("Dynamic Slippage Report:")
-                            self.logger.info(json.dumps(transaction_data['dynamicSlippageReport'], indent=2))
-                        
                         return transaction_bytes
                         
                     except Exception as e:
