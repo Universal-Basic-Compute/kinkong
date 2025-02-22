@@ -516,8 +516,7 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None, addit
             'reason': reason_text,  # Just the raw reasoning text
             'createdAt': current_time,
             'expiryDate': expiry_date.isoformat().replace('+00:00', 'Z'),
-            'expectedReturn': round(expected_return, 2),
-            'validated': 0  # Default to pending validation
+            'expectedReturn': round(expected_return, 2)
         }
 
         # Add any additional fields
