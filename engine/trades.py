@@ -528,33 +528,40 @@ class TradeExecutor:
                         
                         # Create new versioned message using existing message components
                         new_message = MessageV0.try_compile(
-                            payer=tx.message.account_keys[0],  # First account is usually the payer
+                            payer=tx.message.account_keys[0],
                             recent_blockhash=blockhash_hash,
                             instructions=tx.message.instructions,
                             address_lookup_table_accounts=tx.message.address_table_lookups
                         )
+                        
+                        # Sign message
+                        signature = self.wallet_keypair.sign_message(bytes(new_message))
+                        self.logger.info("Signed versioned message")
+                        
+                        # Create final versioned transaction
+                        final_tx = VersionedTransaction(message=new_message, signatures=[signature])
+                        
                     else:
                         # Handle legacy transaction
                         tx = Transaction.from_bytes(transaction_bytes)
                         self.logger.info("Deserialized legacy transaction")
                         
-                        # Create new legacy message with only required parameters
+                        # Create new legacy message without blockhash
                         new_message = Message(
                             instructions=tx.message.instructions,
-                            payer=tx.message.account_keys[0],  # Use first account as payer
-                            recent_blockhash=blockhash_hash
+                            payer=tx.message.account_keys[0]
                         )
-
-                    # Sign message
-                    signature = self.wallet_keypair.sign_message(bytes(new_message))
-                    self.logger.info("Signed message")
-
-                    # Create final transaction
-                    final_tx = (
-                        VersionedTransaction(message=new_message, signatures=[signature])
-                        if is_versioned else
-                        Transaction(message=new_message, signatures=[signature])
-                    )
+                        
+                        # Sign message
+                        signature = self.wallet_keypair.sign_message(bytes(new_message))
+                        self.logger.info("Signed legacy message")
+                        
+                        # Create final legacy transaction with blockhash
+                        final_tx = Transaction(
+                            signatures=[signature],
+                            message=new_message,
+                            recent_blockhash=blockhash_hash  # Pass blockhash here instead
+                        )
 
                     # Send transaction
                     self.logger.info("Sending transaction...")
