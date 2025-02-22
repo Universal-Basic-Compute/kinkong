@@ -358,127 +358,68 @@ async def validate_token_address(token_mint: str) -> bool:
 async def get_enhanced_token_metrics(token_mint: str) -> Dict:
     """Get comprehensive token metrics from Birdeye"""
     try:
-        # Set event loop policy for Windows
-        if os.name == 'nt':
-            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-            
-        # Validate token first
-        if not await validate_token_address(token_mint):
-            print(f"Invalid or non-existent token address: {token_mint}")
-            return {}
-
-        # Calculate time parameters
-        now = int(datetime.now().timestamp())
-        day_ago = now - (24 * 60 * 60)  # 24 hours ago
-            
         headers = {
             "X-API-KEY": os.getenv('BIRDEYE_API_KEY'),
             "x-chain": "solana",
-            "accept": "application/json",
-            "User-Agent": "Mozilla/5.0"
+            "accept": "application/json"
         }
-        
-        # Debug print API key (last 4 chars)
-        api_key = os.getenv('BIRDEYE_API_KEY')
-        if api_key:
-            print(f"Using Birdeye API key ending in: ...{api_key[-4:]}")
-        else:
-            print("WARNING: No Birdeye API key found")
 
-        # Define endpoints
+        # Get price and volume data first
         base_url = "https://public-api.birdeye.so/defi"
-        endpoints = {
-            'price': f"{base_url}/price_volume/single?address={token_mint}&type=24h",
-            'depth': f"{base_url}/orderbook?address={token_mint}",
-            'info': f"{base_url}/token_info?address={token_mint}",
-            'trades': f"{base_url}/trades?address={token_mint}",
-            'pool': f"{base_url}/pool_stats?address={token_mint}"
-        }
+        price_url = f"{base_url}/price_volume/single?address={token_mint}&type=24h"
 
-        print(f"\nFetching metrics for token {token_mint}")
-        
-        # Make parallel requests using aiohttp
         async with aiohttp.ClientSession() as session:
-            tasks = []
-            for endpoint_name, url in endpoints.items():
-                print(f"\nRequesting {endpoint_name} data from: {url}")
-                print(f"Headers: {headers}")
-                tasks.append(session.get(url, headers=headers))
-            
-            responses = await asyncio.gather(*tasks)
-            data = []
-            
-            for i, response in enumerate(responses):
-                endpoint_name = list(endpoints.keys())[i]
+            async with session.get(price_url, headers=headers) as response:
                 if response.status == 200:
-                    json_data = await response.json()
-                    print(f"✅ {endpoint_name} data received")
-                    data.append(json_data)
+                    price_data = await response.json()
+                    if price_data.get('success'):
+                        data = price_data.get('data', {})
+                        metrics = {
+                            'price': {
+                                'current': data.get('price', 0),
+                                'priceChangePercent': data.get('priceChangePercent', 0),
+                                'volumeChangePercent': data.get('volumeChangePercent', 0),
+                                'volumeUSD': data.get('volumeUSD', 0),
+                                'updateUnixTime': data.get('updateUnixTime', 0),
+                                'updateHumanTime': data.get('updateHumanTime', '')
+                            }
+                        }
+                        print(f"\nMetrics for {token_mint}:")
+                        print(json.dumps(metrics, indent=2))
+                        return metrics
+                    else:
+                        print(f"API returned error: {price_data.get('message')}")
                 else:
-                    print(f"❌ {endpoint_name} request failed: {response.status}")
+                    print(f"API request failed: {response.status}")
                     print(f"Response: {await response.text()}")
-                    data.append({})
 
-        # Process and validate metrics
-        price_metrics = {
-            'volatility_24h': calculate_volatility(data[0]) if data[0].get('data') else 0,
-            'momentum_score': calculate_momentum(data[0]) if data[0].get('data') else 0,
-            'ma_trends': get_moving_averages(data[0]) if data[0].get('data') else {}
+        return {
+            'price': {
+                'current': 0,
+                'priceChangePercent': 0,
+                'volumeChangePercent': 0,
+                'volumeUSD': 0,
+                'updateUnixTime': 0,
+                'updateHumanTime': ''
+            }
         }
-        print(f"Price metrics calculated: {price_metrics}")
-
-        liquidity_metrics = {
-            'bid_ask_spread': data[1].get('spread', 0),
-            'depth_buy_2pct': calculate_depth(data[1], 0.02, 'bids'),
-            'depth_sell_2pct': calculate_depth(data[1], 0.02, 'asks'),
-            'liquidity_score': calculate_liquidity_score(data[1])
-        }
-        print(f"Liquidity metrics calculated: {liquidity_metrics}")
-
-        holder_metrics = {
-            'total_holders': data[2].get('holders', 0),
-            'holder_concentration': calculate_holder_concentration(data[2]),
-            'daily_transfers': data[2].get('transfers24h', 0)
-        }
-        print(f"Holder metrics calculated: {holder_metrics}")
-
-        trading_metrics = {
-            'buy_sell_ratio': calculate_buy_sell_ratio(data[3]),
-            'avg_trade_size': calculate_avg_trade_size(data[3]),
-            'large_tx_count': count_large_transactions(data[3]),
-            'vwap_24h': calculate_vwap(data[3])
-        }
-        print(f"Trading metrics calculated: {trading_metrics}")
-
-        pool_metrics = {
-            'tvl_change_24h': data[4].get('tvlChange24h', 0),
-            'fee_apr': data[4].get('feeApr', 0),
-            'utilization_rate': calculate_utilization(data[4]),
-            'il_risk_score': calculate_il_risk(data[4])
-        }
-        print(f"Pool metrics calculated: {pool_metrics}")
-
-        # Return combined metrics
-        metrics = {
-            'price_metrics': price_metrics,
-            'liquidity_metrics': liquidity_metrics,
-            'holder_metrics': holder_metrics,
-            'trading_metrics': trading_metrics,
-            'pool_metrics': pool_metrics
-        }
-
-        print(f"\nFinal metrics for {token_mint}:")
-        print(json.dumps(metrics, indent=2))
-        
-        return metrics
 
     except Exception as e:
-        print(f"Error fetching enhanced metrics for {token_mint}: {e}")
+        print(f"Error fetching metrics for {token_mint}: {e}")
         if hasattr(e, '__traceback__'):
             import traceback
             print("Traceback:")
             traceback.print_tb(e.__traceback__)
-        return {}
+        return {
+            'price': {
+                'current': 0,
+                'priceChangePercent': 0,
+                'volumeChangePercent': 0,
+                'volumeUSD': 0,
+                'updateUnixTime': 0,
+                'updateHumanTime': ''
+            }
+        }
 
 def get_token_price(token_mint: str) -> dict:
     """Get current token metrics from Birdeye"""
