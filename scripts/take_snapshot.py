@@ -459,6 +459,11 @@ def get_token_price(token_mint: str) -> dict:
 async def record_portfolio_snapshot():
     """Record current portfolio state to Airtable"""
     try:
+        # Set Windows event loop policy at the start
+        if os.name == 'nt':  # Windows
+            import asyncio
+            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
         print("\n📸 Taking portfolio snapshot...")
         
         # Initialize Airtable
@@ -617,6 +622,11 @@ async def record_portfolio_snapshot():
 
 if __name__ == "__main__":
     try:
+        # Set Windows event loop policy before running
+        if os.name == 'nt':
+            import asyncio
+            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+        
         asyncio.run(record_portfolio_snapshot())
     except Exception as e:
         print(f"Fatal error: {e}")
