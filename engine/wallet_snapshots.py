@@ -23,12 +23,11 @@ class WalletSnapshotTaker:
         self.birdeye_api_key = os.getenv('BIRDEYE_API_KEY')
         self.wallet = os.getenv('KINKONG_WALLET')
 
-    def get_token_balance(self, token_mint: str) -> dict:
-        """Get token balance from Birdeye API"""
-        url = f"https://public-api.birdeye.so/v1/wallet/token_balance"
+    def get_token_balances(self) -> dict:
+        """Get all token balances from Birdeye API"""
+        url = "https://public-api.birdeye.so/v1/wallet/token_list"
         params = {
-            "wallet": self.wallet,
-            "token_address": token_mint
+            "wallet": self.wallet
         }
         headers = {
             "x-api-key": self.birdeye_api_key,
@@ -42,66 +41,61 @@ class WalletSnapshotTaker:
             data = response.json()
             
             # Debug logging
-            print(f"Raw API response for {token_mint}:", json.dumps(data, indent=2))
+            print(f"Raw API response:", json.dumps(data, indent=2))
             
             if not data.get('success'):
                 raise Exception(f"API returned success=false: {data.get('message', 'No error message')}")
                 
-            token_data = data.get('data', {})
-            if not token_data:
-                raise Exception("No data returned from API")
-                
-            # Extract values with proper fallbacks
-            return {
-                'success': True,
-                'data': {
-                    'tokenBalance': float(token_data.get('balance', 0)),
-                    'price': float(token_data.get('value', 0)),
-                    'tokenValue': float(token_data.get('valueUSD', 0))
-                }
-            }
+            return data.get('data', [])
             
         except requests.exceptions.RequestException as e:
-            print(f"HTTP Request failed for {token_mint}: {str(e)}")
-            return {'success': False, 'error': str(e)}
-        except (KeyError, TypeError, ValueError) as e:
-            print(f"Data parsing error for {token_mint}: {str(e)}")
-            return {'success': False, 'error': str(e)}
+            print(f"HTTP Request failed: {str(e)}")
+            return []
         except Exception as e:
-            print(f"Unexpected error for {token_mint}: {str(e)}")
-            return {'success': False, 'error': str(e)}
+            print(f"Unexpected error: {str(e)}")
+            return []
 
     def take_snapshot(self):
         """Take a snapshot of wallet holdings"""
         print("📸 Taking snapshot of KinKong wallet...")
 
-        # Get active tokens
+        # Get active tokens from Airtable
         tokens = self.airtable.get_all(
             formula="{isActive} = 1",
             fields=['token', 'mint']
         )
         print(f"Found {len(tokens)} active tokens to check")
 
-        # Get balance for each token
+        # Get all token balances at once
+        token_balances = self.get_token_balances()
+        
+        # Create mapping of mint to balance data
+        balance_map = {
+            balance['mint']: balance 
+            for balance in token_balances 
+            if float(balance.get('value', 0)) > 0  # Only include non-zero balances
+        }
+
+        # Process balances for tracked tokens
         balances = []
         created_at = datetime.now(timezone.utc).isoformat()
 
         for token in tokens:
             try:
                 mint = token['fields']['mint']
-                response = self.get_token_balance(mint)
+                balance_data = balance_map.get(mint)
 
-                if response['success'] and response['data']:
+                if balance_data:
                     balances.append({
                         'token': token['fields']['token'],
                         'mint': mint,
-                        'amount': response['data']['tokenBalance'],
-                        'price': response['data']['price'],
-                        'value': response['data']['tokenValue']
+                        'amount': float(balance_data.get('balance', 0)),
+                        'price': float(balance_data.get('value', 0)),
+                        'value': float(balance_data.get('valueUSD', 0))
                     })
-                    print(f"✓ {token['fields']['token']}: {response['data']['tokenBalance']:.2f} tokens (${response['data']['tokenValue']:.2f})")
+                    print(f"✓ {token['fields']['token']}: {float(balance_data.get('balance', 0)):.2f} tokens (${float(balance_data.get('valueUSD', 0)):.2f})")
             except Exception as e:
-                print(f"❌ Error getting balance for {token['fields']['token']}: {str(e)}")
+                print(f"❌ Error processing {token['fields']['token']}: {str(e)}")
 
         # Calculate total value
         total_value = sum(b['value'] for b in balances)
