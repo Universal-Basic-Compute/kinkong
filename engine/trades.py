@@ -16,6 +16,10 @@ from solana.transaction import Transaction
 import base58
 from spl.token.constants import TOKEN_PROGRAM_ID
 
+# Set Windows event loop policy
+if os.name == 'nt':  # Windows
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 def get_associated_token_address(owner: Pubkey, mint: Pubkey) -> Pubkey:
     """Derive the associated token account address"""
     seeds = [
@@ -309,7 +313,6 @@ class TradeExecutor:
         try:
             self.trades_table.update(trade_id, {
                 'status': 'FAILED',
-                'error': error_message,
                 'failedAt': datetime.now(timezone.utc).isoformat()
             })
         except Exception as e:
