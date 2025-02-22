@@ -56,8 +56,7 @@ class JupiterTradeExecutor:
             logger.info(f"Amount Raw: {amount_raw}")
             logger.info(f"Full URL: {url}?{urllib.parse.urlencode(params)}")
 
-            # Use TCPConnector with custom configuration for Windows
-            connector = aiohttp.TCPConnector(family=socket.AF_INET)  # Force IPv4
+            connector = aiohttp.TCPConnector(family=socket.AF_INET)
             
             async with aiohttp.ClientSession(connector=connector) as session:
                 async with session.get(url, params=params) as response:
@@ -78,24 +77,18 @@ class JupiterTradeExecutor:
                         logger.error(f"Invalid JSON: {response_text}")
                         return None
                     
-                    if not data.get('success'):
-                        error_msg = data.get('error', 'No error message provided')
-                        logger.error(f"Jupiter API returned error: {error_msg}")
-                        return None
-                        
-                    quote_data = data.get('data', {})
-                    
-                    if not quote_data.get('outAmount'):
-                        logger.error("Quote missing output amount")
-                        logger.error(f"Quote data: {json.dumps(quote_data, indent=2)}")
+                    # Vérifier que les champs requis sont présents
+                    if not all(key in data for key in ['inputMint', 'outputMint', 'inAmount', 'outAmount']):
+                        logger.error("Missing required fields in response")
+                        logger.error(f"Response data: {json.dumps(data, indent=2)}")
                         return None
                     
                     logger.info("Quote received successfully:")
-                    logger.info(f"Input amount: {quote_data.get('inAmount')}")
-                    logger.info(f"Output amount: {quote_data.get('outAmount')}")
-                    logger.info(f"Price impact: {quote_data.get('priceImpactPct')}%")
+                    logger.info(f"Input amount: {data['inAmount']}")
+                    logger.info(f"Output amount: {data['outAmount']}")
+                    logger.info(f"Price impact: {data.get('priceImpactPct', 'N/A')}%")
                     
-                    return quote_data
+                    return data
                     
         except Exception as e:
             logger.error(f"Error getting Jupiter quote: {str(e)}")
