@@ -5,17 +5,20 @@ import requests
 from airtable import Airtable
 from dotenv import load_dotenv
 from typing import List, Dict, Optional
+from datetime import timedelta
+import logging
 
 # Load environment variables
 load_dotenv()
 
+# Configure logging
+logger = logging.getLogger(__name__)
+
 class TokenSnapshotTaker:
     def __init__(self):
-        self.tokens_table = Airtable(
-            os.getenv('KINKONG_AIRTABLE_BASE_ID'),
-            'TOKENS',
-            os.getenv('KINKONG_AIRTABLE_API_KEY')
-        )
+        self.base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
+        self.api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
+        self.tokens_table = Airtable(self.base_id, 'TOKENS', self.api_key)
         self.snapshots_table = Airtable(
             os.getenv('KINKONG_AIRTABLE_BASE_ID'),
             'TOKEN_SNAPSHOTS',
@@ -112,53 +115,121 @@ class TokenSnapshotTaker:
                 'priceChange24h': 0
             }
 
-    def take_snapshot(self):
-        """Take snapshots of all active tokens"""
-        print("\n📸 Taking token snapshots...")
-        
-        # Get active tokens
-        active_tokens = self.get_active_tokens()
-        print(f"\nFound {len(active_tokens)} active tokens")
-        
-        # Current timestamp
-        created_at = datetime.now(timezone.utc).isoformat()
-        
-        # Create snapshots for each token
-        for token in active_tokens:
-            try:
-                token_name = token['fields'].get('token')
-                mint = token['fields'].get('mint')
+    async def calculate_volume7d(self, token: str) -> float:
+        """Calculate 7-day average volume for a token"""
+        try:
+            # Get snapshots from last 7 days for this token
+            seven_days_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+            
+            snapshots_table = Airtable(
+                self.base_id,
+                'TOKEN_SNAPSHOTS',
+                self.api_key
+            )
+            
+            snapshots = snapshots_table.get_all(
+                formula=f"AND({{token}}='{token}', IS_AFTER({{createdAt}}, '{seven_days_ago}'))"
+            )
+            
+            if not snapshots:
+                logger.warning(f"No snapshots found for {token} in last 7 days")
+                return 0
                 
-                if not token_name or not mint:
-                    continue
-                    
-                print(f"\nProcessing {token_name}...")
-                
-                # Get current metrics
-                metrics = self.get_token_price(mint)
-                
-                # Create snapshot
-                snapshot = {
-                    'token': token_name,
-                    'price': metrics['price'],
-                    'volume24h': metrics['volume24h'],
-                    'liquidity': metrics['liquidity'],
-                    'priceChange24h': metrics['priceChange24h'],
-                    'createdAt': created_at,
-                    'isActive': True
-                }
-                
-                # Save snapshot
-                self.snapshots_table.insert(snapshot)
-                print(f"✅ Snapshot saved for {token_name}")
-                
-            except Exception as e:
-                print(f"❌ Error processing {token_name}: {e}")
-                continue
-        
-        print("\n✅ Token snapshots completed")
+            # Calculate average volume
+            volumes = [float(snap['fields'].get('volume24h', 0)) for snap in snapshots]
+            avg_volume = sum(volumes) / len(volumes) if volumes else 0
+            
+            logger.info(f"Calculated 7-day average volume for {token}: ${avg_volume:,.2f}")
+            return avg_volume
+            
+        except Exception as e:
+            logger.error(f"Error calculating 7-day volume for {token}: {e}")
+            return 0
 
-def main():
+    async def calculate_metrics(self, token: Dict) -> Dict:
+        """Calculate all metrics for a token"""
+        try:
+            token_name = token['fields'].get('token')
+            if not token_name:
+                return {}
+                
+            logger.info(f"\nCalculating metrics for {token_name}...")
+            
+            # Calculate metrics one by one
+            volume7d = await self.calculate_volume7d(token_name)
+            
+            metrics = {
+                'volume7d': volume7d
+            }
+            
+            logger.info(f"Metrics calculated for {token_name}:")
+            logger.info(json.dumps(metrics, indent=2))
+            
+            return metrics
+            
+        except Exception as e:
+            logger.error(f"Error calculating metrics for {token['fields'].get('token')}: {e}")
+            return {}
+
+    async def take_snapshot(self):
+        """Take snapshots of all active tokens"""
+        try:
+            logger.info("\n📸 Taking token snapshots...")
+            
+            # Get active tokens
+            active_tokens = self.get_active_tokens()
+            logger.info(f"\nFound {len(active_tokens)} active tokens")
+            
+            # Current timestamp
+            created_at = datetime.now(timezone.utc).isoformat()
+            
+            # Create snapshots for each token
+            for token in active_tokens:
+                try:
+                    token_name = token['fields'].get('token')
+                    mint = token['fields'].get('mint')
+                    
+                    if not token_name or not mint:
+                        continue
+                        
+                    logger.info(f"\nProcessing {token_name}...")
+                    
+                    # Get current metrics
+                    metrics = self.get_token_price(mint)
+                    
+                    # Calculate additional metrics
+                    calculated_metrics = await self.calculate_metrics(token)
+                    
+                    # Create snapshot
+                    snapshot = {
+                        'token': token_name,
+                        'price': metrics['price'],
+                        'volume24h': metrics['volume24h'],
+                        'liquidity': metrics['liquidity'],
+                        'priceChange24h': metrics['priceChange24h'],
+                        'createdAt': created_at,
+                        'isActive': True,
+                        **calculated_metrics  # Add calculated metrics
+                    }
+                    
+                    # Save snapshot
+                    self.snapshots_table.insert(snapshot)
+                    logger.info(f"✅ Snapshot saved for {token_name}")
+                    
+                    # Update token record with new metrics
+                    self.tokens_table.update(token['id'], calculated_metrics)
+                    logger.info(f"✅ Token metrics updated for {token_name}")
+                    
+                except Exception as e:
+                    logger.error(f"❌ Error processing {token_name}: {e}")
+                    continue
+            
+            logger.info("\n✅ Token snapshots completed")
+            
+        except Exception as e:
+            logger.error(f"Error taking snapshots: {str(e)}")
+
+async def main():
     try:
         # Verify environment variables
         required_vars = [
@@ -172,11 +243,11 @@ def main():
 
         # Take snapshots
         snapshot_taker = TokenSnapshotTaker()
-        snapshot_taker.take_snapshot()
+        await snapshot_taker.take_snapshot()
 
     except Exception as e:
         print(f"\n❌ Script failed: {str(e)}")
         exit(1)
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
