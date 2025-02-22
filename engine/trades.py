@@ -426,28 +426,43 @@ class TradeExecutor:
             time_elapsed = datetime.now(timezone.utc) - created_at
             max_duration = timedelta(days=45)  # Extended to 45 days
         
-            # Check conditions
+            # Calculate percentages
             price_change_pct = (current_price - entry_price) / entry_price * 100
+            target_pct = (target_price - entry_price) / entry_price * 100
+            stop_loss_pct = (stop_loss - entry_price) / entry_price * 100
         
-            self.logger.info(f"\nChecking exit conditions for trade {trade['id']}:")
+            # Color formatting for console
+            GREEN = '\033[92m'
+            RED = '\033[91m'
+            YELLOW = '\033[93m'
+            BLUE = '\033[94m'
+            ENDC = '\033[0m'
+            
+            # Determine price change color
+            price_color = GREEN if price_change_pct >= 0 else RED
+        
+            self.logger.info(f"\n{BLUE}Checking exit conditions for trade {trade['id']}:{ENDC}")
             self.logger.info(f"Token: {trade['fields'].get('token')} ({token_mint})")
-            self.logger.info(f"Current price: ${current_price:.4f}")
+            self.logger.info(f"Current price: {price_color}${current_price:.4f}{ENDC}")
             self.logger.info(f"Entry price: ${entry_price:.4f}")
-            self.logger.info(f"Target price: ${target_price:.4f}")
-            self.logger.info(f"Stop loss: ${stop_loss:.4f}")
-            self.logger.info(f"Price change: {price_change_pct:.2f}%")
-            self.logger.info(f"Time elapsed: {time_elapsed.days}d {time_elapsed.seconds//3600}h")
+            self.logger.info(f"Target price: {GREEN}${target_price:.4f} (+{target_pct:.1f}%){ENDC}")
+            self.logger.info(f"Stop loss: {RED}${stop_loss:.4f} ({stop_loss_pct:.1f}%){ENDC}")
+            self.logger.info(f"Price change: {price_color}{price_change_pct:+.2f}%{ENDC}")
+            self.logger.info(f"Time elapsed: {YELLOW}{time_elapsed.days}d {time_elapsed.seconds//3600}h{ENDC}")
         
             # Check take profit
             if current_price >= target_price:
+                self.logger.info(f"{GREEN}✨ Take profit target reached!{ENDC}")
                 return "TAKE_PROFIT"
             
             # Check stop loss
             if current_price <= stop_loss:
+                self.logger.info(f"{RED}⚠️ Stop loss triggered!{ENDC}")
                 return "STOP_LOSS"
             
             # Check expiry (after 45 days regardless of price)
             if time_elapsed >= max_duration:
+                self.logger.info(f"{YELLOW}⏰ Trade duration expired{ENDC}")
                 return "EXPIRED"
                 
             return None
