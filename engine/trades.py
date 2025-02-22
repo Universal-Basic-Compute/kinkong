@@ -562,7 +562,7 @@ class TradeExecutor:
                     return False
 
                 # Calculate USD value we want to trade (3% of USDC balance, min $10, max $1000)
-                trade_amount_usd = min(balance_amount * 0.03, 1000)
+                trade_amount_usd = min(balance * 0.03, 1000)
                 trade_amount_usd = max(trade_amount_usd, 10)
 
                 # Convert USD amount to token amount
@@ -593,7 +593,15 @@ class TradeExecutor:
                 
                 async with aiohttp.ClientSession() as session:
                     try:
-                        async with session.get(quote_url, params=params) as response:
+                        # Build quote request parameters
+                        quote_params = {
+                            "inputMint": USDC_MINT,
+                            "outputMint": signal['fields']['mint'],
+                            "amount": str(int(trade_amount_usd * 1e6)),
+                            "slippageBps": "100"
+                        }
+                        
+                        async with session.get(quote_url, params=quote_params) as response:
                             if not response.ok:
                                 self.logger.error(f"Failed to get Jupiter quote: {response.status}")
                                 self.logger.error(f"Response text: {await response.text()}")
