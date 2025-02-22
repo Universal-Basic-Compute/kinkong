@@ -13,6 +13,8 @@ from solders.keypair import Keypair
 from solders.pubkey import Pubkey
 from solana.rpc.async_api import AsyncClient
 from solana.transaction import Transaction
+from solana.publickey import PublicKey
+from spl.token.instructions import get_associated_token_address
 from base58 import b58decode
 import json
 from spl.token.instructions import get_associated_token_address
@@ -361,12 +363,18 @@ class TradeExecutor:
                 # Create keypair from bytes
                 wallet_keypair = Keypair.from_bytes(private_key_bytes)
                 
-                # Check USDC balance
+                # Convert Solders Pubkey to Solana PublicKey for get_associated_token_address
+                wallet_pubkey = PublicKey(str(wallet_keypair.pubkey()))
+                usdc_mint_pubkey = PublicKey(USDC_MINT)
+                
+                # Get USDC ATA using solana types
                 usdc_ata = get_associated_token_address(
-                    owner=wallet_keypair.pubkey(),  # Use pubkey() instead of public_key
-                    mint=Pubkey.from_string(USDC_MINT)
+                    owner=wallet_pubkey,
+                    mint=usdc_mint_pubkey
                 )
-                usdc_balance = await client.get_token_account_balance(usdc_ata)
+                
+                # Convert back to string for RPC call
+                usdc_balance = await client.get_token_account_balance(str(usdc_ata))
                 
                 if not usdc_balance or float(usdc_balance.value.amount) / 1e6 < 10:  # Minimum $10 USDC
                     self.logger.error("Insufficient USDC balance")
