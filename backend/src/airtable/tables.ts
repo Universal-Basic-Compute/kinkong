@@ -8,6 +8,22 @@ export interface Portfolio {
   usdValue?: number;
 }
 
+export interface MarketSentiment {
+  weekStartDate: string;
+  weekEndDate: string;
+  classification: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+  confidence: number;
+  totalTokens: number;
+  tokensAbove7dAvg: number;
+  weeklyVolume: number;
+  prevWeekVolume: number;
+  upDayVolume: number;
+  totalVolume: number;
+  solPerformance: number;
+  aiTokensPerformance: number;
+  notes: string;
+}
+
 export interface Trade {
   createdAt: string;
   token: string;
