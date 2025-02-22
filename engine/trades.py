@@ -359,67 +359,77 @@ class TradeExecutor:
     async def get_jupiter_quote(self, input_token: str, output_token: str, amount: int) -> Optional[Dict]:
         """Get quote from Jupiter"""
         try:
-            # Build parameters - amount should already be in raw form with proper decimals
+            # Build parameters
             params = {
                 "inputMint": str(input_token),
                 "outputMint": str(output_token),
-                "amount": str(amount),  # Already in raw form
+                "amount": str(amount),
                 "slippageBps": "100"
             }
             
-            self.logger.info(f"Requesting Jupiter quote:")
-            self.logger.info(f"Input token: {input_token}")
-            self.logger.info(f"Output token: {output_token}")
-            self.logger.info(f"Amount: {amount}")
-            
             url = "https://quote-api.jup.ag/v6/quote"
             
+            # Detailed request logging
+            self.logger.info("Jupiter Quote Request Details:")
+            self.logger.info(f"URL: {url}")
+            self.logger.info(f"Parameters: {json.dumps(params, indent=2)}")
+            
             async with aiohttp.ClientSession() as session:
-                async with session.get(url, params=params) as response:
-                    response_text = await response.text()
-                    
-                    if not response.ok:
-                        self.logger.error(f"Jupiter API error {response.status}: {response_text}")
+                try:
+                    async with session.get(url, params=params) as response:
+                        # Log raw response
+                        response_text = await response.text()
+                        self.logger.info(f"Response Status: {response.status}")
+                        self.logger.info(f"Raw Response: {response_text}")
                         
-                        # Check for specific error conditions
-                        try:
-                            error_data = json.loads(response_text)
-                            error_message = error_data.get('error', '')
+                        if not response.ok:
+                            self.logger.error(f"Jupiter API HTTP error: {response.status}")
+                            self.logger.error(f"Response headers: {dict(response.headers)}")
+                            self.logger.error(f"Response body: {response_text}")
+                            return None
                             
-                            if "Could not find any route" in error_message:
-                                self.logger.error("No liquidity route found. Possible reasons:")
+                        try:
+                            data = json.loads(response_text)
+                        except json.JSONDecodeError as e:
+                            self.logger.error(f"Failed to parse JSON response: {e}")
+                            self.logger.error(f"Invalid JSON: {response_text}")
+                            return None
+                        
+                        # Log parsed response
+                        self.logger.info(f"Parsed Response: {json.dumps(data, indent=2)}")
+                        
+                        if not data.get('success'):
+                            error_msg = data.get('error', 'No error message provided')
+                            self.logger.error(f"Jupiter API returned error: {error_msg}")
+                            
+                            # Check specific error conditions
+                            if "Could not find any route" in str(error_msg):
+                                self.logger.error("No liquidity route found - possible reasons:")
                                 self.logger.error("- Insufficient liquidity in pools")
                                 self.logger.error("- Token pair not supported")
                                 self.logger.error("- Amount too small or too large")
+                                self.logger.error(f"Attempted amount: {amount}")
+                            return None
                             
-                        except json.JSONDecodeError:
-                            pass
-                            
-                        return None
+                        quote_data = data.get('data', {})
                         
-                    try:
-                        data = json.loads(response_text)
-                    except json.JSONDecodeError:
-                        self.logger.error(f"Invalid JSON response: {response_text}")
-                        return None
-                    
-                    if not data.get('success'):
-                        self.logger.error(f"Jupiter API returned error: {data.get('error')}")
-                        return None
+                        # Validate quote data
+                        if not quote_data.get('outAmount'):
+                            self.logger.error("Quote missing output amount")
+                            self.logger.error(f"Quote data: {json.dumps(quote_data, indent=2)}")
+                            return None
                         
-                    quote_data = data.get('data', {})
-                    
-                    # Validate quote data
-                    if not quote_data.get('outAmount'):
-                        self.logger.error("Quote missing output amount")
-                        return None
+                        # Log successful quote details    
+                        self.logger.info("Quote received successfully:")
+                        self.logger.info(f"Input amount: {quote_data.get('inAmount')}")
+                        self.logger.info(f"Output amount: {quote_data.get('outAmount')}")
+                        self.logger.info(f"Price impact: {quote_data.get('priceImpactPct')}%")
                         
-                    self.logger.info("Quote received successfully:")
-                    self.logger.info(f"Input amount: {quote_data.get('inAmount')}")
-                    self.logger.info(f"Output amount: {quote_data.get('outAmount')}")
-                    self.logger.info(f"Price impact: {quote_data.get('priceImpactPct')}%")
-                    
-                    return quote_data
+                        return quote_data
+                        
+                except aiohttp.ClientError as e:
+                    self.logger.error(f"HTTP request failed: {str(e)}")
+                    return None
                     
         except Exception as e:
             self.logger.error(f"Error getting Jupiter quote: {str(e)}")
