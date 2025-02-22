@@ -64,7 +64,7 @@ foreach ($logFile in $logFiles) {
         $lastLines = Get-Content $path -Tail 3
 
         Write-Host ""
-        Write-Host "$logFile:" -ForegroundColor Cyan
+        Write-Host ($logFile + ":") -ForegroundColor Cyan
         Write-Host "Size: $([math]::Round($size/1KB, 2)) KB"
         Write-Host "Last Modified: $lastWrite"
         Write-Host "Last entries:"
@@ -73,7 +73,7 @@ foreach ($logFile in $logFiles) {
         }
     } else {
         Write-Host ""
-        Write-Host "$logFile:" -ForegroundColor Cyan
+        Write-Host ($logFile + ":") -ForegroundColor Cyan
         Write-Host "File not found" -ForegroundColor Red
     }
 }
