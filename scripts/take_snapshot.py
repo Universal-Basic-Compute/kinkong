@@ -547,8 +547,7 @@ async def record_portfolio_snapshot():
 
                 # Create snapshot with core metrics
                 snapshot = {
-                    'symbol': symbol,
-                    'mint': mint,
+                    'token': symbol,  # Use token instead of symbol
                     'price': metrics['price'],
                     'volume24h': metrics['volume24h'],
                     'liquidity': metrics['liquidity'],
