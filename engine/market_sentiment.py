@@ -258,7 +258,7 @@ async def main():
         logger.debug(f"Sentiment data: {sentiment}")
         
         sentiment_table.insert(sentiment)
-        logger.info("✅ Market sentiment recorded successfully")
+        logger.info("[SUCCESS] Market sentiment recorded successfully")
         
     except Exception as e:
         logger.error(f"Script failed: {e}", exc_info=True)
