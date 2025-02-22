@@ -16,9 +16,11 @@ class MetricType(Enum):
 METRIC_DEFAULTS = {
     MetricType.PRICE: {
         'current': 0,
-        'changePercent': 0,
+        'priceChangePercent': 0,
+        'volumeChangePercent': 0,
         'volumeUSD': 0,
-        'updateTime': ''
+        'updateUnixTime': 0,
+        'updateHumanTime': ''
     },
     MetricType.TRADE: {
         'volume': {'amount24h': 0, 'change': 0},
@@ -180,17 +182,16 @@ class TokenMetricsCollector:
 
     def _extract_price_metrics(self, data: Dict) -> Dict:
         """Extract and organize price metrics"""
-        price_data = {
-            'current': data.get('value', 0),  # API returns 'value' for current price
-            'priceChangePercent': data.get('priceChangePercent', 0),
-            'volumeUSD': data.get('volume24h', 0),
-            'volumeChangePercent': data.get('volumeChangePercent', 0),
-            'updateTime': datetime.fromtimestamp(
-                data.get('updateTime', 0), 
-                timezone.utc
-            ).isoformat()
-        }
-        return price_data
+        if isinstance(data, dict):
+            return {
+                'current': float(data.get('current', 0)),
+                'priceChangePercent': float(data.get('priceChangePercent', 0)),
+                'volumeChangePercent': float(data.get('volumeChangePercent', 0)),
+                'volumeUSD': float(data.get('volumeUSD', 0)),
+                'updateUnixTime': int(data.get('updateUnixTime', 0)),
+                'updateHumanTime': str(data.get('updateHumanTime', ''))
+            }
+        return METRIC_DEFAULTS[MetricType.PRICE]
 
     def _extract_trade_metrics(self, data: Dict) -> Dict:
         """Extract and organize trade metrics"""
