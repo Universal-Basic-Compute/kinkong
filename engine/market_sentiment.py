@@ -5,13 +5,44 @@ from dotenv import load_dotenv
 import logging
 from typing import Dict, List, Tuple
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-logger = logging.getLogger(__name__)
+import logging.handlers
+from pathlib import Path
+
+def setup_logging():
+    """Configure logging with file and console handlers"""
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
+    
+    # Create logs directory if it doesn't exist
+    log_dir = Path("logs")
+    log_dir.mkdir(exist_ok=True)
+    
+    # File handler with rotation
+    file_handler = logging.handlers.RotatingFileHandler(
+        log_dir / "market_sentiment.log",
+        maxBytes=1024*1024,  # 1MB
+        backupCount=5
+    )
+    file_handler.setFormatter(logging.Formatter(
+        '%(asctime)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    ))
+    
+    # Console handler
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(logging.Formatter(
+        '%(asctime)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    ))
+    
+    # Add handlers if they don't exist
+    if not logger.handlers:
+        logger.addHandler(file_handler)
+        logger.addHandler(console_handler)
+    
+    return logger
+
+logger = setup_logging()
 
 class MarketSentimentAnalyzer:
     def __init__(self):
@@ -30,6 +61,9 @@ class MarketSentimentAnalyzer:
 
     def analyze_price_action(self, active_tokens: List[Dict]) -> Tuple[bool, str]:
         """Check if >60% of AI tokens are above their 7-day average"""
+        logger = logging.getLogger(__name__)
+        logger.info("Analyzing price action...")
+        
         tokens_above_avg = 0
         total_tokens = len([t for t in active_tokens if t['fields'].get('token') != 'SOL'])
         
@@ -184,7 +218,7 @@ class MarketSentimentAnalyzer:
             ]
             
             result = {
-                "sentiment": sentiment,
+                "classification": sentiment,
                 "confidence": confidence,
                 "bullishSignals": bullish_signals,
                 "reasons": reasons,
@@ -207,6 +241,9 @@ class MarketSentimentAnalyzer:
 
 async def main():
     try:
+        logger = setup_logging()
+        logger.info("Starting market sentiment analysis...")
+        
         analyzer = MarketSentimentAnalyzer()
         sentiment = await analyzer.calculate_sentiment()
         
@@ -217,11 +254,14 @@ async def main():
             os.getenv('KINKONG_AIRTABLE_API_KEY')
         )
         
+        logger.info("Saving sentiment analysis to Airtable...")
+        logger.debug(f"Sentiment data: {sentiment}")
+        
         sentiment_table.insert(sentiment)
-        logger.info("\n✅ Market sentiment recorded")
+        logger.info("✅ Market sentiment recorded successfully")
         
     except Exception as e:
-        logger.error(f"Script failed: {e}")
+        logger.error(f"Script failed: {e}", exc_info=True)
         raise
 
 if __name__ == "__main__":
