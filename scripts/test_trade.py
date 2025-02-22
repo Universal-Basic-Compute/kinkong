@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from solders.keypair import Keypair
 from solders.transaction import Transaction
 from solders.message import Message
+from solders.instruction import Instruction
 from solana.rpc.async_api import AsyncClient
 import base58
 
