@@ -425,8 +425,8 @@ class TradeExecutor:
             if current_price <= stop_loss:
                 return "STOP_LOSS"
             
-            # Check expiry (only if price is below entry after 45 days)
-            if time_elapsed >= max_duration and current_price < entry_price:
+            # Check expiry (after 45 days regardless of price)
+            if time_elapsed >= max_duration:
                 return "EXPIRED"
                 
             return None
