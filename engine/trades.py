@@ -474,27 +474,22 @@ class TradeExecutor:
                         return False
 
                 try:
-                    # The transaction comes as a base58 encoded string
-                    transaction_base58 = transaction_data['swapTransaction']
-                    self.logger.info("Got transaction base58 string")
+                    # The transaction comes as a base64 encoded string
+                    transaction_base64 = transaction_data['swapTransaction']
+                    self.logger.info("Got transaction string")
                     
-                    # Clean the transaction string
-                    transaction_base58 = transaction_base58.replace('/', '_')  # Replace forward slashes
-                    transaction_base58 = ''.join(c for c in transaction_base58 if c.isalnum() or c in '_-')  # Keep only valid chars
-                    
-                    self.logger.info(f"Cleaned transaction string length: {len(transaction_base58)}")
-                    
-                    # Decode the transaction bytes
+                    # First decode from base64 to bytes
                     try:
-                        transaction_bytes = base58.b58decode(transaction_base58)
+                        import base64
+                        transaction_bytes = base64.b64decode(transaction_base64)
                         self.logger.info(f"Decoded transaction bytes length: {len(transaction_bytes)}")
-                    except ValueError as ve:
-                        self.logger.error(f"Base58 decode error: {str(ve)}")
-                        self.logger.error(f"Problem string: {transaction_base58[:100]}...")  # Log first 100 chars
+                    except Exception as e:
+                        self.logger.error(f"Base64 decode error: {str(e)}")
+                        self.logger.error(f"Problem string: {transaction_base64[:100]}...")
                         await self.handle_failed_trade(trade['id'], "Invalid transaction format")
                         return False
                     
-                    # Create the transaction object
+                    # Create the transaction object directly from bytes
                     try:
                         transaction = Transaction.deserialize(transaction_bytes)
                         self.logger.info("Deserialized transaction successfully")
