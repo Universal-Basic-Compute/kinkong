@@ -21,7 +21,10 @@ from solana.rpc.commitment import Commitment
 import base58
 import base64
 import urllib.parse
+from solana.rpc.async_api import AsyncClient
+from solders.pubkey import Pubkey
 from spl.token.constants import TOKEN_PROGRAM_ID
+from spl.token.instructions import get_associated_token_address
 
 def setup_logging():
     """Configure logging with a single handler"""
@@ -501,21 +504,26 @@ class TradeExecutor:
     async def execute_trade(self, signal: Dict) -> bool:
         """Execute a trade for a signal"""
         try:
-            # Validate wallet and balance first
-            if not self.wallet_keypair:
+            self.logger.info(f"\nExecuting trade for signal {signal['id']}")
+            
+            # Validate wallet first
+            if not self.wallet_keypair or not self.wallet_address:
                 self.logger.error("No wallet configured")
+                return False
+                
+            # Get USDC balance first
+            balance = await self.get_usdc_balance(self.wallet_address)
+            if balance <= 0:
+                self.logger.error("Could not get USDC balance")
+                return False
+            if balance < 10:
+                self.logger.error(f"Insufficient USDC balance: ${balance:.2f}")
                 return False
                 
             # Get current token price
             token_price = await self.get_token_price(signal['fields']['mint'])
             if not token_price:
                 self.logger.error("Could not get token price")
-                return False
-                
-            # Get USDC balance
-            balance = await self.get_usdc_balance(self.wallet_address)
-            if balance < 10:
-                self.logger.error(f"Insufficient USDC balance: ${balance:.2f}")
                 return False
                 
             # Calculate trade amount (3% of balance, min $10, max $1000)
