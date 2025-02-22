@@ -12,7 +12,8 @@
     "fetch-tokens": "ts-node --transpile-only scripts/fetch-token-data.ts",
     "reallocation": "ts-node scripts/execute-reallocation.ts",
     "snapshot": "python scripts/take_snapshot.py",
-    "calculate-signals": "ts-node scripts/calculate-closed-signals.ts"
+    "calculate-signals": "ts-node scripts/calculate-closed-signals.ts",
+    "wallet-snapshot": "ts-node --esm engine/wallet_snapshots.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.10.2",
