@@ -10,6 +10,7 @@ from solders.transaction import Transaction
 from solders.message import Message
 from solders.instruction import AccountMeta, Instruction
 from solana.rpc.async_api import AsyncClient
+from solana.rpc.types import TxOpts
 import base58
 
 # Get absolute path to project root and .env file
@@ -184,11 +185,11 @@ async def test_usdc_usdt_swap():
                 try:
                     result = await client.send_transaction(
                         new_transaction,
-                        opts={
-                            "skip_preflight": False,
-                            "preflight_commitment": "confirmed",
-                            "max_retries": 2
-                        }
+                        opts=TxOpts(
+                            skip_preflight=False,
+                            preflight_commitment="confirmed",
+                            max_retries=2
+                        )
                     )
                     
                     if result.value:
