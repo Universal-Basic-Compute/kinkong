@@ -421,35 +421,47 @@ class TradeExecutor:
 
     async def monitor_signals(self):
         """Main loop to monitor signals and execute trades"""
-        try:
-            while True:
+        while True:
+            try:
                 logger.info("Checking for active signals...")
                 
-                # Get active signals
-                signals = await self.get_active_buy_signals()
-                
+                try:
+                    signals = await self.get_active_buy_signals()
+                except Exception as e:
+                    logger.error(f"Failed to fetch active signals: {e}")
+                    await asyncio.sleep(60)
+                    continue
+
                 for signal in signals:
                     try:
-                        # Check entry conditions - remove await since it's synchronous
                         if self.check_entry_conditions(signal):
                             logger.info(f"Entry conditions met for signal {signal['id']}")
                             
-                            # Execute trade
-                            if await self.execute_trade(signal):
-                                logger.info(f"Successfully executed trade for signal {signal['id']}")
-                            else:
-                                logger.error(f"Failed to execute trade for signal {signal['id']}")
+                            # Execute trade with timeout
+                            try:
+                                async with asyncio.timeout(30):  # 30 second timeout
+                                    if await self.execute_trade(signal):
+                                        logger.info(f"Successfully executed trade for signal {signal['id']}")
+                                    else:
+                                        logger.error(f"Failed to execute trade for signal {signal['id']}")
+                            except asyncio.TimeoutError:
+                                logger.error(f"Trade execution timed out for signal {signal['id']}")
+                            except Exception as e:
+                                logger.error(f"Error executing trade: {e}")
                     
                     except Exception as e:
                         logger.error(f"Error processing signal {signal['id']}: {e}")
                         continue
 
-                # Wait before next check
-                await asyncio.sleep(60)  # Check every minute
+                    # Add delay between signals
+                    await asyncio.sleep(2)
 
-        except Exception as e:
-            logger.error(f"Error in monitor loop: {e}")
-            raise
+                # Wait before next check
+                await asyncio.sleep(60)
+
+            except Exception as e:
+                logger.error(f"Error in monitor loop: {e}")
+                await asyncio.sleep(60)  # Wait before retrying
 
 def main():
     try:
