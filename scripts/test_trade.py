@@ -114,9 +114,9 @@ async def test_usdc_usdt_swap():
 
             # Create new message with fee payer and fresh blockhash
             new_message = Message.new_with_blockhash(
-                instructions=original_transaction.message.instructions,
-                payer=wallet_keypair.pubkey(),
-                recent_blockhash=blockhash.value.blockhash
+                original_transaction.message.instructions,
+                wallet_keypair.pubkey(),
+                blockhash.value.blockhash
             )
 
             # Create new unsigned transaction with the message
