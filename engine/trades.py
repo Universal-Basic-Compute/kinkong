@@ -115,6 +115,7 @@ class TradeExecutor:
             self.wallet_keypair = None
             self.wallet_address = None
 
+
     async def get_active_buy_signals(self) -> List[Dict]:
         """Get all non-expired BUY signals"""
         try:
