@@ -38,9 +38,19 @@ console.log('📝 Loaded environment variables:', {
 
 async function main() {
     try {
-        if (!process.env.KINKONG_AIRTABLE_API_KEY || !process.env.KINKONG_AIRTABLE_BASE_ID) {
+        // Check environment variables
+        const airtableKey = process.env.KINKONG_AIRTABLE_API_KEY;
+        const airtableBase = process.env.KINKONG_AIRTABLE_BASE_ID;
+        
+        console.log('Checking Airtable configuration:', {
+            apiKey: airtableKey ? '✅ Present' : '❌ Missing',
+            baseId: airtableBase ? '✅ Present' : '❌ Missing'
+        });
+
+        if (!airtableKey || !airtableBase) {
             throw new Error('Required environment variables are missing');
         }
+
         console.log('📸 Starting manual snapshot...');
         const result = await recordPortfolioSnapshot();
         console.log('✅ Snapshot completed:', {

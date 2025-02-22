@@ -1,6 +1,12 @@
+import Airtable from 'airtable';
 import { getTable } from '../airtable/tables';
 import { getTokenData as getAirtableTokenData } from '../airtable/tokens';
 import { getCurrentPortfolio } from './portfolio';
+
+// Initialize Airtable with environment variables
+const airtable = new Airtable({
+  apiKey: process.env.KINKONG_AIRTABLE_API_KEY
+}).base(process.env.KINKONG_AIRTABLE_BASE_ID!);
 import { getTokenPrices } from '../utils/jupiter';
 import { calculateDailyPnl, calculateWeeklyPnl, calculateMonthlyPnl } from '../utils/pnl-calculations';
 import fetch from 'node-fetch';
@@ -111,6 +117,11 @@ interface TokenSnapshot {
 export async function recordPortfolioSnapshot() {
   try {
     console.log('Starting portfolio snapshot recording...');
+    
+    // Verify Airtable credentials
+    if (!process.env.KINKONG_AIRTABLE_API_KEY || !process.env.KINKONG_AIRTABLE_BASE_ID) {
+      throw new Error('Airtable credentials are not properly configured');
+    }
     
     // Get current portfolio
     console.log('Fetching current portfolio...');
