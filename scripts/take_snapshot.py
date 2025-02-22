@@ -7,7 +7,9 @@ from airtable import Airtable
 import requests
 import json
 import numpy as np
-from typing import List, Optional, Dict
+import aiohttp
+import asyncio
+from typing import List, Optional, Dict, Any
 
 # Get the project root (parent of scripts directory)
 project_root = Path(__file__).parent.parent
@@ -17,18 +19,226 @@ if str(project_root) not in sys.path:
 # Force load environment variables from project root .env
 load_dotenv(dotenv_path=project_root / '.env', override=True)
 
-def calculate_volatility(prices: List[float], window: int = 24) -> float:
-    """Calculate price volatility as standard deviation of returns, filtering outliers"""
-    if len(prices) < 2:
+def calculate_volatility(price_data: Dict) -> float:
+    """Calculate price volatility with Parkinson's High-Low estimator"""
+    try:
+        items = price_data.get('data', {}).get('items', [])
+        if not items:
+            return 0
+            
+        highs = [float(item['h']) for item in items]
+        lows = [float(item['l']) for item in items]
+        
+        # Parkinson's volatility estimator
+        hl_ratios = [np.log(h/l)**2 for h, l in zip(highs, lows)]
+        volatility = np.sqrt(1/(4*np.log(2)) * np.mean(hl_ratios)) * np.sqrt(252)
+        return volatility * 100  # Convert to percentage
+    except Exception as e:
+        print(f"Error calculating volatility: {e}")
         return 0
-    returns = []
-    for i in range(1, len(prices)):
-        if prices[i-1] > 0:  # Avoid division by zero
-            ret = (prices[i] - prices[i-1])/prices[i-1]
-            # Filter outliers
-            if abs(ret) < 1.0:  # Max 100% change per period
-                returns.append(ret)
-    return (np.std(returns) * np.sqrt(252)) * 100 if returns else 0
+
+def calculate_momentum(price_data: Dict) -> float:
+    """Calculate momentum score using RSI and price trends"""
+    try:
+        items = price_data.get('data', {}).get('items', [])
+        if not items:
+            return 0
+            
+        closes = [float(item['c']) for item in items]
+        
+        # Calculate RSI
+        deltas = np.diff(closes)
+        gains = np.where(deltas > 0, deltas, 0)
+        losses = np.where(deltas < 0, -deltas, 0)
+        
+        avg_gain = np.mean(gains[-14:])  # 14-period RSI
+        avg_loss = np.mean(losses[-14:])
+        
+        rs = avg_gain / avg_loss if avg_loss != 0 else 0
+        rsi = 100 - (100 / (1 + rs))
+        
+        # Calculate price trend
+        sma20 = np.mean(closes[-20:])
+        sma50 = np.mean(closes[-50:])
+        trend = (sma20/sma50 - 1) * 100
+        
+        # Combine RSI and trend into momentum score
+        momentum = (rsi * 0.4) + (trend * 0.6)  # Weighted combination
+        return min(max(momentum, 0), 100)  # Bound between 0-100
+    except Exception as e:
+        print(f"Error calculating momentum: {e}")
+        return 0
+
+def get_moving_averages(price_data: Dict) -> Dict:
+    """Calculate multiple moving averages and their trends"""
+    try:
+        items = price_data.get('data', {}).get('items', [])
+        if not items:
+            return {}
+            
+        closes = [float(item['c']) for item in items]
+        
+        # Calculate multiple MAs
+        ma1h = np.mean(closes[-1:]) if len(closes) >= 1 else 0
+        ma4h = np.mean(closes[-4:]) if len(closes) >= 4 else 0
+        ma24h = np.mean(closes[-24:]) if len(closes) >= 24 else 0
+        
+        # Calculate MA trends
+        trends = {
+            '1h': 'up' if closes[-1] > ma1h else 'down',
+            '4h': 'up' if ma1h > ma4h else 'down',
+            '24h': 'up' if ma4h > ma24h else 'down'
+        }
+        
+        return {
+            'values': {
+                '1h': ma1h,
+                '4h': ma4h,
+                '24h': ma24h
+            },
+            'trends': trends
+        }
+    except Exception as e:
+        print(f"Error calculating MAs: {e}")
+        return {}
+
+def calculate_depth(orderbook: Dict, price_range: float, side: str) -> float:
+    """Calculate order book depth within price range"""
+    try:
+        orders = orderbook.get(side, [])
+        if not orders:
+            return 0
+            
+        current_price = float(orders[0][0])  # Price of best bid/ask
+        range_limit = current_price * (1 + price_range) if side == 'asks' else current_price * (1 - price_range)
+        
+        depth = sum(
+            float(order[1]) for order in orders 
+            if (side == 'asks' and float(order[0]) <= range_limit) or
+               (side == 'bids' and float(order[0]) >= range_limit)
+        )
+        
+        return depth
+    except Exception as e:
+        print(f"Error calculating depth: {e}")
+        return 0
+
+def calculate_liquidity_score(orderbook: Dict) -> float:
+    """Calculate overall liquidity score based on depth and spread"""
+    try:
+        spread = float(orderbook.get('spread', 0))
+        depth_2pct = (
+            calculate_depth(orderbook, 0.02, 'bids') +
+            calculate_depth(orderbook, 0.02, 'asks')
+        ) / 2
+        
+        # Normalize and combine metrics
+        spread_score = max(0, min(100, (1 - spread) * 100))
+        depth_score = min(100, (depth_2pct / 10000) * 100)  # Normalize to 100
+        
+        return (spread_score * 0.4) + (depth_score * 0.6)  # Weighted average
+    except Exception as e:
+        print(f"Error calculating liquidity score: {e}")
+        return 0
+
+def calculate_holder_concentration(holder_data: Dict) -> float:
+    """Calculate holder concentration score"""
+    try:
+        holders = holder_data.get('holders', [])
+        if not holders:
+            return 0
+            
+        total_supply = sum(float(h['balance']) for h in holders)
+        if total_supply == 0:
+            return 0
+            
+        # Calculate Herfindahl-Hirschman Index
+        hhi = sum((float(h['balance'])/total_supply)**2 for h in holders)
+        
+        # Convert HHI to 0-100 score where lower is better
+        return (1 - hhi) * 100
+    except Exception as e:
+        print(f"Error calculating holder concentration: {e}")
+        return 0
+
+def calculate_buy_sell_ratio(trades: Dict) -> float:
+    """Calculate buy/sell volume ratio"""
+    try:
+        recent_trades = trades.get('data', [])
+        if not recent_trades:
+            return 1.0
+            
+        buy_vol = sum(float(t['amount']) for t in recent_trades if t.get('side') == 'buy')
+        sell_vol = sum(float(t['amount']) for t in recent_trades if t.get('side') == 'sell')
+        
+        return buy_vol / sell_vol if sell_vol > 0 else 1.0
+    except Exception as e:
+        print(f"Error calculating buy/sell ratio: {e}")
+        return 1.0
+
+def calculate_avg_trade_size(trades: Dict) -> float:
+    """Calculate average trade size"""
+    try:
+        recent_trades = trades.get('data', [])
+        if not recent_trades:
+            return 0
+            
+        total_volume = sum(float(t['amount']) for t in recent_trades)
+        return total_volume / len(recent_trades)
+    except Exception as e:
+        print(f"Error calculating average trade size: {e}")
+        return 0
+
+def count_large_transactions(trades: Dict, threshold: float = 1000) -> int:
+    """Count number of large transactions"""
+    try:
+        recent_trades = trades.get('data', [])
+        if not recent_trades:
+            return 0
+            
+        return sum(1 for t in recent_trades if float(t['amount']) >= threshold)
+    except Exception as e:
+        print(f"Error counting large transactions: {e}")
+        return 0
+
+def calculate_vwap(trades: Dict) -> float:
+    """Calculate volume weighted average price"""
+    try:
+        recent_trades = trades.get('data', [])
+        if not recent_trades:
+            return 0
+            
+        volume_price = sum(float(t['amount']) * float(t['price']) for t in recent_trades)
+        total_volume = sum(float(t['amount']) for t in recent_trades)
+        
+        return volume_price / total_volume if total_volume > 0 else 0
+    except Exception as e:
+        print(f"Error calculating VWAP: {e}")
+        return 0
+
+def calculate_utilization(pool_data: Dict) -> float:
+    """Calculate pool utilization rate"""
+    try:
+        tvl = float(pool_data.get('tvl', 0))
+        volume_24h = float(pool_data.get('volume24h', 0))
+        
+        return (volume_24h / tvl * 100) if tvl > 0 else 0
+    except Exception as e:
+        print(f"Error calculating utilization: {e}")
+        return 0
+
+def calculate_il_risk(pool_data: Dict) -> float:
+    """Calculate impermanent loss risk score"""
+    try:
+        price_change = abs(float(pool_data.get('priceChange24h', 0)))
+        volatility = float(pool_data.get('volatility24h', 0))
+        
+        # Higher score = higher risk
+        risk_score = (price_change * 0.4) + (volatility * 0.6)
+        return min(risk_score, 100)  # Cap at 100
+    except Exception as e:
+        print(f"Error calculating IL risk: {e}")
+        return 0
 
 def calculate_volume_growth(volumes: List[float]) -> float:
     """Calculate volume growth comparing recent vs old averages"""
@@ -119,13 +329,83 @@ def calculate_additional_metrics(snapshots_table: Airtable, token_symbol: str, d
         print(f"Error calculating additional metrics for {token_symbol}: {e}")
         return None
 
-def get_token_price(token_mint: str) -> dict:
-    """Get current token metrics from DexScreener"""
+async def get_enhanced_token_metrics(token_mint: str) -> Dict:
+    """Get comprehensive token metrics from Birdeye"""
     try:
-        url = f"https://api.dexscreener.com/latest/dex/tokens/{token_mint}"
+        headers = {
+            "X-API-KEY": os.getenv('BIRDEYE_API_KEY'),
+            "x-chain": "solana",
+            "accept": "application/json"
+        }
+        
+        # Get price history
+        price_url = f"https://public-api.birdeye.so/defi/history_price?address={token_mint}&type=1h"
+        
+        # Get order book
+        depth_url = f"https://public-api.birdeye.so/defi/orderbook?address={token_mint}"
+        
+        # Get token info
+        info_url = f"https://public-api.birdeye.so/defi/token_info?address={token_mint}"
+        
+        # Get recent trades
+        trades_url = f"https://public-api.birdeye.so/defi/trades?address={token_mint}"
+        
+        # Get pool stats
+        pool_url = f"https://public-api.birdeye.so/defi/pool_stats?address={token_mint}"
+
+        # Make parallel requests
+        async with aiohttp.ClientSession() as session:
+            tasks = [
+                session.get(url, headers=headers) 
+                for url in [price_url, depth_url, info_url, trades_url, pool_url]
+            ]
+            responses = await asyncio.gather(*tasks)
+            data = [await r.json() for r in responses]
+
+        # Process and combine metrics
+        return {
+            'price_metrics': {
+                'volatility_24h': calculate_volatility(data[0]),
+                'momentum_score': calculate_momentum(data[0]),
+                'ma_trends': get_moving_averages(data[0])
+            },
+            'liquidity_metrics': {
+                'bid_ask_spread': data[1].get('spread', 0),
+                'depth_buy_2pct': calculate_depth(data[1], 0.02, 'bids'),
+                'depth_sell_2pct': calculate_depth(data[1], 0.02, 'asks'),
+                'liquidity_score': calculate_liquidity_score(data[1])
+            },
+            'holder_metrics': {
+                'total_holders': data[2].get('holders', 0),
+                'holder_concentration': calculate_holder_concentration(data[2]),
+                'daily_transfers': data[2].get('transfers24h', 0)
+            },
+            'trading_metrics': {
+                'buy_sell_ratio': calculate_buy_sell_ratio(data[3]),
+                'avg_trade_size': calculate_avg_trade_size(data[3]),
+                'large_tx_count': count_large_transactions(data[3]),
+                'vwap_24h': calculate_vwap(data[3])
+            },
+            'pool_metrics': {
+                'tvl_change_24h': data[4].get('tvlChange24h', 0),
+                'fee_apr': data[4].get('feeApr', 0),
+                'utilization_rate': calculate_utilization(data[4]),
+                'il_risk_score': calculate_il_risk(data[4])
+            }
+        }
+
+    except Exception as e:
+        print(f"Error fetching enhanced metrics: {e}")
+        return {}
+
+def get_token_price(token_mint: str) -> dict:
+    """Get current token metrics from Birdeye"""
+    try:
+        url = f"https://public-api.birdeye.so/defi/price?address={token_mint}"
         response = requests.get(url, headers={
-            'User-Agent': 'Mozilla/5.0',
-            'Accept': 'application/json'
+            "X-API-KEY": os.getenv('BIRDEYE_API_KEY'),
+            "x-chain": "solana",
+            "accept": "application/json"
         })
         
         if response.ok:
