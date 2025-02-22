@@ -317,18 +317,14 @@ class JupiterTradeExecutor:
                 "quoteResponse": quote_data,
                 "userPublicKey": wallet_address,
                 "wrapAndUnwrapSol": False,
-                "asLegacyTransaction": True,  # Changed to use legacy format
+                "asLegacyTransaction": True,  # Force legacy transaction format
                 "useVersionedTransaction": False,  # Explicitly disable versioned tx
-                "dynamicComputeUnitLimit": True,
-                "prioritizationFeeLamports": {
-                    "priorityLevelWithMaxLamports": {
-                        "maxLamports": 10000000,
-                        "priorityLevel": "veryHigh"
-                    }
-                },
-                "dynamicSlippage": {
-                    "maxBps": 100  # 1% max slippage
-                }
+                "computeUnitPriceMicroLamports": 1000,  # Add compute unit price
+                "prioritizationFeeLamports": 1000,  # Reduce priority fee
+                "maxAccounts": 64,  # Limit number of accounts
+                "slippageBps": 100,  # 1% slippage
+                "useTokenLedger": False,  # Disable token ledger to reduce size
+                "destinationTokenAccount": "create"  # Create new token account if needed
             }
             
             self.logger.info(f"Requesting swap transaction with data: {json.dumps(swap_data, indent=2)}")
@@ -350,6 +346,22 @@ class JupiterTradeExecutor:
                     try:
                         transaction_bytes = base64.b64decode(transaction_base64)
                         self.logger.info(f"Transaction bytes length: {len(transaction_bytes)}")
+                        
+                        if len(transaction_bytes) > 1232:  # Check raw transaction size
+                            self.logger.warning("Transaction too large, attempting to optimize...")
+                            # Try again with minimal configuration
+                            swap_data.update({
+                                "maxAccounts": 32,  # Further reduce accounts
+                                "useSharedAccounts": True,  # Use shared accounts where possible
+                                "wrapUnwrapSOL": False,  # Disable SOL wrapping
+                                "feeAccount": None  # Remove fee account
+                            })
+                            
+                            async with session.post(url, json=swap_data) as retry_response:
+                                if retry_response.ok:
+                                    retry_data = await retry_response.json()
+                                    transaction_bytes = base64.b64decode(retry_data['swapTransaction'])
+                                    self.logger.info(f"Optimized transaction bytes length: {len(transaction_bytes)}")
                         
                         # Log dynamic slippage report if available
                         if 'dynamicSlippageReport' in transaction_data:
