@@ -15,7 +15,8 @@
     "wallet-snapshot": "python engine/wallet_snapshots.py",
     "token-search": "python engine/tokens.py",
     "token-snapshot": "python engine/token_snapshots.py",
-    "generate-signals": "python engine/signals.py"
+    "generate-signals": "python engine/signals.py",
+    "monitor-trades": "python engine/trades.py"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.10.2",
