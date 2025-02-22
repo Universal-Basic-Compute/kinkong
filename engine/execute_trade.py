@@ -140,12 +140,12 @@ class JupiterTradeExecutor:
             return 0
 
     async def get_jupiter_quote(self, input_token: str, output_token: str, amount: float) -> Optional[Dict]:
-        """Get quote from Jupiter API v1"""
+        """Get quote from Jupiter API v6 (public endpoint)"""
         try:
             amount_raw = int(amount * 1e6)  # Convert to USDC decimals
             
-            # Use new Jupiter API endpoint
-            base_url = "https://api.jup.ag/swap/v1/quote"
+            # Use public v6 endpoint
+            base_url = "https://quote-api.jup.ag/v6/quote"
             params = {
                 "inputMint": str(input_token),
                 "outputMint": str(output_token),
@@ -155,19 +155,13 @@ class JupiterTradeExecutor:
             
             url = f"{base_url}?{urllib.parse.urlencode(params)}"
             
-            # Get API key from environment
-            jupiter_api_key = os.getenv('JUPITER_API_KEY')
-            headers = {}
-            if jupiter_api_key:
-                headers['Authorization'] = f'Bearer {jupiter_api_key}'
-            
             self.logger.info("\nJupiter Quote Request:")
             self.logger.info(f"URL: {url}")
             self.logger.info(f"Amount USD: ${amount:.2f}")
             self.logger.info(f"Amount Raw: {amount_raw}")
             
             async with aiohttp.ClientSession() as session:
-                async with session.get(url, headers=headers) as response:
+                async with session.get(url) as response:
                     if not response.ok:
                         self.logger.error(f"Jupiter API error: {response.status}")
                         self.logger.error(f"Response: {await response.text()}")
@@ -300,21 +294,8 @@ class JupiterTradeExecutor:
     async def get_jupiter_transaction(self, quote_data: dict, wallet_address: str) -> Optional[bytes]:
         """Get swap transaction from Jupiter"""
         try:
-            # Use new Jupiter API endpoint
-            url = "https://api.jup.ag/swap/v1/swap"
-            
-            # Get API key from environment
-            jupiter_api_key = os.getenv('JUPITER_API_KEY')
-            if not jupiter_api_key:
-                self.logger.warning("No Jupiter API key found, using public endpoint with lower rate limits")
-            
-            headers = {
-                'Content-Type': 'application/json'
-            }
-            
-            # Add API key if available
-            if jupiter_api_key:
-                headers['Authorization'] = f'Bearer {jupiter_api_key}'
+            # Use public v6 endpoint
+            url = "https://quote-api.jup.ag/v6/swap"
             
             swap_data = {
                 "quoteResponse": quote_data,
@@ -328,7 +309,11 @@ class JupiterTradeExecutor:
             self.logger.debug(f"Swap data: {json.dumps(swap_data, indent=2)}")
             
             async with aiohttp.ClientSession() as session:
-                async with session.post(url, json=swap_data, headers=headers) as response:
+                async with session.post(
+                    url, 
+                    json=swap_data,
+                    headers={'Content-Type': 'application/json'}
+                ) as response:
                     response_text = await response.text()
                     
                     if not response.ok:
