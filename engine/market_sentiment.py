@@ -222,7 +222,7 @@ class MarketSentimentAnalyzer:
                 "confidence": confidence,
                 "bullishSignals": bullish_signals,
                 "notes": "\n".join(reasons),  # Join array into single string with line breaks
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "createdAt": datetime.now(timezone.utc).isoformat()
             }
             
             logger.info(f"\nMarket Sentiment Analysis:")
