@@ -13,9 +13,17 @@ from solders.keypair import Keypair
 from solders.pubkey import Pubkey
 from solana.rpc.async_api import AsyncClient
 from solana.transaction import Transaction
-from solana.publickey import PublicKey
-from spl.token.instructions import get_associated_token_address
-from base58 import b58decode
+import base58
+from spl.token.constants import TOKEN_PROGRAM_ID
+
+def get_associated_token_address(owner: Pubkey, mint: Pubkey) -> Pubkey:
+    """Derive the associated token account address"""
+    seeds = [
+        bytes(owner),
+        bytes(TOKEN_PROGRAM_ID),
+        bytes(mint)
+    ]
+    return Pubkey.find_program_address(seeds, TOKEN_PROGRAM_ID)[0]
 import json
 from spl.token.instructions import get_associated_token_address
 import base58
@@ -358,19 +366,16 @@ class TradeExecutor:
                     return False
                 
                 # Convert base58 private key to bytes
-                private_key_bytes = b58decode(private_key)
+                private_key_bytes = base58.b58decode(private_key)
                 
                 # Create keypair from bytes
                 wallet_keypair = Keypair.from_bytes(private_key_bytes)
                 
-                # Convert Solders Pubkey to Solana PublicKey for get_associated_token_address
-                wallet_pubkey = PublicKey(str(wallet_keypair.pubkey()))
-                usdc_mint_pubkey = PublicKey(USDC_MINT)
-                
-                # Get USDC ATA using solana types
+                # Get USDC ATA using Solders types directly
+                usdc_mint = Pubkey.from_string(USDC_MINT)
                 usdc_ata = get_associated_token_address(
-                    owner=wallet_pubkey,
-                    mint=usdc_mint_pubkey
+                    owner=wallet_keypair.pubkey(),
+                    mint=usdc_mint
                 )
                 
                 # Convert back to string for RPC call
