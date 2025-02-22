@@ -166,6 +166,47 @@ class JupiterTradeExecutor:
             self.logger.error(f"Validated swap failed: {e}")
             return False
 
+    async def get_jupiter_quote(self, input_token: str, output_token: str, amount: float) -> Optional[Dict]:
+        """Get quote from Jupiter API"""
+        try:
+            # Convert amount to proper decimals (USDC has 6 decimals)
+            amount_raw = int(amount * 1e6)  # Convert to USDC decimals
+            
+            params = {
+                "inputMint": str(input_token),
+                "outputMint": str(output_token),
+                "amount": str(amount_raw),
+                "slippageBps": "100",
+                "onlyDirectRoutes": "false",  # Allow indirect routes
+                "asLegacyTransaction": "true"  # Force legacy transaction format
+            }
+            
+            url = "https://quote-api.jup.ag/v6/quote"
+            
+            self.logger.info("\nJupiter Quote Request:")
+            self.logger.info(f"Input Token: {input_token}")
+            self.logger.info(f"Output Token: {output_token}")
+            self.logger.info(f"Amount USD: ${amount:.2f}")
+            self.logger.info(f"Amount Raw: {amount_raw}")
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, params=params) as response:
+                    if not response.ok:
+                        self.logger.error(f"Jupiter API error: {response.status}")
+                        return None
+                        
+                    data = await response.json()
+                    
+                    if not data.get('data'):
+                        self.logger.error("No quote data in response")
+                        return None
+                        
+                    return data['data']
+                    
+        except Exception as e:
+            self.logger.error(f"Error getting Jupiter quote: {str(e)}")
+            return None
+
     async def execute_swap(
         self,
         input_token: str,
