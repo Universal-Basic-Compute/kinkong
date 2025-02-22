@@ -432,15 +432,8 @@ class TradeExecutor:
                         transaction_bytes = base64.b64decode(transaction_base64)
                         self.logger.info(f"Transaction bytes length: {len(transaction_bytes)}")
                         
-                        # Verify transaction format
-                        version_byte = transaction_bytes[0]
-                        if version_byte >= 0x80:
-                            # Versioned transaction
-                            VersionedTransaction.from_bytes(transaction_bytes)
-                        else:
-                            # Legacy transaction
-                            Transaction.from_bytes(transaction_bytes)
-                            
+                        # Deserialize as legacy transaction
+                        Transaction.from_bytes(transaction_bytes)
                         return transaction_bytes
                         
                     except Exception as e:
@@ -601,48 +594,32 @@ class TradeExecutor:
                         await self.handle_failed_trade(trade['id'], f"API request failed: {str(e)}")
                         return False
 
-                # Import required types from latest solders
-                from solders.transaction import Transaction, VersionedTransaction
-                from solders.message import Message, MessageV0
-                from solders.instruction import Instruction
-                # Get transaction data with validation
-                transaction_bytes = await self.get_jupiter_transaction(quote_data)
-                if not transaction_bytes:
-                    self.logger.error("Failed to get valid transaction data from Jupiter")
-                    await self.handle_failed_trade(trade['id'], "Invalid transaction data")
+                # Get Jupiter quote and transaction
+                quote = await self.get_jupiter_quote(USDC_MINT, signal['fields']['mint'], trade_amount_usd)
+                if not quote:
+                    await self.handle_failed_trade(trade['id'], "Failed to get quote")
                     return False
 
+                transaction_bytes = await self.get_jupiter_transaction(quote)
+                if not transaction_bytes:
+                    await self.handle_failed_trade(trade['id'], "Failed to get transaction")
+                    return False
+
+                # Create and sign transaction
                 try:
+                    # Always deserialize as legacy transaction since we requested it
+                    transaction = Transaction.from_bytes(transaction_bytes)
+                    
                     # Get fresh blockhash
-                    blockhash_response = await client.get_latest_blockhash()
-                    if not blockhash_response or not blockhash_response.value:
+                    blockhash = await client.get_latest_blockhash()
+                    if not blockhash or not blockhash.value:
                         raise Exception("Failed to get recent blockhash")
-                
-                    blockhash_hash = blockhash_response.value.blockhash
-                
-                    # Determine transaction version and create new transaction
-                    is_versioned = transaction_bytes[0] >= 0x80
-                
-                    if is_versioned:
-                        # Handle versioned transaction
-                        tx = VersionedTransaction.from_bytes(transaction_bytes)
-                        new_message = MessageV0.try_compile(
-                            payer=tx.message.account_keys[0],
-                            recent_blockhash=blockhash_hash,
-                            instructions=tx.message.instructions,
-                            address_lookup_table_accounts=tx.message.address_table_lookups
-                        )
-                        final_tx = VersionedTransaction(message=new_message, signatures=[])
-                        final_tx.sign([self.wallet_keypair])
-                    else:
-                        # Handle legacy transaction
-                        tx = Transaction.from_bytes(transaction_bytes)
-                        # Create new transaction with explicit parameters
-                        final_tx = Transaction(
-                            from_keypairs=[self.wallet_keypair],
-                            message=tx.message,
-                            recent_blockhash=blockhash_hash
-                        )
+                    
+                    # Update transaction with new blockhash
+                    transaction.message.recent_blockhash = blockhash.value.blockhash
+                    
+                    # Sign transaction
+                    transaction.sign([self.wallet_keypair])
 
                     # Send transaction
                     result = await client.send_transaction(
