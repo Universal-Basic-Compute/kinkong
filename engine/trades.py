@@ -179,6 +179,45 @@ class TradeExecutor:
             self.logger.error(f"Error creating buy transaction: {e}")
             raise
 
+    async def calculate_trade_amount(
+        self,
+        client: AsyncClient,
+        wallet_keypair: Keypair,
+        entry_price: float
+    ) -> float:
+        """Calculate trade amount with 3% allocation, min $10, max $1000"""
+        try:
+            # Get wallet SOL balance
+            wallet_balance = await client.get_balance(wallet_keypair.public_key)
+            
+            # Get SOL price
+            sol_price = await self.get_current_price("So11111111111111111111111111111111111111112")
+            if not sol_price:
+                raise ValueError("Could not get SOL price")
+                
+            # Calculate wallet value in USD
+            wallet_value_usd = (wallet_balance.value / 1e9) * sol_price  # Convert lamports to SOL
+            
+            # Calculate 3% of wallet value
+            trade_value_usd = wallet_value_usd * 0.03
+            
+            # Apply min/max constraints
+            trade_value_usd = max(10.0, min(1000.0, trade_value_usd))
+            
+            # Convert to token amount based on entry price
+            token_amount = trade_value_usd / entry_price
+            
+            logger.info(f"Trade calculation:")
+            logger.info(f"Wallet value: ${wallet_value_usd:.2f}")
+            logger.info(f"Trade value: ${trade_value_usd:.2f}")
+            logger.info(f"Token amount: {token_amount:.4f}")
+            
+            return token_amount
+
+        except Exception as e:
+            logger.error(f"Error calculating trade amount: {e}")
+            raise
+
     def get_current_price(self, token_mint: str) -> Optional[float]:
         """Get current token price from Birdeye or DexScreener"""
         try:
@@ -269,10 +308,14 @@ class TradeExecutor:
                 
             wallet_keypair = Keypair.from_secret_key(base58.b58decode(private_key))
 
-            # Calculate trade amount (example: use 5% of wallet SOL balance)
-            wallet_balance = await client.get_balance(wallet_keypair.public_key)
-            trade_amount = wallet_balance.value * 0.05  # 5% of wallet balance
-
+            # Calculate trade amount
+            entry_price = float(signal['fields']['entryPrice'])
+            trade_amount = await self.calculate_trade_amount(
+                client,
+                wallet_keypair,
+                entry_price
+            )
+            
             # Create trade record first as PENDING
             trade_data = {
                 'signalId': signal['id'],
@@ -280,12 +323,12 @@ class TradeExecutor:
                 'type': 'BUY',
                 'timeframe': signal['fields']['timeframe'],
                 'status': 'PENDING',
-                'entryPrice': float(signal['fields']['entryPrice']),
+                'entryPrice': entry_price,
                 'targetPrice': float(signal['fields']['targetPrice']),
                 'stopLoss': float(signal['fields']['stopLoss']),
                 'createdAt': datetime.now(timezone.utc).isoformat(),
                 'amount': trade_amount,
-                'entryValue': trade_amount * float(signal['fields']['entryPrice'])
+                'entryValue': trade_amount * entry_price
             }
             
             trade = self.trades_table.insert(trade_data)
