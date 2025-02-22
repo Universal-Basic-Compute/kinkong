@@ -271,14 +271,14 @@ def calculate_price_trend(prices: List[float]) -> float:
         ema = alpha * price + (1 - alpha) * ema
     return (ema - prices[-1]) / prices[-1] if prices[-1] > 0 else 0
 
-def calculate_additional_metrics(snapshots_table: Airtable, token_symbol: str, days: int = 7) -> Optional[Dict]:
+def calculate_additional_metrics(snapshots_table: Airtable, token_name: str, days: int = 7) -> Optional[Dict]:
     """Calculate additional metrics from historical snapshots"""
     try:
         # Construct base URL and query parameters manually
         base_url = f"https://api.airtable.com/v0/{os.getenv('KINKONG_AIRTABLE_BASE_ID')}/TOKEN_SNAPSHOTS"
         
         # Create the filter formula
-        filter_formula = f"AND({{symbol}}='{token_symbol}', IS_AFTER({{createdAt}}, DATEADD(NOW(), -{days}, 'days')))"
+        filter_formula = f"AND({{token}}='{token_name}', IS_AFTER({{createdAt}}, DATEADD(NOW(), -{days}, 'days')))"
         
         # Create complete URL with parameters - with correct array index notation
         url = f"{base_url}?filterByFormula={filter_formula}&sort%5B0%5D%5Bfield%5D=createdAt&sort%5B0%5D%5Bdirection%5D=desc"
@@ -296,12 +296,12 @@ def calculate_additional_metrics(snapshots_table: Airtable, token_symbol: str, d
             
         recent_snapshots = response.json().get('records', [])
 
-        print(f"\nProcessing {token_symbol}:")
+        print(f"\nProcessing {token_name}:")
         print(f"URL: {url}")
         print("Response status:", response.status_code)
 
         if not recent_snapshots:
-            print(f"No snapshots found for {token_symbol}")
+            print(f"No snapshots found for {token_name}")
             return None
 
         # Extract and validate data
@@ -337,7 +337,7 @@ def calculate_additional_metrics(snapshots_table: Airtable, token_symbol: str, d
             'priceVolatility': volatility
         }
     except Exception as e:
-        print(f"Error calculating additional metrics for {token_symbol}: {e}")
+        print(f"Error calculating additional metrics for {token_name}: {e}")
         return None
 
 async def get_enhanced_token_metrics(token_mint: str) -> Dict:
@@ -530,24 +530,24 @@ async def record_portfolio_snapshot():
         
         for token in active_tokens:
             try:
-                symbol = token['fields'].get('symbol')
+                token_name = token['fields'].get('token')
                 mint = token['fields'].get('mint')
                 
-                if not symbol or not mint:
+                if not token_name or not mint:
                     continue
                 
                 # Get current metrics
                 metrics = get_token_price(mint)
                 
                 # Calculate additional metrics
-                additional_metrics = calculate_additional_metrics(snapshots_table, symbol)
+                additional_metrics = calculate_additional_metrics(snapshots_table, token_name)
                 
                 # Get enhanced metrics
                 enhanced_metrics = await get_enhanced_token_metrics(mint)
 
                 # Create snapshot with core metrics
                 snapshot = {
-                    'token': symbol,  # Use token instead of symbol
+                    'token': token_name,  # Use token name consistently
                     'price': metrics['price'],
                     'volume24h': metrics['volume24h'],
                     'liquidity': metrics['liquidity'],
@@ -605,7 +605,7 @@ async def record_portfolio_snapshot():
                     })
                 
                 new_snapshots.append(snapshot)
-                print(f"\nProcessed {symbol}:")
+                print(f"\nProcessed {token_name}:")
                 print(f"Price: ${metrics['price']:.4f}")
                 print(f"24h Volume: ${metrics['volume24h']:,.2f}")
                 print(f"Liquidity: ${metrics['liquidity']:,.2f}")
