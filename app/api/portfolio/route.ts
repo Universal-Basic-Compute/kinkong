@@ -2,6 +2,29 @@ import { Connection, PublicKey } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { NextResponse } from 'next/server';
 
+const KNOWN_TOKENS = {
+  USDC: {
+    mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    price: 1.00  // USDC is pegged to USD
+  },
+  USDT: {
+    mint: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", 
+    price: 1.00  // USDT is pegged to USD
+  }
+};
+
+async function getJupiterPrice(mint: string): Promise<number> {
+  try {
+    const response = await fetch(`https://price.jup.ag/v4/price?ids=${mint}`);
+    if (!response.ok) return 0;
+    const data = await response.json();
+    return data.data[mint]?.price || 0;
+  } catch (e) {
+    console.error('Jupiter price fetch failed:', e);
+    return 0;
+  }
+}
+
 const TREASURY_WALLET = new PublicKey('FnWyN4t1aoZWFjEEBxopMaAgk5hjL5P3K65oc2T9FBJY');
 const DEXSCREENER_API = 'https://api.dexscreener.com/latest/dex/tokens';
 
@@ -95,21 +118,40 @@ export async function GET() {
       }
 
       // Add USD values
-      const balancesWithUSD = nonZeroBalances.map(balance => {
-        const price = priceMap[balance.mint] || 0;
-        const usdValue = balance.uiAmount * price;
+      const balancesWithUSD = await Promise.all(nonZeroBalances.map(async balance => {
+        let price = 0;
+        
+        // Check if it's a stablecoin first
+        const knownToken = Object.values(KNOWN_TOKENS).find(t => t.mint === balance.mint);
+        if (knownToken) {
+          price = knownToken.price;
+        } else {
+          // Try DexScreener price first
+          price = priceMap[balance.mint] || 0;
           
+          // If price is 0, try Jupiter as fallback
+          if (price === 0) {
+            console.log(`Attempting Jupiter fallback for ${balance.token || balance.mint}`);
+            price = await getJupiterPrice(balance.mint);
+          }
+        }
+
+        const usdValue = balance.uiAmount * price;
+            
         console.log(`Token ${balance.token || balance.mint}:`, {
           uiAmount: balance.uiAmount,
           price,
-          usdValue
+          usdValue,
+          isStablecoin: !!knownToken,
+          source: knownToken ? 'fixed' : (price === priceMap[balance.mint] ? 'dexscreener' : 'jupiter')
         });
 
         return {
           ...balance,
-          usdValue
+          usdValue,
+          price
         };
-      });
+      }));
 
       console.log('Returning portfolio data');
       return NextResponse.json(balancesWithUSD, { headers });
