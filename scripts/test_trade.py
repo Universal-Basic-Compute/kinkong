@@ -112,9 +112,29 @@ async def test_usdc_usdt_swap():
             # Deserialize original transaction
             original_transaction = Transaction.from_bytes(transaction_bytes)
 
-            # Create new message with fee payer and fresh blockhash
+            # Convert CompiledInstructions to Instructions
+            instructions = []
+            for compiled_instruction in original_transaction.message.instructions:
+                # Get the program id from the accounts list
+                program_id = original_transaction.message.account_keys[compiled_instruction.program_id_index]
+                
+                # Get the accounts for this instruction
+                accounts = [
+                    original_transaction.message.account_keys[idx]
+                    for idx in compiled_instruction.accounts
+                ]
+                
+                # Create new Instruction
+                instruction = Instruction(
+                    program_id=program_id,
+                    accounts=accounts,
+                    data=compiled_instruction.data
+                )
+                instructions.append(instruction)
+
+            # Create new message with converted instructions
             new_message = Message.new_with_blockhash(
-                original_transaction.message.instructions,
+                instructions,  # List of uncompiled Instructions
                 wallet_keypair.pubkey(),
                 blockhash.value.blockhash
             )
