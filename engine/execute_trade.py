@@ -320,10 +320,8 @@ class JupiterTradeExecutor:
                 "asLegacyTransaction": True,
                 "dynamicComputeUnitLimit": True,
                 "prioritizationFeeLamports": {
-                    "prioritizeLevelWithMaxLamports": {
-                        "maxLamports": 10000000,
-                        "priorityLevel": "high"
-                    }
+                    "priorityLevel": "HIGH",
+                    "maxLamports": 10000000
                 },
                 "dynamicSlippage": {
                     "maxBps": 100  # 1% max slippage
