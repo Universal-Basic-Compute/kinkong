@@ -503,71 +503,66 @@ class TradeExecutor:
             return False
 
     async def monitor_signals(self):
-        """Main loop to monitor signals and execute trades"""
-        while True:
-            try:
-                # First check active trades for exit conditions
-                active_trades = self.trades_table.get_all(
-                    formula="status='EXECUTED'"
-                )
-                
-                self.logger.info(f"Checking {len(active_trades)} active trades...")
-                
-                for trade in active_trades:
-                    try:
-                        exit_reason = await self.check_exit_conditions(trade)
-                        if exit_reason:
-                            self.logger.info(f"Exit condition met for trade {trade['id']}: {exit_reason}")
-                            if await self.close_trade(trade, exit_reason):
-                                self.logger.info(f"Successfully closed trade {trade['id']}")
-                            else:
-                                self.logger.error(f"Failed to close trade {trade['id']}")
-                    except Exception as e:
-                        self.logger.error(f"Error processing trade {trade['id']}: {e}")
-                        continue
-                    
-                    await asyncio.sleep(2)  # Delay between trades
-                
-                # Then check for new signals
-                self.logger.info("Checking for active signals...")
-                
+        """Single run to check trades and signals"""
+        try:
+            # First check active trades for exit conditions
+            active_trades = self.trades_table.get_all(
+                formula="status='EXECUTED'"
+            )
+            
+            self.logger.info(f"Checking {len(active_trades)} active trades...")
+            
+            for trade in active_trades:
                 try:
-                    signals = await self.get_active_buy_signals()
+                    exit_reason = await self.check_exit_conditions(trade)
+                    if exit_reason:
+                        self.logger.info(f"Exit condition met for trade {trade['id']}: {exit_reason}")
+                        if await self.close_trade(trade, exit_reason):
+                            self.logger.info(f"Successfully closed trade {trade['id']}")
+                        else:
+                            self.logger.error(f"Failed to close trade {trade['id']}")
                 except Exception as e:
-                    self.logger.error(f"Failed to fetch active signals: {e}")
-                    await asyncio.sleep(60)
+                    self.logger.error(f"Error processing trade {trade['id']}: {e}")
+                    continue
+                
+                await asyncio.sleep(2)  # Delay between trades
+            
+            # Then check for new signals
+            self.logger.info("Checking for active signals...")
+            
+            try:
+                signals = await self.get_active_buy_signals()
+            except Exception as e:
+                self.logger.error(f"Failed to fetch active signals: {e}")
+                return  # Exit if we can't get signals
+
+            for signal in signals:
+                try:
+                    if self.check_entry_conditions(signal):
+                        self.logger.info(f"Entry conditions met for signal {signal['id']}")
+                        
+                        # Execute trade with timeout
+                        try:
+                            async with asyncio.timeout(30):  # 30 second timeout
+                                if await self.execute_trade(signal):
+                                    self.logger.info(f"Successfully executed trade for signal {signal['id']}")
+                                else:
+                                    self.logger.error(f"Failed to execute trade for signal {signal['id']}")
+                        except asyncio.TimeoutError:
+                            self.logger.error(f"Trade execution timed out for signal {signal['id']}")
+                        except Exception as e:
+                            self.logger.error(f"Error executing trade: {e}")
+                
+                except Exception as e:
+                    self.logger.error(f"Error processing signal {signal['id']}: {e}")
                     continue
 
-                for signal in signals:
-                    try:
-                        if self.check_entry_conditions(signal):
-                            logger.info(f"Entry conditions met for signal {signal['id']}")
-                            
-                            # Execute trade with timeout
-                            try:
-                                async with asyncio.timeout(30):  # 30 second timeout
-                                    if await self.execute_trade(signal):
-                                        logger.info(f"Successfully executed trade for signal {signal['id']}")
-                                    else:
-                                        logger.error(f"Failed to execute trade for signal {signal['id']}")
-                            except asyncio.TimeoutError:
-                                logger.error(f"Trade execution timed out for signal {signal['id']}")
-                            except Exception as e:
-                                logger.error(f"Error executing trade: {e}")
-                    
-                    except Exception as e:
-                        logger.error(f"Error processing signal {signal['id']}: {e}")
-                        continue
+                await asyncio.sleep(2)  # Delay between signals
 
-                    # Add delay between signals
-                    await asyncio.sleep(2)
+            self.logger.info("✅ Finished processing all trades and signals")
 
-                # Wait before next check
-                await asyncio.sleep(60)
-
-            except Exception as e:
-                logger.error(f"Error in monitor loop: {e}")
-                await asyncio.sleep(60)  # Wait before retrying
+        except Exception as e:
+            self.logger.error(f"Error in monitor process: {e}")
 
 def main():
     try:
