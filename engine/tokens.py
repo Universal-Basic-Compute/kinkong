@@ -63,21 +63,18 @@ class TokenSearcher:
     def create_token_record(self, token_data: Dict[str, Any]) -> bool:
         """Create a token record in Airtable"""
         try:
+            # Get current timestamp in ISO format
+            created_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+            
             # Format data for Airtable
             airtable_record = {
+                'tokenId': token_data.get('symbol', ''),  # Using symbol as tokenId
                 'token': token_data.get('symbol', ''),
                 'name': token_data.get('name', ''),
-                'mint': token_data.get('address', ''),
                 'isActive': True,
-                'volume7d': float(token_data.get('volume7d', 0)),
-                'liquidity': float(token_data.get('liquidity', 0)),
-                'volumeGrowth': float(token_data.get('volumeChange24h', 0)),
-                'pricePerformance': float(token_data.get('priceChange24h', 0)),
-                'holderCount': int(token_data.get('holderCount', 0)),
-                'price': float(token_data.get('price', 0)),
-                'price7dAvg': float(token_data.get('price7dAvg', 0)),
-                'volumeOnUpDay': token_data.get('volumeOnUpDay', False),
-                'priceChange24h': float(token_data.get('priceChange24h', 0))
+                'mint': token_data.get('address', ''),
+                'description': f"Token {token_data.get('symbol')} on Solana chain",  # Basic description
+                'createdAt': created_at
             }
             
             # Check if token already exists
@@ -87,6 +84,8 @@ class TokenSearcher:
             if existing_records:
                 print(f"Token {token_data.get('symbol')} already exists in Airtable")
                 record_id = existing_records[0]['id']
+                # Don't update createdAt for existing records
+                del airtable_record['createdAt']
                 self.airtable.update(record_id, airtable_record)
                 print(f"Updated existing token record")
             else:
