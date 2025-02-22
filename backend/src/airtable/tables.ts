@@ -1,6 +1,22 @@
 import { base } from './client';
 
 // Table interfaces (keep these for TypeScript)
+export interface Portfolio {
+  token: string;
+  allocation: number;
+  lastUpdate: string;
+  usdValue?: number;
+}
+
+export interface Trade {
+  createdAt: string;
+  token: string;
+  action: 'BUY' | 'SELL';
+  amount: number;
+  price: number;
+  lastUpdateTime?: string;
+}
+
 export interface Token {
   token: string;
   name: string;
