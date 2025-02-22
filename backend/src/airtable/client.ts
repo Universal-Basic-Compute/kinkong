@@ -14,7 +14,8 @@ console.log('⚙️ Initializing Airtable client...', {
   hasApiKey: !!process.env.KINKONG_AIRTABLE_API_KEY,
   hasBaseId: !!process.env.KINKONG_AIRTABLE_BASE_ID,
   nodeEnv: process.env.NODE_ENV,
-  cwd: process.cwd()
+  cwd: process.cwd(),
+  envPath: path.resolve(process.cwd(), '.env')
 });
 
 if (!process.env.KINKONG_AIRTABLE_API_KEY) {
@@ -25,16 +26,28 @@ if (!process.env.KINKONG_AIRTABLE_BASE_ID) {
   throw new Error('KINKONG_AIRTABLE_BASE_ID is not defined');
 }
 
-export const base = new Airtable({
-  apiKey: process.env.KINKONG_AIRTABLE_API_KEY
-}).base(process.env.KINKONG_AIRTABLE_BASE_ID);
+// Initialize Airtable with explicit configuration
+const airtableConfig = {
+  apiKey: process.env.KINKONG_AIRTABLE_API_KEY,
+  endpointUrl: 'https://api.airtable.com',
+};
 
-export function testConnection() {
+console.log('Creating Airtable base instance...', {
+  baseId: process.env.KINKONG_AIRTABLE_BASE_ID
+});
+
+export const base = new Airtable(airtableConfig).base(process.env.KINKONG_AIRTABLE_BASE_ID);
+
+// Add a test function to verify connection
+export async function testConnection() {
   try {
-    const table = base.table('Investments');
-    return table.select().firstPage();
+    console.log('Testing Airtable connection...');
+    const table = base.table('PORTFOLIO');
+    const records = await table.select().firstPage();
+    console.log(`✅ Connection successful. Found ${records.length} records in PORTFOLIO table`);
+    return true;
   } catch (error) {
-    console.error('Airtable connection test failed:', error);
+    console.error('❌ Airtable connection test failed:', error);
     throw error;
   }
 }

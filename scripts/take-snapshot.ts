@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { recordPortfolioSnapshot } from '../backend/src/strategy/snapshots.js';
+import { testConnection } from '../backend/src/airtable/client.js';
 
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -50,6 +51,10 @@ async function main() {
         if (!airtableKey || !airtableBase) {
             throw new Error('Required environment variables are missing');
         }
+
+        // Test Airtable connection
+        console.log('Testing Airtable connection...');
+        await testConnection();
 
         console.log('📸 Starting manual snapshot...');
         const result = await recordPortfolioSnapshot();
