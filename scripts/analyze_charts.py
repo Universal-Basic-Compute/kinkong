@@ -521,6 +521,8 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None, addit
 
         # Add any additional fields
         if additional_fields:
+            # Remove 'validated' from additional fields if present
+            additional_fields.pop('validated', None)
             signal_data.update(additional_fields)
 
         print("\nSending to Airtable:", json.dumps(signal_data, indent=2))
