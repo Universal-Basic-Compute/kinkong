@@ -1,6 +1,7 @@
 import { getTokenPrice } from '@/backend/src/utils/prices';
 
 interface TokenMetrics {
+  token: string;  // Changed from symbol if present
   price: {
     current: number;
     high24h: number;
