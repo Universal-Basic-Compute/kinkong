@@ -4,6 +4,7 @@ import os
 from datetime import datetime, timezone
 import asyncio
 import requests
+import aiohttp
 from airtable import Airtable
 from dotenv import load_dotenv
 import json
