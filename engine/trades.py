@@ -306,16 +306,20 @@ class TradeExecutor:
             # Calculate trade amount (3% of balance, min $10, max $1000)
             balance = await self.jupiter.get_token_balance("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v")  # USDC balance
             if balance <= 0:
-                logger.error("Could not get USDC balance")
-                await self.handle_failed_trade(trade['id'], "Failed to get USDC balance")
-                return False
-            if balance < 10:
-                logger.error(f"Insufficient USDC balance: ${balance:.2f}")
-                await self.handle_failed_trade(trade['id'], "Insufficient USDC balance")
+                error_msg = "Insufficient USDC balance"
+                logger.error(error_msg)
+                await self.handle_failed_trade(trade['id'], error_msg)
                 return False
 
-            trade_amount_usd = min(balance * 0.03, 1000)  # 3% of balance, max $1000
-            trade_amount_usd = max(trade_amount_usd, 10)  # Minimum $10
+            # Calculate trade amount (3% of balance, min $10, max $1000)
+            trade_amount_usd = min(balance * 0.03, 1000)
+            trade_amount_usd = max(trade_amount_usd, 10)
+
+            if trade_amount_usd < 10:
+                error_msg = f"Trade amount ${trade_amount_usd:.2f} below minimum $10"
+                logger.error(error_msg)
+                await self.handle_failed_trade(trade['id'], error_msg)
+                return False
 
             logger.info(f"\nTrade calculation:")
             logger.info(f"USDC balance: ${balance:.2f}")

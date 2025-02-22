@@ -407,17 +407,43 @@ class JupiterTradeExecutor:
                 async with session.get(url, headers=headers, params=params) as response:
                     if response.status == 200:
                         data = await response.json()
+                        self.logger.debug(f"Birdeye API response: {json.dumps(data, indent=2)}")
+                        
                         if data.get('success'):
-                            balance = float(data['data'].get('value', 0))
+                            token_data = data.get('data', {})
+                            # Get balance and handle decimals (USDC has 6 decimals)
+                            raw_balance = float(token_data.get('balance', 0))
+                            decimals = int(token_data.get('decimals', 6))  # Default to 6 for USDC
+                            balance = raw_balance / (10 ** decimals)
+                            
+                            usd_value = float(token_data.get('usd_value', 0))
+                            
                             self.logger.info(f"Token balance: {balance:.4f}")
-                            return balance
+                            self.logger.info(f"USD value: ${usd_value:.2f}")
+                            
+                            return balance if balance > 0 else usd_value  # Return either balance or USD value
                         else:
                             self.logger.error(f"Birdeye API error: {data.get('message')}")
                     else:
                         self.logger.error(f"Birdeye API request failed: {response.status}")
                         self.logger.error(f"Response: {await response.text()}")
 
-            return 0
+                # If we get here, try fallback to DexScreener
+                self.logger.info("Attempting fallback to DexScreener...")
+                dexscreener_url = f"https://api.dexscreener.com/latest/dex/tokens/{token_mint}"
+                
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(dexscreener_url) as response:
+                        if response.status == 200:
+                            data = await response.json()
+                            pairs = data.get('pairs', [])
+                            if pairs:
+                                best_pair = max(pairs, key=lambda x: float(x.get('liquidity', {}).get('usd', 0) or 0))
+                                price = float(best_pair.get('priceUsd', 0))
+                                self.logger.info(f"DexScreener price: ${price:.4f}")
+                                return price
+                
+                return 0
 
         except Exception as e:
             self.logger.error(f"Error getting token balance from Birdeye: {e}")
