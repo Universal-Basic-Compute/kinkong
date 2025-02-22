@@ -45,7 +45,7 @@ async function get24hHistoricalData(token: string): Promise<HistoricalData> {
   };
 }
 
-export async function getTokenMetrics(token: string): Promise<TokenMetrics> {
+export async function getTokenMetrics(token: string): Promise<TokenMetrics> {  // Changed parameter name
   // Get current price and 24h historical data
   const currentPrice = await getTokenPrice(token);
   const historicalData = await get24hHistoricalData(token);

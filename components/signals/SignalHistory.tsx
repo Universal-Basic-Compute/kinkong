@@ -18,7 +18,7 @@ export const signalEvents = {
   }
 };
 
-function formatTokenSymbol(token: string): string {
+function formatTokenSymbol(token: string): string {  // Formats tokens
   return token.startsWith('$') ? token : `$${token}`;
 }
 
