@@ -354,7 +354,7 @@ class TradeExecutor:
             transaction_url = f"https://solscan.io/tx/{signature}"
             self.trades_table.update(trade['id'], {
                 'status': 'EXECUTED',
-                'transactionSignature': signature,
+                'txSignature': signature,  # Changed to 'txSignature'
                 'amount': trade_amount_usd,
                 'price': float(signal['fields']['entryPrice']),
                 'transactionUrl': transaction_url,
