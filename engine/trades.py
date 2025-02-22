@@ -371,18 +371,33 @@ class TradeExecutor:
                 # Create keypair from bytes
                 wallet_keypair = Keypair.from_bytes(private_key_bytes)
                 
-                # Get USDC ATA using Solders types directly
+                # Get USDC ATA using Solders types
                 usdc_mint = Pubkey.from_string(USDC_MINT)
                 usdc_ata = get_associated_token_address(
                     owner=wallet_keypair.pubkey(),
                     mint=usdc_mint
                 )
                 
-                # Convert back to string for RPC call
-                usdc_balance = await client.get_token_account_balance(str(usdc_ata))
+                # Convert Pubkey to base58 string for RPC call
+                usdc_ata_string = str(usdc_ata)
                 
-                if not usdc_balance or float(usdc_balance.value.amount) / 1e6 < 10:  # Minimum $10 USDC
-                    self.logger.error("Insufficient USDC balance")
+                try:
+                    # Get balance using string address
+                    usdc_balance = await client.get_token_account_balance(usdc_ata_string)
+                    
+                    if not usdc_balance:
+                        self.logger.error("Failed to get USDC balance")
+                        return False
+                        
+                    balance_amount = float(usdc_balance.value.amount) / 1e6  # Convert from decimals
+                    self.logger.info(f"USDC Balance: ${balance_amount:.2f}")
+                    
+                    if balance_amount < 10:  # Minimum $10 USDC
+                        self.logger.error(f"Insufficient USDC balance: ${balance_amount:.2f}")
+                        return False
+                        
+                except Exception as e:
+                    self.logger.error(f"Error checking USDC balance: {e}")
                     return False
             except Exception as e:
                 self.logger.error(f"Wallet initialization failed: {e}")
