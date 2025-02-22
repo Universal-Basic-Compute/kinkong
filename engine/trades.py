@@ -373,23 +373,29 @@ class TradeExecutor:
                 
                 # Get USDC ATA using Solders types
                 usdc_mint = Pubkey.from_string(USDC_MINT)
-                usdc_ata = get_associated_token_address(
-                    owner=wallet_keypair.pubkey(),
-                    mint=usdc_mint
+                wallet_pubkey = wallet_keypair.pubkey()
+                
+                # Get the ATA address
+                from spl.token.constants import ASSOCIATED_TOKEN_PROGRAM_ID
+                seeds = [
+                    bytes(wallet_pubkey),
+                    bytes(TOKEN_PROGRAM_ID),
+                    bytes(usdc_mint)
+                ]
+                usdc_ata, _ = Pubkey.find_program_address(
+                    seeds,
+                    ASSOCIATED_TOKEN_PROGRAM_ID
                 )
                 
-                # Convert Pubkey to base58 string for RPC call
-                usdc_ata_string = str(usdc_ata)
-                
                 try:
-                    # Get balance using string address
-                    usdc_balance = await client.get_token_account_balance(usdc_ata_string)
+                    # Get balance using the correct Pubkey format
+                    balance_response = await client.get_token_account_balance(usdc_ata)
                     
-                    if not usdc_balance:
+                    if not balance_response or not balance_response.value:
                         self.logger.error("Failed to get USDC balance")
                         return False
                         
-                    balance_amount = float(usdc_balance.value.amount) / 1e6  # Convert from decimals
+                    balance_amount = float(balance_response.value.amount) / 1e6  # Convert from decimals
                     self.logger.info(f"USDC Balance: ${balance_amount:.2f}")
                     
                     if balance_amount < 10:  # Minimum $10 USDC
