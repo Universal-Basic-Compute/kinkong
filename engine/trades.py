@@ -441,7 +441,7 @@ class TradeExecutor:
                 except aiohttp.ClientError as e:
                     self.logger.error(f"HTTP request failed: {str(e)}")
                     return None
-                    
+                
         except Exception as e:
             self.logger.error(f"Error getting Jupiter quote: {str(e)}")
             if hasattr(e, '__traceback__'):
@@ -449,6 +449,10 @@ class TradeExecutor:
                 self.logger.error("Traceback:")
                 traceback.print_tb(e.__traceback__)
             return None
+            
+        finally:
+            if 'client' in locals():
+                await client.close()
 
     async def get_jupiter_transaction(self, quote_data: dict) -> Optional[bytes]:
         """Get swap transaction from Jupiter"""
