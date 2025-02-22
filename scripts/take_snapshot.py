@@ -407,17 +407,66 @@ async def get_enhanced_token_metrics(token_mint: str) -> Dict:
             'updateHumanTime': price_data.get('updateHumanTime', '')
         }
 
-        # Process trade data
+        # Process trade data with additional v3 metrics
         trade_data = responses.get('trade_data', {})
         trade_metrics = {
+            # Volume metrics
             'volume24h': trade_data.get('volume24h', 0),
-            'trades24h': trade_data.get('trades24h', 0),
-            'avgTradeSize': trade_data.get('avgTradeSize', 0),
-            'buySellRatio': trade_data.get('buySellRatio', 1.0),
-            'largeTransactions': trade_data.get('largeTransactions', 0),
-            'uniqueTraders': trade_data.get('uniqueTraders', 0),
             'volumeChange': trade_data.get('volumeChange', 0),
-            'tradesChange': trade_data.get('tradesChange', 0)
+            'volumeChangePercent': trade_data.get('volumeChangePercent', 0),
+            
+            # Trade count metrics
+            'trades24h': trade_data.get('trades24h', 0),
+            'tradesChange': trade_data.get('tradesChange', 0),
+            'tradesChangePercent': trade_data.get('tradesChangePercent', 0),
+            
+            # Price metrics
+            'priceHigh24h': trade_data.get('priceHigh24h', 0),
+            'priceLow24h': trade_data.get('priceLow24h', 0),
+            'priceChange24h': trade_data.get('priceChange24h', 0),
+            'priceChangePercent24h': trade_data.get('priceChangePercent24h', 0),
+            
+            # Trading activity
+            'avgTradeSize': trade_data.get('avgTradeSize', 0),
+            'avgTradeSizeChange': trade_data.get('avgTradeSizeChange', 0),
+            'avgTradeSizeChangePercent': trade_data.get('avgTradeSizeChangePercent', 0),
+            'buySellRatio': trade_data.get('buySellRatio', 1.0),
+            'buySellRatioChange': trade_data.get('buySellRatioChange', 0),
+            
+            # Transaction analysis
+            'largeTransactions': trade_data.get('largeTransactions', 0),
+            'largeTransactionsChange': trade_data.get('largeTransactionsChange', 0),
+            'largeTransactionVolume': trade_data.get('largeTransactionVolume', 0),
+            'largeTransactionVolumeChange': trade_data.get('largeTransactionVolumeChange', 0),
+            
+            # Trader metrics
+            'uniqueTraders': trade_data.get('uniqueTraders', 0),
+            'uniqueTradersChange': trade_data.get('uniqueTradersChange', 0),
+            'uniqueTradersChangePercent': trade_data.get('uniqueTradersChangePercent', 0),
+            'newTraders': trade_data.get('newTraders', 0),
+            'newTradersChange': trade_data.get('newTradersChange', 0),
+            
+            # Market depth
+            'marketDepthBid': trade_data.get('marketDepthBid', 0),
+            'marketDepthAsk': trade_data.get('marketDepthAsk', 0),
+            'marketDepthRatio': trade_data.get('marketDepthRatio', 0),
+            
+            # Liquidity metrics
+            'liquidityUSD': trade_data.get('liquidityUSD', 0),
+            'liquidityChange': trade_data.get('liquidityChange', 0),
+            'liquidityChangePercent': trade_data.get('liquidityChangePercent', 0),
+            
+            # Time-based metrics
+            'timeFirstTrade': trade_data.get('timeFirstTrade', ''),
+            'timeLastTrade': trade_data.get('timeLastTrade', ''),
+            'tradingHours': trade_data.get('tradingHours', 0),
+            'activeTradingHours': trade_data.get('activeTradingHours', 0),
+            
+            # Additional analysis
+            'volatility24h': trade_data.get('volatility24h', 0),
+            'momentum24h': trade_data.get('momentum24h', 0),
+            'trendStrength': trade_data.get('trendStrength', 0),
+            'averageSlippage': trade_data.get('averageSlippage', 0)
         }
 
         # Process top traders data
@@ -435,7 +484,8 @@ async def get_enhanced_token_metrics(token_mint: str) -> Dict:
         metrics = {
             'price': price_metrics,
             'trade': trade_metrics,
-            'traders': trader_metrics
+            'traders': trader_metrics,
+            'timestamp': datetime.now(timezone.utc).isoformat()
         }
 
         print(f"\nMetrics for {token_mint}:")
