@@ -376,9 +376,8 @@ class JupiterTradeExecutor:
                 if not blockhash or not blockhash.value:
                     raise Exception("Failed to get recent blockhash")
 
-                # Deserialize transaction using Transaction.deserialize
-                # Transaction class handles both legacy and versioned transactions
-                original_transaction = Transaction.deserialize(transaction_bytes)
+                # Deserialize transaction using from_bytes
+                original_transaction = Transaction.from_bytes(transaction_bytes)
 
                 # Create new transaction with fresh blockhash and signatures
                 new_transaction = Transaction.new_with_blockhash(
