@@ -167,8 +167,34 @@ class TradeExecutor:
                 logger.warning(f"No mint address for signal {signal['id']}")
                 return False
 
-            current_price = self.get_current_price(token_mint)
+            # Use DexScreener API for current price
+            url = f"https://api.dexscreener.com/latest/dex/tokens/{token_mint}"
+            headers = {
+                'User-Agent': 'Mozilla/5.0',
+                'Accept': 'application/json'
+            }
+            
+            response = requests.get(url, headers=headers)
+            if not response.ok:
+                logger.error(f"DexScreener API error: {response.status_code}")
+                return False
+                
+            data = response.json()
+            if not data.get('pairs'):
+                logger.warning(f"No pairs found for token {token_mint}")
+                return False
+                
+            # Get most liquid Solana pair
+            sol_pairs = [p for p in data['pairs'] if p.get('chainId') == 'solana']
+            if not sol_pairs:
+                logger.warning(f"No Solana pairs found for {token_mint}")
+                return False
+                
+            main_pair = max(sol_pairs, key=lambda x: float(x.get('liquidity', {}).get('usd', 0) or 0))
+            current_price = float(main_pair.get('priceUsd', 0))
+            
             if not current_price:
+                logger.error(f"Could not get current price for {token_mint}")
                 return False
 
             entry_price = float(signal['fields'].get('entryPrice', 0))
