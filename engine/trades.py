@@ -323,54 +323,25 @@ class TradeExecutor:
                 existing_trades = self.trades_table.get_all(
                     formula=f"{{signalId}} = '{signal['id']}'"
                 )
+                if existing_trades:
+                    self.logger.warning(f"Trade already exists for signal {signal['id']}")
+                    return False
             except Exception as e:
                 self.logger.error(f"Failed to check existing trades: {e}")
                 return False
 
-            if existing_trades:
-                self.logger.warning(f"Trade already exists for signal {signal['id']}")
-                return False
-
-            # Get token mint with error handling
-            try:
-                tokens_table = Airtable(self.base_id, 'TOKENS', self.api_key)
-                token_records = tokens_table.get_all(
-                    formula=f"{{token}}='{signal['fields']['token']}'"
-                )
-            except Exception as e:
-                self.logger.error(f"Failed to fetch token data: {e}")
-                return False
-
-            if not token_records:
-                self.logger.error(f"Token {signal['fields']['token']} not found in TOKENS table")
-                return False
-
-            token_mint = token_records[0]['fields'].get('mint')
-            if not token_mint:
-                self.logger.error(f"No mint address found for token {signal['fields']['token']}")
-                return False
-
-            # Initialize Solana client with error handling
-            try:
-                client = AsyncClient("https://api.mainnet-beta.solana.com")
-                await client.is_connected()  # Test connection
-            except Exception as e:
-                self.logger.error(f"Failed to initialize Solana client: {e}")
-                return False
-
-            # Load wallet with validation
+            # Initialize wallet
             try:
                 private_key = os.getenv('STRATEGY_WALLET_PRIVATE_KEY')
                 if not private_key:
                     self.logger.error("STRATEGY_WALLET_PRIVATE_KEY not found")
                     return False
                 
-                # Convert base58 private key to bytes and create keypair
                 private_key_bytes = base58.b58decode(private_key)
                 wallet_keypair = Keypair.from_bytes(private_key_bytes)
                 wallet_address = str(wallet_keypair.pubkey())
                 
-                # Get USDC balance from Birdeye
+                # Verify wallet balance before proceeding
                 birdeye_url = "https://public-api.birdeye.so/v1/wallet/token_balance"
                 params = {
                     "wallet": wallet_address,
@@ -382,110 +353,137 @@ class TradeExecutor:
                     "accept": "application/json"
                 }
                 
-                try:
-                    response = requests.get(birdeye_url, params=params, headers=headers)
-                    response.raise_for_status()
-                    data = response.json()
-                    
-                    if not data.get('success'):
-                        self.logger.error(f"Birdeye API error: {data.get('message', 'Unknown error')}")
-                        return False
-                        
-                    balance_data = data.get('data', {})
-                    balance_amount = float(balance_data.get('uiAmount', 0))
-                    
-                    self.logger.info(f"USDC Balance: ${balance_amount:.2f}")
-                    
-                    if balance_amount < 10:  # Minimum $10 USDC
-                        self.logger.error(f"Insufficient USDC balance: ${balance_amount:.2f}")
-                        return False
-                        
-                    return True
-                        
-                except Exception as e:
-                    self.logger.error(f"Error checking USDC balance: {e}")
+                response = requests.get(birdeye_url, params=params, headers=headers)
+                if not response.ok:
+                    self.logger.error(f"Failed to get wallet balance: {response.status_code}")
                     return False
+                    
+                data = response.json()
+                if not data.get('success'):
+                    self.logger.error(f"Birdeye API error: {data.get('message')}")
+                    return False
+                    
+                balance_amount = float(data['data'].get('uiAmount', 0))
+                if balance_amount < 10:
+                    self.logger.error(f"Insufficient USDC balance: ${balance_amount:.2f}")
+                    return False
+                    
+                self.logger.info(f"Wallet USDC balance: ${balance_amount:.2f}")
+                
             except Exception as e:
                 self.logger.error(f"Wallet initialization failed: {e}")
                 return False
 
-            # Calculate trade amount with validation
-            try:
-                entry_price = float(signal['fields']['entryPrice'])
-                trade_amount = await self.calculate_trade_amount(
-                    client,
-                    wallet_keypair,
-                    entry_price
-                )
-                if trade_amount <= 0:
-                    self.logger.error("Invalid trade amount calculated")
-                    return False
-            except Exception as e:
-                self.logger.error(f"Trade amount calculation failed: {e}")
-                return False
-
-            # Create trade record with error handling
+            # Create trade record BEFORE execution
             try:
                 trade_data = {
                     'signalId': signal['id'],
                     'token': signal['fields']['token'],
-                    'type': 'BUY',
+                    'type': signal['fields']['type'],
                     'timeframe': signal['fields']['timeframe'],
                     'status': 'PENDING',
-                    'entryPrice': entry_price,
+                    'entryPrice': float(signal['fields']['entryPrice']),
                     'targetPrice': float(signal['fields']['targetPrice']),
                     'stopLoss': float(signal['fields']['stopLoss']),
                     'createdAt': datetime.now(timezone.utc).isoformat(),
-                    'amount': trade_amount,
-                    'entryValue': trade_amount * entry_price
+                    'wallet': wallet_address
                 }
+                
                 trade = self.trades_table.insert(trade_data)
+                self.logger.info(f"Created trade record: {trade['id']}")
+                
             except Exception as e:
                 self.logger.error(f"Failed to create trade record: {e}")
                 return False
 
-            # Execute transaction with proper cleanup
+            # Execute trade using Jupiter API
             try:
-                transaction = await self.create_buy_transaction(
-                    client,
-                    token_mint,
-                    trade_amount,
-                    wallet_keypair
-                )
+                # Calculate trade amount (3% of balance)
+                trade_amount_usd = min(balance_amount * 0.03, 1000)  # Cap at $1000
+                trade_amount_usd = max(trade_amount_usd, 10)  # Minimum $10
                 
+                # Get Jupiter quote
+                quote_url = "https://quote-api.jup.ag/v6/quote"
+                quote_params = {
+                    "inputMint": USDC_MINT,
+                    "outputMint": signal['fields']['mint'],
+                    "amount": int(trade_amount_usd * 1e6),  # Convert to USDC decimals
+                    "slippageBps": 100  # 1% slippage
+                }
+                
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(quote_url, params=quote_params) as response:
+                        if not response.ok:
+                            self.logger.error(f"Failed to get Jupiter quote: {response.status}")
+                            await self.handle_failed_trade(trade['id'], "Failed to get quote")
+                            return False
+                        quote_data = await response.json()
+
+                # Get transaction data
+                swap_url = "https://quote-api.jup.ag/v6/swap"
+                swap_data = {
+                    "quoteResponse": quote_data,
+                    "userPublicKey": wallet_address,
+                    "wrapUnwrapSOL": False
+                }
+                
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(swap_url, json=swap_data) as response:
+                        if not response.ok:
+                            self.logger.error(f"Failed to get swap transaction: {response.status}")
+                            await self.handle_failed_trade(trade['id'], "Failed to get swap transaction")
+                            return False
+                        transaction_data = await response.json()
+
+                # Sign and send transaction
+                transaction = Transaction.deserialize(base58.b58decode(transaction_data['swapTransaction']))
+                transaction.sign(wallet_keypair)
+                
+                # Initialize Solana client
+                client = AsyncClient("https://api.mainnet-beta.solana.com")
                 result = await client.send_transaction(transaction)
                 
                 if result.value:
+                    # Update trade record with success
                     transaction_url = f"https://solscan.io/tx/{result.value}"
-                    try:
-                        self.trades_table.update(trade['id'], {
-                            'status': 'EXECUTED',
-                            'transactionUrl': transaction_url,
-                            'executedAt': datetime.now(timezone.utc).isoformat()
-                        })
-                    except Exception as e:
-                        self.logger.error(f"Failed to update trade status: {e}")
-                        # Don't return False here as trade was executed
+                    self.trades_table.update(trade['id'], {
+                        'status': 'EXECUTED',
+                        'transactionUrl': transaction_url,
+                        'executedAt': datetime.now(timezone.utc).isoformat(),
+                        'amount': trade_amount_usd / float(signal['fields']['entryPrice'])
+                    })
                     
                     self.logger.info(f"Trade executed successfully: {transaction_url}")
+                    
+                    # Send notification
+                    message = f"🤖 Trade Executed\n\n"
+                    message += f"Token: ${signal['fields']['token']}\n"
+                    message += f"Type: {signal['fields']['type']}\n"
+                    message += f"Amount: ${trade_amount_usd:.2f}\n"
+                    message += f"Transaction: {transaction_url}"
+                    
+                    from scripts.analyze_charts import send_telegram_message
+                    send_telegram_message(message)
+                    
                     return True
                 else:
                     self.logger.error("Transaction failed with no error")
-                    await self.handle_failed_trade(trade['id'], "Transaction failed with no error")
+                    await self.handle_failed_trade(trade['id'], "Transaction failed")
                     return False
 
             except Exception as e:
-                self.logger.error(f"Transaction execution failed: {e}")
-                await self.handle_failed_trade(trade['id'], str(e))
+                self.logger.error(f"Trade execution failed: {e}")
+                if 'trade' in locals():
+                    await self.handle_failed_trade(trade['id'], str(e))
                 return False
+
+            finally:
+                if 'client' in locals():
+                    await client.close()
 
         except Exception as e:
             self.logger.error(f"Unexpected error in execute_trade: {e}")
             return False
-
-        finally:
-            if 'client' in locals():
-                await client.close()
 
     async def monitor_signals(self):
         """Main loop to monitor signals and execute trades"""
