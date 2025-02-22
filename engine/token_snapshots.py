@@ -174,17 +174,30 @@ class TokenSnapshotTaker:
                 # Calculate trends (current vs average)
                 volume_growth = ((volume24h - volume7d) / volume7d * 100) if volume7d > 0 else 0
                 price_trend = ((current_price - price7dAvg) / price7dAvg * 100) if price7dAvg > 0 else 0
+
+                # Calculate volatility (standard deviation of price changes)
+                if len(prices) > 1:
+                    # Calculate daily returns
+                    price_changes = [(prices[i] - prices[i-1])/prices[i-1] * 100 for i in range(1, len(prices))]
+                    # Calculate standard deviation
+                    mean_change = sum(price_changes) / len(price_changes)
+                    squared_diff = sum((x - mean_change) ** 2 for x in price_changes)
+                    volatility = (squared_diff / len(price_changes)) ** 0.5
+                else:
+                    volatility = 0
             else:
                 volume7d = volume24h
                 price7dAvg = current_price
                 volume_growth = 0
                 price_trend = 0
+                volatility = 0
                 
             metrics = {
                 'volume7d': volume7d,
                 'volumeGrowth': volume_growth,
                 'price7dAvg': price7dAvg,
-                'priceTrend': price_trend
+                'priceTrend': price_trend,
+                'priceVolatility': volatility
             }
             
             self.logger.info(f"Metrics calculated for {token_name}:")
