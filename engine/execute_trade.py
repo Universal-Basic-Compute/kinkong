@@ -238,62 +238,6 @@ if os.name == 'nt':  # Windows
             self.logger.error(f"Validated swap failed: {e}")
             return False, None
 
-    async def get_jupiter_quote(self, input_token: str, output_token: str, amount: float) -> Optional[Dict]:
-        """Get quote from Jupiter API v6"""
-        try:
-            # Convert amount to proper decimals (USDC has 6 decimals)
-            amount_raw = int(amount * 1e6)  # Convert to USDC decimals
-            
-            # Build URL with parameters
-            base_url = "https://quote-api.jup.ag/v6/quote"
-            params = {
-                "inputMint": str(input_token),
-                "outputMint": str(output_token),
-                "amount": str(amount_raw),
-                "slippageBps": "100",  # 1% slippage
-                "onlyDirectRoutes": "false",
-                "asLegacyTransaction": "true"
-            }
-            
-            url = f"{base_url}?{urllib.parse.urlencode(params)}"
-            
-            self.logger.info("\nJupiter Quote Request:")
-            self.logger.info(f"URL: {url}")
-            self.logger.info(f"Amount USD: ${amount:.2f}")
-            self.logger.info(f"Amount Raw: {amount_raw}")
-            
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url) as response:
-                    response_text = await response.text()
-                    self.logger.info(f"Response Status: {response.status}")
-                    
-                    if not response.ok:
-                        self.logger.error(f"Jupiter API error: {response.status}")
-                        return None
-                        
-                    data = json.loads(response_text)
-                    
-                    # La réponse est déjà la donnée dont nous avons besoin
-                    if not data:
-                        self.logger.error("Empty response from Jupiter API")
-                        return None
-
-                    # Log quote details
-                    self.logger.info(f"Quote received:")
-                    self.logger.info(f"Input Amount: {data['inAmount']}")
-                    self.logger.info(f"Output Amount: {data['outAmount']}")
-                    self.logger.info(f"Price Impact: {data['priceImpactPct']}%")
-                    self.logger.info(f"Route Plan: {json.dumps(data['routePlan'], indent=2)}")
-                    
-                    return data  # Retourner directement la réponse
-                    
-        except Exception as e:
-            self.logger.error(f"Error getting Jupiter quote: {str(e)}")
-            if hasattr(e, '__traceback__'):
-                import traceback
-                self.logger.error("Traceback:")
-                traceback.print_tb(e.__traceback__)
-            return None
 
 
     async def get_jupiter_transaction(
@@ -357,51 +301,6 @@ if os.name == 'nt':  # Windows
             self.logger.error(f"Error getting swap transaction: {e}")
             return None
 
-async def execute_test_trade():
-    """Test function to execute a small USDC -> SOL trade"""
-    test_logger = setup_logging()
-    try:
-        # Initialize executor
-        executor = JupiterTradeExecutor()
-        
-        # USDC and SOL mint addresses
-        USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
-        SOL_MINT = "So11111111111111111111111111111111111111112"
-        
-        # Test wallet address (replace with your wallet)
-        wallet_address = os.getenv('STRATEGY_WALLET_ADDRESS')
-        
-        if not wallet_address:
-            raise ValueError("STRATEGY_WALLET_ADDRESS not found in environment")
-        
-        # Get quote for 1 USDC -> SOL
-        quote = await executor.get_jupiter_quote(
-            input_token=USDC_MINT,
-            output_token=SOL_MINT,
-            amount=1.0  # 1 USDC
-        )
-        
-        if not quote:
-            raise Exception("Failed to get quote")
-            
-        # Get transaction
-        transaction_bytes = await executor.get_jupiter_transaction(
-            quote_data=quote,
-            wallet_address=wallet_address
-        )
-        
-        if not transaction_bytes:
-            raise Exception("Failed to get transaction")
-            
-        test_logger.info("✅ Successfully generated swap transaction")
-        test_logger.info(f"Transaction size: {len(transaction_bytes)} bytes")
-        
-        # Note: Actual transaction signing and sending would go here
-        # But we're just testing the Jupiter API integration for now
-        
-    except Exception as e:
-        test_logger.error(f"Test trade failed: {e}")
-        raise
 
 class JupiterTradeExecutor:
     def __init__(self):
@@ -682,9 +581,4 @@ class JupiterTradeExecutor:
             return None
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(execute_test_trade())
-    except KeyboardInterrupt:
-        print("\nScript interrupted by user")
-    except Exception as e:
-        print(f"Script failed: {e}")
+    print("This module is not meant to be run directly")
