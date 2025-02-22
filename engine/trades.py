@@ -591,13 +591,14 @@ class TradeExecutor:
                     blockhash_response = await client.get_latest_blockhash()
                     if not blockhash_response or not blockhash_response.value:
                         raise Exception("Failed to get recent blockhash")
-                    
+                
                     blockhash_hash = blockhash_response.value.blockhash
-                    
-                    # Determine transaction version and deserialize
+                
+                    # Determine transaction version and create new transaction
                     is_versioned = transaction_bytes[0] >= 0x80
-                    
+                
                     if is_versioned:
+                        # Handle versioned transaction
                         tx = VersionedTransaction.from_bytes(transaction_bytes)
                         new_message = MessageV0.try_compile(
                             payer=tx.message.account_keys[0],
@@ -608,7 +609,9 @@ class TradeExecutor:
                         final_tx = VersionedTransaction(message=new_message, signatures=[])
                         final_tx.sign([self.wallet_keypair])
                     else:
+                        # Handle legacy transaction
                         tx = Transaction.from_bytes(transaction_bytes)
+                        # Create new transaction with explicit parameters
                         final_tx = Transaction(
                             from_keypairs=[self.wallet_keypair],
                             message=tx.message,
