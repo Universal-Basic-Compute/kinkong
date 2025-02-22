@@ -431,11 +431,11 @@ class JupiterTradeExecutor:
                     address_table_lookups=[]  # Add empty address table lookups if none present
                 )
                 
-                # Create new transaction with updated message and empty signatures
-                new_transaction = VersionedTransaction(message=new_message)
-                
-                # Sign the transaction
-                new_transaction.sign([self.wallet_keypair])
+                # Create new transaction with message and keypair
+                new_transaction = VersionedTransaction(
+                    message=new_message,
+                    keypairs=[self.wallet_keypair]  # Pass keypair directly in constructor
+                )
                 
                 self.logger.info("Successfully prepared versioned transaction with fresh blockhash")
                 return new_transaction
