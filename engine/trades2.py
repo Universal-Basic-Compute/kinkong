@@ -1,9 +1,30 @@
 import sys
 from pathlib import Path
+import os
 
+# Get absolute path to project root
+project_root = Path(__file__).parent.parent.absolute()
 
-# Now we can import from engine
-from engine.execute_trade import JupiterTradeExecutor
+# Add project root to Python path
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
+# Debug prints
+print("\nCurrent working directory:", os.getcwd())
+print("Project root:", project_root)
+print("Python path:", sys.path)
+
+# Now try the import
+try:
+    from execute_trade import JupiterTradeExecutor
+except ImportError as e:
+    print(f"\nImport failed: {e}")
+    print("\nTrying alternate import path...")
+    try:
+        from engine.execute_trade import JupiterTradeExecutor
+    except ImportError as e:
+        print(f"Alternate import also failed: {e}")
+        raise
 
 import os
 from datetime import datetime, timezone
