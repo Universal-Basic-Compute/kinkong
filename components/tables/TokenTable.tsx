@@ -42,11 +42,6 @@ const TOKEN_METADATA: Record<string, TokenMetadata> = {
     token: 'SOL',
     image: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png'
   },
-  'B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo': {
-    name: 'Compute',
-    token: 'COMPUTE',
-    image: 'https://dd.dexscreener.com/ds-data/tokens/solana/B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo.png?size=lg'
-  },
   '9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump': {
     name: 'UBC',
     token: 'UBC',
