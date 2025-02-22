@@ -20,6 +20,7 @@ from solana.rpc import types
 from solana.rpc.commitment import Commitment
 import base58
 import base64
+import urllib.parse
 from spl.token.constants import TOKEN_PROGRAM_ID
 
 def setup_logging():
@@ -356,23 +357,29 @@ class TradeExecutor:
         except Exception as e:
             self.logger.error(f"Error updating failed trade status: {e}")
 
-    async def get_jupiter_quote(self, input_token: str, output_token: str, amount: int) -> Optional[Dict]:
-        """Get quote from Jupiter"""
+    async def get_jupiter_quote(self, input_token: str, output_token: str, amount: float) -> Optional[Dict]:
+        """Get quote from Jupiter with proper amount handling"""
         try:
-            # Build parameters
+            # Convert amount to proper decimals (USDC has 6 decimals)
+            amount_raw = int(amount * 1e6)  # Convert to USDC decimals
+            
             params = {
                 "inputMint": str(input_token),
                 "outputMint": str(output_token),
-                "amount": str(amount),
-                "slippageBps": "100"
+                "amount": str(amount_raw),
+                "slippageBps": "100",
+                "onlyDirectRoutes": "false",  # Allow indirect routes
+                "asLegacyTransaction": "true"  # Force legacy transaction format
             }
             
             url = "https://quote-api.jup.ag/v6/quote"
             
-            # Detailed request logging
-            self.logger.info("Jupiter Quote Request Details:")
-            self.logger.info(f"URL: {url}")
-            self.logger.info(f"Parameters: {json.dumps(params, indent=2)}")
+            self.logger.info("\nJupiter Quote Request:")
+            self.logger.info(f"Input Token: {input_token}")
+            self.logger.info(f"Output Token: {output_token}")
+            self.logger.info(f"Amount USD: ${amount:.2f}")
+            self.logger.info(f"Amount Raw: {amount_raw}")
+            self.logger.info(f"Full URL: {url}?{urllib.parse.urlencode(params)}")
             
             async with aiohttp.ClientSession() as session:
                 try:
@@ -494,56 +501,31 @@ class TradeExecutor:
     async def execute_trade(self, signal: Dict) -> bool:
         """Execute a trade for a signal"""
         try:
-            # Verify wallet is initialized
+            # Validate wallet and balance first
             if not self.wallet_keypair:
-                self.logger.error("Wallet not properly initialized")
+                self.logger.error("No wallet configured")
                 return False
-
-            # First check if trade already exists
-            try:
-                existing_trades = self.trades_table.get_all(
-                    formula=f"{{signalId}} = '{signal['id']}'"
-                )
-                if existing_trades:
-                    self.logger.warning(f"Trade already exists for signal {signal['id']}")
-                    return False
-            except Exception as e:
-                self.logger.error(f"Failed to check existing trades: {e}")
-                return False
-
-            # Verify wallet balance
-            try:
-                birdeye_url = "https://public-api.birdeye.so/v1/wallet/token_balance"
-                params = {
-                    "wallet": self.wallet_address,
-                    "token_address": USDC_MINT
-                }
-                headers = {
-                    "x-api-key": os.getenv('BIRDEYE_API_KEY'),
-                    "x-chain": "solana",
-                    "accept": "application/json"
-                }
                 
-                response = requests.get(birdeye_url, params=params, headers=headers)
-                if not response.ok:
-                    self.logger.error(f"Failed to get wallet balance: {response.status_code}")
-                    return False
-                    
-                data = response.json()
-                if not data.get('success'):
-                    self.logger.error(f"Birdeye API error: {data.get('message')}")
-                    return False
-                    
-                balance_amount = float(data['data'].get('uiAmount', 0))
-                if balance_amount < 10:
-                    self.logger.error(f"Insufficient USDC balance: ${balance_amount:.2f}")
-                    return False
-                    
-                self.logger.info(f"Wallet USDC balance: ${balance_amount:.2f}")
-                
-            except Exception as e:
-                self.logger.error(f"Wallet initialization failed: {e}")
+            # Get current token price
+            token_price = await self.get_token_price(signal['fields']['mint'])
+            if not token_price:
+                self.logger.error("Could not get token price")
                 return False
+                
+            # Get USDC balance
+            balance = await self.get_usdc_balance(self.wallet_address)
+            if balance < 10:
+                self.logger.error(f"Insufficient USDC balance: ${balance:.2f}")
+                return False
+                
+            # Calculate trade amount (3% of balance, min $10, max $1000)
+            trade_amount_usd = min(balance * 0.03, 1000)
+            trade_amount_usd = max(trade_amount_usd, 10)
+            
+            self.logger.info(f"\nTrade calculation:")
+            self.logger.info(f"USDC balance: ${balance:.2f}")
+            self.logger.info(f"Trade amount: ${trade_amount_usd:.2f}")
+            self.logger.info(f"Token price: ${token_price:.4f}")
 
             # Create trade record BEFORE execution
             try:
@@ -827,3 +809,32 @@ def main():
 
 if __name__ == "__main__":
     main()
+    async def get_usdc_balance(self, wallet_address: str) -> float:
+        """Get USDC balance for wallet"""
+        try:
+            url = "https://public-api.birdeye.so/v1/wallet/token_balance"
+            params = {
+                "wallet": wallet_address,
+                "token_address": USDC_MINT
+            }
+            headers = {
+                "x-api-key": os.getenv('BIRDEYE_API_KEY'),
+                "accept": "application/json"
+            }
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, params=params, headers=headers) as response:
+                    if not response.ok:
+                        self.logger.error(f"Balance API error: {response.status}")
+                        return 0
+                        
+                    data = await response.json()
+                    if not data.get('success'):
+                        self.logger.error("Balance API returned error")
+                        return 0
+                        
+                    return float(data['data']['uiAmount'])
+                    
+        except Exception as e:
+            self.logger.error(f"Balance check error: {str(e)}")
+            return 0
