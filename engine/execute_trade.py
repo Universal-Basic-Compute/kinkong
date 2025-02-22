@@ -65,10 +65,14 @@ class JupiterTradeExecutor:
     async def get_token_balance(self, token_mint: str) -> float:
         """Get token balance for wallet"""
         try:
+            # Convert string addresses to Pubkey objects
+            token_mint_pubkey = Pubkey.from_string(token_mint)
+            owner_pubkey = self.wallet_keypair.pubkey()
+            
             # Get token ATA
             token_ata = get_associated_token_address(
-                owner=self.wallet_keypair.pubkey(),  # Use pubkey directly from keypair
-                mint=Pubkey.from_string(token_mint)
+                owner=owner_pubkey,
+                mint=token_mint_pubkey
             )
             
             # Initialize client
@@ -88,6 +92,10 @@ class JupiterTradeExecutor:
                 
         except Exception as e:
             self.logger.error(f"Error getting token balance: {e}")
+            if hasattr(e, '__traceback__'):
+                import traceback
+                self.logger.error("Traceback:")
+                traceback.print_tb(e.__traceback__)
             return 0
 
     async def check_slippage(self, quote_data: dict, max_slippage: float = 1.0) -> bool:
