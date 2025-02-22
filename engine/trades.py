@@ -331,6 +331,10 @@ class TradeExecutor:
             logger.info(f"USDC balance: ${balance:.2f}")
             logger.info(f"Trade value: ${trade_value:.2f}")
 
+            # Calculate token amount based on entry price
+            entry_price = float(signal['fields']['entryPrice'])
+            token_amount = trade_value / entry_price
+
             # Execute validated swap with calculated amount
             success, transaction_bytes = await self.jupiter.execute_validated_swap(
                 input_token="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
@@ -372,7 +376,7 @@ class TradeExecutor:
             message = f"🦍 KinKong Trade Alert\n\n"
             message += f"Token: ${signal['fields']['token']}\n"
             message += f"Action: {signal['fields']['type']}\n"
-            message += f"Amount: ${trade_amount_usd:.2f} USDC\n"
+            message += f"Amount: ${trade_value:.2f} USDC\n"
             message += f"Entry Price: ${float(signal['fields']['entryPrice']):.4f}\n"
             message += f"Target: ${float(signal['fields']['targetPrice']):.4f}\n"
             message += f"Stop Loss: ${float(signal['fields']['stopLoss']):.4f}\n"
