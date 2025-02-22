@@ -95,50 +95,37 @@ async def test_usdc_usdt_swap():
             
             # Get transaction
             logger.info("\nGenerating swap transaction...")
-            
+
             transaction_bytes = await executor.get_jupiter_transaction(
                 quote_data=quote,
                 wallet_address=wallet_address
             )
-            
+
             if not transaction_bytes:
                 raise Exception("Failed to get transaction")
-            
+
             # Get fresh blockhash
             blockhash = await client.get_latest_blockhash()
             if not blockhash or not blockhash.value:
                 raise Exception("Failed to get recent blockhash")
-            
-            # Create new transaction with fresh blockhash
+
+            # Deserialize transaction
             transaction = Transaction.from_bytes(transaction_bytes)
 
-            # Create new transaction with fresh blockhash
-            transaction = Transaction.from_bytes(transaction_bytes)
-
-            # Create new message by copying the original message's attributes
-            new_message = Message(
-                account_keys=transaction.message.account_keys,
-                instructions=transaction.message.instructions,
-                recent_blockhash=blockhash.value.blockhash
-            )
-
-            # Create new transaction with updated message
-            new_transaction = Transaction(
-                signatures=transaction.signatures,
-                message=new_message
-            )
+            # Update blockhash directly on the transaction message
+            transaction.message.recent_blockhash = blockhash.value.blockhash
 
             # Sign transaction
-            new_transaction.sign([wallet_keypair])
-            
+            transaction.sign([wallet_keypair])
+
             logger.info("Sending transaction to network...")
-            
+
             # Send transaction with retry logic
             max_retries = 3
             for attempt in range(max_retries):
                 try:
                     result = await client.send_transaction(
-                        new_transaction,
+                        transaction,
                         opts={
                             "skip_preflight": False,
                             "preflight_commitment": "confirmed",
