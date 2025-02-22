@@ -6,10 +6,10 @@ interface Trade {
   createdAt: string;
   token: string;
   value: number;
+  exitValue: number | null;
   status: string;
   signature: string;
   exitReason?: string;
-  exitValue?: number;
   realizedPnl?: number;
 }
 
@@ -116,7 +116,9 @@ export function TradeHistory({ userOnly = false }: TradeHistoryProps) {
                   ${(trade.value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                  {trade.exitValue ? `$${trade.exitValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-'}
+                  {typeof trade.exitValue === 'number' 
+                    ? `$${trade.exitValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                    : '-'}
                 </td>
                 <td className={`px-6 py-4 whitespace-nowrap text-sm ${trade.realizedPnl ? getPnlColor(trade.realizedPnl) : 'text-gray-300'}`}>
                   {trade.realizedPnl 
