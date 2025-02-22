@@ -591,17 +591,17 @@ class TradeExecutor:
                         signatures=[signature]
                     )
                         
-                        self.logger.info("Created and signed new transaction")
-                        
-                        # Send transaction
-                        result = await client.send_transaction(
-                            transaction,
-                            opts=types.TxOpts(
-                                skip_preflight=False,
-                                preflight_commitment="confirmed"
-                            )
+                    self.logger.info("Created and signed new transaction")
+                    
+                    # Send transaction
+                    result = await client.send_transaction(
+                        transaction,
+                        opts=types.TxOpts(
+                            skip_preflight=False,
+                            preflight_commitment="confirmed"
                         )
-                        self.logger.info(f"Sent transaction: {result.value}")
+                    )
+                    self.logger.info(f"Sent transaction: {result.value}")
 
                     except Exception as e:
                         self.logger.error(f"Transaction error: {str(e)}")
