@@ -479,11 +479,14 @@ class TradeExecutor:
                         await self.handle_failed_trade(trade['id'], f"API request failed: {str(e)}")
                         return False
 
-                # Import required types from latest solana-py
-                from solana.transaction import Transaction, TransactionVersion
-                from solana.rpc.commitment import Commitment
-                from solana.rpc import types
-                from solana.keypair import Keypair
+                # Import required types from latest solders
+                from solders.transaction import Transaction, VersionedTransaction
+                from solders.message import Message, MessageV0
+                from solders.instruction import Instruction
+                from solders.hash import Hash
+                from solders.keypair import Keypair
+                from solders.pubkey import Pubkey
+                from solders.system_program import ID as SYS_PROGRAM_ID
 
                 # Decode base64 transaction
                 transaction_base64 = transaction_data['swapTransaction']
@@ -499,34 +502,55 @@ class TradeExecutor:
                     blockhash_response = await client.get_latest_blockhash()
                     if not blockhash_response or not blockhash_response.value:
                         raise Exception("Failed to get recent blockhash")
-                    recent_blockhash = blockhash_response.value.blockhash
+                    recent_blockhash = Hash.from_string(blockhash_response.value.blockhash)
                     self.logger.info(f"Got recent blockhash: {recent_blockhash}")
 
                     if is_versioned:
                         # Handle versioned transaction
-                        tx = Transaction.deserialize_versioned(transaction_bytes)
+                        tx = VersionedTransaction.from_bytes(transaction_bytes)
                         self.logger.info("Deserialized versioned transaction")
+                        
+                        # Create new message with updated blockhash
+                        new_message = MessageV0(
+                            header=tx.message.header,
+                            account_keys=tx.message.account_keys,
+                            recent_blockhash=recent_blockhash,
+                            instructions=tx.message.instructions,
+                            address_table_lookups=tx.message.address_table_lookups
+                        )
                     else:
                         # Handle legacy transaction
-                        tx = Transaction.deserialize(transaction_bytes)
+                        tx = Transaction.from_bytes(transaction_bytes)
                         self.logger.info("Deserialized legacy transaction")
+                        
+                        # Create new message with updated blockhash
+                        new_message = Message(
+                            header=tx.message.header,
+                            account_keys=tx.message.account_keys,
+                            recent_blockhash=recent_blockhash,
+                            instructions=tx.message.instructions
+                        )
 
-                    # Update blockhash
-                    tx.recent_blockhash = recent_blockhash
+                    # Sign message
+                    signature = wallet_keypair.sign_message(bytes(new_message))
+                    self.logger.info("Signed message")
 
-                    # Sign transaction
-                    tx.sign(wallet_keypair)
-                    self.logger.info("Signed transaction")
+                    # Create final transaction
+                    final_tx = (
+                        VersionedTransaction(message=new_message, signatures=[signature])
+                        if is_versioned else
+                        Transaction(message=new_message, signatures=[signature])
+                    )
 
                     # Send transaction
                     self.logger.info("Sending transaction...")
                     result = await client.send_transaction(
-                        tx,
-                        opts=types.TxOpts(
-                            skip_preflight=False,
-                            preflight_commitment=Commitment("confirmed"),
-                            max_retries=3
-                        )
+                        final_tx,
+                        opts={
+                            "skip_preflight": False,
+                            "preflight_commitment": "confirmed",
+                            "max_retries": 3
+                        }
                     )
                     self.logger.info(f"Transaction sent: {result.value}")
 
