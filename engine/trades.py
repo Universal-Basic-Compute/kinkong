@@ -343,83 +343,113 @@ class TradeExecutor:
         except Exception as e:
             self.logger.error(f"Error updating failed trade status: {e}")
 
-    async def get_jupiter_transaction(self, quote_data: dict, max_retries: int = 3) -> Optional[bytes]:
-        """Get complete transaction data from Jupiter with retries and validation"""
-        self.logger.info("Requesting swap transaction from Jupiter...")
-        
-        for attempt in range(max_retries):
-            try:
-                async with aiohttp.ClientSession() as session:
-                    swap_url = "https://quote-api.jup.ag/v6/swap"
-                    swap_data = {
-                        "quoteResponse": quote_data,
-                        "userPublicKey": self.wallet_address,
-                        "wrapUnwrapSOL": False
-                    }
-                    
-                    self.logger.info(f"Swap request data: {json.dumps(swap_data, indent=2)}")
-                    
-                    async with session.post(swap_url, json=swap_data) as response:
-                        if not response.ok:
-                            self.logger.error(f"Jupiter API error: {response.status}")
-                            self.logger.error(f"Response: {await response.text()}")
-                            continue
-                            
-                        response_text = await response.text()
-                        transaction_data = json.loads(response_text)
+    async def get_jupiter_quote(self, input_token: str, output_token: str, amount: float) -> Optional[Dict]:
+        """Get quote from Jupiter with Meteora route"""
+        try:
+            url = "https://quote-api.jup.ag/v6/quote"
+            params = {
+                "inputMint": input_token,
+                "outputMint": output_token,
+                "amount": str(int(amount * 1e6)),  # Convert to USDC decimals
+                "slippageBps": 100,  # 1% slippage
+                "onlyDirectRoutes": True,
+                "platformFeeBps": 0
+            }
+            
+            self.logger.info(f"Requesting Jupiter quote with params: {json.dumps(params, indent=2)}")
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, params=params) as response:
+                    if not response.ok:
+                        self.logger.error(f"Jupiter API error: {response.status}")
+                        self.logger.error(f"Response: {await response.text()}")
+                        return None
                         
-                        # Get transaction data
-                        transaction_base64 = transaction_data.get('swapTransaction')
-                        if not transaction_base64:
-                            self.logger.error("No transaction data in response")
-                            continue
+                    data = await response.json()
+                    if not data.get('success'):
+                        self.logger.error(f"Jupiter API returned error: {data.get('error')}")
+                        return None
+                        
+                    quote_data = data.get('data', {})
+                    
+                    # Verify Meteora route
+                    route_plan = quote_data.get('routePlan', [])
+                    meteora_routes = [
+                        route for route in route_plan 
+                        if 'Meteora' in route.get('swapInfo', {}).get('label', '')
+                    ]
+                    
+                    if not meteora_routes:
+                        self.logger.error("No Meteora route found")
+                        return None
+                        
+                    # Use first Meteora route found
+                    quote_data['routePlan'] = [meteora_routes[0]]
+                    self.logger.info(f"Selected Meteora route: {json.dumps(meteora_routes[0], indent=2)}")
+                    
+                    return quote_data
+                    
+        except Exception as e:
+            self.logger.error(f"Error getting Jupiter quote: {e}")
+            return None
 
-                        # Decode base64 and verify format
-                        try:
-                            transaction_bytes = base64.b64decode(transaction_base64)
-                            
-                            # Log transaction details
-                            self.logger.info(f"Transaction bytes length: {len(transaction_bytes)}")
-                            self.logger.info(f"First bytes: {transaction_bytes[:4].hex()}")
-                            
-                            # Verify transaction format
-                            version_byte = transaction_bytes[0]
-                            
-                            if version_byte >= 0x80:
-                                # Versioned transaction
-                                self.logger.info("Detected versioned transaction")
-                                try:
-                                    # Validate versioned transaction format
-                                    VersionedTransaction.from_bytes(transaction_bytes)
-                                    return transaction_bytes
-                                except Exception as e:
-                                    self.logger.error(f"Invalid versioned transaction format: {e}")
-                                    continue
-                            else:
-                                # Legacy transaction
-                                self.logger.info("Detected legacy transaction")
-                                try:
-                                    # Validate legacy transaction format
-                                    Transaction.from_bytes(transaction_bytes)
-                                    return transaction_bytes
-                                except Exception as e:
-                                    self.logger.error(f"Invalid legacy transaction format: {e}")
-                                    if attempt < max_retries - 1:
-                                        self.logger.info("Retrying with fresh quote...")
-                                        continue
-                                    
-                        except Exception as e:
-                            self.logger.error(f"Error decoding transaction: {e}")
-                            continue
+    async def get_jupiter_transaction(self, quote_data: dict) -> Optional[bytes]:
+        """Get swap transaction from Jupiter"""
+        try:
+            url = "https://quote-api.jup.ag/v6/swap"
+            swap_data = {
+                "quoteResponse": quote_data,
+                "userPublicKey": self.wallet_address,
+                "wrapAndUnwrapSol": False,
+                "dynamicComputeUnitLimit": True,
+                "prioritizationFeeLamports": {
+                    "priorityLevelWithMaxLamports": {
+                        "maxLamports": 10000000,
+                        "priorityLevel": "high"
+                    }
+                }
+            }
+            
+            self.logger.info(f"Requesting swap transaction with data: {json.dumps(swap_data, indent=2)}")
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url, json=swap_data) as response:
+                    if not response.ok:
+                        self.logger.error(f"Jupiter API error: {response.status}")
+                        self.logger.error(f"Response: {await response.text()}")
+                        return None
+                        
+                    transaction_data = await response.json()
+                    
+                    # Get transaction data
+                    transaction_base64 = transaction_data.get('swapTransaction')
+                    if not transaction_base64:
+                        self.logger.error("No transaction data in response")
+                        return None
 
-            except Exception as e:
-                self.logger.error(f"Error getting transaction (attempt {attempt + 1}): {e}")
-                if attempt < max_retries - 1:
-                    await asyncio.sleep(1 * (attempt + 1))
-                continue
-                
-        self.logger.error("Failed to get valid transaction after all retries")
-        return None
+                    # Decode and validate transaction
+                    try:
+                        transaction_bytes = base64.b64decode(transaction_base64)
+                        self.logger.info(f"Transaction bytes length: {len(transaction_bytes)}")
+                        
+                        # Verify transaction format
+                        version_byte = transaction_bytes[0]
+                        if version_byte >= 0x80:
+                            # Versioned transaction
+                            VersionedTransaction.from_bytes(transaction_bytes)
+                        else:
+                            # Legacy transaction
+                            Transaction.from_bytes(transaction_bytes)
+                            
+                        return transaction_bytes
+                        
+                    except Exception as e:
+                        self.logger.error(f"Invalid transaction format: {e}")
+                        return None
+
+        except Exception as e:
+            self.logger.error(f"Error getting swap transaction: {e}")
+            return None
 
     async def execute_trade(self, signal: Dict) -> bool:
         """Execute a trade for a signal"""
