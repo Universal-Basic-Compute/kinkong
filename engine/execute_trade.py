@@ -317,7 +317,8 @@ class JupiterTradeExecutor:
                 "quoteResponse": quote_data,
                 "userPublicKey": wallet_address,
                 "wrapAndUnwrapSol": False,
-                "asLegacyTransaction": True,
+                "asLegacyTransaction": False,  # Use versioned transactions
+                "useVersionedTransaction": True,  # Explicitly request versioned tx
                 "dynamicComputeUnitLimit": True,
                 "prioritizationFeeLamports": {
                     "priorityLevelWithMaxLamports": {
@@ -366,7 +367,7 @@ class JupiterTradeExecutor:
             return None
 
     async def prepare_transaction(self, transaction_bytes: bytes) -> Optional[Transaction]:
-        """Prepare a transaction from bytes with fresh blockhash"""
+        """Prepare a versioned transaction from bytes with fresh blockhash"""
         try:
             client = AsyncClient("https://api.mainnet-beta.solana.com")
             try:
@@ -375,56 +376,14 @@ class JupiterTradeExecutor:
                 if not blockhash or not blockhash.value:
                     raise Exception("Failed to get recent blockhash")
 
-                # Deserialize original transaction
-                original_transaction = Transaction.from_bytes(transaction_bytes)
+                # Deserialize as versioned transaction
+                from solders.transaction import VersionedTransaction
+                original_transaction = VersionedTransaction.deserialize(transaction_bytes)
 
-                # Convert CompiledInstructions to Instructions
-                instructions = []
-                for compiled_instruction in original_transaction.message.instructions:
-                    program_id = original_transaction.message.account_keys[compiled_instruction.program_id_index]
-                    header = original_transaction.message.header
-                    account_keys = original_transaction.message.account_keys
-                    
-                    writable_signers = header.num_required_signatures - header.num_readonly_signed_accounts
-                    total_non_signers = len(account_keys) - header.num_required_signatures
-                    writable_non_signers = total_non_signers - header.num_readonly_unsigned_accounts
-                    
-                    account_metas = []
-                    for idx in compiled_instruction.accounts:
-                        pubkey = account_keys[idx]
-                        is_signer = idx < header.num_required_signatures
-                        if is_signer:
-                            is_writable = idx < writable_signers
-                        else:
-                            non_signer_idx = idx - header.num_required_signatures
-                            is_writable = non_signer_idx < writable_non_signers
-                        
-                        account_meta = AccountMeta(
-                            pubkey=pubkey,
-                            is_signer=is_signer,
-                            is_writable=is_writable
-                        )
-                        account_metas.append(account_meta)
-                    
-                    instruction = Instruction(
-                        program_id=program_id,
-                        accounts=account_metas,
-                        data=compiled_instruction.data
-                    )
-                    instructions.append(instruction)
-
-                # Create new message with converted instructions
-                new_message = Message.new_with_blockhash(
-                    instructions,
-                    self.wallet_keypair.pubkey(),
-                    blockhash.value.blockhash
-                )
-
-                # Create and sign new transaction
-                new_transaction = Transaction.new_unsigned(message=new_message)
-                new_transaction.sign(
-                    [self.wallet_keypair],
-                    new_transaction.message.recent_blockhash
+                # Create new versioned transaction with fresh blockhash
+                new_transaction = VersionedTransaction(
+                    original_transaction.message,
+                    [self.wallet_keypair]
                 )
 
                 return new_transaction
