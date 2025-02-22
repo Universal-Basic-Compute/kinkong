@@ -201,8 +201,8 @@ class TradeExecutor:
                 
                 for signal in signals:
                     try:
-                        # Check entry conditions
-                        if await self.check_entry_conditions(signal):
+                        # Check entry conditions - remove await since it's synchronous
+                        if self.check_entry_conditions(signal):
                             logger.info(f"Entry conditions met for signal {signal['id']}")
                             
                             # Execute trade
