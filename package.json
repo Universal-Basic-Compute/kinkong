@@ -13,7 +13,7 @@
     "reallocation": "ts-node scripts/execute-reallocation.ts",
     "snapshot": "python scripts/take_snapshot.py",
     "calculate-signals": "ts-node scripts/calculate-closed-signals.ts",
-    "wallet-snapshot": "ts-node --esm engine/wallet_snapshots.ts"
+    "wallet-snapshot": "cross-env NODE_OPTIONS=--loader=ts-node/esm ts-node --esm engine/wallet_snapshots.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.10.2",
@@ -56,6 +56,7 @@
     "pino-pretty": "^10.2.3",
     "postcss": "^8.5.2",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "cross-env": "^7.0.3"
   }
 }
