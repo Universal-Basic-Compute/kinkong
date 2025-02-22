@@ -516,7 +516,9 @@ class TradeExecutor:
                     blockhash_response = await client.get_latest_blockhash()
                     if not blockhash_response or not blockhash_response.value:
                         raise Exception("Failed to get recent blockhash")
-                    recent_blockhash = Hash.from_string(blockhash_response.value.blockhash)
+                    
+                    # Convert Hash object to string
+                    recent_blockhash = str(Hash.from_string(blockhash_response.value.blockhash))
                     self.logger.info(f"Got recent blockhash: {recent_blockhash}")
 
                     if is_versioned:
@@ -524,11 +526,11 @@ class TradeExecutor:
                         tx = VersionedTransaction.from_bytes(transaction_bytes)
                         self.logger.info("Deserialized versioned transaction")
                         
-                        # Create new message with updated blockhash
+                        # Create new message with updated blockhash (as string)
                         new_message = MessageV0(
                             header=tx.message.header,
                             account_keys=tx.message.account_keys,
-                            recent_blockhash=recent_blockhash,
+                            recent_blockhash=recent_blockhash,  # Use string version
                             instructions=tx.message.instructions,
                             address_table_lookups=tx.message.address_table_lookups
                         )
@@ -537,11 +539,11 @@ class TradeExecutor:
                         tx = Transaction.from_bytes(transaction_bytes)
                         self.logger.info("Deserialized legacy transaction")
                         
-                        # Create new message with updated blockhash
+                        # Create new message with updated blockhash (as string)
                         new_message = Message(
                             header=tx.message.header,
                             account_keys=tx.message.account_keys,
-                            recent_blockhash=recent_blockhash,
+                            recent_blockhash=recent_blockhash,  # Use string version
                             instructions=tx.message.instructions
                         )
 
