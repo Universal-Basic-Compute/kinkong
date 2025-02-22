@@ -167,44 +167,55 @@ class JupiterTradeExecutor:
             return False
 
     async def get_jupiter_quote(self, input_token: str, output_token: str, amount: float) -> Optional[Dict]:
-        """Get quote from Jupiter API"""
+        """Get quote from Jupiter API v6"""
         try:
             # Convert amount to proper decimals (USDC has 6 decimals)
             amount_raw = int(amount * 1e6)  # Convert to USDC decimals
             
+            # Build URL with parameters
+            base_url = "https://quote-api.jup.ag/v6/quote"
             params = {
                 "inputMint": str(input_token),
                 "outputMint": str(output_token),
                 "amount": str(amount_raw),
-                "slippageBps": "100",
-                "onlyDirectRoutes": "false",  # Allow indirect routes
-                "asLegacyTransaction": "true"  # Force legacy transaction format
+                "slippageBps": "100",  # 1% slippage
+                "onlyDirectRoutes": "false",
+                "asLegacyTransaction": "true"
             }
             
-            url = "https://quote-api.jup.ag/v6/quote"
+            url = f"{base_url}?{urllib.parse.urlencode(params)}"
             
             self.logger.info("\nJupiter Quote Request:")
-            self.logger.info(f"Input Token: {input_token}")
-            self.logger.info(f"Output Token: {output_token}")
+            self.logger.info(f"URL: {url}")
             self.logger.info(f"Amount USD: ${amount:.2f}")
             self.logger.info(f"Amount Raw: {amount_raw}")
             
             async with aiohttp.ClientSession() as session:
-                async with session.get(url, params=params) as response:
+                async with session.get(url) as response:
+                    response_text = await response.text()
+                    self.logger.info(f"Response Status: {response.status}")
+                    self.logger.info(f"Raw Response: {response_text}")
+                    
                     if not response.ok:
                         self.logger.error(f"Jupiter API error: {response.status}")
                         return None
                         
-                    data = await response.json()
+                    data = json.loads(response_text)
                     
+                    # V6 API returns data in a different structure
                     if not data.get('data'):
                         self.logger.error("No quote data in response")
+                        self.logger.error(f"Response: {data}")
                         return None
                         
                     return data['data']
                     
         except Exception as e:
             self.logger.error(f"Error getting Jupiter quote: {str(e)}")
+            if hasattr(e, '__traceback__'):
+                import traceback
+                self.logger.error("Traceback:")
+                traceback.print_tb(e.__traceback__)
             return None
 
     async def execute_swap(
