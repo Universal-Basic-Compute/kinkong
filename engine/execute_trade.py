@@ -422,11 +422,7 @@ class JupiterTradeExecutor:
                 if not message.account_keys:
                     raise Exception("No accounts found in message")
                     
-                # The first account is always the fee payer
-                payer = message.account_keys[0]
-                
                 # Create new message with fresh blockhash
-                # We'll need to preserve the original message structure but update the blockhash
                 new_message = MessageV0(
                     header=message.header,
                     account_keys=message.account_keys,
@@ -435,13 +431,10 @@ class JupiterTradeExecutor:
                     address_table_lookups=[]  # Add empty address table lookups if none present
                 )
                 
-                # Create new transaction with updated message
-                new_transaction = VersionedTransaction(
-                    message=new_message,
-                    signatures=[]  # Clear signatures as we'll resign
-                )
+                # Create new transaction with updated message and empty signatures
+                new_transaction = VersionedTransaction(message=new_message)
                 
-                # Sign the new transaction
+                # Sign the transaction
                 new_transaction.sign([self.wallet_keypair])
                 
                 self.logger.info("Successfully prepared versioned transaction with fresh blockhash")
