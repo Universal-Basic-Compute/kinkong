@@ -212,7 +212,7 @@ async function fetchTokenData(): Promise<TokenData[]> {
       const dexScreenerData = await getDexScreenerData(token.mint);
       
       if (!dexScreenerData.pairs || dexScreenerData.pairs.length === 0) {
-        console.warn(`No pairs found for ${token.symbol}`);
+        console.warn(`No pairs found for ${token.token}`);
         continue;
       }
 

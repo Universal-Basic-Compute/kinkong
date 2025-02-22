@@ -17,7 +17,7 @@ export type SignalStatus =
 export interface Signal {
   id: string;
   timestamp: string;
-  token: string;  // Changed from symbol
+  token: string;  // Token identifier
   type: 'BUY' | 'SELL';
   timeframe: 'SCALP' | 'INTRADAY' | 'SWING' | 'POSITION';
   entryPrice?: number;
