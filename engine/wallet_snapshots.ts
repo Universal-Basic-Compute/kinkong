@@ -9,7 +9,7 @@ interface TokenBalance {
   amount: number;
   price: number;
   value: number;
-  timestamp: string;
+  createdAt: string;
 }
 
 interface BirdeyeResponse {
@@ -54,7 +54,7 @@ async function recordWalletSnapshot(wallet: string) {
 
     // Get balance for each token
     const balances: TokenBalance[] = [];
-    const timestamp = new Date().toISOString();
+    const createdAt = new Date().toISOString();
 
     for (const token of tokens) {
       try {
@@ -68,7 +68,7 @@ async function recordWalletSnapshot(wallet: string) {
             amount: response.data.tokenBalance,
             price: response.data.price,
             value: response.data.tokenValue,
-            timestamp
+            createdAt
           });
         }
       } catch (error) {
@@ -83,7 +83,7 @@ async function recordWalletSnapshot(wallet: string) {
     const snapshotsTable = getTable('WALLET_SNAPSHOTS');
     await snapshotsTable.create([{
       fields: {
-        timestamp,
+        createdAt,
         totalValue,
         holdings: JSON.stringify(balances.map(b => ({
           token: b.token,
