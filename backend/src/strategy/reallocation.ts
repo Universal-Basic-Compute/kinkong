@@ -1,4 +1,5 @@
 import { base } from '../airtable/client';
+import { getTokenPrice } from '../utils/jupiter';
 
 export const TABLES = {
   PORTFOLIO: 'PORTFOLIO',
