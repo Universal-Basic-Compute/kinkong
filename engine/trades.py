@@ -563,11 +563,7 @@ class TradeExecutor:
                 self.logger.info(f"Decoded transaction bytes length: {len(transaction_bytes)}")
 
                 try:
-                    # Determine transaction version from first byte
-                    is_versioned = transaction_bytes[0] >= 0x80
-                    self.logger.info(f"Transaction type: {'versioned' if is_versioned else 'legacy'}")
-
-                    # Get fresh blockhash
+                    # Get fresh blockhash first
                     blockhash_response = await client.get_latest_blockhash()
                     if not blockhash_response or not blockhash_response.value:
                         raise Exception("Failed to get recent blockhash")
@@ -575,6 +571,10 @@ class TradeExecutor:
                     # Get blockhash - it's already a Hash object
                     blockhash_hash = blockhash_response.value.blockhash
                     self.logger.info(f"Got blockhash: {str(blockhash_hash)}")
+
+                    # Determine transaction version from first byte
+                    is_versioned = transaction_bytes[0] >= 0x80
+                    self.logger.info(f"Transaction type: {'versioned' if is_versioned else 'legacy'}")
 
                     if is_versioned:
                         # Handle versioned transaction
@@ -594,17 +594,17 @@ class TradeExecutor:
                         final_tx.sign([self.wallet_keypair])
                         
                     else:
-                        # Handle legacy transaction
-                        tx = Transaction.from_bytes(transaction_bytes)
+                        # Handle legacy transaction - pass blockhash to from_bytes
+                        tx = Transaction.from_bytes(transaction_bytes, blockhash_hash)
                         self.logger.info("Deserialized legacy transaction")
                         
-                        # Create new legacy message without blockhash
+                        # Create new legacy message
                         new_message = Message(
                             instructions=tx.message.instructions,
                             payer=tx.message.account_keys[0]
                         )
                         
-                        # Create transaction with message and blockhash, then sign it
+                        # Create transaction with message and blockhash
                         final_tx = Transaction(new_message, blockhash_hash)
                         final_tx.sign([self.wallet_keypair])
 
