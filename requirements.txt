@@ -6,5 +6,6 @@ pandas==1.4.2
 mplfinance==0.12.9b7
 airtable-python-wrapper==0.15.0
 requests==2.31.0
-solana==0.30.2
+solana-sdk==0.29.2
+solders==0.18.1
 base58==2.1.1

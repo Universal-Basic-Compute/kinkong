@@ -9,10 +9,11 @@ from dotenv import load_dotenv
 import json
 import logging
 from typing import List, Dict, Optional
+from solders.keypair import Keypair
+from solders.pubkey import Pubkey
 from solana.rpc.async_api import AsyncClient
 from solana.transaction import Transaction
-from solana.keypair import Keypair
-from spl.token.instructions import get_associated_token_account
+from spl.token.instructions import get_associated_token_address
 import base58
 from decimal import Decimal
 import aiohttp
@@ -142,9 +143,9 @@ class TradeExecutor:
         """Create a buy transaction using Jupiter SDK"""
         try:
             # Get the ATA for the token
-            token_account = get_associated_token_account(
-                owner_public_key=wallet_keypair.public_key,
-                mint_public_key=token_mint
+            token_account = get_associated_token_address(
+                owner=wallet_keypair.public_key,
+                mint=Pubkey.from_string(token_mint)
             )
 
             # Use Jupiter API to get the swap route
@@ -191,9 +192,9 @@ class TradeExecutor:
         """Calculate trade amount with 3% allocation, min $10, max $1000"""
         try:
             # Get USDC token account
-            usdc_ata = get_associated_token_account(
-                owner_public_key=wallet_keypair.public_key,
-                mint_public_key=USDC_MINT
+            usdc_ata = get_associated_token_address(
+                owner=wallet_keypair.public_key,
+                mint=Pubkey.from_string(USDC_MINT)
             )
             
             # Get USDC balance
