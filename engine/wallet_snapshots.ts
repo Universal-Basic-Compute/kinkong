@@ -42,7 +42,7 @@ async function getTokenBalance(wallet: string, tokenMint: string): Promise<Birde
 
 async function recordWalletSnapshot(wallet: string) {
   try {
-    console.log(`📸 Taking snapshot of wallet ${wallet}...`);
+    console.log(`📸 Taking snapshot of KinKong wallet...`);
 
     // Get active tokens from Airtable
     const tokensTable = getTable('TOKENS');
@@ -83,7 +83,6 @@ async function recordWalletSnapshot(wallet: string) {
     const snapshotsTable = getTable('WALLET_SNAPSHOTS');
     await snapshotsTable.create([{
       fields: {
-        wallet,
         timestamp,
         totalValue,
         holdings: JSON.stringify(balances.map(b => ({
