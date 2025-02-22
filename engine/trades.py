@@ -383,16 +383,158 @@ class TradeExecutor:
                 await self.handle_failed_trade(trade['id'], str(e))
             return False
 
+    async def check_exit_conditions(self, trade: Dict) -> Optional[str]:
+        """Check if trade should be closed and return exit reason if so"""
+        try:
+            # Get current price
+            token_mint = trade['fields'].get('mint')
+            if not token_mint:
+                self.logger.warning(f"No mint address for trade {trade['id']}")
+                return None
+                
+            current_price = await self.get_token_price(token_mint)
+            if not current_price:
+                self.logger.warning(f"Could not get current price for {token_mint}")
+                return None
+
+            entry_price = float(trade['fields'].get('price', 0))
+            target_price = float(trade['fields'].get('targetPrice', 0))
+            stop_loss = float(trade['fields'].get('stopLoss', 0))
+            created_at = datetime.fromisoformat(trade['fields'].get('createdAt').replace('Z', '+00:00'))
+            
+            # Calculate time elapsed
+            time_elapsed = datetime.now(timezone.utc) - created_at
+            max_duration = timedelta(days=7)  # Maximum 7 days
+            
+            # Check conditions
+            price_change_pct = (current_price - entry_price) / entry_price * 100
+            
+            self.logger.info(f"\nChecking exit conditions for trade {trade['id']}:")
+            self.logger.info(f"Current price: ${current_price:.4f}")
+            self.logger.info(f"Entry price: ${entry_price:.4f}")
+            self.logger.info(f"Target price: ${target_price:.4f}")
+            self.logger.info(f"Stop loss: ${stop_loss:.4f}")
+            self.logger.info(f"Price change: {price_change_pct:.2f}%")
+            self.logger.info(f"Time elapsed: {time_elapsed.days}d {time_elapsed.seconds//3600}h")
+            
+            # Check take profit
+            if current_price >= target_price:
+                return "TAKE_PROFIT"
+                
+            # Check stop loss
+            if current_price <= stop_loss:
+                return "STOP_LOSS"
+                
+            # Check expiry
+            if time_elapsed >= max_duration:
+                return "EXPIRED"
+                
+            return None
+            
+        except Exception as e:
+            self.logger.error(f"Error checking exit conditions: {e}")
+            return None
+
+    async def close_trade(self, trade: Dict, exit_reason: str) -> bool:
+        """Close a trade by executing a sell order"""
+        try:
+            self.logger.info(f"Closing trade {trade['id']} - Reason: {exit_reason}")
+            
+            # Calculate amount to sell (get current balance)
+            token_mint = trade['fields'].get('mint')
+            balance = await self.jupiter.get_token_balance(token_mint)
+            
+            if balance <= 0:
+                self.logger.warning(f"No balance to sell for trade {trade['id']}")
+                return False
+                
+            # Execute sell order
+            success, transaction_bytes = await self.jupiter.execute_validated_swap(
+                input_token=token_mint,
+                output_token="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",  # USDC
+                amount=balance,
+                min_amount=0.1,  # Minimum 0.1 USDC
+                max_slippage=1.0
+            )
+            
+            if not success or not transaction_bytes:
+                self.logger.error(f"Failed to execute sell order for trade {trade['id']}")
+                return False
+                
+            # Prepare and execute transaction
+            transaction = await self.jupiter.prepare_transaction(transaction_bytes)
+            if not transaction:
+                self.logger.error(f"Failed to prepare transaction for trade {trade['id']}")
+                return False
+                
+            signature = await self.jupiter.execute_trade_with_retries(transaction)
+            if not signature:
+                self.logger.error(f"Failed to execute transaction for trade {trade['id']}")
+                return False
+                
+            # Update trade record
+            transaction_url = f"https://solscan.io/tx/{signature}"
+            current_price = await self.get_token_price(token_mint)
+            
+            self.trades_table.update(trade['id'], {
+                'status': exit_reason,
+                'closeTxSignature': signature,
+                'closePrice': current_price,
+                'closeTxUrl': transaction_url,
+                'closedAt': datetime.now(timezone.utc).isoformat()
+            })
+            
+            # Send notification
+            message = f"🦍 KinKong Trade Closed\n\n"
+            message += f"Token: ${trade['fields']['token']}\n"
+            message += f"Exit Reason: {exit_reason}\n"
+            message += f"Entry Price: ${float(trade['fields']['price']):.4f}\n"
+            message += f"Exit Price: ${current_price:.4f}\n"
+            message += f"Profit/Loss: {((current_price - float(trade['fields']['price'])) / float(trade['fields']['price']) * 100):.2f}%\n\n"
+            message += f"🔗 View Transaction:\n{transaction_url}"
+            
+            from scripts.analyze_charts import send_telegram_message
+            send_telegram_message(message)
+            
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Error closing trade: {e}")
+            return False
+
     async def monitor_signals(self):
         """Main loop to monitor signals and execute trades"""
         while True:
             try:
-                logger.info("Checking for active signals...")
+                # First check active trades for exit conditions
+                active_trades = self.trades_table.get_all(
+                    formula="status='EXECUTED'"
+                )
+                
+                self.logger.info(f"Checking {len(active_trades)} active trades...")
+                
+                for trade in active_trades:
+                    try:
+                        exit_reason = await self.check_exit_conditions(trade)
+                        if exit_reason:
+                            self.logger.info(f"Exit condition met for trade {trade['id']}: {exit_reason}")
+                            if await self.close_trade(trade, exit_reason):
+                                self.logger.info(f"Successfully closed trade {trade['id']}")
+                            else:
+                                self.logger.error(f"Failed to close trade {trade['id']}")
+                    except Exception as e:
+                        self.logger.error(f"Error processing trade {trade['id']}: {e}")
+                        continue
+                    
+                    await asyncio.sleep(2)  # Delay between trades
+                
+                # Then check for new signals
+                self.logger.info("Checking for active signals...")
                 
                 try:
                     signals = await self.get_active_buy_signals()
                 except Exception as e:
-                    logger.error(f"Failed to fetch active signals: {e}")
+                    self.logger.error(f"Failed to fetch active signals: {e}")
                     await asyncio.sleep(60)
                     continue
 
