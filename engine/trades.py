@@ -344,7 +344,7 @@ class TradeExecutor:
             self.logger.error(f"Error updating failed trade status: {e}")
 
     async def get_jupiter_quote(self, input_token: str, output_token: str, amount: float) -> Optional[Dict]:
-        """Get quote from Jupiter with Meteora route"""
+        """Get quote from Jupiter"""
         try:
             url = "https://quote-api.jup.ag/v6/quote"
             params = {
@@ -352,7 +352,6 @@ class TradeExecutor:
                 "outputMint": str(output_token),  # Ensure string
                 "amount": str(int(amount)),  # Convert to integer then string
                 "slippageBps": "100",  # Convert to string
-                "onlyDirectRoutes": "true",  # String "true" instead of boolean True
                 "platformFeeBps": "0"  # Convert to string
             }
             
@@ -375,22 +374,7 @@ class TradeExecutor:
                         return None
                         
                     quote_data = data.get('data', {})
-                    
-                    # Verify Meteora route
-                    route_plan = quote_data.get('routePlan', [])
-                    meteora_routes = [
-                        route for route in route_plan 
-                        if 'Meteora' in route.get('swapInfo', {}).get('label', '')
-                    ]
-                    
-                    if not meteora_routes:
-                        self.logger.error("No Meteora route found")
-                        return None
-                        
-                    # Use first Meteora route found
-                    quote_data['routePlan'] = [meteora_routes[0]]
-                    self.logger.info(f"Selected Meteora route: {json.dumps(meteora_routes[0], indent=2)}")
-                    
+                    self.logger.info(f"Got quote data: {json.dumps(quote_data, indent=2)}")
                     return quote_data
                     
         except Exception as e:
