@@ -490,22 +490,26 @@ class TradeExecutor:
                         self.logger.error(f"Problem string: {transaction_base64[:100]}...")
                         await self.handle_failed_trade(trade['id'], "Invalid transaction format")
                         return False
-                    
+
                     # Initialize Solana client
                     client = AsyncClient("https://api.mainnet-beta.solana.com")
                     self.logger.info("Initialized Solana client")
                     
                     try:
-                        # Get recent blockhash
-                        recent_blockhash = await client.get_recent_blockhash()
-                        self.logger.info(f"Got recent blockhash: {recent_blockhash.value.blockhash}")
+                        # Get recent blockhash using the correct method
+                        blockhash_response = await client.get_latest_blockhash()
+                        if not blockhash_response or not blockhash_response.value:
+                            raise Exception("Failed to get recent blockhash")
+                            
+                        recent_blockhash = blockhash_response.value.blockhash
+                        self.logger.info(f"Got recent blockhash: {recent_blockhash}")
                         
                         # Create and deserialize transaction
                         transaction = Transaction.deserialize(transaction_bytes)
                         self.logger.info("Deserialized transaction successfully")
                         
                         # Set recent blockhash
-                        transaction.recent_blockhash = recent_blockhash.value.blockhash
+                        transaction.recent_blockhash = recent_blockhash
                         self.logger.info("Set recent blockhash")
                         
                         # Set fee payer
