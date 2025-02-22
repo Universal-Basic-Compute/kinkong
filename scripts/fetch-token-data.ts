@@ -227,7 +227,7 @@ async function fetchTokenData(): Promise<TokenData[]> {
       }, null);
 
       if (!mainPair) {
-        console.warn(`No valid trading pair found for ${token.symbol}`);
+        console.warn(`No valid trading pair found for ${token.token}`);
         continue;
       }
 
@@ -263,7 +263,7 @@ async function fetchTokenData(): Promise<TokenData[]> {
         priceChange24h: price24hChange
       });
 
-      console.log(`Processed ${token.symbol}:`, {
+      console.log(`Processed ${token.token}:`, {
         mainPair: mainPair?.quoteToken?.symbol,
         price: currentPrice,
         price7dAvg: price7dAvg,
