@@ -456,8 +456,21 @@ class TradeExecutor:
         try:
             self.logger.info(f"Closing trade {trade['id']} - Reason: {exit_reason}")
             
+            # Get token mint from TOKENS table first
+            tokens_table = Airtable(self.base_id, 'TOKENS', self.api_key)
+            token_records = tokens_table.get_all(
+                formula=f"{{token}}='{trade['fields'].get('token')}'")
+            
+            if not token_records:
+                self.logger.error(f"No token record found for {trade['fields'].get('token')}")
+                return False
+                
+            token_mint = token_records[0]['fields'].get('mint')
+            if not token_mint:
+                self.logger.error(f"No mint address found for {trade['fields'].get('token')}")
+                return False
+            
             # Calculate amount to sell (get current balance)
-            token_mint = trade['fields'].get('mint')
             balance = await self.jupiter.get_token_balance(token_mint)
             
             if balance <= 0:
