@@ -492,12 +492,18 @@ class TradeExecutor:
                     if is_versioned:
                         # Handle versioned transaction (v0)
                         from solders.transaction import VersionedTransaction
-                        from solders.message import MessageV0
-                        from solders.instruction import CompiledInstruction
-                        from solders.address_lookup_table import MessageAddressTableLookup
-
                         versioned_tx = VersionedTransaction.from_bytes(transaction_bytes)
                         self.logger.info("Deserialized versioned transaction")
+                    else:
+                        # Handle legacy transaction with workaround
+                        from solders.transaction import Transaction as SoldersTransaction
+                        from solders.message import Message
+                        from solders.instruction import Instruction
+                        from solders.pubkey import Pubkey
+
+                        # Convert transaction bytes to Message first
+                        message = Message.from_bytes(transaction_bytes[1:])  # Skip version byte
+                        self.logger.info("Parsed legacy transaction message")
 
                         # Get fresh blockhash
                         blockhash_response = await client.get_latest_blockhash()
@@ -506,77 +512,27 @@ class TradeExecutor:
                         recent_blockhash = blockhash_response.value.blockhash
                         self.logger.info(f"Got recent blockhash: {recent_blockhash}")
 
-                        # Create new message preserving structure
-                        new_message = MessageV0(
-                            header=versioned_tx.message.header,
-                            account_keys=versioned_tx.message.account_keys,
+                        # Create new message with updated blockhash
+                        new_message = Message(
+                            header=message.header,
+                            account_keys=[Pubkey.from_bytes(bytes(key)) for key in message.account_keys],
                             recent_blockhash=recent_blockhash,
                             instructions=[
-                                CompiledInstruction(
-                                    program_id_index=ix.program_id_index,
+                                Instruction(
+                                    program_id=ix.program_id,
                                     accounts=ix.accounts,
                                     data=ix.data
-                                ) for ix in versioned_tx.message.instructions
-                            ],
-                            address_table_lookups=[
-                                MessageAddressTableLookup(
-                                    account_key=lookup.account_key,
-                                    writable_indexes=lookup.writable_indexes,
-                                    readonly_indexes=lookup.readonly_indexes
-                                ) for lookup in versioned_tx.message.address_table_lookups
+                                ) for ix in message.instructions
                             ]
                         )
 
                         # Sign message
                         signature = wallet_keypair.sign_message(bytes(new_message))
-                        self.logger.info("Signed versioned message")
-
-                        # Create new transaction
-                        transaction = VersionedTransaction(
-                            message=new_message,
-                            signatures=[signature]
-                        )
-
-                    else:
-                        # Handle legacy transaction
-                        from solana.transaction import Transaction
-                        from solders.instruction import Instruction
-                        from solders.message import Message
-
-                        # Deserialize as legacy transaction
-                        legacy_tx = Transaction.deserialize(transaction_bytes)
-                        self.logger.info("Deserialized legacy transaction")
-
-                        # Get fresh blockhash
-                        blockhash_response = await client.get_latest_blockhash()
-                        if not blockhash_response or not blockhash_response.value:
-                            raise Exception("Failed to get recent blockhash")
-                        recent_blockhash = blockhash_response.value.blockhash
-                        self.logger.info(f"Got recent blockhash: {recent_blockhash}")
-
-                        # Convert instructions to Solders format
-                        instructions = []
-                        for ix in legacy_tx.message.instructions:
-                            program_id = ix.program_id
-                            accounts = ix.accounts
-                            data = ix.data
-                            instructions.append(Instruction(program_id, accounts, data))
-
-                        # Create new message
-                        message = Message(
-                            header=legacy_tx.message.header,
-                            account_keys=legacy_tx.message.account_keys,
-                            recent_blockhash=recent_blockhash,
-                            instructions=instructions
-                        )
-
-                        # Sign message
-                        signature = wallet_keypair.sign_message(bytes(message))
                         self.logger.info("Signed legacy message")
 
-                        # Create new transaction
-                        transaction = Transaction()._populate(
-                            message=message,
+                        # Create transaction
+                        transaction = SoldersTransaction(
+                            message=new_message,
                             signatures=[signature]
                         )
 
