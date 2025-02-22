@@ -108,6 +108,15 @@ class TradeExecutor:
     async def execute_trade(self, signal: Dict) -> bool:
         """Execute a trade for a signal"""
         try:
+            # First check if trade already exists for this signal
+            existing_trades = self.trades_table.get_all(
+                formula=f"{{signalId}} = '{signal['id']}'"
+            )
+            
+            if existing_trades:
+                logger.warning(f"Trade already exists for signal {signal['id']}")
+                return False
+
             # Create trade record
             trade_data = {
                 'signalId': signal['id'],
