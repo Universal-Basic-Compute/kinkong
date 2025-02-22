@@ -72,7 +72,7 @@ console.log('Environment check:', {
 const BIRDEYE_API_KEY = process.env.BIRDEYE_API_KEY;
 const TOKENS = [
   {
-    symbol: 'SOL',
+    token: 'SOL',
     name: 'Solana',
     mint: 'So11111111111111111111111111111111111111112'
   },
@@ -154,7 +154,7 @@ const TOKENS = [
 ];
 
 interface TokenData {
-  symbol: string;
+  token: string;
   name: string;
   mint: string;
   isActive: boolean;
@@ -206,7 +206,7 @@ async function fetchTokenData(): Promise<TokenData[]> {
 
   for (const token of TOKENS) {
     try {
-      console.log(`Processing ${token.symbol}...`);
+      console.log(`Processing ${token.token}...`);
       
       // Get DexScreener data first
       const dexScreenerData = await getDexScreenerData(token.mint);
@@ -296,7 +296,7 @@ async function updateAirtable(tokenData: TokenData[]) {
     try {
       // Always create a new record with createdAt
       const fields = {
-        name: token.symbol,           // Primary field
+        name: token.token,           // Primary field
         description: token.name,
         mint: token.mint,
         isActive: token.isActive,
@@ -314,7 +314,7 @@ async function updateAirtable(tokenData: TokenData[]) {
 
       // Create new record
       await table.create([{ fields }]);
-      console.log(`✅ Created new snapshot for ${token.symbol}`);
+      console.log(`✅ Created new snapshot for ${token.token}`);
       console.log(`   Price: $${token.price.toFixed(4)}`);
       console.log(`   7d Avg: $${token.price7dAvg.toFixed(4)}`);
       console.log(`   24h Change: ${token.priceChange24h.toFixed(2)}%`);
