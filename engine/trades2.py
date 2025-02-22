@@ -167,8 +167,9 @@ class TradeExecutor:
             return []
 
     def check_entry_conditions(self, signal: Dict) -> bool:
-        """Check if trade already exists for this signal"""
+        """Check if entry conditions are met for a signal"""
         try:
+            # First check if trade already exists for this signal
             existing_trades = self.trades_table.get_all(
                 formula=f"{{signalId}} = '{signal['id']}'"
             )
@@ -177,7 +178,55 @@ class TradeExecutor:
                 logger.warning(f"Trade already exists for signal {signal['id']}")
                 return False
 
-            return True
+            # Get current price from DexScreener API
+            token_mint = signal['fields'].get('mint')
+            if not token_mint:
+                logger.warning(f"No mint address for signal {signal['id']}")
+                return False
+
+            # Use DexScreener API for current price
+            url = f"https://api.dexscreener.com/latest/dex/tokens/{token_mint}"
+            headers = {
+                'User-Agent': 'Mozilla/5.0',
+                'Accept': 'application/json'
+            }
+            
+            response = requests.get(url, headers=headers)
+            if not response.ok:
+                logger.error(f"DexScreener API error: {response.status_code}")
+                return False
+                
+            data = response.json()
+            if not data.get('pairs'):
+                logger.warning(f"No pairs found for token {token_mint}")
+                return False
+                
+            # Get most liquid Solana pair
+            sol_pairs = [p for p in data['pairs'] if p.get('chainId') == 'solana']
+            if not sol_pairs:
+                logger.warning(f"No Solana pairs found for {token_mint}")
+                return False
+                
+            main_pair = max(sol_pairs, key=lambda x: float(x.get('liquidity', {}).get('usd', 0) or 0))
+            current_price = float(main_pair.get('priceUsd', 0))
+            
+            if not current_price:
+                logger.error(f"Could not get current price for {token_mint}")
+                return False
+
+            entry_price = float(signal['fields'].get('entryPrice', 0))
+            
+            # Check if price is within 1% of entry price
+            price_diff = abs(current_price - entry_price) / entry_price
+            meets_conditions = price_diff <= 0.01
+
+            logger.info(f"Signal {signal['id']} entry check:")
+            logger.info(f"Entry price: {entry_price}")
+            logger.info(f"Current price: {current_price}")
+            logger.info(f"Price difference: {price_diff:.2%}")
+            logger.info(f"Meets conditions: {meets_conditions}")
+
+            return meets_conditions
 
         except Exception as e:
             logger.error(f"Error checking entry conditions: {e}")
