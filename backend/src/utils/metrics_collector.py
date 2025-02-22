@@ -34,32 +34,63 @@ class MetricsResponse:
     success: bool
     error: Optional[str] = None
 
+def setup_logging():
+    """Configure logging"""
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    return logging.getLogger(__name__)
+
 class TokenMetricsCollector:
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str, config: Optional[ApiConfig] = None):
+        self.config = config or ApiConfig()
         self.headers = {
             "X-API-KEY": api_key,
             "x-chain": "solana",
             "accept": "application/json"
         }
-        self.logger = logging.getLogger(__name__)
+        self.logger = setup_logging()
+        self.session: Optional[aiohttp.ClientSession] = None
+
+    async def __aenter__(self):
+        """Context manager entry"""
+        self.session = aiohttp.ClientSession()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit"""
+        if self.session:
+            await self.session.close()
 
     async def _make_request(self, url: str) -> Optional[Dict]:
-        """Make API request with error handling"""
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url, headers=self.headers) as response:
+        """Make API request with retries"""
+        for attempt in range(self.config.max_retries):
+            try:
+                if not self.session:
+                    self.session = aiohttp.ClientSession()
+
+                async with self.session.get(
+                    url, 
+                    headers=self.headers,
+                    timeout=self.config.timeout
+                ) as response:
                     if response.status == 200:
                         data = await response.json()
                         if data.get('success'):
                             return data.get('data', {})
-                        self.logger.warning(f"API error: {data.get('message')}")
-                    else:
-                        self.logger.error(f"Request failed: {response.status}")
-                        self.logger.debug(await response.text())
-            return None
-        except Exception as e:
-            self.logger.error(f"Request error: {str(e)}")
-            return None
+                        raise ApiError(f"API error: {data.get('message')}")
+                    raise ApiError(f"Request failed: {response.status}")
+
+            except Exception as e:
+                self.logger.warning(
+                    f"Request attempt {attempt + 1} failed: {str(e)}"
+                )
+                if attempt == self.config.max_retries - 1:
+                    raise
+                await asyncio.sleep(self.config.retry_delay * (attempt + 1))
+
+        return None
 
     def _extract_trade_metrics(self, data: Dict) -> Dict:
         """Extract and organize trade metrics"""
@@ -103,47 +134,21 @@ class TokenMetricsCollector:
     async def get_token_metrics(self, token_mint: str) -> MetricsResponse:
         """Get comprehensive token metrics"""
         try:
-            # Make parallel requests
             responses = await asyncio.gather(
-                self._make_request(BirdeyeEndpoints.price_volume(token_mint)),
-                self._make_request(BirdeyeEndpoints.trade_data(token_mint)),
-                self._make_request(BirdeyeEndpoints.top_traders(token_mint))
+                self._make_request(f"{self.config.base_url}/price_volume/single?address={token_mint}&type=24h"),
+                self._make_request(f"{self.config.base_url}/v3/token/trade-data/single?address={token_mint}"),
+                self._make_request(f"{self.config.base_url}/v2/tokens/top_traders?address={token_mint}&time_frame=24h&sort_type=desc&sort_by=volume&limit=10")
             )
 
             if not all(responses):
-                return MetricsResponse(
-                    price_metrics={},
-                    trade_metrics={},
-                    trader_metrics={},
-                    timestamp=datetime.now(timezone.utc).isoformat(),
-                    success=False,
-                    error="One or more API requests failed"
-                )
+                raise ApiError("One or more API requests failed")
 
             price_data, trade_data, trader_data = responses
 
-            # Process metrics
-            price_metrics = {
-                'current': price_data.get('price', 0),
-                'changePercent': price_data.get('priceChangePercent', 0),
-                'volumeUSD': price_data.get('volumeUSD', 0),
-                'updateTime': price_data.get('updateHumanTime', '')
-            }
-
-            trade_metrics = self._extract_trade_metrics(trade_data)
-
-            trader_metrics = {
-                'totalVolume': sum(t.get('volume', 0) for t in trader_data.get('items', [])),
-                'buyVolume': sum(t.get('volumeBuy', 0) for t in trader_data.get('items', [])),
-                'sellVolume': sum(t.get('volumeSell', 0) for t in trader_data.get('items', [])),
-                'uniqueTraders': trade_data.get('uniqueTraders', 0),
-                'newTraders': trade_data.get('newTraders', 0)
-            }
-
             return MetricsResponse(
-                price_metrics=price_metrics,
-                trade_metrics=trade_metrics,
-                trader_metrics=trader_metrics,
+                price_metrics=self._extract_price_metrics(price_data),
+                trade_metrics=self._extract_trade_metrics(trade_data),
+                trader_metrics=self._extract_trader_metrics(trader_data),
                 timestamp=datetime.now(timezone.utc).isoformat(),
                 success=True
             )
@@ -151,9 +156,9 @@ class TokenMetricsCollector:
         except Exception as e:
             self.logger.error(f"Error collecting metrics: {str(e)}", exc_info=True)
             return MetricsResponse(
-                price_metrics={},
-                trade_metrics={},
-                trader_metrics={},
+                price_metrics=METRIC_DEFAULTS[MetricType.PRICE],
+                trade_metrics=METRIC_DEFAULTS[MetricType.TRADE],
+                trader_metrics=METRIC_DEFAULTS[MetricType.TRADER],
                 timestamp=datetime.now(timezone.utc).isoformat(),
                 success=False,
                 error=str(e)
