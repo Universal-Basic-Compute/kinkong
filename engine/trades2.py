@@ -296,7 +296,8 @@ class TradeExecutor:
                 'timeframe': signal['fields']['timeframe'],
                 'entryPrice': float(signal['fields']['entryPrice']),
                 'targetPrice': float(signal['fields']['targetPrice']),
-                'stopLoss': float(signal['fields']['stopLoss'])
+                'stopLoss': float(signal['fields']['stopLoss']),
+                'transactionUrl': ''  # Initialize empty, will be updated after execution
             }
             
             trade = self.trades_table.insert(trade_data)
@@ -416,11 +417,13 @@ class TradeExecutor:
                             logger.info(f"View on Solscan: {transaction_url}")
                             
                             # Update trade record
+                            transaction_url = f"https://solscan.io/tx/{result.value}"
                             self.trades_table.update(trade['id'], {
                                 'status': 'EXECUTED',
                                 'signature': str(result.value),  # Convert Signature to string
                                 'amount': trade_amount_usd,  # Use actual amount
-                                'price': float(signal['fields']['entryPrice'])
+                                'price': float(signal['fields']['entryPrice']),
+                                'transactionUrl': transaction_url  # Add transaction URL
                             })
                             
                             # Send notification
