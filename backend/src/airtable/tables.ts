@@ -24,6 +24,24 @@ export interface MarketSentiment {
   notes: string;
 }
 
+export interface Signal {
+  createdAt: string;
+  token: string;
+  type: 'BUY' | 'SELL';
+  timeframe: 'SCALP' | 'INTRADAY' | 'SWING' | 'POSITION';
+  entryPrice?: number;
+  targetPrice?: number;
+  stopLoss?: number;
+  confidence: 'LOW' | 'MEDIUM' | 'HIGH';
+  reason: string;
+  url?: string;
+  expectedReturn?: number;
+  actualReturn?: number;
+  accuracy?: number;
+  wallet?: string;
+  code?: string;
+}
+
 export interface Trade {
   createdAt: string;
   token: string;
