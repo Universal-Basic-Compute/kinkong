@@ -46,7 +46,7 @@ class WalletSnapshotTaker:
             if not data.get('success'):
                 raise Exception(f"API returned success=false: {data.get('message', 'No error message')}")
                 
-            return data.get('data', [])
+            return data.get('data', {}).get('items', [])
             
         except requests.exceptions.RequestException as e:
             print(f"HTTP Request failed: {str(e)}")
@@ -71,9 +71,9 @@ class WalletSnapshotTaker:
         
         # Create mapping of mint to balance data
         balance_map = {
-            balance['mint']: balance 
+            balance['address']: balance
             for balance in token_balances 
-            if float(balance.get('value', 0)) > 0  # Only include non-zero balances
+            if float(balance.get('valueUsd', 0)) > 0  # Only include non-zero balances
         }
 
         # Process balances for tracked tokens
@@ -89,11 +89,11 @@ class WalletSnapshotTaker:
                     balances.append({
                         'token': token['fields']['token'],
                         'mint': mint,
-                        'amount': float(balance_data.get('balance', 0)),
-                        'price': float(balance_data.get('value', 0)),
-                        'value': float(balance_data.get('valueUSD', 0))
+                        'amount': float(balance_data.get('uiAmount', 0)),
+                        'price': float(balance_data.get('priceUsd', 0)),
+                        'value': float(balance_data.get('valueUsd', 0))
                     })
-                    print(f"✓ {token['fields']['token']}: {float(balance_data.get('balance', 0)):.2f} tokens (${float(balance_data.get('valueUSD', 0)):.2f})")
+                    print(f"✓ {token['fields']['token']}: {float(balance_data.get('uiAmount', 0)):.2f} tokens (${float(balance_data.get('valueUsd', 0)):.2f})")
             except Exception as e:
                 print(f"❌ Error processing {token['fields']['token']}: {str(e)}")
 
