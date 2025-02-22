@@ -127,6 +127,17 @@ interface Thought {
   context: Record<string, any>;
 }
 
+interface TokenScore {
+  token: string;
+  baseScore: number;
+  volumeScore: number;
+  priceScore: number;
+  liquidityScore: number;
+  finalScore: number;
+  currentAllocation: number;
+  targetAllocation: number;
+}
+
 function normalizeScore(value: number, allValues: number[]): number {
   const min = Math.min(...allValues);
   const max = Math.max(...allValues);
