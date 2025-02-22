@@ -318,18 +318,18 @@ class TradeExecutor:
                 return False
 
             # Calculate trade amount (3% of balance, min $10, max $1000)
-            trade_amount_usd = min(balance * 0.03, 1000)
-            trade_amount_usd = max(trade_amount_usd, 10)
+            trade_value = min(balance * 0.03, 1000)
+            trade_value = max(trade_value, 10)
 
-            if trade_amount_usd < 10:
-                error_msg = f"Trade amount ${trade_amount_usd:.2f} below minimum $10"
+            if trade_value < 10:
+                error_msg = f"Trade value ${trade_value:.2f} below minimum $10"
                 logger.error(error_msg)
                 await self.handle_failed_trade(trade['id'], error_msg)
                 return False
 
             logger.info(f"\nTrade calculation:")
             logger.info(f"USDC balance: ${balance:.2f}")
-            logger.info(f"Trade amount: ${trade_amount_usd:.2f}")
+            logger.info(f"Trade value: ${trade_value:.2f}")
 
             # Execute validated swap with calculated amount
             success, transaction_bytes = await self.jupiter.execute_validated_swap(
