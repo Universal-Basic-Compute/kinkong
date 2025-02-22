@@ -114,7 +114,12 @@ export const TokenTable = ({ showAllTokens = false }: TokenTableProps) => {
         // Filter out COMPUTE and UBC tokens
         const filteredTokens = data.filter(token => {
           const metadata = TOKEN_METADATA[token.mint];
-          return !(metadata?.token === 'COMPUTE' || metadata?.token === 'UBC');
+          return !(
+            metadata?.token === 'COMPUTE' || 
+            metadata?.token === 'UBC' ||
+            token.token === 'COMPUTE' ||
+            token.token === 'UBC'
+          );
         });
         
         setTokens(filteredTokens);
