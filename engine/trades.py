@@ -557,13 +557,12 @@ class TradeExecutor:
                             traceback.print_tb(e.__traceback__)
                         await self.handle_failed_trade(trade['id'], str(e))
                         return False
-                            
-                        else:
-                            # Fallback to legacy transaction handling
-                            from solana.transaction import Transaction
-                            solana_tx = Transaction.deserialize(transaction_bytes)
-                            
-                            # Convert to Solders format
+
+                    # Fallback to legacy transaction handling
+                    from solana.transaction import Transaction
+                    solana_tx = Transaction.deserialize(transaction_bytes)
+                    
+                    # Convert to Solders format
                             instructions = []
                             for ix in solana_tx.message.instructions:
                                 program_id = Pubkey.from_string(str(ix.program_id))
