@@ -496,7 +496,7 @@ class TradeExecutor:
                     self.logger.info("Initialized Solana client")
                     
                     try:
-                        # Get recent blockhash using the correct method
+                        # Get recent blockhash
                         blockhash_response = await client.get_latest_blockhash()
                         if not blockhash_response or not blockhash_response.value:
                             raise Exception("Failed to get recent blockhash")
@@ -506,20 +506,29 @@ class TradeExecutor:
                         
                         # Use Solders Transaction deserialization
                         from solders.transaction import Transaction as SoldersTransaction
+                        from solders.message import Message
                         transaction = SoldersTransaction.from_bytes(transaction_bytes)
                         self.logger.info("Deserialized transaction successfully")
                         
-                        # Set fee payer
-                        transaction.message.set_fee_payer(wallet_keypair.pubkey())
-                        self.logger.info("Set fee payer")
+                        # Create a new transaction with our wallet as fee payer
+                        new_message = Message(
+                            transaction.message.header,
+                            transaction.message.account_keys.with_signer(wallet_keypair.pubkey()),
+                            transaction.message.recent_blockhash,
+                            transaction.message.instructions
+                        )
                         
-                        # Sign transaction
-                        signed_tx = transaction.sign([wallet_keypair])
-                        self.logger.info("Signed transaction")
+                        # Create and sign new transaction
+                        new_transaction = SoldersTransaction(
+                            message=new_message,
+                            signatures=[wallet_keypair.sign_message(bytes(new_message))]
+                        )
+                        
+                        self.logger.info("Created and signed new transaction")
                         
                         # Send transaction
                         result = await client.send_transaction(
-                            signed_tx,
+                            new_transaction,
                             opts=types.TxOpts(
                                 skip_preflight=False,
                                 preflight_commitment="confirmed"
