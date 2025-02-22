@@ -317,7 +317,7 @@ class TradeExecutor:
         try:
             self.trades_table.update(trade_id, {
                 'status': 'FAILED',
-                'failedAt': datetime.now(timezone.utc).isoformat()
+                'lastUpdateTime': datetime.now(timezone.utc).isoformat()
             })
         except Exception as e:
             self.logger.error(f"Error updating failed trade status: {e}")
@@ -415,7 +415,7 @@ class TradeExecutor:
                 quote_params = {
                     "inputMint": USDC_MINT,
                     "outputMint": signal['fields']['mint'],
-                    "amount": int(trade_amount_usd * 1e6),  # Convert to USDC decimals
+                    "amount": str(int(trade_amount_usd * 1e6)),  # Convert to string to avoid JSON issues
                     "slippageBps": 100  # 1% slippage
                 }
                 
@@ -434,6 +434,14 @@ class TradeExecutor:
                     "userPublicKey": wallet_address,
                     "wrapUnwrapSOL": False
                 }
+
+                # Ensure JSON serialization works
+                try:
+                    json.dumps(swap_data)  # Test JSON serialization
+                except Exception as e:
+                    self.logger.error(f"Invalid JSON data: {e}")
+                    await self.handle_failed_trade(trade['id'], "Invalid transaction data")
+                    return False
                 
                 async with aiohttp.ClientSession() as session:
                     async with session.post(swap_url, json=swap_data) as response:
