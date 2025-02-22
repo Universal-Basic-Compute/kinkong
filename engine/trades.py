@@ -478,68 +478,38 @@ class TradeExecutor:
                 self.logger.error(f"Could not get current price for {token_mint}")
                 return False
                 
-            usd_value = balance * current_price
-            self.logger.info(f"Balance: {balance:.8f} {trade['fields'].get('token')}")
-            self.logger.info(f"Current price: ${current_price:.4f}")
-            self.logger.info(f"USD Value: ${usd_value:.2f}")
+            # If balance has significant value (> $1), proceed with trade
+            if usd_value > 1.0:
+                # Execute sell order with minimum $1 threshold
+                success, transaction_bytes = await self.jupiter.execute_validated_swap(
+                    input_token=token_mint,
+                    output_token="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",  # USDC
+                    amount=balance,
+                    min_amount=1.0,  # Minimum $1 for remaining balance
+                    max_slippage=1.0
+                )
+                
+                if not success or not transaction_bytes:
+                    self.logger.error(f"Failed to execute sell order for trade {trade['id']}")
+                    return False
+                    
+                # Execute transaction
+                transaction = await self.jupiter.prepare_transaction(transaction_bytes)
+                if not transaction:
+                    self.logger.error(f"Failed to prepare transaction")
+                    return False
+                    
+                signature = await self.jupiter.execute_trade_with_retries(transaction)
+                if not signature:
+                    self.logger.error(f"Failed to execute transaction")
+                    return False
+                    
+                transaction_url = f"https://solscan.io/tx/{signature}"
+            else:
+                self.logger.info(f"Balance too small to trade (${usd_value:.2f})")
+                signature = None
+                transaction_url = None
 
-            # Get total portfolio value to calculate percentage
-            portfolio_table = Airtable(self.base_id, 'PORTFOLIO', self.api_key)
-            portfolio_records = portfolio_table.get_all()
-            total_portfolio_value = sum(
-                float(record['fields'].get('usdValue', 0))
-                for record in portfolio_records
-            )
-            
-            # Calculate minimum trade amount (3% of portfolio or $10, whichever is higher)
-            min_trade_amount = max(total_portfolio_value * 0.03, 10.0)
-            self.logger.info(f"Total portfolio value: ${total_portfolio_value:.2f}")
-            self.logger.info(f"Minimum trade amount: ${min_trade_amount:.2f}")
-            
-            # If balance is less than 3% but still has value, execute trade anyway
-            if usd_value < min_trade_amount and usd_value > 1.0:  # Only proceed if > $1
-                self.logger.info(f"Balance (${usd_value:.2f}) below 3% threshold but proceeding with remaining amount")
-                min_trade_amount = 1.0  # Set minimum to $1 for remaining balance
-            elif usd_value <= 1.0:
-                self.logger.warning(f"USD value ${usd_value:.2f} too small to trade")
-                
-                # Update trade record as completed with small balance
-                self.trades_table.update(trade['id'], {
-                    'status': 'CLOSED',
-                    'exitReason': exit_reason,
-                    'exitPrice': current_price,
-                    'closedAt': datetime.now(timezone.utc).isoformat(),
-                    'realizedPnl': 0,
-                    'roi': 0,
-                    'exitValue': usd_value,
-                    'notes': f"Closed with dust balance (${usd_value:.2f})"
-                })
-                return True
-                
-            # Execute sell order
-            success, transaction_bytes = await self.jupiter.execute_validated_swap(
-                input_token=token_mint,
-                output_token="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",  # USDC
-                amount=balance,
-                min_amount=min_trade_amount,  # Use adjusted minimum
-                max_slippage=1.0
-            )
-            
-            if not success or not transaction_bytes:
-                self.logger.error(f"Failed to execute sell order for trade {trade['id']}")
-                return False
-                
-            # Prepare and execute transaction
-            transaction = await self.jupiter.prepare_transaction(transaction_bytes)
-            if not transaction:
-                self.logger.error(f"Failed to prepare transaction for trade {trade['id']}")
-                return False
-                
-            signature = await self.jupiter.execute_trade_with_retries(transaction)
-            if not signature:
-                self.logger.error(f"Failed to execute transaction for trade {trade['id']}")
-                return False
-                
             # Calculate profit/loss metrics
             entry_price = float(trade['fields'].get('price', 0))
             entry_amount = float(trade['fields'].get('amount', 0))
@@ -549,24 +519,29 @@ class TradeExecutor:
             realized_pnl = exit_value - entry_value
             roi = (realized_pnl / entry_value * 100) if entry_value > 0 else 0
 
-            # Generate transaction URL
-            transaction_url = f"https://solscan.io/tx/{signature}"
-            
-            # Update trade record with complete closing data
-            self.trades_table.update(trade['id'], {
-                'status': 'CLOSED',  # Set to CLOSED instead of exit reason
-                'exitReason': exit_reason,  # Store the reason separately
-                'closeTxSignature': signature,
+            # Update trade record
+            update_data = {
+                'status': 'CLOSED',
+                'exitReason': exit_reason,
                 'exitPrice': current_price,
-                'closeTxUrl': transaction_url,
                 'closedAt': datetime.now(timezone.utc).isoformat(),
                 'realizedPnl': realized_pnl,
                 'roi': roi,
                 'exitValue': exit_value,
-                'notes': f"Trade closed via {exit_reason} at ${current_price:.4f}"
-            })
+            }
+
+            if signature:
+                update_data.update({
+                    'closeTxSignature': signature,
+                    'closeTxUrl': transaction_url,
+                    'notes': f"Trade closed via {exit_reason} at ${current_price:.4f}"
+                })
+            else:
+                update_data['notes'] = f"Closed with dust balance (${usd_value:.2f})"
+
+            self.trades_table.update(trade['id'], update_data)
             
-            # Update Telegram message to include ROI
+            # Send Telegram notification
             message = f"🦍 KinKong Trade Closed\n\n"
             message += f"Token: ${trade['fields']['token']}\n"
             message += f"Exit Reason: {exit_reason}\n"
@@ -575,8 +550,9 @@ class TradeExecutor:
             message += f"ROI: {roi:+.2f}%\n"
             message += f"P&L: ${realized_pnl:+.2f}\n"
             message += f"USD Value: ${exit_value:.2f}\n"
-            message += f"Portfolio %: {(exit_value/total_portfolio_value*100):.1f}%\n\n"
-            message += f"🔗 View Transaction:\n{transaction_url}"
+            
+            if transaction_url:
+                message += f"\n🔗 View Transaction:\n{transaction_url}"
             
             try:
                 from scripts.analyze_charts import send_telegram_message
