@@ -194,7 +194,8 @@ export const TokenTable = ({ showAllTokens = false }: TokenTableProps) => {
                 </td>
                 <td className="text-right px-4 py-2 text-gray-300">
                   {Number(token.uiAmount).toLocaleString(undefined, {
-                    maximumFractionDigits: 0
+                    minimumFractionDigits: token.uiAmount > 0 && token.uiAmount < 1 ? 4 : 0,
+                    maximumFractionDigits: token.uiAmount > 0 && token.uiAmount < 1 ? 4 : 0
                   })}
                 </td>
                 <td className="text-right px-4 py-2 text-gray-300">
