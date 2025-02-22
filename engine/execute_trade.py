@@ -63,35 +63,48 @@ class JupiterTradeExecutor:
             self.wallet_address = None
         
     async def get_token_balance(self, token_mint: str) -> float:
-        """Get token balance for wallet"""
+        """Get token balance using Birdeye API"""
         try:
-            # Convert string addresses to Pubkey objects
-            token_mint_pubkey = Pubkey.from_string(token_mint)
-            owner_pubkey = self.wallet_keypair.pubkey()
-            
-            # Get token ATA
-            token_ata = get_associated_token_address(
-                owner=owner_pubkey,
-                mint=token_mint_pubkey
-            )
-            
-            # Initialize client
-            client = AsyncClient("https://api.mainnet-beta.solana.com")
-            
-            try:
-                # Get balance - convert token_ata to string for RPC call
-                response = await client.get_token_account_balance(str(token_ata))
-                if response and response.value:
-                    balance = float(response.value.amount) / 1e6  # Convert from decimals
-                    self.logger.info(f"Token balance: {balance:.4f}")
-                    return balance
-                return 0
-                
-            finally:
-                await client.close()
-                
+            # Get API key from environment
+            api_key = os.getenv('BIRDEYE_API_KEY')
+            if not api_key:
+                raise ValueError("BIRDEYE_API_KEY not found in environment variables")
+
+            # Prepare request
+            url = "https://public-api.birdeye.so/v1/wallet/token_balance"
+            headers = {
+                'x-api-key': api_key,
+                'x-chain': 'solana',
+                'accept': 'application/json'
+            }
+            params = {
+                'wallet': self.wallet_address,
+                'token_address': token_mint
+            }
+
+            self.logger.info(f"Fetching balance for token {token_mint}")
+            self.logger.info(f"Wallet address: {self.wallet_address}")
+
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers=headers, params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        if data.get('success'):
+                            balance = float(data['data'].get('balance', 0))
+                            usd_value = float(data['data'].get('usd_value', 0))
+                            self.logger.info(f"Token balance: {balance:.4f}")
+                            self.logger.info(f"USD value: ${usd_value:.2f}")
+                            return balance
+                        else:
+                            self.logger.error(f"Birdeye API error: {data.get('message')}")
+                    else:
+                        self.logger.error(f"Birdeye API request failed: {response.status}")
+                        self.logger.error(f"Response: {await response.text()}")
+
+            return 0
+
         except Exception as e:
-            self.logger.error(f"Error getting token balance: {e}")
+            self.logger.error(f"Error getting token balance from Birdeye: {e}")
             if hasattr(e, '__traceback__'):
                 import traceback
                 self.logger.error("Traceback:")
