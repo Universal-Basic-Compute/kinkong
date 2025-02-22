@@ -154,7 +154,7 @@ class TokenSnapshotTaker:
             if not token_name:
                 return {}
                 
-            logger.info(f"\nCalculating metrics for {token_name}...")
+            self.logger.info(f"\nCalculating metrics for {token_name}...")
             
             # Calculate metrics one by one
             volume7d = await self.calculate_volume7d(token_name)
@@ -163,13 +163,13 @@ class TokenSnapshotTaker:
                 'volume7d': volume7d
             }
             
-            logger.info(f"Metrics calculated for {token_name}:")
-            logger.info(json.dumps(metrics, indent=2))
+            self.logger.info(f"Metrics calculated for {token_name}:")
+            self.logger.info(json.dumps(metrics, indent=2))
             
             return metrics
             
         except Exception as e:
-            logger.error(f"Error calculating metrics for {token['fields'].get('token')}: {e}")
+            self.logger.error(f"Error calculating metrics for {token['fields'].get('token')}: {e}")
             return {}
 
     async def take_snapshot(self):
@@ -216,10 +216,6 @@ class TokenSnapshotTaker:
                     # Save snapshot
                     self.snapshots_table.insert(snapshot)
                     logger.info(f"✅ Snapshot saved for {token_name}")
-                    
-                    # Update token record with new metrics
-                    self.tokens_table.update(token['id'], calculated_metrics)
-                    logger.info(f"✅ Token metrics updated for {token_name}")
                     
                 except Exception as e:
                     logger.error(f"❌ Error processing {token_name}: {e}")
