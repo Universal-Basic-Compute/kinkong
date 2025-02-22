@@ -414,41 +414,64 @@ class TradeExecutor:
                 quote_params = {
                     "inputMint": USDC_MINT,
                     "outputMint": signal['fields']['mint'],
-                    "amount": str(int(trade_amount_usd * 1e6)),  # Convert to string to avoid JSON issues
-                    "slippageBps": 100  # 1% slippage
-                }
-                
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(quote_url, params=quote_params) as response:
-                        if not response.ok:
-                            self.logger.error(f"Failed to get Jupiter quote: {response.status}")
-                            await self.handle_failed_trade(trade['id'], "Failed to get quote")
-                            return False
-                        quote_data = await response.json()
-
-                # Get transaction data
-                swap_url = "https://quote-api.jup.ag/v6/swap"
-                swap_data = {
-                    "quoteResponse": quote_data,
-                    "userPublicKey": wallet_address,
-                    "wrapUnwrapSOL": False
+                    "amount": str(int(trade_amount_usd * 1e6)),  # Convert to string
+                    "slippageBps": 100
                 }
 
-                # Ensure JSON serialization works
-                try:
-                    json.dumps(swap_data)  # Test JSON serialization
-                except Exception as e:
-                    self.logger.error(f"Invalid JSON data: {e}")
-                    await self.handle_failed_trade(trade['id'], "Invalid transaction data")
-                    return False
-                
                 async with aiohttp.ClientSession() as session:
-                    async with session.post(swap_url, json=swap_data) as response:
-                        if not response.ok:
-                            self.logger.error(f"Failed to get swap transaction: {response.status}")
-                            await self.handle_failed_trade(trade['id'], "Failed to get swap transaction")
+                    try:
+                        async with session.get(quote_url, params=quote_params) as response:
+                            if not response.ok:
+                                self.logger.error(f"Failed to get Jupiter quote: {response.status}")
+                                await self.handle_failed_trade(trade['id'], "Failed to get quote")
+                                return False
+                                
+                            quote_data = await response.json()
+                            
+                            # Validate quote response
+                            if not isinstance(quote_data, dict):
+                                self.logger.error("Invalid quote response format")
+                                await self.handle_failed_trade(trade['id'], "Invalid quote format")
+                                return False
+
+                        # Get transaction data
+                        swap_url = "https://quote-api.jup.ag/v6/swap"
+                        swap_data = {
+                            "quoteResponse": quote_data,
+                            "userPublicKey": wallet_address,
+                            "wrapUnwrapSOL": False
+                        }
+                        
+                        # Validate swap data before sending
+                        try:
+                            json.dumps(swap_data)  # Test JSON serialization
+                        except Exception as e:
+                            self.logger.error(f"Invalid swap data format: {e}")
+                            await self.handle_failed_trade(trade['id'], "Invalid swap data")
                             return False
-                        transaction_data = await response.json()
+
+                        async with session.post(swap_url, json=swap_data) as response:
+                            if not response.ok:
+                                self.logger.error(f"Failed to get swap transaction: {response.status}")
+                                await self.handle_failed_trade(trade['id'], "Failed to get swap transaction")
+                                return False
+                                
+                            transaction_data = await response.json()
+                            
+                            # Validate transaction response
+                            if not isinstance(transaction_data, dict) or 'swapTransaction' not in transaction_data:
+                                self.logger.error("Invalid transaction response format")
+                                await self.handle_failed_trade(trade['id'], "Invalid transaction format")
+                                return False
+
+                    except json.JSONDecodeError as e:
+                        self.logger.error(f"JSON parsing error: {e}")
+                        await self.handle_failed_trade(trade['id'], "Invalid JSON response")
+                        return False
+                    except Exception as e:
+                        self.logger.error(f"API request error: {e}")
+                        await self.handle_failed_trade(trade['id'], str(e))
+                        return False
 
                 # Sign and send transaction
                 transaction = Transaction.deserialize(base58.b58decode(transaction_data['swapTransaction']))
