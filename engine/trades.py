@@ -13,6 +13,8 @@ from solders.keypair import Keypair
 from solders.pubkey import Pubkey
 from solana.rpc.async_api import AsyncClient
 from solana.transaction import Transaction
+from solana.rpc import types
+from solana.rpc.commitment import Commitment
 import base58
 from spl.token.constants import TOKEN_PROGRAM_ID
 
@@ -489,26 +491,53 @@ class TradeExecutor:
                         await self.handle_failed_trade(trade['id'], "Invalid transaction format")
                         return False
                     
-                    # Create the transaction object directly from bytes
-                    try:
-                        transaction = Transaction.deserialize(transaction_bytes)
-                        self.logger.info("Deserialized transaction successfully")
-                    except Exception as e:
-                        self.logger.error(f"Transaction deserialize error: {str(e)}")
-                        await self.handle_failed_trade(trade['id'], "Failed to deserialize transaction")
-                        return False
-
-                    # Sign the transaction
-                    transaction.sign(wallet_keypair)
-                    self.logger.info("Signed transaction")
-                    
                     # Initialize Solana client
                     client = AsyncClient("https://api.mainnet-beta.solana.com")
                     self.logger.info("Initialized Solana client")
                     
-                    # Send transaction
-                    result = await client.send_transaction(transaction)
-                    self.logger.info(f"Sent transaction: {result}")
+                    try:
+                        # Get recent blockhash
+                        recent_blockhash = await client.get_recent_blockhash()
+                        self.logger.info(f"Got recent blockhash: {recent_blockhash.value.blockhash}")
+                        
+                        # Create and deserialize transaction
+                        transaction = Transaction.deserialize(transaction_bytes)
+                        self.logger.info("Deserialized transaction successfully")
+                        
+                        # Set recent blockhash
+                        transaction.recent_blockhash = recent_blockhash.value.blockhash
+                        self.logger.info("Set recent blockhash")
+                        
+                        # Set fee payer
+                        transaction.fee_payer = wallet_keypair.public_key
+                        self.logger.info("Set fee payer")
+                        
+                        # Partial sign (fee payer)
+                        transaction.sign_partial(wallet_keypair)
+                        self.logger.info("Partially signed transaction")
+                        
+                        # Send transaction
+                        result = await client.send_transaction(
+                            transaction,
+                            wallet_keypair,
+                            opts=types.TxOpts(
+                                skip_preflight=False,
+                                preflight_commitment=Commitment.CONFIRMED
+                            )
+                        )
+                        self.logger.info(f"Sent transaction: {result.value}")
+
+                    except Exception as e:
+                        self.logger.error(f"Transaction error: {str(e)}")
+                        if hasattr(e, '__traceback__'):
+                            import traceback
+                            self.logger.error("Traceback:")
+                            traceback.print_tb(e.__traceback__)
+                        await self.handle_failed_trade(trade['id'], str(e))
+                        return False
+
+                    finally:
+                        await client.close()
                     
                     if result.value:
                         # Update trade record with success
