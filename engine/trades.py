@@ -451,9 +451,8 @@ class TradeExecutor:
                         'status': 'EXECUTED',
                         'signature': result.value,
                         'amount': trade_amount_usd / float(signal['fields']['entryPrice']),
-                        'price': float(signal['fields']['entryPrice']), 
-                        'value': trade_amount_usd,
-                        'lastUpdateTime': datetime.now(timezone.utc).isoformat()
+                        'price': float(signal['fields']['entryPrice']),
+                        'value': trade_amount_usd
                     })
                     
                     self.logger.info(f"Trade executed successfully: {transaction_url}")
