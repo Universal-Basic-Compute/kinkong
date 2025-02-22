@@ -59,43 +59,32 @@ class WalletSnapshotTaker:
         """Take a snapshot of wallet holdings"""
         print("📸 Taking snapshot of KinKong wallet...")
 
-        # Get active tokens from Airtable
-        tokens = self.airtable.get_all(
-            formula="{isActive} = 1",
-            fields=['token', 'mint']
-        )
-        print(f"Found {len(tokens)} active tokens to check")
-
         # Get all token balances at once
         token_balances = self.get_token_balances()
         
-        # Create mapping of mint to balance data
-        balance_map = {
-            balance['address']: balance
-            for balance in token_balances 
-            if float(balance.get('valueUsd', 0)) > 0  # Only include non-zero balances
-        }
-
-        # Process balances for tracked tokens
+        # Process balances
         balances = []
         created_at = datetime.now(timezone.utc).isoformat()
 
-        for token in tokens:
+        for balance_data in token_balances:
             try:
-                mint = token['fields']['mint']
-                balance_data = balance_map.get(mint)
+                value = float(balance_data.get('valueUsd', 0))
+                
+                # Skip tokens with no value
+                if value <= 0:
+                    continue
 
-                if balance_data:
-                    balances.append({
-                        'token': token['fields']['token'],
-                        'mint': mint,
-                        'amount': float(balance_data.get('uiAmount', 0)),
-                        'price': float(balance_data.get('priceUsd', 0)),
-                        'value': float(balance_data.get('valueUsd', 0))
-                    })
-                    print(f"✓ {token['fields']['token']}: {float(balance_data.get('uiAmount', 0)):.2f} tokens (${float(balance_data.get('valueUsd', 0)):.2f})")
+                balance = {
+                    'token': balance_data.get('symbol', 'Unknown'),
+                    'mint': balance_data['address'],
+                    'amount': float(balance_data.get('uiAmount', 0)),
+                    'price': float(balance_data.get('priceUsd', 0)),
+                    'value': value
+                }
+                balances.append(balance)
+                print(f"✓ {balance['token']}: {balance['amount']:.2f} tokens (${balance['value']:.2f})")
             except Exception as e:
-                print(f"❌ Error processing {token['fields']['token']}: {str(e)}")
+                print(f"❌ Error processing token {balance_data.get('symbol', 'Unknown')}: {str(e)}")
 
         # Calculate total value
         total_value = sum(b['value'] for b in balances)
