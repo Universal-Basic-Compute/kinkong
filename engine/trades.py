@@ -94,6 +94,22 @@ class TradeExecutor:
         self.signals_table = Airtable(self.base_id, 'SIGNALS', self.api_key)
         self.trades_table = Airtable(self.base_id, 'TRADES', self.api_key)
         self.logger = setup_logging()
+        
+        # Initialize wallet during class initialization
+        try:
+            private_key = os.getenv('STRATEGY_WALLET_PRIVATE_KEY')
+            if not private_key:
+                raise ValueError("STRATEGY_WALLET_PRIVATE_KEY not found")
+            
+            private_key_bytes = base58.b58decode(private_key)
+            self.wallet_keypair = Keypair.from_bytes(private_key_bytes)
+            self.wallet_address = str(self.wallet_keypair.pubkey())
+            self.logger.info(f"Wallet initialized: {self.wallet_address[:8]}...")
+            
+        except Exception as e:
+            self.logger.error(f"Failed to initialize wallet: {e}")
+            self.wallet_keypair = None
+            self.wallet_address = None
 
     async def get_active_buy_signals(self) -> List[Dict]:
         """Get all non-expired BUY signals"""
@@ -330,6 +346,11 @@ class TradeExecutor:
     async def execute_trade(self, signal: Dict) -> bool:
         """Execute a trade for a signal"""
         try:
+            # Verify wallet is initialized
+            if not self.wallet_keypair:
+                self.logger.error("Wallet not properly initialized")
+                return False
+
             # First check if trade already exists
             try:
                 existing_trades = self.trades_table.get_all(
@@ -342,24 +363,11 @@ class TradeExecutor:
                 self.logger.error(f"Failed to check existing trades: {e}")
                 return False
 
-            # Initialize wallet
+            # Verify wallet balance
             try:
-                private_key = os.getenv('STRATEGY_WALLET_PRIVATE_KEY')
-                if not private_key:
-                    self.logger.error("STRATEGY_WALLET_PRIVATE_KEY not found")
-                    return False
-                
-                # Convert private key from base58 to bytes and create Keypair
-                private_key_bytes = base58.b58decode(private_key)
-                wallet_keypair = Keypair.from_bytes(private_key_bytes)
-                wallet_address = str(wallet_keypair.pubkey())
-                
-                self.logger.info(f"Wallet initialized: {wallet_address[:8]}...")
-                
-                # Verify wallet balance
                 birdeye_url = "https://public-api.birdeye.so/v1/wallet/token_balance"
                 params = {
-                    "wallet": wallet_address,
+                    "wallet": self.wallet_address,
                     "token_address": USDC_MINT
                 }
                 headers = {
