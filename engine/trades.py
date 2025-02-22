@@ -482,9 +482,22 @@ class TradeExecutor:
             self.logger.info(f"Balance: {balance:.8f} {trade['fields'].get('token')}")
             self.logger.info(f"Current price: ${current_price:.4f}")
             self.logger.info(f"USD Value: ${usd_value:.2f}")
+
+            # Get total portfolio value to calculate percentage
+            portfolio_table = Airtable(self.base_id, 'PORTFOLIO', self.api_key)
+            portfolio_records = portfolio_table.get_all()
+            total_portfolio_value = sum(
+                float(record['fields'].get('usdValue', 0))
+                for record in portfolio_records
+            )
             
-            if usd_value < 1:
-                self.logger.warning(f"USD value ${usd_value:.2f} too small to sell")
+            # Calculate minimum trade amount (3% of portfolio or $10, whichever is higher)
+            min_trade_amount = max(total_portfolio_value * 0.03, 10.0)
+            self.logger.info(f"Total portfolio value: ${total_portfolio_value:.2f}")
+            self.logger.info(f"Minimum trade amount: ${min_trade_amount:.2f}")
+            
+            if usd_value < min_trade_amount:
+                self.logger.warning(f"USD value ${usd_value:.2f} below minimum ${min_trade_amount:.2f}")
                 
                 # Update trade record as completed with small balance
                 self.trades_table.update(trade['id'], {
@@ -500,7 +513,7 @@ class TradeExecutor:
                 input_token=token_mint,
                 output_token="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",  # USDC
                 amount=balance,
-                min_amount=1.0,  # Minimum $1 USD value
+                min_amount=min_trade_amount,  # Use calculated minimum
                 max_slippage=1.0
             )
             
@@ -531,17 +544,27 @@ class TradeExecutor:
                 'closedAt': datetime.now(timezone.utc).isoformat()
             })
             
-            # Send notification
+            # Calculate profit/loss percentage
+            entry_price = float(trade['fields'].get('price', 0))
+            pnl_percent = ((current_price - entry_price) / entry_price * 100)
+            
+            # Send notification with more details
             message = f"🦍 KinKong Trade Closed\n\n"
             message += f"Token: ${trade['fields']['token']}\n"
             message += f"Exit Reason: {exit_reason}\n"
-            message += f"Entry Price: ${float(trade['fields']['price']):.4f}\n"
+            message += f"Entry Price: ${entry_price:.4f}\n"
             message += f"Exit Price: ${current_price:.4f}\n"
-            message += f"Profit/Loss: {((current_price - float(trade['fields']['price'])) / float(trade['fields']['price']) * 100):.2f}%\n\n"
+            message += f"P&L: {pnl_percent:+.2f}%\n"
+            message += f"USD Value: ${usd_value:.2f}\n"
+            message += f"Portfolio %: {(usd_value/total_portfolio_value*100):.1f}%\n\n"
             message += f"🔗 View Transaction:\n{transaction_url}"
             
-            from scripts.analyze_charts import send_telegram_message
-            send_telegram_message(message)
+            try:
+                from scripts.analyze_charts import send_telegram_message
+                await send_telegram_message(message)
+                self.logger.info("Telegram notification sent")
+            except Exception as e:
+                self.logger.error(f"Failed to send Telegram notification: {e}")
             
             return True
             
