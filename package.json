@@ -14,7 +14,8 @@
     "calculate-signals": "ts-node scripts/calculate-closed-signals.ts",
     "wallet-snapshot": "python engine/wallet_snapshots.py",
     "token-search": "python engine/tokens.py",
-    "token-snapshot": "python engine/token_snapshots.py"
+    "token-snapshot": "python engine/token_snapshots.py",
+    "generate-signals": "python engine/signals.py"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.10.2",
