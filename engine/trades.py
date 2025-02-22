@@ -594,17 +594,17 @@ class TradeExecutor:
                         final_tx.sign([self.wallet_keypair])
                         
                     else:
-                        # Handle legacy transaction - pass blockhash to from_bytes
-                        tx = Transaction.from_bytes(transaction_bytes, blockhash_hash)
+                        # Handle legacy transaction - deserialize first
+                        tx = Transaction.from_bytes(transaction_bytes)
                         self.logger.info("Deserialized legacy transaction")
                         
-                        # Create new legacy message
+                        # Create new message without blockhash
                         new_message = Message(
                             instructions=tx.message.instructions,
                             payer=tx.message.account_keys[0]
                         )
                         
-                        # Create transaction with message and blockhash
+                        # Create new transaction with updated blockhash
                         final_tx = Transaction(new_message, blockhash_hash)
                         final_tx.sign([self.wallet_keypair])
 
