@@ -397,17 +397,16 @@ class JupiterTradeExecutor:
                 # Extract the message components
                 message = original_tx.message
                 
-                # Get the static account keys
-                static_accounts = message.static_account_keys()
-                if not static_accounts:
-                    raise Exception("No static accounts found in message")
+                # In MessageV0, the accounts are directly accessible
+                if not message.account_keys:
+                    raise Exception("No accounts found in message")
                     
-                # The first account in static_accounts is the fee payer
-                payer = static_accounts[0]
+                # The first account is always the fee payer
+                payer = message.account_keys[0]
                 
                 # Recompile message with fresh blockhash
                 new_message = MessageV0.try_compile(
-                    payer=payer,  # Use first account as payer
+                    payer=payer,
                     recent_blockhash=fresh_blockhash,
                     instructions=message.instructions,
                     address_lookup_table_accounts=message.address_lookup_table_accounts
@@ -439,7 +438,7 @@ class JupiterTradeExecutor:
                 await client.close()
 
         except Exception as e:
-            self.logger.error(f"Error preparing transaction: {e}")
+            self.logger.error(f"Error in prepare_transaction: {e}")
             if hasattr(e, '__traceback__'):
                 self.logger.error("Traceback:")
                 traceback.print_tb(e.__traceback__)
