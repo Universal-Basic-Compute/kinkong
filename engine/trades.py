@@ -16,6 +16,28 @@ from solana.transaction import Transaction
 import base58
 from spl.token.constants import TOKEN_PROGRAM_ID
 
+def setup_logging():
+    """Configure logging with a single handler"""
+    logger = logging.getLogger(__name__)
+    
+    # Only add handler if none exist to avoid duplicates
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        formatter = logging.Formatter(
+            '%(asctime)s - %(levelname)s - %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        )
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+        
+    # Force logging level to INFO
+    logger.setLevel(logging.INFO)
+    
+    # Ensure parent loggers don't filter our messages
+    logger.propagate = False
+    
+    return logger
+
 # Set Windows event loop policy
 if os.name == 'nt':  # Windows
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
@@ -55,13 +77,8 @@ project_root = str(Path(__file__).parent.parent.absolute())
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-logger = logging.getLogger(__name__)
+# Initialize logger
+logger = setup_logging()
 
 class TradeExecutor:
     def __init__(self):
@@ -70,20 +87,7 @@ class TradeExecutor:
         self.api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
         self.signals_table = Airtable(self.base_id, 'SIGNALS', self.api_key)
         self.trades_table = Airtable(self.base_id, 'TRADES', self.api_key)
-        
-        # Initialize logger
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.INFO)
-        
-        # Add handler if none exist
-        if not self.logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(levelname)s - %(message)s',
-                datefmt='%Y-%m-%d %H:%M:%S'
-            )
-            handler.setFormatter(formatter)
-            self.logger.addHandler(handler)
+        self.logger = setup_logging()
 
     async def get_active_buy_signals(self) -> List[Dict]:
         """Get all non-expired BUY signals"""
