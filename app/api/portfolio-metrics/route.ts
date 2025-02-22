@@ -19,103 +19,57 @@ interface TradeRecord extends FieldSet {
 
 export async function GET() {
   try {
-    const tradesTable = getTable('TRADES');
+    const snapshotsTable = getTable('WALLET_SNAPSHOTS');
     
-    const trades = await tradesTable.select({
-      sort: [{ field: 'timestamp', direction: 'desc' }]
+    // Get snapshots sorted by date
+    const snapshots = await snapshotsTable.select({
+      sort: [{ field: 'createdAt', direction: 'desc' }],
+      maxRecords: 30 // Last 30 days
     }).all();
 
-    // Calculate metrics
-    let totalTrades = trades.length;
-    let winningTrades = 0;
-    let totalReturn = 0;
-    let returns: number[] = []; // Explicit type annotation
-    let maxDrawdown = 0;
-    let currentDrawdown = 0;
-    let peakValue = 0;
-
-    // Debug log
-    console.log('First trade data:', trades[0]?.fields);
-
-    trades.forEach((trade: AirtableRecord<TradeRecord>) => {
-      const roi = parseFloat(trade.get('roi') as string) || 0;
-      const realizedPnl = parseFloat(trade.get('realizedPnl') as string) || 0;
-
-      if (roi > 0) winningTrades++;
-      totalReturn += realizedPnl;
-      returns.push(roi);
-
-      // Update peak and drawdown
-      if (totalReturn > peakValue) {
-        peakValue = totalReturn;
-        currentDrawdown = 0;
-      } else {
-        currentDrawdown = (peakValue - totalReturn) / peakValue;
-        maxDrawdown = Math.max(maxDrawdown, currentDrawdown);
-      }
-    });
-
-    // Calculate Sharpe Ratio (avoiding division by zero)
-    let sharpeRatio = 0;
-    if (returns.length > 0) {
-      const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
-      const stdDev = Math.sqrt(
-        returns.reduce((a, b) => a + Math.pow(b - avgReturn, 2), 0) / returns.length
-      ) || 1; // Use 1 if stdDev is 0 to avoid division by zero
-      sharpeRatio = avgReturn / stdDev;
+    if (!snapshots.length) {
+      return NextResponse.json({
+        totalValue: 0,
+        change24h: 0,
+        change7d: 0,
+        history: []
+      });
     }
 
-    // Get performance history (daily points)
-    const history = trades.reduce<HistoryDictionary>((acc, trade) => {
-      try {
-        // Safely parse the createdAt timestamp
-        const createdAt = trade.get('createdAt');
-        if (!createdAt || typeof createdAt !== 'string') {
-          console.warn('Invalid createdAt format:', createdAt);
-          return acc;
-        }
-
-        // Get the date part only for the key
-        const dateStr = createdAt.split('T')[0];
-        
-        // Get the value
-        const value = parseFloat(trade.get('value') as string) || 0;
-
-        // Initialize or update the accumulator entry
-        if (!acc[dateStr]) {
-          acc[dateStr] = {
-            createdAt: createdAt,
-            value: 0
-          };
-        }
-        acc[dateStr].value += value;
-
-        return acc;
-      } catch (error) {
-        console.error('Error processing trade:', error);
-        return acc;
-      }
-    }, {} as HistoryDictionary);
-
-    // Debug logs
-    console.log('Metrics calculated:', {
-      totalTrades,
-      winningTrades,
-      totalReturn,
-      maxDrawdown,
-      sharpeRatio
+    // Calculate metrics
+    const latestSnapshot = snapshots[0];
+    const oneDayAgoSnapshot = snapshots.find(s => {
+      const date = new Date(s.get('createdAt'));
+      const now = new Date();
+      const diffDays = (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24);
+      return diffDays >= 1;
     });
-    console.log('History points:', Object.keys(history).length);
+    const sevenDaysAgoSnapshot = snapshots.find(s => {
+      const date = new Date(s.get('createdAt'));
+      const now = new Date();
+      const diffDays = (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24);
+      return diffDays >= 7;
+    });
+
+    // Calculate changes
+    const totalValue = latestSnapshot.get('totalValue') || 0;
+    const oneDayAgoValue = oneDayAgoSnapshot?.get('totalValue') || totalValue;
+    const sevenDaysAgoValue = sevenDaysAgoSnapshot?.get('totalValue') || totalValue;
+
+    const change24h = oneDayAgoValue ? ((totalValue - oneDayAgoValue) / oneDayAgoValue) * 100 : 0;
+    const change7d = sevenDaysAgoValue ? ((totalValue - sevenDaysAgoValue) / sevenDaysAgoValue) * 100 : 0;
+
+    // Format history data
+    const history = snapshots.map(snapshot => ({
+      timestamp: snapshot.get('createdAt'),
+      value: snapshot.get('totalValue') || 0
+    })).reverse(); // Oldest to newest
 
     return NextResponse.json({
-      metrics: {
-        totalReturn: (totalReturn * 100).toFixed(2),
-        winRate: ((winningTrades / totalTrades) * 100).toFixed(2),
-        sharpeRatio: sharpeRatio.toFixed(2),
-        maxDrawdown: (maxDrawdown * 100).toFixed(2),
-        totalTrades
-      },
-      history: Object.values(history)
+      totalValue,
+      change24h,
+      change7d,
+      history
     });
 
   } catch (error) {
