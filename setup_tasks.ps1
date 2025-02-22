@@ -53,8 +53,26 @@ $tasks = @(
 )
 
 foreach ($task in $tasks) {
-    $action = New-ScheduledTaskAction -Execute $PYTHON_PATH -Argument "$SCRIPTS_DIR\$($task.Script)" -WorkingDirectory $SCRIPTS_DIR
-    
+    # Create a wrapper script for each task
+    $wrapperScript = @"
+cd $SCRIPTS_DIR
+$PYTHON_PATH $($task.Script)
+"@
+    $wrapperPath = "$SCRIPTS_DIR\wrapper_$($task.Script).cmd"
+    Set-Content -Path $wrapperPath -Value $wrapperScript
+
+    # Use WindowStyle Hidden and the wrapper script
+    $action = New-ScheduledTaskAction `
+        -Execute "cmd.exe" `
+        -Argument "/c $wrapperPath" `
+        -WorkingDirectory $SCRIPTS_DIR
+
+    # Configure to run whether user is logged in or not
+    $principal = New-ScheduledTaskPrincipal `
+        -UserId "$env:USERDOMAIN\$env:USERNAME" `
+        -LogonType S4U `
+        -RunLevel Highest
+
     # Create trigger based on schedule type
     switch ($task.Schedule) {
         "Every4Hours" {
@@ -62,12 +80,22 @@ foreach ($task in $tasks) {
         }
     }
 
-    # Create the task
-    $taskSettings = New-ScheduledTaskSettingsSet -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Minutes 30)
-    
-    Register-ScheduledTask -TaskName $task.Name -Action $action -Trigger $trigger -Settings $taskSettings -Force
-    
-    Write-Host "Created task: $($task.Name)"
+    # Add settings to hide window
+    $taskSettings = New-ScheduledTaskSettingsSet `
+        -MultipleInstances IgnoreNew `
+        -ExecutionTimeLimit (New-TimeSpan -Minutes 30) `
+        -Hidden
+
+    # Register task with all parameters
+    Register-ScheduledTask `
+        -TaskName $task.Name `
+        -Action $action `
+        -Trigger $trigger `
+        -Settings $taskSettings `
+        -Principal $principal `
+        -Force
+
+    Write-Host "Created task: $($task.Name) with wrapper script"
 }
 
 Write-Host "`nVerifying tasks..."
