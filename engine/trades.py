@@ -16,6 +16,7 @@ from solana.transaction import Transaction
 from solana.rpc import types
 from solana.rpc.commitment import Commitment
 import base58
+import base64
 from spl.token.constants import TOKEN_PROGRAM_ID
 
 def setup_logging():
@@ -405,6 +406,9 @@ class TradeExecutor:
                 self.logger.error(f"Failed to create trade record: {e}")
                 return False
 
+            # Initialize Solana client
+            client = AsyncClient("https://api.mainnet-beta.solana.com")
+            
             # Execute trade using Jupiter API
             try:
                 # Calculate trade amount (3% of balance)
