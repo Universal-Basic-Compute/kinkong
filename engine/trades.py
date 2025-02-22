@@ -512,10 +512,10 @@ class TradeExecutor:
                         transaction.recent_blockhash = recent_blockhash
                         self.logger.info("Set recent blockhash")
                         
-                        # Set fee payer
-                        transaction.fee_payer = wallet_keypair.public_key
+                        # Set fee payer using pubkey() method
+                        transaction.fee_payer = wallet_keypair.pubkey()
                         self.logger.info("Set fee payer")
-                        
+        
                         # Partial sign (fee payer)
                         transaction.sign_partial(wallet_keypair)
                         self.logger.info("Partially signed transaction")
