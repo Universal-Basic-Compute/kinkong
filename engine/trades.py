@@ -508,30 +508,30 @@ class TradeExecutor:
                         from solana.transaction import Transaction
                         solana_tx = Transaction.deserialize(transaction_bytes)
                         self.logger.info("Deserialized transaction using Solana Transaction class")
-                        
+                    
                         # Import Solders types
                         from solders.instruction import Instruction
                         from solders.message import Message, MessageHeader
                         from solders.pubkey import Pubkey
                         from solders.transaction import Transaction as SoldersTransaction
-                        
+                    
                         # Convert instructions to Solders format
                         instructions = []
-                        for ix in solana_tx.instructions:
+                        for ix in solana_tx.message.instructions:
                             program_id = Pubkey.from_string(str(ix.program_id))
                             accounts = [Pubkey.from_string(str(acc)) for acc in ix.accounts]
                             data = bytes(ix.data)
                             instructions.append(Instruction(program_id, accounts, data))
-                        
-                        # Create message header
+                    
+                        # Create message header using message.header
                         header = MessageHeader(
                             num_required_signatures=len(solana_tx.signatures),
-                            num_readonly_signed_accounts=solana_tx.header.num_readonly_signed_accounts,
-                            num_readonly_unsigned_accounts=solana_tx.header.num_readonly_unsigned_accounts
+                            num_readonly_signed_accounts=solana_tx.message.header.num_readonly_signed_accounts,
+                            num_readonly_unsigned_accounts=solana_tx.message.header.num_readonly_unsigned_accounts
                         )
-                        
-                        # Convert account keys
-                        account_keys = [Pubkey.from_string(str(key)) for key in solana_tx.account_keys]
+                    
+                        # Convert account keys from message
+                        account_keys = [Pubkey.from_string(str(key)) for key in solana_tx.message.account_keys]
                         
                         # Create message
                         message = Message(
