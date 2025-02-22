@@ -402,30 +402,32 @@ class JupiterTradeExecutor:
                     # First try to deserialize as VersionedTransaction
                     transaction = VersionedTransaction.deserialize(transaction_bytes)
                     self.logger.info("Successfully deserialized as VersionedTransaction")
+                    
+                    # Update blockhash for versioned transaction
+                    transaction.message.set_recent_blockhash(blockhash_response.value.blockhash)
+                    
+                    # Sign versioned transaction
+                    transaction.sign([self.wallet_keypair])
+                    
                 except Exception as e:
                     self.logger.debug(f"VersionedTransaction deserialization failed: {e}")
                     try:
                         # Fallback to legacy Transaction
                         transaction = Transaction.from_bytes(transaction_bytes)
                         self.logger.info("Successfully deserialized as legacy Transaction")
+                        
+                        # Update blockhash for legacy transaction
+                        # Get the underlying message
+                        message = transaction.message
+                        # Set the blockhash on the message
+                        message.set_recent_blockhash(blockhash_response.value.blockhash)
+                        
+                        # Sign legacy transaction
+                        transaction.sign(self.wallet_keypair)
+                        
                     except Exception as e:
                         self.logger.error(f"Both deserialization attempts failed: {e}")
                         raise
-
-                # Update blockhash
-                if isinstance(transaction, VersionedTransaction):
-                    # Handle versioned transaction
-                    message = transaction.message
-                    message.recent_blockhash = blockhash_response.value.blockhash
-                else:
-                    # Handle legacy transaction
-                    transaction.recent_blockhash = blockhash_response.value.blockhash
-
-                # Sign transaction
-                if isinstance(transaction, VersionedTransaction):
-                    transaction.sign([self.wallet_keypair])
-                else:
-                    transaction.sign(self.wallet_keypair)
 
                 self.logger.info("Transaction prepared successfully")
                 return transaction
