@@ -504,24 +504,51 @@ class TradeExecutor:
                         recent_blockhash = blockhash_response.value.blockhash
                         self.logger.info(f"Got recent blockhash: {recent_blockhash}")
                         
-                        # Use Solders Transaction deserialization
+                        # Import required Solders types
                         from solders.transaction import Transaction as SoldersTransaction
-                        from solders.message import Message
-                        transaction = SoldersTransaction.from_bytes(transaction_bytes)
-                        self.logger.info("Deserialized transaction successfully")
+                        from solders.message import Message, MessageHeader
+                        from solders.instruction import Instruction
+                        from solders.pubkey import Pubkey
                         
-                        # Create a new transaction with our wallet as fee payer
-                        new_message = Message(
-                            transaction.message.header,
-                            transaction.message.account_keys.with_signer(wallet_keypair.pubkey()),
-                            transaction.message.recent_blockhash,
-                            transaction.message.instructions
+                        # Parse the transaction data
+                        from solana.transaction import Transaction as SolanaTransaction
+                        solana_tx = SolanaTransaction.deserialize(transaction_bytes)
+                        
+                        # Create new Solders message
+                        instructions = [
+                            Instruction(
+                                program_id=Pubkey.from_string(str(ix.program_id)),
+                                accounts=[Pubkey.from_string(str(acc)) for acc in ix.accounts],
+                                data=bytes(ix.data)
+                            ) for ix in solana_tx.instructions
+                        ]
+                        
+                        # Create message header
+                        header = MessageHeader(
+                            num_required_signatures=solana_tx.signatures.required_signature_count,
+                            num_readonly_signed_accounts=0,  # We'll need to calculate this
+                            num_readonly_unsigned_accounts=0  # We'll need to calculate this
+                        )
+                        
+                        # Create account keys list with fee payer first
+                        account_keys = [wallet_keypair.pubkey()] + [
+                            Pubkey.from_string(str(key)) 
+                            for key in solana_tx.account_keys 
+                            if str(key) != str(wallet_keypair.pubkey())
+                        ]
+                        
+                        # Create new message
+                        message = Message(
+                            header=header,
+                            account_keys=account_keys,
+                            recent_blockhash=recent_blockhash,
+                            instructions=instructions
                         )
                         
                         # Create and sign new transaction
-                        new_transaction = SoldersTransaction(
-                            message=new_message,
-                            signatures=[wallet_keypair.sign_message(bytes(new_message))]
+                        transaction = SoldersTransaction(
+                            message=message,
+                            signatures=[wallet_keypair.sign_message(bytes(message))]
                         )
                         
                         self.logger.info("Created and signed new transaction")
