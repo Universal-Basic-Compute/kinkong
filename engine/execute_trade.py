@@ -376,14 +376,15 @@ class JupiterTradeExecutor:
                 if not blockhash or not blockhash.value:
                     raise Exception("Failed to get recent blockhash")
 
-                # Deserialize as versioned transaction
-                from solders.transaction import VersionedTransaction
-                original_transaction = VersionedTransaction.deserialize(transaction_bytes)
+                # Deserialize transaction using Transaction.deserialize
+                # Transaction class handles both legacy and versioned transactions
+                original_transaction = Transaction.deserialize(transaction_bytes)
 
-                # Create new versioned transaction with fresh blockhash
-                new_transaction = VersionedTransaction(
-                    original_transaction.message,
-                    [self.wallet_keypair]
+                # Create new transaction with fresh blockhash and signatures
+                new_transaction = Transaction.new_with_blockhash(
+                    message=original_transaction.message,
+                    blockhash=blockhash.value.blockhash,
+                    signers=[self.wallet_keypair]
                 )
 
                 return new_transaction
