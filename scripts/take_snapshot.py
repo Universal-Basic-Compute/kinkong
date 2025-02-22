@@ -622,7 +622,7 @@ async def record_portfolio_snapshot():
                     total_value += metrics['price'] * float(token['fields']['allocation'])
                 
             except Exception as e:
-                print(f"Error processing {symbol}: {e}")
+                print(f"Error processing {token_name}: {e}")
                 continue
         
         # Save new snapshots to Airtable
