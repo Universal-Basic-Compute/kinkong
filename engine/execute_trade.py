@@ -67,6 +67,56 @@ class JupiterTradeExecutor:
             self.wallet_keypair = None
             self.wallet_address = None
 
+    async def get_token_price(self, token_mint: str) -> Optional[float]:
+        """Get current token price from Birdeye API with DexScreener fallback"""
+        try:
+            # Try Birdeye first
+            api_key = os.getenv('BIRDEYE_API_KEY')
+            if not api_key:
+                raise ValueError("BIRDEYE_API_KEY not found in environment variables")
+
+            url = f"https://public-api.birdeye.so/public/price?address={token_mint}"
+            headers = {
+                'x-api-key': api_key,
+                'accept': 'application/json'
+            }
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers=headers) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        if data.get('success'):
+                            return float(data['data']['value'])
+                            
+                    self.logger.error(f"Failed to get price from Birdeye: {await response.text()}")
+                    
+            # Fallback to DexScreener
+            self.logger.info(f"Falling back to DexScreener for {token_mint}")
+            dexscreener_url = f"https://api.dexscreener.com/latest/dex/tokens/{token_mint}"
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(dexscreener_url) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        pairs = data.get('pairs', [])
+                        if pairs:
+                            # Use most liquid Solana pair
+                            sol_pairs = [p for p in pairs if p.get('chainId') == 'solana']
+                            if sol_pairs:
+                                best_pair = max(sol_pairs, key=lambda x: float(x.get('liquidity', {}).get('usd', 0) or 0))
+                                return float(best_pair.get('priceUsd', 0))
+                            
+            self.logger.error(f"Could not get price for {token_mint}")
+            return None
+            
+        except Exception as e:
+            self.logger.error(f"Error getting token price: {str(e)}")
+            if hasattr(e, '__traceback__'):
+                import traceback
+                self.logger.error("Traceback:")
+                traceback.print_tb(e.__traceback__)
+            return None
+
     async def get_token_balance(self, token_mint: str) -> float:
         """Get token balance using Birdeye API"""
         try:
