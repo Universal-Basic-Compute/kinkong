@@ -57,7 +57,26 @@ class TradeExecutor:
             )
             
             logger.info(f"Found {len(signals)} active BUY signals")
-            return signals
+
+            # Get token data from TOKENS table
+            tokens_table = Airtable(self.base_id, 'TOKENS', self.api_key)
+            tokens = {
+                record['fields'].get('token'): record['fields'].get('mint')
+                for record in tokens_table.get_all()
+            }
+
+            # Enrich signals with mint addresses
+            enriched_signals = []
+            for signal in signals:
+                token_name = signal['fields'].get('token')
+                if token_name and token_name in tokens:
+                    signal['fields']['mint'] = tokens[token_name]
+                    enriched_signals.append(signal)
+                else:
+                    logger.warning(f"Could not find mint address for token {token_name}")
+
+            logger.info(f"Enriched {len(enriched_signals)} signals with mint addresses")
+            return enriched_signals
             
         except Exception as e:
             logger.error(f"Error fetching active signals: {e}")
