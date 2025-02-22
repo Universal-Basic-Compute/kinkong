@@ -2,9 +2,9 @@ CHART_CONFIGS = [
     {
         'timeframe': '15m',
         'duration_hours': 34,
-        'title': 'UBC/USD Short-term Analysis (34H)',
-        'subtitle': '15-minute candles - Trading Setup View',
-        'filename': 'ubc_34h_short_term_15m_candles_trading_view.png'
+        'title': '{token}/USD Short-term Analysis (34H)',
+        'subtitle': '15-minute candles - Trading Setup View', 
+        'filename': '{token}_34h_short_term_15m_candles_trading_view.png'
     },
     {
         'timeframe': '2H',

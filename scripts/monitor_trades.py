@@ -45,13 +45,13 @@ def rate_limited_price_check(token_name, validate_change=True):
         api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
         tokens_table = Airtable(base_id, 'TOKENS', api_key)
         
-        # Look up token by symbol
+        # Look up token by name
         token_records = tokens_table.get_all(
-            formula=f"{{token}}='{token_symbol}'"
+            formula=f"{{token}}='{token_name}'"
         )
-        
+            
         if not token_records:
-            print(f"No token record found for symbol {token_symbol}")
+            print(f"No token record found for token {token_name}")
             return None
             
         token_mint = token_records[0]['fields']['mint']
