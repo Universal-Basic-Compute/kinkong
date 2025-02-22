@@ -45,7 +45,7 @@ USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
 USDT_MINT = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"
 
 async def test_usdc_usdt_swap():
-    """Test a swap of 10 USDC to USDT"""
+    """Test a validated swap of 10 USDC to USDT"""
     try:
         logger.info("🚀 Starting USDC -> USDT swap test")
         
@@ -69,17 +69,17 @@ async def test_usdc_usdt_swap():
             
             logger.info(f"Using wallet: {wallet_address[:8]}...{wallet_address[-8:]}")
             
-            # Amount to swap (10 USDC)
-            amount = 10.0
-            
-            logger.info(f"\nGetting quote for {amount} USDC -> USDT")
-            
-            # Get quote
-            quote = await executor.get_jupiter_quote(
+            # Execute validated swap
+            success = await executor.execute_validated_swap(
                 input_token=USDC_MINT,
                 output_token=USDT_MINT,
-                amount=amount
+                amount=10.0,          # 10 USDC
+                min_amount=5.0,       # Minimum 5 USDC
+                max_slippage=1.0      # Maximum 1% slippage
             )
+            
+            if not success:
+                raise Exception("Validated swap failed")
             
             if not quote:
                 raise Exception("Failed to get quote")

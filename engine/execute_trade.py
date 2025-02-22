@@ -57,6 +57,115 @@ class JupiterTradeExecutor:
             self.wallet_keypair = None
             self.wallet_address = None
         
+    async def get_token_balance(self, token_mint: str) -> float:
+        """Get token balance for wallet"""
+        try:
+            # Get token ATA
+            token_ata = get_associated_token_address(
+                owner=self.wallet_keypair.pubkey(),
+                mint=Pubkey.from_string(token_mint)
+            )
+            
+            # Initialize client
+            client = AsyncClient("https://api.mainnet-beta.solana.com")
+            
+            try:
+                # Get balance
+                response = await client.get_token_account_balance(token_ata)
+                if response and response.value:
+                    balance = float(response.value.amount) / 1e6  # Convert from decimals
+                    self.logger.info(f"Token balance: {balance:.4f}")
+                    return balance
+                return 0
+                
+            finally:
+                await client.close()
+                
+        except Exception as e:
+            self.logger.error(f"Error getting token balance: {e}")
+            return 0
+
+    async def check_slippage(self, quote_data: dict, max_slippage: float = 1.0) -> bool:
+        """Check if quote slippage is within acceptable range"""
+        try:
+            price_impact = float(quote_data.get('priceImpactPct', 0))
+            
+            if price_impact > max_slippage:
+                self.logger.warning(f"Price impact {price_impact:.2f}% exceeds max slippage {max_slippage}%")
+                return False
+                
+            self.logger.info(f"Price impact {price_impact:.2f}% within acceptable range")
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Error checking slippage: {e}")
+            return False
+
+    async def validate_trade(
+        self,
+        input_token: str,
+        output_token: str,
+        amount: float,
+        min_amount: float = 1.0,
+        max_slippage: float = 1.0
+    ) -> bool:
+        """Validate trade parameters before execution"""
+        try:
+            # Check minimum amount
+            if amount < min_amount:
+                self.logger.error(f"Amount {amount} below minimum {min_amount}")
+                return False
+                
+            # Check input token balance
+            balance = await self.get_token_balance(input_token)
+            if balance < amount:
+                self.logger.error(f"Insufficient balance: {balance:.4f} < {amount:.4f}")
+                return False
+                
+            # Get and validate quote
+            quote = await self.get_jupiter_quote(input_token, output_token, amount)
+            if not quote:
+                self.logger.error("Failed to get quote")
+                return False
+                
+            # Check slippage
+            if not await self.check_slippage(quote, max_slippage):
+                return False
+                
+            self.logger.info("Trade validation passed")
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Trade validation failed: {e}")
+            return False
+
+    async def execute_validated_swap(
+        self,
+        input_token: str,
+        output_token: str,
+        amount: float,
+        min_amount: float = 1.0,
+        max_slippage: float = 1.0
+    ) -> bool:
+        """Execute swap with validation"""
+        try:
+            # Validate trade first
+            if not await self.validate_trade(
+                input_token,
+                output_token,
+                amount,
+                min_amount,
+                max_slippage
+            ):
+                return False
+                
+            # Execute swap
+            return await self.execute_swap(input_token, output_token, amount)
+            
+        except Exception as e:
+            self.logger.error(f"Validated swap failed: {e}")
+            return False
+
     async def execute_swap(
         self,
         input_token: str,
