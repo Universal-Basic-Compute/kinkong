@@ -159,20 +159,20 @@ class MarketSentimentAnalyzer:
             # Count bullish signals
             bullish_signals = sum([
                 price_bullish,
-                volume_bullish,
+                volume_bullish, 
                 distribution_bullish,
                 strength_bullish
             ])
             
-            # Calculate confidence
+            # Calculate confidence based on proportion of bullish signals
             confidence = (bullish_signals / 4) * 100
             
-            # Determine sentiment
-            if bullish_signals >= 3:
+            # Determine sentiment based on proportion of bullish signals
+            if bullish_signals >= 3:  # 75-100% bullish signals
                 sentiment = "BULLISH"
-            elif bullish_signals <= 1:
+            elif bullish_signals <= 1:  # 0-25% bullish signals
                 sentiment = "BEARISH"
-            else:
+            else:  # 50% bullish signals
                 sentiment = "NEUTRAL"
             
             # Compile reasons
