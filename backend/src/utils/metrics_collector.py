@@ -182,8 +182,14 @@ class TokenMetricsCollector:
 
     def _extract_price_metrics(self, data: Dict) -> Dict:
         """Extract and organize price metrics"""
-        if isinstance(data, dict):
-            return {
+        self.logger.info(f"Raw price data received: {json.dumps(data, indent=2)}")
+        
+        if not isinstance(data, dict):
+            self.logger.warning(f"Received non-dict price data: {type(data)}")
+            return METRIC_DEFAULTS[MetricType.PRICE]
+        
+        try:
+            metrics = {
                 'current': float(data.get('current', 0)),
                 'priceChangePercent': float(data.get('priceChangePercent', 0)),
                 'volumeChangePercent': float(data.get('volumeChangePercent', 0)),
@@ -191,7 +197,12 @@ class TokenMetricsCollector:
                 'updateUnixTime': int(data.get('updateUnixTime', 0)),
                 'updateHumanTime': str(data.get('updateHumanTime', ''))
             }
-        return METRIC_DEFAULTS[MetricType.PRICE]
+            self.logger.info(f"Extracted price metrics: {json.dumps(metrics, indent=2)}")
+            return metrics
+        except Exception as e:
+            self.logger.error(f"Error extracting price metrics: {str(e)}")
+            self.logger.error(f"Data that caused error: {json.dumps(data, indent=2)}")
+            return METRIC_DEFAULTS[MetricType.PRICE]
 
     def _extract_trade_metrics(self, data: Dict) -> Dict:
         """Extract and organize trade metrics"""
