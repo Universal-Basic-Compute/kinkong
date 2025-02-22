@@ -5,11 +5,13 @@ import { NextResponse } from 'next/server';
 const KNOWN_TOKENS = {
   USDC: {
     mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-    price: 1.00  // USDC is pegged to USD
+    price: 1.00,  // USDC is pegged to USD
+    image: "https://s2.coinmarketcap.com/static/img/coins/64x64/3408.png"
   },
   USDT: {
-    mint: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", 
-    price: 1.00  // USDT is pegged to USD
+    mint: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+    price: 1.00,  // USDT is pegged to USD
+    image: "https://s2.coinmarketcap.com/static/img/coins/64x64/825.png"
   }
 };
 
@@ -120,11 +122,13 @@ export async function GET() {
       // Add USD values
       const balancesWithUSD = await Promise.all(nonZeroBalances.map(async balance => {
         let price = 0;
+        let imageUrl = null;
         
-        // Check if it's a stablecoin first
+        // Check if it's a known token first
         const knownToken = Object.values(KNOWN_TOKENS).find(t => t.mint === balance.mint);
         if (knownToken) {
           price = knownToken.price;
+          imageUrl = knownToken.image;
         } else {
           // Try DexScreener price first
           price = priceMap[balance.mint] || 0;
@@ -143,13 +147,15 @@ export async function GET() {
           price,
           usdValue,
           isStablecoin: !!knownToken,
-          source: knownToken ? 'fixed' : (price === priceMap[balance.mint] ? 'dexscreener' : 'jupiter')
+          source: knownToken ? 'fixed' : (price === priceMap[balance.mint] ? 'dexscreener' : 'jupiter'),
+          imageUrl
         });
 
         return {
           ...balance,
           usdValue,
-          price
+          price,
+          imageUrl
         };
       }));
 
