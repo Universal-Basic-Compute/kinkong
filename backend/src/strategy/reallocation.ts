@@ -53,7 +53,7 @@ interface Trade {
 }
 
 interface Token {
-  symbol: string;  // Changed from token to symbol
+  token: string;
   name: string;
   mint: string;
   isActive: boolean;
