@@ -25,6 +25,16 @@ function formatTokentoken(token: string): string {
 function getTokenClass(token: string): string {
   const upperToken = token.toUpperCase();
   switch (upperToken) {
+    case 'UBC':
+      return 'metallic-text-ubc';
+    case 'COMPUTE':
+      return 'metallic-text-compute';
+    case 'SOL':
+      return 'metallic-text-sol';
+    default:
+      return 'metallic-text-argent';
+  }
+}
 
 function getTimeframeEmoji(timeframe: Signal['timeframe']): string {
   switch (timeframe) {
