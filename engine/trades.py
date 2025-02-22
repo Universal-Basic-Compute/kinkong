@@ -354,10 +354,11 @@ class TradeExecutor:
             transaction_url = f"https://solscan.io/tx/{signature}"
             self.trades_table.update(trade['id'], {
                 'status': 'EXECUTED',
-                'signature': signature,
+                'transactionSignature': signature,
                 'amount': trade_amount_usd,
                 'price': float(signal['fields']['entryPrice']),
-                'transactionUrl': transaction_url
+                'transactionUrl': transaction_url,
+                'executedAt': datetime.now(timezone.utc).isoformat()
             })
             
             # Send notification
