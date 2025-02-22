@@ -54,6 +54,20 @@ class TradeExecutor:
         self.api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
         self.signals_table = Airtable(self.base_id, 'SIGNALS', self.api_key)
         self.trades_table = Airtable(self.base_id, 'TRADES', self.api_key)
+        
+        # Initialize logger
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.INFO)
+        
+        # Add handler if none exist
+        if not self.logger.handlers:
+            handler = logging.StreamHandler()
+            formatter = logging.Formatter(
+                '%(asctime)s - %(levelname)s - %(message)s',
+                datefmt='%Y-%m-%d %H:%M:%S'
+            )
+            handler.setFormatter(formatter)
+            self.logger.addHandler(handler)
 
     async def get_active_buy_signals(self) -> List[Dict]:
         """Get all non-expired BUY signals"""
@@ -180,7 +194,7 @@ class TradeExecutor:
             return transaction
 
         except Exception as e:
-            self.logger.error(f"Error creating buy transaction: {e}")
+            self.logger.error(f"Failed to create buy transaction: {e}")
             raise
 
     async def calculate_trade_amount(
@@ -200,7 +214,7 @@ class TradeExecutor:
             # Get USDC balance
             token_balance = await client.get_token_account_balance(usdc_ata)
             if not token_balance:
-                self.logger.error("Could not get USDC balance")
+                self.logger.error("Failed to get USDC balance")
                 return 0
                 
             # Calculate wallet value in USD (USDC balance is already in USD)
@@ -287,7 +301,7 @@ class TradeExecutor:
                 'failedAt': datetime.now(timezone.utc).isoformat()
             })
         except Exception as e:
-            self.logger.error(f"Failed to update failed trade status: {e}")
+            self.logger.error(f"Error updating failed trade status: {e}")
 
     async def execute_trade(self, signal: Dict) -> bool:
         """Execute a trade for a signal"""
