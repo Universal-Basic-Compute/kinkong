@@ -585,19 +585,15 @@ class TradeExecutor:
                 if 'client' in locals():
                     await client.close()
 
-            except Exception as e:
-                self.logger.error(f"Trade execution failed: {e}")
-                if 'trade' in locals():
-                    await self.handle_failed_trade(trade['id'], str(e))
-                return False
-
-            finally:
-                if 'client' in locals():
-                    await client.close()
-
         except Exception as e:
-            self.logger.error(f"Unexpected error in execute_trade: {e}")
+            self.logger.error(f"Trade execution failed: {e}")
+            if 'trade' in locals():
+                await self.handle_failed_trade(trade['id'], str(e))
             return False
+
+        finally:
+            if 'client' in locals():
+                await client.close()
 
     async def monitor_signals(self):
         """Main loop to monitor signals and execute trades"""
