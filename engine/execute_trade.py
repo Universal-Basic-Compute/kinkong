@@ -263,23 +263,37 @@ class JupiterTradeExecutor:
             return False
 
     async def execute_trade_with_retries(self, transaction: Transaction, max_retries: int = 3) -> Optional[str]:
-        """Execute a trade transaction with retries and return signature if successful"""
+        """Execute a trade transaction with optimized sending options"""
         client = AsyncClient("https://api.mainnet-beta.solana.com")
         try:
             for attempt in range(max_retries):
                 try:
+                    # Send with optimized options
                     result = await client.send_transaction(
                         transaction,
                         opts=TxOpts(
-                            skip_preflight=False,
-                            preflight_commitment="confirmed",
-                            max_retries=2
+                            skip_preflight=True,  # Skip preflight for faster sending
+                            max_retries=2,  # Allow RPC retries
+                            preflight_commitment="confirmed"
                         )
                     )
                     
                     if result.value:
+                        # Wait for confirmation
+                        confirmation = await client.confirm_transaction(
+                            result.value,
+                            commitment="finalized"
+                        )
+                        
+                        if confirmation.value.err:
+                            self.logger.error(f"Transaction failed: {confirmation.value.err}")
+                            self.logger.error(f"View transaction: https://solscan.io/tx/{result.value}")
+                            if attempt < max_retries - 1:
+                                continue
+                            return None
+                        
                         self.logger.info(f"✅ Transaction successful!")
-                        self.logger.info(f"Transaction signature: {result.value}")
+                        self.logger.info(f"View transaction: https://solscan.io/tx/{result.value}")
                         return str(result.value)
                         
                 except Exception as e:
@@ -292,7 +306,7 @@ class JupiterTradeExecutor:
             await client.close()
 
     async def get_jupiter_transaction(self, quote_data: dict, wallet_address: str) -> Optional[bytes]:
-        """Get swap transaction from Jupiter"""
+        """Get swap transaction from Jupiter with optimizations for better transaction landing"""
         try:
             # Use public v6 endpoint
             url = "https://quote-api.jup.ag/v6/swap"
@@ -300,13 +314,28 @@ class JupiterTradeExecutor:
             swap_data = {
                 "quoteResponse": quote_data,
                 "userPublicKey": wallet_address,
-                "asLegacyTransaction": True,
-                "computeUnitPriceMicroLamports": 1000,
-                "slippageBps": 100
+                
+                # Dynamic compute unit optimization
+                "dynamicComputeUnitLimit": True,
+                
+                # Dynamic slippage optimization
+                "dynamicSlippage": True,
+                
+                # Priority fee optimization
+                "prioritizationFeeLamports": {
+                    "priorityLevelWithMaxLamports": {
+                        "maxLamports": 10000000,  # 0.01 SOL max
+                        "global": False,  # Use local fee market
+                        "priorityLevel": "veryHigh"  # Use 75th percentile
+                    }
+                },
+                
+                # Optional: Add Jito tip for better transaction landing
+                # "jitoTipLamports": 1000000  # Uncomment if using Jito RPC
             }
             
-            self.logger.info(f"Requesting swap transaction...")
-            self.logger.debug(f"Swap data: {json.dumps(swap_data, indent=2)}")
+            self.logger.info("Requesting optimized swap transaction...")
+            self.logger.debug(f"Swap parameters: {json.dumps(swap_data, indent=2)}")
             
             async with aiohttp.ClientSession() as session:
                 async with session.post(
@@ -314,18 +343,27 @@ class JupiterTradeExecutor:
                     json=swap_data,
                     headers={'Content-Type': 'application/json'}
                 ) as response:
-                    response_text = await response.text()
-                    
                     if not response.ok:
                         self.logger.error(f"Jupiter API error: {response.status}")
-                        self.logger.error(f"Response: {response_text}")
+                        self.logger.error(f"Response: {await response.text()}")
                         return None
-                        
+                    
                     try:
-                        transaction_data = json.loads(response_text)
-                    except json.JSONDecodeError:
-                        self.logger.error(f"Invalid JSON response: {response_text}")
+                        transaction_data = await response.json()
+                    except json.JSONDecodeError as e:
+                        self.logger.error(f"Invalid JSON response: {e}")
                         return None
+                    
+                    # Log optimization reports
+                    if 'dynamicSlippageReport' in transaction_data:
+                        self.logger.info("Dynamic Slippage Report:")
+                        self.logger.info(json.dumps(transaction_data['dynamicSlippageReport'], indent=2))
+                    
+                    if 'computeUnitLimit' in transaction_data:
+                        self.logger.info(f"Compute Unit Limit: {transaction_data['computeUnitLimit']}")
+                    
+                    if 'prioritizationFeeLamports' in transaction_data:
+                        self.logger.info(f"Priority Fee: {transaction_data['prioritizationFeeLamports']} lamports")
                     
                     transaction_base64 = transaction_data.get('swapTransaction')
                     if not transaction_base64:
@@ -343,6 +381,8 @@ class JupiterTradeExecutor:
 
         except Exception as e:
             self.logger.error(f"Error getting swap transaction: {e}")
+            if hasattr(e, '__traceback__'):
+                traceback.print_tb(e.__traceback__)
             return None
 
     async def prepare_transaction(self, transaction_bytes: bytes) -> Optional[Transaction]:
