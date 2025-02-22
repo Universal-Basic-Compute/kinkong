@@ -563,33 +563,33 @@ class TradeExecutor:
                     solana_tx = Transaction.deserialize(transaction_bytes)
                     
                     # Convert to Solders format
-                            instructions = []
-                            for ix in solana_tx.message.instructions:
-                                program_id = Pubkey.from_string(str(ix.program_id))
-                                accounts = [Pubkey.from_string(str(acc)) for acc in ix.accounts]
-                                data = bytes(ix.data)
-                                instructions.append(Instruction(program_id, accounts, data))
-                            
-                            header = MessageHeader(
-                                num_required_signatures=len(solana_tx.signatures),
-                                num_readonly_signed_accounts=solana_tx.message.header.num_readonly_signed_accounts,
-                                num_readonly_unsigned_accounts=solana_tx.message.header.num_readonly_unsigned_accounts
-                            )
-                            
-                            account_keys = [Pubkey.from_string(str(key)) for key in solana_tx.message.account_keys]
-                            
-                            message = MessageV0(
-                                header=header,
-                                account_keys=account_keys,
-                                recent_blockhash=recent_blockhash,
-                                instructions=instructions
-                            )
-                            
-                            signature = wallet_keypair.sign_message(bytes(message))
-                            transaction = VersionedTransaction(
-                                message=message,
-                                signatures=[signature]
-                            )
+                    instructions = []
+                    for ix in solana_tx.message.instructions:
+                        program_id = Pubkey.from_string(str(ix.program_id))
+                        accounts = [Pubkey.from_string(str(acc)) for acc in ix.accounts]
+                        data = bytes(ix.data)
+                        instructions.append(Instruction(program_id, accounts, data))
+                    
+                    header = MessageHeader(
+                        num_required_signatures=len(solana_tx.signatures),
+                        num_readonly_signed_accounts=solana_tx.message.header.num_readonly_signed_accounts,
+                        num_readonly_unsigned_accounts=solana_tx.message.header.num_readonly_unsigned_accounts
+                    )
+                    
+                    account_keys = [Pubkey.from_string(str(key)) for key in solana_tx.message.account_keys]
+                    
+                    message = MessageV0(
+                        header=header,
+                        account_keys=account_keys,
+                        recent_blockhash=recent_blockhash,
+                        instructions=instructions
+                    )
+                    
+                    signature = wallet_keypair.sign_message(bytes(message))
+                    transaction = VersionedTransaction(
+                        message=message,
+                        signatures=[signature]
+                    )
                         
                         self.logger.info("Created and signed new transaction")
                         
