@@ -6,10 +6,21 @@ from datetime import datetime
 import logging
 from dotenv import load_dotenv
 
+# Get absolute path to project root and .env file
+project_root = Path(__file__).parent.parent.absolute()
+env_path = project_root / '.env'
+
+# Load environment variables with explicit path
+load_dotenv(dotenv_path=env_path)
+
+# Add debug prints
+print("\nEnvironment variables loaded from:", env_path)
+print("Current working directory:", os.getcwd())
+print("Project root:", project_root)
+
 # Add project root to Python path
-project_root = str(Path(__file__).parent.parent.absolute())
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
 
 # Import our trade executor
 from engine.execute_trade import JupiterTradeExecutor
