@@ -17,7 +17,8 @@ export async function GET() {
       exitValue: record.get('exitValue'),
       status: record.get('status'),
       exitReason: record.get('exitReason'),
-      realizedPnl: record.get('realizedPnl'),
+      realizedPnl: record.get('realizedPnl'), // In dollars
+      roi: record.get('roi'), // In percentage
       signature: record.get('signature')
     }));
 

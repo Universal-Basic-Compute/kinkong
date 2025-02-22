@@ -9,7 +9,8 @@ interface Trade {
   exitValue: number | null;
   status: string;
   exitReason?: string;
-  realizedPnl?: number;
+  realizedPnl?: number; // In dollars
+  roi?: number; // In percentage
   signature: string;
 }
 
@@ -87,6 +88,7 @@ export function TradeHistory({ userOnly = false }: TradeHistoryProps) {
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Value</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Exit Value</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">PNL</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">ROI</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Status</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Exit Reason</th>
           </tr>
@@ -123,7 +125,12 @@ export function TradeHistory({ userOnly = false }: TradeHistoryProps) {
                 </td>
                 <td className={`px-6 py-4 whitespace-nowrap text-sm ${trade.realizedPnl ? getPnlColor(trade.realizedPnl) : 'text-gray-300'}`}>
                   {trade.realizedPnl 
-                    ? `${trade.realizedPnl >= 0 ? '+' : ''}${trade.realizedPnl.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%` 
+                    ? `${trade.realizedPnl >= 0 ? '+' : ''}$${Math.abs(trade.realizedPnl).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
+                    : '-'}
+                </td>
+                <td className={`px-6 py-4 whitespace-nowrap text-sm ${trade.roi ? getPnlColor(trade.roi) : 'text-gray-300'}`}>
+                  {trade.roi 
+                    ? `${trade.roi >= 0 ? '+' : ''}${trade.roi.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%` 
                     : '-'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
