@@ -19,8 +19,8 @@ schtasks /delete /tn "KinKong_TokenSnapshot" /f 2>nul
 schtasks /delete /tn "KinKong_Signals" /f 2>nul
 schtasks /delete /tn "KinKong_Trades" /f 2>nul
 
-REM Common task settings
-set TASK_SETTINGS=/NP /RL HIGHEST /RU "%USERNAME%" /IT
+REM Common task settings (removed conflicting options)
+set TASK_SETTINGS=/RL HIGHEST /RU "%USERNAME%"
 set ERROR_SETTINGS=/V1 /Z
 
 REM Create new tasks with enhanced configuration
