@@ -221,7 +221,7 @@ class MarketSentimentAnalyzer:
                 "classification": sentiment,
                 "confidence": confidence,
                 "bullishSignals": bullish_signals,
-                "reasons": reasons,
+                "notes": reasons,
                 "timestamp": datetime.now(timezone.utc).isoformat()
             }
             
