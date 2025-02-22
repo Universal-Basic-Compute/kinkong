@@ -3,7 +3,7 @@ from pathlib import Path
 import os
 from datetime import datetime, timezone
 import asyncio
-import aiohttp
+import requests
 from airtable import Airtable
 from dotenv import load_dotenv
 import json
@@ -82,16 +82,25 @@ class TradeExecutor:
             logger.error(f"Error fetching active signals: {e}")
             return []
 
-    async def check_entry_conditions(self, signal: Dict) -> bool:
+    def check_entry_conditions(self, signal: Dict) -> bool:
         """Check if entry conditions are met for a signal"""
         try:
+            # First check if trade already exists for this signal
+            existing_trades = self.trades_table.get_all(
+                formula=f"{{signalId}} = '{signal['id']}'"
+            )
+            
+            if existing_trades:
+                logger.warning(f"Trade already exists for signal {signal['id']}")
+                return False
+
             # Get current price from Birdeye API
             token_mint = signal['fields'].get('mint')
             if not token_mint:
                 logger.warning(f"No mint address for signal {signal['id']}")
                 return False
 
-            current_price = await self.get_current_price(token_mint)
+            current_price = self.get_current_price(token_mint)
             if not current_price:
                 return False
 
@@ -113,7 +122,7 @@ class TradeExecutor:
             logger.error(f"Error checking entry conditions: {e}")
             return False
 
-    async def get_current_price(self, token_mint: str) -> Optional[float]:
+    def get_current_price(self, token_mint: str) -> Optional[float]:
         """Get current token price from Birdeye"""
         try:
             url = f"https://public-api.birdeye.so/public/price?address={token_mint}"
@@ -122,15 +131,14 @@ class TradeExecutor:
                 'accept': 'application/json'
             }
             
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url, headers=headers) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        if data.get('success'):
-                            return float(data['data']['value'])
-                    
-                    logger.warning(f"Failed to get price for {token_mint}")
-                    return None
+            response = requests.get(url, headers=headers)
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success'):
+                    return float(data['data']['value'])
+            
+            logger.warning(f"Failed to get price for {token_mint}")
+            return None
 
         except Exception as e:
             logger.error(f"Error getting price: {e}")
