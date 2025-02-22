@@ -80,7 +80,7 @@ def store_sentiment_analysis(analysis):
                 record = {
                     'fields': {
                         'type': 'TOKEN',
-                        'symbol': token['symbol'],
+                        'token': token['token'],
                         'sentiment': token['sentiment'],
                         'confidence': token['confidence'],
                         'mentions': token.get('mentions', 0),
@@ -90,7 +90,7 @@ def store_sentiment_analysis(analysis):
                     }
                 }
                 sentiment_table.insert(record['fields'])
-                print(f"Created TOKEN sentiment record for {token['symbol']}")
+                print(f"Created TOKEN sentiment record for {token['token']}")
 
         # Store domain sentiments
         if analysis.get('domains'):

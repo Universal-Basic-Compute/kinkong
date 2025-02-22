@@ -316,7 +316,7 @@ def calculate_additional_metrics(snapshots_table: Airtable, token_name: str, day
         volatility = calculate_volatility(prices)
 
         # Get SOL comparison with correct sort parameters
-        sol_url = f"{base_url}?filterByFormula={{symbol}}='SOL'&sort%5B0%5D%5Bfield%5D=createdAt&sort%5B0%5D%5Bdirection%5D=desc"
+        sol_url = f"{base_url}?filterByFormula={{token}}='SOL'&sort%5B0%5D%5Bfield%5D=createdAt&sort%5B0%5D%5Bdirection%5D=desc"
         
         sol_response = requests.get(sol_url, headers=headers)
         if not sol_response.ok:
