@@ -364,45 +364,68 @@ async def get_enhanced_token_metrics(token_mint: str) -> Dict:
             "accept": "application/json"
         }
 
-        # Get price and volume data first
+        # Get price and volume data
         base_url = "https://public-api.birdeye.so/defi"
         price_url = f"{base_url}/price_volume/single?address={token_mint}&type=24h"
+        traders_url = f"{base_url}/v2/tokens/top_traders?address={token_mint}&time_frame=24h&sort_type=desc&sort_by=volume&limit=10"
 
         async with aiohttp.ClientSession() as session:
+            # Get price data
             async with session.get(price_url, headers=headers) as response:
                 if response.status == 200:
                     price_data = await response.json()
-                    if price_data.get('success'):
-                        data = price_data.get('data', {})
-                        metrics = {
-                            'price': {
-                                'current': data.get('price', 0),
-                                'priceChangePercent': data.get('priceChangePercent', 0),
-                                'volumeChangePercent': data.get('volumeChangePercent', 0),
-                                'volumeUSD': data.get('volumeUSD', 0),
-                                'updateUnixTime': data.get('updateUnixTime', 0),
-                                'updateHumanTime': data.get('updateHumanTime', '')
-                            }
-                        }
-                        print(f"\nMetrics for {token_mint}:")
-                        print(json.dumps(metrics, indent=2))
-                        return metrics
-                    else:
-                        print(f"API returned error: {price_data.get('message')}")
+                    if not price_data.get('success'):
+                        print(f"Price API error: {price_data.get('message')}")
+                        price_data = {'data': {}}
                 else:
-                    print(f"API request failed: {response.status}")
-                    print(f"Response: {await response.text()}")
+                    print(f"Price API failed: {response.status}")
+                    price_data = {'data': {}}
 
-        return {
+            # Get trader data
+            async with session.get(traders_url, headers=headers) as response:
+                if response.status == 200:
+                    trader_data = await response.json()
+                    if not trader_data.get('success'):
+                        print(f"Trader API error: {trader_data.get('message')}")
+                        trader_data = {'data': {'items': []}}
+                else:
+                    print(f"Trader API failed: {response.status}")
+                    trader_data = {'data': {'items': []}}
+
+        # Process trader metrics
+        traders = trader_data.get('data', {}).get('items', [])
+        total_volume = sum(t.get('volume', 0) for t in traders)
+        buy_volume = sum(t.get('volumeBuy', 0) for t in traders)
+        sell_volume = sum(t.get('volumeSell', 0) for t in traders)
+        buy_trades = sum(t.get('tradeBuy', 0) for t in traders)
+        sell_trades = sum(t.get('tradeSell', 0) for t in traders)
+
+        # Combine metrics
+        metrics = {
             'price': {
-                'current': 0,
-                'priceChangePercent': 0,
-                'volumeChangePercent': 0,
-                'volumeUSD': 0,
-                'updateUnixTime': 0,
-                'updateHumanTime': ''
+                'current': price_data.get('data', {}).get('price', 0),
+                'priceChangePercent': price_data.get('data', {}).get('priceChangePercent', 0),
+                'volumeChangePercent': price_data.get('data', {}).get('volumeChangePercent', 0),
+                'volumeUSD': price_data.get('data', {}).get('volumeUSD', 0),
+                'updateUnixTime': price_data.get('data', {}).get('updateUnixTime', 0),
+                'updateHumanTime': price_data.get('data', {}).get('updateHumanTime', '')
+            },
+            'trading': {
+                'totalVolume': total_volume,
+                'buyVolume': buy_volume,
+                'sellVolume': sell_volume,
+                'buyTrades': buy_trades,
+                'sellTrades': sell_trades,
+                'buySellRatio': buy_volume / sell_volume if sell_volume > 0 else 1.0,
+                'tradeCount': buy_trades + sell_trades,
+                'avgTradeSize': total_volume / (buy_trades + sell_trades) if (buy_trades + sell_trades) > 0 else 0,
+                'topTraders': len(traders)
             }
         }
+
+        print(f"\nMetrics for {token_mint}:")
+        print(json.dumps(metrics, indent=2))
+        return metrics
 
     except Exception as e:
         print(f"Error fetching metrics for {token_mint}: {e}")
