@@ -498,17 +498,6 @@ class TradeExecutor:
         try:
             self.logger.info(f"Closing trade {trade['id']} - Reason: {exit_reason}")
             
-            # Get total portfolio value first
-            total_portfolio_value = await self.get_total_portfolio_value()
-            if total_portfolio_value <= 0:
-                self.logger.error("Could not get portfolio value")
-                return False
-
-            # Calculate target trade amount (3% of portfolio)
-            target_trade_amount = total_portfolio_value * 0.03
-            self.logger.info(f"Portfolio value: ${total_portfolio_value:.2f}")
-            self.logger.info(f"Target trade amount (3%): ${target_trade_amount:.2f}")
-            
             # Get token mint from TOKENS table first
             tokens_table = Airtable(self.base_id, 'TOKENS', self.api_key)
             token_records = tokens_table.get_all(
@@ -517,43 +506,33 @@ class TradeExecutor:
             if not token_records:
                 self.logger.error(f"No token record found for {trade['fields'].get('token')}")
                 return False
-                
+                    
             token_mint = token_records[0]['fields'].get('mint')
             if not token_mint:
                 self.logger.error(f"No mint address found for {trade['fields'].get('token')}")
                 return False
             
-            # Get current balance and price
-            balance = await self.jupiter.get_token_balance(token_mint)
+            # Get current price
             current_price = await self.get_token_price(token_mint)
-            
             if not current_price:
                 self.logger.error(f"Could not get current price for {token_mint}")
                 return False
-                
-            # Calculate available USD value
-            available_usd = balance * current_price
-            self.logger.info(f"Balance: {balance:.8f} {trade['fields'].get('token')}")
+
+            # Use the original trade amount
+            token_amount = float(trade['fields'].get('amount', 0))
+            trade_value = token_amount * current_price
+
+            self.logger.info(f"Closing amount: {token_amount:.8f} {trade['fields'].get('token')}")
             self.logger.info(f"Current price: ${current_price:.4f}")
-            self.logger.info(f"Available USD: ${available_usd:.2f}")
-
-            # Determine actual trade amount (min of target and available)
-            trade_amount_usd = min(target_trade_amount, available_usd)
-            trade_amount_usd = max(trade_amount_usd, 1.0)  # Minimum $1
-            
-            # Calculate token amount to trade
-            token_amount = trade_amount_usd / current_price
-
-            self.logger.info(f"Trading amount: ${trade_amount_usd:.2f} ({token_amount:.8f} tokens)")
+            self.logger.info(f"USD Value: ${trade_value:.2f}")
 
             # Execute trade if amount is significant
-            if trade_amount_usd >= 1.0:
-                # Execute sell order with minimum $1 threshold
+            if trade_value >= 1.0:
                 success, transaction_bytes = await self.jupiter.execute_validated_swap(
                     input_token=token_mint,
                     output_token="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",  # USDC
-                    amount=balance,
-                    min_amount=1.0,  # Minimum $1 for remaining balance
+                    amount=token_amount,
+                    min_amount=1.0,  # Minimum $1
                     max_slippage=1.0
                 )
                 
@@ -574,16 +553,14 @@ class TradeExecutor:
                     
                 transaction_url = f"https://solscan.io/tx/{signature}"
             else:
-                self.logger.info(f"Balance too small to trade (${trade_amount_usd:.2f})")
+                self.logger.info(f"Balance too small to trade (${trade_value:.2f})")
                 signature = None
                 transaction_url = None
 
             # Calculate profit/loss metrics
             entry_price = float(trade['fields'].get('price', 0))
-            entry_amount = float(trade['fields'].get('amount', 0))
-            entry_value = entry_price * entry_amount
-            
-            exit_value = current_price * balance
+            entry_value = entry_price * token_amount
+            exit_value = current_price * token_amount
             realized_pnl = exit_value - entry_value
             roi = (realized_pnl / entry_value * 100) if entry_value > 0 else 0
 
@@ -595,8 +572,7 @@ class TradeExecutor:
                 'closedAt': datetime.now(timezone.utc).isoformat(),
                 'realizedPnl': realized_pnl,
                 'roi': roi,
-                'exitValue': exit_value,
-                'exitAmount': token_amount,  # Token amount at exit
+                'exitValue': exit_value
             }
 
             if signature:
@@ -606,7 +582,7 @@ class TradeExecutor:
                     'notes': f"Trade closed via {exit_reason} at ${current_price:.4f}"
                 })
             else:
-                update_data['notes'] = f"Closed with dust balance (${trade_amount_usd:.2f})"
+                update_data['notes'] = f"Closed with dust balance (${trade_value:.2f})"
 
             self.trades_table.update(trade['id'], update_data)
             
