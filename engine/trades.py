@@ -526,7 +526,7 @@ class TradeExecutor:
                             wallet_keypair,
                             opts=types.TxOpts(
                                 skip_preflight=False,
-                                preflight_commitment=Commitment.CONFIRMED
+                                preflight_commitment="confirmed"  # Use string instead of enum
                             )
                         )
                         self.logger.info(f"Sent transaction: {result.value}")
