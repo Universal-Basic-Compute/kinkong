@@ -153,27 +153,38 @@ class TokenSnapshotTaker:
                 
             self.logger.info(f"\nCalculating metrics for {token_name}...")
             
-            # Get values from current snapshot
+            # Get current values from snapshot
             volume24h = float(snapshot.get('volume24h', 0))
+            current_price = float(snapshot.get('price', 0))
             
-            # Get 7-day average volume from historical snapshots
+            # Get 7-day historical data
             seven_days_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
             historical_snapshots = self.snapshots_table.get_all(
                 formula=f"AND({{token}}='{token_name}', IS_AFTER({{createdAt}}, '{seven_days_ago}'))"
             )
             
+            # Calculate volume metrics
             if historical_snapshots:
                 volumes = [float(snap['fields'].get('volume24h', 0)) for snap in historical_snapshots]
-                volume7d = sum(volumes) / len(volumes)
-            else:
-                volume7d = volume24h  # Use current volume if no history
+                prices = [float(snap['fields'].get('price', 0)) for snap in historical_snapshots]
                 
-            # Now calculate volume growth using both values
-            volume_growth = await self.calculate_volume_growth(token_name, volume24h, volume7d)
-            
+                volume7d = sum(volumes) / len(volumes)
+                price7dAvg = sum(prices) / len(prices)
+                
+                # Calculate trends (current vs average)
+                volume_growth = ((volume24h - volume7d) / volume7d * 100) if volume7d > 0 else 0
+                price_trend = ((current_price - price7dAvg) / price7dAvg * 100) if price7dAvg > 0 else 0
+            else:
+                volume7d = volume24h
+                price7dAvg = current_price
+                volume_growth = 0
+                price_trend = 0
+                
             metrics = {
-                'volume7d': volume7d,  # Add volume7d to metrics
-                'volumeGrowth': volume_growth
+                'volume7d': volume7d,
+                'volumeGrowth': volume_growth,
+                'price7dAvg': price7dAvg,
+                'priceTrend': price_trend
             }
             
             self.logger.info(f"Metrics calculated for {token_name}:")
