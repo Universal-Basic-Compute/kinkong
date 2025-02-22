@@ -1,90 +1,80 @@
-import { getTokenPrice } from '@/backend/src/utils/prices';
+import { TokenMetricsCollector, MetricsResponse } from '@/backend/src/utils/metrics_collector';
 
 interface TokenMetrics {
-  token: string;  // Changed from token if present
+  token: string;
   price: {
     current: number;
     high24h: number;
     low24h: number;
     change24h: number;
+    updateTime: string;
   };
   volume: {
     amount24h: number;
-    previousDay: number;
-    buyVsSell: number;
+    change: number;
+    changePercent: number;
+    largeTransactions: number;
   };
-  liquidity: {
-    current: number;
-    depth: {
-      buy2percent: number;
-      sell2percent: number;
-    };
+  trades: {
+    count24h: number;
+    avgSize: number;
+    uniqueTraders: number;
+    newTraders: number;
+  };
+  market: {
+    depthBid: number;
+    depthAsk: number;
+    buySellRatio: number;
+    liquidity: number;
+  };
+  analysis: {
+    volatility24h: number;
+    momentum24h: number;
+    trendStrength: number;
+    averageSlippage: number;
   };
 }
 
-interface HistoricalData {
-  highPrice: number;
-  lowPrice: number;
-  openPrice: number;
-  volume24h: number;
-  previousDayVolume: number;
-  buyVolume: number;
-  sellVolume: number;
-}
+export async function getTokenMetrics(token: string): Promise<TokenMetrics> {
+  const collector = new TokenMetricsCollector(process.env.BIRDEYE_API_KEY || '');
+  const metrics = await collector.get_token_metrics(token);
 
-async function get24hHistoricalData(token: string): Promise<HistoricalData> {
-  // For now, return default values until we implement the actual data fetching
+  if (!metrics.success) {
+    throw new Error(metrics.error || 'Failed to fetch token metrics');
+  }
+
   return {
-    highPrice: 0,
-    lowPrice: 0,
-    openPrice: 0,
-    volume24h: 0,
-    previousDayVolume: 0,
-    buyVolume: 0,
-    sellVolume: 0
-  };
-}
-
-export async function getTokenMetrics(token: string): Promise<TokenMetrics> {  // Changed parameter name
-  // Get current price and 24h historical data
-  const currentPrice = await getTokenPrice(token);
-  const historicalData = await get24hHistoricalData(token);
-  
-  // Extract price metrics
-  const priceMetrics = {
-    current: currentPrice || 0, // Default to 0 if null
-    high24h: historicalData.highPrice,
-    low24h: historicalData.lowPrice,
-    change24h: currentPrice 
-      ? ((currentPrice - historicalData.openPrice) / historicalData.openPrice) * 100 
-      : 0 // Default to 0 if currentPrice is null
-  };
-  
-  // Get volume data
-  const volumeMetrics = {
-    amount24h: historicalData.volume24h,
-    previousDay: historicalData.previousDayVolume,
-    buyVsSell: historicalData.buyVolume / historicalData.sellVolume
-  };
-  
-  // Get liquidity data
-  const liquidityMetrics = await getLiquidityMetrics(token);
-  
-  return {
-    price: priceMetrics,
-    volume: volumeMetrics,
-    liquidity: liquidityMetrics
-  };
-}
-
-async function getLiquidityMetrics(token: string) {
-  // Fetch liquidity metrics
-  // Implementation will depend on your DEX data source
-  return {
-    current: 0, // Total liquidity
-    depth: {
-      buy2percent: 0,  // Liquidity within 2% above current price
-      sell2percent: 0  // Liquidity within 2% below current price
+    token,
+    price: {
+      current: metrics.price_metrics.current,
+      high24h: metrics.trade_metrics.price.high24h,
+      low24h: metrics.trade_metrics.price.low24h,
+      change24h: metrics.trade_metrics.price.change24h,
+      updateTime: metrics.price_metrics.updateTime
+    },
+    volume: {
+      amount24h: metrics.trade_metrics.volume.amount24h,
+      change: metrics.trade_metrics.volume.change,
+      changePercent: metrics.trade_metrics.volume.changePercent,
+      largeTransactions: metrics.trade_metrics.volume.largeTransactions
+    },
+    trades: {
+      count24h: metrics.trade_metrics.trades.count24h,
+      avgSize: metrics.trade_metrics.trades.avgSize,
+      uniqueTraders: metrics.trader_metrics.uniqueTraders,
+      newTraders: metrics.trader_metrics.newTraders
+    },
+    market: {
+      depthBid: metrics.trade_metrics.market.depthBid,
+      depthAsk: metrics.trade_metrics.market.depthAsk,
+      buySellRatio: metrics.trade_metrics.market.buySellRatio,
+      liquidity: metrics.trade_metrics.market.liquidity
+    },
+    analysis: {
+      volatility24h: metrics.trade_metrics.analysis.volatility24h,
+      momentum24h: metrics.trade_metrics.analysis.momentum24h,
+      trendStrength: metrics.trade_metrics.analysis.trendStrength,
+      averageSlippage: metrics.trade_metrics.analysis.averageSlippage
     }
   };
 }
