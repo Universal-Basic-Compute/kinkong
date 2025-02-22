@@ -365,45 +365,42 @@ class TradeExecutor:
                     self.logger.error("STRATEGY_WALLET_PRIVATE_KEY not found")
                     return False
                 
-                # Convert base58 private key to bytes
+                # Convert base58 private key to bytes and create keypair
                 private_key_bytes = base58.b58decode(private_key)
-                
-                # Create keypair from bytes
                 wallet_keypair = Keypair.from_bytes(private_key_bytes)
+                wallet_address = str(wallet_keypair.pubkey())
                 
-                # Convert string addresses to Solders Pubkey
-                usdc_mint = Pubkey.from_string(USDC_MINT)
-                wallet_pubkey = wallet_keypair.pubkey()
-                token_program = Pubkey.from_string(str(TOKEN_PROGRAM_ID))
-                associated_token_program = Pubkey.from_string("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL")
-
-                # Calculate the ATA address using Solders types
-                seeds = [
-                    bytes(wallet_pubkey),
-                    bytes(token_program),
-                    bytes(usdc_mint)
-                ]
-                
-                # Use Solders create_program_address
-                usdc_ata = Pubkey.create_program_address(
-                    seeds,
-                    associated_token_program
-                )
+                # Get USDC balance from Birdeye
+                birdeye_url = "https://public-api.birdeye.so/v1/wallet/token_balance"
+                params = {
+                    "wallet": wallet_address,
+                    "token_address": USDC_MINT
+                }
+                headers = {
+                    "x-api-key": os.getenv('BIRDEYE_API_KEY'),
+                    "x-chain": "solana",
+                    "accept": "application/json"
+                }
                 
                 try:
-                    # Get balance using string representation
-                    balance_response = await client.get_token_account_balance(str(usdc_ata))
+                    response = requests.get(birdeye_url, params=params, headers=headers)
+                    response.raise_for_status()
+                    data = response.json()
                     
-                    if not balance_response or not balance_response.value:
-                        self.logger.error("Failed to get USDC balance")
+                    if not data.get('success'):
+                        self.logger.error(f"Birdeye API error: {data.get('message', 'Unknown error')}")
                         return False
                         
-                    balance_amount = float(balance_response.value.amount) / 1e6  # Convert from decimals
+                    balance_data = data.get('data', {})
+                    balance_amount = float(balance_data.get('uiAmount', 0))
+                    
                     self.logger.info(f"USDC Balance: ${balance_amount:.2f}")
                     
                     if balance_amount < 10:  # Minimum $10 USDC
                         self.logger.error(f"Insufficient USDC balance: ${balance_amount:.2f}")
                         return False
+                        
+                    return True
                         
                 except Exception as e:
                     self.logger.error(f"Error checking USDC balance: {e}")
