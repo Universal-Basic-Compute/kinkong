@@ -540,6 +540,9 @@ class TradeExecutor:
             exit_value = current_price * balance
             realized_pnl = exit_value - entry_value
             roi = (realized_pnl / entry_value * 100) if entry_value > 0 else 0
+
+            # Generate transaction URL
+            transaction_url = f"https://solscan.io/tx/{signature}"
             
             # Update trade record with complete closing data
             self.trades_table.update(trade['id'], {
