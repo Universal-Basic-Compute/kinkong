@@ -9,6 +9,7 @@ import logging
 from typing import Dict, Optional
 import urllib.parse
 from dotenv import load_dotenv
+import socket
 
 # Configure logging
 logging.basicConfig(
@@ -17,6 +18,10 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 logger = logging.getLogger(__name__)
+
+# Configure Windows event loop policy
+if os.name == 'nt':  # Windows
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 class JupiterTradeExecutor:
     def __init__(self):
@@ -50,8 +55,11 @@ class JupiterTradeExecutor:
             logger.info(f"Amount USD: ${amount:.2f}")
             logger.info(f"Amount Raw: {amount_raw}")
             logger.info(f"Full URL: {url}?{urllib.parse.urlencode(params)}")
+
+            # Use TCPConnector with custom configuration for Windows
+            connector = aiohttp.TCPConnector(family=socket.AF_INET)  # Force IPv4
             
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(connector=connector) as session:
                 async with session.get(url, params=params) as response:
                     response_text = await response.text()
                     logger.info(f"Response Status: {response.status}")
