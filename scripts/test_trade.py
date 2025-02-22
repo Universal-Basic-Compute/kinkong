@@ -126,15 +126,30 @@ async def test_usdc_usdt_swap():
             
             logger.info("Sending transaction to network...")
             
-            # Send transaction
-            result = await client.send_transaction(
-                new_transaction,
-                opts={
-                    "skip_preflight": False,
-                    "preflight_commitment": "confirmed",
-                    "max_retries": 3
-                }
-            )
+            # Send transaction with retry logic
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    result = await client.send_transaction(
+                        new_transaction,
+                        opts={
+                            "skip_preflight": False,
+                            "preflight_commitment": "confirmed",
+                            "max_retries": 2
+                        }
+                    )
+                    
+                    if result.value:
+                        logger.info(f"✅ Transaction successful!")
+                        logger.info(f"Transaction signature: {result.value}")
+                        logger.info(f"View on Solscan: https://solscan.io/tx/{result.value}")
+                        break
+                        
+                except Exception as e:
+                    if attempt == max_retries - 1:
+                        raise
+                    logger.warning(f"Attempt {attempt + 1} failed, retrying...")
+                    await asyncio.sleep(1)
             
             if result.value:
                 logger.info(f"✅ Transaction successful!")
