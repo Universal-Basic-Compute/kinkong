@@ -144,16 +144,16 @@ class JupiterTradeExecutor:
         try:
             amount_raw = int(amount * 1e6)  # Convert to USDC decimals
             
-            # Use new v1 endpoint
             base_url = "https://api.jup.ag/swap/v1/quote"
             params = {
                 "inputMint": str(input_token),
                 "outputMint": str(output_token),
                 "amount": str(amount_raw),
-                "slippageBps": "100",
-                # Add API key for better rate limits
-                "apiKey": os.getenv('JUPITER_API_KEY', '')
+                "slippageBps": "100"
             }
+            
+            if os.getenv('JUPITER_API_KEY'):
+                params["apiKey"] = os.getenv('JUPITER_API_KEY')
             
             url = f"{base_url}?{urllib.parse.urlencode(params)}"
             
@@ -170,6 +170,14 @@ class JupiterTradeExecutor:
                         return None
                         
                     data = await response.json()
+                    
+                    # Ensure the response has the required fields
+                    required_fields = ['inputMint', 'outputMint', 'inAmount', 'outAmount', 'otherAmountThreshold', 'swapMode']
+                    if not all(field in data for field in required_fields):
+                        self.logger.error("Quote response missing required fields")
+                        self.logger.debug(f"Response data: {json.dumps(data, indent=2)}")
+                        return None
+                    
                     return data
                     
         except Exception as e:
@@ -312,30 +320,43 @@ class JupiterTradeExecutor:
         try:
             url = "https://api.jup.ag/swap/v1/swap"
             
+            # Ensure quote_data has all required fields
+            if not all(key in quote_data for key in ['inputMint', 'outputMint', 'inAmount', 'outAmount', 'otherAmountThreshold', 'swapMode']):
+                self.logger.error("Missing required fields in quote data")
+                self.logger.debug(f"Quote data: {json.dumps(quote_data, indent=2)}")
+                return None
+
             # Construct the request body according to v1 API spec
             swap_data = {
+                "quoteResponse": {
+                    "inputMint": quote_data["inputMint"],
+                    "inAmount": quote_data["inAmount"],
+                    "outputMint": quote_data["outputMint"],
+                    "outAmount": quote_data["outAmount"],
+                    "otherAmountThreshold": quote_data["otherAmountThreshold"],
+                    "swapMode": quote_data["swapMode"],
+                    "slippageBps": quote_data.get("slippageBps", 100),
+                    "platformFee": quote_data.get("platformFee", None),
+                    "priceImpactPct": quote_data.get("priceImpactPct", "0"),
+                    "routePlan": quote_data.get("routePlan", []),
+                    "contextSlot": quote_data.get("contextSlot", 0),
+                    "timeTaken": quote_data.get("timeTaken", 0)
+                },
                 "userPublicKey": wallet_address,
-                "wrapAndUnwrapSol": True,  # Auto wrap/unwrap SOL
-                "useSharedAccounts": True,  # Use shared program accounts for better routing
-                
-                # Add API key if available
-                "trackingAccount": os.getenv('JUPITER_API_KEY', ''),
-                
-                # Enable dynamic compute unit and slippage optimization
+                "wrapAndUnwrapSol": True,
+                "useSharedAccounts": True,
                 "dynamicComputeUnitLimit": True,
-                "dynamicSlippage": True,
-                
-                # Priority fee settings
                 "prioritizationFeeLamports": {
                     "priorityLevelWithMaxLamports": {
                         "priorityLevel": "medium",
-                        "maxLamports": 10000000  # 0.01 SOL max
+                        "maxLamports": 10000000
                     }
-                },
-                
-                # Quote response from previous call
-                "quoteResponse": quote_data
+                }
             }
+
+            # Add API key if available
+            if os.getenv('JUPITER_API_KEY'):
+                swap_data["trackingAccount"] = os.getenv('JUPITER_API_KEY')
             
             self.logger.info("Requesting optimized swap transaction...")
             self.logger.debug(f"Swap parameters: {json.dumps(swap_data, indent=2)}")
@@ -366,13 +387,6 @@ class JupiterTradeExecutor:
                     try:
                         transaction_bytes = base64.b64decode(transaction_base64)
                         self.logger.info(f"Transaction bytes length: {len(transaction_bytes)}")
-                        
-                        # Log additional transaction info
-                        if 'lastValidBlockHeight' in transaction_data:
-                            self.logger.info(f"Last valid block height: {transaction_data['lastValidBlockHeight']}")
-                        if 'prioritizationFeeLamports' in transaction_data:
-                            self.logger.info(f"Priority fee: {transaction_data['prioritizationFeeLamports']} lamports")
-                        
                         return transaction_bytes
                         
                     except Exception as e:
