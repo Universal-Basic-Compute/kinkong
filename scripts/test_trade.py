@@ -46,9 +46,9 @@ async def test_usdc_usdt_swap():
         executor = JupiterTradeExecutor()
         
         # Get wallet address from environment
-        wallet_address = os.getenv('STRATEGY_WALLET_ADDRESS')
+        wallet_address = os.getenv('STRATEGY_WALLET')
         if not wallet_address:
-            raise ValueError("STRATEGY_WALLET_ADDRESS not found in environment")
+            raise ValueError("STRATEGY_WALLET not found in environment")
             
         logger.info(f"Using wallet: {wallet_address[:8]}...{wallet_address[-8:]}")
         
@@ -119,7 +119,7 @@ def main():
         load_dotenv()
         
         # Verify required environment variables
-        required_vars = ['STRATEGY_WALLET_ADDRESS']
+        required_vars = ['STRATEGY_WALLET']
         missing = [var for var in required_vars if not os.getenv(var)]
         
         if missing:
