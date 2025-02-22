@@ -5,12 +5,15 @@ interface Trade {
   id: string;
   createdAt: string;
   token: string;
-  type: 'BUY' | 'SELL';
   amount: number;
   price: number;
   value: number;
   status: string;
   signature: string;
+  exitReason?: string;
+  exitPrice?: number;
+  exitValue?: number;
+  realizedPnl?: number;
 }
 
 interface TradeHistoryProps {
@@ -61,6 +64,10 @@ export function TradeHistory({ userOnly = false }: TradeHistoryProps) {
     return token.startsWith('$') ? token : `$${token}`;
   }
 
+  function getPnlColor(pnl: number): string {
+    return pnl >= 0 ? 'text-green-400' : 'text-red-400';
+  }
+
   function getStatusColor(status: string): string {
     switch (status.toLowerCase()) {
       case 'executed':
@@ -80,9 +87,13 @@ export function TradeHistory({ userOnly = false }: TradeHistoryProps) {
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Time</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Token</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Amount</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Price</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Value</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Entry Price</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Entry Value</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Exit Price</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Exit Value</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">PNL</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Status</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Exit Reason</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gold/10">
@@ -117,10 +128,24 @@ export function TradeHistory({ userOnly = false }: TradeHistoryProps) {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                   ${(trade.value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                  {trade.exitPrice ? `$${trade.exitPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}` : '-'}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                  {trade.exitValue ? `$${trade.exitValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-'}
+                </td>
+                <td className={`px-6 py-4 whitespace-nowrap text-sm ${trade.realizedPnl ? getPnlColor(trade.realizedPnl) : 'text-gray-300'}`}>
+                  {trade.realizedPnl 
+                    ? `${trade.realizedPnl >= 0 ? '+' : ''}${trade.realizedPnl.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%` 
+                    : '-'}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(trade.status)}`}>
                     {trade.status}
                   </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                  {trade.exitReason || '-'}
                 </td>
               </tr>
             );
