@@ -301,9 +301,9 @@ class TradeExecutor:
             client = AsyncClient("https://api.mainnet-beta.solana.com")
 
             # Load wallet from private key
-            private_key = os.getenv('SOLANA_PRIVATE_KEY')
+            private_key = os.getenv('STRATEGY_WALLET_PRIVATE_KEY')
             if not private_key:
-                self.logger.error("SOLANA_PRIVATE_KEY not found in environment variables")
+                self.logger.error("STRATEGY_WALLET_PRIVATE_KEY not found in environment variables")
                 return False
                 
             wallet_keypair = Keypair.from_secret_key(base58.b58decode(private_key))
@@ -419,7 +419,8 @@ def main():
         required_vars = [
             'KINKONG_AIRTABLE_BASE_ID',
             'KINKONG_AIRTABLE_API_KEY',
-            'BIRDEYE_API_KEY'
+            'BIRDEYE_API_KEY',
+            'STRATEGY_WALLET_PRIVATE_KEY'
         ]
         
         missing = [var for var in required_vars if not os.getenv(var)]
