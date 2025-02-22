@@ -15,19 +15,32 @@ interface TokenBalance {
 }
 
 export async function GET() {
+  console.log('Portfolio API called:', new Date().toISOString());
+  
+  const headers = {
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0'
+  };
   try {
     if (!process.env.NEXT_PUBLIC_HELIUS_RPC_URL) {
       throw new Error('RPC URL not configured');
     }
 
-    // Create RPC connection
-    const connection = new Connection(process.env.NEXT_PUBLIC_HELIUS_RPC_URL);
+    console.log('Creating RPC connection...');
+    // Force fresh data with commitment: 'confirmed'
+    const connection = new Connection(process.env.NEXT_PUBLIC_HELIUS_RPC_URL, {
+      commitment: 'confirmed',
+      confirmTransactionInitialTimeout: 60000
+    });
 
-    // Get all token accounts
+    console.log('Fetching token accounts...');
     const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
       TREASURY_WALLET,
       { programId: TOKEN_PROGRAM_ID }
     );
+
+    console.log(`Found ${tokenAccounts.value.length} token accounts`);
 
     // Format balances
     const balances: TokenBalance[] = tokenAccounts.value.map(account => {
@@ -53,7 +66,17 @@ export async function GET() {
       // Fetch prices using DexScreener API
       console.log('Fetching prices from DexScreener for mints:', mints);
         
-      const pricesResponse = await fetch(`${DEXSCREENER_API}/${mints.join(',')}`);
+      // Add timestamp to URL to prevent caching
+      const timestamp = Date.now();
+      const dexscreenerUrl = `${DEXSCREENER_API}/${mints.join(',')}?t=${timestamp}`;
+      
+      console.log('Fetching from DexScreener:', dexscreenerUrl);
+      const pricesResponse = await fetch(dexscreenerUrl, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
         
       if (!pricesResponse.ok) {
         throw new Error(`Failed to fetch token prices: ${pricesResponse.status}`);
@@ -88,21 +111,22 @@ export async function GET() {
         };
       });
 
-      return NextResponse.json(balancesWithUSD);
+      console.log('Returning portfolio data');
+      return NextResponse.json(balancesWithUSD, { headers });
 
     } catch (priceError) {
       console.error('Error fetching prices:', priceError);
       return NextResponse.json(nonZeroBalances.map(balance => ({
         ...balance,
         usdValue: 0
-      })));
+      })), { headers });
     }
 
   } catch (error) {
     console.error('Failed to fetch portfolio:', error);
     return NextResponse.json(
       { error: 'Failed to fetch portfolio data' },
-      { status: 500 }
+      { status: 500, headers }
     );
   }
 }
