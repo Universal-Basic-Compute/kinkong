@@ -112,20 +112,14 @@ async def test_usdc_usdt_swap():
             # Deserialize original transaction
             original_transaction = Transaction.from_bytes(transaction_bytes)
 
-            # Create new message using from_instructions
-            new_message = Message.from_instructions(
-                instructions=original_transaction.message.instructions,
-                recent_blockhash=blockhash.value.blockhash,
-                payer=wallet_keypair.pubkey()  # Add fee payer
-            )
-
-            # Create new transaction with updated message
+            # Create new transaction with fresh blockhash
             new_transaction = Transaction(
-                signatures=original_transaction.signatures,
-                message=new_message
+                fee_payer=wallet_keypair.pubkey(),
+                instructions=original_transaction.message.instructions,
+                recent_blockhash=blockhash.value.blockhash
             )
 
-            # Sign new transaction
+            # Sign transaction
             new_transaction.sign([wallet_keypair])
 
             logger.info("Sending transaction to network...")
