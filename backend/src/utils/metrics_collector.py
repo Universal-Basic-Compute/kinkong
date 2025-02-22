@@ -7,6 +7,12 @@ import json
 import os
 import asyncio
 from enum import Enum
+from solana.rpc.async_api import AsyncClient
+from solders.pubkey import Pubkey
+from spl.token.instructions import get_associated_token_address
+
+# Solana USDC mint address
+USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
 
 class MetricType(Enum):
     PRICE = 'price'
