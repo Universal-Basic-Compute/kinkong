@@ -38,58 +38,6 @@ def setup_logging():
 if os.name == 'nt':  # Windows
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-# Create module-level logger for non-class functions
-logger = setup_logging()
-
-        
-    async def get_token_balance(self, token_mint: str) -> float:
-        """Get token balance using Birdeye API"""
-        try:
-            # Get API key from environment
-            api_key = os.getenv('BIRDEYE_API_KEY')
-            if not api_key:
-                raise ValueError("BIRDEYE_API_KEY not found in environment variables")
-
-            # Prepare request
-            url = "https://public-api.birdeye.so/v1/wallet/token_balance"
-            headers = {
-                'x-api-key': api_key,
-                'x-chain': 'solana',
-                'accept': 'application/json'
-            }
-            params = {
-                'wallet': self.wallet_address,
-                'token_address': token_mint
-            }
-
-            self.logger.info(f"Fetching balance for token {token_mint}")
-            self.logger.info(f"Wallet address: {self.wallet_address}")
-
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url, headers=headers, params=params) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        if data.get('success'):
-                            balance = float(data['data'].get('balance', 0))
-                            usd_value = float(data['data'].get('usd_value', 0))
-                            self.logger.info(f"Token balance: {balance:.4f}")
-                            self.logger.info(f"USD value: ${usd_value:.2f}")
-                            return balance
-                        else:
-                            self.logger.error(f"Birdeye API error: {data.get('message')}")
-                    else:
-                        self.logger.error(f"Birdeye API request failed: {response.status}")
-                        self.logger.error(f"Response: {await response.text()}")
-
-            return 0
-
-        except Exception as e:
-            self.logger.error(f"Error getting token balance from Birdeye: {e}")
-            if hasattr(e, '__traceback__'):
-                import traceback
-                self.logger.error("Traceback:")
-                traceback.print_tb(e.__traceback__)
-            return 0
 
     async def check_slippage(self, quote_data: dict, max_slippage: float = 1.0) -> bool:
         """Check if quote slippage is within acceptable range"""
