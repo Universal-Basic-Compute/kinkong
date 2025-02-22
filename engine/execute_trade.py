@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 import socket
 from solders.keypair import Keypair
 from solders.transaction import Transaction, VersionedTransaction
-from solders.message import Message
+from solders.message import Message, MessageV0
 from solders.instruction import AccountMeta, Instruction
 from solana.rpc.async_api import AsyncClient
 from solana.rpc.types import TxOpts
@@ -379,38 +379,53 @@ class JupiterTradeExecutor:
             return None
 
     async def prepare_transaction(self, transaction_bytes: bytes) -> Optional[Transaction]:
-        """Prepare a versioned transaction from bytes with fresh blockhash"""
+        """Prepare a versioned transaction by recompiling with fresh blockhash"""
         try:
             client = AsyncClient("https://api.mainnet-beta.solana.com")
             try:
-                # Get fresh blockhash
+                # Get fresh blockhash first
                 blockhash_response = await client.get_latest_blockhash()
                 if not blockhash_response or not blockhash_response.value:
                     raise Exception("Failed to get recent blockhash")
-
-                # Log transaction bytes for debugging
-                self.logger.debug(f"Transaction bytes (hex): {transaction_bytes.hex()}")
                 
-                try:
-                    # Use the correct deserialization method for versioned transactions
-                    transaction = VersionedTransaction.from_bytes(transaction_bytes)
-                    self.logger.info("Successfully deserialized versioned transaction")
-                    
-                    # Update blockhash
-                    transaction.message.set_recent_blockhash(blockhash_response.value.blockhash)
-                    
-                    # Sign transaction
-                    transaction.sign([self.wallet_keypair])
-                    
-                    self.logger.info("Transaction prepared successfully")
-                    return transaction
+                fresh_blockhash = blockhash_response.value.blockhash
+                self.logger.info(f"Got fresh blockhash: {fresh_blockhash}")
 
-                except Exception as e:
-                    self.logger.error(f"Failed to prepare transaction: {e}")
-                    if hasattr(e, '__traceback__'):
-                        self.logger.error("Traceback:")
-                        traceback.print_tb(e.__traceback__)
-                    return None
+                # Deserialize the original transaction
+                original_tx = VersionedTransaction.from_bytes(transaction_bytes)
+                
+                # Extract the message components
+                message = original_tx.message
+                
+                # Recompile message with fresh blockhash
+                new_message = MessageV0.try_compile(
+                    payer=message.payer,
+                    recent_blockhash=fresh_blockhash,
+                    instructions=message.instructions,
+                    address_lookup_table_accounts=message.address_lookup_table_accounts
+                )
+                
+                if not new_message:
+                    raise Exception("Failed to compile new message")
+
+                # Create new transaction with recompiled message
+                new_transaction = VersionedTransaction(
+                    message=new_message,
+                    signatures=[]  # Clear signatures as we'll resign
+                )
+                
+                # Sign the new transaction
+                new_transaction.sign([self.wallet_keypair])
+                
+                self.logger.info("Successfully prepared versioned transaction with fresh blockhash")
+                return new_transaction
+
+            except Exception as e:
+                self.logger.error(f"Failed to prepare transaction: {e}")
+                if hasattr(e, '__traceback__'):
+                    self.logger.error("Traceback:")
+                    traceback.print_tb(e.__traceback__)
+                return None
 
             finally:
                 await client.close()
