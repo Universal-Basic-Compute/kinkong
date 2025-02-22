@@ -1,6 +1,12 @@
 import os
+import sys
 import json
 from datetime import datetime, timezone
+import asyncio
+
+# Set Windows event loop policy
+if os.name == 'nt':  # Windows
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 import requests
 from airtable import Airtable
 from dotenv import load_dotenv
@@ -298,12 +304,13 @@ async def main():
         # Verify environment variables
         required_vars = [
             'KINKONG_AIRTABLE_BASE_ID',
-            'KINKONG_AIRTABLE_API_KEY'
+            'KINKONG_AIRTABLE_API_KEY',
+            'BIRDEYE_API_KEY'
         ]
         
         missing = [var for var in required_vars if not os.getenv(var)]
         if missing:
-            raise Exception(f"Missing environment variables: {', '.join(missing)}")
+            raise ValueError(f"Missing environment variables: {', '.join(missing)}")
 
         # Take snapshots
         snapshot_taker = TokenSnapshotTaker()
@@ -314,4 +321,8 @@ async def main():
         exit(1)
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except Exception as e:
+        print(f"Fatal error: {e}")
+        sys.exit(1)
