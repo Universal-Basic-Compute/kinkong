@@ -624,7 +624,7 @@ class TradeExecutor:
 
                     # Send transaction
                     result = await client.send_transaction(
-                        final_tx,
+                        transaction,
                         opts={
                             "skip_preflight": False,
                             "preflight_commitment": "confirmed",
