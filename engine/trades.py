@@ -547,46 +547,43 @@ class TradeExecutor:
 
                 return True
 
-                    finally:
-                        await client.close()
+                # Update trade record with success
+                if result.value:
+                    transaction_url = f"https://solscan.io/tx/{result.value}"
+                    self.trades_table.update(trade['id'], {
+                        'status': 'EXECUTED',
+                        'signature': result.value,
+                        'amount': trade_amount_usd / float(signal['fields']['entryPrice']),
+                        'price': float(signal['fields']['entryPrice']),
+                        'value': trade_amount_usd
+                    })
                     
-                    if result.value:
-                        # Update trade record with success
-                        transaction_url = f"https://solscan.io/tx/{result.value}"
-                        self.trades_table.update(trade['id'], {
-                            'status': 'EXECUTED',
-                            'signature': result.value,
-                            'amount': trade_amount_usd / float(signal['fields']['entryPrice']),
-                            'price': float(signal['fields']['entryPrice']),
-                            'value': trade_amount_usd
-                        })
-                        
-                        self.logger.info(f"Trade executed successfully: {transaction_url}")
-                        
-                        # Send notification
-                        message = f"🤖 Trade Executed\n\n"
-                        message += f"Token: ${signal['fields']['token']}\n"
-                        message += f"Type: {signal['fields']['type']}\n"
-                        message += f"Amount: ${trade_amount_usd:.2f}\n"
-                        message += f"Transaction: {transaction_url}"
-                        
-                        from scripts.analyze_charts import send_telegram_message
-                        send_telegram_message(message)
-                        
-                        return True
+                    self.logger.info(f"Trade executed successfully: {transaction_url}")
+                    
+                    # Send notification
+                    message = f"🤖 Trade Executed\n\n"
+                    message += f"Token: ${signal['fields']['token']}\n"
+                    message += f"Type: {signal['fields']['type']}\n"
+                    message += f"Amount: ${trade_amount_usd:.2f}\n"
+                    message += f"Transaction: {transaction_url}"
+                    
+                    from scripts.analyze_charts import send_telegram_message
+                    send_telegram_message(message)
+                    
+                    return True
 
-                except Exception as e:
-                    self.logger.error(f"Transaction error: {str(e)}")
-                    if hasattr(e, '__traceback__'):
-                        import traceback
-                        self.logger.error("Traceback:")
-                        traceback.print_tb(e.__traceback__)
-                    await self.handle_failed_trade(trade['id'], str(e))
-                    return False
+            except Exception as e:
+                self.logger.error(f"Transaction error: {str(e)}")
+                if hasattr(e, '__traceback__'):
+                    import traceback
+                    self.logger.error("Traceback:")
+                    traceback.print_tb(e.__traceback__)
+                await self.handle_failed_trade(trade['id'], str(e))
+                return False
 
-                finally:
-                    if 'client' in locals():
-                        await client.close()
+            finally:
+                if 'client' in locals():
+                    await client.close()
 
             except Exception as e:
                 self.logger.error(f"Trade execution failed: {e}")
