@@ -1,10 +1,10 @@
 import sys
 from pathlib import Path
 
-# Get the project root (parent of scripts directory)
-project_root = Path(__file__).parent.parent
-if str(project_root) not in sys.path:
-    sys.path.append(str(project_root))
+# Add project root to Python path
+project_root = str(Path(__file__).parent.parent.absolute())
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 # Now we can import backend modules
 from backend.src.airtable.tables import getTable
@@ -20,7 +20,7 @@ import pandas as pd
 from collections import defaultdict
 import statistics
 from airtable import Airtable
-from validate_signal import validate_signal
+from scripts.validate_signal import validate_signal
 
 class ChartAnalysis:
     def __init__(self, timeframe, signal, confidence, reasoning, key_levels, risk_reward_ratio=None, reassess_conditions=None):
