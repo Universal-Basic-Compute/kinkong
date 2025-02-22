@@ -4,3 +4,5 @@ python-dotenv==0.19.2
 anthropic==0.3.0
 pandas==1.4.2
 mplfinance==0.12.9b7
+airtable-python-wrapper==0.15.0
+requests==2.31.0
