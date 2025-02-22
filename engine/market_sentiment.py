@@ -1,0 +1,229 @@
+import os
+from datetime import datetime, timezone, timedelta
+from airtable import Airtable
+from dotenv import load_dotenv
+import logging
+from typing import Dict, List, Tuple
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
+
+class MarketSentimentAnalyzer:
+    def __init__(self):
+        load_dotenv()
+        self.base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
+        self.api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
+        self.snapshots_table = Airtable(self.base_id, 'TOKEN_SNAPSHOTS', self.api_key)
+        self.tokens_table = Airtable(self.base_id, 'TOKENS', self.api_key)
+
+    def get_weekly_snapshots(self, token: str) -> List[Dict]:
+        """Get snapshots from the last 7 days for a token"""
+        seven_days_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+        return self.snapshots_table.get_all(
+            formula=f"AND({{token}}='{token}', IS_AFTER({{createdAt}}, '{seven_days_ago}'))"
+        )
+
+    def analyze_price_action(self, active_tokens: List[Dict]) -> Tuple[bool, str]:
+        """Check if >60% of AI tokens are above their 7-day average"""
+        tokens_above_avg = 0
+        total_tokens = len([t for t in active_tokens if t['fields'].get('token') != 'SOL'])
+        
+        for token in active_tokens:
+            token_name = token['fields'].get('token')
+            if token_name == 'SOL':
+                continue
+                
+            snapshots = self.get_weekly_snapshots(token_name)
+            if snapshots:
+                prices = [float(snap['fields'].get('price', 0)) for snap in snapshots]
+                if prices:
+                    avg_price = sum(prices) / len(prices)
+                    current_price = prices[-1]
+                    if current_price > avg_price:
+                        tokens_above_avg += 1
+        
+        percent_above = (tokens_above_avg / total_tokens * 100) if total_tokens > 0 else 0
+        is_bullish = percent_above > 60
+        reason = f"{percent_above:.1f}% of tokens above 7d average"
+        
+        return is_bullish, reason
+
+    def analyze_volume(self, active_tokens: List[Dict]) -> Tuple[bool, str]:
+        """Check if weekly volume is higher than previous week"""
+        total_volume_current = 0
+        total_volume_previous = 0
+        
+        for token in active_tokens:
+            token_name = token['fields'].get('token')
+            if token_name == 'SOL':
+                continue
+                
+            snapshots = self.get_weekly_snapshots(token_name)
+            if len(snapshots) >= 2:
+                # Split snapshots into current and previous week
+                mid_point = len(snapshots) // 2
+                current_week = snapshots[:mid_point]
+                previous_week = snapshots[mid_point:]
+                
+                current_vol = sum(float(snap['fields'].get('volume24h', 0)) for snap in current_week)
+                previous_vol = sum(float(snap['fields'].get('volume24h', 0)) for snap in previous_week)
+                
+                total_volume_current += current_vol
+                total_volume_previous += previous_vol
+        
+        volume_growth = ((total_volume_current - total_volume_previous) / total_volume_previous * 100) if total_volume_previous > 0 else 0
+        is_bullish = volume_growth > 0
+        reason = f"Volume growth: {volume_growth:.1f}%"
+        
+        return is_bullish, reason
+
+    def analyze_volume_distribution(self, active_tokens: List[Dict]) -> Tuple[bool, str]:
+        """Check if >60% of volume is on up days"""
+        total_up_volume = 0
+        total_volume = 0
+        
+        for token in active_tokens:
+            token_name = token['fields'].get('token')
+            if token_name == 'SOL':
+                continue
+                
+            snapshots = self.get_weekly_snapshots(token_name)
+            for i in range(1, len(snapshots)):
+                current_price = float(snapshots[i]['fields'].get('price', 0))
+                previous_price = float(snapshots[i-1]['fields'].get('price', 0))
+                volume = float(snapshots[i]['fields'].get('volume24h', 0))
+                
+                if current_price > previous_price:
+                    total_up_volume += volume
+                total_volume += volume
+        
+        up_volume_percent = (total_up_volume / total_volume * 100) if total_volume > 0 else 0
+        is_bullish = up_volume_percent > 60
+        reason = f"{up_volume_percent:.1f}% of volume on up days"
+        
+        return is_bullish, reason
+
+    def analyze_relative_strength(self, active_tokens: List[Dict]) -> Tuple[bool, str]:
+        """Check if AI tokens are outperforming SOL"""
+        # Get SOL performance
+        sol_snapshots = self.get_weekly_snapshots('SOL')
+        if not sol_snapshots:
+            return False, "No SOL data available"
+            
+        sol_prices = [float(snap['fields'].get('price', 0)) for snap in sol_snapshots]
+        if len(sol_prices) < 2:
+            return False, "Insufficient SOL price data"
+            
+        sol_return = ((sol_prices[-1] - sol_prices[0]) / sol_prices[0] * 100)
+        
+        # Calculate average AI token performance
+        ai_returns = []
+        for token in active_tokens:
+            token_name = token['fields'].get('token')
+            if token_name == 'SOL':
+                continue
+                
+            snapshots = self.get_weekly_snapshots(token_name)
+            if len(snapshots) >= 2:
+                prices = [float(snap['fields'].get('price', 0)) for snap in snapshots]
+                token_return = ((prices[-1] - prices[0]) / prices[0] * 100)
+                ai_returns.append(token_return)
+        
+        if not ai_returns:
+            return False, "No AI token data available"
+            
+        avg_ai_return = sum(ai_returns) / len(ai_returns)
+        outperformance = avg_ai_return - sol_return
+        is_bullish = outperformance > 0
+        reason = f"AI tokens vs SOL: {outperformance:+.1f}%"
+        
+        return is_bullish, reason
+
+    async def calculate_sentiment(self) -> Dict:
+        """Calculate overall market sentiment"""
+        try:
+            # Get active tokens
+            active_tokens = self.tokens_table.get_all(formula="{isActive}=1")
+            
+            # Run all analyses
+            price_bullish, price_reason = self.analyze_price_action(active_tokens)
+            volume_bullish, volume_reason = self.analyze_volume(active_tokens)
+            distribution_bullish, distribution_reason = self.analyze_volume_distribution(active_tokens)
+            strength_bullish, strength_reason = self.analyze_relative_strength(active_tokens)
+            
+            # Count bullish signals
+            bullish_signals = sum([
+                price_bullish,
+                volume_bullish,
+                distribution_bullish,
+                strength_bullish
+            ])
+            
+            # Calculate confidence
+            confidence = (bullish_signals / 4) * 100
+            
+            # Determine sentiment
+            if bullish_signals >= 3:
+                sentiment = "BULLISH"
+            elif bullish_signals <= 1:
+                sentiment = "BEARISH"
+            else:
+                sentiment = "NEUTRAL"
+            
+            # Compile reasons
+            reasons = [
+                f"Price Action: {price_reason}",
+                f"Volume Trend: {volume_reason}",
+                f"Volume Distribution: {distribution_reason}",
+                f"Relative Strength: {strength_reason}"
+            ]
+            
+            result = {
+                "sentiment": sentiment,
+                "confidence": confidence,
+                "bullishSignals": bullish_signals,
+                "reasons": reasons,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+            
+            logger.info(f"\nMarket Sentiment Analysis:")
+            logger.info(f"Sentiment: {sentiment}")
+            logger.info(f"Confidence: {confidence:.1f}%")
+            logger.info(f"Bullish Signals: {bullish_signals}/4")
+            logger.info("\nReasons:")
+            for reason in reasons:
+                logger.info(f"• {reason}")
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error calculating market sentiment: {e}")
+            raise
+
+async def main():
+    try:
+        analyzer = MarketSentimentAnalyzer()
+        sentiment = await analyzer.calculate_sentiment()
+        
+        # Save to MARKET_SENTIMENT table
+        sentiment_table = Airtable(
+            os.getenv('KINKONG_AIRTABLE_BASE_ID'),
+            'MARKET_SENTIMENT',
+            os.getenv('KINKONG_AIRTABLE_API_KEY')
+        )
+        
+        sentiment_table.insert(sentiment)
+        logger.info("\n✅ Market sentiment recorded")
+        
+    except Exception as e:
+        logger.error(f"Script failed: {e}")
+        raise
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())
