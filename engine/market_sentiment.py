@@ -147,13 +147,17 @@ class MarketSentimentAnalyzer:
         # Get SOL performance
         sol_snapshots = self.get_weekly_snapshots('SOL')
         if not sol_snapshots:
-            return False, "No SOL data available"
+            return False, "No SOL data available", 0, 0
             
-        sol_prices = [float(snap['fields'].get('price', 0)) for snap in sol_snapshots]
-        if len(sol_prices) < 2:
-            return False, "Insufficient SOL price data"
+        # Sort snapshots by date and get first and last prices
+        sol_snapshots.sort(key=lambda x: x['fields'].get('createdAt', ''))
+        sol_start_price = float(sol_snapshots[0]['fields'].get('price', 0))
+        sol_end_price = float(sol_snapshots[-1]['fields'].get('price', 0))
+        
+        if sol_start_price == 0:
+            return False, "Insufficient SOL price data", 0, 0
             
-        sol_return = ((sol_prices[-1] - sol_prices[0]) / sol_prices[0] * 100)
+        sol_return = ((sol_end_price - sol_start_price) / sol_start_price * 100)
         
         # Calculate average AI token performance
         ai_returns = []
@@ -163,13 +167,18 @@ class MarketSentimentAnalyzer:
                 continue
                 
             snapshots = self.get_weekly_snapshots(token_name)
-            if len(snapshots) >= 2:
-                prices = [float(snap['fields'].get('price', 0)) for snap in snapshots]
-                token_return = ((prices[-1] - prices[0]) / prices[0] * 100)
-                ai_returns.append(token_return)
+            if snapshots:
+                # Sort snapshots by date
+                snapshots.sort(key=lambda x: x['fields'].get('createdAt', ''))
+                start_price = float(snapshots[0]['fields'].get('price', 0))
+                end_price = float(snapshots[-1]['fields'].get('price', 0))
+                
+                if start_price > 0:  # Avoid division by zero
+                    token_return = ((end_price - start_price) / start_price * 100)
+                    ai_returns.append(token_return)
         
         if not ai_returns:
-            return False, "No AI token data available"
+            return False, "No AI token data available", 0, 0
             
         avg_ai_return = sum(ai_returns) / len(ai_returns)
         outperformance = avg_ai_return - sol_return
