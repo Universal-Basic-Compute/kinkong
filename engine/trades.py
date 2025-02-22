@@ -532,31 +532,39 @@ class TradeExecutor:
                 self.logger.error(f"Failed to execute transaction for trade {trade['id']}")
                 return False
                 
-            # Update trade record
-            transaction_url = f"https://solscan.io/tx/{signature}"
-            current_price = await self.get_token_price(token_mint)
+            # Calculate profit/loss metrics
+            entry_price = float(trade['fields'].get('price', 0))
+            entry_amount = float(trade['fields'].get('amount', 0))
+            entry_value = entry_price * entry_amount
             
+            exit_value = current_price * balance
+            realized_pnl = exit_value - entry_value
+            roi = (realized_pnl / entry_value * 100) if entry_value > 0 else 0
+            
+            # Update trade record with complete closing data
             self.trades_table.update(trade['id'], {
-                'status': exit_reason,
+                'status': 'CLOSED',  # Set to CLOSED instead of exit reason
+                'exitReason': exit_reason,  # Store the reason separately
                 'closeTxSignature': signature,
-                'closePrice': current_price,
+                'exitPrice': current_price,
                 'closeTxUrl': transaction_url,
-                'closedAt': datetime.now(timezone.utc).isoformat()
+                'closedAt': datetime.now(timezone.utc).isoformat(),
+                'realizedPnl': realized_pnl,
+                'roi': roi,
+                'exitValue': exit_value,
+                'notes': f"Trade closed via {exit_reason} at ${current_price:.4f}"
             })
             
-            # Calculate profit/loss percentage
-            entry_price = float(trade['fields'].get('price', 0))
-            pnl_percent = ((current_price - entry_price) / entry_price * 100)
-            
-            # Send notification with more details
+            # Update Telegram message to include ROI
             message = f"🦍 KinKong Trade Closed\n\n"
             message += f"Token: ${trade['fields']['token']}\n"
             message += f"Exit Reason: {exit_reason}\n"
             message += f"Entry Price: ${entry_price:.4f}\n"
             message += f"Exit Price: ${current_price:.4f}\n"
-            message += f"P&L: {pnl_percent:+.2f}%\n"
-            message += f"USD Value: ${usd_value:.2f}\n"
-            message += f"Portfolio %: {(usd_value/total_portfolio_value*100):.1f}%\n\n"
+            message += f"ROI: {roi:+.2f}%\n"
+            message += f"P&L: ${realized_pnl:+.2f}\n"
+            message += f"USD Value: ${exit_value:.2f}\n"
+            message += f"Portfolio %: {(exit_value/total_portfolio_value*100):.1f}%\n\n"
             message += f"🔗 View Transaction:\n{transaction_url}"
             
             try:
