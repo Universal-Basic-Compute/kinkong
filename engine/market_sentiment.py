@@ -83,9 +83,9 @@ class MarketSentimentAnalyzer:
         
         percent_above = (tokens_above_avg / total_tokens * 100) if total_tokens > 0 else 0
         is_bullish = percent_above > 60
-        reason = f"{percent_above:.1f}% of tokens above 7d average"
+        notes = f"{percent_above:.1f}% of tokens above 7d average"
         
-        return is_bullish, reason
+        return is_bullish, notes
 
     def analyze_volume(self, active_tokens: List[Dict]) -> Tuple[bool, str]:
         """Check if weekly volume is higher than previous week"""
@@ -112,9 +112,9 @@ class MarketSentimentAnalyzer:
         
         volume_growth = ((total_volume_current - total_volume_previous) / total_volume_previous * 100) if total_volume_previous > 0 else 0
         is_bullish = volume_growth > 0
-        reason = f"Volume growth: {volume_growth:.1f}%"
+        notes = f"Volume growth: {volume_growth:.1f}%"
         
-        return is_bullish, reason
+        return is_bullish, notes
 
     def analyze_volume_distribution(self, active_tokens: List[Dict]) -> Tuple[bool, str]:
         """Check if >60% of volume is on up days"""
@@ -138,9 +138,9 @@ class MarketSentimentAnalyzer:
         
         up_volume_percent = (total_up_volume / total_volume * 100) if total_volume > 0 else 0
         is_bullish = up_volume_percent > 60
-        reason = f"{up_volume_percent:.1f}% of volume on up days"
+        notes = f"{up_volume_percent:.1f}% of volume on up days"
         
-        return is_bullish, reason
+        return is_bullish, notes
 
     def analyze_relative_strength(self, active_tokens: List[Dict]) -> Tuple[bool, str]:
         """Check if AI tokens are outperforming SOL"""
@@ -174,9 +174,9 @@ class MarketSentimentAnalyzer:
         avg_ai_return = sum(ai_returns) / len(ai_returns)
         outperformance = avg_ai_return - sol_return
         is_bullish = outperformance > 0
-        reason = f"AI tokens vs SOL: {outperformance:+.1f}%"
+        notes = f"AI tokens vs SOL: {outperformance:+.1f}%"
         
-        return is_bullish, reason
+        return is_bullish, notes
 
     async def calculate_sentiment(self) -> Dict:
         """Calculate overall market sentiment"""
@@ -185,10 +185,10 @@ class MarketSentimentAnalyzer:
             active_tokens = self.tokens_table.get_all(formula="{isActive}=1")
             
             # Run all analyses
-            price_bullish, price_reason = self.analyze_price_action(active_tokens)
-            volume_bullish, volume_reason = self.analyze_volume(active_tokens)
-            distribution_bullish, distribution_reason = self.analyze_volume_distribution(active_tokens)
-            strength_bullish, strength_reason = self.analyze_relative_strength(active_tokens)
+            price_bullish, price_notes = self.analyze_price_action(active_tokens)
+            volume_bullish, volume_notes = self.analyze_volume(active_tokens)
+            distribution_bullish, distribution_notes = self.analyze_volume_distribution(active_tokens)
+            strength_bullish, strength_notes = self.analyze_relative_strength(active_tokens)
             
             # Count bullish signals
             bullish_signals = sum([
@@ -211,10 +211,10 @@ class MarketSentimentAnalyzer:
             
             # Compile reasons
             reasons = [
-                f"Price Action: {price_reason}",
-                f"Volume Trend: {volume_reason}",
-                f"Volume Distribution: {distribution_reason}",
-                f"Relative Strength: {strength_reason}"
+                f"Price Action: {price_notes}",
+                f"Volume Trend: {volume_notes}",
+                f"Volume Distribution: {distribution_notes}",
+                f"Relative Strength: {strength_notes}"
             ]
             
             result = {
