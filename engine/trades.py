@@ -478,14 +478,31 @@ class TradeExecutor:
                     transaction_base58 = transaction_data['swapTransaction']
                     self.logger.info("Got transaction base58 string")
                     
+                    # Clean the transaction string
+                    transaction_base58 = transaction_base58.replace('/', '_')  # Replace forward slashes
+                    transaction_base58 = ''.join(c for c in transaction_base58 if c.isalnum() or c in '_-')  # Keep only valid chars
+                    
+                    self.logger.info(f"Cleaned transaction string length: {len(transaction_base58)}")
+                    
                     # Decode the transaction bytes
-                    transaction_bytes = base58.b58decode(transaction_base58)
-                    self.logger.info("Decoded transaction bytes")
+                    try:
+                        transaction_bytes = base58.b58decode(transaction_base58)
+                        self.logger.info(f"Decoded transaction bytes length: {len(transaction_bytes)}")
+                    except ValueError as ve:
+                        self.logger.error(f"Base58 decode error: {str(ve)}")
+                        self.logger.error(f"Problem string: {transaction_base58[:100]}...")  # Log first 100 chars
+                        await self.handle_failed_trade(trade['id'], "Invalid transaction format")
+                        return False
                     
                     # Create the transaction object
-                    transaction = Transaction.deserialize(transaction_bytes)
-                    self.logger.info("Deserialized transaction")
-                    
+                    try:
+                        transaction = Transaction.deserialize(transaction_bytes)
+                        self.logger.info("Deserialized transaction successfully")
+                    except Exception as e:
+                        self.logger.error(f"Transaction deserialize error: {str(e)}")
+                        await self.handle_failed_trade(trade['id'], "Failed to deserialize transaction")
+                        return False
+
                     # Sign the transaction
                     transaction.sign(wallet_keypair)
                     self.logger.info("Signed transaction")
