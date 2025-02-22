@@ -1,5 +1,10 @@
 import sys
 from pathlib import Path
+
+
+# Now we can import from engine
+from engine.execute_trade import JupiterTradeExecutor
+
 import os
 from datetime import datetime, timezone
 import asyncio
@@ -7,7 +12,6 @@ import requests
 import aiohttp
 from airtable import Airtable
 from dotenv import load_dotenv
-from engine.execute_trade import JupiterTradeExecutor
 from solders.transaction import Transaction
 from solana.rpc.types import TxOpts
 import json
