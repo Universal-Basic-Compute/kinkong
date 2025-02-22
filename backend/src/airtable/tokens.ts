@@ -1,7 +1,7 @@
 import { getTable } from './tables';
 
 export interface TokenData {
-  symbol: string;
+  token: string;
   price: number;
   price7dAvg: number;
   volume24h: number;
@@ -21,7 +21,7 @@ export async function getTokenData(): Promise<TokenData[]> {
       .all();
 
     return records.map(record => ({
-      symbol: record.get('symbol') as string,
+      token: record.get('token') as string,
       price: record.get('price') as number || 0,
       price7dAvg: record.get('price7dAvg') as number || 0,
       volume24h: record.get('volume24h') as number || 0,

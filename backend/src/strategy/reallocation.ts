@@ -366,7 +366,7 @@ export async function executeReallocation() {
       .all();
 
     const tokens: Token[] = tokenRecords.map(record => ({
-      symbol: record.get('symbol') as string || record.get('name') as string,
+      token: record.get('token') as string || record.get('name') as string,
       name: record.get('name') as string,
       mint: record.get('mint') as string,
       isActive: true,
