@@ -18,9 +18,13 @@ export const signalEvents = {
   }
 };
 
-function formatTokenSymbol(token: string): string {  // Formats tokens
+function formatTokenSymbol(token: string): string {
   return token.startsWith('$') ? token : `$${token}`;
 }
+
+function getTokenClass(token: string): string {
+  const upperToken = token.toUpperCase();
+  switch (upperToken) {
 
 function getTimeframeEmoji(timeframe: Signal['timeframe']): string {
   switch (timeframe) {
@@ -386,7 +390,7 @@ export function SignalHistory() {
                 {getRelativeTime(signal.createdAt)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">
-                <span className={getTokenClass(signal.token)}>  
+                <span className={getTokenClass(signal.token)}>
                   {formatTokenSymbol(signal.token)}
                 </span>
               </td>

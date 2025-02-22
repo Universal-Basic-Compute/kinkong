@@ -272,7 +272,7 @@ if __name__ == "__main__":
         symbol_filter = f"{{symbol}}='{fields['token']}'"  # Use symbol field name
         print(f"\nTrying filter: {symbol_filter}")
         token_records = tokens_table.get_all(
-            formula=symbol_filter
+            formula=f"{{token}}='{fields['token']}'"
         )
         
         if not token_records:
