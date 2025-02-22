@@ -123,38 +123,28 @@ class TokenSnapshotTaker:
                 'priceChange24h': 0
             }
 
-    async def calculate_volume7d(self, token: str) -> float:
-        """Calculate 7-day average volume for a token"""
+    async def calculate_volume_growth(self, token: str, volume24h: float, volume7d: float) -> float:
+        """Calculate volume growth percentage comparing 24h to 7d average"""
         try:
-            # Get snapshots from last 7 days for this token
-            seven_days_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
-            
-            snapshots_table = Airtable(
-                self.base_id,
-                'TOKEN_SNAPSHOTS',
-                self.api_key
-            )
-            
-            snapshots = snapshots_table.get_all(
-                formula=f"AND({{token}}='{token}', IS_AFTER({{createdAt}}, '{seven_days_ago}'))"
-            )
-            
-            if not snapshots:
-                logger.warning(f"No snapshots found for {token} in last 7 days")
+            if volume7d <= 0:
+                self.logger.warning(f"No 7-day volume data for {token}")
                 return 0
                 
-            # Calculate average volume
-            volumes = [float(snap['fields'].get('volume24h', 0)) for snap in snapshots]
-            avg_volume = sum(volumes) / len(volumes) if volumes else 0
+            # Calculate growth percentage
+            growth = ((volume24h - volume7d) / volume7d) * 100
+                
+            self.logger.info(f"Volume growth for {token}:")
+            self.logger.info(f"Latest 24h volume: ${volume24h:,.2f}")
+            self.logger.info(f"7-day average volume: ${volume7d:,.2f}")
+            self.logger.info(f"Growth: {growth:+.2f}%")
             
-            logger.info(f"Calculated 7-day average volume for {token}: ${avg_volume:,.2f}")
-            return avg_volume
+            return growth
             
         except Exception as e:
-            logger.error(f"Error calculating 7-day volume for {token}: {e}")
+            self.logger.error(f"Error calculating volume growth for {token}: {e}")
             return 0
 
-    async def calculate_metrics(self, token: Dict) -> Dict:
+    async def calculate_metrics(self, token: Dict, snapshot: Dict) -> Dict:
         """Calculate all metrics for a token"""
         try:
             token_name = token['fields'].get('token')
@@ -163,11 +153,15 @@ class TokenSnapshotTaker:
                 
             self.logger.info(f"\nCalculating metrics for {token_name}...")
             
-            # Calculate metrics one by one
-            volume7d = await self.calculate_volume7d(token_name)
+            # Get values from current snapshot
+            volume24h = float(snapshot.get('volume24h', 0))
+            volume7d = float(snapshot.get('volume7d', 0))
+            
+            # Calculate volume growth using existing values
+            volume_growth = await self.calculate_volume_growth(token_name, volume24h, volume7d)
             
             metrics = {
-                'volume7d': volume7d
+                'volumeGrowth': volume_growth
             }
             
             self.logger.info(f"Metrics calculated for {token_name}:")
@@ -206,7 +200,7 @@ class TokenSnapshotTaker:
                     metrics = self.get_token_price(mint)
                     
                     # Calculate additional metrics
-                    calculated_metrics = await self.calculate_metrics(token)
+                    calculated_metrics = await self.calculate_metrics(token, snapshot)
                     
                     # Create snapshot
                     snapshot = {
