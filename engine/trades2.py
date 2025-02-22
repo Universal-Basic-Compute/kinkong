@@ -302,13 +302,31 @@ class TradeExecutor:
             trade = self.trades_table.insert(trade_data)
             self.logger.info(f"Created trade record: {trade['id']}")
 
-            # Execute validated swap
+            # Calculate trade amount (3% of balance, min $10, max $1000)
+            balance = await self.jupiter.get_token_balance("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v")  # USDC balance
+            if balance <= 0:
+                logger.error("Could not get USDC balance")
+                await self.handle_failed_trade(trade['id'], "Failed to get USDC balance")
+                return False
+            if balance < 10:
+                logger.error(f"Insufficient USDC balance: ${balance:.2f}")
+                await self.handle_failed_trade(trade['id'], "Insufficient USDC balance")
+                return False
+
+            trade_amount_usd = min(balance * 0.03, 1000)  # 3% of balance, max $1000
+            trade_amount_usd = max(trade_amount_usd, 10)  # Minimum $10
+
+            logger.info(f"\nTrade calculation:")
+            logger.info(f"USDC balance: ${balance:.2f}")
+            logger.info(f"Trade amount: ${trade_amount_usd:.2f}")
+
+            # Execute validated swap with calculated amount
             success, transaction_bytes = await self.jupiter.execute_validated_swap(
                 input_token="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",  # USDC
                 output_token=signal['fields']['mint'],
-                amount=10.0,          # 10 USDC
-                min_amount=5.0,       # Minimum 5 USDC
-                max_slippage=1.0      # Maximum 1% slippage
+                amount=trade_amount_usd,  # Use calculated amount
+                min_amount=5.0,          # Minimum 5 USDC
+                max_slippage=1.0         # Maximum 1% slippage
             )
             
             if not success or not transaction_bytes:
@@ -401,7 +419,7 @@ class TradeExecutor:
                             self.trades_table.update(trade['id'], {
                                 'status': 'EXECUTED',
                                 'signature': str(result.value),  # Convert Signature to string
-                                'amount': 10.0,  # Fixed amount for now
+                                'amount': trade_amount_usd,  # Use actual amount
                                 'price': float(signal['fields']['entryPrice'])
                             })
                             
@@ -409,7 +427,7 @@ class TradeExecutor:
                             message = f"🦍 KinKong Trade Alert\n\n"
                             message += f"Token: ${signal['fields']['token']}\n"
                             message += f"Action: {signal['fields']['type']}\n"
-                            message += f"Amount: $10.00 USDC\n"
+                            message += f"Amount: ${trade_amount_usd:.2f} USDC\n"
                             message += f"Entry Price: ${float(signal['fields']['entryPrice']):.4f}\n"
                             message += f"Target: ${float(signal['fields']['targetPrice']):.4f}\n"
                             message += f"Stop Loss: ${float(signal['fields']['stopLoss']):.4f}\n"
