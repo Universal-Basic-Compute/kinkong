@@ -19,6 +19,7 @@ from solders.instruction import AccountMeta, Instruction
 from solana.rpc.async_api import AsyncClient
 from solana.rpc.types import TxOpts
 from solders.pubkey import Pubkey
+from solders.signature import Signature
 from spl.token.instructions import get_associated_token_address
 
 def setup_logging():
@@ -296,8 +297,11 @@ class JupiterTradeExecutor:
                         await asyncio.sleep(delay)
                         continue
                     
-                    signature = str(result.value)
-                    self.logger.info(f"Transaction sent: {signature}")
+                    signature_str = str(result.value)
+                    # Convert string signature to Signature object
+                    signature = Signature.from_string(signature_str)
+                    
+                    self.logger.info(f"Transaction sent: {signature_str}")
                     
                     # Wait before confirmation check to avoid rate limits
                     await asyncio.sleep(1)
@@ -307,26 +311,26 @@ class JupiterTradeExecutor:
                         for confirm_attempt in range(3):
                             try:
                                 confirmation = await client.confirm_transaction(
-                                    signature,
+                                    signature,  # Pass Signature object instead of string
                                     commitment="finalized"
                                 )
                                 
                                 # Check if confirmation was successful
                                 if hasattr(confirmation.value, 'err') and confirmation.value.err:
                                     self.logger.error(f"Transaction failed: {confirmation.value.err}")
-                                    self.logger.error(f"View transaction: https://solscan.io/tx/{signature}")
+                                    self.logger.error(f"View transaction: https://solscan.io/tx/{signature_str}")
                                     break
                                 elif isinstance(confirmation.value, list):
                                     # Handle list response type
                                     if confirmation.value and confirmation.value[0]:
                                         self.logger.info(f"✅ Transaction confirmed!")
-                                        self.logger.info(f"View transaction: https://solscan.io/tx/{signature}")
-                                        return signature
+                                        self.logger.info(f"View transaction: https://solscan.io/tx/{signature_str}")
+                                        return signature_str
                                 else:
                                     # Handle standard response type
                                     self.logger.info(f"✅ Transaction confirmed!")
-                                    self.logger.info(f"View transaction: https://solscan.io/tx/{signature}")
-                                    return signature
+                                    self.logger.info(f"View transaction: https://solscan.io/tx/{signature_str}")
+                                    return signature_str
                                 
                             except Exception as confirm_error:
                                 if "429" in str(confirm_error):  # Rate limit error
