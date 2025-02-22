@@ -370,8 +370,7 @@ class TradeExecutor:
             self.logger.info(f"Requesting Jupiter quote:")
             self.logger.info(f"Input token: {input_token}")
             self.logger.info(f"Output token: {output_token}")
-            self.logger.info(f"Amount: {amount} (raw: {amount_raw})")
-            self.logger.info(f"USD value: ${trade_value_usd:.2f}")
+            self.logger.info(f"Amount: {amount}")
             
             url = "https://quote-api.jup.ag/v6/quote"
             
@@ -599,7 +598,7 @@ class TradeExecutor:
 
                 async with aiohttp.ClientSession() as session:
                     try:
-                        async with session.get(quote_url, params=quote_params) as response:
+                        async with session.get(url, params=params) as response:
                             if not response.ok:
                                 self.logger.error(f"Failed to get Jupiter quote: {response.status}")
                                 self.logger.error(f"Response text: {await response.text()}")
