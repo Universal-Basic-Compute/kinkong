@@ -176,8 +176,12 @@ export const TokenTable = ({ showAllTokens = false }: TokenTableProps) => {
                         alt={metadata.token}
                         className="w-6 h-6 rounded-full"
                         onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                          e.currentTarget.nextElementSibling?.style.display = 'flex';
+                          const target = e.currentTarget;
+                          target.style.display = 'none';
+                          const sibling = target.nextElementSibling as HTMLElement;
+                          if (sibling) {
+                            sibling.style.display = 'flex';
+                          }
                         }}
                       />
                     ) : (
