@@ -205,12 +205,11 @@ class TradeExecutor:
             trade = self.trades_table.insert(trade_data)
             logger.info(f"Created trade record: {trade['id']}")
 
-            # Update signal status
+            # Update signal with trade ID
             self.signals_table.update(signal['id'], {
-                'status': 'ACTIVE',
                 'tradeId': trade['id']
             })
-            
+        
             # TODO: Implement actual trade execution logic here
             # This would integrate with your trading infrastructure
             
