@@ -13,7 +13,7 @@
     "reallocation": "ts-node scripts/execute-reallocation.ts",
     "snapshot": "python scripts/take_snapshot.py",
     "calculate-signals": "ts-node scripts/calculate-closed-signals.ts",
-    "wallet-snapshot": "cross-env NODE_OPTIONS=--loader=ts-node/esm ts-node --esm engine/wallet_snapshots.ts"
+    "wallet-snapshot": "python engine/wallet_snapshots.py"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.10.2",
