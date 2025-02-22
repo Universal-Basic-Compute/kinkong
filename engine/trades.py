@@ -504,29 +504,25 @@ class TradeExecutor:
                         recent_blockhash = blockhash_response.value.blockhash
                         self.logger.info(f"Got recent blockhash: {recent_blockhash}")
                         
-                        # Create and deserialize transaction
-                        transaction = Transaction.deserialize(transaction_bytes)
+                        # Use Solders Transaction deserialization
+                        from solders.transaction import Transaction as SoldersTransaction
+                        transaction = SoldersTransaction.from_bytes(transaction_bytes)
                         self.logger.info("Deserialized transaction successfully")
                         
-                        # Set recent blockhash
-                        transaction.recent_blockhash = recent_blockhash
-                        self.logger.info("Set recent blockhash")
-                        
-                        # Set fee payer using pubkey() method
-                        transaction.fee_payer = wallet_keypair.pubkey()
+                        # Set fee payer
+                        transaction.message.set_fee_payer(wallet_keypair.pubkey())
                         self.logger.info("Set fee payer")
-        
-                        # Partial sign (fee payer)
-                        transaction.sign_partial(wallet_keypair)
-                        self.logger.info("Partially signed transaction")
+                        
+                        # Sign transaction
+                        signed_tx = transaction.sign([wallet_keypair])
+                        self.logger.info("Signed transaction")
                         
                         # Send transaction
                         result = await client.send_transaction(
-                            transaction,
-                            wallet_keypair,
+                            signed_tx,
                             opts=types.TxOpts(
                                 skip_preflight=False,
-                                preflight_commitment="confirmed"  # Use string instead of enum
+                                preflight_commitment="confirmed"
                             )
                         )
                         self.logger.info(f"Sent transaction: {result.value}")
