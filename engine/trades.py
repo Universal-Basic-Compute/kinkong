@@ -355,11 +355,15 @@ class TradeExecutor:
                     self.logger.error("STRATEGY_WALLET_PRIVATE_KEY not found")
                     return False
                 
-                wallet_keypair = Keypair.from_secret_key(base58.b58decode(private_key))
+                # Convert base58 private key to bytes
+                private_key_bytes = b58decode(private_key)
                 
-                # Check USDC balance instead of SOL
+                # Create keypair from bytes
+                wallet_keypair = Keypair.from_bytes(private_key_bytes)
+                
+                # Check USDC balance
                 usdc_ata = get_associated_token_address(
-                    owner=wallet_keypair.public_key,
+                    owner=wallet_keypair.pubkey(),  # Use pubkey() instead of public_key
                     mint=Pubkey.from_string(USDC_MINT)
                 )
                 usdc_balance = await client.get_token_account_balance(usdc_ata)
