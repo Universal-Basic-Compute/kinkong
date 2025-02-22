@@ -5,6 +5,10 @@ import asyncio
 from datetime import datetime
 import logging
 from dotenv import load_dotenv
+from solders.keypair import Keypair
+from solders.transaction import Transaction
+from solana.rpc.async_api import AsyncClient
+import base58
 
 # Get absolute path to project root and .env file
 project_root = Path(__file__).parent.parent.absolute()
@@ -45,66 +49,96 @@ async def test_usdc_usdt_swap():
         # Initialize trade executor
         executor = JupiterTradeExecutor()
         
-        # Get wallet address from environment
+        # Get wallet address and private key from environment
         wallet_address = os.getenv('STRATEGY_WALLET')
-        if not wallet_address:
-            raise ValueError("STRATEGY_WALLET not found in environment")
+        private_key = os.getenv('STRATEGY_WALLET_PRIVATE_KEY')
+        
+        if not wallet_address or not private_key:
+            raise ValueError("Wallet configuration missing")
             
-        logger.info(f"Using wallet: {wallet_address[:8]}...{wallet_address[-8:]}")
+        # Create Solana client
+        client = AsyncClient("https://api.mainnet-beta.solana.com")
         
-        # Amount to swap (10 USDC)
-        amount = 10.0
-        
-        logger.info(f"\nGetting quote for {amount} USDC -> USDT")
-        
-        # Get quote
-        quote = await executor.get_jupiter_quote(
-            input_token=USDC_MINT,
-            output_token=USDT_MINT,
-            amount=amount
-        )
-        
-        if not quote:
-            raise Exception("Failed to get quote")
+        try:
+            # Convert private key to Keypair
+            private_key_bytes = base58.b58decode(private_key)
+            wallet_keypair = Keypair.from_bytes(private_key_bytes)
             
-        # Log quote details
-        in_amount = float(quote['inAmount']) / 1e6  # Convert from USDC decimals
-        out_amount = float(quote['outAmount']) / 1e6  # Convert from USDT decimals
-        price_impact = float(quote.get('priceImpactPct', 0))
-        
-        logger.info("\nQuote details:")
-        logger.info(f"Input: {in_amount:.2f} USDC")
-        logger.info(f"Output: {out_amount:.2f} USDT")
-        logger.info(f"Price impact: {price_impact:.4f}%")
-        logger.info(f"Rate: {out_amount/in_amount:.6f} USDT/USDC")
-        
-        # Get transaction
-        logger.info("\nGenerating swap transaction...")
-        
-        transaction_bytes = await executor.get_jupiter_transaction(
-            quote_data=quote,
-            wallet_address=wallet_address
-        )
-        
-        if not transaction_bytes:
-            raise Exception("Failed to get transaction")
+            logger.info(f"Using wallet: {wallet_address[:8]}...{wallet_address[-8:]}")
             
-        logger.info("✅ Successfully generated swap transaction")
-        logger.info(f"Transaction size: {len(transaction_bytes)} bytes")
-        
-        # Save transaction bytes to file for inspection
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"usdc_usdt_swap_{timestamp}.tx"
-        
-        with open(filename, "wb") as f:
-            f.write(transaction_bytes)
+            # Amount to swap (10 USDC)
+            amount = 10.0
             
-        logger.info(f"\nTransaction saved to {filename}")
-        logger.info("\n✅ Test completed successfully")
-        
-        # Note: This test only generates the transaction
-        # Actual signing and sending would require private key access
-        
+            logger.info(f"\nGetting quote for {amount} USDC -> USDT")
+            
+            # Get quote
+            quote = await executor.get_jupiter_quote(
+                input_token=USDC_MINT,
+                output_token=USDT_MINT,
+                amount=amount
+            )
+            
+            if not quote:
+                raise Exception("Failed to get quote")
+                
+            # Log quote details
+            in_amount = float(quote['inAmount']) / 1e6
+            out_amount = float(quote['outAmount']) / 1e6
+            price_impact = float(quote.get('priceImpactPct', 0))
+            
+            logger.info("\nQuote details:")
+            logger.info(f"Input: {in_amount:.2f} USDC")
+            logger.info(f"Output: {out_amount:.2f} USDT")
+            logger.info(f"Price impact: {price_impact:.4f}%")
+            logger.info(f"Rate: {out_amount/in_amount:.6f} USDT/USDC")
+            
+            # Get transaction
+            logger.info("\nGenerating swap transaction...")
+            
+            transaction_bytes = await executor.get_jupiter_transaction(
+                quote_data=quote,
+                wallet_address=wallet_address
+            )
+            
+            if not transaction_bytes:
+                raise Exception("Failed to get transaction")
+            
+            # Deserialize and sign transaction
+            transaction = Transaction.from_bytes(transaction_bytes)
+            
+            # Get fresh blockhash
+            blockhash = await client.get_latest_blockhash()
+            if not blockhash or not blockhash.value:
+                raise Exception("Failed to get recent blockhash")
+            
+            # Update transaction with new blockhash
+            transaction.message.recent_blockhash = blockhash.value.blockhash
+            
+            # Sign transaction
+            transaction.sign([wallet_keypair])
+            
+            logger.info("Sending transaction to network...")
+            
+            # Send transaction
+            result = await client.send_transaction(
+                transaction,
+                opts={
+                    "skip_preflight": False,
+                    "preflight_commitment": "confirmed",
+                    "max_retries": 3
+                }
+            )
+            
+            if result.value:
+                logger.info(f"✅ Transaction successful!")
+                logger.info(f"Transaction signature: {result.value}")
+                logger.info(f"View on Solscan: https://solscan.io/tx/{result.value}")
+            else:
+                raise Exception("Transaction failed to send")
+
+        finally:
+            await client.close()
+            
     except Exception as e:
         logger.error(f"\n❌ Test failed: {str(e)}")
         if hasattr(e, '__traceback__'):
