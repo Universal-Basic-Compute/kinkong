@@ -368,7 +368,7 @@ async def get_enhanced_token_metrics(token_mint: str) -> Dict:
         # Get pool stats
         pool_url = f"https://public-api.birdeye.so/defi/pool_stats?address={token_mint}"
 
-        # Make parallel requests
+        # Make parallel requests using aiohttp
         async with aiohttp.ClientSession() as session:
             tasks = [
                 session.get(url, headers=headers) 
