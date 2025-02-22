@@ -10,14 +10,27 @@ from typing import Dict, Optional
 import urllib.parse
 from dotenv import load_dotenv
 import socket
+from solders.keypair import Keypair
+from solders.transaction import Transaction
+from solders.message import Message
+from solders.instruction import AccountMeta, Instruction
+from solana.rpc.async_api import AsyncClient
+from solana.rpc.types import TxOpts
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-logger = logging.getLogger(__name__)
+def setup_logging():
+    """Configure logging"""
+    logger = logging.getLogger(__name__)
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        formatter = logging.Formatter(
+            '%(asctime)s - %(levelname)s - %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        )
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
+    logger.propagate = False
+    return logger
 
 # Configure Windows event loop policy
 if os.name == 'nt':  # Windows
@@ -26,14 +39,31 @@ if os.name == 'nt':  # Windows
 class JupiterTradeExecutor:
     def __init__(self):
         load_dotenv()
+        self.logger = setup_logging()
         
-    async def get_jupiter_quote(
-        self, 
-        input_token: str, 
-        output_token: str, 
+        # Initialize wallet during class initialization
+        try:
+            private_key = os.getenv('STRATEGY_WALLET_PRIVATE_KEY')
+            if not private_key:
+                raise ValueError("STRATEGY_WALLET_PRIVATE_KEY not found")
+            
+            private_key_bytes = base58.b58decode(private_key)
+            self.wallet_keypair = Keypair.from_bytes(private_key_bytes)
+            self.wallet_address = str(self.wallet_keypair.pubkey())
+            self.logger.info(f"Wallet initialized: {self.wallet_address[:8]}...")
+            
+        except Exception as e:
+            self.logger.error(f"Failed to initialize wallet: {e}")
+            self.wallet_keypair = None
+            self.wallet_address = None
+        
+    async def execute_swap(
+        self,
+        input_token: str,
+        output_token: str,
         amount: float
-    ) -> Optional[Dict]:
-        """Get quote from Jupiter"""
+    ) -> bool:
+        """Execute a token swap"""
         try:
             # Convert amount to proper decimals (USDC has 6 decimals)
             amount_raw = int(amount * 1e6)
