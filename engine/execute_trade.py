@@ -146,7 +146,7 @@ class JupiterTradeExecutor:
         amount: float,
         min_amount: float = 1.0,
         max_slippage: float = 1.0
-    ) -> bool:
+    ) -> tuple[bool, Optional[bytes]]:  # Modified to return transaction bytes
         """Execute swap with validation"""
         try:
             # Validate trade first
@@ -157,14 +157,23 @@ class JupiterTradeExecutor:
                 min_amount,
                 max_slippage
             ):
-                return False
-                
-            # Execute swap
-            return await self.execute_swap(input_token, output_token, amount)
+                return False, None
+
+            # Get quote
+            quote = await self.get_jupiter_quote(input_token, output_token, amount)
+            if not quote:
+                return False, None
+
+            # Get transaction bytes
+            transaction_bytes = await self.get_jupiter_transaction(quote, self.wallet_address)
+            if not transaction_bytes:
+                return False, None
+
+            return True, transaction_bytes
             
         except Exception as e:
             self.logger.error(f"Validated swap failed: {e}")
-            return False
+            return False, None
 
     async def get_jupiter_quote(self, input_token: str, output_token: str, amount: float) -> Optional[Dict]:
         """Get quote from Jupiter API v6"""

@@ -70,7 +70,7 @@ async def test_usdc_usdt_swap():
             logger.info(f"Using wallet: {wallet_address[:8]}...{wallet_address[-8:]}")
             
             # Execute validated swap
-            success = await executor.execute_validated_swap(
+            success, transaction_bytes = await executor.execute_validated_swap(
                 input_token=USDC_MINT,
                 output_token=USDT_MINT,
                 amount=10.0,          # 10 USDC
@@ -80,6 +80,9 @@ async def test_usdc_usdt_swap():
             
             if not success:
                 raise Exception("Validated swap failed")
+
+            if not transaction_bytes:
+                raise Exception("Failed to get transaction")
 
             if not transaction_bytes:
                 raise Exception("Failed to get transaction")
