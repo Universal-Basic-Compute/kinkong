@@ -16,6 +16,8 @@ from solders.message import Message
 from solders.instruction import AccountMeta, Instruction
 from solana.rpc.async_api import AsyncClient
 from solana.rpc.types import TxOpts
+from solders.pubkey import Pubkey
+from spl.token.instructions import get_associated_token_address
 
 def setup_logging():
     """Configure logging"""
@@ -188,12 +190,12 @@ class JupiterTradeExecutor:
             
             url = "https://quote-api.jup.ag/v6/quote"
             
-            logger.info("\nJupiter Quote Request:")
-            logger.info(f"Input Token: {input_token}")
-            logger.info(f"Output Token: {output_token}")
-            logger.info(f"Amount USD: ${amount:.2f}")
-            logger.info(f"Amount Raw: {amount_raw}")
-            logger.info(f"Full URL: {url}?{urllib.parse.urlencode(params)}")
+            self.logger.info("\nJupiter Quote Request:")
+            self.logger.info(f"Input Token: {input_token}")
+            self.logger.info(f"Output Token: {output_token}")
+            self.logger.info(f"Amount USD: ${amount:.2f}")
+            self.logger.info(f"Amount Raw: {amount_raw}")
+            self.logger.info(f"Full URL: {url}?{urllib.parse.urlencode(params)}")
 
             connector = aiohttp.TCPConnector(family=socket.AF_INET)
             

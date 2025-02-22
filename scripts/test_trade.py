@@ -80,28 +80,6 @@ async def test_usdc_usdt_swap():
             
             if not success:
                 raise Exception("Validated swap failed")
-            
-            if not quote:
-                raise Exception("Failed to get quote")
-                
-            # Log quote details
-            in_amount = float(quote['inAmount']) / 1e6
-            out_amount = float(quote['outAmount']) / 1e6
-            price_impact = float(quote.get('priceImpactPct', 0))
-            
-            logger.info("\nQuote details:")
-            logger.info(f"Input: {in_amount:.2f} USDC")
-            logger.info(f"Output: {out_amount:.2f} USDT")
-            logger.info(f"Price impact: {price_impact:.4f}%")
-            logger.info(f"Rate: {out_amount/in_amount:.6f} USDT/USDC")
-            
-            # Get transaction
-            logger.info("\nGenerating swap transaction...")
-
-            transaction_bytes = await executor.get_jupiter_transaction(
-                quote_data=quote,
-                wallet_address=wallet_address
-            )
 
             if not transaction_bytes:
                 raise Exception("Failed to get transaction")
