@@ -8,6 +8,8 @@ import aiohttp
 from airtable import Airtable
 from dotenv import load_dotenv
 from engine.execute_trade import JupiterTradeExecutor
+from solders.transaction import Transaction
+from solana.rpc.types import TxOpts
 import json
 import logging
 from typing import List, Dict, Optional
