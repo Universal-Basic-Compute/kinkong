@@ -430,10 +430,10 @@ class JupiterTradeExecutor:
                     address_table_lookups=address_table_lookups  # Use original lookups
                 )
                 
-                # Create new transaction
-                new_transaction = VersionedTransaction.from_message(
-                    new_message,
-                    [self.wallet_keypair]  # Pass keypair for signing
+                # Create new transaction using constructor
+                new_transaction = VersionedTransaction(
+                    message=new_message,
+                    keypairs=[self.wallet_keypair]  # Pass keypair for signing
                 )
                 
                 self.logger.info("Successfully prepared versioned transaction with fresh blockhash")
