@@ -464,7 +464,7 @@ class TradeExecutor:
                         swap_url = "https://quote-api.jup.ag/v6/swap"
                         swap_data = {
                             "quoteResponse": quote_data,
-                            "userPublicKey": wallet_address,
+                            "userPublicKey": self.wallet_address,
                             "wrapUnwrapSOL": False
                         }
                         
@@ -546,7 +546,7 @@ class TradeExecutor:
                         )
 
                     # Sign message
-                    signature = wallet_keypair.sign_message(bytes(new_message))
+                    signature = self.wallet_keypair.sign_message(bytes(new_message))
                     self.logger.info("Signed message")
 
                     # Create final transaction
