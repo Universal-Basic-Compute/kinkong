@@ -309,16 +309,16 @@ class TradeExecutor:
             trade = self.trades_table.insert(trade_data)
             self.logger.info(f"Created trade record: {trade['id']}")
 
-            # Calculate trade amount (3% of balance, min $10, max $1000)
-            balance = await self.jupiter.get_token_balance("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v")  # USDC balance
-            if balance <= 0:
+            # Get USDC balance using Birdeye API
+            usdc_balance = await self.jupiter.get_token_balance("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v")  # USDC address
+            if usdc_balance <= 0:
                 error_msg = "Insufficient USDC balance"
                 logger.error(error_msg)
                 await self.handle_failed_trade(trade['id'], error_msg)
                 return False
 
-            # Calculate trade amount (3% of balance, min $10, max $1000)
-            trade_value = min(balance * 0.03, 1000)
+            # Calculate trade amount (5% of USDC balance, min $10, max $1000)
+            trade_value = min(usdc_balance * 0.05, 1000)  # Changed from 0.03 to 0.05
             trade_value = max(trade_value, 10)
 
             if trade_value < 10:
@@ -328,8 +328,8 @@ class TradeExecutor:
                 return False
 
             logger.info(f"\nTrade calculation:")
-            logger.info(f"USDC balance: ${balance:.2f}")
-            logger.info(f"Trade value: ${trade_value:.2f}")
+            logger.info(f"USDC balance: ${usdc_balance:.2f}")
+            logger.info(f"Trade value: ${trade_value:.2f} (5% of USDC balance)")
 
             # Calculate token amount based on entry price
             entry_price = float(signal['fields']['entryPrice'])
