@@ -47,7 +47,7 @@ def rate_limited_price_check(token_symbol, validate_change=True):
         
         # Look up token by symbol
         token_records = tokens_table.get_all(
-            formula=f"{{symbol}}='{token_symbol}'"
+            formula=f"{{token}}='{token_symbol}'"
         )
         
         if not token_records:

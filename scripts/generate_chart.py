@@ -425,8 +425,8 @@ def generate_chart(df, config, support_levels=None):
                 fontsize=8)
 
         # Create token-specific directory from the symbol in config title
-        symbol = config['title'].split('/')[0].strip()
-        charts_dir = os.path.join('public', 'charts', symbol.lower())
+        token = config['title'].split('/')[0].strip()
+        charts_dir = os.path.join('public', 'charts', token.lower())
         os.makedirs(charts_dir, exist_ok=True)
         
         # Save in token-specific directory

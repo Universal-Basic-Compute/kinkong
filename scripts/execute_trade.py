@@ -33,7 +33,7 @@ def execute_trade_with_phantom(signal_id: str) -> bool:
         # Get token mint address
         tokens_table = Airtable(base_id, 'TOKENS', api_key)
         token_records = tokens_table.get_all(
-            formula=f"{{symbol}}='{fields['token']}'"
+            formula=f"{{token}}='{fields['token']}'"
         )
         if not token_records:
             print(f"❌ No token record found for {fields['token']}")
