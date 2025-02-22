@@ -53,21 +53,31 @@ def calculate_price_trend(prices: List[float]) -> float:
 def calculate_additional_metrics(snapshots_table: Airtable, token_symbol: str, days: int = 7) -> Optional[Dict]:
     """Calculate additional metrics from historical snapshots"""
     try:
-        # Get recent snapshots for this token
-        formula = f"AND({{symbol}}='{token_symbol}', IS_AFTER({{createdAt}}, DATEADD(NOW(), -{days}, 'days')))"
+        # Construct base URL and query parameters manually
+        base_url = f"https://api.airtable.com/v0/{os.getenv('KINKONG_AIRTABLE_BASE_ID')}/TOKEN_SNAPSHOTS"
         
-        # Use get_all() with correct sort parameters
-        recent_snapshots = snapshots_table.get_all(
-            formula=formula,
-            sort=[{
-                'field': 'createdAt',
-                'direction': 'desc'
-            }]
-        )
+        # Create the filter formula
+        filter_formula = f"AND({{symbol}}='{token_symbol}', IS_AFTER({{createdAt}}, DATEADD(NOW(), -{days}, 'days')))"
+        
+        # Create complete URL with parameters
+        url = f"{base_url}?filterByFormula={filter_formula}&sort%5B0%5D%5Bfield%5D=createdAt&sort%5B0%5D%5Bdirection%5D=desc"
+        
+        # Make request with headers
+        headers = {
+            'Authorization': f"Bearer {os.getenv('KINKONG_AIRTABLE_API_KEY')}",
+            'Content-Type': 'application/json'
+        }
+        
+        response = requests.get(url, headers=headers)
+        if not response.ok:
+            print(f"Error fetching snapshots: {response.status_code} - {response.text}")
+            return None
+            
+        recent_snapshots = response.json().get('records', [])
 
         print(f"\nProcessing {token_symbol}:")
-        print(f"Formula: {formula}")
-        print("Sort parameters:", [{'field': 'createdAt', 'direction': 'desc'}])
+        print(f"URL: {url}")
+        print("Response status:", response.status_code)
 
         if not recent_snapshots:
             print(f"No snapshots found for {token_symbol}")
