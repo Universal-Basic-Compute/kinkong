@@ -107,7 +107,7 @@ async def analyze_token(token):
     retries = 3
     for attempt in range(retries):
         try:
-            print(f"\n🔄 Processing {token['symbol']}...")
+            print(f"\n🔄 Processing {token['token']}...")
             
             # Create token-specific directory
             token_dir = Path('public/charts') / token['symbol'].lower()
