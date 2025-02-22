@@ -42,11 +42,6 @@ const TOKEN_METADATA: Record<string, TokenMetadata> = {
     token: 'SOL',
     image: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png'
   },
-  '9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump': {
-    name: 'UBC',
-    token: 'UBC',
-    image: 'https://dd.dexscreener.com/ds-data/tokens/solana/9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump.png?size=lg'
-  },
   '0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b': {
     name: 'Virtual Protocol',
     token: 'VIRTUAL',
@@ -115,7 +110,14 @@ export const TokenTable = ({ showAllTokens = false }: TokenTableProps) => {
           throw new Error('Failed to fetch token data');
         }
         const data = await response.json();
-        setTokens(data);
+        
+        // Filter out COMPUTE and UBC tokens
+        const filteredTokens = data.filter(token => {
+          const metadata = TOKEN_METADATA[token.mint];
+          return !(metadata?.token === 'COMPUTE' || metadata?.token === 'UBC');
+        });
+        
+        setTokens(filteredTokens);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load tokens');
       } finally {
@@ -124,7 +126,7 @@ export const TokenTable = ({ showAllTokens = false }: TokenTableProps) => {
     };
 
     fetchTokens();
-  }, []);
+  }, [showAllTokens]);
 
   if (isLoading) {
     return <div className="text-center py-4">Loading portfolio...</div>;
