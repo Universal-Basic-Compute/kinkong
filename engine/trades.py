@@ -451,10 +451,58 @@ class TradeExecutor:
             self.logger.error(f"Error checking exit conditions: {e}")
             return None
 
+    async def get_total_portfolio_value(self) -> float:
+        """Get total portfolio value using Birdeye API"""
+        try:
+            api_key = os.getenv('BIRDEYE_API_KEY')
+            if not api_key:
+                raise ValueError("BIRDEYE_API_KEY not found")
+
+            url = "https://public-api.birdeye.so/v1/wallet/tokens"
+            headers = {
+                'x-api-key': api_key,
+                'x-chain': 'solana',
+                'accept': 'application/json'
+            }
+            params = {
+                'wallet': self.wallet_address
+            }
+
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers=headers, params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        if data.get('success'):
+                            tokens = data.get('data', [])
+                            total_value = sum(
+                                float(token.get('valueUsd', 0))
+                                for token in tokens
+                            )
+                            self.logger.info(f"Total portfolio value: ${total_value:.2f}")
+                            return total_value
+                    
+                    self.logger.error(f"Failed to get portfolio value: {await response.text()}")
+                    return 0
+
+        except Exception as e:
+            self.logger.error(f"Error getting portfolio value: {e}")
+            return 0
+
     async def close_trade(self, trade: Dict, exit_reason: str) -> bool:
         """Close a trade by executing a sell order"""
         try:
             self.logger.info(f"Closing trade {trade['id']} - Reason: {exit_reason}")
+            
+            # Get total portfolio value first
+            total_portfolio_value = await self.get_total_portfolio_value()
+            if total_portfolio_value <= 0:
+                self.logger.error("Could not get portfolio value")
+                return False
+
+            # Calculate target trade amount (3% of portfolio)
+            target_trade_amount = total_portfolio_value * 0.03
+            self.logger.info(f"Portfolio value: ${total_portfolio_value:.2f}")
+            self.logger.info(f"Target trade amount (3%): ${target_trade_amount:.2f}")
             
             # Get token mint from TOKENS table first
             tokens_table = Airtable(self.base_id, 'TOKENS', self.api_key)
@@ -470,7 +518,7 @@ class TradeExecutor:
                 self.logger.error(f"No mint address found for {trade['fields'].get('token')}")
                 return False
             
-            # Calculate amount to sell (get current balance)
+            # Get current balance and price
             balance = await self.jupiter.get_token_balance(token_mint)
             current_price = await self.get_token_price(token_mint)
             
@@ -478,14 +526,23 @@ class TradeExecutor:
                 self.logger.error(f"Could not get current price for {token_mint}")
                 return False
                 
-            # Calculate USD value
-            usd_value = balance * current_price
+            # Calculate available USD value
+            available_usd = balance * current_price
             self.logger.info(f"Balance: {balance:.8f} {trade['fields'].get('token')}")
             self.logger.info(f"Current price: ${current_price:.4f}")
-            self.logger.info(f"USD Value: ${usd_value:.2f}")
+            self.logger.info(f"Available USD: ${available_usd:.2f}")
 
-            # If balance has significant value (> $1), proceed with trade
-            if usd_value > 1.0:
+            # Determine actual trade amount (min of target and available)
+            trade_amount_usd = min(target_trade_amount, available_usd)
+            trade_amount_usd = max(trade_amount_usd, 1.0)  # Minimum $1
+            
+            # Calculate token amount to trade
+            token_amount = trade_amount_usd / current_price
+
+            self.logger.info(f"Trading amount: ${trade_amount_usd:.2f} ({token_amount:.8f} tokens)")
+
+            # Execute trade if amount is significant
+            if trade_amount_usd >= 1.0:
                 # Execute sell order with minimum $1 threshold
                 success, transaction_bytes = await self.jupiter.execute_validated_swap(
                     input_token=token_mint,
