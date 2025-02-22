@@ -308,6 +308,63 @@ class JupiterTradeExecutor:
         finally:
             await client.close()
 
+    async def get_jupiter_transaction(self, quote_data: dict, wallet_address: str) -> Optional[bytes]:
+        """Get swap transaction from Jupiter"""
+        try:
+            url = "https://quote-api.jup.ag/v6/swap"
+            
+            swap_data = {
+                "quoteResponse": quote_data,
+                "userPublicKey": wallet_address,
+                "wrapAndUnwrapSol": False,
+                "asLegacyTransaction": True,
+                "dynamicComputeUnitLimit": True,
+                "prioritizationFeeLamports": {
+                    "prioritizeLevelWithMaxLamports": {
+                        "maxLamports": 10000000,
+                        "priorityLevel": "high"
+                    }
+                },
+                "dynamicSlippage": {
+                    "maxBps": 100  # 1% max slippage
+                }
+            }
+            
+            self.logger.info(f"Requesting swap transaction with data: {json.dumps(swap_data, indent=2)}")
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url, json=swap_data) as response:
+                    if not response.ok:
+                        self.logger.error(f"Jupiter API error: {response.status}")
+                        self.logger.error(f"Response: {await response.text()}")
+                        return None
+                        
+                    transaction_data = await response.json()
+                    
+                    transaction_base64 = transaction_data.get('swapTransaction')
+                    if not transaction_base64:
+                        self.logger.error("No transaction data in response")
+                        return None
+
+                    try:
+                        transaction_bytes = base64.b64decode(transaction_base64)
+                        self.logger.info(f"Transaction bytes length: {len(transaction_bytes)}")
+                        
+                        # Log dynamic slippage report if available
+                        if 'dynamicSlippageReport' in transaction_data:
+                            self.logger.info("Dynamic Slippage Report:")
+                            self.logger.info(json.dumps(transaction_data['dynamicSlippageReport'], indent=2))
+                        
+                        return transaction_bytes
+                        
+                    except Exception as e:
+                        self.logger.error(f"Invalid transaction format: {e}")
+                        return None
+
+        except Exception as e:
+            self.logger.error(f"Error getting swap transaction: {e}")
+            return None
+
     async def prepare_transaction(self, transaction_bytes: bytes) -> Optional[Transaction]:
         """Prepare a transaction from bytes with fresh blockhash"""
         try:
