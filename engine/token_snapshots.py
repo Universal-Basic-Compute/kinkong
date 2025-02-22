@@ -155,9 +155,20 @@ class TokenSnapshotTaker:
             
             # Get values from current snapshot
             volume24h = float(snapshot.get('volume24h', 0))
-            volume7d = float(snapshot.get('volume7d', 0))
             
-            # Calculate volume growth using existing values
+            # Get 7-day average volume from historical snapshots
+            seven_days_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+            historical_snapshots = self.snapshots_table.get_all(
+                formula=f"AND({{token}}='{token_name}', IS_AFTER({{createdAt}}, '{seven_days_ago}'))"
+            )
+            
+            if historical_snapshots:
+                volumes = [float(snap['fields'].get('volume24h', 0)) for snap in historical_snapshots]
+                volume7d = sum(volumes) / len(volumes)
+            else:
+                volume7d = volume24h  # Use current volume if no history
+                
+            # Now calculate volume growth using both values
             volume_growth = await self.calculate_volume_growth(token_name, volume24h, volume7d)
             
             metrics = {
