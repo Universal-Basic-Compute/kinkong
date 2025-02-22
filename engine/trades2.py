@@ -275,8 +275,7 @@ class TradeExecutor:
         """Handle failed trade updates"""
         try:
             self.trades_table.update(trade_id, {
-                'status': 'FAILED',
-                'errorMessage': error_message  # Changed back to errorMessage from notes
+                'status': 'FAILED'  # Only update the status
             })
         except Exception as e:
             self.logger.error(f"Error updating failed trade status: {e}")
