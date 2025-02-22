@@ -11,8 +11,11 @@ import logging
 from typing import List, Dict, Optional
 from solders.keypair import Keypair
 from solders.pubkey import Pubkey
+from solders.transaction import Transaction, VersionedTransaction
+from solders.message import Message, MessageV0
+from solders.instruction import Instruction
+from solders.hash import Hash
 from solana.rpc.async_api import AsyncClient
-from solana.transaction import Transaction
 from solana.rpc import types
 from solana.rpc.commitment import Commitment
 import base58
@@ -346,11 +349,14 @@ class TradeExecutor:
                     self.logger.error("STRATEGY_WALLET_PRIVATE_KEY not found")
                     return False
                 
+                # Convert private key from base58 to bytes and create Keypair
                 private_key_bytes = base58.b58decode(private_key)
                 wallet_keypair = Keypair.from_bytes(private_key_bytes)
                 wallet_address = str(wallet_keypair.pubkey())
                 
-                # Verify wallet balance before proceeding
+                self.logger.info(f"Wallet initialized: {wallet_address[:8]}...")
+                
+                # Verify wallet balance
                 birdeye_url = "https://public-api.birdeye.so/v1/wallet/token_balance"
                 params = {
                     "wallet": wallet_address,
