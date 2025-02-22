@@ -20,22 +20,15 @@ class TokenSearcher:
         
     def search_token(self, keyword: str) -> Optional[Dict[str, Any]]:
         """Search for a token using Birdeye API"""
-        url = "https://public-api.birdeye.so/defi/v3/search"
+        url = "https://public-api.birdeye.so/public/search_token"
         
         params = {
-            "chain": "solana",
-            "keyword": keyword,
-            "target": "token",
-            "sort_by": "volume_24h_usd",
-            "sort_type": "desc",
-            "verify_token": True,
-            "offset": 0,
-            "limit": 1
+            "token": keyword,
+            "chain": "solana"
         }
         
         headers = {
             "x-api-key": self.birdeye_api_key,
-            "x-chain": "solana",
             "accept": "application/json"
         }
         
@@ -49,12 +42,18 @@ class TokenSearcher:
             if not data.get('success'):
                 raise Exception(f"API returned success=false: {data.get('message', 'No error message')}")
             
-            tokens = data.get('data', {}).get('tokens', [])
+            tokens = data.get('data', [])
             if not tokens:
                 print(f"No tokens found for keyword: {keyword}")
                 return None
-                
-            return tokens[0]  # Return first match
+            
+            # Find the best match
+            for token in tokens:
+                if token.get('symbol', '').upper() == keyword.upper():
+                    return token
+            
+            # If no exact match, return first result
+            return tokens[0]
             
         except Exception as e:
             print(f"Error searching token: {str(e)}")
