@@ -485,9 +485,13 @@ def record_portfolio_snapshot():
                 # Calculate additional metrics
                 additional_metrics = calculate_additional_metrics(snapshots_table, symbol)
                 
-                # Create snapshot with all metrics
+                # Get enhanced metrics
+                enhanced_metrics = await get_enhanced_token_metrics(mint)
+
+                # Create snapshot with core metrics
                 snapshot = {
                     'symbol': symbol,
+                    'mint': mint,
                     'price': metrics['price'],
                     'volume24h': metrics['volume24h'],
                     'liquidity': metrics['liquidity'],
@@ -495,16 +499,53 @@ def record_portfolio_snapshot():
                     'createdAt': created_at,
                     'isActive': True
                 }
-                
-                # Add additional metrics if available
+
+                # Add additional core metrics if available
                 if additional_metrics:
                     snapshot.update({
                         'volume7d': additional_metrics['volume7d'],
-                        'volumeGrowth': additional_metrics['volumeGrowth'],
-                        'price7dAvg': additional_metrics['price7dAvg'],
-                        'priceTrend': additional_metrics['priceTrend'],
-                        'vsSolPerformance': additional_metrics['vsSolPerformance'],
-                        'priceVolatility': additional_metrics['priceVolatility']
+                        'price7dAvg': additional_metrics['price7dAvg']
+                    })
+
+                # Add detailed metrics as JSON
+                if enhanced_metrics:
+                    snapshot['metrics'] = json.dumps({
+                        'price': {
+                            'volatility24h': enhanced_metrics['price_metrics']['volatility_24h'],
+                            'momentumScore': enhanced_metrics['price_metrics']['momentum_score'],
+                            'movingAverages': enhanced_metrics['price_metrics']['ma_trends']
+                        },
+                        'liquidity': {
+                            'bidAskSpread': enhanced_metrics['liquidity_metrics']['bid_ask_spread'],
+                            'depth': {
+                                'buy2pct': enhanced_metrics['liquidity_metrics']['depth_buy_2pct'],
+                                'sell2pct': enhanced_metrics['liquidity_metrics']['depth_sell_2pct']
+                            },
+                            'score': enhanced_metrics['liquidity_metrics']['liquidity_score']
+                        },
+                        'holders': {
+                            'total': enhanced_metrics['holder_metrics']['total_holders'],
+                            'concentration': enhanced_metrics['holder_metrics']['holder_concentration'],
+                            'dailyTransfers': enhanced_metrics['holder_metrics']['daily_transfers']
+                        },
+                        'trading': {
+                            'buySellRatio': enhanced_metrics['trading_metrics']['buy_sell_ratio'],
+                            'avgTradeSize': enhanced_metrics['trading_metrics']['avg_trade_size'],
+                            'largeTxCount': enhanced_metrics['trading_metrics']['large_tx_count'],
+                            'vwap24h': enhanced_metrics['trading_metrics']['vwap_24h']
+                        },
+                        'pool': {
+                            'tvlChange24h': enhanced_metrics['pool_metrics']['tvl_change_24h'],
+                            'feeApr': enhanced_metrics['pool_metrics']['fee_apr'],
+                            'utilizationRate': enhanced_metrics['pool_metrics']['utilization_rate'],
+                            'ilRiskScore': enhanced_metrics['pool_metrics']['il_risk_score']
+                        },
+                        'additional': {
+                            'volumeGrowth': additional_metrics.get('volumeGrowth'),
+                            'priceTrend': additional_metrics.get('priceTrend'),
+                            'vsSolPerformance': additional_metrics.get('vsSolPerformance'),
+                            'priceVolatility': additional_metrics.get('priceVolatility')
+                        } if additional_metrics else {}
                     })
                 
                 new_snapshots.append(snapshot)
