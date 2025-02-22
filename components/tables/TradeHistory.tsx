@@ -8,9 +8,9 @@ interface Trade {
   value: number;
   exitValue: number | null;
   status: string;
-  signature: string;
   exitReason?: string;
   realizedPnl?: number;
+  signature: string;
 }
 
 interface TradeHistoryProps {
@@ -28,6 +28,7 @@ export function TradeHistory({ userOnly = false }: TradeHistoryProps) {
         const response = await fetch('/api/trades');
         if (!response.ok) throw new Error('Failed to fetch trades');
         const data = await response.json();
+        console.log('Fetched trades:', data); // Debug log
         setTrades(data);
       } catch (error) {
         setError(error instanceof Error ? error.message : 'Failed to load trades');

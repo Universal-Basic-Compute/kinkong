@@ -11,13 +11,13 @@ export async function GET() {
 
     const formattedTrades = trades.map(record => ({
       id: record.id,
-      timestamp: record.get('timestamp'),
+      createdAt: record.get('createdAt'),
       token: record.get('token'),
-      type: record.get('action'),
-      amount: record.get('amount'),
-      price: record.get('price'),
       value: record.get('value'),
-      status: record.get('status') || 'SUCCESS',
+      exitValue: record.get('exitValue'),
+      status: record.get('status'),
+      exitReason: record.get('exitReason'),
+      realizedPnl: record.get('realizedPnl'),
       signature: record.get('signature')
     }));
 
