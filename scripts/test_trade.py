@@ -112,9 +112,13 @@ async def test_usdc_usdt_swap():
             # Create new transaction with fresh blockhash
             transaction = Transaction.from_bytes(transaction_bytes)
 
-            # Create new message with fresh blockhash
-            new_message = Message.from_legacy_message(
-                transaction.message,
+            # Create new transaction with fresh blockhash
+            transaction = Transaction.from_bytes(transaction_bytes)
+
+            # Create new message by copying the original message's attributes
+            new_message = Message(
+                account_keys=transaction.message.account_keys,
+                instructions=transaction.message.instructions,
                 recent_blockhash=blockhash.value.blockhash
             )
 
