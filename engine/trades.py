@@ -170,14 +170,19 @@ class TradeExecutor:
     def check_entry_conditions(self, signal: Dict) -> bool:
         """Check if entry conditions are met for a signal"""
         try:
-            # First check if trade already exists for this signal
+            # Check if trade already exists for this signal
             existing_trades = self.trades_table.get_all(
                 formula=f"{{signalId}} = '{signal['id']}'"
             )
             
             if existing_trades:
-                logger.warning(f"Trade already exists for signal {signal['id']}")
-                return False
+                # Only block if there's an existing trade that's not FAILED
+                non_failed_trades = [t for t in existing_trades if t['fields'].get('status') != 'FAILED']
+                if non_failed_trades:
+                    logger.warning(f"Trade already exists for signal {signal['id']} with status {non_failed_trades[0]['fields'].get('status')}")
+                    return False
+                else:
+                    logger.info(f"Found failed trade for signal {signal['id']}, allowing retry")
 
             # Get current price from DexScreener API
             token_mint = signal['fields'].get('mint')
