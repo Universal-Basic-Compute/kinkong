@@ -41,44 +41,71 @@ export default function Performance() {
     fetchPerformanceData();
   }, []);
 
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
-
   return (
-    <main className="min-h-screen p-4">
-      <h1 className="text-4xl font-bold mb-8">Performance & Analytics</h1>
-
-      <section className="mb-8">
-        <h2 className="text-2xl font-bold mb-4">Historical Performance</h2>
-        <PerformanceChart data={performanceData} />
-      </section>
-
-      <section className="mb-8">
-        <h2 className="text-2xl font-bold mb-4">Key Metrics</h2>
-        <div className="grid grid-cols-4 gap-4">
-          <div className="metric-card bg-gray-800 p-4 rounded-lg">
-            <h3 className="text-gray-400">Total Return</h3>
-            <p className="text-2xl text-green-400">{metrics?.totalReturn}%</p>
-          </div>
-          <div className="metric-card bg-gray-800 p-4 rounded-lg">
-            <h3 className="text-gray-400">Win Rate</h3>
-            <p className="text-2xl text-blue-400">{metrics?.winRate}%</p>
-          </div>
-          <div className="metric-card bg-gray-800 p-4 rounded-lg">
-            <h3 className="text-gray-400">Sharpe Ratio</h3>
-            <p className="text-2xl text-yellow-400">{metrics?.sharpeRatio}</p>
-          </div>
-          <div className="metric-card bg-gray-800 p-4 rounded-lg">
-            <h3 className="text-gray-400">Max Drawdown</h3>
-            <p className="text-2xl text-red-400">{metrics?.maxDrawdown}%</p>
-          </div>
+    <div className="min-h-screen bg-black">
+      <main className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gold mb-2">Performance & Analytics</h1>
+          <p className="text-gray-400">Detailed trading performance metrics and history</p>
         </div>
-      </section>
 
-      <section className="mb-8">
-        <h2 className="text-2xl font-bold mb-4">Recent Trades</h2>
-        <TradeHistory />
-      </section>
-    </main>
+        {/* Key Metrics */}
+        <section className="mb-8">
+          <h2 className="text-2xl font-bold text-gold mb-4">Key Metrics</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
+              <h3 className="text-gray-400 mb-1">Total Return</h3>
+              <p className={`text-2xl font-bold ${Number(metrics?.totalReturn) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {metrics?.totalReturn || '0'}%
+              </p>
+            </div>
+            <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
+              <h3 className="text-gray-400 mb-1">Win Rate</h3>
+              <p className="text-2xl font-bold text-blue-400">
+                {metrics?.winRate || '0'}%
+              </p>
+            </div>
+            <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
+              <h3 className="text-gray-400 mb-1">Sharpe Ratio</h3>
+              <p className="text-2xl font-bold text-yellow-400">
+                {metrics?.sharpeRatio || '0'}
+              </p>
+            </div>
+            <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
+              <h3 className="text-gray-400 mb-1">Max Drawdown</h3>
+              <p className="text-2xl font-bold text-red-400">
+                {metrics?.maxDrawdown || '0'}%
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Performance Chart */}
+        <section className="mb-8">
+          <h2 className="text-2xl font-bold text-gold mb-4">Historical Performance</h2>
+          <div className="bg-black/30 p-6 rounded-lg border border-gold/20 min-h-[400px]">
+            {isLoading ? (
+              <div className="flex items-center justify-center h-[400px]">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gold"></div>
+              </div>
+            ) : error ? (
+              <div className="flex items-center justify-center h-[400px] text-red-400">
+                {error}
+              </div>
+            ) : (
+              <PerformanceChart data={performanceData} />
+            )}
+          </div>
+        </section>
+
+        {/* Trade History */}
+        <section className="mb-8">
+          <h2 className="text-2xl font-bold text-gold mb-4">Recent Trades</h2>
+          <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
+            <TradeHistory />
+          </div>
+        </section>
+      </main>
+    </div>
   );
 }
