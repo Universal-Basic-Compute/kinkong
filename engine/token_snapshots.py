@@ -199,11 +199,22 @@ class TokenSnapshotTaker:
                     # Get current metrics
                     metrics = self.get_token_price(mint)
                     
-                    # Calculate additional metrics
-                    calculated_metrics = await self.calculate_metrics(token, snapshot)
-                    
                     # Create snapshot
                     snapshot = {
+                        'token': token_name,
+                        'price': metrics['price'],
+                        'volume24h': metrics['volume24h'],
+                        'liquidity': metrics['liquidity'],
+                        'priceChange24h': metrics['priceChange24h'],
+                        'createdAt': created_at,
+                        'isActive': True
+                    }
+                    
+                    # Calculate additional metrics using snapshot data
+                    calculated_metrics = await self.calculate_metrics(token, snapshot)
+                    
+                    # Update snapshot with calculated metrics
+                    snapshot.update({
                         'token': token_name,
                         'price': metrics['price'],
                         'volume24h': metrics['volume24h'],
