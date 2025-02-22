@@ -3,6 +3,7 @@ from pathlib import Path
 import os
 from datetime import datetime, timezone
 import asyncio
+import aiohttp
 from airtable import Airtable
 from dotenv import load_dotenv
 import json
