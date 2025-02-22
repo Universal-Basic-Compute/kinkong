@@ -13,7 +13,7 @@ import urllib.parse
 from dotenv import load_dotenv
 import socket
 from solders.keypair import Keypair
-from solders.transaction import Transaction
+from solders.transaction import Transaction, VersionedTransaction
 from solders.message import Message
 from solders.instruction import AccountMeta, Instruction
 from solana.rpc.async_api import AsyncClient
@@ -386,70 +386,64 @@ class JupiterTradeExecutor:
             return None
 
     async def prepare_transaction(self, transaction_bytes: bytes) -> Optional[Transaction]:
-        """Prepare a legacy transaction from bytes with fresh blockhash"""
+        """Prepare a versioned transaction from bytes with fresh blockhash"""
         try:
             client = AsyncClient("https://api.mainnet-beta.solana.com")
             try:
                 # Get fresh blockhash
-                blockhash = await client.get_latest_blockhash()
-                if not blockhash or not blockhash.value:
+                blockhash_response = await client.get_latest_blockhash()
+                if not blockhash_response or not blockhash_response.value:
                     raise Exception("Failed to get recent blockhash")
 
-                # Deserialize legacy transaction
-                original_transaction = Transaction.from_bytes(transaction_bytes)
+                # Log transaction bytes for debugging
+                self.logger.debug(f"Transaction bytes (hex): {transaction_bytes.hex()}")
+                
+                try:
+                    # First try to deserialize as VersionedTransaction
+                    transaction = VersionedTransaction.deserialize(transaction_bytes)
+                    self.logger.info("Successfully deserialized as VersionedTransaction")
+                except Exception as e:
+                    self.logger.debug(f"VersionedTransaction deserialization failed: {e}")
+                    try:
+                        # Fallback to legacy Transaction
+                        transaction = Transaction.from_bytes(transaction_bytes)
+                        self.logger.info("Successfully deserialized as legacy Transaction")
+                    except Exception as e:
+                        self.logger.error(f"Both deserialization attempts failed: {e}")
+                        raise
 
-                # Extract instructions from original transaction
-                instructions = []
-                for compiled_instruction in original_transaction.message.instructions:
-                    # Get the program id from the accounts list
-                    program_id = original_transaction.message.account_keys[compiled_instruction.program_id_index]
-                    
-                    # Convert accounts to AccountMeta objects
-                    account_metas = []
-                    for idx in compiled_instruction.accounts:
-                        pubkey = original_transaction.message.account_keys[idx]
-                        is_signer = idx < original_transaction.message.header.num_required_signatures
-                        is_writable = (
-                            idx < original_transaction.message.header.num_required_signatures - 
-                            original_transaction.message.header.num_readonly_signed_accounts or
-                            (idx >= original_transaction.message.header.num_required_signatures and 
-                             idx < len(original_transaction.message.account_keys) - 
-                             original_transaction.message.header.num_readonly_unsigned_accounts)
-                        )
-                        
-                        account_meta = AccountMeta(
-                            pubkey=pubkey,
-                            is_signer=is_signer,
-                            is_writable=is_writable
-                        )
-                        account_metas.append(account_meta)
-                    
-                    # Create new Instruction
-                    instruction = Instruction(
-                        program_id=program_id,
-                        accounts=account_metas,
-                        data=compiled_instruction.data
-                    )
-                    instructions.append(instruction)
+                # Update blockhash
+                if isinstance(transaction, VersionedTransaction):
+                    # Handle versioned transaction
+                    message = transaction.message
+                    message.recent_blockhash = blockhash_response.value.blockhash
+                else:
+                    # Handle legacy transaction
+                    transaction.recent_blockhash = blockhash_response.value.blockhash
 
-                # Create new message with fresh blockhash
-                new_message = Message.new_with_blockhash(
-                    instructions=instructions,
-                    payer=self.wallet_keypair.pubkey(),
-                    blockhash=blockhash.value.blockhash
-                )
+                # Sign transaction
+                if isinstance(transaction, VersionedTransaction):
+                    transaction.sign([self.wallet_keypair])
+                else:
+                    transaction.sign(self.wallet_keypair)
 
-                # Create and sign new transaction
-                new_transaction = Transaction.new_unsigned(message=new_message)
-                new_transaction.sign([self.wallet_keypair], new_message.recent_blockhash)
+                self.logger.info("Transaction prepared successfully")
+                return transaction
 
-                return new_transaction
-
+            except Exception as e:
+                self.logger.error(f"Error preparing transaction: {e}")
+                if hasattr(e, '__traceback__'):
+                    self.logger.error("Traceback:")
+                    traceback.print_tb(e.__traceback__)
+                return None
             finally:
                 await client.close()
 
         except Exception as e:
             self.logger.error(f"Error preparing transaction: {e}")
+            if hasattr(e, '__traceback__'):
+                self.logger.error("Traceback:")
+                traceback.print_tb(e.__traceback__)
             return None
 
 if __name__ == "__main__":
