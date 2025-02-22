@@ -283,9 +283,9 @@ class TokenMetricsCollector:
 
             # Create response
             response = MetricsResponse(
-                price_metrics=price_metrics,
-                trade_metrics=trade_metrics,
-                trader_metrics=trader_data or METRIC_DEFAULTS[MetricType.TRADER],
+                price=price_metrics,
+                trade=trade_metrics,
+                traders=trader_data or METRIC_DEFAULTS[MetricType.TRADER],
                 timestamp=datetime.now(timezone.utc).isoformat(),
                 success=True
             )
@@ -297,9 +297,9 @@ class TokenMetricsCollector:
             self.logger.error(f"Error collecting metrics: {str(e)}", exc_info=True)
             self.logger.error(f"Stack trace:", exc_info=True)
             return MetricsResponse(
-                price_metrics=METRIC_DEFAULTS[MetricType.PRICE],
-                trade_metrics=METRIC_DEFAULTS[MetricType.TRADE],
-                trader_metrics=METRIC_DEFAULTS[MetricType.TRADER],
+                price=METRIC_DEFAULTS[MetricType.PRICE],
+                trade=METRIC_DEFAULTS[MetricType.TRADE],
+                traders=METRIC_DEFAULTS[MetricType.TRADER],
                 timestamp=datetime.now(timezone.utc).isoformat(),
                 success=False,
                 error=str(e)
