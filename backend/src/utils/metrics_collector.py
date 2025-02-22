@@ -181,11 +181,11 @@ class TokenMetricsCollector:
     def _extract_price_metrics(self, data: Dict) -> Dict:
         """Extract and organize price metrics"""
         return {
-            'current': data.get('value', 0),
-            'changePercent': data.get('priceChangePercent', 0),
-            'volumeUSD': data.get('volume24h', 0),
+            'current': data.get('current', 0),
+            'priceChangePercent': data.get('priceChangePercent', 0),
+            'volumeUSD': data.get('volumeUSD', 0),
             'updateTime': datetime.fromtimestamp(
-                data.get('updateTime', 0), 
+                data.get('updateUnixTime', 0),
                 timezone.utc
             ).isoformat()
         }
