@@ -140,17 +140,19 @@ class JupiterTradeExecutor:
             return 0
 
     async def get_jupiter_quote(self, input_token: str, output_token: str, amount: float) -> Optional[Dict]:
-        """Get quote from Jupiter API v6 (public endpoint)"""
+        """Get quote from Jupiter API v1"""
         try:
             amount_raw = int(amount * 1e6)  # Convert to USDC decimals
             
-            # Use public v6 endpoint
-            base_url = "https://quote-api.jup.ag/v6/quote"
+            # Use new v1 endpoint
+            base_url = "https://api.jup.ag/swap/v1/quote"
             params = {
                 "inputMint": str(input_token),
                 "outputMint": str(output_token),
                 "amount": str(amount_raw),
-                "slippageBps": "100"
+                "slippageBps": "100",
+                # Add API key for better rate limits
+                "apiKey": os.getenv('JUPITER_API_KEY', '')
             }
             
             url = f"{base_url}?{urllib.parse.urlencode(params)}"
@@ -306,28 +308,23 @@ class JupiterTradeExecutor:
             await client.close()
 
     async def get_jupiter_transaction(self, quote_data: dict, wallet_address: str) -> Optional[bytes]:
-        """Get swap transaction from Jupiter with optimizations for better transaction landing"""
+        """Get swap transaction from Jupiter v1 API with optimizations"""
         try:
-            # Use public v6 endpoint
-            url = "https://quote-api.jup.ag/v6/swap"
+            # Use new v1 endpoint
+            url = "https://api.jup.ag/swap/v1/swap"
             
             swap_data = {
                 "quoteResponse": quote_data,
                 "userPublicKey": wallet_address,
+                "apiKey": os.getenv('JUPITER_API_KEY', ''),
                 
                 # Dynamic compute unit optimization
-                "dynamicComputeUnitLimit": True,
-                
-                # Dynamic slippage optimization
-                "dynamicSlippage": True,
+                "computeUnitPriceMicroLamports": "auto",
                 
                 # Priority fee optimization
-                "prioritizationFeeLamports": {
-                    "priorityLevelWithMaxLamports": {
-                        "maxLamports": 10000000,  # 0.01 SOL max
-                        "global": False,  # Use local fee market
-                        "priorityLevel": "veryHigh"  # Use 75th percentile
-                    }
+                "priorityFee": {
+                    "mode": "auto",
+                    "maxPriorityFeeLamports": 10000000  # 0.01 SOL max
                 },
                 
                 # Optional: Add Jito tip for better transaction landing
@@ -347,24 +344,20 @@ class JupiterTradeExecutor:
                         self.logger.error(f"Jupiter API error: {response.status}")
                         self.logger.error(f"Response: {await response.text()}")
                         return None
-                    
+                
                     try:
                         transaction_data = await response.json()
                     except json.JSONDecodeError as e:
                         self.logger.error(f"Invalid JSON response: {e}")
                         return None
-                    
-                    # Log optimization reports
-                    if 'dynamicSlippageReport' in transaction_data:
-                        self.logger.info("Dynamic Slippage Report:")
-                        self.logger.info(json.dumps(transaction_data['dynamicSlippageReport'], indent=2))
-                    
-                    if 'computeUnitLimit' in transaction_data:
-                        self.logger.info(f"Compute Unit Limit: {transaction_data['computeUnitLimit']}")
-                    
-                    if 'prioritizationFeeLamports' in transaction_data:
-                        self.logger.info(f"Priority Fee: {transaction_data['prioritizationFeeLamports']} lamports")
-                    
+                
+                    # Log optimization reports if available
+                    if 'computeUnits' in transaction_data:
+                        self.logger.info(f"Compute Units: {transaction_data['computeUnits']}")
+                
+                    if 'priorityFeeLamports' in transaction_data:
+                        self.logger.info(f"Priority Fee: {transaction_data['priorityFeeLamports']} lamports")
+                
                     transaction_base64 = transaction_data.get('swapTransaction')
                     if not transaction_base64:
                         self.logger.error("No transaction data in response")
