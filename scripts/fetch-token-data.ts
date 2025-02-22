@@ -12,7 +12,7 @@ console.log('.env path:', path.resolve(process.cwd(), '.env'));
 
 interface DexPair {
   quoteToken?: {
-    symbol: string;
+    token: string;
   };
   liquidity?: {
     usd: number;
