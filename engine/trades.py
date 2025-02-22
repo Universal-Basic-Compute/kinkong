@@ -473,42 +473,68 @@ class TradeExecutor:
                         await self.handle_failed_trade(trade['id'], f"API request failed: {str(e)}")
                         return False
 
-                # Sign and send transaction
-                transaction = Transaction.deserialize(base58.b58decode(transaction_data['swapTransaction']))
-                transaction.sign(wallet_keypair)
-                
-                # Initialize Solana client
-                client = AsyncClient("https://api.mainnet-beta.solana.com")
-                result = await client.send_transaction(transaction)
-                
-                if result.value:
-                    # Update trade record with success
-                    transaction_url = f"https://solscan.io/tx/{result.value}"
-                    self.trades_table.update(trade['id'], {
-                        'status': 'EXECUTED',
-                        'signature': result.value,
-                        'amount': trade_amount_usd / float(signal['fields']['entryPrice']),
-                        'price': float(signal['fields']['entryPrice']),
-                        'value': trade_amount_usd
-                    })
+                try:
+                    # The transaction comes as a base58 encoded string
+                    transaction_base58 = transaction_data['swapTransaction']
+                    self.logger.info("Got transaction base58 string")
                     
-                    self.logger.info(f"Trade executed successfully: {transaction_url}")
+                    # Decode the transaction bytes
+                    transaction_bytes = base58.b58decode(transaction_base58)
+                    self.logger.info("Decoded transaction bytes")
                     
-                    # Send notification
-                    message = f"🤖 Trade Executed\n\n"
-                    message += f"Token: ${signal['fields']['token']}\n"
-                    message += f"Type: {signal['fields']['type']}\n"
-                    message += f"Amount: ${trade_amount_usd:.2f}\n"
-                    message += f"Transaction: {transaction_url}"
+                    # Create the transaction object
+                    transaction = Transaction.deserialize(transaction_bytes)
+                    self.logger.info("Deserialized transaction")
                     
-                    from scripts.analyze_charts import send_telegram_message
-                    send_telegram_message(message)
+                    # Sign the transaction
+                    transaction.sign(wallet_keypair)
+                    self.logger.info("Signed transaction")
                     
-                    return True
-                else:
-                    self.logger.error("Transaction failed with no error")
-                    await self.handle_failed_trade(trade['id'], "Transaction failed")
+                    # Initialize Solana client
+                    client = AsyncClient("https://api.mainnet-beta.solana.com")
+                    self.logger.info("Initialized Solana client")
+                    
+                    # Send transaction
+                    result = await client.send_transaction(transaction)
+                    self.logger.info(f"Sent transaction: {result}")
+                    
+                    if result.value:
+                        # Update trade record with success
+                        transaction_url = f"https://solscan.io/tx/{result.value}"
+                        self.trades_table.update(trade['id'], {
+                            'status': 'EXECUTED',
+                            'signature': result.value,
+                            'amount': trade_amount_usd / float(signal['fields']['entryPrice']),
+                            'price': float(signal['fields']['entryPrice']),
+                            'value': trade_amount_usd
+                        })
+                        
+                        self.logger.info(f"Trade executed successfully: {transaction_url}")
+                        
+                        # Send notification
+                        message = f"🤖 Trade Executed\n\n"
+                        message += f"Token: ${signal['fields']['token']}\n"
+                        message += f"Type: {signal['fields']['type']}\n"
+                        message += f"Amount: ${trade_amount_usd:.2f}\n"
+                        message += f"Transaction: {transaction_url}"
+                        
+                        from scripts.analyze_charts import send_telegram_message
+                        send_telegram_message(message)
+                        
+                        return True
+
+                except Exception as e:
+                    self.logger.error(f"Transaction error: {str(e)}")
+                    if hasattr(e, '__traceback__'):
+                        import traceback
+                        self.logger.error("Traceback:")
+                        traceback.print_tb(e.__traceback__)
+                    await self.handle_failed_trade(trade['id'], str(e))
                     return False
+
+                finally:
+                    if 'client' in locals():
+                        await client.close()
 
             except Exception as e:
                 self.logger.error(f"Trade execution failed: {e}")
