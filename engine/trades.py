@@ -496,15 +496,23 @@ class TradeExecutor:
             self.logger.info(f"Total portfolio value: ${total_portfolio_value:.2f}")
             self.logger.info(f"Minimum trade amount: ${min_trade_amount:.2f}")
             
-            if usd_value < min_trade_amount:
-                self.logger.warning(f"USD value ${usd_value:.2f} below minimum ${min_trade_amount:.2f}")
+            # If balance is less than 3% but still has value, execute trade anyway
+            if usd_value < min_trade_amount and usd_value > 1.0:  # Only proceed if > $1
+                self.logger.info(f"Balance (${usd_value:.2f}) below 3% threshold but proceeding with remaining amount")
+                min_trade_amount = 1.0  # Set minimum to $1 for remaining balance
+            elif usd_value <= 1.0:
+                self.logger.warning(f"USD value ${usd_value:.2f} too small to trade")
                 
                 # Update trade record as completed with small balance
                 self.trades_table.update(trade['id'], {
-                    'status': exit_reason,
-                    'closePrice': current_price,
+                    'status': 'CLOSED',
+                    'exitReason': exit_reason,
+                    'exitPrice': current_price,
                     'closedAt': datetime.now(timezone.utc).isoformat(),
-                    'notes': f"Closed with small balance (${usd_value:.2f})"
+                    'realizedPnl': 0,
+                    'roi': 0,
+                    'exitValue': usd_value,
+                    'notes': f"Closed with dust balance (${usd_value:.2f})"
                 })
                 return True
                 
@@ -513,7 +521,7 @@ class TradeExecutor:
                 input_token=token_mint,
                 output_token="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",  # USDC
                 amount=balance,
-                min_amount=min_trade_amount,  # Use calculated minimum
+                min_amount=min_trade_amount,  # Use adjusted minimum
                 max_slippage=1.0
             )
             
