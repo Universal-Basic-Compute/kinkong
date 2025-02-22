@@ -594,11 +594,20 @@ def process_signals_batch(token_analyses):
                 )
                 
                 if result:
-                    # Create trade record with the correct timeframe
+                    # Check for existing trades first
                     trades_table = Airtable(base_id, 'TRADES', api_key)
+                    existing_trades = trades_table.get_all(
+                        formula=f"{{signalId}} = '{result['id']}'"
+                    )
+
+                    if existing_trades:
+                        print(f"⚠️ Trade already exists for signal {result['id']}")
+                        continue
+
+                    # Create trade record with the correct timeframe
                     trade_data = {
                         'signalId': result['id'],
-                        'token': token_info['token'],
+                        'token': token_info['token'], 
                         'type': signal_type,
                         'timeframe': timeframe,  # Use the actual timeframe!
                         'status': 'PENDING',
