@@ -547,7 +547,7 @@ class TradeExecutor:
                     input_token=token_mint,
                     output_token="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",  # USDC
                     amount=token_amount,
-                    min_amount=1.0,  # Minimum $1
+                    min_amount=0.01,  # Changed from 1.0 to 0.01 ($0.01 minimum)
                     max_slippage=1.0
                 )
                 
