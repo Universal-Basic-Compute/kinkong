@@ -157,47 +157,75 @@ class TokenSnapshotTaker:
             volume24h = float(snapshot.get('volume24h', 0))
             current_price = float(snapshot.get('price', 0))
             
-            # Get 7-day historical data
+            # Get 7-day historical data for token
             seven_days_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
             historical_snapshots = self.snapshots_table.get_all(
                 formula=f"AND({{token}}='{token_name}', IS_AFTER({{createdAt}}, '{seven_days_ago}'))"
             )
             
-            # Calculate volume metrics
-            if historical_snapshots:
+            # Get SOL historical data
+            sol_snapshots = self.snapshots_table.get_all(
+                formula=f"AND({{token}}='SOL', IS_AFTER({{createdAt}}, '{seven_days_ago}'))"
+            )
+            
+            # Calculate metrics
+            if historical_snapshots and sol_snapshots:
+                # Token metrics
                 volumes = [float(snap['fields'].get('volume24h', 0)) for snap in historical_snapshots]
                 prices = [float(snap['fields'].get('price', 0)) for snap in historical_snapshots]
                 
+                # SOL metrics
+                sol_prices = [float(snap['fields'].get('price', 0)) for snap in sol_snapshots]
+                
+                # Basic averages
                 volume7d = sum(volumes) / len(volumes)
                 price7dAvg = sum(prices) / len(prices)
                 
-                # Calculate trends (current vs average)
+                # Calculate trends
                 volume_growth = ((volume24h - volume7d) / volume7d * 100) if volume7d > 0 else 0
                 price_trend = ((current_price - price7dAvg) / price7dAvg * 100) if price7dAvg > 0 else 0
-
-                # Calculate volatility (standard deviation of price changes)
+                
+                # Calculate volatility
                 if len(prices) > 1:
-                    # Calculate daily returns
                     price_changes = [(prices[i] - prices[i-1])/prices[i-1] * 100 for i in range(1, len(prices))]
-                    # Calculate standard deviation
                     mean_change = sum(price_changes) / len(price_changes)
                     squared_diff = sum((x - mean_change) ** 2 for x in price_changes)
                     volatility = (squared_diff / len(price_changes)) ** 0.5
                 else:
                     volatility = 0
+                    
+                # Calculate vs SOL performance
+                if len(prices) > 1 and len(sol_prices) > 1:
+                    # Get first and last prices for both
+                    token_start_price = prices[0]
+                    token_end_price = prices[-1]
+                    sol_start_price = sol_prices[0]
+                    sol_end_price = sol_prices[-1]
+                    
+                    # Calculate percentage changes
+                    token_return = ((token_end_price - token_start_price) / token_start_price) * 100
+                    sol_return = ((sol_end_price - sol_start_price) / sol_start_price) * 100
+                    
+                    # Calculate relative performance
+                    vs_sol_performance = token_return - sol_return
+                else:
+                    vs_sol_performance = 0
+                    
             else:
                 volume7d = volume24h
                 price7dAvg = current_price
                 volume_growth = 0
                 price_trend = 0
                 volatility = 0
+                vs_sol_performance = 0
                 
             metrics = {
                 'volume7d': volume7d,
                 'volumeGrowth': volume_growth,
                 'price7dAvg': price7dAvg,
                 'priceTrend': price_trend,
-                'priceVolatility': volatility
+                'priceVolatility': volatility,
+                'vsSolPerformance': vs_sol_performance
             }
             
             self.logger.info(f"Metrics calculated for {token_name}:")
