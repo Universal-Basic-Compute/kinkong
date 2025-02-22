@@ -418,25 +418,23 @@ class JupiterTradeExecutor:
                 # Extract the message components
                 message = original_tx.message
                 
-                # In MessageV0, the accounts are directly accessible
+                # In MessageV0, we need to access the lookup tables differently
                 if not message.account_keys:
                     raise Exception("No accounts found in message")
                     
                 # The first account is always the fee payer
                 payer = message.account_keys[0]
                 
-                # Recompile message with fresh blockhash
-                new_message = MessageV0.try_compile(
-                    payer=payer,
+                # Create new message with fresh blockhash
+                # We'll need to preserve the original message structure but update the blockhash
+                new_message = MessageV0(
+                    header=message.header,
+                    account_keys=message.account_keys,
                     recent_blockhash=fresh_blockhash,
-                    instructions=message.instructions,
-                    address_lookup_table_accounts=message.address_lookup_table_accounts
+                    instructions=message.instructions
                 )
                 
-                if not new_message:
-                    raise Exception("Failed to compile new message")
-
-                # Create new transaction with recompiled message
+                # Create new transaction with updated message
                 new_transaction = VersionedTransaction(
                     message=new_message,
                     signatures=[]  # Clear signatures as we'll resign
