@@ -24,8 +24,7 @@ class TokenSearcher:
         
         params = {
             "keyword": keyword,
-            "chain": "solana",
-            "type": "token"
+            "chain": "solana"
         }
         
         headers = {
@@ -43,18 +42,38 @@ class TokenSearcher:
             if not data.get('success'):
                 raise Exception(f"API returned success=false: {data.get('message', 'No error message')}")
             
-            tokens = data.get('data', {}).get('tokens', [])
-            if not tokens:
+            # Find token results
+            items = data.get('data', {}).get('items', [])
+            token_item = next((item for item in items if item['type'] == 'token'), None)
+            
+            if not token_item or not token_item.get('result'):
                 print(f"No tokens found for keyword: {keyword}")
                 return None
                 
-            # Find the best match
-            for token in tokens:
-                if token.get('symbol', '').upper() == keyword.upper():
-                    return token
+            tokens = token_item['result']
             
-            # If no exact match, return first result
-            return tokens[0]
+            # Find verified token with matching symbol
+            verified_token = next(
+                (token for token in tokens 
+                 if token.get('verified') and 
+                 token.get('symbol', '').upper() == keyword.upper()),
+                None
+            )
+            
+            if verified_token:
+                return verified_token
+                
+            # If no verified match, return first verified token
+            verified_token = next(
+                (token for token in tokens if token.get('verified')),
+                None
+            )
+            
+            if verified_token:
+                return verified_token
+                
+            # If no verified tokens, return first token
+            return tokens[0] if tokens else None
             
         except Exception as e:
             print(f"Error searching token: {str(e)}")
