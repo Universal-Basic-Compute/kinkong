@@ -472,17 +472,35 @@ class TradeExecutor:
             
             # Calculate amount to sell (get current balance)
             balance = await self.jupiter.get_token_balance(token_mint)
+            current_price = await self.get_token_price(token_mint)
             
-            if balance <= 0:
-                self.logger.warning(f"No balance to sell for trade {trade['id']}")
+            if not current_price:
+                self.logger.error(f"Could not get current price for {token_mint}")
                 return False
+                
+            usd_value = balance * current_price
+            self.logger.info(f"Balance: {balance:.8f} {trade['fields'].get('token')}")
+            self.logger.info(f"Current price: ${current_price:.4f}")
+            self.logger.info(f"USD Value: ${usd_value:.2f}")
+            
+            if usd_value < 1:
+                self.logger.warning(f"USD value ${usd_value:.2f} too small to sell")
+                
+                # Update trade record as completed with small balance
+                self.trades_table.update(trade['id'], {
+                    'status': exit_reason,
+                    'closePrice': current_price,
+                    'closedAt': datetime.now(timezone.utc).isoformat(),
+                    'notes': f"Closed with small balance (${usd_value:.2f})"
+                })
+                return True
                 
             # Execute sell order
             success, transaction_bytes = await self.jupiter.execute_validated_swap(
                 input_token=token_mint,
                 output_token="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",  # USDC
                 amount=balance,
-                min_amount=0.1,  # Minimum 0.1 USDC
+                min_amount=1.0,  # Minimum $1 USD value
                 max_slippage=1.0
             )
             
