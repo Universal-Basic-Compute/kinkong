@@ -5,13 +5,10 @@ interface Trade {
   id: string;
   createdAt: string;
   token: string;
-  amount: number;
-  price: number;
   value: number;
   status: string;
   signature: string;
   exitReason?: string;
-  exitPrice?: number;
   exitValue?: number;
   realizedPnl?: number;
 }
@@ -86,10 +83,7 @@ export function TradeHistory({ userOnly = false }: TradeHistoryProps) {
           <tr className="border-b border-gold/20">
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Time</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Token</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Amount</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Entry Price</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Entry Value</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Exit Price</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Value</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Exit Value</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">PNL</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Status</th>
@@ -120,16 +114,7 @@ export function TradeHistory({ userOnly = false }: TradeHistoryProps) {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                  {(trade.amount ?? 0).toLocaleString(undefined, { maximumFractionDigits: 4 })}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                  ${(trade.price ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                   ${(trade.value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                  {trade.exitPrice ? `$${trade.exitPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}` : '-'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                   {trade.exitValue ? `$${trade.exitValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-'}
