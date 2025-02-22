@@ -127,6 +127,13 @@ interface Thought {
   context: Record<string, any>;
 }
 
+interface TradeOrder {
+  token: string;
+  action: 'BUY' | 'SELL';
+  amount: number;
+  reason: string;
+}
+
 interface TokenScore {
   token: string;
   baseScore: number;
