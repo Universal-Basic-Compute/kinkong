@@ -316,8 +316,7 @@ class TradeExecutor:
         """Handle failed trade updates"""
         try:
             self.trades_table.update(trade_id, {
-                'status': 'FAILED',
-                'lastUpdateTime': datetime.now(timezone.utc).isoformat()
+                'status': 'FAILED'  # Only update the status
             })
         except Exception as e:
             self.logger.error(f"Error updating failed trade status: {e}")
