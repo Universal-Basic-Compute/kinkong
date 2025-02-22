@@ -223,7 +223,7 @@ class TokenSnapshotTaker:
                         'createdAt': created_at,
                         'isActive': True,
                         **calculated_metrics  # Add calculated metrics
-                    }
+                    })
                     
                     # Save snapshot
                     self.snapshots_table.insert(snapshot)
