@@ -181,6 +181,11 @@ class MarketSentimentAnalyzer:
     async def calculate_sentiment(self) -> Dict:
         """Calculate overall market sentiment"""
         try:
+            # Calculate week start and end dates
+            now = datetime.now(timezone.utc)
+            week_end_date = now
+            week_start_date = now - timedelta(days=7)
+
             # Get active tokens
             active_tokens = self.tokens_table.get_all(formula="{isActive}=1")
             
@@ -230,7 +235,9 @@ class MarketSentimentAnalyzer:
                 "prevWeekVolume": prev_week_volume,
                 "upDayVolume": up_day_volume,
                 "solPerformance": sol_performance,
-                "aiTokensPerformance": ai_tokens_performance
+                "aiTokensPerformance": ai_tokens_performance,
+                "weekStartDate": week_start_date.isoformat(),
+                "weekEndDate": week_end_date.isoformat()
             }
             
             logger.info(f"\nMarket Sentiment Analysis:")
