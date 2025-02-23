@@ -265,10 +265,10 @@ export function MarketSentimentDisplay() {
             <div className="flex flex-col items-center justify-center h-full">
               <div className="text-sm text-gray-400 mb-2">Volume Trend</div>
               <div className={`text-xl font-bold ${
-                parsedIndicators?.volume?.growth >= 0 ? 'text-green-400' : 'text-red-400'
+                (parsedIndicators?.volume?.growth ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'
               }`}>
-                {parsedIndicators?.volume?.growth >= 0 ? '+' : ''}
-                {parsedIndicators?.volume?.growth?.toFixed(1)}%
+                {(parsedIndicators?.volume?.growth ?? 0) >= 0 ? '+' : ''}
+                {(parsedIndicators?.volume?.growth ?? 0).toFixed(1)}%
               </div>
               <div className="text-xs text-gray-300 mt-1">
                 7-Day Growth
