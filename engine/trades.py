@@ -134,14 +134,15 @@ class TradeExecutor:
         try:
             now = datetime.now(timezone.utc).isoformat()
             
-            # Get BUY signals that haven't expired
+            # Get BUY signals that haven't expired AND have HIGH confidence
             signals = self.signals_table.get_all(
                 formula=f"AND("
                 f"{{type}}='BUY', "
+                f"{{confidence}}='HIGH', "
                 f"IS_AFTER({{expiryDate}}, '{now}'))"
             )
-            
-            logger.info(f"Found {len(signals)} active BUY signals")
+        
+            logger.info(f"Found {len(signals)} active HIGH confidence BUY signals")
 
             # Get token data from TOKENS table
             tokens_table = Airtable(self.base_id, 'TOKENS', self.api_key)
@@ -290,12 +291,6 @@ class TradeExecutor:
         """Execute a trade for a signal"""
         try:
             logger.info("🚀 Starting trade execution...")
-            
-            # Verify signal confidence first
-            confidence = signal['fields'].get('confidence')
-            if confidence != 'HIGH':
-                logger.info(f"Skipping signal {signal['id']} - Confidence {confidence} not HIGH")
-                return False
             
             # Create trade record first with expiryDate from signal
             trade_data = {
