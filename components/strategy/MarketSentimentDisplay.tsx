@@ -56,24 +56,19 @@ export function MarketSentimentDisplay() {
         const response = await fetch('/api/market-sentiment/latest');
         if (!response.ok) throw new Error('Failed to fetch sentiment');
         const data = await response.json();
-        console.log('Raw data from API:', data); // Debug raw data
+        console.log('Raw data from API:', data);
         setSentiment(data);
         
         // Parse the indicators JSON string
         if (data.indicators) {
-          console.log('Raw indicators string:', data.indicators); // Debug raw indicators string
+          console.log('Raw indicators string:', data.indicators);
           const parsed = JSON.parse(data.indicators);
-          console.log('Parsed indicators:', parsed); // Debug parsed object
-          console.log('Relative strength:', parsed.relative_strength); // Debug specific section
-          console.log('Sol performance:', parsed.relative_strength?.sol_performance); // Debug specific value
-          console.log('AI tokens performance:', parsed.relative_strength?.ai_tokens_performance); // Debug specific value
+          console.log('Parsed indicators:', parsed);
+          console.log('Relative strength:', parsed.relative_strength);
           setParsedIndicators(parsed);
-        } else {
-          console.log('No indicators found in data:', data); // Debug missing indicators
         }
       } catch (error) {
         console.error('Error fetching sentiment:', error);
-        console.error('Error details:', error.message); // Debug error details
       } finally {
         setIsLoading(false);
       }
