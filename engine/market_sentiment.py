@@ -221,16 +221,20 @@ class MarketSentimentAnalyzer:
                 strength_bullish
             ])
             
-            # Calculate confidence based on proportion of bullish signals
-            confidence = (bullish_signals / 4) * 100
+            # Calculate percentage of bullish signals
+            total_signals = 4  # Total number of indicators
+            bullish_percentage = (bullish_signals / total_signals) * 100
             
-            # Determine sentiment based on proportion of bullish signals
-            if bullish_signals >= 3:  # 75-100% bullish signals
+            # Determine sentiment based on actual percentages
+            if bullish_percentage >= 75:  # 75-100% bullish signals
                 sentiment = "BULLISH"
-            elif bullish_signals <= 1:  # 0-25% bullish signals
+            elif bullish_percentage <= 25:  # 0-25% bullish signals
                 sentiment = "BEARISH"
-            else:  # 50% bullish signals
+            else:  # 26-74% bullish signals
                 sentiment = "NEUTRAL"
+            
+            # Calculate confidence based on proportion of bullish signals
+            confidence = bullish_percentage  # This gives us 0-100 confidence score
             
             # Compile reasons
             reasons = [
