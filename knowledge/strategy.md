@@ -215,12 +215,21 @@ Note: All indicators prioritize data readily available from Solana DEX APIs and 
    - SOL Position: 20%
    - Stablecoin Reserve: 10%
 
-2. Bear Market Allocation
-   - AI Tokens (Selected 10): 40%
+2. Neutral Market Allocation
+   - AI Tokens (Selected 10): 50%
    - SOL Position: 20%
-   - Stablecoin Reserve: 40%
+   - Stablecoin Reserve: 30%
 
-Note: Market condition (bull/bear) determined by weekly sentiment analysis
+3. Bear Market Allocation
+   - AI Tokens (Selected 10): 30%
+   - SOL Position: 10%
+   - Stablecoin Reserve: 60%
+
+Note: Market sentiment is determined by weekly analysis considering:
+- >60% of AI tokens above their 7-day average price (Bullish)
+- Weekly volume trends and distribution
+- AI tokens performance relative to SOL
+- 4 key metrics weighted equally for classification
 
 ### Project Fundamentals & Sentiment Analysis
 
