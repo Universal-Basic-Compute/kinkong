@@ -12,9 +12,9 @@ def validate_signal(
         if not all(k in signal_data for k in ['signal', 'confidence', 'entryPrice', 'targetPrice', 'stopLoss']):
             return False
 
-        # Validate confidence
-        confidence = float(signal_data.get('confidence', 0))
-        if confidence < 60:
+        # Validate confidence - only accept HIGH
+        confidence = signal_data.get('confidence', 'LOW')
+        if confidence != 'HIGH':
             return False
 
         return True
