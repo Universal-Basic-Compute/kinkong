@@ -51,6 +51,7 @@ class MarketSentimentAnalyzer:
         self.api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
         self.snapshots_table = Airtable(self.base_id, 'TOKEN_SNAPSHOTS', self.api_key)
         self.tokens_table = Airtable(self.base_id, 'TOKENS', self.api_key)
+        self.logger = setup_logging()
 
     def get_weekly_snapshots(self, token: str) -> List[Dict]:
         """Get snapshots from the last 7 days for a token"""
