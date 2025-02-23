@@ -350,9 +350,9 @@ class TradeExecutor:
             logger.info(f"USDC balance: ${usdc_balance:.2f}")
             logger.info(f"Trade value: ${trade_value:.2f} (5% of USDC balance)")
 
-            # Calculate token amount based on entry price
+            # Calculate token amount based on entry price (this gives the actual number of tokens)
             entry_price = float(signal['fields']['entryPrice'])
-            token_amount = trade_value / entry_price
+            token_amount = trade_value / entry_price  # This amount is already in correct token units
 
             # Execute validated swap with calculated amount
             success, transaction_bytes = await self.jupiter.execute_validated_swap(
@@ -578,8 +578,8 @@ class TradeExecutor:
                 self.logger.error(f"Could not get current price for {token_mint}")
                 return False
 
-            # Use the original trade amount but divide by 100 to correct decimals
-            token_amount = float(trade['fields'].get('amount', 0)) / 100  # Ajout de la division par 100
+            # Use the original trade amount directly since it's already in correct units
+            token_amount = float(trade['fields'].get('amount', 0))  # Use amount as-is
             trade_value = token_amount * current_price
 
             self.logger.info(f"Closing amount: {token_amount:.8f} {trade['fields'].get('token')}")
