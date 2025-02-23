@@ -142,6 +142,41 @@ class MarketSentimentAnalyzer:
         
         return is_bullish, notes, total_up_volume
 
+    async def analyze_position_signals(self, active_tokens: List[Dict]) -> Tuple[bool, str, int, int]:
+        """Check if majority of POSITION signals are bullish over last 7 days"""
+        try:
+            # Get signals from last 7 days
+            week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+            signals_table = Airtable(self.base_id, 'SIGNALS', self.api_key)
+            
+            signals = signals_table.get_all(
+                formula=f"AND(timeframe='POSITION', confidence='HIGH', IS_AFTER(createdAt, '{week_ago}'))"
+            )
+            
+            if not signals:
+                return False, "No recent POSITION signals", 0, 0
+                
+            # Count BUY vs SELL signals
+            buy_signals = len([s for s in signals if s['fields'].get('type') == 'BUY'])
+            total_signals = len(signals)
+            
+            buy_percentage = (buy_signals / total_signals * 100) if total_signals > 0 else 0
+            is_bullish = buy_percentage > 60  # Bullish if >60% BUY signals
+            
+            notes = f"{buy_percentage:.1f}% of POSITION signals are BUY ({buy_signals}/{total_signals} signals)"
+            
+            self.logger.info("\nPosition Signals Analysis:")
+            self.logger.info(f"Total signals (7d): {total_signals}")
+            self.logger.info(f"BUY signals: {buy_signals}")
+            self.logger.info(f"BUY percentage: {buy_percentage:.1f}%")
+            self.logger.info(f"Sentiment: {'BULLISH' if is_bullish else 'BEARISH'}")
+            
+            return is_bullish, notes, total_signals, buy_signals
+            
+        except Exception as e:
+            self.logger.error(f"Error analyzing position signals: {e}")
+            return False, "Error analyzing signals", 0, 0
+
     def analyze_relative_strength(self, active_tokens: List[Dict]) -> Tuple[bool, str, float, float]:
         """Check if AI tokens are outperforming SOL"""
         # Get SOL performance
