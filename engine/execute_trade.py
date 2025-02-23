@@ -221,7 +221,7 @@ class JupiterTradeExecutor:
         input_token: str,
         output_token: str,
         amount: float,
-        min_amount: float = 1.0,  # Minimum USD value
+        min_amount: float = 1.0,
         max_slippage: float = 1.0
     ) -> tuple[bool, Optional[bytes]]:
         """Execute swap with validation"""
@@ -242,9 +242,14 @@ class JupiterTradeExecutor:
                 return False, None
 
             # Convert amount to raw token amount using appropriate decimals
-            # WBTC uses 8 decimals, USDC uses 6
-            decimals = 8 if input_token != "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" else 6
-            amount_raw = int(amount * (10 ** decimals))  # Convert to raw amount with proper decimals
+            decimals = 6  # USDC uses 6 decimals
+            if input_token == "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v":  # Si c'est USDC
+                amount_raw = int(amount * (10 ** decimals))  # Convert to raw amount
+            else:
+                # Pour les autres tokens, utiliser le montant tel quel
+                amount_raw = amount
+
+            self.logger.info(f"Raw amount for swap: {amount_raw}")
             
             # Get quote with raw token amount
             quote = await self.get_jupiter_quote(input_token, output_token, amount_raw, is_raw=True)
