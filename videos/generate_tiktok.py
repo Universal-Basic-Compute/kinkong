@@ -40,19 +40,9 @@ def create_tiktok_video():
     height = 1920
     duration = 10
 
-    # Create gradient background
-    def make_gradient_background(t):
-        """Create a moving gradient background"""
-        gradient = np.zeros((height, width, 3))
-        for y in range(height):
-            color_value = (np.sin(y/100 + t) + 1) / 2
-            gradient[y,:] = [0, 0, color_value * 0.3]  # Dark blue gradient
-        return gradient
-
-    # Fix the ColorClip creation by providing size parameter
-    background = ColorClip(size=(width, height), color=make_gradient_background(0))
+    # Create a simpler solid color background first
+    background = ColorClip(size=(width, height), color=[0, 0, 0.3])
     background = background.set_duration(duration)
-    background = background.fl(make_gradient_background)
 
     # Create text clips with animations
     text = "Hey traders,\nKinKong here.\n\nI've been analyzing\nthe UBC market data..."
