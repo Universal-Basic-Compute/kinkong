@@ -275,8 +275,8 @@ class MarketSentimentAnalyzer:
             result = {
                 "classification": sentiment,
                 "confidence": bullish_percentage,
-                "bullish_percentage": bullish_percentage,
-                "position_signals_buy_percentage": (buy_signals / total_position_signals * 100) if total_position_signals > 0 else 0,
+                "bullishPercentage": bullish_percentage,
+                "positionSignalsBuyPercentage": (buy_signals / total_position_signals * 100) if total_position_signals > 0 else 0,
                 "weekStartDate": (datetime.now(timezone.utc) - timedelta(days=7)).isoformat(),
                 "weekEndDate": datetime.now(timezone.utc).isoformat(),
                 "indicators": {
