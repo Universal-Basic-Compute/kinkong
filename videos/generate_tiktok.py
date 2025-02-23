@@ -23,7 +23,7 @@ try:
     print("✓ VideoClip imported")
     from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
     print("✓ CompositeVideoClip imported")
-    from moviepy.video.fx.all import slide_in
+    from moviepy.video.fx.SlideIn import slide_in
     print("✓ fx imported")
 except ImportError as e:
     print(f"Import error: {e}")
