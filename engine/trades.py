@@ -586,6 +586,34 @@ class TradeExecutor:
             self.logger.info(f"Current price: ${current_price:.4f}")
             self.logger.info(f"USD Value: ${trade_value:.2f}")
 
+            # Protection contre les trades trop importants
+            if trade_value > 1000:
+                error_msg = f"Trade value ${trade_value:.2f} exceeds maximum allowed ($1000)"
+                self.logger.error(f"❌ {error_msg}")
+                
+                # Mettre le trade en ERROR avec les détails
+                self.trades_table.update(trade['id'], {
+                    'status': 'ERROR',
+                    'exitReason': 'SAFETY_LIMIT',
+                    'notes': error_msg,
+                    'updatedAt': datetime.now(timezone.utc).isoformat()
+                })
+                
+                # Envoyer une notification Telegram
+                message = f"⚠️ KinKong Safety Alert\n\n"
+                message += f"Trade {trade['id']} exceeded safety limit:\n"
+                message += f"Token: {trade['fields'].get('token')}\n"
+                message += f"Value: ${trade_value:.2f}\n"
+                message += f"Action required: Manual intervention needed"
+                
+                try:
+                    from scripts.analyze_charts import send_telegram_message
+                    send_telegram_message(message)
+                except Exception as e:
+                    self.logger.error(f"Failed to send safety alert: {e}")
+                
+                return False
+
             # Execute trade if amount is significant
             if trade_value >= 1.0:
                 # Add debug logging before swap
