@@ -317,9 +317,6 @@ class MarketSentimentAnalyzer:
                 "weekStartDate": (datetime.now(timezone.utc) - timedelta(days=7)).isoformat(),
                 "weekEndDate": datetime.now(timezone.utc).isoformat(),
                 "indicators": json.dumps(indicators_data),
-                "bullish_indicators": bullish_indicators,
-                "total_indicators": total_indicators,
-                "bullish_percentage": bullish_percentage,
                 "notes": "\n".join([
                     f"Price Action: {price_notes}",
                     f"Volume Trend: {volume_notes}",
