@@ -291,6 +291,12 @@ class TradeExecutor:
         try:
             logger.info("🚀 Starting trade execution...")
             
+            # Verify signal confidence first
+            confidence = signal['fields'].get('confidence')
+            if confidence != 'HIGH':
+                logger.info(f"Skipping signal {signal['id']} - Confidence {confidence} not HIGH")
+                return False
+            
             # Create trade record first with expiryDate from signal
             trade_data = {
                 'signalId': signal['id'],
