@@ -272,7 +272,43 @@ class MarketSentimentAnalyzer:
             else:  # 26-74% bullish indicators
                 sentiment = "NEUTRAL"
 
-            # Create detailed result object
+            # First create the indicators object
+            indicators_data = {
+                "price_action": {
+                    "is_bullish": price_bullish,
+                    "details": price_notes,
+                    "tokens_above_avg": tokens_above_avg,
+                    "total_tokens": total_tokens,
+                    "percentage": (tokens_above_avg / total_tokens * 100) if total_tokens > 0 else 0
+                },
+                "volume": {
+                    "is_bullish": volume_bullish,
+                    "details": volume_notes,
+                    "current": weekly_volume,
+                    "previous": prev_week_volume,
+                    "growth": ((weekly_volume - prev_week_volume) / prev_week_volume * 100) if prev_week_volume > 0 else 0
+                },
+                "distribution": {
+                    "is_bullish": distribution_bullish,
+                    "details": distribution_notes,
+                    "up_day_volume": up_day_volume
+                },
+                "position_signals": {
+                    "is_bullish": position_bullish,
+                    "details": position_notes,
+                    "total_signals": total_position_signals,
+                    "buy_signals": buy_signals,
+                    "buy_percentage": (buy_signals / total_position_signals * 100) if total_position_signals > 0 else 0
+                },
+                "relative_strength": {
+                    "is_bullish": strength_bullish,
+                    "details": strength_notes,
+                    "sol_performance": sol_performance,
+                    "ai_tokens_performance": ai_tokens_performance
+                }
+            }
+
+            # Create result object with stringified indicators
             result = {
                 "classification": sentiment,
                 "confidence": bullish_percentage,
@@ -280,40 +316,7 @@ class MarketSentimentAnalyzer:
                 "positionSignalsBuyPercentage": (buy_signals / total_position_signals * 100) if total_position_signals > 0 else 0,
                 "weekStartDate": (datetime.now(timezone.utc) - timedelta(days=7)).isoformat(),
                 "weekEndDate": datetime.now(timezone.utc).isoformat(),
-                "indicators": json.dumps({
-                    "price_action": {
-                        "is_bullish": price_bullish,
-                        "details": price_notes,
-                        "tokens_above_avg": tokens_above_avg,
-                        "total_tokens": total_tokens,
-                        "percentage": (tokens_above_avg / total_tokens * 100) if total_tokens > 0 else 0
-                    },
-                    "volume": {
-                        "is_bullish": volume_bullish,
-                        "details": volume_notes,
-                        "current": weekly_volume,
-                        "previous": prev_week_volume,
-                        "growth": ((weekly_volume - prev_week_volume) / prev_week_volume * 100) if prev_week_volume > 0 else 0
-                    },
-                    "distribution": {
-                        "is_bullish": distribution_bullish,
-                        "details": distribution_notes,
-                        "up_day_volume": up_day_volume
-                    },
-                    "position_signals": {
-                        "is_bullish": position_bullish,
-                        "details": position_notes,
-                        "total_signals": total_position_signals,
-                        "buy_signals": buy_signals,
-                        "buy_percentage": (buy_signals / total_position_signals * 100) if total_position_signals > 0 else 0
-                    },
-                    "relative_strength": {
-                        "is_bullish": strength_bullish,
-                        "details": strength_notes,
-                        "sol_performance": sol_performance,
-                        "ai_tokens_performance": ai_tokens_performance
-                    }
-                }),
+                "indicators": json.dumps(indicators_data),
                 "portfolio_allocation": {
                     "ai_tokens": 70 if sentiment == "BULLISH" else 30 if sentiment == "BEARISH" else 50,
                     "sol": 20 if sentiment == "BULLISH" else 10 if sentiment == "BEARISH" else 20,
@@ -339,7 +342,7 @@ class MarketSentimentAnalyzer:
             logger.info(f"Confidence: {bullish_percentage:.1f}%")
             logger.info(f"Bullish Indicators: {bullish_indicators}/{total_indicators}")
             logger.info("\nIndicator Details:")
-            for indicator, data in result["indicators"].items():
+            for indicator, data in indicators_data.items():
                 logger.info(f"{indicator}: {'BULLISH' if data['is_bullish'] else 'BEARISH'}")
                 logger.info(f"• {data['details']}")
             
