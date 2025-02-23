@@ -363,27 +363,6 @@ export function MarketSentimentDisplay() {
             </div>
           </div>
         </motion.div>
-
-        {/* Indicator Details */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-          className="mt-8"
-        >
-          <div className="text-sm font-medium text-gold mb-4">Detailed Analysis:</div>
-          <div className="space-y-3">
-            {parsedIndicators && Object.entries(parsedIndicators).map(([key, data]: [string, any]) => (
-              <div key={key} className="flex items-start space-x-2">
-                <div className={`mt-1.5 w-1.5 h-1.5 rounded-full ${
-                  data.is_bullish ? 'bg-green-400' : 'bg-red-400'
-                }`} />
-                <div className="text-gray-300">{data.details}</div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-
       </div>
     </motion.div>
   );
