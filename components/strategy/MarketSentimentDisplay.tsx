@@ -207,10 +207,10 @@ export function MarketSentimentDisplay() {
             <div className="flex flex-col items-center justify-center h-full">
               <div className="text-sm text-gray-400 mb-2">SOL Performance</div>
               <div className={`text-2xl font-bold ${
-                (parsedIndicators?.relative_strength?.sol_performance || 0) >= 0 ? 'text-green-400' : 'text-red-400'
+                (parsedIndicators?.relative_strength?.sol_performance ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'
               }`}>
-                {(parsedIndicators?.relative_strength?.sol_performance || 0) >= 0 ? '+' : ''}
-                {parsedIndicators?.relative_strength?.sol_performance?.toFixed(1)}%
+                {(parsedIndicators?.relative_strength?.sol_performance ?? 0) >= 0 ? '+' : ''}
+                {(parsedIndicators?.relative_strength?.sol_performance ?? 0).toFixed(1)}%
               </div>
               <div className="text-xs text-gray-300 mt-1">
                 7-Day Return
@@ -223,10 +223,10 @@ export function MarketSentimentDisplay() {
             <div className="flex flex-col items-center justify-center h-full">
               <div className="text-sm text-gray-400 mb-2">AI Tokens Performance</div>
               <div className={`text-2xl font-bold ${
-                (parsedIndicators?.relative_strength?.ai_tokens_performance || 0) >= 0 ? 'text-green-400' : 'text-red-400'
+                (parsedIndicators?.relative_strength?.ai_tokens_performance ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'
               }`}>
-                {(parsedIndicators?.relative_strength?.ai_tokens_performance || 0) >= 0 ? '+' : ''}
-                {parsedIndicators?.relative_strength?.ai_tokens_performance?.toFixed(1)}%
+                {(parsedIndicators?.relative_strength?.ai_tokens_performance ?? 0) >= 0 ? '+' : ''}
+                {(parsedIndicators?.relative_strength?.ai_tokens_performance ?? 0).toFixed(1)}%
               </div>
               <div className="text-xs text-gray-300 mt-1">
                 7-Day Return
@@ -247,9 +247,9 @@ export function MarketSentimentDisplay() {
             <div className="flex flex-col items-center justify-center h-full">
               <div className="text-sm text-gray-400 mb-2">Price Action</div>
               <div className={`text-xl font-bold ${
-                parsedIndicators?.price_action?.is_bullish ? 'text-green-400' : 'text-red-400'
+                parsedIndicators?.price_action?.is_bullish ?? false ? 'text-green-400' : 'text-red-400'
               }`}>
-                {parsedIndicators?.price_action?.percentage?.toFixed(1)}%
+                {(parsedIndicators?.price_action?.percentage ?? 0).toFixed(1)}%
               </div>
               <div className="text-xs text-gray-300 mt-1">
                 Above Average
@@ -281,9 +281,9 @@ export function MarketSentimentDisplay() {
             <div className="flex flex-col items-center justify-center h-full">
               <div className="text-sm text-gray-400 mb-2">Position Signals</div>
               <div className={`text-xl font-bold ${
-                parsedIndicators?.position_signals?.buy_percentage >= 50 ? 'text-green-400' : 'text-red-400'
+                (parsedIndicators?.position_signals?.buy_percentage ?? 0) >= 50 ? 'text-green-400' : 'text-red-400'
               }`}>
-                {parsedIndicators?.position_signals?.buy_percentage?.toFixed(1)}%
+                {(parsedIndicators?.position_signals?.buy_percentage ?? 0).toFixed(1)}%
               </div>
               <div className="text-xs text-gray-300 mt-1">
                 Buy Signals
@@ -299,10 +299,10 @@ export function MarketSentimentDisplay() {
             <div className="flex flex-col items-center justify-center h-full">
               <div className="text-sm text-gray-400 mb-2">AI vs SOL</div>
               <div className={`text-xl font-bold ${
-                parsedIndicators?.relative_strength?.is_bullish ? 'text-green-400' : 'text-red-400'
+                parsedIndicators?.relative_strength?.is_bullish ?? false ? 'text-green-400' : 'text-red-400'
               }`}>
-                {parsedIndicators?.relative_strength?.ai_tokens_performance >= 0 ? '+' : ''}
-                {parsedIndicators?.relative_strength?.ai_tokens_performance?.toFixed(1)}%
+                {(parsedIndicators?.relative_strength?.ai_tokens_performance ?? 0) >= 0 ? '+' : ''}
+                {(parsedIndicators?.relative_strength?.ai_tokens_performance ?? 0).toFixed(1)}%
               </div>
               <div className="text-xs text-gray-300 mt-1">
                 Outperformance
