@@ -109,6 +109,34 @@ class TradeExecutor:
         self.signals_table = Airtable(self.base_id, 'SIGNALS', self.api_key)
         self.trades_table = Airtable(self.base_id, 'TRADES', self.api_key)
         self.logger = setup_logging()
+
+    async def get_current_market_sentiment(self) -> str:
+        """Get the most recent market sentiment from MARKET_SENTIMENT table"""
+        try:
+            sentiment_table = Airtable(self.base_id, 'MARKET_SENTIMENT', self.api_key)
+            records = sentiment_table.get_all(
+                sort=[('createdAt', 'desc')],
+                maxRecords=1
+            )
+            
+            if not records:
+                self.logger.warning("No market sentiment found, defaulting to NEUTRAL")
+                return "NEUTRAL"
+                
+            return records[0]['fields'].get('classification', 'NEUTRAL')
+            
+        except Exception as e:
+            self.logger.error(f"Error getting market sentiment: {e}")
+            return "NEUTRAL"  # Default to neutral if error
+
+    async def get_allocation_percentage(self, sentiment: str) -> float:
+        """Get AI tokens allocation percentage based on market sentiment"""
+        allocations = {
+            "BULLISH": 0.70,  # 70% in bull market
+            "NEUTRAL": 0.50,  # 50% in neutral market
+            "BEARISH": 0.30,  # 30% in bear market
+        }
+        return allocations.get(sentiment, 0.50)  # Default to neutral allocation
         
         # Initialize Jupiter trade executor
         self.jupiter = JupiterTradeExecutor()
@@ -336,9 +364,13 @@ class TradeExecutor:
                 await self.handle_failed_trade(trade['id'], error_msg)
                 return False
 
-            # Calculate trade amount (5% of USDC balance, min $10, max $1000)
-            trade_value = min(usdc_balance * 0.05, 1000)  # Changed from 0.03 to 0.05
-            trade_value = max(trade_value, 10)
+            # Get current market sentiment and allocation percentage
+            sentiment = await self.get_current_market_sentiment()
+            allocation_pct = await self.get_allocation_percentage(sentiment)
+            
+            # Calculate trade value (10% of USDC balance * allocation percentage)
+            trade_value = min(usdc_balance * 0.10 * allocation_pct, 1000)  # Still cap at $1000
+            trade_value = max(trade_value, 10)  # Minimum $10
 
             if trade_value < 10:
                 error_msg = f"Trade value ${trade_value:.2f} below minimum $10"
@@ -347,8 +379,10 @@ class TradeExecutor:
                 return False
 
             logger.info(f"\nTrade calculation:")
+            logger.info(f"Market Sentiment: {sentiment}")
+            logger.info(f"AI Token Allocation: {allocation_pct*100:.0f}%")
             logger.info(f"USDC balance: ${usdc_balance:.2f}")
-            logger.info(f"Trade value: ${trade_value:.2f} (5% of USDC balance)")
+            logger.info(f"Trade value: ${trade_value:.2f} (10% of USDC * {allocation_pct*100:.0f}% allocation)")
 
             # Calculate token amount based on entry price (this gives the actual number of tokens)
             entry_price = float(signal['fields']['entryPrice'])
