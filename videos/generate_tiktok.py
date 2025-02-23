@@ -42,7 +42,7 @@ def create_tiktok_video():
 
     # Create a simpler solid color background first
     background = ColorClip(size=(width, height), color=[0, 0, 0.3])
-    background = background.set_duration(duration)
+    background = background.with_duration(duration)
 
     # Create text clips with animations
     text = "Hey traders,\nKinKong here.\n\nI've been analyzing\nthe UBC market data..."
@@ -57,7 +57,7 @@ def create_tiktok_video():
         size=(width-100, height//2),
         method='caption',
         align='center'
-    ).set_duration(5)
+    ).with_duration(5)
     clip1 = clip1.set_position(('center', height//3))
     clip1 = clip1.fadein(1).fadeout(1)
     
@@ -69,7 +69,7 @@ def create_tiktok_video():
         size=(width-100, height//2),
         method='caption',
         align='center'
-    ).set_duration(5)
+    ).with_duration(5)
     clip2 = clip2.set_position(('center', 2*height//3))
     clip2 = clip2.set_start(5)  # Start after first clip
     clip2 = clip2.fx(SlideIn, duration=1, side='right')
