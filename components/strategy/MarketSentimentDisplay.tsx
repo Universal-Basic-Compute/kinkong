@@ -230,61 +230,86 @@ export function MarketSentimentDisplay() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="grid grid-cols-5 gap-4 mt-8"
+          className="grid grid-cols-5 gap-6 mt-8"
         >
           {/* Price Action */}
-          <div className="relative overflow-hidden rounded-xl bg-black/20 p-4">
-            <div className="text-sm text-gray-400 mb-1">Price Action</div>
-            <div className={`text-lg font-bold ${
-              parsedIndicators?.price_action?.is_bullish ? 'text-green-400' : 'text-red-400'
-            }`}>
-              {parsedIndicators?.price_action?.percentage?.toFixed(1)}% Above Avg
-            </div>
-            <div className="text-xs text-gray-300 mt-1">
-              {parsedIndicators?.price_action?.tokens_above_avg}/{parsedIndicators?.price_action?.total_tokens}
+          <div className="relative overflow-hidden rounded-xl bg-black/20 p-4 border border-gray-800 hover:border-gray-700 transition-all group hover:bg-black/30">
+            <div className="flex flex-col items-center justify-center h-full">
+              <div className="text-sm text-gray-400 mb-2">Price Action</div>
+              <div className={`text-xl font-bold ${
+                parsedIndicators?.price_action?.is_bullish ? 'text-green-400' : 'text-red-400'
+              }`}>
+                {parsedIndicators?.price_action?.percentage?.toFixed(1)}%
+              </div>
+              <div className="text-xs text-gray-300 mt-1">
+                Above Average
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                {parsedIndicators?.price_action?.tokens_above_avg}/{parsedIndicators?.price_action?.total_tokens} tokens
+              </div>
             </div>
           </div>
 
           {/* Volume Analysis */}
-          <div className="relative overflow-hidden rounded-xl bg-black/20 p-4">
-            <div className="text-sm text-gray-400 mb-1">Volume Trend</div>
-            <div className={`text-lg font-bold ${
-              parsedIndicators?.volume?.growth >= 0 ? 'text-green-400' : 'text-red-400'
-            }`}>
-              {parsedIndicators?.volume?.growth >= 0 ? '+' : ''}
-              {parsedIndicators?.volume?.growth?.toFixed(1)}% Growth
+          <div className="relative overflow-hidden rounded-xl bg-black/20 p-4 border border-gray-800 hover:border-gray-700 transition-all group hover:bg-black/30">
+            <div className="flex flex-col items-center justify-center h-full">
+              <div className="text-sm text-gray-400 mb-2">Volume Trend</div>
+              <div className={`text-xl font-bold ${
+                parsedIndicators?.volume?.growth >= 0 ? 'text-green-400' : 'text-red-400'
+              }`}>
+                {parsedIndicators?.volume?.growth >= 0 ? '+' : ''}
+                {parsedIndicators?.volume?.growth?.toFixed(1)}%
+              </div>
+              <div className="text-xs text-gray-300 mt-1">
+                7-Day Growth
+              </div>
             </div>
           </div>
 
           {/* Position Signals */}
-          <div className="relative overflow-hidden rounded-xl bg-black/20 p-4">
-            <div className="text-sm text-gray-400 mb-1">Position Signals</div>
-            <div className={`text-lg font-bold ${
-              parsedIndicators?.position_signals?.buy_percentage >= 50 ? 'text-green-400' : 'text-red-400'
-            }`}>
-              {parsedIndicators?.position_signals?.buy_percentage?.toFixed(1)}% Buy
-            </div>
-            <div className="text-xs text-gray-300 mt-1">
-              {parsedIndicators?.position_signals?.buy_signals}/{parsedIndicators?.position_signals?.total_signals}
+          <div className="relative overflow-hidden rounded-xl bg-black/20 p-4 border border-gray-800 hover:border-gray-700 transition-all group hover:bg-black/30">
+            <div className="flex flex-col items-center justify-center h-full">
+              <div className="text-sm text-gray-400 mb-2">Position Signals</div>
+              <div className={`text-xl font-bold ${
+                parsedIndicators?.position_signals?.buy_percentage >= 50 ? 'text-green-400' : 'text-red-400'
+              }`}>
+                {parsedIndicators?.position_signals?.buy_percentage?.toFixed(1)}%
+              </div>
+              <div className="text-xs text-gray-300 mt-1">
+                Buy Signals
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                {parsedIndicators?.position_signals?.buy_signals}/{parsedIndicators?.position_signals?.total_signals} total
+              </div>
             </div>
           </div>
 
           {/* Relative Strength */}
-          <div className="relative overflow-hidden rounded-xl bg-black/20 p-4">
-            <div className="text-sm text-gray-400 mb-1">AI vs SOL</div>
-            <div className={`text-lg font-bold ${
-              parsedIndicators?.relative_strength?.is_bullish ? 'text-green-400' : 'text-red-400'
-            }`}>
-              {parsedIndicators?.relative_strength?.ai_tokens_performance >= 0 ? '+' : ''}
-              {parsedIndicators?.relative_strength?.ai_tokens_performance?.toFixed(1)}%
+          <div className="relative overflow-hidden rounded-xl bg-black/20 p-4 border border-gray-800 hover:border-gray-700 transition-all group hover:bg-black/30">
+            <div className="flex flex-col items-center justify-center h-full">
+              <div className="text-sm text-gray-400 mb-2">AI vs SOL</div>
+              <div className={`text-xl font-bold ${
+                parsedIndicators?.relative_strength?.is_bullish ? 'text-green-400' : 'text-red-400'
+              }`}>
+                {parsedIndicators?.relative_strength?.ai_tokens_performance >= 0 ? '+' : ''}
+                {parsedIndicators?.relative_strength?.ai_tokens_performance?.toFixed(1)}%
+              </div>
+              <div className="text-xs text-gray-300 mt-1">
+                Outperformance
+              </div>
             </div>
           </div>
 
           {/* Market Structure */}
-          <div className="relative overflow-hidden rounded-xl bg-black/20 p-4">
-            <div className="text-sm text-gray-400 mb-1">Confidence</div>
-            <div className={`text-lg font-bold text-gold`}>
-              {sentiment?.confidence}%
+          <div className="relative overflow-hidden rounded-xl bg-black/20 p-4 border border-gray-800 hover:border-gray-700 transition-all group hover:bg-black/30">
+            <div className="flex flex-col items-center justify-center h-full">
+              <div className="text-sm text-gray-400 mb-2">Confidence</div>
+              <div className="text-xl font-bold text-gold">
+                {sentiment?.confidence}%
+              </div>
+              <div className="text-xs text-gray-300 mt-1">
+                Signal Strength
+              </div>
             </div>
           </div>
         </motion.div>
