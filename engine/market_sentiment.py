@@ -312,18 +312,7 @@ class MarketSentimentAnalyzer:
             result = {
                 "classification": sentiment,
                 "confidence": bullish_percentage,
-                "bullishPercentage": bullish_percentage,
-                "positionSignalsBuyPercentage": (buy_signals / total_position_signals * 100) if total_position_signals > 0 else 0,
-                "weekStartDate": (datetime.now(timezone.utc) - timedelta(days=7)).isoformat(),
-                "weekEndDate": datetime.now(timezone.utc).isoformat(),
                 "indicators": json.dumps(indicators_data),
-                "notes": "\n".join([
-                    f"Price Action: {price_notes}",
-                    f"Volume Trend: {volume_notes}",
-                    f"Volume Distribution: {distribution_notes}",
-                    f"Position Signals: {position_notes}",
-                    f"Relative Strength: {strength_notes}"
-                ]),
                 "createdAt": datetime.now(timezone.utc).isoformat(),
                 "weekStartDate": (datetime.now(timezone.utc) - timedelta(days=7)).isoformat(),
                 "weekEndDate": datetime.now(timezone.utc).isoformat()
