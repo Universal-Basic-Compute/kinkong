@@ -279,32 +279,37 @@ class MarketSentimentAnalyzer:
                     "details": price_notes,
                     "tokens_above_avg": tokens_above_avg,
                     "total_tokens": total_tokens,
-                    "percentage": (tokens_above_avg / total_tokens * 100) if total_tokens > 0 else 0
+                    "percentage": (tokens_above_avg / total_tokens * 100) if total_tokens > 0 else 0,
+                    "info": "Measures how many AI tokens are trading above their 7-day average price. A higher percentage indicates broader market strength and positive momentum across the sector."
                 },
                 "volume": {
                     "is_bullish": volume_bullish,
                     "details": volume_notes,
                     "current": weekly_volume,
                     "previous": prev_week_volume,
-                    "growth": ((weekly_volume - prev_week_volume) / prev_week_volume * 100) if prev_week_volume > 0 else 0
+                    "growth": ((weekly_volume - prev_week_volume) / prev_week_volume * 100) if prev_week_volume > 0 else 0,
+                    "info": "Compares current week's trading volume to previous week. Growing volume suggests increasing market participation and validates price movements."
                 },
                 "distribution": {
                     "is_bullish": distribution_bullish,
                     "details": distribution_notes,
-                    "up_day_volume": up_day_volume
+                    "up_day_volume": up_day_volume,
+                    "info": "Analyzes if more trading volume occurs on up-days vs down-days. Higher volume on up-days indicates stronger buying pressure and market conviction."
                 },
                 "position_signals": {
                     "is_bullish": position_bullish,
                     "details": position_notes,
                     "total_signals": total_position_signals,
                     "buy_signals": buy_signals,
-                    "buy_percentage": (buy_signals / total_position_signals * 100) if total_position_signals > 0 else 0
+                    "buy_percentage": (buy_signals / total_position_signals * 100) if total_position_signals > 0 else 0,
+                    "info": "Tracks the ratio of buy vs sell signals from long-term position trades. A higher percentage of buy signals suggests stronger long-term market confidence."
                 },
                 "relative_strength": {
                     "is_bullish": strength_bullish,
                     "details": strength_notes,
                     "sol_performance": sol_performance,
-                    "ai_tokens_performance": ai_tokens_performance
+                    "ai_tokens_performance": ai_tokens_performance,
+                    "info": "Compares AI tokens performance against SOL. Outperformance indicates sector-specific strength rather than just general market movement."
                 }
             }
 
