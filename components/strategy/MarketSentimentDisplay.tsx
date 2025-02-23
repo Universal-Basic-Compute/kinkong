@@ -63,10 +63,8 @@ export function MarketSentimentDisplay() {
           const parsed = JSON.parse(data.indicators);
           setParsedIndicators(parsed);
           console.log('Parsed indicators:', parsed); // Debug log
+          console.log('Relative strength:', parsed.relative_strength); // Debug specific section
         }
-        // Parse the indicators JSON string
-        if (data.indicators) {
-          setParsedIndicators(JSON.parse(data.indicators));
         }
       } catch (error) {
         console.error('Error fetching sentiment:', error);
