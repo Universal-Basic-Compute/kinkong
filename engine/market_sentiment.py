@@ -211,6 +211,7 @@ class MarketSentimentAnalyzer:
             price_bullish, price_notes, total_tokens, tokens_above_avg = self.analyze_price_action(active_tokens)
             volume_bullish, volume_notes, weekly_volume, prev_week_volume = self.analyze_volume(active_tokens)
             distribution_bullish, distribution_notes, up_day_volume = self.analyze_volume_distribution(active_tokens)
+            position_bullish, position_notes, total_position_signals, buy_signals = await self.analyze_position_signals(active_tokens)
             strength_bullish, strength_notes, sol_performance, ai_tokens_performance = self.analyze_relative_strength(active_tokens)
             
             # Count bullish indicators
@@ -218,6 +219,7 @@ class MarketSentimentAnalyzer:
                 price_bullish,
                 volume_bullish, 
                 distribution_bullish,
+                position_bullish,
                 strength_bullish
             ])
             
@@ -241,6 +243,7 @@ class MarketSentimentAnalyzer:
                 f"Price Action: {price_notes}",
                 f"Volume Trend: {volume_notes}",
                 f"Volume Distribution: {distribution_notes}",
+                f"Position Signals: {position_notes}",
                 f"Relative Strength: {strength_notes}"
             ]
             
