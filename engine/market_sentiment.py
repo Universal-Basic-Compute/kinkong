@@ -144,14 +144,14 @@ class MarketSentimentAnalyzer:
         return is_bullish, notes, total_up_volume
 
     async def analyze_position_signals(self, active_tokens: List[Dict]) -> Tuple[bool, str, int, int]:
-        """Check if majority of POSITION signals are bullish over last 7 days"""
+        """Check if majority of POSITION signals are bullish over last 3 days"""
         try:
-            # Get signals from last 7 days
-            week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+            # Get signals from last 3 days instead of 7
+            three_days_ago = (datetime.now(timezone.utc) - timedelta(days=3)).isoformat()
             signals_table = Airtable(self.base_id, 'SIGNALS', self.api_key)
             
             signals = signals_table.get_all(
-                formula=f"AND(timeframe='POSITION', confidence='HIGH', IS_AFTER(createdAt, '{week_ago}'))"
+                formula=f"AND(timeframe='POSITION', confidence='HIGH', IS_AFTER(createdAt, '{three_days_ago}'))"
             )
             
             if not signals:
@@ -164,10 +164,10 @@ class MarketSentimentAnalyzer:
             buy_percentage = (buy_signals / total_signals * 100) if total_signals > 0 else 0
             is_bullish = buy_percentage > 60  # Bullish if >60% BUY signals
             
-            notes = f"{buy_percentage:.1f}% of POSITION signals are BUY ({buy_signals}/{total_signals} signals)"
+            notes = f"{buy_percentage:.1f}% of POSITION signals are BUY ({buy_signals}/{total_signals} signals in last 3 days)"
             
             self.logger.info("\nPosition Signals Analysis:")
-            self.logger.info(f"Total signals (7d): {total_signals}")
+            self.logger.info(f"Total signals (3d): {total_signals}")
             self.logger.info(f"BUY signals: {buy_signals}")
             self.logger.info(f"BUY percentage: {buy_percentage:.1f}%")
             self.logger.info(f"Sentiment: {'BULLISH' if is_bullish else 'BEARISH'}")
