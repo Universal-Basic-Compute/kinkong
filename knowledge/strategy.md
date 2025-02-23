@@ -126,19 +126,26 @@ Trades only execute if any position requires >3% adjustment, providing efficient
    - Week-over-week change in dominance
    Primary source: Birdeye API
 
+4. Position Signals Analysis (via Airtable)
+   - Last 7 days of POSITION signals
+   - Only HIGH confidence signals
+   - Bullish if >60% BUY signals
+   - Minimum 3 signals required
+   Primary source: Airtable SIGNALS table
+
 #### Bullish Week Classification (Need 3/4):
 - >60% of AI tokens above their 7-day average price
 - Weekly volume higher than previous week
 - >60% of volume on up days
-- AI tokens outperforming SOL (relative strength)
+- >60% of POSITION signals are BUY (7-day window)
 
 #### Bearish Week Classification (Need 3/4):
 - <40% of AI tokens above their 7-day average price
 - Weekly volume lower than previous week
 - >60% of volume on down days
-- AI tokens underperforming SOL (relative strength)
+- <40% of POSITION signals are BUY (7-day window)
 
-Note: All indicators prioritize data readily available from Solana DEX APIs and price feeds.
+Note: All indicators prioritize data readily available from Solana DEX APIs, price feeds, and internal signals.
 
 ### Token Selection Process (Weekly Review)
 
