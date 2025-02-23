@@ -23,7 +23,7 @@ try:
     print("✓ VideoClip imported")
     from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
     print("✓ CompositeVideoClip imported")
-    from moviepy.video.fx.SlideIn import slide_in
+    from moviepy.video.fx.SlideIn import SlideIn
     print("✓ fx imported")
 except ImportError as e:
     print(f"Import error: {e}")
@@ -80,7 +80,7 @@ def create_tiktok_video():
     ).set_duration(5)
     clip2 = clip2.set_position(('center', 2*height//3))
     clip2 = clip2.set_start(5)  # Start after first clip
-    clip2 = clip2.fx(slide_in, duration=1, side='right')
+    clip2 = clip2.fx(SlideIn, duration=1, side='right')
     
     text_clips = [clip1, clip2]
 
