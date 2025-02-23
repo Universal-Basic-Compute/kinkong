@@ -230,58 +230,61 @@ export function MarketSentimentDisplay() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="grid grid-cols-2 gap-6 mt-8"
+          className="grid grid-cols-5 gap-4 mt-8"
         >
           {/* Price Action */}
-          <div className="relative overflow-hidden rounded-xl bg-black/20 p-6">
-            <div className="text-sm text-gray-400 mb-2">Price Action</div>
-            <div className={`text-xl font-bold ${
+          <div className="relative overflow-hidden rounded-xl bg-black/20 p-4">
+            <div className="text-sm text-gray-400 mb-1">Price Action</div>
+            <div className={`text-lg font-bold ${
               parsedIndicators?.price_action?.is_bullish ? 'text-green-400' : 'text-red-400'
             }`}>
-              {parsedIndicators?.price_action?.percentage?.toFixed(1)}% Above Average
+              {parsedIndicators?.price_action?.percentage?.toFixed(1)}% Above Avg
             </div>
-            <div className="text-sm text-gray-300 mt-1">
-              {parsedIndicators?.price_action?.tokens_above_avg} / {parsedIndicators?.price_action?.total_tokens} tokens
+            <div className="text-xs text-gray-300 mt-1">
+              {parsedIndicators?.price_action?.tokens_above_avg}/{parsedIndicators?.price_action?.total_tokens}
             </div>
           </div>
 
           {/* Volume Analysis */}
-          <div className="relative overflow-hidden rounded-xl bg-black/20 p-6">
-            <div className="text-sm text-gray-400 mb-2">Volume Trend</div>
-            <div className={`text-xl font-bold ${
+          <div className="relative overflow-hidden rounded-xl bg-black/20 p-4">
+            <div className="text-sm text-gray-400 mb-1">Volume Trend</div>
+            <div className={`text-lg font-bold ${
               parsedIndicators?.volume?.growth >= 0 ? 'text-green-400' : 'text-red-400'
             }`}>
               {parsedIndicators?.volume?.growth >= 0 ? '+' : ''}
               {parsedIndicators?.volume?.growth?.toFixed(1)}% Growth
             </div>
-            <div className="text-sm text-gray-300 mt-1">
-              7-day volume comparison
-            </div>
-          </div>
-
-          {/* Volume Distribution */}
-          <div className="relative overflow-hidden rounded-xl bg-black/20 p-6">
-            <div className="text-sm text-gray-400 mb-2">Volume Distribution</div>
-            <div className={`text-xl font-bold ${
-              parsedIndicators?.distribution?.up_day_volume >= 50 ? 'text-green-400' : 'text-red-400'
-            }`}>
-              {parsedIndicators?.distribution?.up_day_volume?.toFixed(1)}% Up-Day Volume
-            </div>
-            <div className="text-sm text-gray-300 mt-1">
-              Volume on positive days
-            </div>
           </div>
 
           {/* Position Signals */}
-          <div className="relative overflow-hidden rounded-xl bg-black/20 p-6">
-            <div className="text-sm text-gray-400 mb-2">Position Signals</div>
-            <div className={`text-xl font-bold ${
+          <div className="relative overflow-hidden rounded-xl bg-black/20 p-4">
+            <div className="text-sm text-gray-400 mb-1">Position Signals</div>
+            <div className={`text-lg font-bold ${
               parsedIndicators?.position_signals?.buy_percentage >= 50 ? 'text-green-400' : 'text-red-400'
             }`}>
-              {parsedIndicators?.position_signals?.buy_percentage?.toFixed(1)}% Buy Signals
+              {parsedIndicators?.position_signals?.buy_percentage?.toFixed(1)}% Buy
             </div>
-            <div className="text-sm text-gray-300 mt-1">
-              {parsedIndicators?.position_signals?.buy_signals} / {parsedIndicators?.position_signals?.total_signals} signals
+            <div className="text-xs text-gray-300 mt-1">
+              {parsedIndicators?.position_signals?.buy_signals}/{parsedIndicators?.position_signals?.total_signals}
+            </div>
+          </div>
+
+          {/* Relative Strength */}
+          <div className="relative overflow-hidden rounded-xl bg-black/20 p-4">
+            <div className="text-sm text-gray-400 mb-1">AI vs SOL</div>
+            <div className={`text-lg font-bold ${
+              parsedIndicators?.relative_strength?.is_bullish ? 'text-green-400' : 'text-red-400'
+            }`}>
+              {parsedIndicators?.relative_strength?.ai_tokens_performance >= 0 ? '+' : ''}
+              {parsedIndicators?.relative_strength?.ai_tokens_performance?.toFixed(1)}%
+            </div>
+          </div>
+
+          {/* Market Structure */}
+          <div className="relative overflow-hidden rounded-xl bg-black/20 p-4">
+            <div className="text-sm text-gray-400 mb-1">Confidence</div>
+            <div className={`text-lg font-bold text-gold`}>
+              {sentiment?.confidence}%
             </div>
           </div>
         </motion.div>
