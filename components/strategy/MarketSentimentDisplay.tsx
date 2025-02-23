@@ -225,6 +225,87 @@ export function MarketSentimentDisplay() {
           </div>
         </motion.div>
 
+        {/* Detailed Indicators */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+          className="grid grid-cols-2 gap-6 mt-8"
+        >
+          {/* Price Action */}
+          <div className="relative overflow-hidden rounded-xl bg-black/20 p-6">
+            <div className="text-sm text-gray-400 mb-2">Price Action</div>
+            <div className={`text-xl font-bold ${
+              parsedIndicators?.price_action?.is_bullish ? 'text-green-400' : 'text-red-400'
+            }`}>
+              {parsedIndicators?.price_action?.percentage?.toFixed(1)}% Above Average
+            </div>
+            <div className="text-sm text-gray-300 mt-1">
+              {parsedIndicators?.price_action?.tokens_above_avg} / {parsedIndicators?.price_action?.total_tokens} tokens
+            </div>
+          </div>
+
+          {/* Volume Analysis */}
+          <div className="relative overflow-hidden rounded-xl bg-black/20 p-6">
+            <div className="text-sm text-gray-400 mb-2">Volume Trend</div>
+            <div className={`text-xl font-bold ${
+              parsedIndicators?.volume?.growth >= 0 ? 'text-green-400' : 'text-red-400'
+            }`}>
+              {parsedIndicators?.volume?.growth >= 0 ? '+' : ''}
+              {parsedIndicators?.volume?.growth?.toFixed(1)}% Growth
+            </div>
+            <div className="text-sm text-gray-300 mt-1">
+              7-day volume comparison
+            </div>
+          </div>
+
+          {/* Volume Distribution */}
+          <div className="relative overflow-hidden rounded-xl bg-black/20 p-6">
+            <div className="text-sm text-gray-400 mb-2">Volume Distribution</div>
+            <div className={`text-xl font-bold ${
+              parsedIndicators?.distribution?.up_day_volume >= 50 ? 'text-green-400' : 'text-red-400'
+            }`}>
+              {parsedIndicators?.distribution?.up_day_volume?.toFixed(1)}% Up-Day Volume
+            </div>
+            <div className="text-sm text-gray-300 mt-1">
+              Volume on positive days
+            </div>
+          </div>
+
+          {/* Position Signals */}
+          <div className="relative overflow-hidden rounded-xl bg-black/20 p-6">
+            <div className="text-sm text-gray-400 mb-2">Position Signals</div>
+            <div className={`text-xl font-bold ${
+              parsedIndicators?.position_signals?.buy_percentage >= 50 ? 'text-green-400' : 'text-red-400'
+            }`}>
+              {parsedIndicators?.position_signals?.buy_percentage?.toFixed(1)}% Buy Signals
+            </div>
+            <div className="text-sm text-gray-300 mt-1">
+              {parsedIndicators?.position_signals?.buy_signals} / {parsedIndicators?.position_signals?.total_signals} signals
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Indicator Details */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          className="mt-8"
+        >
+          <div className="text-sm font-medium text-gold mb-4">Detailed Analysis:</div>
+          <div className="space-y-3">
+            {parsedIndicators && Object.entries(parsedIndicators).map(([key, data]: [string, any]) => (
+              <div key={key} className="flex items-start space-x-2">
+                <div className={`mt-1.5 w-1.5 h-1.5 rounded-full ${
+                  data.is_bullish ? 'bg-green-400' : 'bg-red-400'
+                }`} />
+                <div className="text-gray-300">{data.details}</div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
         {/* Analysis Notes */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
