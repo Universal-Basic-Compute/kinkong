@@ -1,7 +1,22 @@
 import os
-import numpy as np
-from moviepy.editor import TextClip, ColorClip, CompositeVideoClip, vfx
 from pathlib import Path
+
+# Debug imports
+try:
+    import numpy as np
+    print("✓ numpy imported")
+    from moviepy.editor import TextClip
+    print("✓ TextClip imported") 
+    from moviepy.editor import ColorClip
+    print("✓ ColorClip imported")
+    from moviepy.editor import CompositeVideoClip
+    print("✓ CompositeVideoClip imported")
+    from moviepy.editor import vfx
+    print("✓ vfx imported")
+except ImportError as e:
+    print(f"Import error: {e}")
+    print(f"Error occurred in module: {e.__class__.__module__}")
+    raise
 
 def create_tiktok_video():
     # Create dist/videos directory if it doesn't exist
