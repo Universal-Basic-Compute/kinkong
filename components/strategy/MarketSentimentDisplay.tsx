@@ -17,6 +17,32 @@ interface ParsedIndicators {
     sol_performance: number;
     ai_tokens_performance: number;
   };
+  price_action: {
+    is_bullish: boolean;
+    details: string;
+    tokens_above_avg: number;
+    total_tokens: number;
+    percentage: number;
+  };
+  volume: {
+    is_bullish: boolean;
+    details: string;
+    current: number;
+    previous: number;
+    growth: number;
+  };
+  distribution: {
+    is_bullish: boolean;
+    details: string;
+    up_day_volume: number;
+  };
+  position_signals: {
+    is_bullish: boolean;
+    details: string;
+    total_signals: number;
+    buy_signals: number;
+    buy_percentage: number;
+  };
 }
 
 export function MarketSentimentDisplay() {
@@ -181,10 +207,10 @@ export function MarketSentimentDisplay() {
           <div className="relative overflow-hidden rounded-xl bg-black/20 p-6 group hover:bg-black/30 transition-all">
             <div className="text-sm text-gray-400 mb-2">SOL Performance</div>
             <div className={`text-2xl font-bold ${
-              parsedIndicators?.relative_strength?.sol_performance >= 0 ? 'text-green-400' : 'text-red-400'
+              (parsedIndicators?.relative_strength?.sol_performance || 0) >= 0 ? 'text-green-400' : 'text-red-400'
             }`}>
-              {parsedIndicators?.relative_strength?.sol_performance >= 0 ? '+' : ''}
-              {parsedIndicators?.relative_strength?.sol_performance?.toFixed(1) || '0.0'}%
+              {(parsedIndicators?.relative_strength?.sol_performance || 0) >= 0 ? '+' : ''}
+              {parsedIndicators?.relative_strength?.sol_performance?.toFixed(1)}%
             </div>
           </div>
 
@@ -192,10 +218,10 @@ export function MarketSentimentDisplay() {
           <div className="relative overflow-hidden rounded-xl bg-black/20 p-6 group hover:bg-black/30 transition-all">
             <div className="text-sm text-gray-400 mb-2">AI Tokens Performance</div>
             <div className={`text-2xl font-bold ${
-              parsedIndicators?.relative_strength?.ai_tokens_performance >= 0 ? 'text-green-400' : 'text-red-400'
+              (parsedIndicators?.relative_strength?.ai_tokens_performance || 0) >= 0 ? 'text-green-400' : 'text-red-400'
             }`}>
-              {parsedIndicators?.relative_strength?.ai_tokens_performance >= 0 ? '+' : ''}
-              {parsedIndicators?.relative_strength?.ai_tokens_performance?.toFixed(1) || '0.0'}%
+              {(parsedIndicators?.relative_strength?.ai_tokens_performance || 0) >= 0 ? '+' : ''}
+              {parsedIndicators?.relative_strength?.ai_tokens_performance?.toFixed(1)}%
             </div>
           </div>
         </motion.div>
