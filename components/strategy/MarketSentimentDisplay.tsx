@@ -334,33 +334,6 @@ export function MarketSentimentDisplay() {
           </div>
         </motion.div>
 
-        {/* Analysis Notes */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="space-y-4"
-        >
-          <div className="text-sm font-medium text-gold mb-3">Analysis:</div>
-          <div className="space-y-2 text-gray-300">
-            {sentiment.notes.split('\n').map((note, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.7 + index * 0.1 }}
-                className="flex items-start space-x-2 group"
-              >
-                <div className={`
-                  mt-1.5 w-1.5 h-1.5 rounded-full
-                  ${colors.bg} ${colors.border}
-                  group-hover:scale-110 transition-transform
-                `}/>
-                <div className="flex-1">{note}</div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
       </div>
     </motion.div>
   );
