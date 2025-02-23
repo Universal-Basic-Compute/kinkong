@@ -7,9 +7,16 @@ interface MarketSentiment {
   confidence: number;
   notes: string;
   weekEndDate: string;
-  indicators: string; // JSON string that needs to be parsed
-  solPerformance: number;
-  aiTokensPerformance: number;
+  indicators: string; // This is the JSON string containing all indicators
+}
+
+interface ParsedIndicators {
+  relative_strength: {
+    is_bullish: boolean;
+    details: string;
+    sol_performance: number;
+    ai_tokens_performance: number;
+  };
 }
 
 export function MarketSentimentDisplay() {
@@ -24,6 +31,13 @@ export function MarketSentimentDisplay() {
         if (!response.ok) throw new Error('Failed to fetch sentiment');
         const data = await response.json();
         setSentiment(data);
+        
+        // Parse the indicators JSON string
+        if (data.indicators) {
+          const parsed = JSON.parse(data.indicators);
+          setParsedIndicators(parsed);
+          console.log('Parsed indicators:', parsed); // Debug log
+        }
         // Parse the indicators JSON string
         if (data.indicators) {
           setParsedIndicators(JSON.parse(data.indicators));
