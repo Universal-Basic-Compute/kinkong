@@ -8,6 +8,8 @@ interface MarketSentiment {
   notes: string;
   weekEndDate: string;
   indicators: string; // JSON string that needs to be parsed
+  solPerformance: number;
+  aiTokensPerformance: number;
 }
 
 export function MarketSentimentDisplay() {
@@ -178,8 +180,8 @@ export function MarketSentimentDisplay() {
             <div className={`text-2xl font-bold ${
               parsedIndicators?.relative_strength?.ai_tokens_performance >= 0 ? 'text-green-400' : 'text-red-400'
             }`}>
-              {parsedIndicators?.relative_strength?.ai_tokens_performance > 0 ? '+' : ''}
-              {parsedIndicators?.relative_strength?.ai_tokens_performance?.toFixed(1)}%
+              {parsedIndicators?.relative_strength?.ai_tokens_performance >= 0 ? '+' : ''}
+              {parsedIndicators?.relative_strength?.ai_tokens_performance?.toFixed(1) || '0.0'}%
             </div>
           </div>
         </motion.div>
