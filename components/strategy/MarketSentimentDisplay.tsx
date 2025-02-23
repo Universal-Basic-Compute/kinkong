@@ -245,7 +245,15 @@ export function MarketSentimentDisplay() {
           {/* Price Action */}
           <div className="relative overflow-hidden rounded-xl bg-black/20 p-4 border border-gray-800 hover:border-gray-700 transition-all group hover:bg-black/30">
             <div className="flex flex-col items-center justify-center h-full">
-              <div className="text-sm text-gray-400 mb-2">Price Action</div>
+              <div className="text-sm text-gray-400 mb-2 flex items-center gap-2">
+                Price Action
+                <div className="group relative">
+                  <div className="cursor-help">ⓘ</div>
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-64 p-2 bg-black/90 text-xs text-gray-300 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity mb-2 pointer-events-none">
+                    {parsedIndicators?.price_action?.info}
+                  </div>
+                </div>
+              </div>
               <div className={`text-xl font-bold ${
                 parsedIndicators?.price_action?.is_bullish ?? false ? 'text-green-400' : 'text-red-400'
               }`}>
@@ -263,7 +271,15 @@ export function MarketSentimentDisplay() {
           {/* Volume Analysis */}
           <div className="relative overflow-hidden rounded-xl bg-black/20 p-4 border border-gray-800 hover:border-gray-700 transition-all group hover:bg-black/30">
             <div className="flex flex-col items-center justify-center h-full">
-              <div className="text-sm text-gray-400 mb-2">Volume Trend</div>
+              <div className="text-sm text-gray-400 mb-2 flex items-center gap-2">
+                Volume Trend
+                <div className="group relative">
+                  <div className="cursor-help">ⓘ</div>
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-64 p-2 bg-black/90 text-xs text-gray-300 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity mb-2 pointer-events-none">
+                    {parsedIndicators?.volume?.info}
+                  </div>
+                </div>
+              </div>
               <div className={`text-xl font-bold ${
                 (parsedIndicators?.volume?.growth ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'
               }`}>
@@ -279,7 +295,15 @@ export function MarketSentimentDisplay() {
           {/* Position Signals */}
           <div className="relative overflow-hidden rounded-xl bg-black/20 p-4 border border-gray-800 hover:border-gray-700 transition-all group hover:bg-black/30">
             <div className="flex flex-col items-center justify-center h-full">
-              <div className="text-sm text-gray-400 mb-2">Position Signals</div>
+              <div className="text-sm text-gray-400 mb-2 flex items-center gap-2">
+                Position Signals
+                <div className="group relative">
+                  <div className="cursor-help">ⓘ</div>
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-64 p-2 bg-black/90 text-xs text-gray-300 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity mb-2 pointer-events-none">
+                    {parsedIndicators?.position_signals?.info}
+                  </div>
+                </div>
+              </div>
               <div className={`text-xl font-bold ${
                 (parsedIndicators?.position_signals?.buy_percentage ?? 0) >= 50 ? 'text-green-400' : 'text-red-400'
               }`}>
@@ -297,7 +321,15 @@ export function MarketSentimentDisplay() {
           {/* Relative Strength */}
           <div className="relative overflow-hidden rounded-xl bg-black/20 p-4 border border-gray-800 hover:border-gray-700 transition-all group hover:bg-black/30">
             <div className="flex flex-col items-center justify-center h-full">
-              <div className="text-sm text-gray-400 mb-2">AI vs SOL</div>
+              <div className="text-sm text-gray-400 mb-2 flex items-center gap-2">
+                AI vs SOL
+                <div className="group relative">
+                  <div className="cursor-help">ⓘ</div>
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-64 p-2 bg-black/90 text-xs text-gray-300 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity mb-2 pointer-events-none">
+                    {parsedIndicators?.relative_strength?.info}
+                  </div>
+                </div>
+              </div>
               <div className={`text-xl font-bold ${
                 parsedIndicators?.relative_strength?.is_bullish ?? false ? 'text-green-400' : 'text-red-400'
               }`}>
@@ -313,7 +345,15 @@ export function MarketSentimentDisplay() {
           {/* Market Structure */}
           <div className="relative overflow-hidden rounded-xl bg-black/20 p-4 border border-gray-800 hover:border-gray-700 transition-all group hover:bg-black/30">
             <div className="flex flex-col items-center justify-center h-full">
-              <div className="text-sm text-gray-400 mb-2">Confidence</div>
+              <div className="text-sm text-gray-400 mb-2 flex items-center gap-2">
+                Confidence
+                <div className="group relative">
+                  <div className="cursor-help">ⓘ</div>
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-64 p-2 bg-black/90 text-xs text-gray-300 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity mb-2 pointer-events-none">
+                    Overall confidence score based on the alignment and strength of all market indicators.
+                  </div>
+                </div>
+              </div>
               <div className="text-xl font-bold text-gold">
                 {sentiment?.confidence}%
               </div>
