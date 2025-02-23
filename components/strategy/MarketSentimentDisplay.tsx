@@ -169,8 +169,8 @@ export function MarketSentimentDisplay() {
             <div className={`text-2xl font-bold ${
               parsedIndicators?.relative_strength?.sol_performance >= 0 ? 'text-green-400' : 'text-red-400'
             }`}>
-              {parsedIndicators?.relative_strength?.sol_performance > 0 ? '+' : ''}
-              {parsedIndicators?.relative_strength?.sol_performance?.toFixed(1)}%
+              {parsedIndicators?.relative_strength?.sol_performance >= 0 ? '+' : ''}
+              {parsedIndicators?.relative_strength?.sol_performance?.toFixed(1) || '0.0'}%
             </div>
           </div>
 
