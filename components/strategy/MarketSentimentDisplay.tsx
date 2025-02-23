@@ -247,9 +247,9 @@ export function MarketSentimentDisplay() {
             <div className="flex flex-col items-center justify-center h-full">
               <div className="text-sm text-gray-400 mb-2 flex items-center gap-2">
                 Price Action
-                <div className="group relative">
-                  <div className="cursor-help">ⓘ</div>
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-64 p-2 bg-black/90 text-xs text-gray-300 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity mb-2 pointer-events-none">
+                <div className="relative inline-block">
+                  <div className="cursor-help text-gray-500 hover:text-gray-300">ⓘ</div>
+                  <div className="invisible group-hover:visible absolute bottom-6 left-1/2 transform -translate-x-1/2 w-64 p-2 bg-black/90 border border-gray-700 text-xs text-gray-300 rounded-lg z-50">
                     {parsedIndicators?.price_action?.info}
                   </div>
                 </div>
@@ -273,9 +273,9 @@ export function MarketSentimentDisplay() {
             <div className="flex flex-col items-center justify-center h-full">
               <div className="text-sm text-gray-400 mb-2 flex items-center gap-2">
                 Volume Trend
-                <div className="group relative">
-                  <div className="cursor-help">ⓘ</div>
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-64 p-2 bg-black/90 text-xs text-gray-300 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity mb-2 pointer-events-none">
+                <div className="relative inline-block">
+                  <div className="cursor-help text-gray-500 hover:text-gray-300">ⓘ</div>
+                  <div className="invisible group-hover:visible absolute bottom-6 left-1/2 transform -translate-x-1/2 w-64 p-2 bg-black/90 border border-gray-700 text-xs text-gray-300 rounded-lg z-50">
                     {parsedIndicators?.volume?.info}
                   </div>
                 </div>
@@ -297,9 +297,9 @@ export function MarketSentimentDisplay() {
             <div className="flex flex-col items-center justify-center h-full">
               <div className="text-sm text-gray-400 mb-2 flex items-center gap-2">
                 Position Signals
-                <div className="group relative">
-                  <div className="cursor-help">ⓘ</div>
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-64 p-2 bg-black/90 text-xs text-gray-300 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity mb-2 pointer-events-none">
+                <div className="relative inline-block">
+                  <div className="cursor-help text-gray-500 hover:text-gray-300">ⓘ</div>
+                  <div className="invisible group-hover:visible absolute bottom-6 left-1/2 transform -translate-x-1/2 w-64 p-2 bg-black/90 border border-gray-700 text-xs text-gray-300 rounded-lg z-50">
                     {parsedIndicators?.position_signals?.info}
                   </div>
                 </div>
@@ -323,9 +323,9 @@ export function MarketSentimentDisplay() {
             <div className="flex flex-col items-center justify-center h-full">
               <div className="text-sm text-gray-400 mb-2 flex items-center gap-2">
                 AI vs SOL
-                <div className="group relative">
-                  <div className="cursor-help">ⓘ</div>
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-64 p-2 bg-black/90 text-xs text-gray-300 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity mb-2 pointer-events-none">
+                <div className="relative inline-block">
+                  <div className="cursor-help text-gray-500 hover:text-gray-300">ⓘ</div>
+                  <div className="invisible group-hover:visible absolute bottom-6 left-1/2 transform -translate-x-1/2 w-64 p-2 bg-black/90 border border-gray-700 text-xs text-gray-300 rounded-lg z-50">
                     {parsedIndicators?.relative_strength?.info}
                   </div>
                 </div>
