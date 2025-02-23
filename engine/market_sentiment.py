@@ -247,7 +247,7 @@ class MarketSentimentAnalyzer:
             result = {
                 "classification": sentiment,
                 "confidence": confidence,
-                "bullishSignals": bullish_signals,
+                "bullishSignals": bullish_indicators,
                 "notes": "\n".join(reasons),  # Join array into single string with line breaks
                 "createdAt": datetime.now(timezone.utc).isoformat(),
                 # Add new metrics
@@ -265,7 +265,7 @@ class MarketSentimentAnalyzer:
             logger.info(f"\nMarket Sentiment Analysis:")
             logger.info(f"Sentiment: {sentiment}")
             logger.info(f"Confidence: {confidence:.1f}%")
-            logger.info(f"Bullish Signals: {bullish_signals}/4")
+            logger.info(f"Bullish Signals: {bullish_indicators}/4")
             logger.info("\nReasons:")
             for reason in reasons:
                 logger.info(f"• {reason}")
