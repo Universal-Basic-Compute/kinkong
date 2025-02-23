@@ -7,7 +7,7 @@ export async function GET() {
     const records = await table
       .select({
         maxRecords: 1,
-        sort: [{ field: 'weekEndDate', direction: 'desc' }]
+        sort: [{ field: 'createdAt', direction: 'desc' }]
       })
       .firstPage();
 
@@ -18,14 +18,23 @@ export async function GET() {
       );
     }
 
+    // Get the latest record
+    const record = records[0];
+    
+    // Get all fields from the record
     const latestSentiment = {
-      classification: records[0].get('classification'),
-      confidence: records[0].get('confidence'),
-      notes: records[0].get('notes'),
-      weekEndDate: records[0].get('weekEndDate'),
-      solPerformance: records[0].get('solPerformance'),
-      aiTokensPerformance: records[0].get('aiTokensPerformance')
+      classification: record.get('classification'),
+      confidence: record.get('confidence'),
+      notes: record.get('notes'),
+      weekEndDate: record.get('weekEndDate'),
+      indicators: record.get('indicators') // Get the raw indicators string
     };
+
+    // Log the data for debugging
+    console.log('Fetched sentiment data:', {
+      ...latestSentiment,
+      hasIndicators: !!latestSentiment.indicators
+    });
 
     return NextResponse.json(latestSentiment);
   } catch (error) {
