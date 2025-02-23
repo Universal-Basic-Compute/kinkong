@@ -7,12 +7,12 @@ interface MarketSentiment {
   confidence: number;
   notes: string;
   weekEndDate: string;
-  solPerformance: number;
-  aiTokensPerformance: number;
+  indicators: string; // JSON string that needs to be parsed
 }
 
 export function MarketSentimentDisplay() {
   const [sentiment, setSentiment] = useState<MarketSentiment | null>(null);
+  const [parsedIndicators, setParsedIndicators] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -22,6 +22,10 @@ export function MarketSentimentDisplay() {
         if (!response.ok) throw new Error('Failed to fetch sentiment');
         const data = await response.json();
         setSentiment(data);
+        // Parse the indicators JSON string
+        if (data.indicators) {
+          setParsedIndicators(JSON.parse(data.indicators));
+        }
       } catch (error) {
         console.error('Error fetching sentiment:', error);
       } finally {
@@ -160,16 +164,22 @@ export function MarketSentimentDisplay() {
           {/* SOL Performance */}
           <div className="relative overflow-hidden rounded-xl bg-black/20 p-6 group hover:bg-black/30 transition-all">
             <div className="text-sm text-gray-400 mb-2">SOL Performance</div>
-            <div className={`text-2xl font-bold ${sentiment.solPerformance >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-              {sentiment.solPerformance > 0 ? '+' : ''}{sentiment.solPerformance.toFixed(1)}%
+            <div className={`text-2xl font-bold ${
+              parsedIndicators?.relative_strength?.sol_performance >= 0 ? 'text-green-400' : 'text-red-400'
+            }`}>
+              {parsedIndicators?.relative_strength?.sol_performance > 0 ? '+' : ''}
+              {parsedIndicators?.relative_strength?.sol_performance?.toFixed(1)}%
             </div>
           </div>
 
           {/* AI Performance */}
           <div className="relative overflow-hidden rounded-xl bg-black/20 p-6 group hover:bg-black/30 transition-all">
             <div className="text-sm text-gray-400 mb-2">AI Tokens Performance</div>
-            <div className={`text-2xl font-bold ${sentiment.aiTokensPerformance >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-              {sentiment.aiTokensPerformance > 0 ? '+' : ''}{sentiment.aiTokensPerformance.toFixed(1)}%
+            <div className={`text-2xl font-bold ${
+              parsedIndicators?.relative_strength?.ai_tokens_performance >= 0 ? 'text-green-400' : 'text-red-400'
+            }`}>
+              {parsedIndicators?.relative_strength?.ai_tokens_performance > 0 ? '+' : ''}
+              {parsedIndicators?.relative_strength?.ai_tokens_performance?.toFixed(1)}%
             </div>
           </div>
         </motion.div>
