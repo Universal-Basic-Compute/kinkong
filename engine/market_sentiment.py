@@ -259,7 +259,7 @@ class MarketSentimentAnalyzer:
             ])
             
             # Calculate percentage of bullish indicators
-            total_indicators = 4  # Total number of indicators
+            total_indicators = 5  # Total number of indicators
             bullish_percentage = (bullish_indicators / total_indicators) * 100
             
             # Determine sentiment based on actual percentages
@@ -269,44 +269,73 @@ class MarketSentimentAnalyzer:
                 sentiment = "BEARISH"
             else:  # 26-74% bullish indicators
                 sentiment = "NEUTRAL"
-            
-            # Calculate confidence based on proportion of bullish indicators
-            confidence = bullish_percentage  # This gives us 0-100 confidence score
-            
-            # Compile reasons
-            reasons = [
-                f"Price Action: {price_notes}",
-                f"Volume Trend: {volume_notes}",
-                f"Volume Distribution: {distribution_notes}",
-                f"Position Signals: {position_notes}",
-                f"Relative Strength: {strength_notes}"
-            ]
-            
+
+            # Create detailed result object
             result = {
                 "classification": sentiment,
-                "confidence": confidence,
-                "bullishSignals": bullish_indicators,
-                "notes": "\n".join(reasons),  # Join array into single string with line breaks
+                "confidence": bullish_percentage,
+                "indicators": {
+                    "price_action": {
+                        "is_bullish": price_bullish,
+                        "details": price_notes,
+                        "tokens_above_avg": tokens_above_avg,
+                        "total_tokens": total_tokens,
+                        "percentage": (tokens_above_avg / total_tokens * 100) if total_tokens > 0 else 0
+                    },
+                    "volume": {
+                        "is_bullish": volume_bullish,
+                        "details": volume_notes,
+                        "current": weekly_volume,
+                        "previous": prev_week_volume,
+                        "growth": ((weekly_volume - prev_week_volume) / prev_week_volume * 100) if prev_week_volume > 0 else 0
+                    },
+                    "distribution": {
+                        "is_bullish": distribution_bullish,
+                        "details": distribution_notes,
+                        "up_day_volume": up_day_volume
+                    },
+                    "position_signals": {
+                        "is_bullish": position_bullish,
+                        "details": position_notes,
+                        "total_signals": total_position_signals,
+                        "buy_signals": buy_signals,
+                        "buy_percentage": (buy_signals / total_position_signals * 100) if total_position_signals > 0 else 0
+                    },
+                    "relative_strength": {
+                        "is_bullish": strength_bullish,
+                        "details": strength_notes,
+                        "sol_performance": sol_performance,
+                        "ai_tokens_performance": ai_tokens_performance
+                    }
+                },
+                "portfolio_allocation": {
+                    "ai_tokens": 70 if sentiment == "BULLISH" else 30 if sentiment == "BEARISH" else 50,
+                    "sol": 20 if sentiment == "BULLISH" else 10 if sentiment == "BEARISH" else 20,
+                    "stables": 10 if sentiment == "BULLISH" else 60 if sentiment == "BEARISH" else 30
+                },
+                "bullish_indicators": bullish_indicators,
+                "total_indicators": total_indicators,
+                "bullish_percentage": bullish_percentage,
+                "notes": "\n".join([
+                    f"Price Action: {price_notes}",
+                    f"Volume Trend: {volume_notes}",
+                    f"Volume Distribution: {distribution_notes}",
+                    f"Position Signals: {position_notes}",
+                    f"Relative Strength: {strength_notes}"
+                ]),
                 "createdAt": datetime.now(timezone.utc).isoformat(),
-                # Add new metrics
-                "totalTokens": total_tokens,
-                "tokensAbove7dAvg": tokens_above_avg,
-                "weeklyVolume": weekly_volume,
-                "prevWeekVolume": prev_week_volume,
-                "upDayVolume": up_day_volume,
-                "solPerformance": sol_performance,
-                "aiTokensPerformance": ai_tokens_performance,
-                "weekStartDate": week_start_date.isoformat(),
-                "weekEndDate": week_end_date.isoformat()
+                "weekStartDate": (datetime.now(timezone.utc) - timedelta(days=7)).isoformat(),
+                "weekEndDate": datetime.now(timezone.utc).isoformat()
             }
             
             logger.info(f"\nMarket Sentiment Analysis:")
-            logger.info(f"Sentiment: {sentiment}")
-            logger.info(f"Confidence: {confidence:.1f}%")
-            logger.info(f"Bullish Signals: {bullish_indicators}/4")
-            logger.info("\nReasons:")
-            for reason in reasons:
-                logger.info(f"• {reason}")
+            logger.info(f"Classification: {sentiment}")
+            logger.info(f"Confidence: {bullish_percentage:.1f}%")
+            logger.info(f"Bullish Indicators: {bullish_indicators}/{total_indicators}")
+            logger.info("\nIndicator Details:")
+            for indicator, data in result["indicators"].items():
+                logger.info(f"{indicator}: {'BULLISH' if data['is_bullish'] else 'BEARISH'}")
+                logger.info(f"• {data['details']}")
             
             return result
             
