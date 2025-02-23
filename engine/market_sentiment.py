@@ -317,11 +317,6 @@ class MarketSentimentAnalyzer:
                 "weekStartDate": (datetime.now(timezone.utc) - timedelta(days=7)).isoformat(),
                 "weekEndDate": datetime.now(timezone.utc).isoformat(),
                 "indicators": json.dumps(indicators_data),
-                "portfolio_allocation": {
-                    "ai_tokens": 70 if sentiment == "BULLISH" else 30 if sentiment == "BEARISH" else 50,
-                    "sol": 20 if sentiment == "BULLISH" else 10 if sentiment == "BEARISH" else 20,
-                    "stables": 10 if sentiment == "BULLISH" else 60 if sentiment == "BEARISH" else 30
-                },
                 "bullish_indicators": bullish_indicators,
                 "total_indicators": total_indicators,
                 "bullish_percentage": bullish_percentage,
