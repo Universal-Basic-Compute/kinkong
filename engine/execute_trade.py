@@ -242,14 +242,15 @@ class JupiterTradeExecutor:
                 return False, None
 
             # Convert amount to raw token amount using appropriate decimals
-            decimals = 6  # USDC uses 6 decimals
-            if input_token == "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v":  # Si c'est USDC
-                amount_raw = int(amount * (10 ** decimals))  # Convert to raw amount
-            else:
-                # Pour les autres tokens, utiliser le montant tel quel
-                amount_raw = amount
+            if input_token == "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v":  # USDC
+                decimals = 6
+            else:  # Other tokens typically use 9 decimals
+                decimals = 9
+                
+            # Convert to raw amount with appropriate decimals
+            amount_raw = int(amount * (10 ** decimals))
 
-            self.logger.info(f"Raw amount for swap: {amount_raw}")
+            self.logger.info(f"Converting amount {amount} to raw amount {amount_raw} (using {decimals} decimals)")
             
             # Get quote with raw token amount
             quote = await self.get_jupiter_quote(input_token, output_token, amount_raw, is_raw=True)
