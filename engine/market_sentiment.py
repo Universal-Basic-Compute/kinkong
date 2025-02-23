@@ -1,4 +1,5 @@
 import os
+import json
 from datetime import datetime, timezone, timedelta
 from airtable import Airtable
 from dotenv import load_dotenv
@@ -279,7 +280,7 @@ class MarketSentimentAnalyzer:
                 "positionSignalsBuyPercentage": (buy_signals / total_position_signals * 100) if total_position_signals > 0 else 0,
                 "weekStartDate": (datetime.now(timezone.utc) - timedelta(days=7)).isoformat(),
                 "weekEndDate": datetime.now(timezone.utc).isoformat(),
-                "indicators": {
+                "indicators": json.dumps({
                     "price_action": {
                         "is_bullish": price_bullish,
                         "details": price_notes,
@@ -312,7 +313,7 @@ class MarketSentimentAnalyzer:
                         "sol_performance": sol_performance,
                         "ai_tokens_performance": ai_tokens_performance
                     }
-                },
+                }),
                 "portfolio_allocation": {
                     "ai_tokens": 70 if sentiment == "BULLISH" else 30 if sentiment == "BEARISH" else 50,
                     "sol": 20 if sentiment == "BULLISH" else 10 if sentiment == "BEARISH" else 20,
