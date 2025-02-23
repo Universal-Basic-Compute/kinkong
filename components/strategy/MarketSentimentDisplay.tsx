@@ -205,7 +205,15 @@ export function MarketSentimentDisplay() {
           {/* SOL Performance */}
           <div className="relative overflow-hidden rounded-xl bg-black/20 p-6 border border-gray-800 hover:border-gray-700 transition-all group hover:bg-black/30">
             <div className="flex flex-col items-center justify-center h-full">
-              <div className="text-sm text-gray-400 mb-2">SOL Performance</div>
+              <div className="text-sm text-gray-400 mb-2 flex items-center gap-2">
+                SOL Performance
+                <div className="group relative">
+                  <div className="cursor-help text-gray-500 hover:text-gray-300">ⓘ</div>
+                  <div className="invisible group-hover:visible absolute bottom-6 left-1/2 transform -translate-x-1/2 w-64 p-2 bg-black/90 border border-gray-700 text-xs text-gray-300 rounded-lg z-50">
+                    SOL price performance over the last 7 days. Used as a benchmark for overall market direction and strength.
+                  </div>
+                </div>
+              </div>
               <div className={`text-2xl font-bold ${
                 (parsedIndicators?.relative_strength?.sol_performance ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'
               }`}>
@@ -221,7 +229,15 @@ export function MarketSentimentDisplay() {
           {/* AI Performance */}
           <div className="relative overflow-hidden rounded-xl bg-black/20 p-6 border border-gray-800 hover:border-gray-700 transition-all group hover:bg-black/30">
             <div className="flex flex-col items-center justify-center h-full">
-              <div className="text-sm text-gray-400 mb-2">AI Tokens Performance</div>
+              <div className="text-sm text-gray-400 mb-2 flex items-center gap-2">
+                AI Tokens Performance
+                <div className="group relative">
+                  <div className="cursor-help text-gray-500 hover:text-gray-300">ⓘ</div>
+                  <div className="invisible group-hover:visible absolute bottom-6 left-1/2 transform -translate-x-1/2 w-64 p-2 bg-black/90 border border-gray-700 text-xs text-gray-300 rounded-lg z-50">
+                    Median performance of all tracked AI tokens over the last 7 days. Shows the overall strength of the AI token sector.
+                  </div>
+                </div>
+              </div>
               <div className={`text-2xl font-bold ${
                 (parsedIndicators?.relative_strength?.ai_tokens_performance ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'
               }`}>
