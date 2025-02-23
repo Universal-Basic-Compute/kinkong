@@ -279,13 +279,31 @@ class TradeExecutor:
             return None
 
     async def handle_failed_trade(self, trade_id: str, error_message: str):
-        """Handle failed trade updates"""
+        """Handle failed trade updates with improved error tracking"""
         try:
+            self.logger.error(f"❌ Trade {trade_id} failed: {error_message}")
+            
+            # Update trade with ERROR status and error message
             self.trades_table.update(trade_id, {
-                'status': 'FAILED'  # Only update the status
+                'status': 'ERROR',
+                'notes': error_message,
+                'updatedAt': datetime.now(timezone.utc).isoformat()
             })
+            
+            # Send error notification
+            message = f"⚠️ KinKong Trade Error\n\n"
+            message += f"Trade ID: {trade_id}\n"
+            message += f"Error: {error_message}\n"
+            message += f"Time: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}"
+            
+            try:
+                from scripts.analyze_charts import send_telegram_message
+                send_telegram_message(message)
+            except Exception as e:
+                self.logger.error(f"Failed to send error notification: {e}")
+                
         except Exception as e:
-            self.logger.error(f"Error updating failed trade status: {e}")
+            self.logger.error(f"Error handling failed trade: {e}")
 
     async def execute_trade(self, signal: Dict) -> bool:
         """Execute a trade for a signal"""
@@ -361,13 +379,39 @@ class TradeExecutor:
                 await self.handle_failed_trade(trade['id'], "Transaction failed")
                 return False
 
-            # Update trade record
+            # Verify transaction success
+            client = AsyncClient("https://api.mainnet-beta.solana.com")
+            try:
+                # Wait for confirmation and get transaction status
+                confirmation = await client.confirm_transaction(signature)
+                
+                # Check transaction status
+                if not confirmation.value:
+                    await self.handle_failed_trade(trade['id'], "Transaction not confirmed")
+                    return False
+                
+                # Get transaction details
+                tx_response = await client.get_transaction(signature)
+                if not tx_response.value:
+                    await self.handle_failed_trade(trade['id'], "Could not verify transaction")
+                    return False
+                
+                # Check if transaction was successful
+                if tx_response.value.meta and tx_response.value.meta.err:
+                    error_msg = f"Transaction failed: {tx_response.value.meta.err}"
+                    await self.handle_failed_trade(trade['id'], error_msg)
+                    return False
+
+            finally:
+                await client.close()
+
+            # Update trade record only if transaction was successful
             transaction_url = f"https://solscan.io/tx/{signature}"
             self.trades_table.update(trade['id'], {
                 'status': 'EXECUTED',
-                'txSignature': signature,  # Changed to 'txSignature'
-                'amount': token_amount,  # Token amount
-                'value': trade_value,    # USD value
+                'txSignature': signature,
+                'amount': token_amount,
+                'value': trade_value,
                 'price': float(signal['fields']['entryPrice']),
                 'transactionUrl': transaction_url,
                 'executedAt': datetime.now(timezone.utc).isoformat()
