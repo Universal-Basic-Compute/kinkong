@@ -199,27 +199,36 @@ class TradeExecutor:
     def check_entry_conditions(self, signal: Dict) -> bool:
         """Check if entry conditions are met for a signal"""
         try:
-            # Check if trade already exists for this signal
+            # Add color formatting
+            GREEN = '\033[92m'
+            RED = '\033[91m'
+            YELLOW = '\033[93m'
+            BLUE = '\033[94m'
+            BOLD = '\033[1m'
+            ENDC = '\033[0m'
+
+            self.logger.info(f"\n{BLUE}{BOLD}Analyzing Signal{ENDC} {signal['id']}")
+            self.logger.info(f"Token: {BOLD}{signal['fields'].get('token')}{ENDC}")
+            self.logger.info(f"Type: {BOLD}{signal['fields'].get('type')}{ENDC}")
+            self.logger.info(f"Timeframe: {BOLD}{signal['fields'].get('timeframe')}{ENDC}")
+
+            # Check existing trades
             existing_trades = self.trades_table.get_all(
                 formula=f"{{signalId}} = '{signal['id']}'"
             )
             
             if existing_trades:
-                # Only block if there's an existing trade that's not FAILED
                 non_failed_trades = [t for t in existing_trades if t['fields'].get('status') != 'FAILED']
                 if non_failed_trades:
-                    logger.warning(f"Trade already exists for signal {signal['id']} with status {non_failed_trades[0]['fields'].get('status')}")
+                    self.logger.warning(f"{YELLOW}⚠️ Trade already exists with status: {non_failed_trades[0]['fields'].get('status')}{ENDC}")
                     return False
-                else:
-                    logger.info(f"Found failed trade for signal {signal['id']}, allowing retry")
 
-            # Get current price from DexScreener API
+            # Get current price
             token_mint = signal['fields'].get('mint')
             if not token_mint:
-                logger.warning(f"No mint address for signal {signal['id']}")
+                self.logger.warning(f"{YELLOW}⚠️ No mint address found{ENDC}")
                 return False
 
-            # Use DexScreener API for current price
             url = f"https://api.dexscreener.com/latest/dex/tokens/{token_mint}"
             headers = {
                 'User-Agent': 'Mozilla/5.0',
@@ -228,43 +237,51 @@ class TradeExecutor:
             
             response = requests.get(url, headers=headers)
             if not response.ok:
-                logger.error(f"DexScreener API error: {response.status_code}")
+                self.logger.error(f"{RED}❌ DexScreener API error: {response.status_code}{ENDC}")
                 return False
                 
             data = response.json()
             if not data.get('pairs'):
-                logger.warning(f"No pairs found for token {token_mint}")
+                self.logger.warning(f"{YELLOW}⚠️ No pairs found{ENDC}")
                 return False
                 
-            # Get most liquid Solana pair
             sol_pairs = [p for p in data['pairs'] if p.get('chainId') == 'solana']
             if not sol_pairs:
-                logger.warning(f"No Solana pairs found for {token_mint}")
+                self.logger.warning(f"{YELLOW}⚠️ No Solana pairs found{ENDC}")
                 return False
                 
             main_pair = max(sol_pairs, key=lambda x: float(x.get('liquidity', {}).get('usd', 0) or 0))
             current_price = float(main_pair.get('priceUsd', 0))
             
             if not current_price:
-                logger.error(f"Could not get current price for {token_mint}")
+                self.logger.error(f"{RED}❌ Could not get current price{ENDC}")
                 return False
 
             entry_price = float(signal['fields'].get('entryPrice', 0))
-            
-            # Check if price is within 1.5% of entry price
             price_diff = abs(current_price - entry_price) / entry_price
             meets_conditions = price_diff <= 0.015
 
-            logger.info(f"Signal {signal['id']} entry check:")
-            logger.info(f"Entry price: {entry_price}")
-            logger.info(f"Current price: {current_price}")
-            logger.info(f"Price difference: {price_diff:.2%}")
-            logger.info(f"Meets conditions: {meets_conditions}")
+            # Price analysis logs
+            self.logger.info(f"\n{BOLD}Price Analysis:{ENDC}")
+            self.logger.info(f"Entry Price: ${entry_price:.6f}")
+            self.logger.info(f"Current Price: ${current_price:.6f}")
+            self.logger.info(f"Difference: {GREEN if price_diff <= 0.015 else RED}{price_diff:.2%}{ENDC}")
+            
+            # Additional market data
+            self.logger.info(f"\n{BOLD}Market Data:{ENDC}")
+            self.logger.info(f"24h Volume: ${float(main_pair.get('volume', {}).get('h24', 0)):,.2f}")
+            self.logger.info(f"Liquidity: ${float(main_pair.get('liquidity', {}).get('usd', 0)):,.2f}")
+            
+            # Final decision
+            if meets_conditions:
+                self.logger.info(f"\n{GREEN}✅ Entry conditions met{ENDC}")
+            else:
+                self.logger.info(f"\n{RED}❌ Price outside entry range{ENDC}")
 
             return meets_conditions
 
         except Exception as e:
-            logger.error(f"Error checking entry conditions: {e}")
+            self.logger.error(f"Error checking entry conditions: {e}")
             return False
 
     async def get_token_price(self, token_mint: str) -> Optional[float]:
