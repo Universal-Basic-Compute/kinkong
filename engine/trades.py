@@ -534,8 +534,8 @@ class TradeExecutor:
                 self.logger.error(f"Could not get current price for {token_mint}")
                 return False
 
-            # Use the original trade amount
-            token_amount = float(trade['fields'].get('amount', 0))
+            # Use the original trade amount but divide by 100 to correct decimals
+            token_amount = float(trade['fields'].get('amount', 0)) / 100  # Ajout de la division par 100
             trade_value = token_amount * current_price
 
             self.logger.info(f"Closing amount: {token_amount:.8f} {trade['fields'].get('token')}")
