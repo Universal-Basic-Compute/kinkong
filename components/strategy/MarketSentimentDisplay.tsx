@@ -203,24 +203,34 @@ export function MarketSentimentDisplay() {
           className="grid grid-cols-2 gap-6 mb-8"
         >
           {/* SOL Performance */}
-          <div className="relative overflow-hidden rounded-xl bg-black/20 p-6 group hover:bg-black/30 transition-all">
-            <div className="text-sm text-gray-400 mb-2">SOL Performance</div>
-            <div className={`text-2xl font-bold ${
-              (parsedIndicators?.relative_strength?.sol_performance || 0) >= 0 ? 'text-green-400' : 'text-red-400'
-            }`}>
-              {(parsedIndicators?.relative_strength?.sol_performance || 0) >= 0 ? '+' : ''}
-              {parsedIndicators?.relative_strength?.sol_performance?.toFixed(1)}%
+          <div className="relative overflow-hidden rounded-xl bg-black/20 p-6 border border-gray-800 hover:border-gray-700 transition-all group hover:bg-black/30">
+            <div className="flex flex-col items-center justify-center h-full">
+              <div className="text-sm text-gray-400 mb-2">SOL Performance</div>
+              <div className={`text-2xl font-bold ${
+                (parsedIndicators?.relative_strength?.sol_performance || 0) >= 0 ? 'text-green-400' : 'text-red-400'
+              }`}>
+                {(parsedIndicators?.relative_strength?.sol_performance || 0) >= 0 ? '+' : ''}
+                {parsedIndicators?.relative_strength?.sol_performance?.toFixed(1)}%
+              </div>
+              <div className="text-xs text-gray-300 mt-1">
+                7-Day Return
+              </div>
             </div>
           </div>
 
           {/* AI Performance */}
-          <div className="relative overflow-hidden rounded-xl bg-black/20 p-6 group hover:bg-black/30 transition-all">
-            <div className="text-sm text-gray-400 mb-2">AI Tokens Performance</div>
-            <div className={`text-2xl font-bold ${
-              (parsedIndicators?.relative_strength?.ai_tokens_performance || 0) >= 0 ? 'text-green-400' : 'text-red-400'
-            }`}>
-              {(parsedIndicators?.relative_strength?.ai_tokens_performance || 0) >= 0 ? '+' : ''}
-              {parsedIndicators?.relative_strength?.ai_tokens_performance?.toFixed(1)}%
+          <div className="relative overflow-hidden rounded-xl bg-black/20 p-6 border border-gray-800 hover:border-gray-700 transition-all group hover:bg-black/30">
+            <div className="flex flex-col items-center justify-center h-full">
+              <div className="text-sm text-gray-400 mb-2">AI Tokens Performance</div>
+              <div className={`text-2xl font-bold ${
+                (parsedIndicators?.relative_strength?.ai_tokens_performance || 0) >= 0 ? 'text-green-400' : 'text-red-400'
+              }`}>
+                {(parsedIndicators?.relative_strength?.ai_tokens_performance || 0) >= 0 ? '+' : ''}
+                {parsedIndicators?.relative_strength?.ai_tokens_performance?.toFixed(1)}%
+              </div>
+              <div className="text-xs text-gray-300 mt-1">
+                7-Day Return
+              </div>
             </div>
           </div>
         </motion.div>
