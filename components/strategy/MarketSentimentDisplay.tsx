@@ -21,7 +21,7 @@ interface ParsedIndicators {
 
 export function MarketSentimentDisplay() {
   const [sentiment, setSentiment] = useState<MarketSentiment | null>(null);
-  const [parsedIndicators, setParsedIndicators] = useState<any>(null);
+  const [parsedIndicators, setParsedIndicators] = useState<ParsedIndicators | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
