@@ -213,27 +213,27 @@ class MarketSentimentAnalyzer:
             distribution_bullish, distribution_notes, up_day_volume = self.analyze_volume_distribution(active_tokens)
             strength_bullish, strength_notes, sol_performance, ai_tokens_performance = self.analyze_relative_strength(active_tokens)
             
-            # Count bullish signals
-            bullish_signals = sum([
+            # Count bullish indicators
+            bullish_indicators = sum([
                 price_bullish,
                 volume_bullish, 
                 distribution_bullish,
                 strength_bullish
             ])
             
-            # Calculate percentage of bullish signals
-            total_signals = 4  # Total number of indicators
-            bullish_percentage = (bullish_signals / total_signals) * 100
+            # Calculate percentage of bullish indicators
+            total_indicators = 4  # Total number of indicators
+            bullish_percentage = (bullish_indicators / total_indicators) * 100
             
             # Determine sentiment based on actual percentages
-            if bullish_percentage >= 75:  # 75-100% bullish signals
+            if bullish_percentage >= 75:  # 75-100% bullish indicators
                 sentiment = "BULLISH"
-            elif bullish_percentage <= 25:  # 0-25% bullish signals
+            elif bullish_percentage <= 25:  # 0-25% bullish indicators
                 sentiment = "BEARISH"
-            else:  # 26-74% bullish signals
+            else:  # 26-74% bullish indicators
                 sentiment = "NEUTRAL"
             
-            # Calculate confidence based on proportion of bullish signals
+            # Calculate confidence based on proportion of bullish indicators
             confidence = bullish_percentage  # This gives us 0-100 confidence score
             
             # Compile reasons
