@@ -5,14 +5,13 @@ from pathlib import Path
 try:
     import numpy as np
     print("✓ numpy imported")
-    from moviepy.editor import TextClip
-    print("✓ TextClip imported") 
-    from moviepy.editor import ColorClip
-    print("✓ ColorClip imported")
-    from moviepy.editor import CompositeVideoClip
+    from moviepy.video.io.VideoFileClip import VideoFileClip
+    from moviepy.video.VideoClip import TextClip, ColorClip
+    print("✓ VideoClip imported")
+    from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
     print("✓ CompositeVideoClip imported")
-    from moviepy.editor import vfx
-    print("✓ vfx imported")
+    from moviepy.video.fx.all import slide_in
+    print("✓ fx imported")
 except ImportError as e:
     print(f"Import error: {e}")
     print(f"Error occurred in module: {e.__class__.__module__}")
@@ -68,7 +67,7 @@ def create_tiktok_video():
     ).set_duration(5)
     clip2 = clip2.set_position(('center', 2*height//3))
     clip2 = clip2.set_start(5)  # Start after first clip
-    clip2 = clip2.fx(vfx.slide_in, duration=1, side='right')
+    clip2 = clip2.fx(slide_in, duration=1, side='right')
     
     text_clips = [clip1, clip2]
 
