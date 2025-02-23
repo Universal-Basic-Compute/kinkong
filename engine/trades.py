@@ -637,7 +637,7 @@ class TradeExecutor:
             
             try:
                 from scripts.analyze_charts import send_telegram_message
-                await send_telegram_message(message)
+                send_telegram_message(message)  # Remove await since function is not async
                 self.logger.info("Telegram notification sent")
             except Exception as e:
                 self.logger.error(f"Failed to send Telegram notification: {e}")
