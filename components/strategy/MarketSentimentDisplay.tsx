@@ -243,7 +243,7 @@ export function MarketSentimentDisplay() {
           className="grid grid-cols-5 gap-6 mt-8"
         >
           {/* Price Action */}
-          <div className="relative overflow-hidden rounded-xl bg-black/20 p-4 border border-gray-800 hover:border-gray-700 transition-all group hover:bg-black/30">
+          <div className="relative rounded-xl bg-black/20 p-4 border border-gray-800 hover:border-gray-700 transition-all group hover:bg-black/30">
             <div className="flex flex-col items-center justify-center h-full">
               <div className="text-sm text-gray-400 mb-2 flex items-center gap-2">
                 Price Action
@@ -269,7 +269,7 @@ export function MarketSentimentDisplay() {
           </div>
 
           {/* Volume Analysis */}
-          <div className="relative overflow-hidden rounded-xl bg-black/20 p-4 border border-gray-800 hover:border-gray-700 transition-all group hover:bg-black/30">
+          <div className="relative rounded-xl bg-black/20 p-4 border border-gray-800 hover:border-gray-700 transition-all group hover:bg-black/30">
             <div className="flex flex-col items-center justify-center h-full">
               <div className="text-sm text-gray-400 mb-2 flex items-center gap-2">
                 Volume Trend
@@ -293,7 +293,7 @@ export function MarketSentimentDisplay() {
           </div>
 
           {/* Position Signals */}
-          <div className="relative overflow-hidden rounded-xl bg-black/20 p-4 border border-gray-800 hover:border-gray-700 transition-all group hover:bg-black/30">
+          <div className="relative rounded-xl bg-black/20 p-4 border border-gray-800 hover:border-gray-700 transition-all group hover:bg-black/30">
             <div className="flex flex-col items-center justify-center h-full">
               <div className="text-sm text-gray-400 mb-2 flex items-center gap-2">
                 Position Signals
@@ -319,7 +319,7 @@ export function MarketSentimentDisplay() {
           </div>
 
           {/* Relative Strength */}
-          <div className="relative overflow-hidden rounded-xl bg-black/20 p-4 border border-gray-800 hover:border-gray-700 transition-all group hover:bg-black/30">
+          <div className="relative rounded-xl bg-black/20 p-4 border border-gray-800 hover:border-gray-700 transition-all group hover:bg-black/30">
             <div className="flex flex-col items-center justify-center h-full">
               <div className="text-sm text-gray-400 mb-2 flex items-center gap-2">
                 AI vs SOL
