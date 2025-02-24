@@ -20,17 +20,35 @@ class TokenSearcher:
         
     def search_token(self, keyword: str) -> Optional[Dict[str, Any]]:
         """Search for a token using Birdeye API"""
-        url = "https://public-api.birdeye.so/defi/v3/search"
-        
-        params = {
-            "keyword": keyword,
-            "chain": "solana"
-        }
-        
-        headers = {
-            "x-api-key": self.birdeye_api_key,
-            "accept": "application/json"
-        }
+        try:
+            # First check if token exists in Airtable
+            existing_records = self.airtable.get_all(
+                formula=f"OR({{token}} = '{keyword.upper()}', {{symbol}} = '{keyword.upper()}')"
+            )
+            
+            if existing_records:
+                print(f"✅ Found existing token record for {keyword.upper()}")
+                token_record = existing_records[0]['fields']
+                return {
+                    'symbol': token_record.get('token'),
+                    'name': token_record.get('name'),
+                    'address': token_record.get('mint'),
+                    'verified': True  # Assume tokens in our database are verified
+                }
+
+            # If not found in Airtable, search Birdeye
+            print(f"🔍 Searching Birdeye for {keyword.upper()}...")
+            url = "https://public-api.birdeye.so/defi/v3/search"
+            
+            params = {
+                "keyword": keyword,
+                "chain": "solana"
+            }
+            
+            headers = {
+                "x-api-key": self.birdeye_api_key,
+                "accept": "application/json"
+            }
         
         try:
             response = requests.get(url, params=params, headers=headers)
