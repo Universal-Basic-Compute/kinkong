@@ -165,12 +165,14 @@ class TokenSearcher:
             ALWAYS_INACTIVE_TOKENS = {'UBC', 'COMPUTE'}
             
             token_symbol = token_data.get('symbol')
+            self.logger.info(f"\n🔍 Creating/updating token record for {token_symbol}")
+            self.logger.info(f"Token data received: {json.dumps(token_data, indent=2)}")
 
             # Get current timestamp in ISO format
             created_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
             
             # Get DexScreener data for social links and pair info
-            print(f"\n🔍 Fetching DexScreener data for {token_data.get('address')}")
+            self.logger.info(f"\n🔍 Fetching DexScreener data for {token_data.get('address')}")
             url = f"https://api.dexscreener.com/latest/dex/tokens/{token_data.get('address')}"
             
             headers = {
@@ -188,6 +190,7 @@ class TokenSearcher:
             response = requests.get(url, headers=headers)
             request_time = (datetime.now() - start_time).total_seconds()
             self.logger.info(f"Request time: {request_time:.2f}s")
+            self.logger.info(f"Response status: {response.status_code}")
             
             if response.ok:
                 dex_data = response.json()
