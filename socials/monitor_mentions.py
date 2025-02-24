@@ -94,6 +94,50 @@ def setup_logging():
 
 logger = setup_logging()
 
+async def save_message(message_data: dict, context: str = 'mention'):
+    """Save message to MESSAGES table"""
+    try:
+        airtable = Airtable(
+            os.getenv('KINKONG_AIRTABLE_BASE_ID'),
+            'MESSAGES',
+            os.getenv('KINKONG_AIRTABLE_API_KEY')
+        )
+        
+        # Format message record
+        record = {
+            'messageId': message_data['id'],
+            'context': context,
+            'platform': 'X',
+            'author': message_data.get('author_username', ''),
+            'content': message_data['text'],
+            'createdAt': message_data['created_at'],
+            'url': f"https://twitter.com/{message_data.get('author_username')}/status/{message_data['id']}",
+            'tokens': ', '.join(extract_tokens_from_text(message_data['text'])) if extract_tokens_from_text(message_data['text']) else None
+        }
+        
+        airtable.insert(record)
+        logger.info(f"Saved {context} message: {message_data['id']}")
+        
+    except Exception as e:
+        logger.error(f"Error saving message: {e}")
+
+async def process_tokens(tokens: list):
+    """Process list of tokens"""
+    try:
+        base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
+        api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
+        
+        if not base_id or not api_key:
+            logger.error("Missing Airtable credentials")
+            return
+        
+        for token in tokens:
+            if check_token_status(token, base_id, api_key):
+                logger.info(f"Token {token} needs updating")
+                await update_token(token)
+            else:
+                logger.info(f"Token {token} is up to date")
+
 def get_last_mention_id():
     """Read last processed mention ID from file"""
     try:
@@ -270,7 +314,22 @@ async def check_mentions():
                     if not newest_id or int(mention["id"]) > int(newest_id):
                         newest_id = mention["id"]
                     
-                    logger.info(f"\nProcessing mention: {mention['text']}")
+                    # Get author info
+                    author = next(
+                        (u for u in data["includes"]["users"] if u["id"] == mention["author_id"]),
+                        None
+                    )
+                    
+                    # Format mention data
+                    mention_data = {
+                        'id': mention['id'],
+                        'text': mention['text'],
+                        'created_at': mention['created_at'],
+                        'author_username': author['username'] if author else None
+                    }
+                    
+                    # Save mention
+                    await save_message(mention_data, 'mention')
                     
                     # Check if this is a reply and get parent tweet
                     referenced_tweets = mention.get("referenced_tweets", [])
@@ -285,37 +344,29 @@ async def check_mentions():
                                 if parent_response.ok:
                                     parent_data = parent_response.json()
                                     if "data" in parent_data:
-                                        parent_text = parent_data["data"]["text"]
-                                        logger.info(f"Parent tweet: {parent_text}")
+                                        # Format parent tweet data
+                                        parent_tweet = parent_data["data"]
+                                        parent_tweet_data = {
+                                            'id': parent_tweet['id'],
+                                            'text': parent_tweet['text'],
+                                            'created_at': parent_tweet.get('created_at', mention['created_at']),
+                                            'author_username': parent_tweet.get('author_username', 'unknown')
+                                        }
                                         
-                                        # Extract tokens from parent tweet
-                                        parent_tokens = extract_tokens_from_text(parent_text)
+                                        # Save parent tweet
+                                        await save_message(parent_tweet_data, 'parent_tweet')
+                                        
+                                        # Process tokens from parent tweet
+                                        parent_tokens = extract_tokens_from_text(parent_tweet['text'])
                                         if parent_tokens:
                                             logger.info(f"Found tokens in parent tweet: {parent_tokens}")
-                                            tokens = parent_tokens
-                                        else:
-                                            logger.info("No tokens found in parent tweet")
+                                            await process_tokens(parent_tokens)
                     
-                    # Extract tokens from mention text
-                    tokens = extract_tokens_from_text(mention["text"])
-                    if tokens:
-                        logger.info(f"Found tokens in mention: {tokens}")
-                        
-                        # Get Airtable credentials
-                        base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
-                        api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
-                        
-                        if not base_id or not api_key:
-                            logger.error("Missing Airtable credentials")
-                            continue
-                        
-                        # Check and update each token
-                        for token in tokens:
-                            if check_token_status(token, base_id, api_key):
-                                logger.info(f"Token {token} needs updating")
-                                await update_token(token)
-                            else:
-                                logger.info(f"Token {token} is up to date")
+                    # Process tokens from mention
+                    mention_tokens = extract_tokens_from_text(mention['text'])
+                    if mention_tokens:
+                        logger.info(f"Found tokens in mention: {mention_tokens}")
+                        await process_tokens(mention_tokens)
                     else:
                         logger.info("No tokens found in mention")
                 except Exception as e:
