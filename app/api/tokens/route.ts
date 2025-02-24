@@ -29,12 +29,13 @@ export async function GET() {
       })
       .all();
 
-    // Get latest snapshots
+    // Get only the latest snapshot for each token
     const snapshotsTable = getTable('TOKEN_SNAPSHOTS');
     const snapshotRecords = await snapshotsTable
       .select({
         sort: [{ field: 'createdAt', direction: 'desc' }],
-        filterByFormula: 'IS_SAME({createdAt}, DATEADD(NOW(), -1, "hours"), "hour")'
+        // Prendre vraiment le dernier snapshot sans filtre de temps
+        maxRecords: 100 // Assez pour avoir au moins 1 snapshot par token
       })
       .all();
 
@@ -47,6 +48,8 @@ export async function GET() {
           volume24h: record.get('volume24h') || 0,
           liquidity: record.get('liquidity') || 0,
           holderCount: record.get('holderCount') || 0,
+          priceGrowth: record.get('priceGrowth') || 0, // Récupérer directement du snapshot
+          volumeGrowth: record.get('volumeGrowth') || 0, // Récupérer directement du snapshot
           createdAt: record.get('createdAt')
         };
       }
@@ -58,11 +61,6 @@ export async function GET() {
       const token = record.get('token');
       const snapshot = snapshotMap[token] || {};
       
-      // Ensure all values are valid numbers
-      const priceGrowth = parseFloat(snapshot.priceGrowth) || 0;
-      const volumeGrowth = parseFloat(snapshot.volumeGrowth) || 0;
-      const liquidity = parseFloat(snapshot.liquidity) || 0;
-      
       return {
         token: token,
         name: record.get('name'),
@@ -70,9 +68,9 @@ export async function GET() {
         xAccount: record.get('xAccount'),
         isActive: Boolean(record.get('isActive')),
         price: parseFloat(snapshot.price) || 0,
-        priceGrowth,
-        volumeGrowth,
-        liquidity,
+        priceGrowth: parseFloat(snapshot.priceGrowth) || 0,
+        volumeGrowth: parseFloat(snapshot.volumeGrowth) || 0,
+        liquidity: parseFloat(snapshot.liquidity) || 0,
         holderCount: parseInt(snapshot.holderCount) || 0
       };
     });
