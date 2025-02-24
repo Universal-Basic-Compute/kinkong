@@ -259,13 +259,13 @@ class TradeExecutor:
 
             entry_price = float(signal['fields'].get('entryPrice', 0))
             price_diff = abs(current_price - entry_price) / entry_price
-            meets_conditions = price_diff <= 0.015
+            meets_conditions = price_diff <= 0.02
 
             # Price analysis logs
             self.logger.info(f"\n{BOLD}Price Analysis:{ENDC}")
             self.logger.info(f"Entry Price: ${entry_price:.6f}")
             self.logger.info(f"Current Price: ${current_price:.6f}")
-            self.logger.info(f"Difference: {GREEN if price_diff <= 0.015 else RED}{price_diff:.2%}{ENDC}")
+            self.logger.info(f"Difference: {GREEN if price_diff <= 0.02 else RED}{price_diff:.2%}{ENDC}")
             
             # Additional market data
             self.logger.info(f"\n{BOLD}Market Data:{ENDC}")
