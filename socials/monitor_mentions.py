@@ -10,6 +10,7 @@ from datetime import datetime, timezone, timedelta
 import subprocess
 from typing import Optional, List
 from airtable import Airtable as AirtableAPI
+from airtable import Airtable
 
 def extract_tokens_from_text(text: str) -> List[str]:
     """Extract tokens mentioned with $ symbol from text"""
