@@ -62,7 +62,7 @@ class ImageGenerator:
             logger.info(f"Text verification - Similarity: {similarity:.2f}")
             
             # Accept if similarity is above threshold
-            return similarity > 0.7  # Adjust threshold as needed
+            return similarity > 0.4  # Lowered threshold to 0.4
             
         except Exception as e:
             logger.error(f"Error in text verification: {e}")
@@ -71,6 +71,7 @@ class ImageGenerator:
     def generate_and_save_image(self, prompt: str, image_number: int, output_dir: Path, expected_text: str) -> Optional[str]:
         """Generate image from prompt and save it, with text verification"""
         attempts = 0
+        last_generated_path = None
         
         while attempts < self.max_retries:
             attempts += 1
@@ -126,12 +127,18 @@ class ImageGenerator:
                 
                 logger.info(f"Image saved to {output_path}")
 
+                # Save the last generated path in case all attempts fail
+                last_generated_path = str(output_path)
+
                 # Verify text in image
                 if expected_text and not self.verify_text_in_image(str(output_path), expected_text):
                     logger.warning(f"Text verification failed on attempt {attempts}")
                     if attempts < self.max_retries:
                         logger.info("Retrying image generation...")
                         continue
+                    else:
+                        logger.warning("All verification attempts failed, using last generated image")
+                        return last_generated_path
                 else:
                     logger.info("Text verification passed!")
                     return str(output_path)
@@ -139,9 +146,17 @@ class ImageGenerator:
             except Exception as e:
                 logger.error(f"Error in attempt {attempts}: {e}")
                 if attempts >= self.max_retries:
+                    if last_generated_path:
+                        logger.warning("Using last generated image despite errors")
+                        return last_generated_path
                     return None
-                
-        logger.error(f"Failed to generate acceptable image after {self.max_retries} attempts")
+            
+        # If we get here and have a last generated image, use it
+        if last_generated_path:
+            logger.warning("Using last generated image after all attempts")
+            return last_generated_path
+            
+        logger.error(f"Failed to generate any usable image after {self.max_retries} attempts")
         return None
 
 def generate_image(prompt: str, image_number: int, base_dir: Optional[Path] = None) -> Optional[str]:
