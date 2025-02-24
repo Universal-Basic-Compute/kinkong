@@ -80,7 +80,7 @@ def create_tiktok_video():
         horizontal_align='center',
         vertical_align='center'
     ).with_duration(5)
-    clip1 = clip1.set_position(('center', height//3))
+    clip1 = clip1.with_position(('center', height//3))
     clip1 = clip1.with_effects([
         FadeIn(duration=1),
         FadeOut(duration=1, start_time=4)
@@ -98,7 +98,7 @@ def create_tiktok_video():
         horizontal_align='center',
         vertical_align='center'
     ).with_duration(5)
-    clip2 = clip2.set_position(('center', 2*height//3))
+    clip2 = clip2.with_position(('center', 2*height//3))
     clip2 = clip2.with_start(5)  # Start after first clip
     clip2 = clip2.with_effects([
         SlideIn(duration=1, side='right')
