@@ -245,20 +245,24 @@ def generate_chart(df, config, support_levels=None):
         # and we have 60 candles, so each candle should take up 1% of the space
         candle_width = 0.6  # Fixed width for consistent look across all timeframes
         
-        # Calculate candle width based on timeframe
-        timeframe = config['timeframe']
-        if timeframe == '15m':
-            candle_width = 0.2  # Thinner for 15min candles
-        elif timeframe == '1H':
-            candle_width = 0.4  # Medium for hourly candles
-        elif timeframe == '4H':
-            candle_width = 0.6  # Thicker for 4h candles
-        elif timeframe == '1D':
-            candle_width = 0.8  # Thickest for daily candles
-        else:
-            candle_width = 0.4  # Default width
+        # Calculate time interval between candles in minutes
+        time_diff = (df.index[1] - df.index[0]).total_seconds() / 60
+        print(f"Time interval between candles: {time_diff} minutes")
+        
+        # Calculate width based on time interval with MUCH bigger differences
+        # 15min -> 0.05, 1H -> 0.3, 4H -> 0.8, 1D -> 1.5
+        if time_diff <= 15:  # 15-minute candles
+            candle_width = 0.05  # Super thin for short timeframe
+        elif time_diff <= 60:  # 1-hour candles
+            candle_width = 0.3   # Thin for hourly
+        elif time_diff <= 240:  # 4-hour candles
+            candle_width = 0.8   # Thick for 4H
+        else:  # Daily candles
+            candle_width = 1.5   # Very thick for daily
 
-        # Create figure with timeframe-specific candle width
+        print(f"Using candle width: {candle_width} for {time_diff} minute intervals")
+
+        # Create figure with dramatically different candle widths
         fig, axes = mpf.plot(
             df,
             type='candle',
