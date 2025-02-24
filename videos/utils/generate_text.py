@@ -1,9 +1,18 @@
+import logging
 from pathlib import Path
 from typing import List, Optional, Tuple
 from moviepy.video.VideoClip import TextClip
 from moviepy.video.fx.FadeIn import FadeIn
 from moviepy.video.fx.FadeOut import FadeOut
 from moviepy.video.fx.SlideIn import SlideIn
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
 
 def find_system_font() -> str:
     """Find an available system font."""
