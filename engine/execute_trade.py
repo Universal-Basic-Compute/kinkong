@@ -319,8 +319,8 @@ class JupiterTradeExecutor:
             self.logger.error(f"Error checking slippage: {e}")
             return False
 
-    async def execute_trade_with_retries(self, transaction: Transaction, max_retries: int = 3) -> Optional[str]:
-        """Execute a trade transaction with optimized sending and rate limit handling"""
+    async def execute_trade_with_retries(self, transaction: Transaction, token_mint: str, max_retries: int = 3) -> Optional[str]:
+        """Execute trade with balance confirmation via Birdeye API"""
         client = AsyncClient(
             "https://api.mainnet-beta.solana.com",
             commitment="confirmed"
@@ -328,78 +328,78 @@ class JupiterTradeExecutor:
         try:
             for attempt in range(max_retries):
                 try:
-                    # Calculate exponential backoff delay
-                    delay = (2 ** attempt) * 1.5  # 1.5s, 3s, 6s
-                
-                    # Convert versioned transaction to bytes
-                    transaction_bytes = bytes(transaction)
-                
-                    # Send with optimized options
+                    # Get initial balance from Birdeye
+                    url = "https://public-api.birdeye.so/v1/wallet/token_balance"
+                    headers = {
+                        'x-api-key': os.getenv('BIRDEYE_API_KEY'),
+                        'x-chain': 'solana',
+                        'accept': 'application/json'
+                    }
+                    params = {
+                        'wallet': self.wallet_address,
+                        'token_address': token_mint
+                    }
+
+                    async with aiohttp.ClientSession() as session:
+                        async with session.get(url, headers=headers, params=params) as response:
+                            if response.status == 200:
+                                data = await response.json()
+                                if data.get('success'):
+                                    initial_balance = float(data['data'].get('balance', 0))
+                                    self.logger.info(f"Initial balance: {initial_balance}")
+                                else:
+                                    self.logger.error("Failed to get initial balance")
+                                    continue
+                            else:
+                                self.logger.error(f"Birdeye API error: {response.status}")
+                                continue
+
+                    # Send transaction
                     result = await client.send_raw_transaction(
-                        transaction_bytes,
+                        bytes(transaction),
                         opts=TxOpts(
                             skip_preflight=True,
                             max_retries=2,
                             preflight_commitment="confirmed"
                         )
                     )
-                    
+
                     if not result.value:
                         self.logger.error("No transaction signature returned")
-                        await asyncio.sleep(delay)
                         continue
-                    
+
                     signature_str = str(result.value)
                     self.logger.info(f"Transaction sent: {signature_str}")
-                    
-                    # Wait before confirmation check
-                    await asyncio.sleep(1)
-                    
-                    # Confirm with retries
+
+                    # Check new balance with retries
                     for confirm_attempt in range(3):
-                        try:
-                            signature = Signature.from_string(signature_str)
-                            confirmation = await client.confirm_transaction(
-                                {
-                                    "signature": str(signature),
-                                    "maxSupportedTransactionVersion": 0
-                                },
-                                commitment="finalized"
-                            )
-                            
-                            try:
-                                # Simple confirmation with just the signature
-                                confirmation = await client.confirm_transaction(
-                                    signature,  # Pass Signature object directly
-                                    commitment="finalized"
-                                )
-                            except Exception as confirm_error:
-                                self.logger.error(f"Confirmation error: {confirm_error}")
-                                # Continue despite confirmation error
-                                pass
+                        await asyncio.sleep(2)  # Wait for transaction to process
 
-                            # Mark as successful and calculate fields even if confirmation fails
-                            self.logger.info(f"✅ Transaction sent successfully")
-                            self.logger.info(f"View transaction: https://solscan.io/tx/{signature_str}")
-                            return signature_str
+                        async with aiohttp.ClientSession() as session:
+                            async with session.get(url, headers=headers, params=params) as response:
+                                if response.status == 200:
+                                    data = await response.json()
+                                    if data.get('success'):
+                                        new_balance = float(data['data'].get('balance', 0))
+                                        self.logger.info(f"New balance: {new_balance}")
+                                        
+                                        if new_balance > initial_balance:
+                                            self.logger.info("✅ Transaction confirmed - Balance increased!")
+                                            return signature_str
+                                        
+                                        self.logger.info("Balance unchanged, waiting...")
+                                else:
+                                    self.logger.error(f"Failed to get new balance: {response.status}")
 
-                        except Exception as e:
-                            self.logger.error(f"Error in confirmation attempt {confirm_attempt + 1}: {e}")
-                            if confirm_attempt < 2:
-                                await asyncio.sleep(2)
-                                continue
-                                
+                        if confirm_attempt < 2:
+                            continue
+
                 except Exception as e:
-                    if "429" in str(e):
-                        self.logger.warning(f"Rate limit hit, waiting {delay}s before retry...")
-                        await asyncio.sleep(delay)
+                    self.logger.error(f"Attempt {attempt + 1} failed: {e}")
+                    if attempt < max_retries - 1:
+                        await asyncio.sleep(2)
                         continue
-                        
-                    if attempt == max_retries - 1:
-                        raise
-                    self.logger.warning(f"Attempt {attempt + 1} failed, retrying in {delay}s...")
-                    await asyncio.sleep(delay)
-                    
+
             return None
             
         except Exception as e:
