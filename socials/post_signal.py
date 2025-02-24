@@ -50,34 +50,33 @@ class AirtableAPI:
             return None
 
 def post_to_x(text: str) -> bool:
-    """Post to X using API v2 with OAuth 2.0 User Context"""
+    """Post to X using API v2 with OAuth 1.0a"""
     try:
         import tweepy
         
-        # Get OAuth 2.0 credentials
-        client_id = os.getenv('X_CLIENT_ID')
-        client_secret = os.getenv('X_CLIENT_SECRET')
-        access_token = os.getenv('X_ACCESS_TOKEN')  # OAuth 2.0 User Access Token
+        # Get OAuth 1.0a credentials
+        api_key = os.getenv('X_API_KEY')
+        api_secret = os.getenv('X_API_SECRET')
+        access_token = os.getenv('X_ACCESS_TOKEN')
+        access_token_secret = os.getenv('X_ACCESS_TOKEN_SECRET')
         
-        if not all([client_id, client_secret, access_token]):
-            logger.error("Missing X API credentials. Required: X_CLIENT_ID, X_CLIENT_SECRET, X_ACCESS_TOKEN")
+        if not all([api_key, api_secret, access_token, access_token_secret]):
+            logger.error("Missing X API credentials. Required: X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET")
             return False
             
-        # Initialize Tweepy client with OAuth 2.0 User Context
-        client = tweepy.Client(
-            access_token=access_token,  # User context access token
-            consumer_key=client_id,
-            consumer_secret=client_secret
-        )
+        # Initialize Tweepy client with OAuth 1.0a
+        auth = tweepy.OAuthHandler(api_key, api_secret)
+        auth.set_access_token(access_token, access_token_secret)
+        api = tweepy.API(auth)
         
-        # Post tweet
-        response = client.create_tweet(text=text)
+        # Post tweet using v1.1 API
+        response = api.update_status(text)
         
-        if response.data:
-            logger.info(f"Successfully posted to X. Tweet ID: {response.data['id']}")
+        if response:
+            logger.info(f"Successfully posted to X. Tweet ID: {response.id}")
             return True
         else:
-            logger.error("Failed to post to X - no response data")
+            logger.error("Failed to post to X - no response")
             return False
             
     except Exception as e:
