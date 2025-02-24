@@ -205,6 +205,21 @@ class MarketOverviewGenerator:
             if not analysis:
                 logger.error("Failed to generate overview")
                 return False
+
+            # Create THOUGHTS record first
+            thoughts_table = Airtable(self.base_id, 'THOUGHTS', self.api_key)
+            thought_record = {
+                'type': 'MARKET_OVERVIEW',
+                'content': analysis,
+                'createdAt': datetime.now(timezone.utc).isoformat()
+            }
+            
+            try:
+                thoughts_table.insert(thought_record)
+                logger.info("✅ Created THOUGHTS record")
+            except Exception as e:
+                logger.error(f"Failed to create THOUGHTS record: {e}")
+                return False
             
             # Send to Telegram as single message
             if not send_telegram_message(analysis):
