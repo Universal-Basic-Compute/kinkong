@@ -360,11 +360,14 @@ class JupiterTradeExecutor:
                         try:
                             signature = Signature.from_string(signature_str)
                             confirmation = await client.confirm_transaction(
-                                signature,
+                                {
+                                    "signature": str(signature),
+                                    "maxSupportedTransactionVersion": 0
+                                },
                                 commitment="finalized"
                             )
                             
-                            # Verify confirmation with get_transaction and support version
+                            # Verify confirmation with get_transaction
                             tx_response = await client.get_transaction(
                                 signature,
                                 commitment="finalized",
