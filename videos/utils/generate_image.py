@@ -7,7 +7,8 @@ import logging
 import difflib
 import re
 from PIL import Image
-import easyocr
+import pytesseract
+from PIL import Image
 from typing import Optional
 from dotenv import load_dotenv
 
@@ -31,7 +32,8 @@ class ImageGenerator:
             "Api-Key": self.api_key,
             "Content-Type": "application/json"
         }
-        self.reader = easyocr.Reader(['en'])  # Initialize OCR once
+        # Set Tesseract path for Windows
+        pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
         self.max_retries = 3  # Maximum number of regeneration attempts
 
     def verify_text_in_image(self, image_path: str, expected_text: str) -> bool:
@@ -43,9 +45,11 @@ class ImageGenerator:
             # Clean up expected text (remove emojis, extra spaces, make uppercase)
             expected_clean = re.sub(r'[^\w\s]', '', expected_text).upper().strip()
             
+            # Open the image
+            image = Image.open(image_path)
+            
             # Perform OCR
-            result = self.reader.readtext(image_path)
-            detected_text = ' '.join([detection[1] for detection in result]).upper()
+            detected_text = pytesseract.image_to_string(image)
             
             # Clean up detected text
             detected_clean = re.sub(r'[^\w\s]', '', detected_text).strip()
