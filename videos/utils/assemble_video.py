@@ -68,7 +68,7 @@ def process_video_clip(
     video_num: int
 ) -> Optional[CompositeVideoClip]:
     """
-    Process a single video clip: resize, crop, add text and effects
+    Process a single video clip with smooth transitions
     """
     video_clip = None
     try:
@@ -88,10 +88,14 @@ def process_video_clip(
                 Crop(x1=x_offset, width=target_width)
             ])
         
-        # Set duration
+        # Set duration and add fade effects
         video_clip = video_clip.with_duration(duration)
+        video_clip = video_clip.with_effects([
+            FadeIn(duration=0.3),
+            FadeOut(duration=0.3)
+        ])
         
-        # Create text clips
+        # Create text clips with background box
         text_clips, _ = create_text_clips(
             screen['text'], 
             target_width, 

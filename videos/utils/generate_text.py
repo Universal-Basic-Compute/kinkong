@@ -1,10 +1,12 @@
 import logging
 from pathlib import Path
 from typing import List, Optional, Tuple
-from moviepy.video.VideoClip import TextClip
+from emoji import replace_emoji
+from moviepy.video.VideoClip import TextClip, ColorClip
 from moviepy.video.fx.FadeIn import FadeIn
 from moviepy.video.fx.FadeOut import FadeOut
 from moviepy.video.fx.SlideIn import SlideIn
+from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
 
 # Configure logging
 logging.basicConfig(
