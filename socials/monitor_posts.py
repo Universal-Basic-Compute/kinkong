@@ -232,10 +232,13 @@ def send_telegram_notification(token: str, analysis: str):
         
     except Exception as e:
         logger.error(f"Failed to send Telegram notification: {e}")
-        return False
+        return False, None
 
-def monitor_token(token: Optional[str] = None) -> bool:
-    """Monitor posts for a specific token or all tokens if none specified"""
+def monitor_token(token: Optional[str] = None) -> tuple[bool, Optional[str]]:
+    """Monitor posts for a specific token or all tokens if none specified
+    Returns:
+        tuple: (bullish_signals_found: bool, analysis_text: Optional[str])
+    """
     try:
         start_time = datetime.now()
         
@@ -266,19 +269,19 @@ def monitor_token(token: Optional[str] = None) -> bool:
         # Get token data
         if token:
             # Get specific token
-            tokens = airtable.get_all(
-                formula=f"AND({{isActive}}=1, {{token}}='{token}')"
-            )
+            tokens = airtable.get_active_tokens()
+            tokens = [t for t in tokens if t.get('token') == token]
             if not tokens:
                 logger.error(f"Token {token} not found or not active")
-                return False
+                return False, None
         else:
             # Get all active tokens
             tokens = airtable.get_active_tokens()
             
         logger.info(f"Found {len(tokens)} token(s) to process")
         
-        success = True
+        bullish_found = False
+        analysis_text = None
         # Process token(s)
         for token_data in tokens:
             try:
@@ -308,7 +311,8 @@ def monitor_token(token: Optional[str] = None) -> bool:
                         metrics.increment('notifications_sent')
                     else:
                         logger.error(f"Failed to send notification for ${token_symbol}")
-                        success = False
+                    bullish_found = True
+                    analysis_text = analysis
                 else:
                     logger.info(f"No significant bullish signals for ${token_symbol}")
                 
@@ -319,7 +323,6 @@ def monitor_token(token: Optional[str] = None) -> bool:
             except Exception as e:
                 logger.error(f"Error processing token {token_symbol}: {e}")
                 metrics.increment('errors')
-                success = False
                 continue
                 
         # Add summary
@@ -334,7 +337,7 @@ def monitor_token(token: Optional[str] = None) -> bool:
         Errors: {metrics.metrics['errors']}
         """)
         
-        return success
+        return bullish_found, analysis_text
                 
     except Exception as e:
         logger.error(f"Script failed: {e}")
@@ -351,8 +354,17 @@ def main():
         else:
             logger.info("Monitoring posts for all active tokens")
             
-        success = monitor_token(token)
-        sys.exit(0 if success else 1)
+        bullish, analysis = monitor_token(token)
+        
+        # Print results
+        if bullish:
+            print("\n✅ Bullish signals found!")
+            print("\nAnalysis:")
+            print(analysis)
+        else:
+            print("\n❌ No bullish signals found")
+            
+        sys.exit(0 if bullish else 1)
 
     except Exception as e:
         logger.error(f"Fatal error: {e}")
