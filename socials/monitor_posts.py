@@ -102,6 +102,46 @@ WINDOW_SECONDS = 15 * 60
 @sleep_and_retry
 @limits(calls=CALLS_PER_WINDOW, period=WINDOW_SECONDS)
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
+def search_token_tweets(token: str, bearer_token: str) -> List[Dict]:
+    """Search recent tweets mentioning a token"""
+    try:
+        headers = {
+            "Authorization": f"Bearer {bearer_token}",
+            "Content-Type": "application/json"
+        }
+        
+        # Search endpoint
+        search_url = "https://api.twitter.com/2/tweets/search/recent"
+        
+        # Search for cashtag and hashtag
+        query = f"(${token} OR #{token}) -is:retweet -is:reply lang:en"
+        
+        params = {
+            "query": query,
+            "max_results": 10,
+            "tweet.fields": "created_at,public_metrics,text",
+            "sort_order": "relevancy"
+        }
+        
+        response = requests.get(search_url, headers=headers, params=params)
+        response.raise_for_status()
+        
+        tweets = response.json().get('data', [])
+        logger.info(f"Found {len(tweets)} tweets mentioning {token}")
+        return tweets
+        
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error searching tweets for token {token}: {str(e)}")
+        if e.response is not None:
+            logger.error(f"Response content: {e.response.content}")
+        return []
+    except Exception as e:
+        logger.error(f"Unexpected error searching tweets for token {token}: {str(e)}")
+        return []
+
+@sleep_and_retry
+@limits(calls=CALLS_PER_WINDOW, period=WINDOW_SECONDS)
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
 def get_account_tweets(x_account: str, bearer_token: str) -> List[Dict]:
     """Get recent tweets from a specific X account"""
     try:
@@ -288,17 +328,23 @@ def monitor_token(token: Optional[str] = None) -> tuple[bool, Optional[str]]:
                 token_symbol = token_data.get('token')
                 x_account = token_data.get('xAccount')
                 
-                if not token_symbol or not x_account:
-                    logger.warning(f"Missing data for token {token_symbol}")
+                if not token_symbol:
+                    logger.warning(f"Missing token symbol")
                     continue
                     
-                logger.info(f"Processing ${token_symbol} (X account: {x_account})")
+                logger.info(f"Processing ${token_symbol}")
                 metrics.increment('tokens_processed')
                 
-                # Get account tweets
-                tweets = get_account_tweets(x_account, os.getenv('X_BEARER_TOKEN'))
+                # Get tweets - either from account or search
+                if x_account:
+                    logger.info(f"Getting tweets from account: {x_account}")
+                    tweets = get_account_tweets(x_account, os.getenv('X_BEARER_TOKEN'))
+                else:
+                    logger.info(f"No X account found, searching for ${token_symbol} mentions")
+                    tweets = search_token_tweets(token_symbol, os.getenv('X_BEARER_TOKEN'))
+                
                 if not tweets:
-                    logger.info(f"No tweets found for {x_account}")
+                    logger.info(f"No tweets found for {token_symbol}")
                     continue
                     
                 # Analyze sentiment
