@@ -331,18 +331,17 @@ class JupiterTradeExecutor:
                     # Calculate exponential backoff delay
                     delay = (2 ** attempt) * 1.5  # 1.5s, 3s, 6s
                     
-                    # Create basic options
-                    opts = TxOpts(
-                        skip_preflight=True,
-                        max_retries=2,
-                        preflight_commitment="confirmed"
-                    )
-                
+                    # Serialize transaction and send raw
+                    serialized_tx = transaction.serialize()
+                    
                     # Send with optimized options
-                    result = await client.send_transaction(
-                        transaction,
-                        opts=opts,
-                        max_supported_transaction_version=0  # Moved back as separate parameter
+                    result = await client.send_raw_transaction(
+                        serialized_tx,
+                        opts=TxOpts(
+                            skip_preflight=True,
+                            max_retries=2,
+                            preflight_commitment="confirmed"
+                        )
                     )
                     
                     if not result.value:
@@ -351,61 +350,43 @@ class JupiterTradeExecutor:
                         continue
                     
                     signature_str = str(result.value)
-                    
                     self.logger.info(f"Transaction sent: {signature_str}")
                     
-                    # Wait before confirmation check to avoid rate limits
+                    # Wait before confirmation check
                     await asyncio.sleep(1)
                     
-                    try:
-                        # Confirm with retries
-                        for confirm_attempt in range(3):
-                            try:
-                                # Convert string to Signature object before confirming
-                                signature = Signature.from_string(signature_str)
-                                confirmation = await client.confirm_transaction(
-                                    signature,
-                                    commitment="finalized"
-                                )
+                    # Confirm with retries
+                    for confirm_attempt in range(3):
+                        try:
+                            signature = Signature.from_string(signature_str)
+                            confirmation = await client.confirm_transaction(
+                                signature,
+                                commitment="finalized"
+                            )
+                            
+                            if hasattr(confirmation.value, 'err') and confirmation.value.err:
+                                self.logger.error(f"Transaction failed: {confirmation.value.err}")
+                                self.logger.error(f"View transaction: https://solscan.io/tx/{signature_str}")
+                                break
+                            else:
+                                self.logger.info(f"✅ Transaction confirmed!")
+                                self.logger.info(f"View transaction: https://solscan.io/tx/{signature_str}")
+                                return signature_str
                                 
-                                # Check if confirmation was successful
-                                if hasattr(confirmation.value, 'err') and confirmation.value.err:
-                                    self.logger.error(f"Transaction failed: {confirmation.value.err}")
-                                    self.logger.error(f"View transaction: https://solscan.io/tx/{signature_str}")
-                                    break
-                                elif isinstance(confirmation.value, list):
-                                    # Handle list response type
-                                    if confirmation.value and confirmation.value[0]:
-                                        self.logger.info(f"✅ Transaction confirmed!")
-                                        self.logger.info(f"View transaction: https://solscan.io/tx/{signature_str}")
-                                        return signature_str
-                                else:
-                                    # Handle standard response type
-                                    self.logger.info(f"✅ Transaction confirmed!")
-                                    self.logger.info(f"View transaction: https://solscan.io/tx/{signature_str}")
-                                    return signature_str
-                                
-                            except Exception as confirm_error:
-                                if "429" in str(confirm_error):  # Rate limit error
-                                    self.logger.warning(f"Rate limit during confirmation, waiting {delay}s...")
+                        except Exception as confirm_error:
+                            if "429" in str(confirm_error):
+                                self.logger.warning(f"Rate limit during confirmation, waiting {delay}s...")
+                                await asyncio.sleep(delay)
+                                continue
+                            else:
+                                self.logger.error(f"Confirmation error: {confirm_error}")
+                                if confirm_attempt < 2:
                                     await asyncio.sleep(delay)
                                     continue
-                                else:
-                                    self.logger.error(f"Confirmation error: {confirm_error}")
-                                    if confirm_attempt < 2:  # Try again if not last attempt
-                                        await asyncio.sleep(delay)
-                                        continue
-                                    break
+                                break
                                 
-                    except Exception as e:
-                        self.logger.error(f"Confirmation error: {e}")
-                        if attempt < max_retries - 1:
-                            await asyncio.sleep(delay)
-                            continue
-                        raise
-                        
                 except Exception as e:
-                    if "429" in str(e):  # Rate limit error
+                    if "429" in str(e):
                         self.logger.warning(f"Rate limit hit, waiting {delay}s before retry...")
                         await asyncio.sleep(delay)
                         continue
