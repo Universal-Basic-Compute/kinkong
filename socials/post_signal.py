@@ -49,8 +49,8 @@ class AirtableAPI:
             logger.error(f"Error fetching signal from Airtable: {str(e)}")
             return None
 
-def post_to_x(text: str) -> bool:
-    """Post to X using API v2"""
+def post_to_x(text: str, signal_data: Dict) -> bool:
+    """Post to X using API v2 with media"""
     try:
         import tweepy
         
@@ -61,12 +61,30 @@ def post_to_x(text: str) -> bool:
         access_token_secret = os.getenv('X_ACCESS_TOKEN_SECRET')
         
         if not all([api_key, api_secret, access_token, access_token_secret]):
-            logger.error("Missing X API credentials. Required: X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET")
+            logger.error("Missing X API credentials")
             return False
             
         # Initialize Tweepy with OAuth 1.0a
         auth = tweepy.OAuthHandler(api_key, api_secret)
         auth.set_access_token(access_token, access_token_secret)
+        
+        # Create API v1.1 instance for media upload
+        api = tweepy.API(auth)
+        
+        # Get signal details
+        token = signal_data.get('fields', {}).get('token', '')
+        timeframe = signal_data.get('fields', {}).get('timeframe', '')
+        
+        # Construct image path
+        chart_path = f"public/charts/{token.lower()}/{token}_{timeframe.lower()}_scalp.png"
+        
+        if not os.path.exists(chart_path):
+            logger.error(f"Chart image not found: {chart_path}")
+            return False
+            
+        # Upload media
+        logger.info(f"Uploading chart: {chart_path}")
+        media = api.media_upload(filename=chart_path)
         
         # Create API v2 client
         client = tweepy.Client(
@@ -76,11 +94,14 @@ def post_to_x(text: str) -> bool:
             access_token_secret=access_token_secret
         )
         
-        # Post tweet using v2 endpoint
-        response = client.create_tweet(text=text)
+        # Post tweet with media
+        response = client.create_tweet(
+            text=text,
+            media_ids=[media.media_id]
+        )
         
         if response.data:
-            logger.info(f"Successfully posted to X. Tweet ID: {response.data['id']}")
+            logger.info(f"Successfully posted to X with media. Tweet ID: {response.data['id']}")
             return True
         else:
             logger.error("Failed to post to X - no response data")
@@ -246,9 +267,9 @@ def main():
             logger.error("Failed to generate tweet content")
             return
             
-        # Post to X
+        # Post to X with signal data
         logger.info("Posting to X...")
-        if post_to_x(tweet_text):
+        if post_to_x(tweet_text, signal):
             logger.info("Successfully posted signal to X")
             logger.info(f"Tweet content: {tweet_text}")
         else:
