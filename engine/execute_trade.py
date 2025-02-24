@@ -323,8 +323,7 @@ class JupiterTradeExecutor:
         """Execute a trade transaction with optimized sending and rate limit handling"""
         client = AsyncClient(
             "https://api.mainnet-beta.solana.com",
-            commitment="confirmed",
-            conf={"maxSupportedTransactionVersion": 0}  # Add version support
+            commitment="confirmed"
         )
         try:
             for attempt in range(max_retries):
@@ -360,7 +359,6 @@ class JupiterTradeExecutor:
                     for confirm_attempt in range(3):
                         try:
                             signature = Signature.from_string(signature_str)
-                            # Simple confirmation without version parameters
                             confirmation = await client.confirm_transaction(
                                 signature,
                                 commitment="finalized"
@@ -369,7 +367,7 @@ class JupiterTradeExecutor:
                             # Verify confirmation with get_transaction
                             tx_response = await client.get_transaction(
                                 signature,
-                                max_supported_transaction_version=0  # Add version support here
+                                max_supported_transaction_version=0  # Version support only here
                             )
                             
                             if not tx_response.value:
