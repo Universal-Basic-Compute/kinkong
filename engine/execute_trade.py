@@ -18,6 +18,7 @@ from solders.message import Message, MessageV0
 from solders.instruction import AccountMeta, Instruction
 from solana.rpc.async_api import AsyncClient
 from solana.rpc.types import TxOpts
+from solana.rpc.commitment import Commitment
 from solders.pubkey import Pubkey
 from solders.signature import Signature
 from solders.signature import Signature
@@ -513,8 +514,10 @@ class JupiterTradeExecutor:
             )
             
             try:
-                # Get fresh blockhash - version is handled at transaction level
-                blockhash_response = await client.get_latest_blockhash()
+                # Get fresh blockhash
+                blockhash_response = await client.get_latest_blockhash(
+                    commitment=Commitment("confirmed")  # Specify commitment explicitly
+                )
                 if not blockhash_response or not blockhash_response.value:
                     raise Exception("Failed to get recent blockhash")
                 
@@ -534,7 +537,7 @@ class JupiterTradeExecutor:
                     address_table_lookups=message.address_table_lookups
                 )
                 
-                # Create new transaction with version 0
+                # Create new versioned transaction
                 new_transaction = VersionedTransaction(
                     message=new_message,
                     signatures=[self.wallet_keypair.sign_message(bytes(new_message))]
