@@ -5,6 +5,22 @@ from datetime import datetime, timezone
 from airtable import Airtable
 from dotenv import load_dotenv
 from typing import Optional, Dict, Any
+import logging
+
+def setup_logging():
+    """Configure logging"""
+    logger = logging.getLogger(__name__)
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        formatter = logging.Formatter(
+            '%(asctime)s - %(levelname)s - %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        )
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
+    logger.propagate = False
+    return logger
 
 # Load environment variables
 load_dotenv()
@@ -17,6 +33,7 @@ class TokenSearcher:
             os.getenv('KINKONG_AIRTABLE_API_KEY')
         )
         self.birdeye_api_key = os.getenv('BIRDEYE_API_KEY')
+        self.logger = setup_logging()
         
     def search_token(self, keyword: str) -> Optional[Dict[str, Any]]:
         """Search for a token and create new record if it doesn't exist"""
