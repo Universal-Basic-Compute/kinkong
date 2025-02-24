@@ -238,11 +238,15 @@ def main():
             logger.error("Usage: python assemble_video.py <video_number>")
             sys.exit(1)
         
-        # Debug the input
-        logger.info(f"Attempting to convert '{sys.argv[1]}' to integer")
-        video_num = int(sys.argv[1])
-        logger.info(f"Successfully converted to integer: {video_num}")
-        
+        try:
+            # Convert video number to integer
+            logger.info(f"Attempting to convert '{sys.argv[1]}' to integer")
+            video_num = int(sys.argv[1])
+            logger.info(f"Successfully converted to integer: {video_num}")
+        except ValueError:
+            logger.error(f"Video number must be an integer. Input was: '{sys.argv[1]}'")
+            sys.exit(1)
+            
         # Load video paths and screens from the video's directory
         video_dir = Path('videos/videos') / f'video{video_num}'
         if not video_dir.exists():
@@ -283,10 +287,6 @@ def main():
             logger.error(f"❌ Failed to assemble video {video_num}")
             sys.exit(1)
             
-    except ValueError as ve:
-        logger.error(f"Video number must be an integer. Input was: '{sys.argv[1]}'")
-        logger.debug(f"ValueError details: {ve}")
-        sys.exit(1)
     except Exception as e:
         logger.error(f"Error: {e}")
         logger.exception("Detailed error trace:")
