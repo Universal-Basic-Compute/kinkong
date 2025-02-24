@@ -64,7 +64,7 @@ def process_video_clip(
         # Resize maintaining aspect ratio
         aspect_ratio = video_clip.size[0] / video_clip.size[1]
         new_width = int(target_height * aspect_ratio)
-        video_clip = video_clip.resize(height=target_height)
+        video_clip = video_clip.resized(height=target_height)
         
         # Center crop if needed using the Crop effect
         if new_width > target_width:
