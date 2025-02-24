@@ -109,13 +109,10 @@ def get_top_tweets(token: str, bearer_token: str) -> List[Dict]:
             "Content-Type": "application/json"
         }
         
-        # Use cashtag search syntax for v2 API
-        query = f'(${token} OR cashtag:{token}) -is:retweet lang:en'
+        # Use just the cashtag operator
+        query = f'cashtag:{token} -is:retweet lang:en'
         
         url = "https://api.twitter.com/2/tweets/search/recent"
-        
-        logger.debug(f"Searching with query: {query}")
-        
         params = {
             "query": query,
             "max_results": 20,
