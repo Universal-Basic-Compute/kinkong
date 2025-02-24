@@ -2,7 +2,28 @@ import { Connection, PublicKey } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { NextResponse } from 'next/server';
 import { getTable } from '@/backend/src/airtable/tables';
-import type { Record } from 'airtable';
+import type { Record, FieldSet } from 'airtable';
+
+// Define interfaces for our record types
+interface TokenMetadata {
+  name: string;
+  token: string;
+  image: string;
+  mint: string;
+}
+
+interface TokenBalance {
+  mint: string;
+  amount: number;
+  decimals: number;
+  uiAmount: number;
+  token?: string;
+  usdValue?: number;
+  price?: number;
+  name?: string;
+  imageUrl?: string;
+  percentage?: number;
+}
 
 const KNOWN_TOKENS = {
   USDC: {
