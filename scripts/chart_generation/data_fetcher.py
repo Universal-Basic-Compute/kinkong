@@ -16,20 +16,21 @@ def fetch_ubc_sol_data(timeframe='1H', hours=24, candles_target=60):
     
     now = int(datetime.now().timestamp())
     
-    # Double the time ranges to get more candles
+    # Configure timeframes with specific multipliers
     timeframe_config = {
-        '15m': {'minutes': 15, 'target': 48},   # 12 hours -> 48 candles
-        '1H': {'minutes': 60, 'target': 48},    # 48 hours -> 48 candles
-        '4H': {'minutes': 240, 'target': 48},   # 8 days -> 48 candles
-        '1D': {'minutes': 1440, 'target': 48}   # 48 days -> 48 candles
+        '15m': {'minutes': 15, 'target': 48, 'multiplier': 2.0},    # Scalp x2
+        '1H': {'minutes': 60, 'target': 48, 'multiplier': 2.0},     # Intraday x2
+        '4H': {'minutes': 240, 'target': 48, 'multiplier': 1.0},    # Swing (normal)
+        '1D': {'minutes': 1440, 'target': 48, 'multiplier': 1.6}    # Position x1.6
     }
     
-    config = timeframe_config.get(timeframe, {'minutes': 60, 'target': 48})
+    config = timeframe_config.get(timeframe, {'minutes': 60, 'target': 48, 'multiplier': 1.0})
     minutes_per_candle = config['minutes']
     target_candles = config['target']
+    multiplier = config['multiplier']
     
-    # Calculate time range needed (doubled)
-    total_minutes_needed = minutes_per_candle * target_candles * 2  # Double the time range
+    # Calculate time range needed with specific multiplier
+    total_minutes_needed = minutes_per_candle * target_candles * multiplier
     start_time = now - int(total_minutes_needed * 60)
     
     params = {
