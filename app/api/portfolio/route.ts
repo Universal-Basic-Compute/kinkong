@@ -68,13 +68,13 @@ export async function GET() {
     'Pragma': 'no-cache',
     'Expires': '0'
   };
+  
   try {
     if (!process.env.NEXT_PUBLIC_HELIUS_RPC_URL) {
       throw new Error('RPC URL not configured');
     }
 
     console.log('Creating RPC connection...');
-    // Force fresh data with commitment: 'confirmed'
     const connection = new Connection(process.env.NEXT_PUBLIC_HELIUS_RPC_URL, {
       commitment: 'confirmed',
       confirmTransactionInitialTimeout: 60000
@@ -102,6 +102,7 @@ export async function GET() {
 
     // Filter non-zero balances
     const nonZeroBalances = balances.filter(b => b.uiAmount > 0);
+    const mints = nonZeroBalances.map(b => b.mint);
 
     // Get latest snapshots from TOKEN_SNAPSHOTS
     const snapshotsTable = getTable('TOKEN_SNAPSHOTS');
@@ -122,69 +123,61 @@ export async function GET() {
       }
     }
 
-      // Fetch tokens metadata first
-      const tokensMetadata = await getTokensMetadata();
-      console.log('Tokens metadata loaded:', Object.keys(tokensMetadata).length, 'tokens');
+    // Fetch tokens metadata
+    const tokensMetadata = await getTokensMetadata();
+    console.log('Tokens metadata loaded:', Object.keys(tokensMetadata).length, 'tokens');
 
-      // Add USD values and metadata
-      const balancesWithUSD = await Promise.all(nonZeroBalances.map(async balance => {
-        let price = 0;
-        
-        // Check if it's a known token first (for price override)
-        const knownToken = Object.values(KNOWN_TOKENS).find(t => t.mint === balance.mint);
-        if (knownToken) {
-          price = knownToken.price;
-        } else {
-          // Get price from snapshots
-          price = priceMap[balance.mint] || 0;
-        
-          // If no price in snapshots, try Jupiter as fallback
-          if (price === 0) {
-            console.log(`Attempting Jupiter fallback for ${balance.token || balance.mint}`);
-            price = await getJupiterPrice(balance.mint);
-          }
+    // Add USD values and metadata
+    const balancesWithUSD = await Promise.all(nonZeroBalances.map(async balance => {
+      let price = 0;
+      
+      // Check if it's a known token first
+      const knownToken = Object.values(KNOWN_TOKENS).find(t => t.mint === balance.mint);
+      if (knownToken) {
+        price = knownToken.price;
+      } else {
+        // Get price from snapshots
+        price = priceMap[balance.mint] || 0;
+      
+        // If no price in snapshots, try Jupiter as fallback
+        if (price === 0) {
+          console.log(`Attempting Jupiter fallback for ${balance.token || balance.mint}`);
+          price = await getJupiterPrice(balance.mint);
         }
+      }
 
-        const usdValue = balance.uiAmount * price;
-        
-        // Get metadata from our tokens table
-        const metadata = tokensMetadata[balance.mint] || {
-          name: balance.token || balance.mint,
-          token: balance.token || balance.mint,
-          image: '', // Default empty if not found
-          mint: balance.mint
-        };
+      const usdValue = balance.uiAmount * price;
+      
+      // Get metadata from our tokens table
+      const metadata = tokensMetadata[balance.mint] || {
+        name: balance.token || balance.mint,
+        token: balance.token || balance.mint,
+        image: '',
+        mint: balance.mint
+      };
 
-        console.log(`Token ${metadata.token}:`, {
-          uiAmount: balance.uiAmount,
-          price,
-          usdValue,
-          isStablecoin: !!knownToken,
-          source: knownToken ? 'fixed' : (price === priceMap[balance.mint] ? 'snapshot' : 'jupiter'),
-          metadata
-        });
+      console.log(`Token ${metadata.token}:`, {
+        uiAmount: balance.uiAmount,
+        price,
+        usdValue,
+        isStablecoin: !!knownToken,
+        source: knownToken ? 'fixed' : (price === priceMap[balance.mint] ? 'snapshot' : 'jupiter'),
+        metadata
+      });
 
-        return {
-          ...balance,
-          usdValue,
-          price,
-          name: metadata.name,
-          token: metadata.token,
-          imageUrl: metadata.image,
-          mint: balance.mint
-        };
-      }));
-
-      console.log('Returning portfolio data');
-      return NextResponse.json(balancesWithUSD, { headers });
-
-    } catch (priceError) {
-      console.error('Error fetching prices:', priceError);
-      return NextResponse.json(nonZeroBalances.map(balance => ({
+      return {
         ...balance,
-        usdValue: 0
-      })), { headers });
-    }
+        usdValue,
+        price,
+        name: metadata.name,
+        token: metadata.token,
+        imageUrl: metadata.image,
+        mint: balance.mint
+      };
+    }));
+
+    console.log('Returning portfolio data');
+    return NextResponse.json(balancesWithUSD, { headers });
 
   } catch (error) {
     console.error('Failed to fetch portfolio:', error);
