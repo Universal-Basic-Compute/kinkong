@@ -29,8 +29,13 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
     svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
     container.appendChild(svg);
 
-    // Filter and clean data first
-    const validTokens = tokens.filter(token => {
+    // Filter out stablecoins first
+    const nonStableTokens = tokens.filter(token => 
+      token.token !== 'USDT' && token.token !== 'USDC'
+    );
+
+    // Then apply validation filters
+    const validTokens = nonStableTokens.filter(token => {
       return (
         typeof token.volumeGrowth === 'number' && 
         typeof token.priceTrend === 'number' &&
