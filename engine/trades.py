@@ -483,35 +483,45 @@ class TradeExecutor:
             finally:
                 await client.close()
 
-            # Update trade record only if transaction was successful
-            transaction_url = f"https://solscan.io/tx/{signature}"
-            self.trades_table.update(trade['id'], {
-                'status': 'EXECUTED',
-                'txSignature': signature,
-                'amount': token_amount,
-                'value': trade_value,
-                'price': float(signal['fields']['entryPrice']),
-                'transactionUrl': transaction_url,
-                'executedAt': datetime.now(timezone.utc).isoformat()
-            })
-            
-            # Send notification
-            message = f"🦍 KinKong Trade Alert\n\n"
-            message += f"Token: ${signal['fields']['token']}\n"
-            message += f"Action: {signal['fields']['type']}\n"
-            message += f"Amount: ${trade_value:.2f} USDC\n"
-            message += f"Entry Price: ${float(signal['fields']['entryPrice']):.4f}\n"
-            message += f"Target: ${float(signal['fields']['targetPrice']):.4f}\n"
-            message += f"Stop Loss: ${float(signal['fields']['stopLoss']):.4f}\n"
-            message += f"Timeframe: {signal['fields']['timeframe']}\n\n"
-            message += f"🔗 View Transaction:\n{transaction_url}"
-            
-            from scripts.analyze_charts import send_telegram_message
-            send_telegram_message(message)
-            
-            return True
+            # If we have a signature, the transaction succeeded (balance verified)
+            if signature:
+                # Update trade record
+                transaction_url = f"https://solscan.io/tx/{signature}"
+                self.trades_table.update(trade['id'], {
+                    'status': 'EXECUTED',
+                    'txSignature': signature,
+                    'amount': token_amount,
+                    'value': trade_value,
+                    'price': float(signal['fields']['entryPrice']),
+                    'transactionUrl': transaction_url,
+                    'executedAt': datetime.now(timezone.utc).isoformat()
+                })
+                
+                # Send notification
+                message = f"🦍 KinKong Trade Alert\n\n"
+                message += f"Token: ${signal['fields']['token']}\n"
+                message += f"Action: {signal['fields']['type']}\n"
+                message += f"Amount: ${trade_value:.2f} USDC\n"
+                message += f"Entry Price: ${float(signal['fields']['entryPrice']):.4f}\n"
+                message += f"Target: ${float(signal['fields']['targetPrice']):.4f}\n"
+                message += f"Stop Loss: ${float(signal['fields']['stopLoss']):.4f}\n"
+                message += f"Timeframe: {signal['fields']['timeframe']}\n\n"
+                message += f"🔗 View Transaction:\n{transaction_url}"
+                
+                from scripts.analyze_charts import send_telegram_message
+                send_telegram_message(message)
+                
+                return True
+
+            # If no signature, transaction failed
+            await self.handle_failed_trade(trade['id'], "Transaction failed")
+            return False
 
         except Exception as e:
+            # Ignore version error if we already have a signature
+            if "UnsupportedTransactionVersion" in str(e) and 'signature' in locals():
+                return True
+                
             logger.error(f"Trade execution failed: {e}")
             if 'trade' in locals():
                 await self.handle_failed_trade(trade['id'], str(e))
