@@ -259,9 +259,19 @@ def main():
             logger.error(f"Script file not found: {script_path}")
             sys.exit(1)
             
-        with open(script_path) as f:
-            script = json.load(f)
-            screens = script.get('screens', [])
+        # Open file with explicit UTF-8 encoding
+        with open(script_path, 'r', encoding='utf-8') as f:
+            try:
+                script = json.load(f)
+                screens = script.get('screens', [])
+                logger.info(f"Successfully loaded script with {len(screens)} screens")
+            except json.JSONDecodeError as je:
+                logger.error(f"Failed to parse script.json: {je}")
+                sys.exit(1)
+            
+        if not screens:
+            logger.error("No screens found in script")
+            sys.exit(1)
             
         # Get video paths
         videos_dir = video_dir / 'videos'
