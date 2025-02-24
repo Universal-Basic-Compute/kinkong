@@ -224,7 +224,7 @@ class MarketOverviewGenerator:
                 logger.error("Failed to send Telegram message")
                 return False
             
-            # Post to X as thread without images
+            # Post to X as single long tweet
             try:
                 import tweepy
                 
@@ -246,36 +246,14 @@ class MarketOverviewGenerator:
                     access_token_secret=access_token_secret
                 )
                 
-                # Split analysis into chunks
-                chunks = []
-                current_chunk = ""
-                for line in analysis.split('\n'):
-                    if len(current_chunk) + len(line) + 1 <= 280:
-                        current_chunk += line + '\n'
-                    else:
-                        chunks.append(current_chunk.strip())
-                        current_chunk = line + '\n'
-                if current_chunk:
-                    chunks.append(current_chunk.strip())
+                # Post single long tweet
+                response = client.create_tweet(text=analysis)
                 
-                # Post thread
-                previous_tweet_id = None
-                for i, chunk in enumerate(chunks):
-                    numbered_chunk = f"({i+1}/{len(chunks)}) {chunk}"
-                    try:
-                        response = client.create_tweet(
-                            text=numbered_chunk,
-                            in_reply_to_tweet_id=previous_tweet_id
-                        )
-                        if response.data:
-                            previous_tweet_id = response.data['id']
-                            logger.info(f"Posted thread part {i+1}")
-                        else:
-                            logger.error(f"Failed to post thread part {i+1}")
-                            return False
-                    except Exception as e:
-                        logger.error(f"Error posting thread part {i+1}: {e}")
-                        return False
+                if response.data:
+                    logger.info("Successfully posted market overview to X")
+                else:
+                    logger.error("Failed to post to X - no response data")
+                    return False
                     
             except Exception as e:
                 logger.error(f"Failed to post to X: {e}")
