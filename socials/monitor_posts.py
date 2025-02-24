@@ -137,12 +137,12 @@ def get_account_tweets(x_account: str, bearer_token: str) -> List[Dict]:
         return tweets
         
     except requests.exceptions.RequestException as e:
-        logger.error(f"Error fetching tweets for {token}: {str(e)}")
+        logger.error(f"Error fetching tweets for account {x_account}: {str(e)}")
         if e.response is not None:
             logger.error(f"Response content: {e.response.content}")
         return []
     except Exception as e:
-        logger.error(f"Unexpected error fetching tweets for {token}: {str(e)}")
+        logger.error(f"Unexpected error fetching tweets for account {x_account}: {str(e)}")
         return []
 
 def analyze_sentiment_with_claude(token: str, tweets: List[Dict]) -> Optional[str]:
