@@ -503,40 +503,54 @@ class TradeExecutor:
     async def check_exit_conditions(self, trade: Dict) -> Optional[str]:
         """Check if trade should be closed and return exit reason if so"""
         try:
+            # Get token info
+            token = trade['fields'].get('token')
+            token_mint = None
+
             # Get token mint from TOKENS table
             tokens_table = Airtable(self.base_id, 'TOKENS', self.api_key)
             token_records = tokens_table.get_all(
-                formula=f"{{token}}='{trade['fields'].get('token')}'")
+                formula=f"{{token}}='{token}'")
             
             if not token_records:
-                self.logger.warning(f"No token record found for {trade['fields'].get('token')}")
+                self.logger.warning(f"No token record found for {token}")
                 return None
                 
             token_mint = token_records[0]['fields'].get('mint')
             if not token_mint:
-                self.logger.warning(f"No mint address found for {trade['fields'].get('token')}")
+                self.logger.warning(f"No mint address found for {token}")
                 return None
 
+            # Log trade details
+            created_at = datetime.fromisoformat(trade['fields'].get('createdAt').replace('Z', '+00:00'))
+            time_elapsed = datetime.now(timezone.utc) - created_at
+            max_duration = timedelta(days=45)
+            time_remaining = max_duration - time_elapsed
+
+            self.logger.info(f"\n🕒 Trade Duration Analysis for {token}:")
+            self.logger.info(f"Trade ID: {trade['id']}")
+            self.logger.info(f"Entry Time: {created_at.strftime('%Y-%m-%d %H:%M:%S UTC')}")
+            self.logger.info(f"Time Elapsed: {time_elapsed.days}d {time_elapsed.seconds//3600}h {(time_elapsed.seconds//60)%60}m")
+            self.logger.info(f"Time Remaining: {time_remaining.days}d {time_remaining.seconds//3600}h {(time_remaining.seconds//60)%60}m")
+
             # Get current price using mint address
+            self.logger.info(f"\n💰 Price Check:")
+            self.logger.info(f"Token: {token} ({token_mint})")
             current_price = await self.get_token_price(token_mint)
             if not current_price:
                 self.logger.warning(f"Could not get current price for {token_mint}")
                 return None
 
+            # Get trade parameters
             entry_price = float(trade['fields'].get('price', 0))
             target_price = float(trade['fields'].get('targetPrice', 0))
             stop_loss = float(trade['fields'].get('stopLoss', 0))
-            created_at = datetime.fromisoformat(trade['fields'].get('createdAt').replace('Z', '+00:00'))
             
-            # Calculate time elapsed
-            time_elapsed = datetime.now(timezone.utc) - created_at
-            max_duration = timedelta(days=45)  # Extended to 45 days
-        
             # Calculate percentages
-            price_change_pct = (current_price - entry_price) / entry_price * 100
-            target_pct = (target_price - entry_price) / entry_price * 100
-            stop_loss_pct = (stop_loss - entry_price) / entry_price * 100
-        
+            price_change_pct = ((current_price - entry_price) / entry_price * 100) if entry_price > 0 else 0
+            target_pct = ((target_price - entry_price) / entry_price * 100) if entry_price > 0 else 0
+            stop_loss_pct = ((stop_loss - entry_price) / entry_price * 100) if entry_price > 0 else 0
+
             # Color formatting for console
             GREEN = '\033[92m'
             RED = '\033[91m'
@@ -546,31 +560,37 @@ class TradeExecutor:
             
             # Determine price change color
             price_color = GREEN if price_change_pct >= 0 else RED
-        
-            self.logger.info(f"\n{BLUE}Checking exit conditions for trade {trade['id']}:{ENDC}")
-            self.logger.info(f"Token: {trade['fields'].get('token')} ({token_mint})")
-            self.logger.info(f"Current price: {price_color}${current_price:.4f}{ENDC}")
-            self.logger.info(f"Entry price: ${entry_price:.4f}")
-            self.logger.info(f"Target price: {GREEN}${target_price:.4f} (+{target_pct:.1f}%){ENDC}")
-            self.logger.info(f"Stop loss: {RED}${stop_loss:.4f} ({stop_loss_pct:.1f}%){ENDC}")
-            self.logger.info(f"Price change: {price_color}{price_change_pct:+.2f}%{ENDC}")
-            self.logger.info(f"Time elapsed: {YELLOW}{time_elapsed.days}d {time_elapsed.seconds//3600}h{ENDC}")
-        
+
+            self.logger.info(f"\n📊 Price Analysis:")
+            self.logger.info(f"Current Price: {price_color}${current_price:.4f}{ENDC}")
+            self.logger.info(f"Entry Price: ${entry_price:.4f}")
+            self.logger.info(f"Target Price: {GREEN}${target_price:.4f} (+{target_pct:.1f}%){ENDC}")
+            self.logger.info(f"Stop Loss: {RED}${stop_loss:.4f} ({stop_loss_pct:.1f}%){ENDC}")
+            self.logger.info(f"Price Change: {price_color}{price_change_pct:+.2f}%{ENDC}")
+
+            # Check conditions
+            self.logger.info(f"\n🎯 Exit Conditions:")
+            
             # Check take profit
             if current_price >= target_price:
                 self.logger.info(f"{GREEN}✨ Take profit target reached!{ENDC}")
                 return "TAKE_PROFIT"
+            else:
+                self.logger.info(f"Take Profit: Need {GREEN}+{((target_price/current_price)-1)*100:.2f}%{ENDC} more")
             
             # Check stop loss
             if current_price <= stop_loss:
                 self.logger.info(f"{RED}⚠️ Stop loss triggered!{ENDC}")
                 return "STOP_LOSS"
+            else:
+                self.logger.info(f"Stop Loss: {RED}{((stop_loss/current_price)-1)*100:.2f}%{ENDC} below current price")
             
-            # Check expiry (after 45 days regardless of price)
+            # Check expiry
             if time_elapsed >= max_duration:
                 self.logger.info(f"{YELLOW}⏰ Trade duration expired{ENDC}")
                 return "EXPIRED"
-                
+            
+            self.logger.info(f"{BLUE}✋ Holding position{ENDC}")
             return None
             
         except Exception as e:
