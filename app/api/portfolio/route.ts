@@ -142,7 +142,7 @@ export async function GET() {
       })
       .all();
 
-    // Create price map from snapshots
+    // Create price map from snapshots using mint addresses
     const priceMap: Record<string, number> = {};
     for (const record of snapshotRecords) {
       const token = record.get('token');
@@ -160,12 +160,12 @@ export async function GET() {
     const balancesWithUSD = await Promise.all(nonZeroBalances.map(async balance => {
       let price = 0;
       
-      // Check if it's a known token first
+      // Check if it's a known stablecoin first
       const knownToken = Object.values(KNOWN_TOKENS).find(t => t.mint === balance.mint);
       if (knownToken) {
         price = knownToken.price;
       } else {
-        // Get price from snapshots
+        // Get price from snapshots using mint address
         price = priceMap[balance.mint] || 0;
       
         // If no price in snapshots, try Jupiter as fallback
@@ -175,27 +175,24 @@ export async function GET() {
         }
       }
 
+      // Add debug logging
+      console.log('Price calculation:', {
+        mint: balance.mint,
+        knownToken: !!knownToken,
+        snapshotPrice: priceMap[balance.mint],
+        finalPrice: price
+      });
+
       const usdValue = balance.uiAmount * price;
       
-      // Get token symbol
+      // Get token symbol and metadata
       const tokenSymbol = await getTokenSymbol(balance.mint, tokensMetadata);
-      
-      // Get metadata from our tokens table
       const metadata = tokensMetadata[balance.mint] || {
         name: tokenSymbol,
         token: tokenSymbol,
         image: '',
         mint: balance.mint
       };
-
-      console.log(`Token ${tokenSymbol}:`, {
-        uiAmount: balance.uiAmount,
-        price,
-        usdValue,
-        isStablecoin: !!knownToken,
-        source: knownToken ? 'fixed' : (price === priceMap[balance.mint] ? 'snapshot' : 'jupiter'),
-        metadata
-      });
 
       return {
         ...balance,
