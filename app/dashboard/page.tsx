@@ -14,6 +14,10 @@ interface TokenInfo {
   name: string;
   mint: string;
   xAccount?: string;
+  price: number;
+  volume24h: number;
+  liquidity: number;
+  holderCount: number;
 }
 
 function getTokenClass(token: string): string {
