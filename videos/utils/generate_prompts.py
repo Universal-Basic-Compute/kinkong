@@ -81,15 +81,15 @@ class PromptGenerator:
                     "screens": [
                         {
                             "text": "Hey crypto fam! 👋",
-                            "background": "Futuristic trading room, holographic screens, dark ambient lighting, crypto symbols floating --ar 9:16"
+                            "background": "Futuristic trading room, holographic screens, dark ambient lighting, crypto symbols floating"
                         },
                         {
                             "text": "$SOL is about to EXPLODE 🚀",
-                            "background": "Dramatic upward chart pattern, solana logo glowing, cosmic background --ar 9:16"
+                            "background": "Dramatic upward chart pattern, solana logo glowing, cosmic background"
                         },
                         {
                             "text": "Technical analysis shows strong support",
-                            "background": "Clean minimalist chart with support lines highlighted in neon, dark theme --ar 9:16"
+                            "background": "Clean minimalist chart with support lines highlighted in neon, dark theme"
                         }
                     ]
                 }
