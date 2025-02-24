@@ -126,14 +126,14 @@ def check_mentions():
         }
         
         # First get the authenticated user ID
-        me_url = "https://api.twitter.com/2/users/me"
+        me_url = "https://api.x.com/2/users/me"
         me_response = requests.get(me_url, headers=headers)
         me_response.raise_for_status()
         
         user_id = me_response.json()['data']['id']
         
         # Now get mentions using the user ID
-        mentions_url = f"https://api.twitter.com/2/users/{user_id}/mentions"
+        mentions_url = f"https://api.x.com/2/users/{user_id}/mentions"
         
         # Parameters for the request
         params = {
@@ -187,7 +187,7 @@ def check_mentions():
                     reply_text = generate_reply_with_claude(mention["text"], author["username"])
                     if reply_text:
                         # Post reply using v2 endpoint
-                        reply_url = "https://api.twitter.com/2/tweets"
+                        reply_url = "https://api.x.com/2/tweets"
                         reply_data = {
                             "text": reply_text,
                             "reply": {
