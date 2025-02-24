@@ -21,10 +21,14 @@ interface SnapshotRecord extends FieldSet {
 
 export async function GET() {
   try {
-    // Get all tokens (remove active filter)
+    // Get all tokens except UBC and COMPUTE
     const tokensTable = getTable('TOKENS');
     const tokenRecords = await tokensTable
       .select({
+        filterByFormula: "AND(" + 
+          "NOT({token}='UBC'), " +
+          "NOT({token}='COMPUTE')" +
+        ")",
         sort: [{ field: 'isActive', direction: 'desc' }] // Sort by active status
       })
       .all();
