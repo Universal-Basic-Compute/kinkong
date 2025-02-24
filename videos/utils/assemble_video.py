@@ -144,6 +144,7 @@ def assemble_final_video(
     try:
         logger.info(f"🎞️ Creating video clips for video {video_num}...")
         clips = []
+        current_start_time = 0  # Track the start time for each clip
         
         for i, (screen_num, video_path) in enumerate(video_paths):
             logger.info(f"Processing screen {screen_num}/{len(screens)} for video {video_num}")
@@ -158,6 +159,10 @@ def assemble_final_video(
             )
             
             if screen_clip:
+                # Set the start time for this clip
+                screen_clip = screen_clip.with_start(current_start_time)
+                current_start_time += duration_per_screen  # Update start time for next clip
+                
                 clips.append(screen_clip)
                 logger.info(f"✅ Completed screen {screen_num} for video {video_num}")
             else:
@@ -168,9 +173,12 @@ def assemble_final_video(
             logger.error("❌ No valid clips generated, cannot create video")
             return None
             
-        # Combine all clips
+        # Combine all clips with sequential timing
         logger.info("🎬 Combining all clips into final video...")
-        final_clip = CompositeVideoClip(clips)
+        final_clip = CompositeVideoClip(
+            clips,
+            size=(width, height)
+        ).with_duration(current_start_time)  # Set total duration
         
         return final_clip
         
