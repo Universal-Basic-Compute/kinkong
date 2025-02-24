@@ -140,7 +140,8 @@ class VideoGenerator:
             import time
             max_attempts = 30  # 5 minutes total
             for attempt in range(max_attempts):
-                status = self.client.image_to_video.get(job_id)
+                # Use retrieve instead of get
+                status = self.client.image_to_video.retrieve(job_id)
                 logger.info(f"Status check {attempt + 1}: {status.status}")
                 
                 if status.status == "completed":
@@ -166,6 +167,7 @@ class VideoGenerator:
             
         except Exception as e:
             logger.error(f"❌ Error during video generation: {e}")
+            logger.exception("Detailed error trace:")  # Add stack trace for debugging
             return None
                 
         except Exception as e:
