@@ -245,7 +245,20 @@ def generate_chart(df, config, support_levels=None):
         # and we have 60 candles, so each candle should take up 1% of the space
         candle_width = 0.6  # Fixed width for consistent look across all timeframes
         
-        # Create figure with consistent candle width
+        # Calculate candle width based on timeframe
+        timeframe = config['timeframe']
+        if timeframe == '15m':
+            candle_width = 0.2  # Thinner for 15min candles
+        elif timeframe == '1H':
+            candle_width = 0.4  # Medium for hourly candles
+        elif timeframe == '4H':
+            candle_width = 0.6  # Thicker for 4h candles
+        elif timeframe == '1D':
+            candle_width = 0.8  # Thickest for daily candles
+        else:
+            candle_width = 0.4  # Default width
+
+        # Create figure with timeframe-specific candle width
         fig, axes = mpf.plot(
             df,
             type='candle',
@@ -264,8 +277,8 @@ def generate_chart(df, config, support_levels=None):
             style=style,
             update_width_config=dict(
                 candle_linewidth=0.8,
-                candle_width=candle_width,  # Use fixed width
-                volume_width=candle_width,  # Match volume bars to candles
+                candle_width=candle_width,
+                volume_width=candle_width,
                 volume_linewidth=0.8
             )
         )

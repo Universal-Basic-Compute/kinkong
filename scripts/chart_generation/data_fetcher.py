@@ -24,8 +24,18 @@ def fetch_ubc_sol_data(timeframe='1H', hours=24, candles_target=60):
         '1D': 1440
     }
     
+    # Adjust candles target based on timeframe to maintain visual consistency
+    timeframe_adjustments = {
+        '15m': 120,  # More candles for shorter timeframe
+        '1H': 60,    # Base number of candles
+        '4H': 40,    # Fewer candles for longer timeframe
+        '1D': 30     # Even fewer for daily
+    }
+    
+    adjusted_target = timeframe_adjustments.get(timeframe, candles_target)
+    
     minutes_per_candle = timeframe_minutes.get(timeframe, 60)
-    total_minutes_needed = minutes_per_candle * candles_target
+    total_minutes_needed = minutes_per_candle * adjusted_target
     start_time = now - (total_minutes_needed * 60)  # Convert minutes to seconds
     
     params = {
@@ -76,9 +86,9 @@ def fetch_ubc_sol_data(timeframe='1H', hours=24, candles_target=60):
         
         df = df.sort_index()
         df = df[~df.index.duplicated(keep='first')]
-        if len(df) > candles_target:
-            print(f"Trimming excess candles ({len(df)} -> {candles_target})")
-            df = df.iloc[-candles_target:]
+        if len(df) > adjusted_target:
+            print(f"Trimming excess candles ({len(df)} -> {adjusted_target})")
+            df = df.iloc[-adjusted_target:]
         
         print(f"Final candle count: {len(df)}")
         
