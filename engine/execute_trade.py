@@ -319,7 +319,13 @@ class JupiterTradeExecutor:
 
     async def execute_trade_with_retries(self, transaction: Transaction, max_retries: int = 3) -> Optional[str]:
         """Execute a trade transaction with optimized sending and rate limit handling"""
-        client = AsyncClient("https://api.mainnet-beta.solana.com")
+        client = AsyncClient(
+            "https://api.mainnet-beta.solana.com",
+            commitment="confirmed",
+            transaction_version_config={
+                "maxSupportedTransactionVersion": 0
+            }
+        )
         try:
             for attempt in range(max_retries):
                 try:
@@ -332,7 +338,8 @@ class JupiterTradeExecutor:
                         opts=TxOpts(
                             skip_preflight=True,
                             max_retries=2,
-                            preflight_commitment="confirmed"
+                            preflight_commitment="confirmed",
+                            max_supported_transaction_version=0
                         )
                     )
                     
