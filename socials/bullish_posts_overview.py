@@ -235,25 +235,42 @@ class MarketOverviewGenerator:
 
 def main():
     try:
-        # Verify environment variables
-        required_vars = [
-            'KINKONG_AIRTABLE_BASE_ID',
-            'KINKONG_AIRTABLE_API_KEY',
-            'TELEGRAM_BOT_TOKEN',
-            'TELEGRAM_CHAT_ID',
-            'X_API_KEY',
-            'X_API_SECRET',
-            'X_ACCESS_TOKEN',
-            'X_ACCESS_TOKEN_SECRET',
-            'ANTHROPIC_API_KEY'
-        ]
+        # Load environment variables with explicit path
+        project_root = Path(__file__).parent.parent.absolute()
+        env_path = project_root / '.env'
+        load_dotenv(dotenv_path=env_path)
         
-        missing = [var for var in required_vars if not os.getenv(var)]
+        logger.info(f"Loading environment variables from: {env_path}")
+        
+        # Verify required environment variables
+        required_vars = {
+            'KINKONG_AIRTABLE_BASE_ID': os.getenv('KINKONG_AIRTABLE_BASE_ID'),
+            'KINKONG_AIRTABLE_API_KEY': os.getenv('KINKONG_AIRTABLE_API_KEY'),
+            'TELEGRAM_BOT_TOKEN': os.getenv('TELEGRAM_BOT_TOKEN'),
+            'TELEGRAM_CHAT_ID': os.getenv('TELEGRAM_CHAT_ID'),
+            'X_API_KEY': os.getenv('X_API_KEY'),
+            'X_API_SECRET': os.getenv('X_API_SECRET'),
+            'X_ACCESS_TOKEN': os.getenv('X_ACCESS_TOKEN'),
+            'X_ACCESS_TOKEN_SECRET': os.getenv('X_ACCESS_TOKEN_SECRET'),
+            'ANTHROPIC_API_KEY': os.getenv('ANTHROPIC_API_KEY')
+        }
+        
+        # Check each variable and log status
+        missing = []
+        for var_name, var_value in required_vars.items():
+            if not var_value:
+                missing.append(var_name)
+                logger.error(f"❌ {var_name} not found")
+            else:
+                logger.info(f"✅ {var_name} loaded")
+
         if missing:
-            raise ValueError(f"Missing environment variables: {', '.join(missing)}")
+            raise ValueError(f"Missing required environment variables: {', '.join(missing)}")
 
         # Generate and send overview
+        logger.info("\n🚀 Initializing market overview generator...")
         generator = MarketOverviewGenerator()
+        
         if generator.send_overview():
             logger.info("✅ Market overview sent successfully")
             sys.exit(0)
@@ -262,7 +279,7 @@ def main():
             sys.exit(1)
 
     except Exception as e:
-        logger.error(f"Fatal error: {e}")
+        logger.error(f"Fatal error: {str(e)}")
         sys.exit(1)
 
 if __name__ == "__main__":
