@@ -166,10 +166,24 @@ class TokenSearcher:
                         
                         # Extract social links and pair
                         social_links = {
-                            'website': main_pair.get('website', ''),
-                            'xAccount': main_pair.get('twitter', ''),
-                            'telegram': main_pair.get('telegram', '')
+                            'website': '',
+                            'xAccount': '',
+                            'telegram': ''
                         }
+
+                        # Extract from info.websites array
+                        if main_pair.get('info', {}).get('websites'):
+                            for website in main_pair['info']['websites']:
+                                if website.get('label') == 'Website':
+                                    social_links['website'] = website.get('url', '')
+
+                        # Extract from info.socials array
+                        if main_pair.get('info', {}).get('socials'):
+                            for social in main_pair['info']['socials']:
+                                if social.get('type') == 'twitter':
+                                    social_links['xAccount'] = social.get('url', '')
+                                elif social.get('type') == 'telegram':
+                                    social_links['telegram'] = social.get('url', '')
 
                         # Get pair address
                         pair = main_pair.get('pairAddress', '')
