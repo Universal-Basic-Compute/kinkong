@@ -98,41 +98,98 @@ class TokenSearcher:
             return None
 
     def create_token_record(self, token_data: Dict[str, Any]) -> bool:
-        """Create a token record in Airtable"""
+        """Create a token record in Airtable with social media from DexScreener"""
         try:
             # Get current timestamp in ISO format
             created_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
             
+            # Get DexScreener data for social links
+            print(f"\n🔍 Fetching DexScreener data for {token_data.get('address')}")
+            url = f"https://api.dexscreener.com/latest/dex/tokens/{token_data.get('address')}"
+            
+            headers = {
+                'User-Agent': 'Mozilla/5.0',
+                'Accept': 'application/json'
+            }
+            
+            response = requests.get(url, headers=headers)
+            print(f"\nDexScreener Response Status: {response.status_code}")
+            
+            social_links = {}
+            if response.ok:
+                dex_data = response.json()
+                print("\n📊 DexScreener Raw Response:")
+                print(json.dumps(dex_data, indent=2))
+                
+                if dex_data.get('pairs'):
+                    # Get Solana pairs and find most liquid
+                    sol_pairs = [p for p in dex_data['pairs'] if p.get('chainId') == 'solana']
+                    if sol_pairs:
+                        print(f"\n🔎 Found {len(sol_pairs)} Solana pairs")
+                        # Use most liquid pair for social info
+                        main_pair = max(sol_pairs, key=lambda x: float(x.get('liquidity', {}).get('usd', 0) or 0))
+                        print("\n💧 Most liquid pair details:")
+                        print(json.dumps(main_pair, indent=2))
+                        
+                        # Extract social links
+                        social_links = {
+                            'website': main_pair.get('website', ''),
+                            'xAccount': main_pair.get('twitter', ''),
+                            'telegram': main_pair.get('telegram', ''),
+                            'discord': main_pair.get('discord', ''),
+                            'priceBot': main_pair.get('priceBot', '')
+                        }
+                        
+                        print("\n🔗 Extracted social links:")
+                        print(json.dumps(social_links, indent=2))
+            else:
+                print(f"❌ DexScreener API error: {response.status_code}")
+                print(f"Response text: {response.text}")
+            
             # Format data for Airtable
             airtable_record = {
-                'tokenId': token_data.get('symbol', ''),  # Using symbol as tokenId
+                'tokenId': token_data.get('symbol', ''),
                 'token': token_data.get('symbol', ''),
                 'name': token_data.get('name', ''),
                 'isActive': True,
                 'mint': token_data.get('address', ''),
-                'description': f"Token {token_data.get('symbol')} on Solana chain",  # Basic description
-                'createdAt': created_at
+                'description': f"Token {token_data.get('symbol')} on Solana chain",
+                'createdAt': created_at,
+                # Add social media links if found
+                'website': social_links.get('website', ''),
+                'xAccount': social_links.get('xAccount', ''),
+                'telegram': social_links.get('telegram', ''),
+                'discord': social_links.get('discord', ''),
+                'priceBot': social_links.get('priceBot', '')
             }
+            
+            print("\n📝 Airtable Record to Create/Update:")
+            print(json.dumps(airtable_record, indent=2))
             
             # Check if token already exists
             existing_records = self.airtable.get_all(
                 formula=f"{{mint}} = '{token_data.get('address')}'")
             
             if existing_records:
-                print(f"Token {token_data.get('symbol')} already exists in Airtable")
+                print(f"\n🔄 Updating existing token record for {token_data.get('symbol')}")
                 record_id = existing_records[0]['id']
                 # Don't update createdAt for existing records
                 del airtable_record['createdAt']
                 self.airtable.update(record_id, airtable_record)
-                print(f"Updated existing token record")
+                print("✅ Token record updated successfully")
             else:
+                print(f"\n➕ Creating new token record for {token_data.get('symbol')}")
                 self.airtable.insert(airtable_record)
-                print(f"Created new token record")
+                print("✅ Token record created successfully")
             
             return True
             
         except Exception as e:
-            print(f"Error creating token record: {str(e)}")
+            print(f"\n❌ Error creating token record: {str(e)}")
+            if hasattr(e, '__traceback__'):
+                import traceback
+                print("Traceback:")
+                traceback.print_tb(e.__traceback__)
             return False
 
 def main():
