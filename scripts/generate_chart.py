@@ -240,6 +240,11 @@ def generate_chart(df, config, support_levels=None):
         # Use a consistent candle width
         candle_width = 0.8  # Set a fixed width that looks good across all timeframes
         
+        # Calculate candle width based on number of candles
+        # We want the candles to take up about 60% of the available space
+        # and we have 60 candles, so each candle should take up 1% of the space
+        candle_width = 0.6  # Fixed width for consistent look across all timeframes
+        
         # Create figure with consistent candle width
         fig, axes = mpf.plot(
             df,
@@ -258,10 +263,10 @@ def generate_chart(df, config, support_levels=None):
             show_nontrading=True,
             style=style,
             update_width_config=dict(
-                candle_linewidth=0.8,  # Match the candle width
-                candle_width=candle_width,
-                volume_width=candle_width,
-                volume_linewidth=0.8  # Match the candle width
+                candle_linewidth=0.8,
+                candle_width=candle_width,  # Use fixed width
+                volume_width=candle_width,  # Match volume bars to candles
+                volume_linewidth=0.8
             )
         )
 
