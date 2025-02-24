@@ -36,7 +36,7 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
         typeof token.priceGrowth === 'number' && 
         typeof token.liquidity === 'number' &&
         !isNaN(token.volumeGrowth) &&
-        !isNaN(token.priceGrowth) &&
+        !isNaN(token.priceTrend) &&
         !isNaN(token.liquidity)
       );
     });
