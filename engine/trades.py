@@ -639,6 +639,12 @@ class TradeExecutor:
         try:
             self.logger.info(f"Closing trade {trade['id']} - Reason: {exit_reason}")
             
+            # Get original amount from trade record
+            original_amount = float(trade['fields'].get('amount', 0))
+            if not original_amount:
+                self.logger.error("No amount found in trade record")
+                return False
+
             # Get token mint from TOKENS table first
             tokens_table = Airtable(self.base_id, 'TOKENS', self.api_key)
             token_records = tokens_table.get_all(
@@ -653,16 +659,22 @@ class TradeExecutor:
                 self.logger.error(f"No mint address found for {trade['fields'].get('token')}")
                 return False
             
+            # Check current token balance
+            current_balance = await self.jupiter.get_token_balance(token_mint)
+            
+            # Use minimum between current balance and original amount
+            token_amount = min(current_balance, original_amount)
+            
             # Get current price
             current_price = await self.get_token_price(token_mint)
             if not current_price:
                 self.logger.error(f"Could not get current price for {token_mint}")
                 return False
 
-            # Use the original trade amount directly since it's already in correct units
-            token_amount = float(trade['fields'].get('amount', 0))  # Use amount as-is
             trade_value = token_amount * current_price
 
+            self.logger.info(f"Original amount: {original_amount:.8f} {trade['fields'].get('token')}")
+            self.logger.info(f"Current balance: {current_balance:.8f} {trade['fields'].get('token')}")
             self.logger.info(f"Closing amount: {token_amount:.8f} {trade['fields'].get('token')}")
             self.logger.info(f"Current price: ${current_price:.4f}")
             self.logger.info(f"USD Value: ${trade_value:.2f}")
