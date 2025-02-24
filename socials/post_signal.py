@@ -52,6 +52,8 @@ class AirtableAPI:
 def post_to_x(text: str) -> bool:
     """Post to X using API v2"""
     try:
+        import tweepy
+        
         # Get OAuth 1.0a credentials
         api_key = os.getenv('X_API_KEY')
         api_secret = os.getenv('X_API_SECRET')
