@@ -303,7 +303,10 @@ def analyze_charts_with_claude(chart_paths, token_info=None):
                 snapshots_table = getTable('TOKEN_SNAPSHOTS')
                 records = snapshots_table.get_all(
                     formula=f"{{mint}} = '{token_info['mint']}'",
-                    sort=[{'field': 'createdAt', 'direction': 'desc'}],
+                    sort=[{
+                        'field': 'createdAt',
+                        'direction': 'desc'
+                    }],
                     maxRecords=1
                 )
                 
