@@ -40,10 +40,10 @@ class PromptGenerator:
             records = self.signals_table.get_all(
                 formula="AND(" +
                     "{signal}='BUY', " +
-                    "{confidence}>=80, " +  # High confidence threshold
-                    "IS_AFTER({timestamp}, DATEADD(NOW(), -1, 'days'))" +  # Last 24 hours
+                    "{confidence}='HIGH', " +  # High confidence signals
+                    "IS_AFTER({createdAt}, DATEADD(NOW(), -1, 'days'))" +  # Last 24 hours
                 ")",
-                sort=[('timestamp', 'desc')]  # Get most recent first
+                sort=[('createdAt', 'desc')]  # Get most recent first
             )
             
             if not records:
@@ -52,7 +52,7 @@ class PromptGenerator:
                 
             # Get the most recent signal
             signal = records[0]['fields']
-            logger.info(f"Found signal for {signal.get('token')} with {signal.get('confidence')}% confidence")
+            logger.info(f"Found signal for {signal.get('token')} with {signal.get('confidence')} confidence")
             return signal
             
         except Exception as e:
