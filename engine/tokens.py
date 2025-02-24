@@ -171,6 +171,9 @@ class TokenSearcher:
             return None
 
         except Exception as e:
+            print(f"❌ Request timed out searching for {keyword}")
+            return None
+        except Exception as e:
             print(f"❌ Error searching token: {str(e)}")
             return None
 
