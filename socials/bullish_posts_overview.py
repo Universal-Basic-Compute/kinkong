@@ -91,8 +91,8 @@ class MarketOverviewGenerator:
             logger.error(f"Error getting market sentiment: {e}")
             return 'NEUTRAL'
 
-    def generate_overview_with_claude(self, signals: Dict[str, List[Dict]], sentiment: str) -> tuple[str, str]:
-        """Generate market overview using Claude"""
+    def generate_overview_with_claude(self, signals: Dict[str, List[Dict]], sentiment: str) -> str:
+        """Generate comprehensive market overview using Claude"""
         try:
             # Format signals data for Claude
             bullish_tokens = "\n".join([
@@ -108,26 +108,44 @@ class MarketOverviewGenerator:
             current_time = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
             
             system_prompt = """You are KinKong, an AI-powered cryptocurrency trading bot specializing in Solana ecosystem tokens.
-            Write a market overview based on the provided token analyses and market sentiment.
+            Write a comprehensive market analysis article that covers both bullish and bearish signals.
             
-            Your response should include:
-            1. Brief market sentiment summary
-            2. Analysis of bullish signals found
-            3. Analysis of bearish signals and risks
-            4. Key themes or patterns observed
+            Article structure:
+            1. Market Overview
+               - Current sentiment and key trends
+               - Major market movements
+               - Overall ecosystem health
             
-            Format:
-            - Write in a professional but engaging tone
-            - Use relevant emojis appropriately
-            - Keep the analysis data-driven
-            - Avoid specific price predictions
-            - Include both opportunities and risks
+            2. Bullish Signals
+               - Notable token performances
+               - Volume and liquidity analysis
+               - Emerging opportunities
             
-            Provide two versions:
-            1. TELEGRAM: Detailed analysis (up to 2000 characters)
-            2. TWITTER: Key points only (up to 280 characters)
+            3. Risk Analysis
+               - Bearish indicators
+               - Market concerns
+               - Areas to monitor
             
-            Start with TELEGRAM: and then TWITTER: without any other text."""
+            4. Technical Insights
+               - Volume patterns
+               - Price action analysis
+               - Market structure
+            
+            5. Conclusion
+               - Key takeaways
+               - Market outlook
+               - Important levels to watch
+            
+            Writing style:
+            - Professional but engaging tone
+            - Data-driven analysis
+            - Clear reasoning for all points
+            - Use relevant emojis for sections
+            - Include specific examples from the data
+            - Avoid price predictions
+            - Maintain KinKong's analytical voice
+            
+            The article will be split into a thread, so structure it in clear sections."""
 
             user_prompt = f"""Time: {current_time}
             Market Sentiment: {sentiment}
@@ -147,21 +165,17 @@ class MarketOverviewGenerator:
                 messages=[{"role": "user", "content": user_prompt}]
             )
             
-            analysis = response.content[0].text
+            analysis = response.content[0].text.strip()
             
-            # Split into Telegram and Twitter messages
-            parts = analysis.split('TWITTER:')
-            if len(parts) != 2:
-                raise ValueError("Claude's response not in expected format")
+            # Add signature
+            analysis += "\n\n🤖 Analysis by KinKong AI"
+            analysis += "\nFollow @kinkong_ubc for real-time signals and analysis"
             
-            telegram_msg = parts[0].replace('TELEGRAM:', '').strip()
-            tweet_msg = parts[1].strip()
-            
-            return telegram_msg, tweet_msg
+            return analysis
             
         except Exception as e:
             logger.error(f"Error generating overview with Claude: {e}")
-            return "", ""
+            return ""
 
     def send_overview(self) -> bool:
         """Generate and send market overview"""
@@ -171,22 +185,50 @@ class MarketOverviewGenerator:
             sentiment = self.get_market_sentiment()
             
             # Generate overview
-            telegram_msg, tweet_msg = self.generate_overview_with_claude(signals, sentiment)
-            if not telegram_msg or not tweet_msg:
+            analysis = self.generate_overview_with_claude(signals, sentiment)
+            if not analysis:
                 logger.error("Failed to generate overview")
                 return False
             
-            # Send to Telegram
+            # Send to Telegram as single message
             from scripts.analyze_charts import send_telegram_message
-            if not send_telegram_message(telegram_msg):
+            if not send_telegram_message(analysis):
                 logger.error("Failed to send Telegram message")
                 return False
             
-            # Post to Twitter
+            # Split into thread for Twitter
             from socials.post_signal import post_to_x
-            if not post_to_x(tweet_msg, {'type': 'MARKET_UPDATE'}):
-                logger.error("Failed to post to Twitter")
-                return False
+            
+            # Split analysis into ~280 char chunks for threading
+            chunks = []
+            current_chunk = ""
+            for line in analysis.split('\n'):
+                if len(current_chunk) + len(line) + 1 <= 280:
+                    current_chunk += line + '\n'
+                else:
+                    chunks.append(current_chunk.strip())
+                    current_chunk = line + '\n'
+            if current_chunk:
+                chunks.append(current_chunk.strip())
+            
+            # Post thread
+            previous_tweet_id = None
+            for i, chunk in enumerate(chunks):
+                # Add thread numbering
+                numbered_chunk = f"({i+1}/{len(chunks)}) {chunk}"
+                
+                # Post as reply to previous tweet
+                success = post_to_x(
+                    numbered_chunk, 
+                    {'type': 'MARKET_UPDATE', 'reply_to': previous_tweet_id}
+                )
+                
+                if not success:
+                    logger.error(f"Failed to post thread part {i+1}")
+                    return False
+                    
+                # Get tweet ID for next reply
+                previous_tweet_id = success
             
             logger.info("Successfully sent market overview")
             return True
