@@ -61,10 +61,13 @@ async def create_tiktok_video():
             screens = script.get('screens', [])
             
             if not screens:
-                logger.error("No screens found in script")
+                logger.error("❌ No screens found in script")
                 return
 
+            logger.info(f"✅ Successfully parsed script with {len(screens)} screens")
+
             # Generate images for each screen
+            logger.info("🎨 Starting image generation process...")
             for i, screen in enumerate(screens, 1):
                 background_prompt = screen.get('background')
                 if not background_prompt:
