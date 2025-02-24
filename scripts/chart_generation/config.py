@@ -5,7 +5,7 @@ CHART_CONFIGS = [
         'duration_hours': 6,
         'title': '{token}/USD Scalp Analysis (6H)',
         'subtitle': '15-minute candles - Scalp Trading View',
-        'filename': '{token}_6h_scalp.png'
+        'filename': '{token}_6h_scalp.png'  # Matches SCALP timeframe
     },
     {
         'timeframe': '1H',
@@ -13,7 +13,7 @@ CHART_CONFIGS = [
         'duration_hours': 24,
         'title': '{token}/USD Intraday Analysis (24H)',
         'subtitle': '1-hour candles - Intraday Trading View',
-        'filename': '{token}_24h_intraday.png'
+        'filename': '{token}_24h_intraday.png'  # Matches INTRADAY timeframe
     },
     {
         'timeframe': '4H',
@@ -21,7 +21,7 @@ CHART_CONFIGS = [
         'duration_hours': 168,  # 7 days
         'title': '{token}/USD Swing Analysis (7D)',
         'subtitle': '4-hour candles - Swing Trading View',
-        'filename': '{token}_7d_swing.png'
+        'filename': '{token}_7d_swing.png'  # Matches SWING timeframe
     },
     {
         'timeframe': '1D',
@@ -29,6 +29,6 @@ CHART_CONFIGS = [
         'duration_hours': 720,  # 30 days
         'title': '{token}/USD Position Analysis (30D)',
         'subtitle': 'Daily candles - Position Trading View',
-        'filename': '{token}_30d_position.png'
+        'filename': '{token}_30d_position.png'  # Matches POSITION timeframe
     }
 ]

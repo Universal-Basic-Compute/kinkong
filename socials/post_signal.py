@@ -88,8 +88,17 @@ def post_to_x(text: str, signal_data: Dict) -> bool:
         # Map signal timeframe to chart timeframe
         chart_timeframe = get_chart_timeframe(signal_timeframe)
         
-        # Construct image path using the signal timeframe type in lowercase
-        chart_path = f"public/charts/{token.lower()}/{token}_{chart_timeframe}_{signal_timeframe.lower()}.png"
+        # Map signal timeframe to chart timeframe and filename
+        timeframe_map = {
+            'SCALP': '6h_scalp',
+            'INTRADAY': '24h_intraday',
+            'SWING': '7d_swing',
+            'POSITION': '30d_position'
+        }
+        chart_filename = timeframe_map.get(signal_timeframe, '6h_scalp')
+        
+        # Construct image path using the mapped filename
+        chart_path = f"public/charts/{token.lower()}/{token}_{chart_filename}.png"
         
         logger.info(f"Looking for chart at: {chart_path}")
         
