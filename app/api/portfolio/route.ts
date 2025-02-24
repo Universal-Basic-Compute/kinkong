@@ -177,15 +177,18 @@ export async function GET() {
 
       const usdValue = balance.uiAmount * price;
       
+      // Get token symbol
+      const tokenSymbol = await getTokenSymbol(balance.mint, tokensMetadata);
+      
       // Get metadata from our tokens table
       const metadata = tokensMetadata[balance.mint] || {
-        name: balance.token || balance.mint,
-        token: balance.token || balance.mint,
+        name: tokenSymbol,
+        token: tokenSymbol,
         image: '',
         mint: balance.mint
       };
 
-      console.log(`Token ${metadata.token}:`, {
+      console.log(`Token ${tokenSymbol}:`, {
         uiAmount: balance.uiAmount,
         price,
         usdValue,
@@ -199,7 +202,7 @@ export async function GET() {
         usdValue,
         price,
         name: metadata.name,
-        token: metadata.token,
+        token: tokenSymbol,
         imageUrl: metadata.image,
         mint: balance.mint
       };
