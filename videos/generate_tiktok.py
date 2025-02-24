@@ -46,6 +46,24 @@ def create_tiktok_video():
     background = ColorClip(size=(width, height), color=[0, 0, 0.3])
     background = background.with_duration(duration)
 
+    # Find a usable system font
+    font_paths = [
+        r"C:\Windows\Fonts\segoe.ttf",
+        r"C:\Windows\Fonts\segoeui.ttf", 
+        r"C:\Windows\Fonts\arial.ttf",
+        r"C:\Windows\Fonts\calibri.ttf",
+    ]
+    
+    font_path = None
+    for path in font_paths:
+        if os.path.exists(path):
+            font_path = path
+            print(f"Using font: {path}")
+            break
+    
+    if not font_path:
+        raise ValueError("No usable system font found!")
+
     # Create text clips with animations
     text = "Hey traders,\nKinKong here.\n\nI've been analyzing\nthe UBC market data..."
     text_parts = text.split('\n\n')
@@ -53,7 +71,7 @@ def create_tiktok_video():
     # First part appears with fade
     clip1 = TextClip(
         text=text_parts[0],
-        font=None,  # Use Pillow's default font
+        font=font_path,  # Use the found system font
         font_size=70,
         color='white',
         size=(width-100, height//2),
@@ -71,7 +89,7 @@ def create_tiktok_video():
     # Second part slides in from right
     clip2 = TextClip(
         text=text_parts[1],
-        font=None,  # Use Pillow's default font
+        font=font_path,  # Use the same font
         font_size=70,
         color='white',
         size=(width-100, height//2),
