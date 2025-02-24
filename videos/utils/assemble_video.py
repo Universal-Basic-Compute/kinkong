@@ -25,6 +25,21 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Add project root to Python path
+project_root = str(Path(__file__).parent.parent.parent.absolute())
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
+from videos.utils.generate_text import create_text_clips
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
+
 def process_video_clip(
     video_path: str | Path,
     screen: Dict,
@@ -171,10 +186,8 @@ def main():
     """
     Main entry point when script is run directly
     """
-    import sys
-    
     if len(sys.argv) != 2:
-        print("Usage: python assemble_video.py <video_number>")
+        logger.error("Usage: python assemble_video.py <video_number>")
         sys.exit(1)
         
     try:
@@ -230,6 +243,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 def assemble_video(
     video_paths: List[Tuple[int, str]],
     screens: List[Dict],
