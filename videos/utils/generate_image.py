@@ -2,6 +2,7 @@ import os
 import sys
 from pathlib import Path
 import aiohttp
+import socket
 import asyncio
 import json
 import logging
@@ -43,13 +44,14 @@ class ImageGenerator:
             }
 
             # Create images directory if it doesn't exist
-            output_dir = Path('videos/images/video1')
+            output_dir = Path('videos/videos/video1/images')  # Updated path
             output_dir.mkdir(parents=True, exist_ok=True)
             
             output_path = output_dir / f"{image_number}.png"
 
             # Make API request
-            async with aiohttp.ClientSession() as session:
+            connector = aiohttp.TCPConnector(family=socket.AF_INET)  # Force IPv4
+            async with aiohttp.ClientSession(connector=connector) as session:
                 async with session.post(
                     self.base_url,
                     headers=self.headers,
@@ -107,4 +109,8 @@ async def main():
         print("Failed to generate image")
 
 if __name__ == "__main__":
+    # Set event loop policy for Windows
+    if sys.platform == 'win32':
+        asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+        
     asyncio.run(main())

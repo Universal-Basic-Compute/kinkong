@@ -167,6 +167,10 @@ async def create_tiktok_video():
 if __name__ == "__main__":
     logger.info("🚀 Starting TikTok video generator")
     try:
+        # Set event loop policy for Windows
+        if sys.platform == 'win32':
+            asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+            
         asyncio.run(create_tiktok_video())
         logger.info("✅ Process completed")
     except KeyboardInterrupt:
