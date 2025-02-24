@@ -537,10 +537,12 @@ class JupiterTradeExecutor:
                     address_table_lookups=message.address_table_lookups
                 )
                 
-                # Create new transaction and add signature separately
-                new_transaction = VersionedTransaction(message=new_message)
-                new_transaction.sign([self.wallet_keypair])
-                
+                # Create new transaction with keypair
+                new_transaction = VersionedTransaction(
+                    message=new_message,
+                    keypairs=[self.wallet_keypair]
+                )
+            
                 self.logger.info("Successfully prepared versioned transaction")
                 return new_transaction
 
