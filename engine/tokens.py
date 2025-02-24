@@ -37,6 +37,7 @@ load_dotenv()
 class TokenSearcher:
     def __init__(self):
         self.last_error = None  # For tracking the last error
+        self.logger = setup_logging()  # Initialize logger
         self.airtable = Airtable(
             os.getenv('KINKONG_AIRTABLE_BASE_ID'),
             'TOKENS',
@@ -83,7 +84,7 @@ class TokenSearcher:
             
             if not data.get('success'):
                 self.last_error = f"Birdeye API error: {data.get('message', 'Unknown error')}"
-                logger.error(self.last_error)
+                self.logger.error(self.last_error)
                 return None
             
             # Find token results
@@ -92,7 +93,7 @@ class TokenSearcher:
             
             if not token_item or not token_item.get('result'):
                 self.last_error = f"No token found matching '{keyword}'"
-                logger.error(self.last_error)
+                self.logger.error(self.last_error)
                 return None
                 
             tokens = token_item['result']
@@ -309,26 +310,26 @@ def main():
         if len(sys.argv) > 1:
             # Process single token
             keyword = sys.argv[1]
-            logger.info(f"[SEARCH] Searching for token: {keyword}")
+            searcher.logger.info(f"[SEARCH] Searching for token: {keyword}")
             
             token_data = searcher.search_token(keyword)
             if token_data:
-                logger.info(f"[SUCCESS] Found token: {token_data.get('symbol')}")
+                searcher.logger.info(f"[SUCCESS] Found token: {token_data.get('symbol')}")
                 
                 # Force isActive true for special tokens
                 if token_data.get('symbol') in ALWAYS_ACTIVE_TOKENS:
                     token_data['isActive'] = True
-                    logger.info(f"[INFO] {token_data.get('symbol')} is a special token - always active")
+                    searcher.logger.info(f"[INFO] {token_data.get('symbol')} is a special token - always active")
                 
                 if searcher.create_token_record(token_data):
-                    logger.info(f"[SUCCESS] Token record created/updated successfully")
+                    searcher.logger.info(f"[SUCCESS] Token record created/updated successfully")
                 else:
-                    logger.error(f"[ERROR] Failed to create/update token record")
+                    searcher.logger.error(f"[ERROR] Failed to create/update token record")
             else:
-                logger.error(f"[ERROR] Token not found or API request failed")
+                searcher.logger.error(f"[ERROR] Token not found or API request failed")
                 # Add more details about the failure
                 if hasattr(searcher, 'last_error'):
-                    logger.error(f"[ERROR] Details: {searcher.last_error}")
+                    searcher.logger.error(f"[ERROR] Details: {searcher.last_error}")
         else:
             # Process all existing tokens
             print("🔄 Processing all existing tokens...")
@@ -380,10 +381,10 @@ def main():
                 print(f"❌ Error generating market overview: {str(e)}")
 
     except Exception as e:
-        logger.error(f"[ERROR] Script failed: {str(e)}")
+        searcher.logger.error(f"[ERROR] Script failed: {str(e)}")
         # Add traceback for more details
         import traceback
-        logger.error("Traceback:")
+        searcher.logger.error("Traceback:")
         traceback.print_exc()
         sys.exit(1)
 
