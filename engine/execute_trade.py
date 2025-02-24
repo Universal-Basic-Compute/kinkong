@@ -361,8 +361,7 @@ class JupiterTradeExecutor:
                             signature = Signature.from_string(signature_str)
                             confirmation = await client.confirm_transaction(
                                 signature,
-                                commitment="finalized",
-                                max_supported_transaction_version=0
+                                commitment="finalized"
                             )
                         
                             if hasattr(confirmation.value, 'err') and confirmation.value.err:
