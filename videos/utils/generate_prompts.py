@@ -3,20 +3,20 @@ from pathlib import Path
 import os
 from datetime import datetime
 from airtable import Airtable
-from dotenv import load_dotenv
 import logging
 from typing import Dict, Optional
 
-# Add project root to Python path (go up two levels from videos/utils)
-project_root = Path(__file__).parent.parent.parent.absolute()
-if str(project_root) not in sys.path:
-    sys.path.insert(0, str(project_root))
+# Add project root to Python path
+project_root = str(Path(__file__).parent.parent.parent.absolute())
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
-# Load .env from project root
-load_dotenv(project_root / '.env')
-
-# Now import from scripts
+# Import anthropic before loading .env
 import anthropic
+
+# Load environment variables after imports
+from dotenv import load_dotenv
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(
