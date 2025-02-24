@@ -305,6 +305,29 @@ Format your response as JSON:
 def analyze_charts_with_claude(chart_paths, token_info=None):
     """Analyze multiple timeframe charts together using Claude 3"""
     try:
+        # Debug logging at start
+        print("\nStarting chart analysis with:")
+        print(f"Chart paths: {chart_paths}")
+        print(f"Token info: {token_info}")
+
+        # Validate inputs
+        if not chart_paths:
+            raise ValueError("No chart paths provided")
+            
+        if not token_info or 'token' not in token_info:
+            raise ValueError("Invalid token info provided")
+            
+        # Verify chart files exist
+        existing_charts = []
+        for path in chart_paths:
+            if os.path.exists(path):
+                existing_charts.append(path)
+            else:
+                print(f"Warning: Chart not found at {path}")
+                
+        if not existing_charts:
+            raise ValueError("No valid chart files found")
+
         # Get API key from environment
         api_key = os.getenv('ANTHROPIC_API_KEY')
         if not api_key:
