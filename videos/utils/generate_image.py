@@ -89,8 +89,15 @@ def generate_image(prompt: str, image_number: int, base_dir: Optional[Path] = No
     try:
         generator = ImageGenerator()
         if base_dir is None:
-            base_dir = Path('videos/videos/video1/images').resolve()
+            # Find next available video number
+            videos_dir = Path('videos/videos')
+            video_num = 1
+            while (videos_dir / f'video{video_num}/images').exists():
+                video_num += 1
+                
+            base_dir = videos_dir / f'video{video_num}/images'
             base_dir.mkdir(parents=True, exist_ok=True)
+            
         return generator.generate_and_save_image(prompt, image_number, base_dir)
     except Exception as e:
         logger.error(f"Error in generate_image: {e}")
