@@ -110,25 +110,6 @@ def generate_reply_with_claude(mention_text: str, username: str) -> Optional[str
         logger.error(f"Error generating reply with Claude: {str(e)}")
         return None
 
-def reply_to_mention(api: tweepy.API, client: tweepy.Client, mention_id: int, username: str, text: str) -> bool:
-    """Reply to a mention on X"""
-    try:
-        # Post reply
-        response = client.create_tweet(
-            text=text,
-            in_reply_to_tweet_id=mention_id
-        )
-        
-        if response.data:
-            logger.info(f"Successfully replied to @{username}")
-            return True
-        else:
-            logger.error("Failed to post reply - no response data")
-            return False
-            
-    except Exception as e:
-        logger.error(f"Error replying to mention: {str(e)}")
-        return False
 
 def check_mentions():
     """Check mentions of @kinkong_ubc once"""
