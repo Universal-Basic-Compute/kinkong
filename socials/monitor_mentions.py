@@ -2,10 +2,77 @@ import os
 import requests
 import logging
 import anthropic
+from pathlib import Path
 from dotenv import load_dotenv
 from requests_oauthlib import OAuth1
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import datetime, timezone, timedelta
+import subprocess
+from typing import Optional, List
+
+def extract_tokens_from_text(text: str) -> List[str]:
+    """Extract tokens mentioned with $ symbol from text"""
+    import re
+    # Match $TOKEN pattern, excluding common punctuation after the token
+    pattern = r'\$([A-Za-z0-9]+)(?=[.,!?\s]|$)'
+    matches = re.findall(pattern, text)
+    return [token.upper() for token in matches]
+
+def check_token_status(token: str, airtable: AirtableAPI) -> bool:
+    """Check if token needs updating (doesn't exist or old data)"""
+    try:
+        # Get token record
+        records = airtable.get_all(
+            formula=f"{{token}}='{token}'",
+            fields=['token', 'updatedAt']
+        )
+        
+        if not records:
+            logger.info(f"Token {token} not found in database")
+            return True
+            
+        # Check updatedAt timestamp
+        record = records[0]
+        updated_at = record.get('fields', {}).get('updatedAt')
+        if not updated_at:
+            return True
+            
+        # Convert to datetime and check if older than 48 hours
+        updated_at = datetime.fromisoformat(updated_at.replace('Z', '+00:00'))
+        age = datetime.now(timezone.utc) - updated_at
+        
+        return age > timedelta(hours=48)
+        
+    except Exception as e:
+        logger.error(f"Error checking token status: {e}")
+        return True
+
+async def update_token(token: str):
+    """Update token data using engine/tokens.py"""
+    try:
+        import subprocess
+        
+        logger.info(f"Updating token data for {token}")
+        
+        # Construct path to engine/tokens.py
+        tokens_script = Path(__file__).parent.parent / 'engine' / 'tokens.py'
+        
+        # Run the script with token as argument
+        result = subprocess.run(
+            [sys.executable, str(tokens_script), token],
+            capture_output=True,
+            text=True
+        )
+        
+        if result.returncode == 0:
+            logger.info(f"Successfully updated token {token}")
+            return True
+        else:
+            logger.error(f"Failed to update token {token}: {result.stderr}")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Error updating token {token}: {e}")
+        return False
 
 def setup_logging():
     logging.basicConfig(
@@ -177,15 +244,38 @@ def check_mentions():
         if "data" in data:
             newest_id = None
             for mention in data["data"]:
-                # Track newest mention ID
-                if not newest_id or int(mention["id"]) > int(newest_id):
-                    newest_id = mention["id"]
-                    
-                # Get author info from includes
-                author = next(
-                    (u for u in data["includes"]["users"] if u["id"] == mention["author_id"]),
-                    None
-                )
+                try:
+                    # Track newest mention ID
+                    if not newest_id or int(mention["id"]) > int(newest_id):
+                        newest_id = mention["id"]
+                        
+                    # Extract tokens from mention text
+                    tokens = extract_tokens_from_text(mention["text"])
+                    if tokens:
+                        logger.info(f"Found tokens in mention: {tokens}")
+                            
+                        # Initialize Airtable client for token checks
+                        airtable = AirtableAPI(
+                            os.getenv('KINKONG_AIRTABLE_BASE_ID'),
+                            os.getenv('KINKONG_AIRTABLE_API_KEY')
+                        )
+                            
+                        # Check and update each token
+                        for token in tokens:
+                            if check_token_status(token, airtable):
+                                logger.info(f"Token {token} needs updating")
+                                await update_token(token)
+                            else:
+                                logger.info(f"Token {token} is up to date")
+
+                    # Get author info from includes
+                    author = next(
+                        (u for u in data["includes"]["users"] if u["id"] == mention["author_id"]),
+                        None
+                    )
+                except Exception as e:
+                    logger.error(f"Error processing mention: {e}")
+                    continue
                 
                 if author:
                     # Format notification data to match expected structure
