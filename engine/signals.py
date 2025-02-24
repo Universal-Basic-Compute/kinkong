@@ -38,28 +38,28 @@ class SignalGenerator:
             {
                 'timeframe': '15m',
                 'strategy': 'SCALP',
-                'hours': 12,  # Doubled from 6 to get more candles
+                'hours': 15,  # 15 hours = 60 fifteen-minute candles
                 'title': '{token}/USD Scalp Analysis (6H)',
                 'filename': '{token}_6h_scalp.png'
             },
             {
                 'timeframe': '1H',
                 'strategy': 'INTRADAY',
-                'hours': 48,  # Doubled from 24 to get more candles
+                'hours': 60,  # 60 hours = 60 hourly candles
                 'title': '{token}/USD Intraday Analysis (24H)',
                 'filename': '{token}_24h_intraday.png'
             },
             {
                 'timeframe': '4H',
                 'strategy': 'SWING',
-                'hours': 336,  # Changed from 168 (7 days) to 14 days
+                'hours': 240,  # 240 hours = 60 four-hour candles
                 'title': '{token}/USD Swing Analysis (7D)',
                 'filename': '{token}_7d_swing.png'
             },
             {
                 'timeframe': '1D',
                 'strategy': 'POSITION',
-                'hours': 720,  # 30 days
+                'hours': 1440,  # 1440 hours = 60 daily candles
                 'title': '{token}/USD Position Analysis (30D)',
                 'filename': '{token}_30d_position.png'
             }
