@@ -432,7 +432,10 @@ class TradeExecutor:
                 return False
 
             # Execute transaction
-            signature = await self.jupiter.execute_trade_with_retries(transaction)
+            signature = await self.jupiter.execute_trade_with_retries(
+                transaction,
+                signal['fields']['mint']  # Add mint address
+            )
             if not signature:
                 await self.handle_failed_trade(trade['id'], "Transaction failed")
                 return False
@@ -748,7 +751,10 @@ class TradeExecutor:
                     self.logger.error(f"Failed to prepare transaction")
                     return False
                     
-                signature = await self.jupiter.execute_trade_with_retries(transaction)
+                signature = await self.jupiter.execute_trade_with_retries(
+                    transaction,
+                    token_mint  # We already have token_mint in this function
+                )
                 if not signature:
                     self.logger.error(f"Failed to execute transaction")
                     return False
