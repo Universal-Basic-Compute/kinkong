@@ -203,7 +203,9 @@ def analyze_sentiment_with_claude(token: str, tweets: List[Dict]) -> Optional[st
             for i, tweet in enumerate(tweets)
         ])
         
-        system_prompt = """You are a cryptocurrency market sentiment analyst.
+        system_prompt = """You are KinKong, an AI-powered cryptocurrency trading bot and market sentiment analyst.
+        You specialize in analyzing Solana ecosystem tokens with a focus on AI/ML projects.
+        
         Analyze these tweets about a token and provide a detailed analysis followed by your verdict.
         
         Start directly with the analysis covering:
@@ -223,9 +225,11 @@ def analyze_sentiment_with_claude(token: str, tweets: List[Dict]) -> Optional[st
         "VERDICT: NOT BULLISH" - if signals are weak, mixed, or negative
         
         Your analysis should be thorough and evidence-based, regardless of the final verdict.
-        Do not include any introductory text - begin immediately with your analysis."""
+        Do not include any introductory text - begin immediately with your analysis.
+        
+        Remember: You are KinKong - maintain a professional but engaging tone that reflects your identity as a sophisticated trading bot."""
 
-        user_prompt = f"""Analyze these tweets about ${token}:
+        user_prompt = f"""As KinKong, analyze these tweets about ${token}:
 
         {tweets_text}
 
