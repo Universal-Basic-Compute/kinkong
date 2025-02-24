@@ -132,6 +132,15 @@ async def create_tiktok_video():
                 logger.error("❌ No screens found in script")
                 return
 
+            # Save script to JSON file
+            script_path = video_dir / 'script.json'
+            try:
+                with open(script_path, 'w', encoding='utf-8') as f:
+                    json.dump(script, f, indent=2, ensure_ascii=False)
+                logger.info(f"📝 Saved script to: {script_path}")
+            except Exception as e:
+                logger.error(f"❌ Failed to save script: {e}")
+
             logger.info(f"✅ Successfully parsed script with {len(screens)} screens")
 
             # Generate all images in parallel
