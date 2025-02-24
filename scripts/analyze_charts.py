@@ -320,6 +320,23 @@ Format your response as JSON:
     }}
 }}"""
 
+def get_latest_token_snapshot(token):
+    """Get latest token snapshot from Airtable"""
+    try:
+        snapshots_table = getTable('TOKEN_SNAPSHOTS')
+        records = snapshots_table.select(
+            filterByFormula=f"{{token}} = '{token}'",
+            sort=[{'field': 'createdAt', 'direction': 'desc'}],
+            maxRecords=1
+        ).all()
+        
+        if records:
+            return records[0]['fields']
+        return None
+    except Exception as e:
+        print(f"Error fetching token snapshot: {e}")
+        return None
+
 def analyze_charts_with_claude(chart_paths, token_info=None):
     """Analyze multiple timeframe charts together using Claude 3"""
     try:
@@ -352,7 +369,21 @@ def analyze_charts_with_claude(chart_paths, token_info=None):
             raise ValueError("ANTHROPIC_API_KEY not found in .env file")
 
         # Format system prompt with token metrics
-        formatted_system_prompt = SYSTEM_PROMPT.format(token_metrics="")
+        # Get latest snapshot
+        latest_snapshot = get_latest_token_snapshot(token_info['token'])
+        snapshot_text = ""
+        if latest_snapshot:
+            snapshot_text = f"""
+
+Latest Token Metrics:
+• Price: ${latest_snapshot.get('price', 0):.4f}
+• 24h Volume: ${latest_snapshot.get('volume24h', 0):,.2f}
+• Market Cap: ${latest_snapshot.get('marketCap', 0):,.2f}
+• Liquidity: ${latest_snapshot.get('liquidity', 0):,.2f}
+• Price Change 24h: {latest_snapshot.get('priceChange24h', 0):.2f}%
+• Volume Change 24h: {latest_snapshot.get('volumeChange24h', 0):.2f}%"""
+
+        formatted_system_prompt = SYSTEM_PROMPT.format(token_metrics=snapshot_text)
 
         # Make request to Claude via HTTP
         print("\n🚀 Making request to Claude API...")
