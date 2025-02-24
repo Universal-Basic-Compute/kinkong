@@ -233,9 +233,18 @@ def clean_json_string(json_str):
         end_idx = json_str.rfind('}')
         
         if start_idx == -1 or end_idx == -1:
-            print("No valid JSON structure found in response")
-            print("Original string:", json_str)
-            return '{"timeframes": {}, "overall_analysis": {}}'
+            logger.error("No valid JSON structure found in response")
+            logger.error("Original string:", json_str)
+            # Return a valid empty structure
+            return json.dumps({
+                "timeframes": {
+                    "POSITION": {},
+                    "SWING": {},
+                    "INTRADAY": {},
+                    "SCALP": {}
+                },
+                "overall_analysis": {}
+            })
             
         # Extract just the JSON part
         json_str = json_str[start_idx:end_idx + 1]
@@ -244,15 +253,37 @@ def clean_json_string(json_str):
         json_str = json_str.replace('```json', '')
         json_str = json_str.replace('```', '')
         
-        # Validate by parsing
-        json.loads(json_str)
+        # Remove any leading/trailing whitespace
+        json_str = json_str.strip()
         
-        return json_str
+        # Add proper structure if missing
+        if not json_str.startswith('{"timeframes"'):
+            json_str = '{"timeframes": ' + json_str + '}'
+        
+        # Validate by parsing
+        parsed = json.loads(json_str)
+        
+        # Ensure required structure exists
+        if 'timeframes' not in parsed:
+            parsed['timeframes'] = {}
+        if 'overall_analysis' not in parsed:
+            parsed['overall_analysis'] = {}
+            
+        return json.dumps(parsed)
         
     except Exception as e:
-        print(f"Error cleaning JSON string: {e}")
-        print("Original string:", json_str)
-        return '{"timeframes": {}, "overall_analysis": {}}'
+        logger.error(f"Error cleaning JSON string: {e}")
+        logger.error("Original string:", json_str)
+        # Return a valid empty structure
+        return json.dumps({
+            "timeframes": {
+                "POSITION": {},
+                "SWING": {},
+                "INTRADAY": {},
+                "SCALP": {}
+            },
+            "overall_analysis": {}
+        })
 
 SYSTEM_PROMPT = """You are an expert cryptocurrency technical analyst specializing in UBC/USD market analysis.
 
