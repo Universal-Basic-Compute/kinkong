@@ -330,9 +330,9 @@ class JupiterTradeExecutor:
                 try:
                     # Calculate exponential backoff delay
                     delay = (2 ** attempt) * 1.5  # 1.5s, 3s, 6s
-                    
-                    # Get transaction bytes using serialize()
-                    transaction_bytes = bytes(transaction.serialize())
+                
+                    # Convert versioned transaction to bytes
+                    transaction_bytes = bytes(transaction)
                 
                     # Send with optimized options
                     result = await client.send_raw_transaction(
