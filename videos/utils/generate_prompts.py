@@ -1,22 +1,19 @@
 import sys
 from pathlib import Path
-import os
-from datetime import datetime
-from airtable import Airtable
-import logging
-from typing import Dict, Optional
 
 # Add project root to Python path
 project_root = str(Path(__file__).parent.parent.parent.absolute())
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-# Import anthropic before loading .env
+# Now we can import backend modules
+from backend.src.airtable.tables import getTable
 import anthropic
-
-# Load environment variables after imports
-from dotenv import load_dotenv
-load_dotenv()
+import os
+from datetime import datetime
+from airtable import Airtable
+import logging
+from typing import Dict, Optional
 
 # Configure logging
 logging.basicConfig(
@@ -28,7 +25,6 @@ logger = logging.getLogger(__name__)
 
 class PromptGenerator:
     def __init__(self):
-        load_dotenv()
         self.base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
         self.api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
         self.signals_table = Airtable(self.base_id, 'SIGNALS', self.api_key)
