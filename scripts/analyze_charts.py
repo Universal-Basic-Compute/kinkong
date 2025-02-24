@@ -408,30 +408,37 @@ def analyze_charts_with_claude(chart_paths, token_info=None):
             }
         market_context = get_market_context()
 
-        # Prepare all chart images
+        # Prepare chart images
         chart_contents = []
-        for chart_path in chart_paths:
-            chart_path_str = str(chart_path)
-            with open(chart_path, "rb") as image_file:
-                image_data = base64.b64encode(image_file.read()).decode('utf-8')
-                
-                # Map the chart path to the correct timeframe
-                if '6h_scalp' in chart_path_str:
-                    timeframe = 'SCALP'
-                elif '24h_intraday' in chart_path_str:
-                    timeframe = 'INTRADAY'
-                elif '7d_swing' in chart_path_str:
-                    timeframe = 'SWING'
-                elif '30d_position' in chart_path_str:
-                    timeframe = 'POSITION'
-                else:
-                    print(f"Unknown timeframe in chart path: {chart_path_str}")
-                    continue
+        for chart_path in existing_charts:  # Use existing_charts instead of chart_paths
+            try:
+                with open(chart_path, "rb") as image_file:
+                    image_data = base64.b64encode(image_file.read()).decode('utf-8')
+                    
+                    # Map the chart path to the correct timeframe
+                    if '6h_scalp' in str(chart_path):
+                        timeframe = 'SCALP'
+                    elif '24h_intraday' in str(chart_path):
+                        timeframe = 'INTRADAY'
+                    elif '7d_swing' in str(chart_path):
+                        timeframe = 'SWING'
+                    elif '30d_position' in str(chart_path):
+                        timeframe = 'POSITION'
+                    else:
+                        print(f"Unknown timeframe in chart path: {chart_path}")
+                        continue
 
-                chart_contents.append({
-                    "timeframe": timeframe,
-                    "data": image_data
-                })
+                    chart_contents.append({
+                        "timeframe": timeframe,
+                        "data": image_data
+                    })
+                    print(f"Successfully loaded chart for {timeframe}")
+            except Exception as e:
+                print(f"Error loading chart {chart_path}: {e}")
+                continue
+
+        if not chart_contents:
+            raise ValueError("No chart images could be loaded")
         
         # Format market data for prompt
         market_data_str = ""
