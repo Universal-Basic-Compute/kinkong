@@ -404,15 +404,13 @@ class JupiterTradeExecutor:
                                             # Pour une vente, vérifier que la balance USDC a augmenté
                                             if (is_buy and new_balance > initial_balance) or (not is_buy and new_balance > initial_balance):
                                                 self.logger.info("✅ Transaction confirmed!")
-                                                success = True
-                                                break
+                                                # Retourner la signature dès que la balance est confirmée
+                                                return signature_str
                                                 
                                             self.logger.info("Balance not yet updated, waiting 8 seconds...")
                                 
-                                if success:
-                                    return signature_str
-                                else:
-                                    self.logger.warning("Balance check timeout, moving to next attempt")
+                                # Si on arrive ici, c'est qu'on n'a pas confirmé la balance après 3 tentatives
+                                self.logger.warning("Balance check timeout, moving to next attempt")
 
                 except Exception as e:
                     self.logger.error(f"Attempt {attempt + 1} failed: {e}")
