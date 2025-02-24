@@ -122,24 +122,31 @@ def check_mentions():
             
         headers = {
             "Authorization": f"Bearer {bearer_token}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "X-Client-Type": "API"  # Add X API specific header
         }
         
-        # First get the authenticated user ID
-        me_url = "https://api.x.com/2/users/me"
+        # Get authenticated user ID using v2 endpoint
+        me_url = "https://api.twitter.com/2/users/me"  # Keep twitter.com for API endpoints
         me_response = requests.get(me_url, headers=headers)
-        me_response.raise_for_status()
         
+        if me_response.status_code == 403:
+            logger.error("Authentication failed. Please check your X_BEARER_TOKEN")
+            return
+        elif not me_response.ok:
+            logger.error(f"API request failed: {me_response.status_code} - {me_response.text}")
+            return
+            
         user_id = me_response.json()['data']['id']
         
-        # Now get mentions using the user ID
-        mentions_url = f"https://api.x.com/2/users/{user_id}/mentions"
+        # Get mentions using v2 endpoint
+        mentions_url = f"https://api.twitter.com/2/users/{user_id}/mentions"
         
-        # Parameters for the request
+        # Updated parameters for v2 API
         params = {
-            "tweet.fields": "created_at,text",
-            "expansions": "author_id",
-            "user.fields": "username",
+            "tweet.fields": "created_at,text,conversation_id",
+            "expansions": "author_id,referenced_tweets",
+            "user.fields": "username,profile_image_url",
             "max_results": 100
         }
         
