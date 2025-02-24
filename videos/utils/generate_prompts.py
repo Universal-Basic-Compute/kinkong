@@ -7,12 +7,12 @@ from dotenv import load_dotenv
 import logging
 from typing import Dict, Optional
 
-# Add project root to Python path
-project_root = str(Path(__file__).parent.parent.absolute())
+# Add project root to Python path (go up two levels from videos/utils)
+project_root = str(Path(__file__).parent.parent.parent.absolute())
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-# Import project modules
+# Now import from scripts
 from scripts.analyze_charts import analyze_charts_with_claude
 
 # Configure logging
