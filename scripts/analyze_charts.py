@@ -300,19 +300,26 @@ def analyze_charts_with_claude(chart_paths, token_info=None):
         token_metrics = ""
         if token_info and token_info.get('mint'):
             try:
-                snapshots_table = getTable('TOKEN_SNAPSHOTS')
-                records = snapshots_table.get_all(
-                    formula=f"{{mint}} = '{token_info['mint']}'",
-                    sort=[{
-                        'field': 'createdAt',
-                        'direction': 'desc'
-                    }],
-                    maxRecords=1
-                )
+                base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
+                api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
                 
-                if records:
-                    latest = records[0]['fields']
-                    token_metrics = f"""
+                # Build URL with hardcoded sort parameters
+                mint = token_info['mint']
+                url = f"https://api.airtable.com/v0/{base_id}/TOKEN_SNAPSHOTS?filterByFormula={{mint}}='{mint}'&sort[0][field]=createdAt&sort[0][direction]=desc&maxRecords=1"
+                
+                headers = {
+                    'Authorization': f'Bearer {api_key}'
+                }
+                
+                response = requests.get(url, headers=headers)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    records = data.get('records', [])
+                    
+                    if records:
+                        latest = records[0]['fields']
+                        token_metrics = f"""
 • Price: ${latest.get('price', 0):.4f}
 • 24h Volume: ${latest.get('volume24h', 0):,.2f}
 • 7d Volume: ${latest.get('volume7d', 0):,.2f}
@@ -322,8 +329,13 @@ def analyze_charts_with_claude(chart_paths, token_info=None):
 • Holder Count: {latest.get('holderCount', 0):,}
 • Created At: {latest.get('createdAt', 'Unknown')}
 """
+                    else:
+                        token_metrics = "No recent token metrics available"
                 else:
-                    token_metrics = "No recent token metrics available"
+                    print(f"Error fetching token metrics: {response.status_code}")
+                    print(f"Response: {response.text}")
+                    token_metrics = "Error fetching token metrics"
+                    
             except Exception as e:
                 print(f"Error fetching token metrics: {e}")
                 token_metrics = "Error fetching token metrics"
