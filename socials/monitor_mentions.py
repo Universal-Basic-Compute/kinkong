@@ -229,17 +229,23 @@ async def check_mentions():
         # Get mentions using v2 endpoint with correct parameters
         mentions_url = f"https://api.twitter.com/2/users/{user_id}/mentions"
         
+        # Get last mention ID
+        last_mention_id = get_last_mention_id()
+        logger.info(f"Last processed mention ID: {last_mention_id}")
+        
         params = {
-            "tweet.fields": "created_at,text",  # Simplified fields
-            "expansions": "author_id",          # Only essential expansion
-            "user.fields": "username",          # Only username needed
-            "max_results": 10                   # Reduced results
+            "tweet.fields": "created_at,text",
+            "expansions": "author_id",
+            "user.fields": "username",
+            "max_results": 10
         }
         
         # Add since_id if we have a last mention
-        last_mention_id = get_last_mention_id()
         if last_mention_id:
             params["since_id"] = last_mention_id
+            logger.info(f"Checking for mentions since ID: {last_mention_id}")
+        else:
+            logger.info("No last mention ID found, checking all recent mentions")
             
         logger.info(f"Fetching mentions for user ID: {user_id}")
         response = requests.get(mentions_url, auth=auth, params=params)
@@ -250,26 +256,26 @@ async def check_mentions():
             response.raise_for_status()
         
         data = response.json()
+        logger.info(f"API Response: {json.dumps(data, indent=2)}")
         
         if "data" in data:
+            mentions_count = len(data["data"])
+            logger.info(f"Found {mentions_count} new mentions")
+            
             newest_id = None
             for mention in data["data"]:
                 try:
                     # Track newest mention ID
                     if not newest_id or int(mention["id"]) > int(newest_id):
                         newest_id = mention["id"]
-                        
+                    
+                    logger.info(f"\nProcessing mention: {mention['text']}")
+                    
                     # Extract tokens from mention text
                     tokens = extract_tokens_from_text(mention["text"])
                     if tokens:
                         logger.info(f"Found tokens in mention: {tokens}")
-                            
-                        # Initialize Airtable client for token checks
-                        airtable = AirtableAPI(
-                            os.getenv('KINKONG_AIRTABLE_BASE_ID'),
-                            os.getenv('KINKONG_AIRTABLE_API_KEY')
-                        )
-                            
+                        
                         # Get Airtable credentials
                         base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
                         api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
@@ -277,7 +283,7 @@ async def check_mentions():
                         if not base_id or not api_key:
                             logger.error("Missing Airtable credentials")
                             continue
-                            
+                        
                         # Check and update each token
                         for token in tokens:
                             if check_token_status(token, base_id, api_key):
@@ -285,61 +291,18 @@ async def check_mentions():
                                 await update_token(token)
                             else:
                                 logger.info(f"Token {token} is up to date")
-
-                    # Get author info from includes
-                    author = next(
-                        (u for u in data["includes"]["users"] if u["id"] == mention["author_id"]),
-                        None
-                    )
+                    else:
+                        logger.info("No tokens found in mention")
                 except Exception as e:
                     logger.error(f"Error processing mention: {e}")
                     continue
-                
-                if author:
-                    # Format notification data to match expected structure
-                    notification_data = {
-                        "id": mention["id"],
-                        "created_at": mention["created_at"],
-                        "text": mention["text"],
-                        "user": {
-                            "screen_name": author["username"]
-                        }
-                    }
-                    
-                    # Comment out notification sending
-                    # if send_telegram_notification(notification_data):
-                    #     logger.info(f"Notification sent for mention from @{author['username']}")
-                    # else:
-                    #     logger.error(f"Failed to send notification for mention from @{author['username']}")
-
-                    # Comment out reply generation and posting
-                    # reply_text = generate_reply_with_claude(mention["text"], author["username"])
-                    # if reply_text:
-                    #     # Post reply using v2 endpoint
-                    #     reply_url = "https://api.x.com/2/tweets"
-                    #     reply_data = {
-                    #         "text": reply_text,
-                    #         "reply": {
-                    #             "in_reply_to_tweet_id": mention["id"]
-                    #         }
-                    #     }
-                    #     
-                    #     reply_response = requests.post(
-                    #         reply_url,
-                    #         auth=auth,
-                    #         json=reply_data
-                    #     )
-                    #     
-                    #     if reply_response.status_code == 201:
-                    #         logger.info(f"Reply posted: {reply_text}")
-                    #     else:
-                    #         logger.error("Failed to post reply")
-                    # else:
-                    #     logger.error("Failed to generate reply")
             
-            # Save newest mention ID
+            # Save newest mention ID if we found any mentions
             if newest_id:
+                logger.info(f"Saving newest mention ID: {newest_id}")
                 save_last_mention_id(newest_id)
+        else:
+            logger.info("No new mentions found")
                 
     except Exception as e:
         logger.error(f"Check mentions failed: {e}")
