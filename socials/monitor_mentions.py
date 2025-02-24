@@ -67,18 +67,31 @@ async def update_token(token: str):
         # Construct path to engine/tokens.py
         tokens_script = Path(__file__).parent.parent / 'engine' / 'tokens.py'
         
-        # Run the script with token as argument
-        result = subprocess.run(
+        # Run the script with token as argument and proper encoding
+        process = subprocess.Popen(
             [sys.executable, str(tokens_script), token],
-            capture_output=True,
-            text=True
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            encoding='utf-8',  # Spécifier l'encodage UTF-8
+            errors='replace'   # Remplacer les caractères non décodables
         )
         
-        if result.returncode == 0:
-            logger.info(f"Successfully updated token {token}")
-            return True
-        else:
-            logger.error(f"Failed to update token {token}: {result.stderr}")
+        # Attendre la fin du processus avec timeout
+        try:
+            stdout, stderr = process.communicate(timeout=30)
+            
+            if process.returncode == 0:
+                logger.info(f"Successfully updated token {token}")
+                return True
+            else:
+                logger.error(f"Failed to update token {token}")
+                if stderr:
+                    logger.error(f"Error output: {stderr}")
+                return False
+                
+        except subprocess.TimeoutExpired:
+            process.kill()
+            logger.error(f"Token update timed out for {token}")
             return False
             
     except Exception as e:
