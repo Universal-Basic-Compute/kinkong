@@ -55,6 +55,13 @@ class SignalGenerator:
                 'hours': 168,  # 7 days
                 'title': '{token}/USD Swing Analysis (7D)',
                 'filename': '{token}_7d_swing.png'
+            },
+            {
+                'timeframe': '1D',
+                'strategy': 'POSITION',
+                'hours': 720,  # 30 days
+                'title': '{token}/USD Position Analysis (30D)',
+                'filename': '{token}_30d_position.png'
             }
         ]
 
