@@ -800,10 +800,10 @@ def main():
             chart_paths = [
                 Path('public/charts') / token_info['token'].lower() / f"{token_info['token']}_{tf}"
                 for tf in [
-                    '6h_scalp.png',
-                    '24h_intraday.png',
+                    '30d_position.png',
                     '7d_swing.png',
-                    '30d_position.png'
+                    '24h_intraday.png',
+                    '6h_scalp.png'
                 ]
             ]
             
