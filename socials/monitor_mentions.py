@@ -290,35 +290,36 @@ async def check_mentions():
                         }
                     }
                     
-                    if send_telegram_notification(notification_data):
-                        logger.info(f"Notification sent for mention from @{author['username']}")
-                    else:
-                        logger.error(f"Failed to send notification for mention from @{author['username']}")
+                    # Comment out notification sending
+                    # if send_telegram_notification(notification_data):
+                    #     logger.info(f"Notification sent for mention from @{author['username']}")
+                    # else:
+                    #     logger.error(f"Failed to send notification for mention from @{author['username']}")
 
-                    # Generate and post reply
-                    reply_text = generate_reply_with_claude(mention["text"], author["username"])
-                    if reply_text:
-                        # Post reply using v2 endpoint
-                        reply_url = "https://api.x.com/2/tweets"
-                        reply_data = {
-                            "text": reply_text,
-                            "reply": {
-                                "in_reply_to_tweet_id": mention["id"]
-                            }
-                        }
-                        
-                        reply_response = requests.post(
-                            reply_url,
-                            auth=auth,
-                            json=reply_data
-                        )
-                        
-                        if reply_response.status_code == 201:
-                            logger.info(f"Reply posted: {reply_text}")
-                        else:
-                            logger.error("Failed to post reply")
-                    else:
-                        logger.error("Failed to generate reply")
+                    # Comment out reply generation and posting
+                    # reply_text = generate_reply_with_claude(mention["text"], author["username"])
+                    # if reply_text:
+                    #     # Post reply using v2 endpoint
+                    #     reply_url = "https://api.x.com/2/tweets"
+                    #     reply_data = {
+                    #         "text": reply_text,
+                    #         "reply": {
+                    #             "in_reply_to_tweet_id": mention["id"]
+                    #         }
+                    #     }
+                    #     
+                    #     reply_response = requests.post(
+                    #         reply_url,
+                    #         auth=auth,
+                    #         json=reply_data
+                    #     )
+                    #     
+                    #     if reply_response.status_code == 201:
+                    #         logger.info(f"Reply posted: {reply_text}")
+                    #     else:
+                    #         logger.error("Failed to post reply")
+                    # else:
+                    #     logger.error("Failed to generate reply")
             
             # Save newest mention ID
             if newest_id:
@@ -339,9 +340,9 @@ async def main():
             'X_API_SECRET', 
             'X_ACCESS_TOKEN',
             'X_ACCESS_TOKEN_SECRET',
-            'TELEGRAM_BOT_TOKEN',
-            'TELEGRAM_CHAT_ID',
-            'ANTHROPIC_API_KEY'
+            # 'TELEGRAM_BOT_TOKEN',  # Commented out
+            # 'TELEGRAM_CHAT_ID',    # Commented out
+            # 'ANTHROPIC_API_KEY'    # Commented out
         ]
         
         missing_vars = [var for var in required_vars if not os.getenv(var)]
