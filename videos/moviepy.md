@@ -120,7 +120,7 @@ clip = clip.with_effects([                      # Apply effects
 
 ### TextClip Methods
 - `with_duration(duration)`: Set clip duration
-- `set_position(pos)`: Set position in composite clip
+- `with_position(pos)`: Set position in composite clip
   - pos can be: (x,y), 'center', 'left', 'right', 'top', 'bottom'
 - `with_start(t)`: Set start time in composition
 - `with_effects(effects)`: Apply list of effects
