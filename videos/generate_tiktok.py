@@ -17,7 +17,7 @@ from moviepy.video.fx.FadeOut import FadeOut
 from moviepy.video.VideoClip import TextClip, ColorClip, ImageClip
 from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
 from moviepy.video.fx.SlideIn import SlideIn
-from moviepy.editor import VideoFileClip
+from moviepy.video.io.VideoFileClip import VideoFileClip
 
 from videos.utils.generate_text import create_text_clips
 from videos.utils.generate_prompts import PromptGenerator
