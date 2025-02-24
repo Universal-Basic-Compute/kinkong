@@ -36,6 +36,7 @@ load_dotenv()
 
 class TokenSearcher:
     def __init__(self):
+        self.last_error = None  # For tracking the last error
         self.airtable = Airtable(
             os.getenv('KINKONG_AIRTABLE_BASE_ID'),
             'TOKENS',
