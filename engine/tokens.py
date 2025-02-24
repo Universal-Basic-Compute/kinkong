@@ -37,6 +37,9 @@ def setup_logging():
     logger.propagate = False
     return logger
 
+# Initialize logger
+logger = logging.getLogger(__name__)
+
 def log_message(message: str, level: str = 'info'):
     """Log message with emoji replacements"""
     # Replace emojis with text
