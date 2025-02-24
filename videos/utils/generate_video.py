@@ -4,7 +4,6 @@ from pathlib import Path
 import logging
 from typing import Optional
 import requests
-from runwayml import RunwayML
 from dotenv import load_dotenv
 
 # Configure logging
@@ -26,7 +25,6 @@ class VideoGenerator:
         if not self.imgur_client_id:
             raise ValueError("IMGUR_CLIENT_ID not found in environment variables")
         
-        self.client = RunwayML(api_key=self.api_key)
 
     def upload_to_imgur(self, image_path: Path) -> Optional[str]:
         """Upload image to Imgur and return HTTPS URL"""
@@ -113,27 +111,48 @@ class VideoGenerator:
             
             logger.info(f"✅ Image uploaded: {image_url}")
             
-            # Generate video
-            response = self.client.image_to_video.create(
-                model=model,
-                prompt_image=image_url,
-                prompt_text=prompt
+            # Make direct HTTP call to Runway API
+            runway_url = "https://api.dev.runwayml.com/v1/image_to_video"
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            }
+            
+            payload = {
+                "model": model,
+                "prompt_image": image_url,
+                "prompt_text": prompt
+            }
+            
+            # Make the request
+            response = requests.post(
+                runway_url,
+                headers=headers,
+                json=payload
             )
             
-            # Log the response structure to understand what we got
-            logger.debug(f"API Response: {response}")
+            # Log response for debugging
+            logger.info(f"HTTP Request: POST {runway_url} \"{response.status_code} {response.reason}\"")
             
-            # Try different ways to get the video URL
+            if response.status_code != 200:
+                logger.error(f"API request failed: {response.status_code} - {response.text}")
+                return None
+                
+            # Parse response
+            result = response.json()
+            
+            # Try to get video URL from response
             video_url = None
-            if hasattr(response, 'url'):
-                video_url = response.url
-            elif hasattr(response, 'output') and hasattr(response.output, 'url'):
-                video_url = response.output.url
-            elif isinstance(response, dict):
-                video_url = response.get('url') or response.get('output', {}).get('url')
+            if isinstance(result, dict):
+                video_url = (
+                    result.get('url') or 
+                    result.get('output', {}).get('url') or
+                    result.get('data', {}).get('url')
+                )
                 
             if not video_url:
                 logger.error("❌ No video URL in response")
+                logger.debug(f"Response content: {result}")
                 return None
                 
             # Download the video
@@ -150,7 +169,7 @@ class VideoGenerator:
                 
         except Exception as e:
             logger.error(f"❌ Error during video generation: {e}")
-            logger.exception("Detailed error trace:")  # Add stack trace for debugging
+            logger.exception("Detailed error trace:")
             return None
                 
         except Exception as e:
