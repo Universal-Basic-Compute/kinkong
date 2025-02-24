@@ -164,7 +164,7 @@ def check_mentions():
             params["since_id"] = last_mention_id
             
         # Make the request
-        response = requests.get(mentions_url, headers=headers, params=params)
+        response = requests.get(mentions_url, auth=auth, params=params)
         response.raise_for_status()
         
         data = response.json()
@@ -212,7 +212,7 @@ def check_mentions():
                         
                         reply_response = requests.post(
                             reply_url,
-                            headers=headers,
+                            auth=auth,
                             json=reply_data
                         )
                         
