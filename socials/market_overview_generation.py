@@ -7,6 +7,32 @@ from typing import List, Dict, Optional
 from dotenv import load_dotenv
 from airtable import Airtable
 import anthropic
+import requests
+
+def send_telegram_message(message: str) -> bool:
+    """Send message to Telegram"""
+    try:
+        bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
+        chat_id = os.getenv('TELEGRAM_CHAT_ID')
+        
+        if not bot_token or not chat_id:
+            logger.error("Missing Telegram credentials")
+            return False
+            
+        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+        data = {
+            "chat_id": chat_id,
+            "text": message,
+            "parse_mode": "HTML"
+        }
+        
+        response = requests.post(url, data=data)
+        response.raise_for_status()
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to send Telegram message: {e}")
+        return False
 
 def setup_logging():
     """Configure logging"""
@@ -181,9 +207,8 @@ class MarketOverviewGenerator:
                 return False
             
             # Send to Telegram as single message
-            from scripts.analyze_charts import send_telegram_message
             if not send_telegram_message(analysis):
-                logger.error("Failed to send Telegram message")
+                logger.error("Failed to send Telegram message") 
                 return False
             
             # Split into thread for Twitter
