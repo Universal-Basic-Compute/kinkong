@@ -204,8 +204,13 @@ def analyze_sentiment_with_claude(token: str, tweets: List[Dict]) -> Optional[st
         ])
         
         system_prompt = """You are a cryptocurrency market sentiment analyst.
-        Analyze these top tweets about a token and determine if there are any notably bullish signals.
-        Focus on:
+        Analyze these tweets about a token and determine if there are clear bullish signals.
+        
+        Your response MUST start with either:
+        "BULLISH:" followed by your analysis, or
+        "NOT BULLISH:" followed by brief explanation
+        
+        For BULLISH signals, look for:
         1. Significant announcements or news
         2. Strong community sentiment
         3. Notable endorsements or partnerships
@@ -214,15 +219,15 @@ def analyze_sentiment_with_claude(token: str, tweets: List[Dict]) -> Optional[st
         6. Development activity
         7. Ecosystem growth
         
-        Consider the engagement levels (likes/retweets) as a weight for each signal.
-        Only return analysis if there are clear bullish signals with supporting evidence.
-        If nothing significant, return None."""
+        Consider engagement levels (likes/retweets) as signal strength.
+        Only mark as BULLISH if there are clear, strong signals with evidence.
+        If signals are weak or unclear, mark as NOT BULLISH."""
 
-        user_prompt = f"""Analyze these top tweets about ${token}:
+        user_prompt = f"""Analyze these tweets about ${token}:
 
         {tweets_text}
 
-        Are there any noteworthy bullish signals? If yes, explain briefly. If no, respond with 'None'."""
+        Start your response with BULLISH: or NOT BULLISH: followed by your analysis."""
 
         message = client.messages.create(
             model="claude-3-5-sonnet-20241022",
@@ -237,7 +242,15 @@ def analyze_sentiment_with_claude(token: str, tweets: List[Dict]) -> Optional[st
         )
         
         analysis = message.content[0].text.strip()
-        return None if analysis.lower() == 'none' else analysis
+        
+        # Parse the response
+        if analysis.startswith("BULLISH:"):
+            return analysis  # Return full analysis including "BULLISH:" prefix
+        elif analysis.startswith("NOT BULLISH:"):
+            return None  # Return None for not bullish
+        else:
+            logger.warning(f"Unexpected analysis format: {analysis[:50]}...")
+            return None
         
     except Exception as e:
         logger.error(f"Error analyzing sentiment with Claude: {str(e)}")
