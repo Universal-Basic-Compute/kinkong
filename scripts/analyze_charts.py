@@ -446,36 +446,65 @@ For each timeframe, consider how it relates to the higher timeframes above it. Y
         )
         
         try:
-            # Clean and parse response
-            cleaned_response = clean_json_string(message.content[0].text)
-            analysis = json.loads(cleaned_response)
+            # Add debug logging for Claude's response
+            print("\nRaw response from Claude:")
+            print(message.content[0].text)
+
+            # Clean and parse response with better error handling
+            try:
+                cleaned_response = clean_json_string(message.content[0].text)
+                print("\nCleaned response:")
+                print(cleaned_response)
                 
-            # Extract timeframe analyses
-            timeframe_analyses = analysis.get('timeframes', {})
+                # Validate JSON structure before parsing
+                if not cleaned_response.strip().startswith('{'):
+                    raise ValueError("Response is not valid JSON - doesn't start with {")
+                    
+                analysis = json.loads(cleaned_response)
                 
-            # Convert to ChartAnalysis objects
-            analyses = {}
-            for timeframe, data in timeframe_analyses.items():
-                analyses[timeframe] = ChartAnalysis(
-                    timeframe=timeframe,
-                    signal=data.get("signal"),
-                    confidence=data.get("confidence"),
-                    reasoning=data.get("reasoning"),
-                    key_levels=data.get("key_levels"),
-                    risk_reward_ratio=data.get("risk_reward_ratio"),
-                    reassess_conditions=None
-                )
+                # Validate expected structure
+                if 'timeframes' not in analysis:
+                    raise ValueError("Response missing required 'timeframes' key")
+                    
+                # Extract timeframe analyses
+                timeframe_analyses = analysis.get('timeframes', {})
                 
-            # Add overall analysis
-            analyses["overall"] = analysis.get("overall_analysis", {})
+                if not timeframe_analyses:
+                    raise ValueError("No timeframe analyses found in response")
+                    
+                # Convert to ChartAnalysis objects
+                analyses = {}
+                for timeframe, data in timeframe_analyses.items():
+                    if not isinstance(data, dict):
+                        print(f"Warning: Invalid data format for timeframe {timeframe}")
+                        continue
+                        
+                    analyses[timeframe] = ChartAnalysis(
+                        timeframe=timeframe,
+                        signal=data.get("signal"),
+                        confidence=data.get("confidence"),
+                        reasoning=data.get("reasoning"),
+                        key_levels=data.get("key_levels"),
+                        risk_reward_ratio=data.get("risk_reward_ratio"),
+                        reassess_conditions=None
+                    )
+                    
+                # Add overall analysis
+                analyses["overall"] = analysis.get("overall_analysis", {})
                 
-            return analyses
-            
-        except Exception as e:
-            print(f"Failed to parse analysis: {e}")
-            print("Response content:")
-            print(cleaned_response)
-            raise
+                return analyses
+                
+            except json.JSONDecodeError as e:
+                print(f"\nJSON parsing error: {e}")
+                print("Failed to parse response at position:", e.pos)
+                print("Line:", e.doc.splitlines()[e.lineno-1])
+                return None
+                
+            except Exception as e:
+                print(f"\nError processing Claude's response: {e}")
+                print("Response content:")
+                print(cleaned_response)
+                return None
             
 
             
