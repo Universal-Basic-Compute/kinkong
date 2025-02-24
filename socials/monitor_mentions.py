@@ -1,5 +1,4 @@
 import os
-import time
 import tweepy
 import requests
 import logging
@@ -14,6 +13,19 @@ def setup_logging():
     return logging.getLogger(__name__)
 
 logger = setup_logging()
+
+def get_last_mention_id():
+    """Read last processed mention ID from file"""
+    try:
+        with open('last_mention_id.txt', 'r') as f:
+            return int(f.read().strip())
+    except (FileNotFoundError, ValueError):
+        return None
+
+def save_last_mention_id(mention_id):
+    """Save last processed mention ID to file"""
+    with open('last_mention_id.txt', 'w') as f:
+        f.write(str(mention_id))
 
 def send_telegram_notification(mention):
     """Send mention notification to Telegram"""
@@ -51,8 +63,8 @@ def send_telegram_notification(mention):
         logger.error(f"Failed to send Telegram notification: {e}")
         return False
 
-def monitor_mentions():
-    """Monitor mentions of @kinkong_ubc"""
+def check_mentions():
+    """Check mentions of @kinkong_ubc once"""
     try:
         # Initialize X API client
         auth = tweepy.OAuthHandler(
@@ -72,48 +84,40 @@ def monitor_mentions():
             access_token_secret=os.getenv('X_ACCESS_TOKEN_SECRET')
         )
         
-        # Track last processed mention
-        last_mention_id = None
+        # Get last processed mention ID
+        last_mention_id = get_last_mention_id()
         
-        while True:
-            try:
-                # Get mentions using v2 endpoint
-                mentions = client.get_users_mentions(
-                    id=client.get_me()[0].id,
-                    since_id=last_mention_id,
-                    tweet_fields=['created_at', 'text'],
-                    expansions=['author_id'],
-                    user_fields=['username']
-                )
+        # Get mentions using v2 endpoint
+        mentions = client.get_users_mentions(
+            id=client.get_me()[0].id,
+            since_id=last_mention_id,
+            tweet_fields=['created_at', 'text'],
+            expansions=['author_id'],
+            user_fields=['username']
+        )
+        
+        if mentions.data:
+            newest_id = None
+            for mention in mentions.data:
+                # Track newest mention ID
+                if not newest_id or mention.id > newest_id:
+                    newest_id = mention.id
+                    
+                # Get full tweet object for better formatting
+                tweet = api.get_status(mention.id, tweet_mode='extended')
                 
-                if mentions.data:
-                    for mention in mentions.data:
-                        # Update last mention ID
-                        if not last_mention_id or mention.id > last_mention_id:
-                            last_mention_id = mention.id
-                            
-                        # Get full tweet object for better formatting
-                        tweet = api.get_status(mention.id, tweet_mode='extended')
-                        
-                        # Send notification
-                        if send_telegram_notification(tweet):
-                            logger.info(f"Notification sent for mention from @{tweet.user.screen_name}")
-                        else:
-                            logger.error(f"Failed to send notification for mention from @{tweet.user.screen_name}")
-                
-                # Wait before next check
-                time.sleep(60)  # Check every minute
-                
-            except tweepy.RateLimitError:
-                logger.warning("Rate limit reached, waiting 15 minutes...")
-                time.sleep(900)
-                
-            except Exception as e:
-                logger.error(f"Error checking mentions: {e}")
-                time.sleep(60)
+                # Send notification
+                if send_telegram_notification(tweet):
+                    logger.info(f"Notification sent for mention from @{tweet.user.screen_name}")
+                else:
+                    logger.error(f"Failed to send notification for mention from @{tweet.user.screen_name}")
+            
+            # Save newest mention ID
+            if newest_id:
+                save_last_mention_id(newest_id)
                 
     except Exception as e:
-        logger.error(f"Monitor process failed: {e}")
+        logger.error(f"Check mentions failed: {e}")
         raise
 
 def main():
@@ -135,8 +139,9 @@ def main():
         if missing_vars:
             raise ValueError(f"Missing required environment variables: {', '.join(missing_vars)}")
         
-        logger.info("Starting mentions monitor...")
-        monitor_mentions()
+        logger.info("Checking mentions...")
+        check_mentions()
+        logger.info("Mentions check completed")
         
     except Exception as e:
         logger.error(f"Script failed: {e}")
