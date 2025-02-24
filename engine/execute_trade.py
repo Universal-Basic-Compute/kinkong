@@ -321,10 +321,7 @@ class JupiterTradeExecutor:
         """Execute a trade transaction with optimized sending and rate limit handling"""
         client = AsyncClient(
             "https://api.mainnet-beta.solana.com",
-            commitment="confirmed",
-            transaction_version_config={
-                "maxSupportedTransactionVersion": 0
-            }
+            commitment="confirmed"
         )
         try:
             for attempt in range(max_retries):
@@ -339,7 +336,7 @@ class JupiterTradeExecutor:
                             skip_preflight=True,
                             max_retries=2,
                             preflight_commitment="confirmed",
-                            max_supported_transaction_version=0
+                            max_supported_transaction_version=0  # Specify version in options
                         )
                     )
                     
