@@ -52,8 +52,8 @@ export async function GET() {
           volume24h: record.get('volume24h') || 0,
           liquidity: record.get('liquidity') || 0,
           holderCount: record.get('holderCount') || 0,
-          priceGrowth: record.get('priceGrowth') || 0, // Récupérer directement du snapshot
-          volumeGrowth: record.get('volumeGrowth') || 0, // Récupérer directement du snapshot
+          priceTrend: record.get('priceTrend') || 0,
+          volumeGrowth: record.get('volumeGrowth') || 0,
           createdAt: record.get('createdAt')
         };
       }
@@ -72,7 +72,7 @@ export async function GET() {
         xAccount: record.get('xAccount'),
         isActive: Boolean(record.get('isActive')),
         price: parseFloat(snapshot.price) || 0,
-        priceGrowth: parseFloat(snapshot.priceGrowth) || 0,
+        priceTrend: parseFloat(snapshot.priceTrend) || 0,
         volumeGrowth: parseFloat(snapshot.volumeGrowth) || 0,
         liquidity: parseFloat(snapshot.liquidity) || 0,
         holderCount: parseInt(snapshot.holderCount) || 0

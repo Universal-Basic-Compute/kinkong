@@ -6,7 +6,7 @@ interface TokenInfo {
   token: string;
   name: string;
   mint: string;
-  priceGrowth: number;
+  priceTrend: number;
   volumeGrowth: number;
   liquidity: number;
 }
@@ -193,7 +193,7 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
           <div class="font-bold mb-1">${token.token}</div>
           <div class="text-gray-400 text-xs mb-2">${token.name}</div>
           <div>Volume Growth: ${token.volumeGrowth.toFixed(2)}%</div>
-          <div>Price Growth: ${token.priceGrowth.toFixed(2)}%</div>
+          <div>Price Trend: ${token.priceTrend.toFixed(2)}%</div>
           <div>Liquidity: $${token.liquidity.toLocaleString()}</div>
         `;
         tooltip.style.display = 'block';
