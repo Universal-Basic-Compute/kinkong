@@ -331,8 +331,7 @@ class TradeExecutor:
             # Update trade with ERROR status and error message
             self.trades_table.update(trade_id, {
                 'status': 'ERROR',
-                'notes': error_message,
-                'updatedAt': datetime.now(timezone.utc).isoformat()
+                'notes': error_message
             })
             
             # Send error notification
