@@ -219,22 +219,34 @@ class MarketOverviewGenerator:
                 logger.error(f"Failed to create THOUGHTS record: {e}")
                 return False
             
-            # Send to Telegram as single message
+            # Send to Telegram
             if not send_telegram_message(analysis):
-                logger.error("Failed to send Telegram message") 
+                logger.error("Failed to send Telegram message")
                 return False
             
-            # Post to X as thread
+            # Post to X as thread without images
             try:
-                # Import post_to_x using absolute path
-                import sys
-                from pathlib import Path
-                project_root = Path(__file__).parent.parent.absolute()
-                if str(project_root) not in sys.path:
-                    sys.path.insert(0, str(project_root))
+                import tweepy
                 
-                from socials.post_signal import post_to_x
+                # Get OAuth credentials
+                api_key = os.getenv('X_API_KEY')
+                api_secret = os.getenv('X_API_SECRET')
+                access_token = os.getenv('X_ACCESS_TOKEN')
+                access_token_secret = os.getenv('X_ACCESS_TOKEN_SECRET')
                 
+                if not all([api_key, api_secret, access_token, access_token_secret]):
+                    logger.error("Missing X API credentials")
+                    return False
+                
+                # Initialize Tweepy client
+                client = tweepy.Client(
+                    consumer_key=api_key,
+                    consumer_secret=api_secret,
+                    access_token=access_token,
+                    access_token_secret=access_token_secret
+                )
+                
+                # Split analysis into chunks
                 chunks = []
                 current_chunk = ""
                 for line in analysis.split('\n'):
@@ -246,17 +258,24 @@ class MarketOverviewGenerator:
                 if current_chunk:
                     chunks.append(current_chunk.strip())
                 
+                # Post thread
                 previous_tweet_id = None
                 for i, chunk in enumerate(chunks):
                     numbered_chunk = f"({i+1}/{len(chunks)}) {chunk}"
-                    success = post_to_x(
-                        numbered_chunk, 
-                        {'type': 'MARKET_UPDATE', 'reply_to': previous_tweet_id}
-                    )
-                    if not success:
-                        logger.error(f"Failed to post thread part {i+1}")
+                    try:
+                        response = client.create_tweet(
+                            text=numbered_chunk,
+                            in_reply_to_tweet_id=previous_tweet_id
+                        )
+                        if response.data:
+                            previous_tweet_id = response.data['id']
+                            logger.info(f"Posted thread part {i+1}")
+                        else:
+                            logger.error(f"Failed to post thread part {i+1}")
+                            return False
+                    except Exception as e:
+                        logger.error(f"Error posting thread part {i+1}: {e}")
                         return False
-                    previous_tweet_id = success
                     
             except Exception as e:
                 logger.error(f"Failed to post to X: {e}")
