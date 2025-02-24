@@ -14,12 +14,36 @@ from airtable import Airtable as AirtableAPI
 from airtable import Airtable
 
 def extract_tokens_from_text(text: str) -> List[str]:
-    """Extract tokens mentioned with $ symbol from text"""
+    """Extract tokens from text, with or without $ symbol"""
     import re
-    # Match $TOKEN pattern, excluding common punctuation after the token
-    pattern = r'\$([A-Za-z0-9]+)(?=[.,!?\s]|$)'
-    matches = re.findall(pattern, text)
-    return [token.upper() for token in matches]
+    
+    # Liste des tokens à ignorer
+    IGNORE_TOKENS = {'USD', 'APT', 'NFT', 'AI', 'ML', 'DM', 'GM', 'GN', 'ATH', 'IMO', 'TBH', 'IDK', 'NFA'}
+    
+    # Patterns pour trouver les tokens
+    patterns = [
+        r'\$([A-Za-z0-9]+)(?=[.,!?\s]|$)',  # Tokens avec $
+        r'\b([A-Z][A-Z0-9]{2,})(?=[.,!?\s]|$)',  # Tokens en majuscules
+        r'(?:token|coin)\s+([A-Za-z0-9]+)',  # Mots après "token" ou "coin"
+        r'#([A-Za-z0-9]+)(?=[.,!?\s]|$)'  # Hashtags
+    ]
+    
+    all_tokens = set()
+    
+    # Appliquer chaque pattern
+    for pattern in patterns:
+        matches = re.findall(pattern, text, re.IGNORECASE)
+        for token in matches:
+            token = token.upper()
+            if (token not in IGNORE_TOKENS and 
+                len(token) >= 3 and 
+                len(token) <= 10):
+                all_tokens.add(token)
+    
+    if all_tokens:
+        logger.info(f"Found tokens in text: {list(all_tokens)}")
+    
+    return list(all_tokens)
 
 def check_token_status(token: str, airtable_base_id: str, airtable_api_key: str) -> bool:
     """Check if token needs updating (doesn't exist or old data)"""
@@ -361,60 +385,48 @@ async def check_mentions():
                         'created_at': mention['created_at'],
                         'author_username': author['username'] if author else None
                     }
-                        
-                    # Save mention and process its tokens
+                    
+                    # Save mention
                     await save_message(mention_data, 'X_MENTION')
-                    mention_tokens = extract_tokens_from_text(mention['text'])
-                        
+                    
+                    # Collect all text to search for tokens
+                    all_text = [mention['text']]  # Start with mention text
+                    
                     # Get conversation context
-                    conversation_tokens = set()
-                        
-                    # Check referenced tweets (replies, quotes)
                     referenced_tweets = mention.get("referenced_tweets", [])
                     for ref in referenced_tweets:
                         try:
                             # Get parent tweet
                             parent_url = f"https://api.twitter.com/2/tweets/{ref['id']}"
                             parent_response = requests.get(parent_url, auth=auth)
-                                
+                            
                             if parent_response.ok:
                                 parent_data = parent_response.json()
                                 if "data" in parent_data:
                                     parent_tweet = parent_data["data"]
-                                        
-                                    # Save parent tweet
-                                    parent_tweet_data = {
-                                        'id': parent_tweet['id'],
-                                        'text': parent_tweet['text'],
-                                        'created_at': parent_tweet.get('created_at', mention['created_at']),
-                                        'author_username': parent_tweet.get('author_username', 'unknown')
-                                    }
-                                    await save_message(parent_tweet_data, 'X_MENTION')
-                                        
-                                    # Extract tokens from parent
-                                    parent_tokens = extract_tokens_from_text(parent_tweet['text'])
-                                    conversation_tokens.update(parent_tokens)
-                                        
+                                    all_text.append(parent_tweet['text'])
+                                    
                                     # If this is a reply, get the conversation thread
                                     if ref['type'] == 'replied_to':
                                         conversation_url = f"https://api.twitter.com/2/tweets/{ref['id']}/conversation"
                                         conv_response = requests.get(conversation_url, auth=auth)
-                                            
+                                        
                                         if conv_response.ok:
                                             conv_data = conv_response.json()
                                             for tweet in conv_data.get('data', []):
-                                                conv_tokens = extract_tokens_from_text(tweet['text'])
-                                                conversation_tokens.update(conv_tokens)
-                            
+                                                all_text.append(tweet['text'])
+                        
                         except Exception as e:
                             logger.error(f"Error processing referenced tweet: {e}")
                             continue
-                        
-                    # Combine all tokens from mention and conversation
-                    all_tokens = set(mention_tokens) | conversation_tokens
-                    if all_tokens:
-                        logger.info(f"Found tokens in conversation: {list(all_tokens)}")
-                        await process_tokens(list(all_tokens))
+                    
+                    # Combine all text and search for tokens
+                    combined_text = " ".join(all_text)
+                    tokens = extract_tokens_from_text(combined_text)
+                    
+                    if tokens:
+                        logger.info(f"Found tokens in conversation: {tokens}")
+                        await process_tokens(tokens)
                     else:
                         logger.info("No tokens found in conversation")
                 except Exception as e:
