@@ -364,16 +364,18 @@ class JupiterTradeExecutor:
                                 commitment="finalized"
                             )
                             
-                            # Verify confirmation with get_transaction
+                            # Verify confirmation with get_transaction and support version
                             tx_response = await client.get_transaction(
                                 signature,
+                                commitment="finalized",
+                                encoding="jsonParsed",
                                 max_supported_transaction_version=0
                             )
-                            
+                    
                             if not tx_response.value:
                                 self.logger.error("Could not verify transaction")
                                 continue
-                                
+                        
                             # Check transaction metadata for errors
                             if tx_response.value.transaction.meta.err:
                                 self.logger.error(f"Transaction failed: {tx_response.value.transaction.meta.err}")
