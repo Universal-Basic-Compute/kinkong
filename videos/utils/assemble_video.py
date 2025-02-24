@@ -51,6 +51,7 @@ def process_video_clip(
     """
     Process a single video clip: resize, crop, add text and effects
     """
+    video_clip = None
     try:
         logger.info(f"Processing clip for video {video_num}")
         # Load video clip
@@ -96,6 +97,19 @@ def process_video_clip(
         logger.error(f"Error processing video clip: {e}")
         logger.exception("Detailed error trace:")
         return None
+    finally:
+        # Cleanup video clip
+        if video_clip is not None:
+            try:
+                if hasattr(video_clip, 'reader') and video_clip.reader is not None:
+                    try:
+                        video_clip.reader.close()
+                    except Exception:
+                        pass
+                    video_clip.reader = None
+                video_clip.close()
+            except Exception:
+                pass
 
 def assemble_final_video(
     video_paths: List[Tuple[int, str]],
@@ -153,7 +167,7 @@ def write_final_video(
     fps: int = 30
 ) -> bool:
     """
-    Write the final video to disk
+    Write the final video to disk with aggressive cleanup
     """
     try:
         # Determine output path
@@ -167,49 +181,65 @@ def write_final_video(
         output_dir.mkdir(parents=True, exist_ok=True)
         
         try:
+            # Write video file
             final_clip.write_videofile(
                 str(output_path),
                 fps=fps,
                 codec='libx264',
                 audio=False,
-                logger=None  # Suppress MoviePy's internal logging
+                logger=None
             )
-        finally:
-            # Explicitly close clips and readers
-            try:
-                # Close all video readers first
-                for clip in final_clip.clips:
+            
+            # Force cleanup of all clips
+            for clip in final_clip.clips:
+                try:
+                    # Clean up reader
                     if hasattr(clip, 'reader') and clip.reader is not None:
                         try:
                             clip.reader.close()
-                            clip.reader = None
-                        except Exception as e:
-                            logger.debug(f"Non-critical error during reader cleanup: {e}")
+                        except Exception:
+                            pass
+                        clip.reader = None
                     
-                    # Close the clip
-                    try:
-                        clip.close()
-                    except Exception as e:
-                        logger.debug(f"Non-critical error during clip cleanup: {e}")
-                
-                # Finally close the main clip
-                if hasattr(final_clip, 'reader') and final_clip.reader is not None:
-                    try:
-                        final_clip.reader.close()
-                        final_clip.reader = None
-                    except Exception as e:
-                        logger.debug(f"Non-critical error during final reader cleanup: {e}")
-                        
-                final_clip.close()
-                
-            except Exception as e:
-                logger.debug(f"Non-critical error during cleanup: {e}")
-        
-        logger.info(f"✨ Video {video_num} creation completed successfully!")
-        return True
-        
+                    # Clean up audio
+                    if hasattr(clip, 'audio') and clip.audio is not None:
+                        try:
+                            clip.audio.close()
+                        except Exception:
+                            pass
+                        clip.audio = None
+                    
+                    # Close clip
+                    clip.close()
+                except Exception:
+                    pass
+            
+            # Clean up final clip
+            if hasattr(final_clip, 'reader') and final_clip.reader is not None:
+                try:
+                    final_clip.reader.close()
+                except Exception:
+                    pass
+                final_clip.reader = None
+            
+            if hasattr(final_clip, 'audio') and final_clip.audio is not None:
+                try:
+                    final_clip.audio.close()
+                except Exception:
+                    pass
+                final_clip.audio = None
+            
+            final_clip.close()
+            
+            logger.info(f"✨ Video {video_num} creation completed successfully!")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error writing video file: {e}")
+            return False
+            
     except Exception as e:
-        logger.error(f"Error writing final video: {e}")
+        logger.error(f"Error in write_final_video: {e}")
         logger.exception("Detailed error trace:")
         return False
 
