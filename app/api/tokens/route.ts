@@ -33,20 +33,22 @@ export async function GET() {
       })
       .all();
 
-    // Get latest snapshots
+    // Get snapshots from last 12 hours
     const snapshotsTable = getTable('TOKEN_SNAPSHOTS');
     const snapshotRecords = await snapshotsTable
       .select({
         sort: [{ field: 'createdAt', direction: 'desc' }],
-        filterByFormula: "IS_SAME({createdAt}, DATEADD(NOW(), -1, 'hours'), 'hour')" // Get snapshots from last hour
+        filterByFormula: "IS_AFTER({createdAt}, DATEADD(NOW(), -12, 'hours'))"
       })
       .all();
 
-    // Create a map of latest snapshots by token
-    const snapshotMap = snapshotRecords.reduce((acc, record: Record<SnapshotRecord>) => {
+    // Create a map keeping only the most recent snapshot for each token
+    const snapshotMap: Record<string, any> = {};
+    for (const record of snapshotRecords) {
       const token = record.get('token');
-      if (!acc[token] || new Date(record.get('createdAt')) > new Date(acc[token].createdAt)) {
-        acc[token] = {
+      // Only store if we don't have this token yet (since records are sorted by date desc)
+      if (!snapshotMap[token]) {
+        snapshotMap[token] = {
           price: record.get('price') || 0,
           volume24h: record.get('volume24h') || 0,
           liquidity: record.get('liquidity') || 0,
@@ -56,8 +58,7 @@ export async function GET() {
           createdAt: record.get('createdAt')
         };
       }
-      return acc;
-    }, {} as Record<string, any>);
+    }
 
     // Combine token info with snapshot data
     const tokens = tokenRecords.map((record: Record<TokenRecord>) => {
