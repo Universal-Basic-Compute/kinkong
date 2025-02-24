@@ -175,7 +175,19 @@ async def create_tiktok_video():
                 try:
                     # Create background clip
                     bg_clip = ImageClip(str(img_path))
-                    bg_clip = bg_clip.resize(height=height)  # Maintain aspect ratio
+                    
+                    # Calculate new width maintaining aspect ratio
+                    aspect_ratio = bg_clip.size[0] / bg_clip.size[1]
+                    new_width = int(height * aspect_ratio)
+                    
+                    # Resize clip using with_size
+                    bg_clip = bg_clip.with_size((new_width, height))
+                    
+                    # Center the clip if wider than target width
+                    if new_width > width:
+                        x_offset = (new_width - width) // 2
+                        bg_clip = bg_clip.with_crop(x1=x_offset, x2=x_offset+width, y1=0, y2=height)
+                    
                     bg_clip = bg_clip.with_duration(duration_per_screen)
                     
                     # Create text clip
@@ -189,7 +201,7 @@ async def create_tiktok_video():
                     
                     # Combine background and text
                     logger.debug("Combining clips and adding effects")
-                    screen_clip = CompositeVideoClip([bg_clip] + text_clips)
+                    screen_clip = CompositeVideoClip([bg_clip] + text_clips, size=(width, height))
                     screen_clip = screen_clip.with_effects([
                         FadeIn(duration=0.5),
                         FadeOut(duration=0.5)
@@ -199,6 +211,7 @@ async def create_tiktok_video():
                     logger.info(f"✅ Completed screen {screen_num}")
                 except Exception as e:
                     logger.error(f"❌ Error processing screen {screen_num}: {e}")
+                    logger.exception("Detailed error trace:")  # Add stack trace for debugging
                     continue
 
             # Check if we have any clips before proceeding
