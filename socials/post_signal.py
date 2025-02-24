@@ -125,8 +125,6 @@ Write a short, engaging tweet about a trading signal. The tweet should:
         base_prompt += f"\n\nMention the project's X account: {token_info['xAccount']}"
 
     return base_prompt
-[Levels]
-#Solana"""
 
 def generate_tweet_with_claude(signal_data: Dict) -> Optional[str]:
     """Generate tweet content using Claude"""
