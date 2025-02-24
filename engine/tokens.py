@@ -159,6 +159,9 @@ class TokenSearcher:
     def create_token_record(self, token_data: Dict[str, Any]) -> bool:
         """Create a token record in Airtable with social media and pair info from DexScreener"""
         try:
+            # Get current timestamp in ISO format
+            current_time = datetime.now(timezone.utc).isoformat()
+            
             # Special tokens that are always active
             ALWAYS_ACTIVE_TOKENS = {'USDT', 'WETH', 'WBTC', 'SOL'}
             # Tokens that are always inactive
