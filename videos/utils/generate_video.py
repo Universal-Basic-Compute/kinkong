@@ -119,11 +119,19 @@ class VideoGenerator:
                 "X-Runway-Version": "2024-11-06"  # Added version header
             }
             
+            # Ensure image URL is properly formatted
+            # Remove any query parameters or fragments
+            clean_image_url = image_url.split('?')[0].split('#')[0]
+            
+            logger.info(f"✅ Using image URL: {clean_image_url}")
+            
             payload = {
                 "model": model,
-                "prompt_image": image_url,
-                "prompt_text": prompt
+                "promptImage": clean_image_url,  # Changed from prompt_image to promptImage
+                "promptText": prompt  # Changed from prompt_text to promptText
             }
+            
+            logger.debug(f"Sending payload: {json.dumps(payload, indent=2)}")
             
             response = requests.post(
                 runway_url,
