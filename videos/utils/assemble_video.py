@@ -186,12 +186,17 @@ def main():
     """
     Main entry point when script is run directly
     """
-    if len(sys.argv) != 2:
-        logger.error("Usage: python assemble_video.py <video_number>")
-        sys.exit(1)
-        
     try:
+        logger.info(f"Command line arguments: {sys.argv}")
+        
+        if len(sys.argv) != 2:
+            logger.error("Usage: python assemble_video.py <video_number>")
+            sys.exit(1)
+        
+        # Debug the input
+        logger.info(f"Attempting to convert '{sys.argv[1]}' to integer")
         video_num = int(sys.argv[1])
+        logger.info(f"Successfully converted to integer: {video_num}")
         
         # Load video paths and screens from the video's directory
         video_dir = Path('videos/videos') / f'video{video_num}'
@@ -233,8 +238,9 @@ def main():
             logger.error(f"❌ Failed to assemble video {video_num}")
             sys.exit(1)
             
-    except ValueError:
-        logger.error("Video number must be an integer")
+    except ValueError as ve:
+        logger.error(f"Video number must be an integer. Input was: '{sys.argv[1]}'")
+        logger.debug(f"ValueError details: {ve}")
         sys.exit(1)
     except Exception as e:
         logger.error(f"Error: {e}")
@@ -242,6 +248,8 @@ def main():
         sys.exit(1)
 
 if __name__ == "__main__":
+    logger.info("Starting video assembly script")
+    logger.info(f"Arguments received: {sys.argv}")
     main()
 
 def assemble_video(
