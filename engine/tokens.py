@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import codecs
 import requests
 from datetime import datetime, timezone
 from pathlib import Path
@@ -8,6 +9,30 @@ from airtable import Airtable
 from dotenv import load_dotenv
 from typing import Optional, Dict, Any
 import logging
+
+# Configure UTF-8 encoding for stdout/stderr
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+    sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
+
+def log_message(message: str, level: str = 'info'):
+    """Log message with emoji replacements"""
+    # Replace emojis with text
+    message = message.replace('🔍', '[SEARCH]')
+    message = message.replace('✅', '[SUCCESS]') 
+    message = message.replace('❌', '[ERROR]')
+    message = message.replace('➕', '[ADD]')
+    message = message.replace('🔄', '[UPDATE]')
+    message = message.replace('📝', '[WRITE]')
+    message = message.replace('🌐', '[WEB]')
+    message = message.replace('💧', '[LIQUID]')
+    message = message.replace('ℹ️', '[INFO]')
+    message = message.replace('⚠️', '[WARN]')
+    
+    if level == 'error':
+        logger.error(message)
+    else:
+        logger.info(message)
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent.absolute()
