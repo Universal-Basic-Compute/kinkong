@@ -54,6 +54,10 @@ def log_message(message: str, level: str = 'info'):
     message = message.replace('ℹ️', '[INFO]')
     message = message.replace('⚠️', '[WARN]')
     
+    # Use print for immediate output
+    print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {level.upper()} - {message}")
+    
+    # Also log through logger
     if level == 'error':
         logger.error(message)
     else:

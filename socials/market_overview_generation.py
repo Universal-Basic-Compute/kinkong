@@ -37,18 +37,29 @@ def send_telegram_message(message: str) -> bool:
 def setup_logging():
     """Configure logging"""
     logger = logging.getLogger(__name__)
-    if not logger.handlers:
-        handler = logging.StreamHandler()
-        formatter = logging.Formatter(
-            '%(asctime)s - %(levelname)s - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
-        )
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
+    
+    # Remove any existing handlers to avoid duplicates
+    if logger.hasHandlers():
+        logger.handlers.clear()
+    
+    # Create console handler with formatting
+    console_handler = logging.StreamHandler(sys.stdout)  # Explicitly use stdout
+    formatter = logging.Formatter(
+        '%(asctime)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+    console_handler.setFormatter(formatter)
+    
+    # Add handler to logger
+    logger.addHandler(console_handler)
     logger.setLevel(logging.INFO)
-    logger.propagate = False
+    
+    # Ensure propagation is enabled
+    logger.propagate = True
+    
     return logger
 
+# Initialize logger at module level
 logger = setup_logging()
 
 class MarketOverviewGenerator:
