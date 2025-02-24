@@ -105,16 +105,15 @@ def generate_images_parallel(screens: List[Dict]) -> List[Tuple[int, Optional[st
     def generate_single(args: Tuple[int, Dict]) -> Tuple[int, Optional[str]]:
         """Worker function for each image generation task"""
         i, screen = args
-        background_prompt = screen.get('background')
-        if not background_prompt:
-            logger.warning(f"⚠️ No background prompt for screen {i}")
+        if not screen:
+            logger.warning(f"⚠️ No screen data for screen {i}")
             return i, None
             
         logger.info(f"🖼️ Generating image {i}/{len(screens)}")
-        logger.debug(f"Prompt: {background_prompt[:100]}...")
+        logger.debug(f"Screen data: {screen}")
         
-        # Generate image with absolute path
-        image_path = generate_image(background_prompt, i, base_dir)
+        # Pass the entire screen dict to generate_image
+        image_path = generate_image(screen, i, base_dir)
         
         if not image_path:
             logger.error(f"❌ Failed to generate image {i}")
