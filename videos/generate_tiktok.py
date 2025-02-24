@@ -4,6 +4,8 @@ import json
 import asyncio
 import logging
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Dict, List, Optional, Tuple
 
 # Add project root to Python path
 project_root = str(Path(__file__).parent.parent.absolute())
@@ -27,6 +29,59 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 logger = logging.getLogger(__name__)
+
+def generate_images_parallel(screens: List[Dict]) -> List[Tuple[int, Optional[str]]]:
+    """
+    Generate all images in parallel using a thread pool
+    Returns list of tuples (screen_number, image_path)
+    """
+    logger.info(f"🎨 Starting parallel image generation for {len(screens)} screens...")
+    
+    def generate_single(args: Tuple[int, Dict]) -> Tuple[int, Optional[str]]:
+        """Worker function for each image generation task"""
+        i, screen = args
+        background_prompt = screen.get('background')
+        if not background_prompt:
+            logger.warning(f"⚠️ No background prompt for screen {i}")
+            return i, None
+            
+        logger.info(f"🖼️ Generating image {i}/{len(screens)}")
+        logger.debug(f"Prompt: {background_prompt[:100]}...")
+        
+        image_path = generate_image(background_prompt, i)
+        
+        if not image_path:
+            logger.error(f"❌ Failed to generate image {i}")
+            return i, None
+            
+        logger.info(f"✅ Generated image {i}: {image_path}")
+        return i, image_path
+
+    # Create tasks for each screen
+    tasks = list(enumerate(screens, 1))
+    results = []
+
+    # Use ThreadPoolExecutor to run tasks in parallel
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        # Submit all tasks
+        future_to_screen = {
+            executor.submit(generate_single, task): task[0] 
+            for task in tasks
+        }
+        
+        # Collect results as they complete
+        for future in as_completed(future_to_screen):
+            screen_num = future_to_screen[future]
+            try:
+                result = future.result()
+                results.append(result)
+            except Exception as e:
+                logger.error(f"❌ Error generating image {screen_num}: {e}")
+                results.append((screen_num, None))
+
+    # Sort results by screen number
+    results.sort(key=lambda x: x[0])
+    return results
 
 async def create_tiktok_video():
     try:
@@ -73,23 +128,16 @@ async def create_tiktok_video():
 
             logger.info(f"✅ Successfully parsed script with {len(screens)} screens")
 
-            # Generate images for each screen
-            logger.info("🎨 Starting image generation process...")
-            for i, screen in enumerate(screens, 1):
-                background_prompt = screen.get('background')
-                if not background_prompt:
-                    logger.warning(f"⚠️ No background prompt for screen {i}")
-                    continue
-                    
-                logger.info(f"🖼️ Generating image {i}/{len(screens)}")
-                logger.debug(f"Prompt: {background_prompt[:100]}...")
-                image_path = generate_image(background_prompt, i)
-                
-                if not image_path:
-                    logger.error(f"❌ Failed to generate image {i}")
-                    continue
-                    
-                logger.info(f"✅ Generated image {i}: {image_path}")
+            # Generate all images in parallel
+            image_results = generate_images_parallel(screens)
+
+            # Check if we have all images
+            failed_screens = [num for num, path in image_results if path is None]
+            if failed_screens:
+                logger.error(f"❌ Failed to generate images for screens: {failed_screens}")
+                return
+
+            logger.info("✅ All images generated successfully")
 
             # Video settings (TikTok format)
             width = 1080
@@ -100,23 +148,23 @@ async def create_tiktok_video():
             # Create clips for each screen
             logger.info("🎞️ Creating video clips...")
             clips = []
-            for i, screen in enumerate(screens, 1):
-                logger.info(f"Processing screen {i}/{len(screens)}")
+            for i, (screen_num, image_path) in enumerate(image_results):
+                logger.info(f"Processing screen {screen_num}/{len(screens)}")
                 
                 # Load background image
-                img_path = image_dir / f"{i}.png"
-                if not img_path.exists():
-                    logger.error(f"❌ Missing image for screen {i}")
+                if not Path(image_path).exists():
+                    logger.error(f"❌ Missing image for screen {screen_num}")
                     continue
                 
-                logger.debug(f"Loading image: {img_path}")
+                logger.debug(f"Loading image: {image_path}")
                 
                 # Create background clip
-                bg_clip = ImageClip(str(img_path))
+                bg_clip = ImageClip(str(image_path))
                 bg_clip = bg_clip.resize(height=height)  # Maintain aspect ratio
                 bg_clip = bg_clip.with_duration(duration_per_screen)
                 
                 # Create text clip
+                screen = screens[i]  # Get corresponding screen data
                 logger.debug(f"Creating text clip: {screen['text']}")
                 text_clips, _ = create_text_clips(
                     screen['text'], 
@@ -133,7 +181,7 @@ async def create_tiktok_video():
                 ])
                 
                 clips.append(screen_clip)
-                logger.info(f"✅ Completed screen {i}")
+                logger.info(f"✅ Completed screen {screen_num}")
 
             # Combine all clips
             logger.info("🎬 Combining all clips into final video...")
