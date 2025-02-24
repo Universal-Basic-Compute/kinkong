@@ -7,15 +7,25 @@ import logging
 import platform
 if platform.system() == 'Windows':
     import asyncio
+    import socket
+    from functools import partial
+    
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     
-    # Fix DNS lookup without modifying socket
-    import socket
-    original_getaddrinfo = socket.getaddrinfo
+    # Create proper async DNS resolver
+    async def async_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+        loop = asyncio.get_event_loop()
+        return await loop.getaddrinfo(host, port)
+    
+    # Replace socket.getaddrinfo with async version
     def patched_getaddrinfo(*args, **kwargs):
-        return asyncio.get_event_loop().run_until_complete(
-            asyncio.get_event_loop().getaddrinfo(*args, **kwargs)
-        )
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            return loop.run_until_complete(async_getaddrinfo(*args))
+        finally:
+            loop.close()
+    
     socket.getaddrinfo = patched_getaddrinfo
 try:
     import anthropic
