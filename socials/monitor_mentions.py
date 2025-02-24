@@ -235,8 +235,8 @@ async def check_mentions():
         logger.info(f"Last processed mention ID: {last_mention_id}")
         
         params = {
-            "tweet.fields": "created_at,text",
-            "expansions": "author_id",
+            "tweet.fields": "created_at,text,conversation_id,referenced_tweets",
+            "expansions": "author_id,referenced_tweets.id",
             "user.fields": "username",
             "max_results": 10
         }
@@ -271,6 +271,30 @@ async def check_mentions():
                         newest_id = mention["id"]
                     
                     logger.info(f"\nProcessing mention: {mention['text']}")
+                    
+                    # Check if this is a reply and get parent tweet
+                    referenced_tweets = mention.get("referenced_tweets", [])
+                    if referenced_tweets:
+                        for ref in referenced_tweets:
+                            if ref["type"] == "replied_to":
+                                parent_id = ref["id"]
+                                # Get parent tweet
+                                parent_url = f"https://api.twitter.com/2/tweets/{parent_id}"
+                                parent_response = requests.get(parent_url, auth=auth)
+                                
+                                if parent_response.ok:
+                                    parent_data = parent_response.json()
+                                    if "data" in parent_data:
+                                        parent_text = parent_data["data"]["text"]
+                                        logger.info(f"Parent tweet: {parent_text}")
+                                        
+                                        # Extract tokens from parent tweet
+                                        parent_tokens = extract_tokens_from_text(parent_text)
+                                        if parent_tokens:
+                                            logger.info(f"Found tokens in parent tweet: {parent_tokens}")
+                                            tokens = parent_tokens
+                                        else:
+                                            logger.info("No tokens found in parent tweet")
                     
                     # Extract tokens from mention text
                     tokens = extract_tokens_from_text(mention["text"])
