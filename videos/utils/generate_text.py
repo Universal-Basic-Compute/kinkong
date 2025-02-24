@@ -42,63 +42,71 @@ def create_text_clips(
     font_path: Optional[str] = None
 ) -> Tuple[List[TextClip], str]:
     """
-    Create text clips for the video with punchy effects.
-    
-    Args:
-        text: The text to display
-        width: Video width
-        height: Video height
-        font_path: Optional path to font file
-    
-    Returns:
-        Tuple of (list of text clips, font path used)
+    Create text clips with background box and animations.
     """
     if not font_path:
         font_path = find_system_font()
+
+    # Remove emojis for now (we can add them back later with proper rendering)
+    text = replace_emoji(text, replace='')
 
     # Convert text to uppercase and split into parts
     text_parts = [part.upper() for part in text.split('\n\n')]
     if len(text_parts) == 1:
         text_parts = [text_parts[0], text_parts[0]]
     
-    # First part appears with fade - bigger and bolder
-    clip1 = TextClip(
-        text=text_parts[0],
-        font=font_path,
-        font_size=140,  # Increased size
-        color='white',
-        stroke_color='black',
-        stroke_width=4,  # Thicker outline
-        size=(width-80, height//2),  # Slightly larger text area
-        method='caption',
-        text_align='center',
-        horizontal_align='center',
-        vertical_align='center'
-    ).with_duration(5)
-    clip1 = clip1.with_position(('center', height//3))
-    clip1 = clip1.with_effects([
-        FadeIn(duration=0.3),  # Faster fade for more impact
-        FadeOut(duration=0.3)
-    ])
+    clips = []
+    text_box_margin = 20  # Margin around text in the box
     
-    # Second part with different styling
-    clip2 = TextClip(
-        text=text_parts[-1],
-        font=font_path,
-        font_size=120,  # Slightly smaller than first
-        color='#00ffff',  # Cyan color
-        stroke_color='black',
-        stroke_width=4,
-        size=(width-80, height//2),
-        method='caption',
-        text_align='center',
-        horizontal_align='center',
-        vertical_align='center'
-    ).with_duration(5)
-    clip2 = clip2.with_position(('center', 2*height//3))
-    clip2 = clip2.with_start(5)  # Start after first clip
-    clip2 = clip2.with_effects([
-        SlideIn(duration=0.5, side='right')  # Even faster slide
-    ])
+    for i, text_part in enumerate(text_parts):
+        # Create background box first
+        box_width = width - 100  # Slightly smaller than video width
+        box_height = height//4   # Adjust height as needed
+        
+        background_box = ColorClip(
+            size=(box_width, box_height),
+            color=[0.5, 0, 0]  # Dark red
+        ).with_opacity(0.8)  # Slightly transparent
+        
+        # Create text clip
+        text_clip = TextClip(
+            text=text_part,
+            font=font_path,
+            font_size=80,  # Larger font size
+            color='white',
+            stroke_color='black',
+            stroke_width=2,
+            size=(box_width - 2*text_box_margin, box_height - 2*text_box_margin),
+            method='caption',
+            text_align='center',
+            horizontal_align='center',
+            vertical_align='center'
+        )
+        
+        # Combine text and background
+        composed_clip = CompositeVideoClip(
+            [background_box, text_clip.with_position("center")],
+            size=(box_width, box_height)
+        )
+        
+        # Add animations based on position
+        if i == 0:
+            # First text slides in from left
+            composed_clip = composed_clip.with_effects([
+                SlideIn(duration=0.7, side="left"),
+                FadeOut(duration=0.5)
+            ])
+            composed_clip = composed_clip.with_duration(5)
+            composed_clip = composed_clip.with_position(('center', height//3))
+        else:
+            # Second text slides in from right
+            composed_clip = composed_clip.with_effects([
+                SlideIn(duration=0.7, side="right")
+            ])
+            composed_clip = composed_clip.with_duration(5)
+            composed_clip = composed_clip.with_start(0.5)  # Start slightly after first clip
+            composed_clip = composed_clip.with_position(('center', 2*height//3))
+        
+        clips.append(composed_clip)
 
-    return [clip1, clip2], font_path
+    return clips, font_path
