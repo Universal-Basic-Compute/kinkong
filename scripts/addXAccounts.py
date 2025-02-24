@@ -74,6 +74,11 @@ def get_dexscreener_data(token_address: str) -> Optional[Dict]:
         url = f"https://api.dexscreener.com/latest/dex/tokens/{token_address}"
         response = requests.get(url)
         response.raise_for_status()
+        
+        # Log the full response for debugging
+        logger.info(f"Dexscreener response for {token_address}:")
+        logger.info(json.dumps(response.json(), indent=2))
+        
         data = response.json()
         
         if not data.get('pairs'):
@@ -82,6 +87,9 @@ def get_dexscreener_data(token_address: str) -> Optional[Dict]:
             
         # Get the first pair which typically contains the social info
         pair = data['pairs'][0]
+        
+        # Log the social info specifically
+        logger.info(f"Social info found: {json.dumps(pair.get('social', {}), indent=2)}")
         
         return {
             'xAccount': pair.get('social', {}).get('twitter', '')
