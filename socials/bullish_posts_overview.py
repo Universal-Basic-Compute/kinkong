@@ -92,7 +92,7 @@ class MarketOverviewGenerator:
             return 'NEUTRAL'
 
     def generate_overview_with_claude(self, signals: Dict[str, List[Dict]], sentiment: str) -> str:
-        """Generate comprehensive market overview using Claude"""
+        """Generate comprehensive market overview using Claude, focusing on bullish signals"""
         try:
             # Format signals data for Claude
             bullish_tokens = "\n".join([
@@ -108,68 +108,64 @@ class MarketOverviewGenerator:
             current_time = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
             
             system_prompt = """You are KinKong, an AI-powered cryptocurrency trading bot specializing in Solana ecosystem tokens.
-            Write a comprehensive market analysis article that covers both bullish and bearish signals.
+            Write an engaging market analysis focused on bullish opportunities while acknowledging key risks.
             
             Article structure:
-            1. Market Overview
-               - Current sentiment and key trends
-               - Major market movements
-               - Overall ecosystem health
+            1. Market Overview (Brief)
+               - Current sentiment
+               - Key ecosystem trends
             
-            2. Bullish Signals
-               - Notable token performances
-               - Volume and liquidity analysis
-               - Emerging opportunities
+            2. Bullish Opportunities (Main Focus)
+               - Strongest performing tokens
+               - Notable volume increases
+               - Positive technical setups
+               - Emerging patterns
+               - Key support levels
             
-            3. Risk Analysis
-               - Bearish indicators
-               - Market concerns
-               - Areas to monitor
+            3. Quick Risk Summary
+               - Brief mention of key risks
+               - Important resistance levels
             
-            4. Technical Insights
-               - Volume patterns
-               - Price action analysis
-               - Market structure
-            
-            5. Conclusion
-               - Key takeaways
-               - Market outlook
-               - Important levels to watch
+            4. Action Items
+               - Tokens to watch
+               - Key levels to monitor
+               - Volume thresholds
             
             Writing style:
-            - Professional but engaging tone
+            - Enthusiastic but professional tone
+            - Focus on opportunities
             - Data-driven analysis
-            - Clear reasoning for all points
-            - Use relevant emojis for sections
-            - Include specific examples from the data
-            - Avoid price predictions
-            - Maintain KinKong's analytical voice
+            - Use relevant emojis
+            - Include specific examples
+            - Keep risk section concise
+            - Maintain KinKong's voice
             
-            The article will be split into a thread, so structure it in clear sections."""
+            Remember: While maintaining objectivity, emphasize the constructive and bullish signals in the market."""
 
             user_prompt = f"""Time: {current_time}
             Market Sentiment: {sentiment}
             
-            Bullish Signals ({len(signals['bullish'])} tokens):
+            Strong Bullish Signals ({len(signals['bullish'])} tokens):
             {bullish_tokens if bullish_tokens else "None found"}
             
-            Bearish Signals ({len(signals['bearish'])} tokens):
+            Watch List ({len(signals['bearish'])} tokens):
             {bearish_tokens if bearish_tokens else "None found"}"""
 
-            # Get Claude's analysis using same model as monitor_mentions
+            # Get Claude's analysis
             client = anthropic.Client(api_key=os.getenv('ANTHROPIC_API_KEY'))
             response = client.messages.create(
                 model="claude-3-5-sonnet-20241022",
-                max_tokens=4096,  # Increased to 4096
+                max_tokens=4096,
                 system=system_prompt,
                 messages=[{"role": "user", "content": user_prompt}]
             )
             
             analysis = response.content[0].text.strip()
             
-            # Add signature
-            analysis += "\n\n🤖 Analysis by KinKong AI" 
-            analysis += "\nFollow @kinkong_ubc for real-time signals and analysis"
+            # Add signature and call to action
+            analysis += "\n\n🦍 KinKong AI Analysis"
+            analysis += "\n📊 Real-time signals: @kinkong_ubc"
+            analysis += "\n💡 Join our community: t.me/ubccommunity"
             
             return analysis
             
