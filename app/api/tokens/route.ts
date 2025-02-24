@@ -43,7 +43,7 @@ export async function GET() {
       .all();
 
     // Create a map keeping only the most recent snapshot for each token
-    const snapshotMap: Record<string, any> = {};
+    const snapshotMap: { [key: string]: any } = {};
     for (const record of snapshotRecords) {
       const token = record.get('token');
       // Only store if we don't have this token yet (since records are sorted by date desc)

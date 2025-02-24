@@ -171,7 +171,7 @@ export async function GET() {
       .all();
 
     // Create price map from snapshots using mint addresses
-    const priceMap: Record<string, number> = {};
+    const priceMap: { [key: string]: number } = {};
     for (const record of snapshotRecords) {
       const token = record.get('token');
       const mint = record.get('mint');
