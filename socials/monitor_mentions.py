@@ -19,9 +19,16 @@ def extract_tokens_from_text(text: str) -> List[str]:
     matches = re.findall(pattern, text)
     return [token.upper() for token in matches]
 
-def check_token_status(token: str, airtable: AirtableAPI) -> bool:
+def check_token_status(token: str, airtable_base_id: str, airtable_api_key: str) -> bool:
     """Check if token needs updating (doesn't exist or old data)"""
     try:
+        # Initialize Airtable with proper parameters
+        airtable = Airtable(
+            base_id=airtable_base_id,
+            table_name='TOKENS',  # Specify the table name
+            api_key=airtable_api_key
+        )
+        
         # Get token record
         records = airtable.get_all(
             formula=f"{{token}}='{token}'",
@@ -262,9 +269,17 @@ async def check_mentions():
                             os.getenv('KINKONG_AIRTABLE_API_KEY')
                         )
                             
+                        # Get Airtable credentials
+                        base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
+                        api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
+                        
+                        if not base_id or not api_key:
+                            logger.error("Missing Airtable credentials")
+                            continue
+                            
                         # Check and update each token
                         for token in tokens:
-                            if check_token_status(token, airtable):
+                            if check_token_status(token, base_id, api_key):
                                 logger.info(f"Token {token} needs updating")
                                 await update_token(token)
                             else:
