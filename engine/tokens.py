@@ -221,12 +221,12 @@ class TokenSearcher:
             
             # Format data for Airtable
             airtable_record = {
-                'tokenId': token_data.get('symbol', ''),
-                'token': token_data.get('symbol', ''),
+                'tokenId': token_symbol,
+                'token': token_symbol,
                 'name': token_data.get('name', ''),
-                'isActive': True,
+                'isActive': True if token_symbol in ALWAYS_ACTIVE_TOKENS else token_data.get('isActive', True),
                 'mint': token_data.get('address', ''),
-                'description': f"Token {token_data.get('symbol')} on Solana chain",
+                'description': f"Token {token_symbol} on Solana chain",
                 'createdAt': created_at,
                 # Add social media links
                 'website': social_links.get('website', ''),
@@ -289,6 +289,9 @@ def main():
         # Initialize searcher
         searcher = TokenSearcher()
         
+        # Define special tokens that are always active
+        ALWAYS_ACTIVE_TOKENS = {'USDT', 'WETH', 'WBTC', 'SOL'}
+        
         # Check if token keyword provided
         if len(sys.argv) > 1:
             # Process single token
@@ -298,6 +301,12 @@ def main():
             token_data = searcher.search_token(keyword)
             if token_data:
                 print(f"✅ Found token: {token_data.get('symbol')}")
+                
+                # Force isActive true for special tokens
+                if token_data.get('symbol') in ALWAYS_ACTIVE_TOKENS:
+                    token_data['isActive'] = True
+                    print(f"ℹ️ {token_data.get('symbol')} is a special token - always active")
+                
                 if searcher.create_token_record(token_data):
                     print(f"✅ Token record created/updated successfully")
                 else:
@@ -315,14 +324,21 @@ def main():
             success_count = 0
             for token_record in tokens:
                 try:
+                    token_symbol = token_record['fields'].get('token')
                     token_data = {
-                        'symbol': token_record['fields'].get('token'),
+                        'symbol': token_symbol,
                         'name': token_record['fields'].get('name'),
                         'address': token_record['fields'].get('mint'),
                         'verified': True
                     }
                     
                     print(f"\n🔍 Processing {token_data['symbol']}...")
+                    
+                    # Force isActive true for special tokens
+                    if token_symbol in ALWAYS_ACTIVE_TOKENS:
+                        token_data['isActive'] = True
+                        print(f"ℹ️ {token_symbol} is a special token - always active")
+                    
                     if searcher.create_token_record(token_data):
                         success_count += 1
                         print(f"✅ Token record updated successfully")
