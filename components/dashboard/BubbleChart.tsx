@@ -6,11 +6,9 @@ interface TokenInfo {
   token: string;
   name: string;
   mint: string;
-  volume7d: number;
-  liquidity: number;
+  priceGrowth: number;
   volumeGrowth: number;
-  pricePerformance: number;
-  marketCap: number;
+  liquidity: number;
 }
 
 interface BubbleChartProps {
@@ -41,8 +39,8 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
     // Calculate scales
     const maxVolumeGrowth = Math.max(...tokens.map(t => t.volumeGrowth));
     const minVolumeGrowth = Math.min(...tokens.map(t => t.volumeGrowth));
-    const maxPerformance = Math.max(...tokens.map(t => t.pricePerformance));
-    const minPerformance = Math.min(...tokens.map(t => t.pricePerformance));
+    const maxPriceGrowth = Math.max(...tokens.map(t => t.priceGrowth));
+    const minPriceGrowth = Math.min(...tokens.map(t => t.priceGrowth));
     const maxLiquidity = Math.max(...tokens.map(t => t.liquidity));
     const minLiquidity = Math.min(...tokens.map(t => t.liquidity));
 
@@ -51,8 +49,8 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
       return padding + ((volumeGrowth - minVolumeGrowth) / (maxVolumeGrowth - minVolumeGrowth)) * (width - 2 * padding);
     };
 
-    const scaleY = (performance: number) => {
-      return height - (padding + ((performance - minPerformance) / (maxPerformance - minPerformance)) * (height - 2 * padding));
+    const scaleY = (priceGrowth: number) => {
+      return height - (padding + ((priceGrowth - minPriceGrowth) / (maxPriceGrowth - minPriceGrowth)) * (height - 2 * padding));
     };
 
     const scaleRadius = (liquidity: number) => {
@@ -180,9 +178,8 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
           <div class="font-bold mb-1">${token.token}</div>
           <div class="text-gray-400 text-xs mb-2">${token.name}</div>
           <div>Volume Growth: ${token.volumeGrowth.toFixed(2)}%</div>
-          <div>Price Performance: ${token.pricePerformance.toFixed(2)}%</div>
+          <div>Price Growth: ${token.priceGrowth.toFixed(2)}%</div>
           <div>Liquidity: $${token.liquidity.toLocaleString()}</div>
-          <div>7d Volume: $${token.volume7d.toLocaleString()}</div>
         `;
         tooltip.style.display = 'block';
         
@@ -229,7 +226,7 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
     yLabel.setAttribute('text-anchor', 'middle');
     yLabel.setAttribute('transform', `rotate(-90, 20, ${height / 2})`);
     yLabel.setAttribute('fill', 'rgba(255, 215, 0, 0.8)');
-    yLabel.textContent = 'Price Performance (%)';
+    yLabel.textContent = 'Price Growth (%)';
 
     svg.appendChild(xLabel);
     svg.appendChild(yLabel);

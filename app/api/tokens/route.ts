@@ -58,14 +58,19 @@ export async function GET() {
       const token = record.get('token');
       const snapshot = snapshotMap[token] || {};
       
+      // Calculer la croissance du prix et du volume
+      const priceGrowth = snapshot.priceGrowth || 0;
+      const volumeGrowth = snapshot.volumeGrowth || 0;
+      
       return {
         token: token,
         name: record.get('name'),
         mint: record.get('mint'),
         xAccount: record.get('xAccount'),
-        isActive: record.get('isActive') || false, // Add isActive field
+        isActive: record.get('isActive') || false,
         price: snapshot.price || 0,
-        volume24h: snapshot.volume24h || 0,
+        priceGrowth: priceGrowth,
+        volumeGrowth: volumeGrowth,
         liquidity: snapshot.liquidity || 0,
         holderCount: snapshot.holderCount || 0
       };
