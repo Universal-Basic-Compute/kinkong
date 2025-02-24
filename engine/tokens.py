@@ -98,12 +98,12 @@ class TokenSearcher:
             return None
 
     def create_token_record(self, token_data: Dict[str, Any]) -> bool:
-        """Create a token record in Airtable with social media from DexScreener"""
+        """Create a token record in Airtable with social media and pair info from DexScreener"""
         try:
             # Get current timestamp in ISO format
             created_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
             
-            # Get DexScreener data for social links
+            # Get DexScreener data for social links and pair info
             print(f"\n🔍 Fetching DexScreener data for {token_data.get('address')}")
             url = f"https://api.dexscreener.com/latest/dex/tokens/{token_data.get('address')}"
             
@@ -116,6 +116,7 @@ class TokenSearcher:
             print(f"\nDexScreener Response Status: {response.status_code}")
             
             social_links = {}
+            pair_info = {}
             if response.ok:
                 dex_data = response.json()
                 print("\n📊 DexScreener Raw Response:")
@@ -135,13 +136,20 @@ class TokenSearcher:
                         social_links = {
                             'website': main_pair.get('website', ''),
                             'xAccount': main_pair.get('twitter', ''),
-                            'telegram': main_pair.get('telegram', ''),
-                            'discord': main_pair.get('discord', ''),
-                            'priceBot': main_pair.get('priceBot', '')
+                            'telegram': main_pair.get('telegram', '')
+                        }
+                        
+                        # Extract pair info
+                        pair_info = {
+                            'pairAddress': main_pair.get('pairAddress', ''),
+                            'dexId': main_pair.get('dexId', ''),
+                            'pairCreatedAt': main_pair.get('pairCreatedAt', '')
                         }
                         
                         print("\n🔗 Extracted social links:")
                         print(json.dumps(social_links, indent=2))
+                        print("\n🔄 Extracted pair info:")
+                        print(json.dumps(pair_info, indent=2))
             else:
                 print(f"❌ DexScreener API error: {response.status_code}")
                 print(f"Response text: {response.text}")
@@ -155,12 +163,14 @@ class TokenSearcher:
                 'mint': token_data.get('address', ''),
                 'description': f"Token {token_data.get('symbol')} on Solana chain",
                 'createdAt': created_at,
-                # Add social media links if found
+                # Add social media links
                 'website': social_links.get('website', ''),
                 'xAccount': social_links.get('xAccount', ''),
                 'telegram': social_links.get('telegram', ''),
-                'discord': social_links.get('discord', ''),
-                'priceBot': social_links.get('priceBot', '')
+                # Add pair info
+                'pairAddress': pair_info.get('pairAddress', ''),
+                'dexId': pair_info.get('dexId', ''),
+                'pairCreatedAt': pair_info.get('pairCreatedAt', '')
             }
             
             print("\n📝 Airtable Record to Create/Update:")
