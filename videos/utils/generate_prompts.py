@@ -39,8 +39,8 @@ class PromptGenerator:
             # Query for BUY signals with high confidence
             records = self.signals_table.get_all(
                 formula="AND(" +
-                    "{signal}='BUY', " +
-                    "{confidence}='HIGH', " +  # High confidence signals
+                    "{type}='BUY', " +           # Changed from 'signal' to 'type'
+                    "{confidence}='HIGH', " +     # High confidence signals
                     "IS_AFTER({createdAt}, DATEADD(NOW(), -1, 'days'))" +  # Last 24 hours
                 ")",
                 sort=[('createdAt', 'desc')]  # Get most recent first
