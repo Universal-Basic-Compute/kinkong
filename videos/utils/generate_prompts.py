@@ -139,7 +139,20 @@ class PromptGenerator:
                 logger.warning("No response from Claude")
                 return None
 
-            return message.content[0].text
+            response_text = message.content[0].text
+            
+            # Find JSON boundaries
+            start_idx = response_text.find('{')
+            end_idx = response_text.rfind('}')
+            
+            if start_idx == -1 or end_idx == -1:
+                logger.error("Could not find valid JSON markers in response")
+                return None
+                
+            # Extract just the JSON portion
+            json_text = response_text[start_idx:end_idx + 1]
+            
+            return json_text
             
         except Exception as e:
             logger.error(f"Error generating script: {e}")
