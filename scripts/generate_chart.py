@@ -237,18 +237,10 @@ def generate_chart(df, config, support_levels=None):
             mpf.make_addplot(ema50, color='blue', width=0.8, label='EMA50')
         ]
 
-        # Calculate candle width based on timeframe
-        timeframe = config['timeframe']
-        if timeframe == '15m':
-            candle_width = 0.008  # Good for short term
-        elif timeframe == '2H':
-            candle_width = 0.04   # Good for medium term
-        elif timeframe == '8H':
-            candle_width = 0.16   # Increased from 0.12 for even better long term visibility
-        else:
-            candle_width = 0.02   # Default width
+        # Use a consistent candle width
+        candle_width = 0.8  # Set a fixed width that looks good across all timeframes
         
-        # Create figure with timeframe-adjusted candle width
+        # Create figure with consistent candle width
         fig, axes = mpf.plot(
             df,
             type='candle',
@@ -266,10 +258,10 @@ def generate_chart(df, config, support_levels=None):
             show_nontrading=True,
             style=style,
             update_width_config=dict(
-                candle_linewidth=candle_width * 1.5,
+                candle_linewidth=0.8,  # Match the candle width
                 candle_width=candle_width,
                 volume_width=candle_width,
-                volume_linewidth=candle_width * 1.5
+                volume_linewidth=0.8  # Match the candle width
             )
         )
 
