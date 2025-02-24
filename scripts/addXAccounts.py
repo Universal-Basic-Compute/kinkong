@@ -51,19 +51,21 @@ class AirtableAPI:
             logger.error(f"Error fetching tokens from Airtable: {str(e)}")
             return []
 
-    def update_token(self, token_id: str, x_account: str):
-        """Update token record with X account"""
+    def update_token(self, token_id: str, social_data: Dict):
+        """Update token record with social data"""
         try:
             url = f"{self.base_url}/TOKENS/{token_id}"
             data = {
                 "fields": {
-                    "xAccount": x_account
+                    "xAccount": social_data.get('xAccount', ''),
+                    "website": social_data.get('website', ''),
+                    "telegram": social_data.get('telegram', '')
                 }
             }
             
             response = requests.patch(url, headers=self.headers, json=data)
             response.raise_for_status()
-            logger.info(f"Updated X account: {x_account}")
+            logger.info(f"Updated social data: {json.dumps(social_data, indent=2)}")
             
         except Exception as e:
             logger.error(f"Error updating token: {str(e)}")
@@ -74,26 +76,47 @@ def get_dexscreener_data(token_address: str) -> Optional[Dict]:
         url = f"https://api.dexscreener.com/latest/dex/tokens/{token_address}"
         response = requests.get(url)
         response.raise_for_status()
-        
-        # Log the full response for debugging
-        logger.info(f"Dexscreener response for {token_address}:")
-        logger.info(json.dumps(response.json(), indent=2))
-        
+            
         data = response.json()
-        
+            
         if not data.get('pairs'):
             logger.warning(f"No pairs found for token {token_address}")
             return None
-            
-        # Get the first pair which typically contains the social info
+                
+        # Get the first pair
         pair = data['pairs'][0]
-        
-        # Log the social info specifically
-        logger.info(f"Social info found: {json.dumps(pair.get('social', {}), indent=2)}")
-        
-        return {
-            'xAccount': pair.get('social', {}).get('twitter', '')
+            
+        # Initialize social data
+        social_data = {
+            'xAccount': '',
+            'website': '',
+            'telegram': ''
         }
+            
+        # Extract info from new structure
+        if 'info' in pair:
+            # Get website
+            if 'websites' in pair['info']:
+                for website in pair['info']['websites']:
+                    if website.get('label') == 'Website':
+                        social_data['website'] = website.get('url', '')
+                        break
+                
+            # Get socials
+            if 'socials' in pair['info']:
+                for social in pair['info']['socials']:
+                    if social.get('type') == 'twitter':
+                        # Extract handle from Twitter URL
+                        twitter_url = social.get('url', '')
+                        social_data['xAccount'] = twitter_url.split('/')[-1] if twitter_url else ''
+                    elif social.get('type') == 'telegram':
+                        social_data['telegram'] = social.get('url', '')
+            
+        # Log what we found
+        logger.info(f"Social info found for {token_address}:")
+        logger.info(json.dumps(social_data, indent=2))
+            
+        return social_data
         
     except Exception as e:
         logger.error(f"Error fetching Dexscreener data for {token_address}: {str(e)}")
