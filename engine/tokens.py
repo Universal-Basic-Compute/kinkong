@@ -112,25 +112,40 @@ class TokenSearcher:
                 'Accept': 'application/json'
             }
             
-            response = requests.get(url, headers=headers)
-            print(f"\nDexScreener Response Status: {response.status_code}")
+            # Log request details
+            self.logger.info(f"\n🌐 DexScreener API Request:")
+            self.logger.info(f"URL: {url}")
+            self.logger.info(f"Headers: {json.dumps(headers, indent=2)}")
             
-            social_links = {}
-            pair_info = {}
+            # Time the request
+            start_time = datetime.now()
+            response = requests.get(url, headers=headers)
+            request_time = (datetime.now() - start_time).total_seconds()
+            self.logger.info(f"Request time: {request_time:.2f}s")
+            
             if response.ok:
                 dex_data = response.json()
-                print("\n📊 DexScreener Raw Response:")
-                print(json.dumps(dex_data, indent=2))
+                self.logger.info("\n📊 DexScreener Raw Response:")
+                self.logger.info(json.dumps(dex_data, indent=2))
                 
                 if dex_data.get('pairs'):
                     # Get Solana pairs and find most liquid
                     sol_pairs = [p for p in dex_data['pairs'] if p.get('chainId') == 'solana']
                     if sol_pairs:
-                        print(f"\n🔎 Found {len(sol_pairs)} Solana pairs")
+                        self.logger.info(f"\n🔎 Found {len(sol_pairs)} Solana pairs")
+                        
+                        # Log liquidity for each pair
+                        for pair in sol_pairs:
+                            self.logger.info(
+                                f"Pair {pair.get('pairAddress')}: "
+                                f"${float(pair.get('liquidity', {}).get('usd', 0)):,.2f} liquidity, "
+                                f"${float(pair.get('volume', {}).get('h24', 0)):,.2f} 24h volume"
+                            )
+                        
                         # Use most liquid pair for social info
                         main_pair = max(sol_pairs, key=lambda x: float(x.get('liquidity', {}).get('usd', 0) or 0))
-                        print("\n💧 Most liquid pair details:")
-                        print(json.dumps(main_pair, indent=2))
+                        self.logger.info("\n💧 Selected most liquid pair:")
+                        self.logger.info(json.dumps(main_pair, indent=2))
                         
                         # Extract social links
                         social_links = {
