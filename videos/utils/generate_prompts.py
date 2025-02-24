@@ -65,7 +65,6 @@ class PromptGenerator:
             # Prepare context for Claude
             token_info = {
                 'token': signal.get('token'),
-                'mint': signal.get('mint'),  # Add mint address
                 'analysis': f"""
                     Token: {signal.get('token')}
                     Signal: {signal.get('type', 'BUY')}
@@ -84,9 +83,6 @@ class PromptGenerator:
                     6. Split into 2 parts with \n\n between them
                 """
             }
-
-            # Debug log
-            logger.info(f"Token info prepared: {token_info['token']}, mint: {token_info.get('mint')}")
 
             # Use the standard analysis function
             response = analyze_charts_with_claude(
