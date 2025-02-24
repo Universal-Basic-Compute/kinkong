@@ -302,23 +302,23 @@ For each timeframe, provide:
 5. Risk/reward ratio if applicable
 
 Format your response as JSON:
-{
-    "timeframes": {
-        "POSITION": {
-            "signal": "BUY|SELL|HOLD",
-            "confidence": 0,
-            "reasoning": "Detailed analysis",
-            "key_levels": {
-                "support": [0.0, 0.0],
-                "resistance": [0.0, 0.0]
-            },
-            "risk_reward_ratio": 0.0
-        },
-        "SWING": { ... },
-        "INTRADAY": { ... },
-        "SCALP": { ... }
-    }
-}"""
+{{
+    \\"timeframes\\": {{
+        \\"POSITION\\": {{
+            \\"signal\\": \\"BUY|SELL|HOLD\\",
+            \\"confidence\\": 0,
+            \\"reasoning\\": \\"Detailed analysis\\",
+            \\"key_levels\\": {{
+                \\"support\\": [0.0, 0.0],
+                \\"resistance\\": [0.0, 0.0]
+            }},
+            \\"risk_reward_ratio\\": 0.0
+        }},
+        \\"SWING\\": {{ ... }},
+        \\"INTRADAY\\": {{ ... }},
+        \\"SCALP\\": {{ ... }}
+    }}
+}}"""
 
 def analyze_charts_with_claude(chart_paths, token_info=None):
     """Analyze multiple timeframe charts together using Claude 3"""
