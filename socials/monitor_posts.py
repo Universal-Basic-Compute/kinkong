@@ -370,6 +370,8 @@ def monitor_token(token: Optional[str] = None) -> tuple[bool, Optional[str]]:
                 analysis = analyze_sentiment_with_claude(token_symbol, tweets)
                 if analysis:
                     is_bullish = "VERDICT: BULLISH" in analysis
+                    analysis_text = analysis  # Store analysis regardless of verdict
+                    
                     if is_bullish:
                         logger.info(f"Bullish signals detected for ${token_symbol}")
                         if send_telegram_notification(token_symbol, analysis):
@@ -380,9 +382,9 @@ def monitor_token(token: Optional[str] = None) -> tuple[bool, Optional[str]]:
                         bullish_found = True
                     else:
                         logger.info(f"No significant bullish signals for ${token_symbol}")
-                    analysis_text = analysis  # Store full analysis regardless of verdict
                 else:
                     logger.info(f"No analysis generated for ${token_symbol}")
+                    analysis_text = "No analysis could be generated"  # Default text for failed analysis
                 
                 # Add delay between tokens if processing multiple
                 if len(tokens) > 1:
@@ -391,6 +393,7 @@ def monitor_token(token: Optional[str] = None) -> tuple[bool, Optional[str]]:
             except Exception as e:
                 logger.error(f"Error processing token {token_symbol}: {e}")
                 metrics.increment('errors')
+                analysis_text = f"Error during analysis: {str(e)}"  # Store error as analysis
                 continue
                 
         # Add summary
@@ -410,7 +413,7 @@ def monitor_token(token: Optional[str] = None) -> tuple[bool, Optional[str]]:
     except Exception as e:
         logger.error(f"Script failed: {e}")
         metrics.increment('errors')
-        return False
+        return False, f"Script failed: {str(e)}"  # Return error message as analysis
 
 def main():
     try:
