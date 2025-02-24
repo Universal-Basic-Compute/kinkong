@@ -3,6 +3,7 @@ import requests
 import logging
 import anthropic
 from dotenv import load_dotenv
+from requests_oauthlib import OAuth1
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -114,21 +115,28 @@ def generate_reply_with_claude(mention_text: str, username: str) -> Optional[str
 def check_mentions():
     """Check mentions of @kinkong_ubc once"""
     try:
-        # Get bearer token
-        bearer_token = os.getenv('X_BEARER_TOKEN')
-        if not bearer_token:
-            logger.error("Missing X_BEARER_TOKEN")
+        # Get OAuth credentials
+        api_key = os.getenv('X_API_KEY')
+        api_secret = os.getenv('X_API_SECRET')
+        access_token = os.getenv('X_ACCESS_TOKEN')
+        access_secret = os.getenv('X_ACCESS_SECRET')
+        
+        # Verify credentials
+        if not all([api_key, api_secret, access_token, access_secret]):
+            logger.error("Missing X API credentials. Required: X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_SECRET")
             return
             
-        headers = {
-            "Authorization": f"Bearer {bearer_token}",
-            "Content-Type": "application/json",
-            "X-Client-Type": "API"  # Add X API specific header
-        }
+        # Create OAuth1 auth object
+        auth = OAuth1(
+            api_key,
+            api_secret,
+            access_token,
+            access_secret
+        )
         
         # Get authenticated user ID using v2 endpoint
-        me_url = "https://api.twitter.com/2/users/me"  # Keep twitter.com for API endpoints
-        me_response = requests.get(me_url, headers=headers)
+        me_url = "https://api.twitter.com/2/users/me"
+        me_response = requests.get(me_url, auth=auth)
         
         if me_response.status_code == 403:
             logger.error("Authentication failed. Please check your X_BEARER_TOKEN")
@@ -230,7 +238,10 @@ def main():
         
         # Verify required environment variables
         required_vars = [
-            'X_BEARER_TOKEN',
+            'X_API_KEY',
+            'X_API_SECRET', 
+            'X_ACCESS_TOKEN',
+            'X_ACCESS_SECRET',
             'TELEGRAM_BOT_TOKEN',
             'TELEGRAM_CHAT_ID',
             'ANTHROPIC_API_KEY'
