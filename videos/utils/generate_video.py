@@ -129,7 +129,8 @@ class VideoGenerator:
             payload = {
                 "model": model,
                 "promptImage": clean_image_url,  # Changed from prompt_image to promptImage
-                "promptText": prompt  # Changed from prompt_text to promptText
+                "promptText": prompt,  # Changed from prompt_text to promptText
+                "ratio": "768:1280"  # Added correct ratio parameter
             }
             
             logger.debug(f"Sending payload: {json.dumps(payload, indent=2)}")
