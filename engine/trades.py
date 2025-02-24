@@ -109,6 +109,25 @@ class TradeExecutor:
         self.signals_table = Airtable(self.base_id, 'SIGNALS', self.api_key)
         self.trades_table = Airtable(self.base_id, 'TRADES', self.api_key)
         self.logger = setup_logging()
+        
+        # Initialize Jupiter trade executor
+        self.jupiter = JupiterTradeExecutor()
+        
+        # Initialize wallet
+        try:
+            private_key = os.getenv('STRATEGY_WALLET_PRIVATE_KEY')
+            if not private_key:
+                raise ValueError("STRATEGY_WALLET_PRIVATE_KEY not found")
+            
+            private_key_bytes = base58.b58decode(private_key)
+            self.wallet_keypair = Keypair.from_bytes(private_key_bytes)
+            self.wallet_address = str(self.wallet_keypair.pubkey())
+            self.logger.info(f"Wallet initialized: {self.wallet_address[:8]}...")
+            
+        except Exception as e:
+            self.logger.error(f"Failed to initialize wallet: {e}")
+            self.wallet_keypair = None
+            self.wallet_address = None
 
     async def get_current_market_sentiment(self) -> str:
         """Get the most recent market sentiment from MARKET_SENTIMENT table"""
@@ -137,25 +156,6 @@ class TradeExecutor:
             "BEARISH": 0.30,  # 30% in bear market
         }
         return allocations.get(sentiment, 0.50)  # Default to neutral allocation
-        
-        # Initialize Jupiter trade executor
-        self.jupiter = JupiterTradeExecutor()
-        
-        # Initialize wallet during class initialization
-        try:
-            private_key = os.getenv('STRATEGY_WALLET_PRIVATE_KEY')
-            if not private_key:
-                raise ValueError("STRATEGY_WALLET_PRIVATE_KEY not found")
-            
-            private_key_bytes = base58.b58decode(private_key)
-            self.wallet_keypair = Keypair.from_bytes(private_key_bytes)
-            self.wallet_address = str(self.wallet_keypair.pubkey())
-            self.logger.info(f"Wallet initialized: {self.wallet_address[:8]}...")
-            
-        except Exception as e:
-            self.logger.error(f"Failed to initialize wallet: {e}")
-            self.wallet_keypair = None
-            self.wallet_address = None
 
     async def get_active_buy_signals(self) -> List[Dict]:
         """Get all non-expired BUY signals"""
