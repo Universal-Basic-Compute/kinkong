@@ -10,6 +10,25 @@ from moviepy.video.fx.FadeIn import FadeIn
 from moviepy.video.fx.FadeOut import FadeOut
 from moviepy.video.fx.Crop import Crop
 
+# Monkey patch MoviePy's FFMPEG_VideoReader to prevent cleanup errors
+from moviepy.video.io.ffmpeg_reader import FFMPEG_VideoReader
+original_del = FFMPEG_VideoReader.__del__
+
+def safe_del(self):
+    """Safe cleanup that won't raise errors"""
+    try:
+        if hasattr(self, 'proc'):
+            try:
+                self.proc.terminate()
+                self.proc.wait(timeout=1)
+            except:
+                pass
+            self.proc = None
+    except:
+        pass
+
+FFMPEG_VideoReader.__del__ = safe_del
+
 # Add project root to Python path
 project_root = str(Path(__file__).parent.parent.parent.absolute())
 if project_root not in sys.path:
