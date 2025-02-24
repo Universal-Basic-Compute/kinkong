@@ -76,18 +76,22 @@ def process_video_clip(
         # Set duration
         video_clip = video_clip.with_duration(duration)
         
-        # Create text clips
-        text_clips, _ = create_text_clips(
-            screen['text'], 
-            target_width, 
-            target_height//3
-        )
+        # Comment out text clip creation and composition
+        # # Create text clips
+        # text_clips, _ = create_text_clips(
+        #     screen['text'], 
+        #     target_width, 
+        #     target_height//3
+        # )
         
-        # Combine video and text
-        screen_clip = CompositeVideoClip(
-            [video_clip] + text_clips,
-            size=(target_width, target_height)
-        ).with_duration(duration)  # Set final duration
+        # # Combine video and text
+        # screen_clip = CompositeVideoClip(
+        #     [video_clip] + text_clips,
+        #     size=(target_width, target_height)
+        # ).with_duration(duration)  # Set final duration
+        
+        # Just return the video clip without text
+        screen_clip = video_clip.with_size((target_width, target_height))
         
         return screen_clip
         
