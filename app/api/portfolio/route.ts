@@ -65,12 +65,19 @@ async function getTokenSymbol(mint: string, tokensMetadata: any): Promise<string
   return 'Unknown';
 }
 
+interface TokenFields extends FieldSet {
+  name: string;
+  token: string;
+  image: string;
+  mint: string;
+}
+
 async function getTokensMetadata() {
   try {
     const tokensTable = getTable('TOKENS');
     const records = await tokensTable.select().all();
     
-    return records.reduce((acc, record: Record<FieldSet>) => {
+    return records.reduce((acc, record: Record<TokenFields>) => {
       const fields = record.fields;
       acc[fields.mint] = {
         name: fields.name || fields.token,
@@ -79,7 +86,7 @@ async function getTokensMetadata() {
         mint: fields.mint
       };
       return acc;
-    }, {} as Record<string, TokenMetadata>);
+    }, {} as { [key: string]: TokenMetadata });
   } catch (error) {
     console.error('Failed to fetch tokens metadata:', error);
     return {};
