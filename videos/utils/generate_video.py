@@ -111,7 +111,7 @@ class VideoGenerator:
             
             logger.info(f"✅ Image uploaded: {image_url}")
             
-            # Make direct HTTP call to Runway API
+            # Submit task to Runway API
             runway_url = "https://api.dev.runwayml.com/v1/image_to_video"
             headers = {
                 "Authorization": f"Bearer {self.api_key}",
@@ -124,56 +124,77 @@ class VideoGenerator:
                 "prompt_text": prompt
             }
             
-            # Make the request
             response = requests.post(
                 runway_url,
                 headers=headers,
                 json=payload
             )
             
-            # Log response for debugging
             logger.info(f"HTTP Request: POST {runway_url} \"{response.status_code} {response.reason}\"")
             
             if response.status_code != 200:
                 logger.error(f"API request failed: {response.status_code} - {response.text}")
                 return None
                 
-            # Parse response
+            # Get task ID from response
             result = response.json()
+            task_id = result.get('id')
+            if not task_id:
+                logger.error("No task ID in response")
+                return None
+                
+            logger.info(f"Task submitted successfully. ID: {task_id}")
             
-            # Try to get video URL from response
-            video_url = None
-            if isinstance(result, dict):
-                video_url = (
-                    result.get('url') or 
-                    result.get('output', {}).get('url') or
-                    result.get('data', {}).get('url')
-                )
+            # Poll status endpoint until complete
+            status_url = f"https://api.dev.runwayml.com/v1/tasks/{task_id}"
+            max_attempts = 30  # 5 minutes total
+            
+            for attempt in range(max_attempts):
+                status_response = requests.get(status_url, headers=headers)
+                if status_response.status_code != 200:
+                    logger.error(f"Status check failed: {status_response.status_code}")
+                    continue
+                    
+                status_data = status_response.json()
+                status = status_data.get('status')
                 
-            if not video_url:
-                logger.error("❌ No video URL in response")
-                logger.debug(f"Response content: {result}")
-                return None
+                logger.info(f"Task status ({attempt + 1}): {status}")
                 
-            # Download the video
-            logger.info(f"✅ Downloading video from: {video_url}")
-            video_response = requests.get(video_url)
-            if video_response.status_code == 200:
-                with open(output_path, 'wb') as f:
-                    f.write(video_response.content)
-                logger.info(f"✅ Video saved to: {output_path}")
-                return str(output_path)
-            else:
-                logger.error(f"❌ Failed to download video: {video_response.status_code}")
-                return None
+                if status == "SUCCEEDED":
+                    # Get output URL
+                    output_urls = status_data.get('output', [])
+                    if not output_urls:
+                        logger.error("No output URLs in success response")
+                        return None
+                        
+                    video_url = output_urls[0]
+                    
+                    # Download the video
+                    logger.info(f"✅ Downloading video from: {video_url}")
+                    video_response = requests.get(video_url)
+                    if video_response.status_code == 200:
+                        with open(output_path, 'wb') as f:
+                            f.write(video_response.content)
+                        logger.info(f"✅ Video saved to: {output_path}")
+                        return str(output_path)
+                    else:
+                        logger.error(f"❌ Failed to download video: {video_response.status_code}")
+                        return None
+                        
+                elif status == "FAILED":
+                    logger.error(f"Task failed: {status_data.get('error', 'Unknown error')}")
+                    return None
+                    
+                # Wait before next check
+                import time
+                time.sleep(10)  # 10 second delay between checks
+                
+            logger.error("Task timed out")
+            return None
                 
         except Exception as e:
             logger.error(f"❌ Error during video generation: {e}")
             logger.exception("Detailed error trace:")
-            return None
-                
-        except Exception as e:
-            logger.error(f"❌ Fatal error: {e}")
             return None
 
 def generate_video(
