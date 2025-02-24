@@ -19,7 +19,7 @@ class TokenSearcher:
         self.birdeye_api_key = os.getenv('BIRDEYE_API_KEY')
         
     def search_token(self, keyword: str) -> Optional[Dict[str, Any]]:
-        """Search for a token using Birdeye API"""
+        """Search for a token and create new record if it doesn't exist"""
         try:
             # First check if token exists in Airtable
             existing_records = self.airtable.get_all(
@@ -33,11 +33,11 @@ class TokenSearcher:
                     'symbol': token_record.get('token'),
                     'name': token_record.get('name'),
                     'address': token_record.get('mint'),
-                    'verified': True  # Assume tokens in our database are verified
+                    'verified': True
                 }
 
-            # If not found in Airtable, search Birdeye
-            print(f"🔍 Searching Birdeye for {keyword.upper()}...")
+            # If not found, search Birdeye and create new record
+            print(f"🔍 Token not found. Searching Birdeye for {keyword.upper()}...")
             url = "https://public-api.birdeye.so/defi/v3/search"
             
             params = {
@@ -49,11 +49,10 @@ class TokenSearcher:
                 "x-api-key": self.birdeye_api_key,
                 "accept": "application/json"
             }
+            
             response = requests.get(url, params=params, headers=headers)
             response.raise_for_status()
             data = response.json()
-            
-            print(f"Raw API response:", json.dumps(data, indent=2))
             
             if not data.get('success'):
                 raise Exception(f"API returned success=false: {data.get('message', 'No error message')}")
@@ -63,36 +62,39 @@ class TokenSearcher:
             token_item = next((item for item in items if item['type'] == 'token'), None)
             
             if not token_item or not token_item.get('result'):
-                print(f"No tokens found for keyword: {keyword}")
+                print(f"❌ No tokens found for keyword: {keyword}")
                 return None
                 
             tokens = token_item['result']
             
             # Find verified token with matching symbol
-            verified_token = next(
+            token_data = next(
                 (token for token in tokens 
                  if token.get('verified') and 
                  token.get('symbol', '').upper() == keyword.upper()),
                 None
             )
             
-            if verified_token:
-                return verified_token
-                
-            # If no verified match, return first verified token
-            verified_token = next(
-                (token for token in tokens if token.get('verified')),
-                None
-            )
+            # If no verified match with exact symbol, try first verified token
+            if not token_data:
+                token_data = next((token for token in tokens if token.get('verified')), None)
             
-            if verified_token:
-                return verified_token
+            # If still no match, use first token
+            if not token_data:
+                token_data = tokens[0] if tokens else None
                 
-            # If no verified tokens, return first token
-            return tokens[0] if tokens else None
-            
+            if token_data:
+                print(f"✅ Found token on Birdeye, creating record...")
+                if self.create_token_record(token_data):
+                    print(f"✅ Created new token record for {keyword.upper()}")
+                else:
+                    print(f"❌ Failed to create token record")
+                return token_data
+                
+            return None
+
         except Exception as e:
-            print(f"Error searching token: {str(e)}")
+            print(f"❌ Error searching token: {str(e)}")
             return None
 
     def create_token_record(self, token_data: Dict[str, Any]) -> bool:
