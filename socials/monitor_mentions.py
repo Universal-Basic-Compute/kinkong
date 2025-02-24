@@ -39,14 +39,16 @@ def send_telegram_notification(mention):
             logger.error("Missing Telegram credentials")
             return False
             
-        # Format message
-        mention_time = mention.created_at.strftime("%Y-%m-%d %H:%M:%S UTC")
+        # Format message using v2 API response format
+        mention_time = datetime.fromisoformat(mention['created_at'].replace('Z', '+00:00'))
+        mention_time_str = mention_time.strftime("%Y-%m-%d %H:%M:%S UTC")
+        
         message = (
             f"🔔 <b>New Mention of @kinkong_ubc</b>\n\n"
-            f"From: @{mention.user.screen_name}\n"
-            f"Time: {mention_time}\n\n"
-            f"{mention.full_text}\n\n"
-            f"🔗 https://twitter.com/{mention.user.screen_name}/status/{mention.id}"
+            f"From: @{mention['user']['screen_name']}\n"
+            f"Time: {mention_time_str}\n\n"
+            f"{mention['text']}\n\n"
+            f"🔗 https://twitter.com/{mention['user']['screen_name']}/status/{mention['id']}"
         )
         
         # Send to Telegram
@@ -186,7 +188,7 @@ def check_mentions():
                 )
                 
                 if author:
-                    # Send notification
+                    # Format notification data to match expected structure
                     notification_data = {
                         "id": mention["id"],
                         "created_at": mention["created_at"],
