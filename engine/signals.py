@@ -1,6 +1,11 @@
 import sys
+import codecs
 from pathlib import Path
 import os
+
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+    sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
 from datetime import datetime, timedelta
 import asyncio
 from airtable import Airtable

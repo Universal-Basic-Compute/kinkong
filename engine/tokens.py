@@ -305,11 +305,11 @@ def main():
         if len(sys.argv) > 1:
             # Process single token
             keyword = sys.argv[1]
-            print(f"🔍 Searching for token: {keyword}")
+            print(f"[SEARCH] Searching for token: {keyword}")
             
             token_data = searcher.search_token(keyword)
             if token_data:
-                print(f"✅ Found token: {token_data.get('symbol')}")
+                print(f"[SUCCESS] Found token: {token_data.get('symbol')}")
                 
                 # Force isActive true for special tokens
                 if token_data.get('symbol') in ALWAYS_ACTIVE_TOKENS:
@@ -317,11 +317,11 @@ def main():
                     print(f"ℹ️ {token_data.get('symbol')} is a special token - always active")
                 
                 if searcher.create_token_record(token_data):
-                    print(f"✅ Token record created/updated successfully")
+                    print(f"[SUCCESS] Token record created/updated successfully")
                 else:
-                    print(f"❌ Failed to create/update token record")
+                    print(f"[ERROR] Failed to create/update token record")
             else:
-                print(f"❌ Token not found")
+                print(f"[ERROR] Token not found")
         else:
             # Process all existing tokens
             print("🔄 Processing all existing tokens...")
@@ -373,7 +373,7 @@ def main():
                 print(f"❌ Error generating market overview: {str(e)}")
 
     except Exception as e:
-        print(f"\n❌ Script failed: {str(e)}")
+        print(f"\n[ERROR] Script failed: {str(e)}")
         sys.exit(1)
 
 if __name__ == "__main__":
