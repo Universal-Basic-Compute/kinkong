@@ -94,7 +94,7 @@ export default function Dashboard() {
             <table className="min-w-full">
               <thead>
                 <tr className="border-b border-gold/20">
-                  <th className="px-4 py-2 text-left text-gold">Status</th>
+                  <th className="px-4 py-2 text-left text-gold">Active</th>
                   <th className="px-4 py-2 text-left text-gold">Token</th>
                   <th className="px-4 py-2 text-left text-gold">Name</th>
                   <th className="px-4 py-2 text-left text-gold">X Account</th>
