@@ -206,7 +206,7 @@ def analyze_sentiment_with_claude(token: str, tweets: List[Dict]) -> Optional[st
         system_prompt = """You are a cryptocurrency market sentiment analyst.
         Analyze these tweets about a token and provide a detailed analysis followed by your verdict.
         
-        First provide a detailed analysis covering:
+        Start directly with the analysis covering:
         1. Content summary - key themes and topics
         2. Engagement analysis - likes, retweets, discussions
         3. Notable signals:
@@ -222,13 +222,14 @@ def analyze_sentiment_with_claude(token: str, tweets: List[Dict]) -> Optional[st
         "VERDICT: BULLISH" - if there are clear, strong positive signals
         "VERDICT: NOT BULLISH" - if signals are weak, mixed, or negative
         
-        Your analysis should be thorough and evidence-based, regardless of the final verdict."""
+        Your analysis should be thorough and evidence-based, regardless of the final verdict.
+        Do not include any introductory text - begin immediately with your analysis."""
 
         user_prompt = f"""Analyze these tweets about ${token}:
 
         {tweets_text}
 
-        Provide detailed analysis followed by your VERDICT."""
+        Start directly with analysis and end with your VERDICT."""
 
         message = client.messages.create(
             model="claude-3-5-sonnet-20241022",
