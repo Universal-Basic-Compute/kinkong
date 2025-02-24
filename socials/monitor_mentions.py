@@ -80,7 +80,9 @@ async def update_token(token: str):
     """Update token data using engine/tokens.py"""
     try:
         import subprocess
-        
+        import threading
+        import queue
+
         logger.info(f"Updating token data for {token}")
         
         # Construct path to engine/tokens.py
@@ -91,60 +93,92 @@ async def update_token(token: str):
         
         # Create environment variables with proper paths
         env = os.environ.copy()
-        env['PYTHONPATH'] = str(Path(__file__).parent.parent)  # Add project root to PYTHONPATH
+        env['PYTHONPATH'] = str(Path(__file__).parent.parent)
         
-        # Run the script with token as argument
+        # Create queues for output
+        stdout_queue = queue.Queue()
+        stderr_queue = queue.Queue()
+
+        def enqueue_output(out, queue):
+            for line in iter(out.readline, b''):
+                queue.put(line.decode('utf-8').strip())
+            out.close()
+
+        # Start process with pipes
         process = subprocess.Popen(
             [python_exe, str(tokens_script), token],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            encoding='utf-8',
-            errors='replace',
+            env=env,
             bufsize=1,
-            universal_newlines=True,
-            env=env  # Pass environment variables
+            universal_newlines=False
         )
-        
-        # Function to handle output streams
-        def log_output(stream, prefix):
-            for line in stream:
-                line = line.strip()
-                if line:
-                    logger.info(f"{prefix} {line}")
 
-        # Create threads to handle stdout and stderr
-        import threading
+        # Start threads to read output
         stdout_thread = threading.Thread(
-            target=log_output, 
-            args=(process.stdout, "[tokens.py]")
+            target=enqueue_output, 
+            args=(process.stdout, stdout_queue)
         )
         stderr_thread = threading.Thread(
-            target=log_output, 
-            args=(process.stderr, "[tokens.py ERROR]")
+            target=enqueue_output, 
+            args=(process.stderr, stderr_queue)
         )
-        
-        # Start threads
+        stdout_thread.daemon = True
+        stderr_thread.daemon = True
         stdout_thread.start()
         stderr_thread.start()
-        
-        # Wait for process to complete with timeout
-        try:
-            return_code = process.wait(timeout=30)
-            
-            # Wait for output threads to complete
-            stdout_thread.join()
-            stderr_thread.join()
-            
-            if return_code == 0:
-                logger.info(f"Successfully updated token {token}")
-                return True
-            else:
-                logger.error(f"Failed to update token {token} (return code: {return_code})")
-                return False
-                
-        except subprocess.TimeoutExpired:
+
+        # Monitor process with timeout
+        start_time = datetime.now()
+        timeout = 60  # 60 seconds timeout
+        success = False
+
+        while (datetime.now() - start_time).seconds < timeout:
+            # Check if process has finished
+            if process.poll() is not None:
+                success = process.returncode == 0
+                break
+
+            # Process stdout
+            try:
+                while True:
+                    line = stdout_queue.get_nowait()
+                    logger.info(f"[tokens.py] {line}")
+                    if "Successfully updated token" in line:
+                        success = True
+            except queue.Empty:
+                pass
+
+            # Process stderr
+            try:
+                while True:
+                    line = stderr_queue.get_nowait()
+                    logger.error(f"[tokens.py ERROR] {line}")
+            except queue.Empty:
+                pass
+
+            await asyncio.sleep(0.1)
+
+        # Check if we timed out
+        if (datetime.now() - start_time).seconds >= timeout:
             process.kill()
             logger.error(f"Token update timed out for {token}")
+            return False
+
+        # Drain any remaining output
+        stdout_thread.join(1)
+        stderr_thread.join(1)
+
+        while not stdout_queue.empty():
+            logger.info(f"[tokens.py] {stdout_queue.get()}")
+        while not stderr_queue.empty():
+            logger.error(f"[tokens.py ERROR] {stderr_queue.get()}")
+
+        if success:
+            logger.info(f"Successfully updated token {token}")
+            return True
+        else:
+            logger.error(f"Failed to update token {token}")
             return False
             
     except Exception as e:
