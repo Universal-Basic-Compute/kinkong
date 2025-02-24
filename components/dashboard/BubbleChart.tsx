@@ -190,10 +190,10 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
         tooltip.innerHTML = `
           <div class="font-bold mb-1">${token.token}</div>
           <div class="text-gray-400 text-xs mb-2">${token.name}</div>
-          <div>Volume Growth: ${token.volumeGrowth.toFixed(2)}%</div>
-          <div>Price Trend: ${token.priceTrend.toFixed(2)}%</div>
-          <div>Volume 24h: $${token.volume24h.toLocaleString()}</div>
-          <div>Liquidity: $${token.liquidity.toLocaleString()}</div>
+          <div>Volume Growth: ${(token.volumeGrowth || 0).toFixed(2)}%</div>
+          <div>Price Trend: ${(token.priceTrend || 0).toFixed(2)}%</div>
+          <div>Volume 24h: $${(token.volume24h || 0).toLocaleString()}</div>
+          <div>Liquidity: $${(token.liquidity || 0).toLocaleString()}</div>
         `;
         tooltip.style.display = 'block';
         
