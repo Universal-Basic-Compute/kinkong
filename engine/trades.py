@@ -168,12 +168,14 @@ class TradeExecutor:
             # Get BUY signals that:
             # 1. Were created in last 24 hours
             # 2. Have HIGH confidence
+            # 3. Haven't expired yet
             signals = self.signals_table.get_all(
                 formula=f"AND("
                 f"{{type}}='BUY', "
                 f"{{confidence}}='HIGH', "
                 f"IS_AFTER({{createdAt}}, '{twenty_four_hours_ago}'), "
-                f"IS_BEFORE({{createdAt}}, '{now}'))"
+                f"IS_BEFORE({{createdAt}}, '{now}'), "
+                f"IS_AFTER({{expiryDate}}, '{now}'))"  # Added expiry check
             )
         
             logger.info(f"Found {len(signals)} active HIGH confidence BUY signals from last 24h")
