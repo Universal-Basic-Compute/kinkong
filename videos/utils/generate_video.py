@@ -113,26 +113,39 @@ class VideoGenerator:
             
             logger.info(f"✅ Image uploaded: {image_url}")
             
-            # Start video generation
+            # Generate video
             response = self.client.image_to_video.create(
                 model=model,
                 prompt_image=image_url,
                 prompt_text=prompt
             )
             
-            # Get the video URL directly from response
-            if hasattr(response, 'output') and hasattr(response.output, 'url'):
+            # Log the response structure to understand what we got
+            logger.debug(f"API Response: {response}")
+            
+            # Try different ways to get the video URL
+            video_url = None
+            if hasattr(response, 'url'):
+                video_url = response.url
+            elif hasattr(response, 'output') and hasattr(response.output, 'url'):
                 video_url = response.output.url
-                logger.info(f"✅ Downloading video from: {video_url}")
+            elif isinstance(response, dict):
+                video_url = response.get('url') or response.get('output', {}).get('url')
                 
-                video_response = requests.get(video_url)
-                if video_response.status_code == 200:
-                    with open(output_path, 'wb') as f:
-                        f.write(video_response.content)
-                    logger.info(f"✅ Video saved to: {output_path}")
-                    return str(output_path)
-            else:
+            if not video_url:
                 logger.error("❌ No video URL in response")
+                return None
+                
+            # Download the video
+            logger.info(f"✅ Downloading video from: {video_url}")
+            video_response = requests.get(video_url)
+            if video_response.status_code == 200:
+                with open(output_path, 'wb') as f:
+                    f.write(video_response.content)
+                logger.info(f"✅ Video saved to: {output_path}")
+                return str(output_path)
+            else:
+                logger.error(f"❌ Failed to download video: {video_response.status_code}")
                 return None
                 
         except Exception as e:
