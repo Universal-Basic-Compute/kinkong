@@ -147,24 +147,19 @@ class TokenSearcher:
                         self.logger.info("\n💧 Selected most liquid pair:")
                         self.logger.info(json.dumps(main_pair, indent=2))
                         
-                        # Extract social links
+                        # Extract social links and pair
                         social_links = {
                             'website': main_pair.get('website', ''),
                             'xAccount': main_pair.get('twitter', ''),
                             'telegram': main_pair.get('telegram', '')
                         }
-                        
-                        # Extract pair info
-                        pair_info = {
-                            'pairAddress': main_pair.get('pairAddress', ''),
-                            'dexId': main_pair.get('dexId', ''),
-                            'pairCreatedAt': main_pair.get('pairCreatedAt', '')
-                        }
-                        
+
+                        # Get pair address
+                        pair = main_pair.get('pairAddress', '')
+
                         print("\n🔗 Extracted social links:")
                         print(json.dumps(social_links, indent=2))
-                        print("\n🔄 Extracted pair info:")
-                        print(json.dumps(pair_info, indent=2))
+                        print("\n🔄 Pair:", pair)
             else:
                 self.logger.error(f"\n❌ DexScreener API error:")
                 self.logger.error(f"Status code: {response.status_code}")
