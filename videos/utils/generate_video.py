@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 import logging
 from typing import Optional
+import requests
 from runwayml import RunwayML
 from dotenv import load_dotenv
 
@@ -20,8 +21,41 @@ class VideoGenerator:
         self.api_key = os.getenv('RUNWAYML_API_KEY')
         if not self.api_key:
             raise ValueError("RUNWAYML_API_KEY not found in environment variables")
+            
+        # Add ImgBB API key for image hosting
+        self.imgbb_api_key = os.getenv('IMGBB_API_KEY')
+        if not self.imgbb_api_key:
+            raise ValueError("IMGBB_API_KEY not found in environment variables")
         
         self.client = RunwayML(api_key=self.api_key)
+
+    def upload_image_to_imgbb(self, image_path: Path) -> Optional[str]:
+        """Upload image to ImgBB and return HTTPS URL"""
+        try:
+            url = "https://api.imgbb.com/1/upload"
+            
+            # Read image file
+            with open(image_path, "rb") as file:
+                files = {"image": file}
+                
+                # Make upload request
+                payload = {"key": self.imgbb_api_key}
+                response = requests.post(url, files=files, data=payload)
+                
+                if response.status_code != 200:
+                    logger.error(f"ImgBB upload failed: {response.status_code} - {response.text}")
+                    return None
+                    
+                data = response.json()
+                if not data.get("data", {}).get("url"):
+                    logger.error("No URL in ImgBB response")
+                    return None
+                    
+                return data["data"]["url"]
+                
+        except Exception as e:
+            logger.error(f"Error uploading to ImgBB: {e}")
+            return None
 
     def generate_video(
         self,
@@ -62,11 +96,20 @@ class VideoGenerator:
             logger.info(f"🎬 Generating video from image: {image_path}")
             logger.info(f"Using prompt: {prompt}")
             
-            # Generate video
+            # First upload image to get HTTPS URL
+            logger.info(f"📤 Uploading image to ImgBB...")
+            image_url = self.upload_image_to_imgbb(image_path)
+            
+            if not image_url:
+                raise ValueError("Failed to get HTTPS URL for image")
+            
+            logger.info(f"✅ Image uploaded: {image_url}")
+            
+            # Generate video using HTTPS URL
             try:
                 response = self.client.image_to_video.create(
                     model=model,
-                    prompt_image=str(image_path),
+                    prompt_image=image_url,  # Use HTTPS URL instead of local path
                     prompt_text=prompt
                 )
                 
