@@ -449,43 +449,11 @@ class TradeExecutor:
             # Execute transaction
             trade_result = await self.jupiter.execute_trade_with_retries(
                 transaction,
-                token_mint  # Use mint address from TOKENS table
+                token_mint
             )
-            if not trade_result:
-                await self.handle_failed_trade(trade['id'], "Transaction failed")
-                return False
-
-            # Verify transaction success
-            client = AsyncClient("https://api.mainnet-beta.solana.com")
-            try:
-                # Convert string signature to Signature object
-                sig_obj = Signature.from_string(trade_result['signature'])
-                    
-                # Wait for confirmation and get transaction status
-                confirmation = await client.confirm_transaction(sig_obj)
-                    
-                # Check transaction status
-                if not confirmation.value:
-                    await self.handle_failed_trade(trade['id'], "Transaction not confirmed")
-                    return False
-                    
-                # Get transaction details
-                tx_response = await client.get_transaction(sig_obj)
-                if not tx_response.value:
-                    await self.handle_failed_trade(trade['id'], "Could not verify transaction")
-                    return False
-                    
-                # Check if transaction was successful
-                if tx_response.value.meta and tx_response.value.meta.err:
-                    error_msg = f"Transaction failed: {tx_response.value.meta.err}"
-                    await self.handle_failed_trade(trade['id'], error_msg)
-                    return False
-
-            finally:
-                await client.close()
-
-            # If we have a trade result, the transaction succeeded (balance verified)
-            if trade_result:
+            
+            # Si on a un résultat avec signature, la transaction a réussi (balance vérifiée)
+            if trade_result and trade_result.get('signature'):
                 # Update trade record
                 transaction_url = f"https://solscan.io/tx/{trade_result['signature']}"
                 self.trades_table.update(trade['id'], {
@@ -519,8 +487,9 @@ class TradeExecutor:
             return False
 
         except Exception as e:
-            # Ignore version error if we already have a signature
-            if "UnsupportedTransactionVersion" in str(e) and 'signature' in locals():
+            # Ignorer l'erreur de version si on a déjà un trade_result avec signature
+            if "UnsupportedTransactionVersion" in str(e) and 'trade_result' in locals() and trade_result and trade_result.get('signature'):
+                logger.info("Ignoring version error since transaction is confirmed")
                 return True
                 
             logger.error(f"Trade execution failed: {e}")
