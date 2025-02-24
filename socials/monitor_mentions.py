@@ -107,10 +107,10 @@ async def save_message(message_data: dict, context: str = 'X_MENTION'):
         tokens = extract_tokens_from_text(message_data['text'])
         tokens_string = json.dumps(tokens) if tokens else None
         
-        # Format message record
+        # Format message record avec 'content' au lieu de 'text'
         record = {
             'messageId': message_data['id'],
-            'text': message_data['text'],
+            'content': message_data['text'],  # Changé de 'text' à 'content'
             'username': message_data.get('author_username', ''),
             'context': context,
             'role': 'user',
