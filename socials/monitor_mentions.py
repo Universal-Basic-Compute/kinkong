@@ -418,7 +418,7 @@ async def check_mentions():
                     # Initialize conversation text array
                     conversation_texts = [mention['text']]  # Start with mention text
 
-                    # Get full conversation context
+                    # Get conversation context
                     try:
                         # Get conversation ID
                         conversation_id = mention.get("conversation_id")
@@ -431,14 +431,14 @@ async def check_mentions():
                                 "max_results": 100
                             }
                             
-                            async with aiohttp.ClientSession() as session:
-                                async with session.get(conversation_url, auth=auth, params=params) as response:
-                                    if response.status == 200:
-                                        conv_data = await response.json()
-                                        if "data" in conv_data:
-                                            for tweet in conv_data["data"]:
-                                                conversation_texts.append(tweet["text"])
-                                                logger.debug(f"Added conversation tweet: {tweet['text'][:50]}...")
+                            # Use synchronous requests instead of aiohttp
+                            conv_response = requests.get(conversation_url, auth=auth, params=params)
+                            if conv_response.status_code == 200:
+                                conv_data = conv_response.json()
+                                if "data" in conv_data:
+                                    for tweet in conv_data["data"]:
+                                        conversation_texts.append(tweet["text"])
+                                        logger.debug(f"Added conversation tweet: {tweet['text'][:50]}...")
 
                         # Get any quoted or replied-to tweets
                         referenced_tweets = mention.get("referenced_tweets", [])
@@ -446,13 +446,12 @@ async def check_mentions():
                             ref_id = ref.get("id")
                             if ref_id:
                                 ref_url = f"https://api.twitter.com/2/tweets/{ref_id}"
-                                async with aiohttp.ClientSession() as session:
-                                    async with session.get(ref_url, auth=auth) as response:
-                                        if response.status == 200:
-                                            ref_data = await response.json()
-                                            if "data" in ref_data:
-                                                conversation_texts.append(ref_data["data"]["text"])
-                                                logger.debug(f"Added referenced tweet: {ref_data['data']['text'][:50]}...")
+                                ref_response = requests.get(ref_url, auth=auth)
+                                if ref_response.status_code == 200:
+                                    ref_data = ref_response.json()
+                                    if "data" in ref_data:
+                                        conversation_texts.append(ref_data["data"]["text"])
+                                        logger.debug(f"Added referenced tweet: {ref_data['data']['text'][:50]}...")
 
                     except Exception as e:
                         logger.error(f"Error getting conversation context: {e}")
