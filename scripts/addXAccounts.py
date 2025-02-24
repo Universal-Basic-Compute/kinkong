@@ -147,12 +147,12 @@ def main():
             logger.info(f"Processing {token['token']}...")
             
             # Get Dexscreener data
-            dex_data = get_dexscreener_data(token['mint'])
+            social_data = get_dexscreener_data(token['mint'])
             
-            if dex_data and dex_data['xAccount']:
-                # Update token with X account
-                airtable.update_token(token['id'], dex_data['xAccount'])
-                logger.info(f"Updated {token['token']} with X account: {dex_data['xAccount']}")
+            if social_data and social_data['xAccount']:
+                # Update token with all social data
+                airtable.update_token(token['id'], social_data)
+                logger.info(f"Updated {token['token']} with X account: {social_data['xAccount']}")
             else:
                 logger.warning(f"No X account found for {token['token']}")
             
