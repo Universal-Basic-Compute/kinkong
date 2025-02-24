@@ -24,59 +24,48 @@ def fetch_ubc_sol_data(timeframe='1H', hours=24, candles_target=60):
         '1D': 24 * 60 * 60
     }.get(timeframe, 60 * 60)
     
-    # Fetch data in two parts
-    # Part 1: Most recent 24 candles
-    params_recent = {
+    # Calculate time range to get desired number of candles
+    # Add 20% buffer to ensure we get enough data
+    desired_candles = min(candles_target * 1.2, 1000)  # Cap at API limit
+    time_range = int(desired_candles * interval_seconds)
+    
+    params = {
         "address": "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump",
         "type": timeframe,
         "currency": "usd",
-        "time_from": now - (24 * interval_seconds),
+        "time_from": now - time_range,
         "time_to": now
     }
     
-    # Part 2: Previous 24 candles
-    params_previous = {
-        "address": "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump",
-        "type": timeframe,
-        "currency": "usd",
-        "time_from": now - (48 * interval_seconds),
-        "time_to": now - (24 * interval_seconds)
-    }
-    
     try:
-        print(f"\nFetching recent {timeframe} candles...")
-        response_recent = requests.get(url, headers=headers, params=params_recent)
-        print("Recent response status:", response_recent.status_code)
+        print(f"\nFetching {timeframe} candles...")
+        print("Time range:", datetime.fromtimestamp(params['time_from']), "to", datetime.fromtimestamp(params['time_to']))
         
-        print(f"\nFetching previous {timeframe} candles...")
-        response_previous = requests.get(url, headers=headers, params=params_previous)
-        print("Previous response status:", response_previous.status_code)
+        response = requests.get(url, headers=headers, params=params)
+        print("Response status:", response.status_code)
         
-        # Process both responses
-        df_data = []
-        
-        for response in [response_previous, response_recent]:
-            data = response.json()
-            if not data.get('success'):
-                print(f"API request failed: {data.get('message')}")
-                continue
+        data = response.json()
+        if not data.get('success'):
+            print(f"API request failed: {data.get('message')}")
+            return None
 
-            items = data.get('data', {}).get('items', [])
-            for item in items:
-                date = pd.to_datetime(item['unixTime'], unit='s')
-                df_data.append({
-                    'Date': date,
-                    'Open': float(item['o']),
-                    'High': float(item['h']),
-                    'Low': float(item['l']),
-                    'Close': float(item['c']),
-                    'Volume': float(item['v'])
-                })
-        
-        if not df_data:
+        items = data.get('data', {}).get('items', [])
+        if not items:
             print("No data received from API")
             return None
             
+        df_data = []
+        for item in items:
+            date = pd.to_datetime(item['unixTime'], unit='s')
+            df_data.append({
+                'Date': date,
+                'Open': float(item['o']),
+                'High': float(item['h']),
+                'Low': float(item['l']),
+                'Close': float(item['c']),
+                'Volume': float(item['v'])
+            })
+        
         # Create DataFrame and sort by date
         df = pd.DataFrame(df_data)
         df.set_index('Date', inplace=True)
@@ -85,7 +74,7 @@ def fetch_ubc_sol_data(timeframe='1H', hours=24, candles_target=60):
         # Remove duplicates
         df = df[~df.index.duplicated(keep='first')]
         
-        print(f"\nTotal candles after merge: {len(df)}")
+        print(f"\nTotal candles fetched: {len(df)}")
         print("Date range:", df.index[0], "to", df.index[-1])
         
         return df
