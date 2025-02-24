@@ -166,13 +166,27 @@ def write_final_video(
         # Ensure output directory exists
         output_dir.mkdir(parents=True, exist_ok=True)
         
-        final_clip.write_videofile(
-            str(output_path),
-            fps=fps,
-            codec='libx264',
-            audio=False,
-            logger=None  # Suppress MoviePy's internal logging
-        )
+        try:
+            final_clip.write_videofile(
+                str(output_path),
+                fps=fps,
+                codec='libx264',
+                audio=False,
+                logger=None  # Suppress MoviePy's internal logging
+            )
+        finally:
+            # Explicitly close the clip and its reader
+            try:
+                final_clip.close()
+            except Exception as e:
+                logger.debug(f"Non-critical error during clip cleanup: {e}")
+            
+            # Clean up any remaining clips
+            for clip in final_clip.clips:
+                try:
+                    clip.close()
+                except Exception as e:
+                    logger.debug(f"Non-critical error during clip cleanup: {e}")
         
         logger.info(f"✨ Video {video_num} creation completed successfully!")
         return True
@@ -197,30 +211,40 @@ def assemble_video(
     """
     try:
         logger.info(f"🎥 Starting video assembly for video {video_num}")
+        final_clip = None
         
-        # Assemble the video
-        final_clip = assemble_final_video(
-            video_paths=video_paths,
-            screens=screens,
-            video_num=video_num,
-            width=width,
-            height=height,
-            duration_per_screen=duration_per_screen
-        )
-        
-        if not final_clip:
-            logger.error(f"❌ Failed to assemble video {video_num}")
-            return False
+        try:
+            # Assemble the video
+            final_clip = assemble_final_video(
+                video_paths=video_paths,
+                screens=screens,
+                video_num=video_num,
+                width=width,
+                height=height,
+                duration_per_screen=duration_per_screen
+            )
             
-        # Write the video
-        success = write_final_video(
-            final_clip=final_clip,
-            video_num=video_num,
-            output_dir=output_dir,
-            fps=30
-        )
-        
-        return success
+            if not final_clip:
+                logger.error(f"❌ Failed to assemble video {video_num}")
+                return False
+                
+            # Write the video
+            success = write_final_video(
+                final_clip=final_clip,
+                video_num=video_num,
+                output_dir=output_dir,
+                fps=30
+            )
+            
+            return success
+            
+        finally:
+            # Cleanup if final_clip exists
+            if final_clip:
+                try:
+                    final_clip.close()
+                except Exception as e:
+                    logger.debug(f"Non-critical error during final cleanup: {e}")
         
     except Exception as e:
         logger.error(f"Error in video assembly process for video {video_num}: {e}")
