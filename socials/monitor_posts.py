@@ -204,30 +204,31 @@ def analyze_sentiment_with_claude(token: str, tweets: List[Dict]) -> Optional[st
         ])
         
         system_prompt = """You are a cryptocurrency market sentiment analyst.
-        Analyze these tweets about a token and determine if there are clear bullish signals.
+        Analyze these tweets about a token and provide a detailed analysis followed by your verdict.
         
-        Your response MUST start with either:
-        "BULLISH:" followed by your analysis, or
-        "NOT BULLISH:" followed by brief explanation
+        First provide a detailed analysis covering:
+        1. Content summary - key themes and topics
+        2. Engagement analysis - likes, retweets, discussions
+        3. Notable signals:
+           - Announcements or news
+           - Community sentiment
+           - Endorsements or partnerships
+           - Technical analysis mentions
+           - Volume and liquidity discussions
+           - Development updates
+           - Ecosystem growth indicators
         
-        For BULLISH signals, look for:
-        1. Significant announcements or news
-        2. Strong community sentiment
-        3. Notable endorsements or partnerships
-        4. Technical analysis consensus
-        5. Volume and liquidity indicators
-        6. Development activity
-        7. Ecosystem growth
+        Then end your response with one of these verdicts:
+        "VERDICT: BULLISH" - if there are clear, strong positive signals
+        "VERDICT: NOT BULLISH" - if signals are weak, mixed, or negative
         
-        Consider engagement levels (likes/retweets) as signal strength.
-        Only mark as BULLISH if there are clear, strong signals with evidence.
-        If signals are weak or unclear, mark as NOT BULLISH."""
+        Your analysis should be thorough and evidence-based, regardless of the final verdict."""
 
         user_prompt = f"""Analyze these tweets about ${token}:
 
         {tweets_text}
 
-        Start your response with BULLISH: or NOT BULLISH: followed by your analysis."""
+        Provide detailed analysis followed by your VERDICT."""
 
         message = client.messages.create(
             model="claude-3-5-sonnet-20241022",
@@ -243,13 +244,13 @@ def analyze_sentiment_with_claude(token: str, tweets: List[Dict]) -> Optional[st
         
         analysis = message.content[0].text.strip()
         
-        # Parse the response
-        if analysis.startswith("BULLISH:"):
-            return analysis  # Return full analysis including "BULLISH:" prefix
-        elif analysis.startswith("NOT BULLISH:"):
-            return None  # Return None for not bullish
+        # Check if analysis ends with a verdict
+        if "VERDICT: BULLISH" in analysis:
+            return analysis  # Return full analysis for bullish verdict
+        elif "VERDICT: NOT BULLISH" in analysis:
+            return analysis  # Return full analysis even for not bullish
         else:
-            logger.warning(f"Unexpected analysis format: {analysis[:50]}...")
+            logger.warning(f"Analysis missing verdict: {analysis[:50]}...")
             return None
         
     except Exception as e:
@@ -363,17 +364,20 @@ def monitor_token(token: Optional[str] = None) -> tuple[bool, Optional[str]]:
                 # Analyze sentiment
                 analysis = analyze_sentiment_with_claude(token_symbol, tweets)
                 if analysis:
-                    logger.info(f"Bullish signals detected for ${token_symbol}")
-                    # Send notification
-                    if send_telegram_notification(token_symbol, analysis):
-                        logger.info(f"Notification sent for ${token_symbol}")
-                        metrics.increment('notifications_sent')
+                    is_bullish = "VERDICT: BULLISH" in analysis
+                    if is_bullish:
+                        logger.info(f"Bullish signals detected for ${token_symbol}")
+                        if send_telegram_notification(token_symbol, analysis):
+                            logger.info(f"Notification sent for ${token_symbol}")
+                            metrics.increment('notifications_sent')
+                        else:
+                            logger.error(f"Failed to send notification for ${token_symbol}")
+                        bullish_found = True
                     else:
-                        logger.error(f"Failed to send notification for ${token_symbol}")
-                    bullish_found = True
-                    analysis_text = analysis
+                        logger.info(f"No significant bullish signals for ${token_symbol}")
+                    analysis_text = analysis  # Store full analysis regardless of verdict
                 else:
-                    logger.info(f"No significant bullish signals for ${token_symbol}")
+                    logger.info(f"No analysis generated for ${token_symbol}")
                 
                 # Add delay between tokens if processing multiple
                 if len(tokens) > 1:
