@@ -133,20 +133,39 @@ class VideoGenerator:
                     prompt_text=prompt
                 )
                 
-                # Download the video
-                video_url = response.video_url
-                if not video_url:
-                    raise ValueError("No video URL in response")
-                    
-                # Save the video
-                with open(output_path, 'wb') as f:
-                    f.write(response.video_data)
-                    
-                logger.info(f"✅ Video saved to: {output_path}")
-                return str(output_path)
+                # Log full response for debugging
+                logger.debug(f"RunwayML API Response: {response}")
                 
+                # Check if response has video data
+                if not hasattr(response, 'video_data'):
+                    # Try to get video URL from response
+                    if hasattr(response, 'output') and hasattr(response.output, 'url'):
+                        # Download video from URL
+                        video_response = requests.get(response.output.url)
+                        if video_response.status_code == 200:
+                            # Save the video
+                            with open(output_path, 'wb') as f:
+                                f.write(video_response.content)
+                            logger.info(f"✅ Video saved to: {output_path}")
+                            return str(output_path)
+                        else:
+                            raise ValueError(f"Failed to download video: {video_response.status_code}")
+                    else:
+                        # Log the actual response structure for debugging
+                        logger.error(f"Unexpected response structure: {response}")
+                        raise ValueError("No video data or URL in response")
+                else:
+                    # Original handling for video_data
+                    with open(output_path, 'wb') as f:
+                        f.write(response.video_data)
+                    logger.info(f"✅ Video saved to: {output_path}")
+                    return str(output_path)
+                    
             except Exception as e:
                 logger.error(f"❌ Error during video generation: {e}")
+                # Log the full response for debugging
+                if 'response' in locals():
+                    logger.debug(f"Full response: {response}")
                 return None
                 
         except Exception as e:
