@@ -101,8 +101,12 @@ def generate_image(prompt: str, image_number: int, base_dir: Optional[Path] = No
             base_dir = videos_dir / f'video{video_num}/images'
             base_dir.mkdir(parents=True, exist_ok=True)
 
-        # Modify the prompt to include text overlay instructions
-        modified_prompt = f'"{prompt}" in BIG bold BebasNeue letters, {prompt}'
+        # Get the text from the screens data
+        text = prompt.get('text', '') if isinstance(prompt, dict) else ''
+        background = prompt.get('background', prompt) if isinstance(prompt, dict) else prompt
+
+        # Combine text and background in the correct format
+        modified_prompt = f'"{text}" in BIG bold BebasNeue letters, {background}'
             
         return generator.generate_and_save_image(modified_prompt, image_number, base_dir)
     except Exception as e:
