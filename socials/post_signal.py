@@ -50,10 +50,8 @@ class AirtableAPI:
             return None
 
 def post_to_x(text: str) -> bool:
-    """Post to X using API v1.1 with OAuth 1.0a"""
+    """Post to X using API v2"""
     try:
-        import tweepy
-        
         # Get OAuth 1.0a credentials
         api_key = os.getenv('X_API_KEY')
         api_secret = os.getenv('X_API_SECRET')
@@ -68,17 +66,22 @@ def post_to_x(text: str) -> bool:
         auth = tweepy.OAuthHandler(api_key, api_secret)
         auth.set_access_token(access_token, access_token_secret)
         
-        # Create API v1.1 instance
-        api = tweepy.API(auth)
+        # Create API v2 client
+        client = tweepy.Client(
+            consumer_key=api_key,
+            consumer_secret=api_secret,
+            access_token=access_token,
+            access_token_secret=access_token_secret
+        )
         
-        # Post tweet using v1.1 endpoint
-        response = api.update_status(text)
+        # Post tweet using v2 endpoint
+        response = client.create_tweet(text=text)
         
-        if response:
-            logger.info(f"Successfully posted to X. Tweet ID: {response.id}")
+        if response.data:
+            logger.info(f"Successfully posted to X. Tweet ID: {response.data['id']}")
             return True
         else:
-            logger.error("Failed to post to X - no response")
+            logger.error("Failed to post to X - no response data")
             return False
             
     except Exception as e:
