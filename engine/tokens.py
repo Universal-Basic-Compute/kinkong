@@ -15,25 +15,6 @@ if sys.stdout.encoding != 'utf-8':
     sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
     sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
 
-def log_message(message: str, level: str = 'info'):
-    """Log message with emoji replacements"""
-    # Replace emojis with text
-    message = message.replace('🔍', '[SEARCH]')
-    message = message.replace('✅', '[SUCCESS]') 
-    message = message.replace('❌', '[ERROR]')
-    message = message.replace('➕', '[ADD]')
-    message = message.replace('🔄', '[UPDATE]')
-    message = message.replace('📝', '[WRITE]')
-    message = message.replace('🌐', '[WEB]')
-    message = message.replace('💧', '[LIQUID]')
-    message = message.replace('ℹ️', '[INFO]')
-    message = message.replace('⚠️', '[WARN]')
-    
-    if level == 'error':
-        logger.error(message)
-    else:
-        logger.info(message)
-
 # Add project root to Python path
 project_root = Path(__file__).parent.parent.absolute()
 if str(project_root) not in sys.path:
@@ -55,6 +36,25 @@ def setup_logging():
     logger.setLevel(logging.INFO)
     logger.propagate = False
     return logger
+
+def log_message(message: str, level: str = 'info'):
+    """Log message with emoji replacements"""
+    # Replace emojis with text
+    message = message.replace('🔍', '[SEARCH]')
+    message = message.replace('✅', '[SUCCESS]') 
+    message = message.replace('❌', '[ERROR]')
+    message = message.replace('➕', '[ADD]')
+    message = message.replace('🔄', '[UPDATE]')
+    message = message.replace('📝', '[WRITE]')
+    message = message.replace('🌐', '[WEB]')
+    message = message.replace('💧', '[LIQUID]')
+    message = message.replace('ℹ️', '[INFO]')
+    message = message.replace('⚠️', '[WARN]')
+    
+    if level == 'error':
+        logger.error(message)
+    else:
+        logger.info(message)
 
 # Load environment variables
 load_dotenv()
