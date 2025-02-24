@@ -117,9 +117,11 @@ async def save_message(message_data: dict, context: str = 'mention'):
         
         airtable.insert(record)
         logger.info(f"Saved {context} message: {message_data['id']}")
+        return True
         
     except Exception as e:
         logger.error(f"Error saving message: {e}")
+        return False
 
 async def process_tokens(tokens: list):
     """Process list of tokens"""
@@ -129,7 +131,7 @@ async def process_tokens(tokens: list):
         
         if not base_id or not api_key:
             logger.error("Missing Airtable credentials")
-            return
+            return False
         
         for token in tokens:
             if check_token_status(token, base_id, api_key):
@@ -137,6 +139,11 @@ async def process_tokens(tokens: list):
                 await update_token(token)
             else:
                 logger.info(f"Token {token} is up to date")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Error processing tokens: {e}")
+        return False
 
 def get_last_mention_id():
     """Read last processed mention ID from file"""
