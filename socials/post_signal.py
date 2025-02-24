@@ -88,8 +88,8 @@ def post_to_x(text: str, signal_data: Dict) -> bool:
         # Map signal timeframe to chart timeframe
         chart_timeframe = get_chart_timeframe(signal_timeframe)
         
-        # Construct image path
-        chart_path = f"public/charts/{token.lower()}/{token}_{chart_timeframe}_scalp.png"
+        # Construct image path using the signal timeframe type in lowercase
+        chart_path = f"public/charts/{token.lower()}/{token}_{chart_timeframe}_{signal_timeframe.lower()}.png"
         
         logger.info(f"Looking for chart at: {chart_path}")
         
