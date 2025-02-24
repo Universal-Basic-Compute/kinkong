@@ -296,8 +296,10 @@ class TokenSearcher:
             if existing_records:
                 self.logger.info(f"\n🔄 Updating existing token record for {token_symbol}")
                 record_id = existing_records[0]['id']
-                # Don't update createdAt for existing records
+                # Don't update createdAt for existing records but DO update updatedAt
                 del airtable_record['createdAt']
+                # Keep updatedAt for updates
+                airtable_record['updatedAt'] = current_time
                 self.airtable.update(record_id, airtable_record)
                 self.logger.info("✅ Token record updated successfully")
             else:
