@@ -335,8 +335,7 @@ class JupiterTradeExecutor:
                         opts=TxOpts(
                             skip_preflight=True,
                             max_retries=2,
-                            preflight_commitment="confirmed",
-                            max_supported_transaction_version=0  # Specify version in options
+                            preflight_commitment="confirmed"
                         )
                     )
                     
