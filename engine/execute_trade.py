@@ -367,15 +367,16 @@ class JupiterTradeExecutor:
                             # Verify confirmation with get_transaction
                             tx_response = await client.get_transaction(
                                 signature,
-                                max_supported_transaction_version=0  # Version support only here
+                                max_supported_transaction_version=0
                             )
                             
                             if not tx_response.value:
                                 self.logger.error("Could not verify transaction")
                                 continue
                                 
-                            if tx_response.value.meta and tx_response.value.meta.err:
-                                self.logger.error(f"Transaction failed: {tx_response.value.meta.err}")
+                            # Check transaction metadata for errors
+                            if tx_response.value.transaction.meta.err:
+                                self.logger.error(f"Transaction failed: {tx_response.value.transaction.meta.err}")
                                 self.logger.error(f"View transaction: https://solscan.io/tx/{signature_str}")
                                 continue
                             
