@@ -76,25 +76,34 @@ class MarketOverviewGenerator:
             logger.error(f"Error getting market sentiment: {e}")
             return 'NEUTRAL'
 
-    def generate_overview_with_claude(self, signals: Dict[str, List[Dict]], sentiment: str) -> str:
-        """Generate comprehensive market overview using Claude, focusing on bullish signals"""
+    def generate_overview_with_claude(self, tokens: List[Dict], sentiment: str) -> str:
+        """Generate market overview using Claude with token metrics and sentiment"""
         try:
-            # Format signals data for Claude
-            bullish_tokens = "\n".join([
-                f"${token['token']}: ${token['price']:.4f} | {token['priceChange24h']:+.1f}% | Vol: ${token['volume24h']:,.0f}\n{token['analysis']}"
-                for token in signals['bullish']
-            ])
-            
-            bearish_tokens = "\n".join([
-                f"${token['token']}: ${token['price']:.4f} | {token['priceChange24h']:+.1f}% | Vol: ${token['volume24h']:,.0f}\n{token['analysis']}"
-                for token in signals['bearish']
+            # Format token data for Claude
+            token_summaries = "\n".join([
+                f"${token['token']}:"
+                f"\nPrice: ${token.get('price', 0):.4f} ({token.get('priceChange24h', 0):+.1f}%)"
+                f"\nVolume 24h: ${token.get('volume24h', 0):,.0f}"
+                f"\nVolume 7d: ${token.get('volume7d', 0):,.0f}"
+                f"\nLiquidity: ${token.get('liquidity', 0):,.0f}"
+                f"\nHolders: {token.get('holderCount', 0):,}"
+                f"\nVolume Growth: {token.get('volumeGrowth', 0):+.1f}%"
+                f"\nPrice Performance: {token.get('pricePerformance', 0):+.1f}%"
+                for token in tokens
             ])
             
             current_time = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
             
-            system_prompt = """You are KinKong, an AI-powered cryptocurrency trading bot specializing in Solana ecosystem tokens.
-            Write an engaging market analysis focused on bullish opportunities while acknowledging key risks.
-            
+            system_prompt = f"""You are KinKong, an AI-powered cryptocurrency trading bot specializing in Solana ecosystem tokens.
+            Write a comprehensive market analysis based on the current data.
+
+            Current Market Context:
+            Time: {current_time}
+            Market Sentiment: {sentiment}
+
+            Token Metrics Available:
+            {token_summaries}
+
             Article structure:
             1. Market Overview (Brief)
                - Current sentiment
@@ -123,18 +132,9 @@ class MarketOverviewGenerator:
             - Use relevant emojis
             - Include specific examples
             - Keep risk section concise
-            - Maintain KinKong's voice
-            
-            Remember: While maintaining objectivity, emphasize the constructive and bullish signals in the market."""
+            - Maintain KinKong's voice"""
 
-            user_prompt = f"""Time: {current_time}
-            Market Sentiment: {sentiment}
-            
-            Strong Bullish Signals ({len(signals['bullish'])} tokens):
-            {bullish_tokens if bullish_tokens else "None found"}
-            
-            Watch List ({len(signals['bearish'])} tokens):
-            {bearish_tokens if bearish_tokens else "None found"}"""
+            user_prompt = "Generate a market overview based on the provided token metrics and market sentiment."
 
             # Get Claude's analysis
             client = anthropic.Client(api_key=os.getenv('ANTHROPIC_API_KEY'))
