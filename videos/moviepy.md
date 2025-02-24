@@ -76,14 +76,118 @@ from moviepy.video.fx.SlideIn import SlideIn
 ## Video Components
 
 ### TextClip Parameters
+Complete parameter list for TextClip:
 ```python
 clip = TextClip(
-    txt="Hello World",
-    fontsize=70,
-    color='white',
-    size=(1000, 500),
-    method='caption'
+    # Required parameters
+    text="Hello World",      # The text to display
+    
+    # Font settings
+    font='Arial',           # Path to OpenType font or system font name
+    font_size=70,          # Font size in points
+    
+    # Color settings
+    color='white',         # Text color (name, RGB tuple, or hex)
+    bg_color=None,         # Background color (None for transparent)
+    stroke_color=None,     # Text outline color (None for no stroke)
+    stroke_width=0,        # Width of text outline in pixels
+    
+    # Size and layout
+    size=(1000, 500),      # (width, height) in pixels
+    margin=(None, None),   # Margins (horizontal, vertical) or (left, top, right, bottom)
+    
+    # Text alignment
+    method='caption',      # 'label' (auto-size) or 'caption' (fixed size)
+    text_align='center',   # 'left', 'center', or 'right'
+    horizontal_align='center', # 'left', 'center', or 'right' (text block in image)
+    vertical_align='center',   # 'top', 'center', or 'bottom' (text block in image)
+    interline=4,          # Spacing between lines
+    
+    # Other options
+    transparent=True,     # Whether to allow transparency
+    duration=None        # Clip duration in seconds
 )
+
+# Common TextClip operations
+clip = clip.with_duration(5)                    # Set duration
+clip = clip.set_position(('center', 'center'))  # Position in composite
+clip = clip.with_start(2)                       # Start time in composition
+clip = clip.with_effects([                      # Apply effects
+    FadeIn(duration=1),
+    FadeOut(duration=1, start_time=4)
+])
+```
+
+### TextClip Methods
+- `with_duration(duration)`: Set clip duration
+- `set_position(pos)`: Set position in composite clip
+  - pos can be: (x,y), 'center', 'left', 'right', 'top', 'bottom'
+- `with_start(t)`: Set start time in composition
+- `with_effects(effects)`: Apply list of effects
+- `resize(width=None, height=None)`: Resize the text clip
+- `rotate(angle)`: Rotate the text
+- `with_color(color)`: Change text color
+
+### TextClip Best Practices
+1. Font Selection:
+   - Use common system fonts or provide full path to custom fonts
+   - Test fallback fonts for cross-platform compatibility
+
+2. Size Management:
+   - Use 'label' method for auto-sized text
+   - Use 'caption' method when you need fixed dimensions
+   - Always provide size when using 'caption' method
+
+3. Text Alignment:
+   - `text_align`: Controls text alignment within text block
+   - `horizontal_align`: Controls text block position in image
+   - `vertical_align`: Controls text block position in image
+
+4. Performance:
+   - Create TextClips once and reuse when possible
+   - Use appropriate font size to avoid scaling
+   - Consider using ColorClip for solid backgrounds
+
+### Common TextClip Examples
+```python
+# Centered title with background
+title = TextClip(
+    text="My Video Title",
+    font='Arial',
+    font_size=70,
+    color='white',
+    bg_color='black',
+    size=(1920, 200),
+    method='caption',
+    text_align='center',
+    horizontal_align='center',
+    vertical_align='center'
+).with_duration(5)
+
+# Auto-sized label with stroke
+label = TextClip(
+    text="Important Label",
+    font='Arial',
+    font_size=40,
+    color='white',
+    stroke_color='black',
+    stroke_width=2,
+    method='label',
+    text_align='left'
+).with_duration(3)
+
+# Multi-line caption with margin
+caption = TextClip(
+    text="First line\nSecond line",
+    font='Arial',
+    font_size=30,
+    color='white',
+    size=(400, None),  # Fixed width, auto height
+    margin=(20, 10),   # Horizontal and vertical margins
+    method='caption',
+    text_align='center',
+    interline=8
+).with_duration(4)
 ```
 
 ### ColorClip Parameters
