@@ -1,10 +1,13 @@
 import os
+import yaml
 import requests
 import logging
 import anthropic
+from time import sleep
 from dotenv import load_dotenv
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 def setup_logging():
     logging.basicConfig(
@@ -14,6 +17,53 @@ def setup_logging():
     return logging.getLogger(__name__)
 
 logger = setup_logging()
+
+class TweetCache:
+    def __init__(self):
+        self.cache = {}
+        self.expiry = timedelta(hours=1)
+
+    def get(self, tweet_id):
+        if tweet_id in self.cache:
+            timestamp, data = self.cache[tweet_id]
+            if datetime.now() - timestamp < self.expiry:
+                return data
+        return None
+
+    def set(self, tweet_id, data):
+        self.cache[tweet_id] = (datetime.now(), data)
+
+class MetricsTracker:
+    def __init__(self):
+        self.metrics = {
+            'tokens_processed': 0,
+            'tweets_analyzed': 0,
+            'bullish_signals': 0,
+            'notifications_sent': 0,
+            'errors': 0
+        }
+
+    def increment(self, metric):
+        self.metrics[metric] += 1
+
+    def report(self):
+        return self.metrics
+
+tweet_cache = TweetCache()
+metrics = MetricsTracker()
+
+def load_config():
+    try:
+        with open('config.yaml', 'r') as f:
+            return yaml.safe_load(f)
+    except FileNotFoundError:
+        return {
+            'max_tweets_per_token': 20,
+            'analysis_threshold': 0.7,
+            'cache_expiry_hours': 1,
+            'delay_between_tokens': 2,
+            'max_retries': 3
+        }
 
 class AirtableAPI:
     def __init__(self, base_id: str, api_key: str):
@@ -43,6 +93,7 @@ class AirtableAPI:
             logger.error(f"Error fetching tokens from Airtable: {str(e)}")
             return []
 
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
 def get_top_tweets(token: str, bearer_token: str) -> List[Dict]:
     """Get top tweets for a token using X API"""
     try:
@@ -107,8 +158,13 @@ def analyze_sentiment_with_claude(token: str, tweets: List[Dict]) -> Optional[st
         2. Strong community sentiment
         3. Notable endorsements or partnerships
         4. Technical analysis consensus
+        5. Volume and liquidity indicators
+        6. Development activity
+        7. Ecosystem growth
         
-        Only return analysis if there are clear bullish signals. If nothing significant, return None."""
+        Consider the engagement levels (likes/retweets) as a weight for each signal.
+        Only return analysis if there are clear bullish signals with supporting evidence.
+        If nothing significant, return None."""
 
         user_prompt = f"""Analyze these top tweets about ${token}:
 
@@ -168,8 +224,11 @@ def send_telegram_notification(token: str, analysis: str):
 
 def main():
     try:
-        # Load environment variables
+        start_time = datetime.now()
+        
+        # Load environment variables and config
         load_dotenv()
+        config = load_config()
         
         # Verify required environment variables
         required_vars = [
@@ -195,13 +254,15 @@ def main():
         tokens = airtable.get_active_tokens()
         logger.info(f"Found {len(tokens)} active tokens")
         
-        # Process each token
+        # Process each token with delay
         for token_data in tokens:
-            token = token_data.get('token')
-            if not token:
-                continue
-                
-            logger.info(f"Processing ${token}")
+            try:
+                token = token_data.get('token')
+                if not token:
+                    continue
+                    
+                logger.info(f"Processing ${token}")
+                metrics.increment('tokens_processed')
             
             # Get top tweets
             tweets = get_top_tweets(token, os.getenv('X_BEARER_TOKEN'))
@@ -221,8 +282,29 @@ def main():
             else:
                 logger.info(f"No significant bullish signals for ${token}")
                 
+                # Add delay between tokens
+                sleep(config['delay_between_tokens'])
+                
+            except Exception as e:
+                logger.error(f"Error processing token {token}: {e}")
+                metrics.increment('errors')
+                continue
+                
+        # Add summary at end
+        duration = datetime.now() - start_time
+        logger.info(f"""
+        Monitor Posts Summary:
+        Duration: {duration}
+        Tokens Processed: {metrics.metrics['tokens_processed']}
+        Tweets Analyzed: {metrics.metrics['tweets_analyzed']}
+        Bullish Signals: {metrics.metrics['bullish_signals']}
+        Notifications Sent: {metrics.metrics['notifications_sent']}
+        Errors: {metrics.metrics['errors']}
+        """)
+                
     except Exception as e:
         logger.error(f"Script failed: {e}")
+        metrics.increment('errors')
         raise
 
 if __name__ == "__main__":
