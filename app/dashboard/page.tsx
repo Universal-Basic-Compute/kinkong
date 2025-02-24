@@ -13,6 +13,7 @@ interface TokenInfo {
   name: string;
   mint: string;
   xAccount?: string;
+  isActive: boolean;
   price: number;
   volume24h: number;
   liquidity: number;
@@ -93,6 +94,7 @@ export default function Dashboard() {
             <table className="min-w-full">
               <thead>
                 <tr className="border-b border-gold/20">
+                  <th className="px-4 py-2 text-left text-gold">Status</th>
                   <th className="px-4 py-2 text-left text-gold">Token</th>
                   <th className="px-4 py-2 text-left text-gold">Name</th>
                   <th className="px-4 py-2 text-left text-gold">X Account</th>
@@ -101,6 +103,13 @@ export default function Dashboard() {
               <tbody>
                 {trackedTokens.map((token) => (
                   <tr key={token.mint} className="border-b border-gold/10 hover:bg-gold/5">
+                    <td className="px-4 py-2">
+                      {token.isActive ? (
+                        <span className="text-green-500">✓</span>
+                      ) : (
+                        <span className="text-red-500">✗</span>
+                      )}
+                    </td>
                     <td className="px-4 py-2">
                       <a 
                         href={`https://solscan.io/token/${token.mint}`}

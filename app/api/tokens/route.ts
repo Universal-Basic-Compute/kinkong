@@ -21,11 +21,11 @@ interface SnapshotRecord extends FieldSet {
 
 export async function GET() {
   try {
-    // Get active tokens first
+    // Get all tokens (remove active filter)
     const tokensTable = getTable('TOKENS');
     const tokenRecords = await tokensTable
       .select({
-        filterByFormula: '{isActive} = 1'
+        sort: [{ field: 'isActive', direction: 'desc' }] // Sort by active status
       })
       .all();
 
@@ -63,6 +63,7 @@ export async function GET() {
         name: record.get('name'),
         mint: record.get('mint'),
         xAccount: record.get('xAccount'),
+        isActive: record.get('isActive') || false, // Add isActive field
         price: snapshot.price || 0,
         volume24h: snapshot.volume24h || 0,
         liquidity: snapshot.liquidity || 0,
