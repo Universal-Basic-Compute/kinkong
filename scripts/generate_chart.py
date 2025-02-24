@@ -249,16 +249,15 @@ def generate_chart(df, config, support_levels=None):
         time_diff = (df.index[1] - df.index[0]).total_seconds() / 60
         print(f"Time interval between candles: {time_diff} minutes")
         
-        # Calculate width based on time interval with MUCH bigger differences
-        # 15min -> 0.05, 1H -> 0.3, 4H -> 0.8, 1D -> 1.5
-        if time_diff <= 15:  # 15-minute candles
-            candle_width = 0.05  # Super thin for short timeframe
-        elif time_diff <= 60:  # 1-hour candles
-            candle_width = 0.3   # Thin for hourly
-        elif time_diff <= 240:  # 4-hour candles
-            candle_width = 0.8   # Thick for 4H
-        else:  # Daily candles
-            candle_width = 1.5   # Very thick for daily
+        # Calculate width based on time interval with adjusted divisors
+        if time_diff <= 15:  # 15-minute candles (SCALP)
+            candle_width = 1.5 / 4  # Divide by 4 for scalp
+        elif time_diff <= 60:  # 1-hour candles (INTRADAY)
+            candle_width = 1.5 / 6  # Divide by 6 for intraday
+        elif time_diff <= 240:  # 4-hour candles (SWING)
+            candle_width = 1.5 / 4  # Divide by 4 for swing
+        else:  # Daily candles (POSITION)
+            candle_width = 1.5 / 2  # Divide by 2 for position
 
         print(f"Using candle width: {candle_width} for {time_diff} minute intervals")
 
