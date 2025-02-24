@@ -66,11 +66,13 @@ class PromptGenerator:
             token_info = {
                 'token': signal.get('token'),
                 'analysis': f"""
-                    Signal Type: {signal.get('type')}
+                    Token: {signal.get('token')}
+                    Signal: {signal.get('type', 'BUY')}  # BUY signal from earlier query
+                    Strategy: {signal.get('strategy')}
                     Timeframe: {signal.get('timeframe')}
-                    Confidence: {signal.get('confidence')}
-                    Key Levels: {signal.get('keyLevels', 'N/A')}
-                    Reasoning: {signal.get('reasoning', 'N/A')}
+                    Confidence: {signal.get('confidence')}  # HIGH from earlier query
+                    Support/Resistance: {signal.get('supportResistance', 'N/A')}
+                    Analysis: {signal.get('analysis', 'N/A')}
                     
                     Create a short, engaging TikTok video script with:
                     1. Catchy intro (2-3 lines)
