@@ -22,12 +22,14 @@ def process_video_clip(
     screen: Dict,
     target_width: int,
     target_height: int,
-    duration: float
+    duration: float,
+    video_num: int
 ) -> Optional[CompositeVideoClip]:
     """
     Process a single video clip: resize, crop, add text and effects
     """
     try:
+        logger.info(f"Processing clip for video {video_num}")
         # Load video clip
         video_clip = VideoFileClip(str(video_path))
         
@@ -75,6 +77,7 @@ def process_video_clip(
 def assemble_final_video(
     video_paths: List[Tuple[int, str]],
     screens: List[Dict],
+    video_num: int,
     width: int = 1080,
     height: int = 1920,
     duration_per_screen: float = 2.5
@@ -83,25 +86,26 @@ def assemble_final_video(
     Assemble all video clips into final video
     """
     try:
-        logger.info("🎞️ Creating video clips...")
+        logger.info(f"🎞️ Creating video clips for video {video_num}...")
         clips = []
         
         for i, (screen_num, video_path) in enumerate(video_paths):
-            logger.info(f"Processing screen {screen_num}/{len(screens)}")
+            logger.info(f"Processing screen {screen_num}/{len(screens)} for video {video_num}")
             
             screen_clip = process_video_clip(
                 video_path=video_path,
                 screen=screens[i],
                 target_width=width,
                 target_height=height,
-                duration=duration_per_screen
+                duration=duration_per_screen,
+                video_num=video_num
             )
             
             if screen_clip:
                 clips.append(screen_clip)
-                logger.info(f"✅ Completed screen {screen_num}")
+                logger.info(f"✅ Completed screen {screen_num} for video {video_num}")
             else:
-                logger.error(f"❌ Failed to process screen {screen_num}")
+                logger.error(f"❌ Failed to process screen {screen_num} for video {video_num}")
         
         # Check if we have any clips before proceeding
         if not clips:
@@ -121,17 +125,23 @@ def assemble_final_video(
 
 def write_final_video(
     final_clip: CompositeVideoClip,
-    output_path: str | Path,
+    video_num: int,
+    output_dir: Optional[Path] = None,
     fps: int = 30
 ) -> bool:
     """
     Write the final video to disk
     """
     try:
-        logger.info(f"💾 Writing final video to: {output_path}")
+        # Determine output path
+        if output_dir is None:
+            output_dir = Path('dist/videos')
+        
+        output_path = output_dir / f'tiktok_video_{video_num}.mp4'
+        logger.info(f"💾 Writing video {video_num} to: {output_path}")
         
         # Ensure output directory exists
-        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+        output_dir.mkdir(parents=True, exist_ok=True)
         
         final_clip.write_videofile(
             str(output_path),
@@ -141,10 +151,53 @@ def write_final_video(
             logger=None  # Suppress MoviePy's internal logging
         )
         
-        logger.info("✨ Video creation completed successfully!")
+        logger.info(f"✨ Video {video_num} creation completed successfully!")
         return True
         
     except Exception as e:
         logger.error(f"Error writing final video: {e}")
+        logger.exception("Detailed error trace:")
+        return False
+def assemble_video(
+    video_paths: List[Tuple[int, str]],
+    screens: List[Dict],
+    video_num: int,
+    width: int = 1080,
+    height: int = 1920,
+    duration_per_screen: float = 2.5,
+    output_dir: Optional[Path] = None
+) -> bool:
+    """
+    Main entry point for video assembly process
+    """
+    try:
+        logger.info(f"🎥 Starting video assembly for video {video_num}")
+        
+        # Assemble the video
+        final_clip = assemble_final_video(
+            video_paths=video_paths,
+            screens=screens,
+            video_num=video_num,
+            width=width,
+            height=height,
+            duration_per_screen=duration_per_screen
+        )
+        
+        if not final_clip:
+            logger.error(f"❌ Failed to assemble video {video_num}")
+            return False
+            
+        # Write the video
+        success = write_final_video(
+            final_clip=final_clip,
+            video_num=video_num,
+            output_dir=output_dir,
+            fps=30
+        )
+        
+        return success
+        
+    except Exception as e:
+        logger.error(f"Error in video assembly process for video {video_num}: {e}")
         logger.exception("Detailed error trace:")
         return False

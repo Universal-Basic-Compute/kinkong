@@ -234,28 +234,21 @@ async def create_tiktok_video():
             duration_per_screen = 2.5
             logger.info(f"📺 Video settings: {width}x{height}, {duration_per_screen}s per screen")
 
-            # Assemble final video
-            final_clip = assemble_final_video(
+            # Assemble and write final video
+            success = assemble_video(
                 video_paths=video_paths,
                 screens=screens,
+                video_num=video_num,
                 width=width,
                 height=height,
                 duration_per_screen=duration_per_screen
             )
 
-            if not final_clip:
-                logger.error("❌ Failed to assemble final video")
-                return
-
-            # Write final video
-            output_path = Path('dist/videos') / f'tiktok_video_{video_num}.mp4'
-            success = write_final_video(final_clip, output_path)
-
             if not success:
-                logger.error("❌ Failed to write final video")
+                logger.error(f"❌ Failed to create video {video_num}")
                 return
 
-            logger.info(f"📍 Final video saved at: {output_path}")
+            logger.info(f"✅ Successfully created video {video_num}")
 
         except json.JSONDecodeError as e:
             logger.error(f"❌ Failed to parse script JSON: {e}")
