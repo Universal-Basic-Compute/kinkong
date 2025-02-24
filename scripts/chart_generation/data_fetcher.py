@@ -16,19 +16,21 @@ def fetch_ubc_sol_data(timeframe='1H', hours=24, candles_target=60):
     
     now = int(datetime.now().timestamp())
     
-    # Calculate required time range based on timeframe to get target number of candles
-    timeframe_minutes = {
-        '15m': 15,
-        '1H': 60,
-        '4H': 240,
-        '1D': 1440
+    # Double the time ranges to get more candles
+    timeframe_config = {
+        '15m': {'minutes': 15, 'target': 48},   # 12 hours -> 48 candles
+        '1H': {'minutes': 60, 'target': 48},    # 48 hours -> 48 candles
+        '4H': {'minutes': 240, 'target': 48},   # 8 days -> 48 candles
+        '1D': {'minutes': 1440, 'target': 48}   # 48 days -> 48 candles
     }
     
-    minutes_per_candle = timeframe_minutes.get(timeframe, 60)
-    total_minutes_needed = minutes_per_candle * candles_target
+    config = timeframe_config.get(timeframe, {'minutes': 60, 'target': 48})
+    minutes_per_candle = config['minutes']
+    target_candles = config['target']
     
-    # Add 20% buffer to ensure we get enough candles
-    start_time = now - int((total_minutes_needed * 1.2) * 60)
+    # Calculate time range needed (doubled)
+    total_minutes_needed = minutes_per_candle * target_candles * 2  # Double the time range
+    start_time = now - int(total_minutes_needed * 60)
     
     params = {
         "address": "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump",
