@@ -182,6 +182,51 @@ def write_final_video(
         logger.exception("Detailed error trace:")
         return False
 
+
+def assemble_video(
+    video_paths: List[Tuple[int, str]],
+    screens: List[Dict],
+    video_num: int,
+    width: int = 1080,
+    height: int = 1920,
+    duration_per_screen: float = 2.5,
+    output_dir: Optional[Path] = None
+) -> bool:
+    """
+    Main entry point for video assembly process
+    """
+    try:
+        logger.info(f"🎥 Starting video assembly for video {video_num}")
+        
+        # Assemble the video
+        final_clip = assemble_final_video(
+            video_paths=video_paths,
+            screens=screens,
+            video_num=video_num,
+            width=width,
+            height=height,
+            duration_per_screen=duration_per_screen
+        )
+        
+        if not final_clip:
+            logger.error(f"❌ Failed to assemble video {video_num}")
+            return False
+            
+        # Write the video
+        success = write_final_video(
+            final_clip=final_clip,
+            video_num=video_num,
+            output_dir=output_dir,
+            fps=30
+        )
+        
+        return success
+        
+    except Exception as e:
+        logger.error(f"Error in video assembly process for video {video_num}: {e}")
+        logger.exception("Detailed error trace:")
+        return False
+
 def main():
     """
     Main entry point when script is run directly
@@ -251,47 +296,3 @@ if __name__ == "__main__":
     logger.info("Starting video assembly script")
     logger.info(f"Arguments received: {sys.argv}")
     main()
-
-def assemble_video(
-    video_paths: List[Tuple[int, str]],
-    screens: List[Dict],
-    video_num: int,
-    width: int = 1080,
-    height: int = 1920,
-    duration_per_screen: float = 2.5,
-    output_dir: Optional[Path] = None
-) -> bool:
-    """
-    Main entry point for video assembly process
-    """
-    try:
-        logger.info(f"🎥 Starting video assembly for video {video_num}")
-        
-        # Assemble the video
-        final_clip = assemble_final_video(
-            video_paths=video_paths,
-            screens=screens,
-            video_num=video_num,
-            width=width,
-            height=height,
-            duration_per_screen=duration_per_screen
-        )
-        
-        if not final_clip:
-            logger.error(f"❌ Failed to assemble video {video_num}")
-            return False
-            
-        # Write the video
-        success = write_final_video(
-            final_clip=final_clip,
-            video_num=video_num,
-            output_dir=output_dir,
-            fps=30
-        )
-        
-        return success
-        
-    except Exception as e:
-        logger.error(f"Error in video assembly process for video {video_num}: {e}")
-        logger.exception("Detailed error trace:")
-        return False
