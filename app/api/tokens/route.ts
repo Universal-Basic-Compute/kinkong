@@ -29,17 +29,16 @@ export async function GET() {
           "NOT({token}='UBC'), " +
           "NOT({token}='COMPUTE')" +
         ")",
-        sort: [{ field: 'isActive', direction: 'desc' }] // Sort by active status
+        sort: [{ field: 'isActive', direction: 'desc' }]
       })
       .all();
 
-    // Get only the latest snapshot for each token
+    // Get latest snapshots
     const snapshotsTable = getTable('TOKEN_SNAPSHOTS');
     const snapshotRecords = await snapshotsTable
       .select({
         sort: [{ field: 'createdAt', direction: 'desc' }],
-        // Prendre vraiment le dernier snapshot sans filtre de temps
-        maxRecords: 100 // Assez pour avoir au moins 1 snapshot par token
+        filterByFormula: "IS_SAME({createdAt}, DATEADD(NOW(), -1, 'hours'), 'hour')" // Get snapshots from last hour
       })
       .all();
 
