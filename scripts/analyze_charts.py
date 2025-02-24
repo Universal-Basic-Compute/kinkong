@@ -319,11 +319,23 @@ def analyze_charts_with_claude(chart_paths, token_info=None):
         # Prepare all chart images
         chart_contents = []
         for chart_path in chart_paths:
-            # Convert WindowsPath to string
             chart_path_str = str(chart_path)
             with open(chart_path, "rb") as image_file:
                 image_data = base64.b64encode(image_file.read()).decode('utf-8')
-                timeframe = '15m' if '15m' in chart_path_str else '2h' if '2h' in chart_path_str else '8h'
+                
+                # Map the chart path to the correct timeframe
+                if '6h_scalp' in chart_path_str:
+                    timeframe = 'SCALP'
+                elif '24h_intraday' in chart_path_str:
+                    timeframe = 'INTRADAY'
+                elif '7d_swing' in chart_path_str:
+                    timeframe = 'SWING'
+                elif '30d_position' in chart_path_str:
+                    timeframe = 'POSITION'
+                else:
+                    print(f"Unknown timeframe in chart path: {chart_path_str}")
+                    continue
+
                 chart_contents.append({
                     "timeframe": timeframe,
                     "data": image_data
@@ -786,8 +798,13 @@ def main():
             
             # Get chart paths for this token
             chart_paths = [
-                Path('public/charts') / token_info['token'].lower() / f"{token_info['token']}_{tf}_candles_trading_view.png"
-                for tf in ['15m', '2h', '8h']
+                Path('public/charts') / token_info['token'].lower() / f"{token_info['token']}_{tf}"
+                for tf in [
+                    '6h_scalp.png',
+                    '24h_intraday.png',
+                    '7d_swing.png',
+                    '30d_position.png'
+                ]
             ]
             
             # Filter to only existing charts
