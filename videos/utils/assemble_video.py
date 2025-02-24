@@ -1,7 +1,10 @@
+import json
+import sys
 import logging
 from pathlib import Path
 from typing import List, Dict, Tuple, Optional
-from moviepy.video.VideoClip import VideoFileClip, TextClip, ColorClip
+from moviepy.editor import VideoFileClip
+from moviepy.video.VideoClip import TextClip, ColorClip
 from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
 from moviepy.video.fx.FadeIn import FadeIn
 from moviepy.video.fx.FadeOut import FadeOut
@@ -158,6 +161,70 @@ def write_final_video(
         logger.error(f"Error writing final video: {e}")
         logger.exception("Detailed error trace:")
         return False
+
+def main():
+    """
+    Main entry point when script is run directly
+    """
+    import sys
+    
+    if len(sys.argv) != 2:
+        print("Usage: python assemble_video.py <video_number>")
+        sys.exit(1)
+        
+    try:
+        video_num = int(sys.argv[1])
+        
+        # Load video paths and screens from the video's directory
+        video_dir = Path('videos/videos') / f'video{video_num}'
+        if not video_dir.exists():
+            logger.error(f"Video directory not found: {video_dir}")
+            sys.exit(1)
+            
+        # Load script.json
+        script_path = video_dir / 'script.json'
+        if not script_path.exists():
+            logger.error(f"Script file not found: {script_path}")
+            sys.exit(1)
+            
+        with open(script_path) as f:
+            script = json.load(f)
+            screens = script.get('screens', [])
+            
+        # Get video paths
+        videos_dir = video_dir / 'videos'
+        video_paths = []
+        for i in range(1, len(screens) + 1):
+            video_path = videos_dir / f'{i}.mp4'
+            if video_path.exists():
+                video_paths.append((i, str(video_path)))
+            else:
+                logger.error(f"Video file not found: {video_path}")
+                sys.exit(1)
+                
+        # Assemble the video
+        success = assemble_video(
+            video_paths=video_paths,
+            screens=screens,
+            video_num=video_num
+        )
+        
+        if success:
+            logger.info(f"✅ Successfully assembled video {video_num}")
+        else:
+            logger.error(f"❌ Failed to assemble video {video_num}")
+            sys.exit(1)
+            
+    except ValueError:
+        logger.error("Video number must be an integer")
+        sys.exit(1)
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        logger.exception("Detailed error trace:")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
 def assemble_video(
     video_paths: List[Tuple[int, str]],
     screens: List[Dict],
