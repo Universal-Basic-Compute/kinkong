@@ -7,6 +7,71 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, List, Optional, Tuple
 
+def generate_videos_parallel(image_results: List[Tuple[int, str]], screens: List[Dict], videos_dir: Path) -> List[Tuple[int, str]]:
+    """
+    Generate all videos in parallel using a thread pool
+    Returns list of tuples (screen_number, video_path)
+    """
+    logger.info(f"🎥 Starting parallel video generation for {len(image_results)} images...")
+    
+    def generate_single(args: Tuple[int, str, Dict]) -> Tuple[int, Optional[str]]:
+        """Worker function for each video generation task"""
+        screen_num, image_path, screen = args
+        if not image_path:
+            logger.error(f"❌ No image path for screen {screen_num}")
+            return screen_num, None
+            
+        # Get the corresponding screen data for the prompt
+        prompt = f"Smooth camera movement exploring the scene. {screen.get('background', '')}"
+        
+        logger.info(f"🎬 Generating video {screen_num}/{len(image_results)}")
+        
+        # Generate video from image
+        video_path = generate_video(
+            image_path=image_path,
+            prompt=prompt,
+            output_path=videos_dir / f"{screen_num}.mp4"
+        )
+        
+        if video_path:
+            logger.info(f"✅ Generated video {screen_num}: {video_path}")
+            return screen_num, str(video_path)
+        else:
+            logger.error(f"❌ Failed to generate video for screen {screen_num}")
+            return screen_num, None
+
+    # Create tasks list combining screen number, image path, and screen data
+    tasks = [
+        (screen_num, image_path, screens[i])
+        for i, (screen_num, image_path) in enumerate(image_results)
+    ]
+    
+    results = []
+    
+    # Use ThreadPoolExecutor to run tasks in parallel
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        # Submit all tasks
+        future_to_screen = {
+            executor.submit(generate_single, task): task[0]
+            for task in tasks
+        }
+        
+        # Collect results as they complete
+        for future in as_completed(future_to_screen):
+            screen_num = future_to_screen[future]
+            try:
+                result = future.result()
+                results.append(result)
+                logger.info(f"✅ Completed video generation for screen {screen_num}")
+            except Exception as e:
+                logger.error(f"❌ Error generating video {screen_num}: {e}")
+                logger.exception("Detailed error trace:")
+                results.append((screen_num, None))
+
+    # Sort results by screen number
+    results.sort(key=lambda x: x[0])
+    return results
+
 # Add project root to Python path
 project_root = str(Path(__file__).parent.parent.absolute())
 if project_root not in sys.path:
@@ -156,33 +221,19 @@ async def create_tiktok_video():
 
             logger.info("✅ All images generated successfully")
 
-            # Generate animated videos from images
+            # Generate animated videos from images in parallel
             logger.info("🎥 Generating animated videos from images...")
-            video_paths = []
             videos_dir = video_dir / 'videos'
             videos_dir.mkdir(exist_ok=True)
 
-            for i, (screen_num, image_path) in enumerate(image_results):
-                if not image_path:
-                    logger.error(f"❌ No image path for screen {screen_num}")
-                    continue
-                    
-                # Get the corresponding screen data for the prompt
-                screen = screens[i]
-                prompt = f"Smooth camera movement exploring the scene. {screen.get('background', '')}"
-                
-                # Generate video from image
-                video_path = generate_video(
-                    image_path=image_path,
-                    prompt=prompt,
-                    output_path=videos_dir / f"{screen_num}.mp4"
-                )
-                
-                if video_path:
-                    logger.info(f"✅ Generated video {screen_num}: {video_path}")
-                    video_paths.append((screen_num, video_path))
-                else:
-                    logger.error(f"❌ Failed to generate video for screen {screen_num}")
+            video_results = generate_videos_parallel(image_results, screens, videos_dir)
+            
+            # Filter out failed generations
+            video_paths = [(num, path) for num, path in video_results if path is not None]
+            
+            if not video_paths:
+                logger.error("❌ No videos were successfully generated")
+                return
 
             # Video settings (TikTok format)
             width = 1080
