@@ -55,7 +55,7 @@ class TokenSearcher:
             )
             
             if existing_records:
-                print(f"✅ Found existing token record for {keyword.upper()}")
+                log_message(f"[SUCCESS] Found existing token record for {keyword.upper()}")
                 token_record = existing_records[0]['fields']
                 return {
                     'symbol': token_record.get('token'),  # Use token as symbol
@@ -65,7 +65,7 @@ class TokenSearcher:
                 }
 
             # If not found, search Birdeye and create new record
-            print(f"🔍 Token not found. Searching Birdeye for {keyword.upper()}...")
+            log_message(f"[SEARCH] Token not found. Searching Birdeye for {keyword.upper()}")
             url = "https://public-api.birdeye.so/defi/v3/search"
             
             params = {

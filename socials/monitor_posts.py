@@ -4,7 +4,12 @@ import yaml
 import json
 import requests
 import logging
-import anthropic
+try:
+    import anthropic
+    ANTHROPIC_AVAILABLE = True
+except ImportError:
+    ANTHROPIC_AVAILABLE = False
+    print("Warning: anthropic module not available, some features will be disabled")
 from time import sleep
 from ratelimit import limits, sleep_and_retry
 from dotenv import load_dotenv
@@ -355,6 +360,11 @@ def monitor_token(token: Optional[str] = None) -> tuple[bool, Optional[str]]:
                 logger.info(f"Processing ${token_symbol}")
                 metrics.increment('tokens_processed')
                 
+                # Check if anthropic is available
+                if not ANTHROPIC_AVAILABLE:
+                    logger.info("Anthropic not available - skipping sentiment analysis")
+                    return True, "Token added to monitoring (sentiment analysis disabled)"
+
                 # Get tweets - either from account or search
                 if x_account:
                     logger.info(f"Getting tweets from account: {x_account}")
