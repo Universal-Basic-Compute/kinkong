@@ -54,11 +54,13 @@ def create_tiktok_video():
     clip1 = TextClip(
         text=text_parts[0],
         font='Arial',
-        fontsize=70,
+        font_size=70,
         color='white',
         size=(width-100, height//2),
         method='caption',
-        align='center'
+        text_align='center',
+        horizontal_align='center',
+        vertical_align='center'
     ).with_duration(5)
     clip1 = clip1.set_position(('center', height//3))
     clip1 = clip1.with_effects([
@@ -70,11 +72,13 @@ def create_tiktok_video():
     clip2 = TextClip(
         text=text_parts[1],
         font='Arial',
-        fontsize=70,
+        font_size=70,
         color='white',
         size=(width-100, height//2),
         method='caption',
-        align='center'
+        text_align='center',
+        horizontal_align='center',
+        vertical_align='center'
     ).with_duration(5)
     clip2 = clip2.set_position(('center', 2*height//3))
     clip2 = clip2.with_start(5)  # Start after first clip
