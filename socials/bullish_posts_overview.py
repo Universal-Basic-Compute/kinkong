@@ -34,9 +34,9 @@ class MarketOverviewGenerator:
         self.sentiment_table = Airtable(self.base_id, 'MARKET_SENTIMENT', self.api_key)
 
     def get_token_data(self) -> List[Dict]:
-        """Get important token metrics from TOKENS table"""
+        """Get important token metrics and explanations from TOKENS table"""
         try:
-            # Get active tokens with key metrics
+            # Get active tokens with key metrics - prioritizing explanation
             records = self.tokens_table.get_all(
                 formula="AND(" +
                     "{isActive}=1, " +
@@ -45,6 +45,7 @@ class MarketOverviewGenerator:
                 ")",
                 fields=[
                     'token',
+                    'explanation',  # Added explanation as primary field
                     'price',
                     'priceChange24h',
                     'volume24h',
@@ -79,60 +80,66 @@ class MarketOverviewGenerator:
     def generate_overview_with_claude(self, tokens: List[Dict], sentiment: str) -> str:
         """Generate market overview using Claude with token metrics and sentiment"""
         try:
-            # Format token data for Claude
-            token_summaries = "\n".join([
-                f"${token['token']}:"
-                f"\nPrice: ${token.get('price', 0):.4f} ({token.get('priceChange24h', 0):+.1f}%)"
-                f"\nVolume 24h: ${token.get('volume24h', 0):,.0f}"
-                f"\nVolume 7d: ${token.get('volume7d', 0):,.0f}"
-                f"\nLiquidity: ${token.get('liquidity', 0):,.0f}"
-                f"\nHolders: {token.get('holderCount', 0):,}"
-                f"\nVolume Growth: {token.get('volumeGrowth', 0):+.1f}%"
-                f"\nPrice Performance: {token.get('pricePerformance', 0):+.1f}%"
+            # Format token data emphasizing explanations
+            token_summaries = "\n\n".join([
+                f"${token['token']} Updates:"
+                f"\nNews & Analysis: {token.get('explanation', 'No recent updates')}"
+                f"\nMetrics:"
+                f"\n- Price: ${token.get('price', 0):.4f} ({token.get('priceChange24h', 0):+.1f}%)"
+                f"\n- Volume 24h: ${token.get('volume24h', 0):,.0f}"
+                f"\n- Volume 7d: ${token.get('volume7d', 0):,.0f}"
+                f"\n- Liquidity: ${token.get('liquidity', 0):,.0f}"
+                f"\n- Holders: {token.get('holderCount', 0):,}"
+                f"\n- Volume Growth: {token.get('volumeGrowth', 0):+.1f}%"
+                f"\n- Price Performance: {token.get('pricePerformance', 0):+.1f}%"
                 for token in tokens
             ])
             
             current_time = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
             
             system_prompt = f"""You are KinKong, an AI-powered cryptocurrency trading bot specializing in Solana ecosystem tokens.
-            Write a comprehensive market analysis based on the current data.
+            Write a comprehensive ecosystem update focusing on recent developments and news.
 
             Current Market Context:
             Time: {current_time}
             Market Sentiment: {sentiment}
 
-            Token Metrics Available:
+            Token Updates and Metrics:
             {token_summaries}
 
             Article structure:
-            1. Market Overview (Brief)
+            1. Ecosystem Overview
                - Current sentiment
-               - Key ecosystem trends
+               - Major developments
+               - Key project updates
             
-            2. Bullish Opportunities (Main Focus)
-               - Strongest performing tokens
-               - Notable volume increases
-               - Positive technical setups
-               - Emerging patterns
-               - Key support levels
+            2. Notable Developments (Main Focus)
+               - Project announcements
+               - Partnership news
+               - Development milestones
+               - Community growth
+               - Adoption metrics
             
-            3. Quick Risk Summary
-               - Brief mention of key risks
-               - Important resistance levels
+            3. Market Impact
+               - Volume trends
+               - Liquidity changes
+               - Holder growth
+               - Brief technical context
             
-            4. Action Items
-               - Tokens to watch
-               - Key levels to monitor
-               - Volume thresholds
+            4. Forward Outlook
+               - Upcoming developments
+               - Projects to watch
+               - Key events
             
             Writing style:
-            - Enthusiastic but professional tone
-            - Focus on opportunities
-            - Data-driven analysis
+            - Focus on news and developments
+            - Highlight ecosystem growth
+            - Data-supported narrative
             - Use relevant emojis
-            - Include specific examples
-            - Keep risk section concise
-            - Maintain KinKong's voice"""
+            - Include specific project updates
+            - Keep technical analysis minimal
+            - Maintain KinKong's voice
+            - Emphasize fundamental developments over price action"""
 
             user_prompt = "Generate a market overview based on the provided token metrics and market sentiment."
 
