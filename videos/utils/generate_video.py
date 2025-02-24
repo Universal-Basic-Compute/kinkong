@@ -84,18 +84,6 @@ class VideoGenerator:
         output_path: Optional[str | Path] = None,
         model: str = "gen3a_turbo"
     ) -> Optional[str]:
-        """
-        Generate a video from an image using RunwayML.
-        
-        Args:
-            image_path: Path to the input image
-            prompt: Text description for video generation
-            output_path: Optional path for output video (default: same directory as input)
-            model: RunwayML model to use (default: gen3a_turbo)
-            
-        Returns:
-            Path to generated video if successful, None otherwise
-        """
         try:
             # Convert paths to Path objects
             image_path = Path(image_path)
@@ -132,39 +120,21 @@ class VideoGenerator:
                 prompt_text=prompt
             )
             
-            # Get the job ID
-            job_id = response.id
-            logger.info(f"🎬 Video generation started. Job ID: {job_id}")
-            
-            # Poll for completion
-            import time
-            max_attempts = 30  # 5 minutes total
-            for attempt in range(max_attempts):
-                # Use status to check job status
-                status = self.client.image_to_video.status(job_id)
-                logger.info(f"Status check {attempt + 1}: {status.status}")
-                    
-                if status.status == "completed":
-                    # Download the video
-                    video_url = status.output.url
-                    logger.info(f"✅ Downloading video from: {video_url}")
-                        
-                    video_response = requests.get(video_url)
-                    if video_response.status_code == 200:
-                        with open(output_path, 'wb') as f:
-                            f.write(video_response.content)
-                        logger.info(f"✅ Video saved to: {output_path}")
-                        return str(output_path)
-                            
-                elif status.status == "failed":
-                    logger.error(f"❌ Video generation failed: {status.error}")
-                    return None
-                        
-                time.sleep(10)  # Wait 10 seconds between checks
+            # Get the video URL directly from response
+            if hasattr(response, 'output') and hasattr(response.output, 'url'):
+                video_url = response.output.url
+                logger.info(f"✅ Downloading video from: {video_url}")
                 
-            logger.error("❌ Video generation timed out")
-            return None
-            
+                video_response = requests.get(video_url)
+                if video_response.status_code == 200:
+                    with open(output_path, 'wb') as f:
+                        f.write(video_response.content)
+                    logger.info(f"✅ Video saved to: {output_path}")
+                    return str(output_path)
+            else:
+                logger.error("❌ No video URL in response")
+                return None
+                
         except Exception as e:
             logger.error(f"❌ Error during video generation: {e}")
             logger.exception("Detailed error trace:")  # Add stack trace for debugging
