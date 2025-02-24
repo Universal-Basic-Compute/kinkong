@@ -81,14 +81,17 @@ class TokenSearcher:
             data = response.json()
             
             if not data.get('success'):
-                raise Exception(f"API returned success=false: {data.get('message', 'No error message')}")
+                self.last_error = f"Birdeye API error: {data.get('message', 'Unknown error')}"
+                logger.error(self.last_error)
+                return None
             
             # Find token results
             items = data.get('data', {}).get('items', [])
             token_item = next((item for item in items if item['type'] == 'token'), None)
             
             if not token_item or not token_item.get('result'):
-                print(f"❌ No tokens found for keyword: {keyword}")
+                self.last_error = f"No token found matching '{keyword}'"
+                logger.error(self.last_error)
                 return None
                 
             tokens = token_item['result']
@@ -305,23 +308,26 @@ def main():
         if len(sys.argv) > 1:
             # Process single token
             keyword = sys.argv[1]
-            print(f"[SEARCH] Searching for token: {keyword}")
+            logger.info(f"[SEARCH] Searching for token: {keyword}")
             
             token_data = searcher.search_token(keyword)
             if token_data:
-                print(f"[SUCCESS] Found token: {token_data.get('symbol')}")
+                logger.info(f"[SUCCESS] Found token: {token_data.get('symbol')}")
                 
                 # Force isActive true for special tokens
                 if token_data.get('symbol') in ALWAYS_ACTIVE_TOKENS:
                     token_data['isActive'] = True
-                    print(f"ℹ️ {token_data.get('symbol')} is a special token - always active")
+                    logger.info(f"[INFO] {token_data.get('symbol')} is a special token - always active")
                 
                 if searcher.create_token_record(token_data):
-                    print(f"[SUCCESS] Token record created/updated successfully")
+                    logger.info(f"[SUCCESS] Token record created/updated successfully")
                 else:
-                    print(f"[ERROR] Failed to create/update token record")
+                    logger.error(f"[ERROR] Failed to create/update token record")
             else:
-                print(f"[ERROR] Token not found")
+                logger.error(f"[ERROR] Token not found or API request failed")
+                # Add more details about the failure
+                if hasattr(searcher, 'last_error'):
+                    logger.error(f"[ERROR] Details: {searcher.last_error}")
         else:
             # Process all existing tokens
             print("🔄 Processing all existing tokens...")
@@ -373,7 +379,11 @@ def main():
                 print(f"❌ Error generating market overview: {str(e)}")
 
     except Exception as e:
-        print(f"\n[ERROR] Script failed: {str(e)}")
+        logger.error(f"[ERROR] Script failed: {str(e)}")
+        # Add traceback for more details
+        import traceback
+        logger.error("Traceback:")
+        traceback.print_exc()
         sys.exit(1)
 
 if __name__ == "__main__":
