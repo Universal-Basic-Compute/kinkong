@@ -24,52 +24,47 @@ def fetch_ubc_sol_data(timeframe='1H', hours=24, candles_target=60):
         '1D': 24 * 60 * 60
     }.get(timeframe, 60 * 60)
     
-    # Calculate time range to get desired number of candles
-    desired_candles = min(candles_target * 1.2, 1000)  # Cap at API limit
-    time_range = int(desired_candles * interval_seconds)
-    
-    params = {
+    # Make two requests with overlapping time ranges
+    params1 = {
         "address": "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump",
         "type": timeframe,
         "currency": "usd",
-        "time_from": now - time_range,
-        "time_to": now,
-        "limit": int(desired_candles)  # Add explicit limit parameter
+        "time_from": now - (2 * interval_seconds * 24),  # Get 48 intervals
+        "time_to": now
     }
     
-    # Debug prints
-    print("\nAPI Request Details:")
-    print(f"URL: {url}")
-    print(f"Headers: {headers}")
-    print(f"Params: {params}")
-    print(f"Timeframe: {timeframe}")
-    print(f"Desired candles: {desired_candles}")
-    print(f"Time range: {time_range} seconds")
-    print(f"From: {datetime.fromtimestamp(params['time_from']).strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"To: {datetime.fromtimestamp(params['time_to']).strftime('%Y-%m-%d %H:%M:%S')}")
+    params2 = {
+        "address": "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump",
+        "type": timeframe,
+        "currency": "usd",
+        "time_from": now - (4 * interval_seconds * 24),  # Get previous 48 intervals
+        "time_to": now - (2 * interval_seconds * 24)
+    }
     
     try:
-        response = requests.get(url, headers=headers, params=params)
-        print("\nAPI Response:")
-        print(f"Status Code: {response.status_code}")
-        print(f"Response Headers: {dict(response.headers)}")
+        # Make both requests
+        response1 = requests.get(url, headers=headers, params=params1)
+        response2 = requests.get(url, headers=headers, params=params2)
         
-        data = response.json()
-        print(f"Response Data Keys: {data.keys() if isinstance(data, dict) else 'Not a dict'}")
+        all_items = []
         
-        if not data.get('success'):
-            print(f"API Error: {data.get('message', 'No error message')}")
-            return None
-
-        items = data.get('data', {}).get('items', [])
-        print(f"Number of items received: {len(items)}")
-        
-        if not items:
-            print("No data items in response")
+        # Process first response
+        data1 = response1.json()
+        if data1.get('success'):
+            all_items.extend(data1.get('data', {}).get('items', []))
+            
+        # Process second response
+        data2 = response2.json()
+        if data2.get('success'):
+            all_items.extend(data2.get('data', {}).get('items', []))
+            
+        if not all_items:
+            print("No data items in responses")
             return None
             
+        # Convert to DataFrame
         df_data = []
-        for item in items:
+        for item in all_items:
             date = pd.to_datetime(item['unixTime'], unit='s')
             df_data.append({
                 'Date': date,
@@ -85,15 +80,9 @@ def fetch_ubc_sol_data(timeframe='1H', hours=24, candles_target=60):
         df = df.sort_index()
         df = df[~df.index.duplicated(keep='first')]
         
-        print("\nDataFrame Info:")
-        print(f"Shape: {df.shape}")
-        print(f"Date Range: {df.index[0]} to {df.index[-1]}")
-        print(f"Number of candles: {len(df)}")
-        
+        print(f"\nFetched {len(df)} candles for timeframe {timeframe}")
         return df
         
     except Exception as e:
         print(f"\nError fetching data: {str(e)}")
-        if 'response' in locals():
-            print(f"Raw Response: {response.text[:1000]}...")  # Print first 1000 chars of response
         return None
