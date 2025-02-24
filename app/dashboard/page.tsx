@@ -7,7 +7,6 @@ import { PortfolioSection } from '@/components/dashboard/PortfolioSection';
 import { TrackedTokensSection } from '@/components/dashboard/TrackedTokensSection';
 import { InvestmentCard } from '@/components/dashboard/InvestmentCard';
 import { BubbleChart } from '@/components/dashboard/BubbleChart';
-import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 
 interface TokenInfo {
   token: string;
@@ -41,7 +40,6 @@ export default function Dashboard() {
   const [trackedTokens, setTrackedTokens] = useState<TokenInfo[]>([]);
   const [isTrackedTokensLoading, setIsTrackedTokensLoading] = useState(true);
   const [trackedTokensError, setTrackedTokensError] = useState<string | null>(null);
-  const [isTableVisible, setIsTableVisible] = useState(false);
 
   useEffect(() => {
     async function fetchTrackedTokens() {
@@ -90,72 +88,49 @@ export default function Dashboard() {
           <BubbleChart tokens={trackedTokens} />
         )}
 
-        {/* Collapsible Table Section */}
-        <div className="mt-8">
-          <button 
-            onClick={() => setIsTableVisible(!isTableVisible)}
-            className="w-full flex items-center justify-between p-4 bg-black/30 border border-gold/20 rounded-lg hover:bg-gold/5 transition-colors"
-          >
-            <span className="text-lg font-medium">More Information</span>
-            {isTableVisible ? (
-              <ChevronUpIcon className="w-5 h-5 text-gold" />
-            ) : (
-              <ChevronDownIcon className="w-5 h-5 text-gold" />
-            )}
-          </button>
-          
-          {isTableVisible && (
-            <div className="mt-4 bg-black/30 p-8 rounded-lg border border-gold/20">
-              {isTrackedTokensLoading ? (
-                <div className="text-center py-4">Loading tokens...</div>
-              ) : trackedTokensError ? (
-                <div className="text-center py-4 text-red-400">Error: {trackedTokensError}</div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full">
-                    <thead>
-                      <tr className="border-b border-gold/20">
-                        <th className="px-4 py-2 text-left text-gold">Token</th>
-                        <th className="px-4 py-2 text-left text-gold">Name</th>
-                        <th className="px-4 py-2 text-left text-gold">X Account</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {trackedTokens.map((token) => (
-                        <tr key={token.mint} className="border-b border-gold/10 hover:bg-gold/5">
-                          <td className="px-4 py-2">
-                            <a 
-                              href={`https://solscan.io/token/${token.mint}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={`font-medium ${getTokenClass(token.token)}`}
-                            >
-                              ${token.token}
-                            </a>
-                          </td>
-                          <td className="px-4 py-2 text-gray-300">{token.name}</td>
-                          <td className="px-4 py-2 text-gray-300">
-                            {token.xAccount ? (
-                              <a
-                                href={`https://x.com/${token.xAccount}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-400 hover:text-blue-300"
-                              >
-                                @{token.xAccount}
-                              </a>
-                            ) : (
-                              '-'
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          )}
+        <div className="mt-8 bg-black/30 p-8 rounded-lg border border-gold/20">
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b border-gold/20">
+                  <th className="px-4 py-2 text-left text-gold">Token</th>
+                  <th className="px-4 py-2 text-left text-gold">Name</th>
+                  <th className="px-4 py-2 text-left text-gold">X Account</th>
+                </tr>
+              </thead>
+              <tbody>
+                {trackedTokens.map((token) => (
+                  <tr key={token.mint} className="border-b border-gold/10 hover:bg-gold/5">
+                    <td className="px-4 py-2">
+                      <a 
+                        href={`https://solscan.io/token/${token.mint}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`font-medium ${getTokenClass(token.token)}`}
+                      >
+                        ${token.token}
+                      </a>
+                    </td>
+                    <td className="px-4 py-2 text-gray-300">{token.name}</td>
+                    <td className="px-4 py-2 text-gray-300">
+                      {token.xAccount ? (
+                        <a
+                          href={`https://x.com/${token.xAccount}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-400 hover:text-blue-300"
+                        >
+                          @{token.xAccount}
+                        </a>
+                      ) : (
+                        '-'
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
     </main>
