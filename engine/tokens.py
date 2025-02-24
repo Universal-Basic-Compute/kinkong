@@ -272,7 +272,8 @@ class TokenSearcher:
                 ),
                 'mint': token_data.get('address', ''),
                 'description': f"Token {token_symbol} on Solana chain",
-                'createdAt': created_at,
+                'createdAt': current_time,
+                'updatedAt': current_time,
                 # Add social media links
                 'website': social_links.get('website', ''),
                 'xAccount': social_links.get('xAccount', ''),
