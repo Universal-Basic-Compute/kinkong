@@ -74,33 +74,48 @@ class PromptGenerator:
             message = client.messages.create(
                 model="claude-3-5-sonnet-20241022",
                 max_tokens=4096,
-                messages=[{
-                    "role": "user",
-                    "content": [
+                messages=[
+                    {
+                        "role": "system",
+                        "content": """You are a crypto trading expert creating engaging TikTok scripts. Your scripts should be punchy, direct and split into two parts:
+                        1. A catchy hook/intro
+                        2. Key analysis points
+                        
+                        Return your response as JSON with this structure:
                         {
-                            "type": "text",
-                            "text": f"""Create a short, engaging TikTok video script about this trading signal:
-
-                            Token: {signal.get('token')}
-                            Signal Type: {signal.get('type', 'BUY')}
-                            Strategy: {signal.get('strategy')}
-                            Timeframe: {signal.get('timeframe')}
-                            Confidence: {signal.get('confidence')}
-                            Support/Resistance: {signal.get('supportResistance', 'N/A')}
-                            Analysis: {signal.get('analysis', 'N/A')}
-
-                            Requirements:
-                            1. Write a catchy intro (2-3 lines)
-                            2. Follow with key analysis points (2-3 lines)
-                            3. Keep it simple and direct
-                            4. Use emojis sparingly but effectively
-                            5. Total length should be 4-6 lines
-                            6. Split the response into 2 parts with a blank line between them
-
-                            Format your response as plain text with just the script."""
+                            "intro": "Hey traders! 👋\nBig move incoming on $SOL",
+                            "analysis": "Technical analysis shows strong support\nVolume is picking up 📈\nTime to watch this closely!"
                         }
-                    ]
-                }]
+                        
+                        Keep each part short and impactful. Use emojis strategically but don't overdo it."""
+                    },
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": f"""Create a short, engaging TikTok video script about this trading signal:
+
+                                Token: {signal.get('token')}
+                                Signal Type: {signal.get('type', 'BUY')}
+                                Strategy: {signal.get('strategy')}
+                                Timeframe: {signal.get('timeframe')}
+                                Confidence: {signal.get('confidence')}
+                                Support/Resistance: {signal.get('supportResistance', 'N/A')}
+                                Analysis: {signal.get('analysis', 'N/A')}
+
+                                Requirements:
+                                1. Write a catchy intro (2-3 lines)
+                                2. Follow with key analysis points (2-3 lines)
+                                3. Keep it simple and direct
+                                4. Use emojis sparingly but effectively
+                                5. Total length should be 4-6 lines
+                                6. Return response as JSON with 'intro' and 'analysis' fields
+
+                                Format the response as JSON only, no additional text."""
+                            }
+                        ]
+                    }]
             )
             
             if not message:
