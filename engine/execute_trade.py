@@ -20,6 +20,7 @@ from solana.rpc.async_api import AsyncClient
 from solana.rpc.types import TxOpts
 from solders.pubkey import Pubkey
 from solders.signature import Signature
+from solders.signature import Signature
 from spl.token.instructions import get_associated_token_address
 
 def setup_logging():
