@@ -94,7 +94,7 @@ def setup_logging():
 
 logger = setup_logging()
 
-async def save_message(message_data: dict, context: str = 'mention'):
+async def save_message(message_data: dict, context: str = 'X_MENTION'):
     """Save message to MESSAGES table"""
     try:
         airtable = Airtable(
@@ -103,20 +103,23 @@ async def save_message(message_data: dict, context: str = 'mention'):
             os.getenv('KINKONG_AIRTABLE_API_KEY')
         )
         
+        # Extract tokens and convert to string
+        tokens = extract_tokens_from_text(message_data['text'])
+        tokens_string = json.dumps(tokens) if tokens else None
+        
         # Format message record
         record = {
             'messageId': message_data['id'],
+            'text': message_data['text'],
+            'username': message_data.get('author_username', ''),
             'context': context,
-            'platform': 'X',
-            'author': message_data.get('author_username', ''),
-            'content': message_data['text'],
-            'createdAt': message_data['created_at'],
-            'url': f"https://twitter.com/{message_data.get('author_username')}/status/{message_data['id']}",
-            'tokens': ', '.join(extract_tokens_from_text(message_data['text'])) if extract_tokens_from_text(message_data['text']) else None
+            'role': 'user',
+            'notes': tokens_string,
+            'createdAt': message_data['created_at']
         }
         
         airtable.insert(record)
-        logger.info(f"Saved {context} message: {message_data['id']}")
+        logger.info(f"Saved message: {message_data['id']}")
         return True
         
     except Exception as e:
@@ -336,7 +339,7 @@ async def check_mentions():
                     }
                     
                     # Save mention
-                    await save_message(mention_data, 'mention')
+                    await save_message(mention_data, 'X_MENTION')
                     
                     # Check if this is a reply and get parent tweet
                     referenced_tweets = mention.get("referenced_tweets", [])
@@ -361,7 +364,7 @@ async def check_mentions():
                                         }
                                         
                                         # Save parent tweet
-                                        await save_message(parent_tweet_data, 'parent_tweet')
+                                        await save_message(parent_tweet_data, 'X_MENTION')
                                         
                                         # Process tokens from parent tweet
                                         parent_tokens = extract_tokens_from_text(parent_tweet['text'])
