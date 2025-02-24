@@ -3,7 +3,7 @@ import sys
 import logging
 from pathlib import Path
 from typing import List, Dict, Tuple, Optional
-from moviepy.editor import VideoFileClip
+from moviepy.video.io.VideoFileClip import VideoFileClip
 from moviepy.video.VideoClip import TextClip, ColorClip
 from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
 from moviepy.video.fx.FadeIn import FadeIn
