@@ -432,8 +432,11 @@ class TradeExecutor:
             # Verify transaction success
             client = AsyncClient("https://api.mainnet-beta.solana.com")
             try:
+                # Convert string signature to Signature object
+                sig_obj = Signature.from_string(signature)
+                
                 # Wait for confirmation and get transaction status
-                confirmation = await client.confirm_transaction(signature)
+                confirmation = await client.confirm_transaction(sig_obj)
                 
                 # Check transaction status
                 if not confirmation.value:
@@ -441,7 +444,7 @@ class TradeExecutor:
                     return False
                 
                 # Get transaction details
-                tx_response = await client.get_transaction(signature)
+                tx_response = await client.get_transaction(sig_obj)
                 if not tx_response.value:
                     await self.handle_failed_trade(trade['id'], "Could not verify transaction")
                     return False
