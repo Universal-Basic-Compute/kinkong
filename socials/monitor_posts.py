@@ -4,6 +4,16 @@ import yaml
 import json
 import requests
 import logging
+import platform
+if platform.system() == 'Windows':
+    import asyncio
+    import socket
+    # Replace problematic DNS implementation
+    socket.getaddrinfo = lambda *args, **kwargs: asyncio.get_event_loop().run_in_executor(
+        None, socket._getaddrinfo, *args, **kwargs
+    )
+    # Use selector event loop
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 try:
     import anthropic
     ANTHROPIC_AVAILABLE = True
