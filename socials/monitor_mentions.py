@@ -119,7 +119,7 @@ def check_mentions():
         api_key = os.getenv('X_API_KEY')
         api_secret = os.getenv('X_API_SECRET')
         access_token = os.getenv('X_ACCESS_TOKEN')
-        access_secret = os.getenv('X_ACCESS_SECRET')
+        access_secret = os.getenv('X_ACCESS_TOKEN_SECRET')
         
         # Verify credentials
         if not all([api_key, api_secret, access_token, access_secret]):
@@ -241,7 +241,7 @@ def main():
             'X_API_KEY',
             'X_API_SECRET', 
             'X_ACCESS_TOKEN',
-            'X_ACCESS_SECRET',
+            'X_ACCESS_TOKEN_SECRET',
             'TELEGRAM_BOT_TOKEN',
             'TELEGRAM_CHAT_ID',
             'ANTHROPIC_API_KEY'
