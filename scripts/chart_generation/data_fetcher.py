@@ -16,8 +16,19 @@ def fetch_ubc_sol_data(timeframe='1H', hours=24, candles_target=60):
     
     now = int(datetime.now().timestamp())
     
-    # Double the time range to ensure we get enough candles
-    start_time = now - (hours * 3600 * 2)  # Multiply by 2 to get more candles
+    # Calculate required time range based on timeframe to get target number of candles
+    timeframe_minutes = {
+        '15m': 15,
+        '1H': 60,
+        '4H': 240,
+        '1D': 1440
+    }
+    
+    minutes_per_candle = timeframe_minutes.get(timeframe, 60)
+    total_minutes_needed = minutes_per_candle * candles_target
+    
+    # Add 20% buffer to ensure we get enough candles
+    start_time = now - int((total_minutes_needed * 1.2) * 60)
     
     params = {
         "address": "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump",
@@ -28,8 +39,11 @@ def fetch_ubc_sol_data(timeframe='1H', hours=24, candles_target=60):
     }
     
     try:
-        print(f"Fetching {timeframe} candles with 2x duration multiplier")
-        print("Time range:",
+        print(f"\nFetching {timeframe} candles...")
+        print(f"Target candles: {candles_target}")
+        print(f"Minutes per candle: {minutes_per_candle}")
+        print(f"Total minutes needed: {total_minutes_needed}")
+        print("Time range:", 
               datetime.fromtimestamp(start_time).strftime('%Y-%m-%d %H:%M'),
               "to",
               datetime.fromtimestamp(now).strftime('%Y-%m-%d %H:%M'))
