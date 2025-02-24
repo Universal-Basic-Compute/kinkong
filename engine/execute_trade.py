@@ -361,9 +361,10 @@ class JupiterTradeExecutor:
                             signature = Signature.from_string(signature_str)
                             confirmation = await client.confirm_transaction(
                                 signature,
-                                commitment="finalized"
+                                commitment="finalized",
+                                max_supported_transaction_version=0
                             )
-                            
+                        
                             if hasattr(confirmation.value, 'err') and confirmation.value.err:
                                 self.logger.error(f"Transaction failed: {confirmation.value.err}")
                                 self.logger.error(f"View transaction: https://solscan.io/tx/{signature_str}")
