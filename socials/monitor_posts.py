@@ -109,11 +109,10 @@ def get_top_tweets(token: str, bearer_token: str) -> List[Dict]:
             "Content-Type": "application/json"
         }
         
-        # URL encode the query parameters properly
-        # Add more search operators to improve results
-        query = f'"{token}" OR "${token}" -is:retweet lang:en'
+        # Search specifically for $token format
+        query = f'${token} -is:retweet lang:en'  # Changed to search for $token
         
-        url = "https://api.twitter.com/2/tweets/search/recent"  # Change back to twitter.com
+        url = "https://api.twitter.com/2/tweets/search/recent"
         params = {
             "query": query,
             "max_results": 20,
