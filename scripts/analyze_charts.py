@@ -298,20 +298,25 @@ def analyze_charts_with_claude(chart_paths, token_info=None):
 
         # Get latest token snapshot
         token_metrics = ""
-        if token_info and token_info.get('mint'):
+        if token_info and token_info.get('token'):
             try:
                 base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
                 api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
                 
-                # Build URL with hardcoded sort parameters
-                mint = token_info['mint']
-                url = f"https://api.airtable.com/v0/{base_id}/TOKEN_SNAPSHOTS?filterByFormula={{mint}}='{mint}'&sort[0][field]=createdAt&sort[0][direction]=desc&maxRecords=1"
+                # Build URL filtering by token name instead of mint
+                token = token_info['token']
+                url = f"https://api.airtable.com/v0/{base_id}/TOKEN_SNAPSHOTS?filterByFormula={{token}}='{token}'&sort[0][field]=createdAt&sort[0][direction]=desc&maxRecords=1"
                 
                 headers = {
                     'Authorization': f'Bearer {api_key}'
                 }
                 
+                # Add debug logging
+                print(f"Fetching token snapshots for token: {token}")
+                print(f"Using URL: {url}")
+                
                 response = requests.get(url, headers=headers)
+                print(f"Response status: {response.status_code}")
                 
                 if response.status_code == 200:
                     data = response.json()
