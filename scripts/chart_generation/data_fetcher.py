@@ -16,12 +16,12 @@ def fetch_ubc_sol_data(timeframe='1H', hours=24, candles_target=60):
     
     now = int(datetime.now().timestamp())
     
-    # Configure timeframes with specific multipliers
+    # Configure timeframes with specific multipliers and limits
     timeframe_config = {
-        '15m': {'minutes': 15, 'target': 48, 'multiplier': 2.0},    # Scalp x2
-        '1H': {'minutes': 60, 'target': 48, 'multiplier': 2.0},     # Intraday x2
-        '4H': {'minutes': 240, 'target': 48, 'multiplier': 1.0},    # Swing (normal)
-        '1D': {'minutes': 1440, 'target': 48, 'multiplier': 1.6}    # Position x1.6
+        '15m': {'minutes': 15, 'target': 96, 'multiplier': 2.0},    # Try to get 96 15m candles
+        '1H': {'minutes': 60, 'target': 96, 'multiplier': 2.0},     # Try to get 96 1h candles
+        '4H': {'minutes': 240, 'target': 84, 'multiplier': 1.0},    # Try to get 84 4h candles
+        '1D': {'minutes': 1440, 'target': 60, 'multiplier': 1.6}    # Try to get 60 daily candles
     }
     
     config = timeframe_config.get(timeframe, {'minutes': 60, 'target': 48, 'multiplier': 1.0})
@@ -38,18 +38,20 @@ def fetch_ubc_sol_data(timeframe='1H', hours=24, candles_target=60):
         "type": timeframe,
         "currency": "usd",
         "time_from": start_time,
-        "time_to": now
+        "time_to": now,
+        "limit": target_candles  # Add explicit limit parameter
     }
     
     try:
         print(f"\nFetching {timeframe} candles...")
-        print(f"Target candles: {candles_target}")
+        print(f"Target candles: {target_candles}")
         print(f"Minutes per candle: {minutes_per_candle}")
+        print(f"Multiplier: {multiplier}")
         print(f"Total minutes needed: {total_minutes_needed}")
-        print("Time range:", 
-              datetime.fromtimestamp(start_time).strftime('%Y-%m-%d %H:%M'),
-              "to",
-              datetime.fromtimestamp(now).strftime('%Y-%m-%d %H:%M'))
+        print(f"Time range: {(total_minutes_needed/60/24):.1f} days")
+        print("From:", datetime.fromtimestamp(start_time).strftime('%Y-%m-%d %H:%M'))
+        print("To:", datetime.fromtimestamp(now).strftime('%Y-%m-%d %H:%M'))
+        print("Params:", params)
         
         response = requests.get(url, headers=headers, params=params)
         print("Response status:", response.status_code)
