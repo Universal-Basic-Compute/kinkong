@@ -286,38 +286,54 @@ class TokenSearcher:
 
 def main():
     try:
-        # Check command line arguments
-        import sys
-        if len(sys.argv) != 2:
-            print("Usage: python tokens.py <token_keyword>")
-            sys.exit(1)
-            
-        keyword = sys.argv[1]
-        
-        # Verify environment variables
-        required_vars = [
-            'KINKONG_AIRTABLE_BASE_ID',
-            'KINKONG_AIRTABLE_API_KEY',
-            'BIRDEYE_API_KEY'
-        ]
-        
-        missing = [var for var in required_vars if not os.getenv(var)]
-        if missing:
-            raise Exception(f"Missing environment variables: {', '.join(missing)}")
-
-        # Search and create token
+        # Initialize searcher
         searcher = TokenSearcher()
-        print(f"🔍 Searching for token: {keyword}")
         
-        token_data = searcher.search_token(keyword)
-        if token_data:
-            print(f"✅ Found token: {token_data.get('symbol')}")
-            if searcher.create_token_record(token_data):
-                print(f"✅ Token record created/updated successfully")
+        # Check if token keyword provided
+        if len(sys.argv) > 1:
+            # Process single token
+            keyword = sys.argv[1]
+            print(f"🔍 Searching for token: {keyword}")
+            
+            token_data = searcher.search_token(keyword)
+            if token_data:
+                print(f"✅ Found token: {token_data.get('symbol')}")
+                if searcher.create_token_record(token_data):
+                    print(f"✅ Token record created/updated successfully")
+                else:
+                    print(f"❌ Failed to create/update token record")
             else:
-                print(f"❌ Failed to create/update token record")
+                print(f"❌ Token not found")
         else:
-            print(f"❌ Token not found")
+            # Process all existing tokens
+            print("🔄 Processing all existing tokens...")
+            
+            # Get all tokens from Airtable
+            tokens = searcher.airtable.get_all()
+            print(f"Found {len(tokens)} tokens to process")
+            
+            success_count = 0
+            for token_record in tokens:
+                try:
+                    token_data = {
+                        'symbol': token_record['fields'].get('token'),
+                        'name': token_record['fields'].get('name'),
+                        'address': token_record['fields'].get('mint'),
+                        'verified': True
+                    }
+                    
+                    print(f"\n🔍 Processing {token_data['symbol']}...")
+                    if searcher.create_token_record(token_data):
+                        success_count += 1
+                        print(f"✅ Token record updated successfully")
+                    else:
+                        print(f"❌ Failed to update token record")
+                        
+                except Exception as e:
+                    print(f"❌ Error processing token: {str(e)}")
+                    continue
+            
+            print(f"\n✅ Processed {success_count} out of {len(tokens)} tokens successfully")
 
     except Exception as e:
         print(f"\n❌ Script failed: {str(e)}")
