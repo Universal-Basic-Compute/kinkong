@@ -505,18 +505,20 @@ class JupiterTradeExecutor:
     async def prepare_transaction(self, transaction_bytes: bytes) -> Optional[Transaction]:
         """Prepare a versioned transaction by recompiling with fresh blockhash"""
         try:
+            # Create client with correct configuration
             client = AsyncClient(
-                "https://api.mainnet-beta.solana.com",
-                commitment="confirmed",
-                # Add version configuration
-                conf = {
-                    "maxSupportedTransactionVersion": 0
-                }
+                "https://api.mainnet-beta.solana.com", 
+                commitment="confirmed"
             )
             
             try:
+                # Set max supported version via appropriate method
+                client._provider_config['maxSupportedTransactionVersion'] = 0
+                
                 # Get fresh blockhash
-                blockhash_response = await client.get_latest_blockhash()
+                blockhash_response = await client.get_latest_blockhash(
+                    max_supported_transaction_version=0  # Add here too
+                )
                 if not blockhash_response or not blockhash_response.value:
                     raise Exception("Failed to get recent blockhash")
                 
