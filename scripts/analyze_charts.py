@@ -248,6 +248,9 @@ Analyze the charts in order from highest to lowest timeframe:
 3. INTRADAY (1H chart, 24-hour trades)
 4. SCALP (15m chart, 6-hour trades)
 
+Latest Token Metrics:
+{token_metrics}
+
 For each timeframe, provide:
 1. Signal (BUY/SELL/HOLD)
 2. Confidence level (0-100%)
@@ -292,6 +295,38 @@ def analyze_charts_with_claude(chart_paths, token_info=None):
         api_key = os.getenv('ANTHROPIC_API_KEY')
         if not api_key:
             raise ValueError("ANTHROPIC_API_KEY not found in .env file")
+
+        # Get latest token snapshot
+        token_metrics = ""
+        if token_info and token_info.get('mint'):
+            try:
+                snapshots_table = getTable('TOKEN_SNAPSHOTS')
+                records = snapshots_table.get_all(
+                    formula=f"{{mint}} = '{token_info['mint']}'",
+                    sort=[{'field': 'createdAt', 'direction': 'desc'}],
+                    maxRecords=1
+                )
+                
+                if records:
+                    latest = records[0]['fields']
+                    token_metrics = f"""
+• Price: ${latest.get('price', 0):.4f}
+• 24h Volume: ${latest.get('volume24h', 0):,.2f}
+• 7d Volume: ${latest.get('volume7d', 0):,.2f}
+• Liquidity: ${latest.get('liquidity', 0):,.2f}
+• Price Change 24h: {latest.get('priceChange24h', 0):.2f}%
+• Volume Growth: {latest.get('volumeGrowth', 0):.2f}%
+• Holder Count: {latest.get('holderCount', 0):,}
+• Created At: {latest.get('createdAt', 'Unknown')}
+"""
+                else:
+                    token_metrics = "No recent token metrics available"
+            except Exception as e:
+                print(f"Error fetching token metrics: {e}")
+                token_metrics = "Error fetching token metrics"
+        
+        # Format system prompt with token metrics
+        formatted_system_prompt = SYSTEM_PROMPT.format(token_metrics=token_metrics)
         
         # Debug print to verify the key
         print(f"API Key from .env: {api_key[:8]}...{api_key[-4:]}")
@@ -375,7 +410,7 @@ For each timeframe, consider how it relates to the higher timeframes above it. Y
                 "content": [
                     {
                         "type": "text",
-                        "text": f"{SYSTEM_PROMPT}\n\n{user_prompt}"
+                        "text": f"{formatted_system_prompt}\n\n{user_prompt}"
                     },
                     *[{
                         "type": "image",
