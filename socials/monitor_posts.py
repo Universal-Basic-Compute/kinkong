@@ -4,6 +4,7 @@ import requests
 import logging
 import anthropic
 from time import sleep
+from ratelimit import limits, sleep_and_retry
 from dotenv import load_dotenv
 from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional
@@ -93,6 +94,12 @@ class AirtableAPI:
             logger.error(f"Error fetching tokens from Airtable: {str(e)}")
             return []
 
+# Define rate limits (450 requests per 15-minute window for search)
+CALLS_PER_WINDOW = 450
+WINDOW_SECONDS = 15 * 60
+
+@sleep_and_retry
+@limits(calls=CALLS_PER_WINDOW, period=WINDOW_SECONDS)
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
 def get_top_tweets(token: str, bearer_token: str) -> List[Dict]:
     """Get top tweets for a token using X API"""
@@ -102,22 +109,29 @@ def get_top_tweets(token: str, bearer_token: str) -> List[Dict]:
             "Content-Type": "application/json"
         }
         
-        # Search query for token mentions
-        query = f"${token} -is:retweet lang:en"
+        # URL encode the query parameters properly
+        # Add more search operators to improve results
+        query = f'"{token}" OR "${token}" -is:retweet lang:en'
         
-        url = "https://api.x.com/2/tweets/search/recent"
+        url = "https://api.twitter.com/2/tweets/search/recent"  # Change back to twitter.com
         params = {
             "query": query,
             "max_results": 20,
             "tweet.fields": "created_at,public_metrics,text",
-            "sort_order": "relevancy"
+            "expansions": "author_id",
+            "user.fields": "username"
         }
         
         response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
         
-        tweets = response.json().get('data', [])
+        data = response.json()
+        tweets = data.get('data', [])
         
+        if not tweets:
+            logger.info(f"No tweets found matching query for {token}")
+            return []
+            
         # Sort by engagement (likes + retweets)
         sorted_tweets = sorted(
             tweets,
@@ -128,10 +142,18 @@ def get_top_tweets(token: str, bearer_token: str) -> List[Dict]:
             reverse=True
         )
         
+        # Log some debug info
+        logger.debug(f"Found {len(tweets)} tweets for {token}, returning top {min(5, len(sorted_tweets))}")
+        
         return sorted_tweets[:5]  # Return top 5 most engaged tweets
         
-    except Exception as e:
+    except requests.exceptions.RequestException as e:
         logger.error(f"Error fetching tweets for {token}: {str(e)}")
+        if e.response is not None:
+            logger.error(f"Response content: {e.response.content}")
+        return []
+    except Exception as e:
+        logger.error(f"Unexpected error fetching tweets for {token}: {str(e)}")
         return []
 
 def analyze_sentiment_with_claude(token: str, tweets: List[Dict]) -> Optional[str]:
