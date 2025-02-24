@@ -648,12 +648,12 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None, addit
         response = airtable.insert(signal_data)
         print(f"✅ Created signal: {response['id']}")
 
-        # Post to social media if it's a high confidence signal
-        if confidence_level == 'HIGH':
+        # Post to social media if it's a high confidence BUY signal
+        if confidence_level == 'HIGH' and signal_type == 'BUY':
             if post_signal(response):
-                print("✅ Signal posted to social media")
+                print("✅ HIGH confidence BUY signal posted to social media")
             else:
-                print("⚠️ Failed to post signal to social media")
+                print("⚠️ Failed to post HIGH confidence BUY signal to social media")
 
         return response
 
