@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import requests
+import aiohttp
 import logging
 import anthropic
 from pathlib import Path
@@ -413,43 +414,58 @@ async def check_mentions():
                         'created_at': mention['created_at'],
                         'author_username': author['username'] if author else None
                     }
-                    
-                    # Save mention
+
+                    # Initialize conversation text array
+                    conversation_texts = [mention['text']]  # Start with mention text
+
+                    # Get full conversation context
+                    try:
+                        # Get conversation ID
+                        conversation_id = mention.get("conversation_id")
+                        if conversation_id:
+                            conversation_url = f"https://api.twitter.com/2/tweets/search/recent"
+                            params = {
+                                "query": f"conversation_id:{conversation_id}",
+                                "tweet.fields": "created_at,text,referenced_tweets",
+                                "expansions": "referenced_tweets.id",
+                                "max_results": 100
+                            }
+                            
+                            async with aiohttp.ClientSession() as session:
+                                async with session.get(conversation_url, auth=auth, params=params) as response:
+                                    if response.status == 200:
+                                        conv_data = await response.json()
+                                        if "data" in conv_data:
+                                            for tweet in conv_data["data"]:
+                                                conversation_texts.append(tweet["text"])
+                                                logger.debug(f"Added conversation tweet: {tweet['text'][:50]}...")
+
+                        # Get any quoted or replied-to tweets
+                        referenced_tweets = mention.get("referenced_tweets", [])
+                        for ref in referenced_tweets:
+                            ref_id = ref.get("id")
+                            if ref_id:
+                                ref_url = f"https://api.twitter.com/2/tweets/{ref_id}"
+                                async with aiohttp.ClientSession() as session:
+                                    async with session.get(ref_url, auth=auth) as response:
+                                        if response.status == 200:
+                                            ref_data = await response.json()
+                                            if "data" in ref_data:
+                                                conversation_texts.append(ref_data["data"]["text"])
+                                                logger.debug(f"Added referenced tweet: {ref_data['data']['text'][:50]}...")
+
+                    except Exception as e:
+                        logger.error(f"Error getting conversation context: {e}")
+                        # Continue with what we have even if context gathering fails
+
+                    # Combine all conversation texts
+                    combined_text = " ".join(conversation_texts)
+                    mention_data['text'] = combined_text  # Update with full context
+
+                    # Save mention with full context
                     await save_message(mention_data, 'X_MENTION')
                     
-                    # Collect all text to search for tokens
-                    all_text = [mention['text']]  # Start with mention text
-                    
-                    # Get conversation context
-                    referenced_tweets = mention.get("referenced_tweets", [])
-                    for ref in referenced_tweets:
-                        try:
-                            # Get parent tweet
-                            parent_url = f"https://api.twitter.com/2/tweets/{ref['id']}"
-                            parent_response = requests.get(parent_url, auth=auth)
-                            
-                            if parent_response.ok:
-                                parent_data = parent_response.json()
-                                if "data" in parent_data:
-                                    parent_tweet = parent_data["data"]
-                                    all_text.append(parent_tweet['text'])
-                                    
-                                    # If this is a reply, get the conversation thread
-                                    if ref['type'] == 'replied_to':
-                                        conversation_url = f"https://api.twitter.com/2/tweets/{ref['id']}/conversation"
-                                        conv_response = requests.get(conversation_url, auth=auth)
-                                        
-                                        if conv_response.ok:
-                                            conv_data = conv_response.json()
-                                            for tweet in conv_data.get('data', []):
-                                                all_text.append(tweet['text'])
-                        
-                        except Exception as e:
-                            logger.error(f"Error processing referenced tweet: {e}")
-                            continue
-                    
-                    # Combine all text and search for tokens
-                    combined_text = " ".join(all_text)
+                    # Extract tokens from full context
                     tokens = extract_tokens_from_text(combined_text)
                     
                     if tokens:
