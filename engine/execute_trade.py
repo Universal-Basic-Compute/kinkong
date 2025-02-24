@@ -341,8 +341,6 @@ class JupiterTradeExecutor:
                         continue
                     
                     signature_str = str(result.value)
-                    # Convert string signature to Signature object
-                    signature = Signature.from_string(signature_str)
                     
                     self.logger.info(f"Transaction sent: {signature_str}")
                     
@@ -353,8 +351,10 @@ class JupiterTradeExecutor:
                         # Confirm with retries
                         for confirm_attempt in range(3):
                             try:
+                                # Convert string to Signature object before confirming
+                                signature = Signature.from_string(signature_str)
                                 confirmation = await client.confirm_transaction(
-                                    signature,  # Pass Signature object instead of string
+                                    signature,
                                     commitment="finalized"
                                 )
                                 
