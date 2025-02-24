@@ -245,23 +245,8 @@ def generate_chart(df, config, support_levels=None):
         # and we have 60 candles, so each candle should take up 1% of the space
         candle_width = 0.6  # Fixed width for consistent look across all timeframes
         
-        # Calculate time interval between candles in minutes
-        time_diff = (df.index[1] - df.index[0]).total_seconds() / 60
-        print(f"Time interval between candles: {time_diff} minutes")
-        
-        # Calculate width based on time interval with adjusted divisors
-        if time_diff <= 15:  # 15-minute candles (SCALP)
-            candle_width = 1.5 / 4  # Divide by 4 for scalp
-        elif time_diff <= 60:  # 1-hour candles (INTRADAY)
-            candle_width = 1.5 / 6  # Divide by 6 for intraday
-        elif time_diff <= 240:  # 4-hour candles (SWING)
-            candle_width = 1.5 / 4  # Divide by 4 for swing
-        else:  # Daily candles (POSITION)
-            candle_width = 1.5 / 2  # Divide by 2 for position
 
-        print(f"Using candle width: {candle_width} for {time_diff} minute intervals")
-
-        # Create figure with dramatically different candle widths
+        # Create figure without specifying candle width
         fig, axes = mpf.plot(
             df,
             type='candle',
@@ -277,13 +262,7 @@ def generate_chart(df, config, support_levels=None):
             xrotation=25,
             tight_layout=False,
             show_nontrading=True,
-            style=style,
-            update_width_config=dict(
-                candle_linewidth=0.8,
-                candle_width=candle_width,
-                volume_width=candle_width,
-                volume_linewidth=0.8
-            )
+            style=style
         )
 
         # Get the main price axis and volume axis
