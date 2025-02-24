@@ -17,8 +17,8 @@ logger = logging.getLogger(__name__)
 def find_system_font() -> str:
     """Find an available system font."""
     font_paths = [
-        # Custom downloaded fonts
-        Path('assets/fonts/BebasNeue-Regular.ttf'),  # You'll need to download this
+        # Custom downloaded fonts - check public directory first
+        Path('public/BebasNeue-Regular.ttf'),
         # System fonts in order of preference
         Path(r"C:\Windows\Fonts\impact.ttf"),
         Path(r"C:\Windows\Fonts\segoeui.ttf"), 
@@ -31,7 +31,7 @@ def find_system_font() -> str:
             logger.info(f"Using font: {path}")
             return str(path)
     
-    raise ValueError("No usable font found! Please download Bebas Neue")
+    raise ValueError("No usable font found! Please check font paths")
 
 def create_text_clips(
     text: str,
