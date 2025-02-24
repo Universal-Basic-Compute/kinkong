@@ -263,24 +263,24 @@ def main():
                     
                 logger.info(f"Processing ${token}")
                 metrics.increment('tokens_processed')
-            
-            # Get top tweets
-            tweets = get_top_tweets(token, os.getenv('X_BEARER_TOKEN'))
-            if not tweets:
-                logger.info(f"No tweets found for ${token}")
-                continue
                 
-            # Analyze sentiment
-            analysis = analyze_sentiment_with_claude(token, tweets)
-            if analysis:
-                logger.info(f"Bullish signals detected for ${token}")
-                # Send notification
-                if send_telegram_notification(token, analysis):
-                    logger.info(f"Notification sent for ${token}")
+                # Get top tweets
+                tweets = get_top_tweets(token, os.getenv('X_BEARER_TOKEN'))
+                if not tweets:
+                    logger.info(f"No tweets found for ${token}")
+                    continue
+                    
+                # Analyze sentiment
+                analysis = analyze_sentiment_with_claude(token, tweets)
+                if analysis:
+                    logger.info(f"Bullish signals detected for ${token}")
+                    # Send notification
+                    if send_telegram_notification(token, analysis):
+                        logger.info(f"Notification sent for ${token}")
+                    else:
+                        logger.error(f"Failed to send notification for ${token}")
                 else:
-                    logger.error(f"Failed to send notification for ${token}")
-            else:
-                logger.info(f"No significant bullish signals for ${token}")
+                    logger.info(f"No significant bullish signals for ${token}")
                 
                 # Add delay between tokens
                 sleep(config['delay_between_tokens'])
