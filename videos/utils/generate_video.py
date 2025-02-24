@@ -115,7 +115,8 @@ class VideoGenerator:
             runway_url = "https://api.dev.runwayml.com/v1/image_to_video"
             headers = {
                 "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "X-Runway-Version": "2024-11-06"  # Added version header
             }
             
             payload = {
@@ -150,7 +151,15 @@ class VideoGenerator:
             max_attempts = 30  # 5 minutes total
             
             for attempt in range(max_attempts):
-                status_response = requests.get(status_url, headers=headers)
+                # Use same headers including version for status check
+                status_response = requests.get(
+                    status_url,
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "Content-Type": "application/json",
+                        "X-Runway-Version": "2024-11-06"
+                    }
+                )
                 if status_response.status_code != 200:
                     logger.error(f"Status check failed: {status_response.status_code}")
                     continue
