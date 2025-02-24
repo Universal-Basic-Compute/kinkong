@@ -10,10 +10,39 @@ const KNOWN_TOKENS = {
     price: 1.00
   },
   USDT: {
-    mint: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+    mint: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", 
     price: 1.00
   }
 };
+
+async function getTokenSymbol(mint: string, tokensMetadata: any): Promise<string> {
+  // Check known tokens first
+  const knownToken = Object.entries(KNOWN_TOKENS).find(([_, data]) => data.mint === mint);
+  if (knownToken) {
+    return knownToken[0]; // Return the symbol (key) of the known token
+  }
+
+  // Check our metadata
+  if (tokensMetadata[mint]) {
+    return tokensMetadata[mint].token || 'Unknown';
+  }
+
+  // If we still don't have a symbol, try to get it from our TOKENS table
+  try {
+    const tokensTable = getTable('TOKENS');
+    const records = await tokensTable.select({
+      filterByFormula: `{mint}='${mint}'`
+    }).firstPage();
+
+    if (records && records.length > 0) {
+      return records[0].get('token') || 'Unknown';
+    }
+  } catch (e) {
+    console.error(`Error fetching token symbol for mint ${mint}:`, e);
+  }
+
+  return 'Unknown';
+}
 
 async function getTokensMetadata() {
   try {
