@@ -1,4 +1,5 @@
 import os
+import sys
 import requests
 import logging
 import anthropic
@@ -8,6 +9,7 @@ from requests_oauthlib import OAuth1
 from datetime import datetime, timezone, timedelta
 import subprocess
 from typing import Optional, List
+from airtable import Airtable as AirtableAPI
 
 def extract_tokens_from_text(text: str) -> List[str]:
     """Extract tokens mentioned with $ symbol from text"""
@@ -181,7 +183,7 @@ def generate_reply_with_claude(mention_text: str, username: str) -> Optional[str
         return None
 
 
-def check_mentions():
+async def check_mentions():
     """Check mentions of @kinkong_ubc once"""
     try:
         # Get OAuth credentials
@@ -326,7 +328,7 @@ def check_mentions():
         logger.error(f"Check mentions failed: {e}")
         raise
 
-def main():
+async def main():
     try:
         # Load environment variables
         load_dotenv()
@@ -347,7 +349,7 @@ def main():
             raise ValueError(f"Missing required environment variables: {', '.join(missing_vars)}")
         
         logger.info("Checking mentions...")
-        check_mentions()
+        await check_mentions()
         logger.info("Mentions check completed")
         
     except Exception as e:
@@ -355,4 +357,5 @@ def main():
         raise
 
 if __name__ == "__main__":
-    main()
+    import asyncio
+    asyncio.run(main())
