@@ -36,16 +36,19 @@ class MarketOverviewGenerator:
     def get_token_data(self) -> List[Dict]:
         """Get important token metrics and explanations from TOKENS table"""
         try:
-            # Get active tokens with key metrics - prioritizing explanation
+            # Get only truly active tokens with explanations
             records = self.tokens_table.get_all(
                 formula="AND(" +
-                    "{isActive}=1, " +
-                    "NOT({token}='UBC'), " +
-                    "NOT({token}='COMPUTE')" +
+                    "{isActive}=1, " +  # Must be active
+                    "NOT({token}='UBC'), " +  # Exclude specific tokens
+                    "NOT({token}='COMPUTE'), " +
+                    "NOT({token}='USDT'), " +  # Exclude stablecoins
+                    "NOT({token}='USDC'), " +
+                    "{volume24h}>0" +  # Must have recent volume
                 ")",
                 fields=[
                     'token',
-                    'explanation',  # Added explanation as primary field
+                    'explanation',  # Primary field for news/updates
                     'price',
                     'priceChange24h',
                     'volume24h',
@@ -57,11 +60,19 @@ class MarketOverviewGenerator:
                 ]
             )
             
-            return [record['fields'] for record in records]
+            # Sort by volume to prioritize most active tokens
+            sorted_records = sorted(
+                [record['fields'] for record in records],
+                key=lambda x: float(x.get('volume24h', 0)),
+                reverse=True
+            )
+            
+            logger.info(f"Found {len(sorted_records)} active tokens for market overview")
+            return sorted_records
             
         except Exception as e:
-            logger.error(f"Error getting token signals: {e}")
-            return {'bullish': [], 'bearish': []}
+            logger.error(f"Error getting token data: {e}")
+            return []
 
     def get_market_sentiment(self) -> str:
         """Get latest market sentiment"""
