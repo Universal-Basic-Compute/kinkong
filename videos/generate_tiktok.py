@@ -53,6 +53,7 @@ def create_tiktok_video():
     # First part appears with fade
     clip1 = TextClip(
         txt=text_parts[0],
+        font='Arial',
         fontsize=70,
         color='white',
         size=(width-100, height//2),
@@ -68,6 +69,7 @@ def create_tiktok_video():
     # Second part slides in from right
     clip2 = TextClip(
         txt=text_parts[1],
+        font='Arial',
         fontsize=70,
         color='white',
         size=(width-100, height//2),
