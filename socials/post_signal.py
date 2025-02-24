@@ -114,11 +114,8 @@ Expected Return: {fields.get('expectedReturn')}%"""
         message = client.messages.create(
             model="claude-3-5-sonnet-20241022",
             max_tokens=1000,
+            system=SYSTEM_PROMPT,  # System prompt goes here as a parameter
             messages=[
-                {
-                    "role": "system",
-                    "content": SYSTEM_PROMPT
-                },
                 {
                     "role": "user",
                     "content": user_prompt
