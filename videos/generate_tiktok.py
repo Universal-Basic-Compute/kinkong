@@ -17,10 +17,12 @@ from moviepy.video.fx.FadeOut import FadeOut
 from moviepy.video.VideoClip import TextClip, ColorClip, ImageClip
 from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
 from moviepy.video.fx.SlideIn import SlideIn
+from moviepy.editor import VideoFileClip
 
 from videos.utils.generate_text import create_text_clips
 from videos.utils.generate_prompts import PromptGenerator
 from videos.utils.generate_image import generate_image
+from videos.utils.generate_video import generate_video
 
 # Configure logging with more detailed format
 logging.basicConfig(
@@ -154,6 +156,34 @@ async def create_tiktok_video():
 
             logger.info("✅ All images generated successfully")
 
+            # Generate animated videos from images
+            logger.info("🎥 Generating animated videos from images...")
+            video_paths = []
+            videos_dir = video_dir / 'videos'
+            videos_dir.mkdir(exist_ok=True)
+
+            for i, (screen_num, image_path) in enumerate(image_results):
+                if not image_path:
+                    logger.error(f"❌ No image path for screen {screen_num}")
+                    continue
+                    
+                # Get the corresponding screen data for the prompt
+                screen = screens[i]
+                prompt = f"Smooth camera movement exploring the scene. {screen.get('background', '')}"
+                
+                # Generate video from image
+                video_path = generate_video(
+                    image_path=image_path,
+                    prompt=prompt,
+                    output_path=videos_dir / f"{screen_num}.mp4"
+                )
+                
+                if video_path:
+                    logger.info(f"✅ Generated video {screen_num}: {video_path}")
+                    video_paths.append((screen_num, video_path))
+                else:
+                    logger.error(f"❌ Failed to generate video for screen {screen_num}")
+
             # Video settings (TikTok format)
             width = 1080
             height = 1920
@@ -163,54 +193,41 @@ async def create_tiktok_video():
             # Create clips for each screen
             logger.info("🎞️ Creating video clips...")
             clips = []
-            for i, (screen_num, image_path) in enumerate(image_results):
+            for i, (screen_num, video_path) in enumerate(video_paths):
                 logger.info(f"Processing screen {screen_num}/{len(screens)}")
                 
-                # Skip if no image path
-                if not image_path:
-                    logger.error(f"❌ No image path for screen {screen_num}")
-                    continue
-                    
-                # Convert to Path object
-                img_path = Path(image_path)
-                
-                # Check if file exists
-                if not img_path.exists():
-                    logger.error(f"❌ Missing image file: {img_path}")
-                    continue
-                
-                logger.debug(f"Loading image: {img_path}")
-                
                 try:
-                    # Create background clip
-                    bg_clip = ImageClip(str(img_path))
+                    # Load video clip
+                    video_clip = VideoFileClip(str(video_path))
                     
-                    # Calculate new width maintaining aspect ratio
-                    aspect_ratio = bg_clip.size[0] / bg_clip.size[1]
+                    # Resize maintaining aspect ratio
+                    aspect_ratio = video_clip.size[0] / video_clip.size[1]
                     new_width = int(height * aspect_ratio)
+                    video_clip = video_clip.resize(height=height)
                     
-                    # Resize clip using with_size
-                    bg_clip = bg_clip.with_size((new_width, height))
-                    
-                    # Center the clip if wider than target width
+                    # Center crop if needed
                     if new_width > width:
                         x_offset = (new_width - width) // 2
-                        bg_clip = bg_clip.with_crop(x1=x_offset, x2=x_offset+width, y1=0, y2=height)
-                    
-                    bg_clip = bg_clip.with_duration(duration_per_screen)
+                        video_clip = video_clip.crop(x1=x_offset, x2=x_offset+width)
+                        
+                    # Set duration
+                    video_clip = video_clip.with_duration(duration_per_screen)
                     
                     # Create text clip
-                    screen = screens[i]  # Get corresponding screen data
+                    screen = screens[i]
                     logger.debug(f"Creating text clip: {screen['text']}")
                     text_clips, _ = create_text_clips(
                         screen['text'], 
                         width, 
-                        height//3  # Text takes up top third
+                        height//3
                     )
                     
-                    # Combine background and text
+                    # Combine video and text
                     logger.debug("Combining clips and adding effects")
-                    screen_clip = CompositeVideoClip([bg_clip] + text_clips, size=(width, height))
+                    screen_clip = CompositeVideoClip(
+                        [video_clip] + text_clips,
+                        size=(width, height)
+                    )
                     screen_clip = screen_clip.with_effects([
                         FadeIn(duration=0.5),
                         FadeOut(duration=0.5)
