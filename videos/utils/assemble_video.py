@@ -64,7 +64,7 @@ def process_video_clip(
         # Resize maintaining aspect ratio
         aspect_ratio = video_clip.size[0] / video_clip.size[1]
         new_width = int(target_height * aspect_ratio)
-        video_clip = video_clip.resized(height=target_height)
+        video_clip = video_clip.resize(height=target_height)
         
         # Center crop if needed using the Crop effect
         if new_width > target_width:
@@ -76,22 +76,11 @@ def process_video_clip(
         # Set duration
         video_clip = video_clip.with_duration(duration)
         
-        # Comment out text clip creation and composition
-        # # Create text clips
-        # text_clips, _ = create_text_clips(
-        #     screen['text'], 
-        #     target_width, 
-        #     target_height//3
-        # )
-        
-        # # Combine video and text
-        # screen_clip = CompositeVideoClip(
-        #     [video_clip] + text_clips,
-        #     size=(target_width, target_height)
-        # ).with_duration(duration)  # Set final duration
-        
-        # Just return the video clip without text
-        screen_clip = video_clip.with_size((target_width, target_height))
+        # Create a CompositeVideoClip with just the video
+        screen_clip = CompositeVideoClip(
+            [video_clip],
+            size=(target_width, target_height)
+        ).with_duration(duration)
         
         return screen_clip
         
