@@ -186,11 +186,13 @@ export async function GET() {
       // Add debug logging
       console.log('Price calculation:', {
         mint: balance.mint,
+        uiAmount: balance.uiAmount,
         knownToken: !!knownToken,
         snapshotPrice: priceMap[balance.mint],
         finalPrice: price
       });
 
+      // Calculate USD value using uiAmount (which is already adjusted for decimals)
       const usdValue = balance.uiAmount * price;
       
       // Get token symbol and metadata
@@ -213,16 +215,27 @@ export async function GET() {
       };
     }));
 
-    console.log('Returning portfolio data');
-    // Add final debug log
-    console.log('Portfolio balances:', balancesWithUSD.map(b => ({
-      token: b.token,
-      amount: b.uiAmount,
-      price: b.price,
-      value: b.usdValue
-    })));
+    // Calculate total portfolio value
+    const totalValue = balancesWithUSD.reduce((sum, b) => sum + (b.usdValue || 0), 0);
 
-    return NextResponse.json(balancesWithUSD, { headers });
+    // Add portfolio percentages
+    const balancesWithPercentages = balancesWithUSD.map(balance => ({
+      ...balance,
+      percentage: totalValue > 0 ? ((balance.usdValue || 0) / totalValue) * 100 : 0
+    }));
+
+    console.log('Portfolio Summary:', {
+      totalValue,
+      balances: balancesWithPercentages.map(b => ({
+        token: b.token,
+        amount: b.uiAmount,
+        price: b.price,
+        usdValue: b.usdValue,
+        percentage: b.percentage
+      }))
+    });
+
+    return NextResponse.json(balancesWithPercentages, { headers });
 
   } catch (error) {
     console.error('Failed to fetch portfolio:', error);
