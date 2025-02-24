@@ -49,6 +49,16 @@ class AirtableAPI:
             logger.error(f"Error fetching signal from Airtable: {str(e)}")
             return None
 
+def get_chart_timeframe(signal_timeframe: str) -> str:
+    """Map signal timeframe to chart timeframe"""
+    timeframe_map = {
+        'SCALP': '6h',
+        'INTRADAY': '24h', 
+        'SWING': '7d',
+        'POSITION': '30d'  # Adding POSITION just for completeness
+    }
+    return timeframe_map.get(signal_timeframe, '6h')  # Default to 6h if unknown
+
 def post_to_x(text: str, signal_data: Dict) -> bool:
     """Post to X using API v2 with media"""
     try:
@@ -73,10 +83,15 @@ def post_to_x(text: str, signal_data: Dict) -> bool:
         
         # Get signal details
         token = signal_data.get('fields', {}).get('token', '')
-        timeframe = signal_data.get('fields', {}).get('timeframe', '')
+        signal_timeframe = signal_data.get('fields', {}).get('timeframe', '')
+        
+        # Map signal timeframe to chart timeframe
+        chart_timeframe = get_chart_timeframe(signal_timeframe)
         
         # Construct image path
-        chart_path = f"public/charts/{token.lower()}/{token}_{timeframe.lower()}_scalp.png"
+        chart_path = f"public/charts/{token.lower()}/{token}_{chart_timeframe}_scalp.png"
+        
+        logger.info(f"Looking for chart at: {chart_path}")
         
         if not os.path.exists(chart_path):
             logger.error(f"Chart image not found: {chart_path}")
