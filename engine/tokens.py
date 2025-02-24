@@ -360,6 +360,18 @@ def main():
             
             print(f"\n✅ Processed {success_count} out of {len(tokens)} tokens successfully")
 
+            # Generate and post market overview after processing all tokens
+            try:
+                print("\n📊 Generating market overview...")
+                from socials.bullish_posts_overview import MarketOverviewGenerator
+                generator = MarketOverviewGenerator()
+                if generator.send_overview():
+                    print("✅ Market overview posted successfully")
+                else:
+                    print("❌ Failed to post market overview")
+            except Exception as e:
+                print(f"❌ Error generating market overview: {str(e)}")
+
     except Exception as e:
         print(f"\n❌ Script failed: {str(e)}")
         sys.exit(1)
