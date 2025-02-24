@@ -158,19 +158,24 @@ class TradeExecutor:
         return allocations.get(sentiment, 0.50)  # Default to neutral allocation
 
     async def get_active_buy_signals(self) -> List[Dict]:
-        """Get all non-expired BUY signals"""
+        """Get all non-expired BUY signals from last 24 hours"""
         try:
+            # Calculate timestamps for now and 24 hours ago
             now = datetime.now(timezone.utc).isoformat()
+            twenty_four_hours_ago = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
             
-            # Get BUY signals that haven't expired AND have HIGH confidence
+            # Get BUY signals that:
+            # 1. Were created in last 24 hours
+            # 2. Have HIGH confidence
             signals = self.signals_table.get_all(
                 formula=f"AND("
                 f"{{type}}='BUY', "
                 f"{{confidence}}='HIGH', "
-                f"IS_AFTER({{expiryDate}}, '{now}'))"
+                f"IS_AFTER({{createdAt}}, '{twenty_four_hours_ago}'), "
+                f"IS_BEFORE({{createdAt}}, '{now}'))"
             )
         
-            logger.info(f"Found {len(signals)} active HIGH confidence BUY signals")
+            logger.info(f"Found {len(signals)} active HIGH confidence BUY signals from last 24h")
 
             # Get token data from TOKENS table
             tokens_table = Airtable(self.base_id, 'TOKENS', self.api_key)
