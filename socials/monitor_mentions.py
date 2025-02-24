@@ -144,7 +144,10 @@ def check_mentions():
             os.getenv('X_ACCESS_TOKEN_SECRET')
         )
         
+        # Create API v1.1 instance for media upload
         api = tweepy.API(auth)
+        
+        # Create API v2 client
         client = tweepy.Client(
             consumer_key=os.getenv('X_API_KEY'),
             consumer_secret=os.getenv('X_API_SECRET'),
