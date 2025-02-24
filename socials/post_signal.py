@@ -116,6 +116,17 @@ def generate_tweet_with_claude(signal_data: Dict) -> Optional[str]:
             
         client = anthropic.Client(api_key=api_key)
         
+        # Get token info
+        airtable = AirtableAPI(os.getenv('KINKONG_AIRTABLE_BASE_ID'), os.getenv('KINKONG_AIRTABLE_API_KEY'))
+        token_info = get_token_info(signal_data.get('fields', {}).get('token'), airtable)
+        
+        if not token_info:
+            logger.error(f"Token info not found for {signal_data.get('fields', {}).get('token')}")
+            return None
+            
+        # Get customized system prompt
+        system_prompt = get_system_prompt(token_info)
+        
         # Prepare signal info for Claude
         fields = signal_data.get('fields', {})
         user_prompt = f"""Create a tweet for this trading signal:
@@ -130,7 +141,7 @@ Expected Return: {fields.get('expectedReturn')}%"""
         message = client.messages.create(
             model="claude-3-5-sonnet-20241022",
             max_tokens=1000,
-            system=SYSTEM_PROMPT,  # System prompt goes here as a parameter
+            system=system_prompt,
             messages=[
                 {
                     "role": "user",
