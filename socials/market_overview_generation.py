@@ -34,41 +34,32 @@ class MarketOverviewGenerator:
         self.sentiment_table = Airtable(self.base_id, 'MARKET_SENTIMENT', self.api_key)
 
     def get_token_data(self) -> List[Dict]:
-        """Get important token metrics and explanations from TOKENS table"""
+        """Get active tokens with their explanations and X accounts"""
         try:
-            # Get only truly active tokens with explanations
+            # Get only active tokens with explanations
             records = self.tokens_table.get_all(
                 formula="AND(" +
                     "{isActive}=1, " +  # Must be active
                     "NOT({token}='UBC'), " +  # Exclude specific tokens
                     "NOT({token}='COMPUTE'), " +
                     "NOT({token}='USDT'), " +  # Exclude stablecoins
-                    "NOT({token}='USDC'), " +
-                    "{volume24h}>0" +  # Must have recent volume
+                    "NOT({token}='USDC')" +
                 ")",
                 fields=[
                     'token',
                     'explanation',  # Primary field for news/updates
-                    'price',
-                    'priceChange24h',
-                    'volume24h',
-                    'volume7d',
-                    'liquidity',
-                    'holderCount',
-                    'volumeGrowth',
-                    'pricePerformance'
+                    'xAccount'      # X/Twitter account for mentions
                 ]
             )
             
-            # Sort by volume to prioritize most active tokens
-            sorted_records = sorted(
-                [record['fields'] for record in records],
-                key=lambda x: float(x.get('volume24h', 0)),
-                reverse=True
-            )
+            # Filter out records without explanations
+            valid_records = [
+                record['fields'] for record in records 
+                if record['fields'].get('explanation')
+            ]
             
-            logger.info(f"Found {len(sorted_records)} active tokens for market overview")
-            return sorted_records
+            logger.info(f"Found {len(valid_records)} active tokens with updates")
+            return valid_records
             
         except Exception as e:
             logger.error(f"Error getting token data: {e}")
