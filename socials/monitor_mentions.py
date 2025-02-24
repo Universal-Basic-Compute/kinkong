@@ -120,8 +120,8 @@ def check_mentions():
             logger.error("Missing X_BEARER_TOKEN")
             return
             
-        # API endpoint
-        url = "https://api.twitter.com/2/users/me/mentions"
+        # API endpoint - updated to api.x.com
+        url = "https://api.x.com/2/users/me/mentions"
         
         # Headers with bearer token
         headers = {
@@ -183,7 +183,7 @@ def check_mentions():
                     reply_text = generate_reply_with_claude(mention["text"], author["username"])
                     if reply_text:
                         # Post reply using v2 endpoint
-                        reply_url = "https://api.twitter.com/2/tweets"
+                        reply_url = "https://api.x.com/2/tweets"
                         reply_data = {
                             "text": reply_text,
                             "reply": {
