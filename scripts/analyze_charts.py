@@ -505,12 +505,10 @@ For each timeframe, consider how it relates to the higher timeframes above it. Y
                 print("Response content:")
                 print(cleaned_response)
                 return None
-            
-
-            
-    except Exception as e:
-        print(f"Failed to analyze charts: {e}")
-        raise
+                
+        except Exception as e:
+            print(f"Failed to analyze charts: {e}")
+            raise
 
 def create_airtable_signal(analysis, timeframe, token_info, analyses=None, additional_fields=None):
     try:
