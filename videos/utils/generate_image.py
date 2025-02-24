@@ -28,7 +28,7 @@ class ImageGenerator:
             "Content-Type": "application/json"
         }
 
-    def generate_and_save_image(self, prompt: str, image_number: int) -> Optional[str]:
+    def generate_and_save_image(self, prompt: str, image_number: int, output_dir: Path) -> Optional[str]:
         """Generate image from prompt and save it"""
         try:
             # Prepare request payload
@@ -41,11 +41,11 @@ class ImageGenerator:
                 }
             }
 
-            # Create images directory if it doesn't exist
-            output_dir = Path('videos/videos/video1/images')
+            # Ensure output directory exists
             output_dir.mkdir(parents=True, exist_ok=True)
-            
             output_path = output_dir / f"{image_number}.png"
+            
+            logger.debug(f"Will save image to: {output_path}")
 
             # Make API request
             response = requests.post(
@@ -84,11 +84,14 @@ class ImageGenerator:
             logger.error(f"Error generating/saving image: {e}")
             return None
 
-def generate_image(prompt: str, image_number: int) -> Optional[str]:
+def generate_image(prompt: str, image_number: int, base_dir: Optional[Path] = None) -> Optional[str]:
     """Wrapper function to generate and save a single image"""
     try:
         generator = ImageGenerator()
-        return generator.generate_and_save_image(prompt, image_number)
+        if base_dir is None:
+            base_dir = Path('videos/videos/video1/images').resolve()
+            base_dir.mkdir(parents=True, exist_ok=True)
+        return generator.generate_and_save_image(prompt, image_number, base_dir)
     except Exception as e:
         logger.error(f"Error in generate_image: {e}")
         return None

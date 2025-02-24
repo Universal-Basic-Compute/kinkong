@@ -37,6 +37,11 @@ def generate_images_parallel(screens: List[Dict]) -> List[Tuple[int, Optional[st
     """
     logger.info(f"🎨 Starting parallel image generation for {len(screens)} screens...")
     
+    # Create base directory for images
+    base_dir = Path('videos/videos/video1/images').resolve()
+    base_dir.mkdir(parents=True, exist_ok=True)
+    logger.info(f"📁 Using image directory: {base_dir}")
+    
     def generate_single(args: Tuple[int, Dict]) -> Tuple[int, Optional[str]]:
         """Worker function for each image generation task"""
         i, screen = args
@@ -48,14 +53,15 @@ def generate_images_parallel(screens: List[Dict]) -> List[Tuple[int, Optional[st
         logger.info(f"🖼️ Generating image {i}/{len(screens)}")
         logger.debug(f"Prompt: {background_prompt[:100]}...")
         
-        image_path = generate_image(background_prompt, i)
+        # Generate image with absolute path
+        image_path = generate_image(background_prompt, i, base_dir)
         
         if not image_path:
             logger.error(f"❌ Failed to generate image {i}")
             return i, None
             
         logger.info(f"✅ Generated image {i}: {image_path}")
-        return i, image_path
+        return i, str(Path(image_path).resolve())  # Return absolute path
 
     # Create tasks for each screen
     tasks = list(enumerate(screens, 1))
@@ -151,37 +157,54 @@ async def create_tiktok_video():
             for i, (screen_num, image_path) in enumerate(image_results):
                 logger.info(f"Processing screen {screen_num}/{len(screens)}")
                 
-                # Load background image
-                if not Path(image_path).exists():
-                    logger.error(f"❌ Missing image for screen {screen_num}")
+                # Skip if no image path
+                if not image_path:
+                    logger.error(f"❌ No image path for screen {screen_num}")
+                    continue
+                    
+                # Convert to Path object
+                img_path = Path(image_path)
+                
+                # Check if file exists
+                if not img_path.exists():
+                    logger.error(f"❌ Missing image file: {img_path}")
                     continue
                 
-                logger.debug(f"Loading image: {image_path}")
+                logger.debug(f"Loading image: {img_path}")
                 
-                # Create background clip
-                bg_clip = ImageClip(str(image_path))
-                bg_clip = bg_clip.resize(height=height)  # Maintain aspect ratio
-                bg_clip = bg_clip.with_duration(duration_per_screen)
-                
-                # Create text clip
-                screen = screens[i]  # Get corresponding screen data
-                logger.debug(f"Creating text clip: {screen['text']}")
-                text_clips, _ = create_text_clips(
-                    screen['text'], 
-                    width, 
-                    height//3  # Text takes up top third
-                )
-                
-                # Combine background and text
-                logger.debug("Combining clips and adding effects")
-                screen_clip = CompositeVideoClip([bg_clip] + text_clips)
-                screen_clip = screen_clip.with_effects([
-                    FadeIn(duration=0.5),
-                    FadeOut(duration=0.5)
-                ])
-                
-                clips.append(screen_clip)
-                logger.info(f"✅ Completed screen {screen_num}")
+                try:
+                    # Create background clip
+                    bg_clip = ImageClip(str(img_path))
+                    bg_clip = bg_clip.resize(height=height)  # Maintain aspect ratio
+                    bg_clip = bg_clip.with_duration(duration_per_screen)
+                    
+                    # Create text clip
+                    screen = screens[i]  # Get corresponding screen data
+                    logger.debug(f"Creating text clip: {screen['text']}")
+                    text_clips, _ = create_text_clips(
+                        screen['text'], 
+                        width, 
+                        height//3  # Text takes up top third
+                    )
+                    
+                    # Combine background and text
+                    logger.debug("Combining clips and adding effects")
+                    screen_clip = CompositeVideoClip([bg_clip] + text_clips)
+                    screen_clip = screen_clip.with_effects([
+                        FadeIn(duration=0.5),
+                        FadeOut(duration=0.5)
+                    ])
+                    
+                    clips.append(screen_clip)
+                    logger.info(f"✅ Completed screen {screen_num}")
+                except Exception as e:
+                    logger.error(f"❌ Error processing screen {screen_num}: {e}")
+                    continue
+
+            # Check if we have any clips before proceeding
+            if not clips:
+                logger.error("❌ No valid clips generated, cannot create video")
+                return
 
             # Combine all clips
             logger.info("🎬 Combining all clips into final video...")
