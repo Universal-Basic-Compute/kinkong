@@ -1,10 +1,18 @@
 import sys
+import logging
 from pathlib import Path
 
 # Add project root to Python path
 project_root = str(Path(__file__).parent.parent.absolute())
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 # Now we can import backend modules
 from backend.src.airtable.tables import getTable
@@ -233,8 +241,8 @@ def clean_json_string(json_str):
         end_idx = json_str.rfind('}')
         
         if start_idx == -1 or end_idx == -1:
-            logger.error("No valid JSON structure found in response")
-            logger.error("Original string:", json_str)
+            print("No valid JSON structure found in response")
+            print("Original string:", json_str)
             # Return a valid empty structure
             return json.dumps({
                 "timeframes": {
@@ -272,8 +280,8 @@ def clean_json_string(json_str):
         return json.dumps(parsed)
         
     except Exception as e:
-        logger.error(f"Error cleaning JSON string: {e}")
-        logger.error("Original string:", json_str)
+        print(f"Error cleaning JSON string: {e}")
+        print("Original string:", json_str)
         # Return a valid empty structure
         return json.dumps({
             "timeframes": {
@@ -420,6 +428,8 @@ Please analyze the charts in this specific order, from highest to lowest timefra
 
 For each timeframe, consider how it relates to the higher timeframes above it. Your analysis should flow from the larger trend down to the immediate trading opportunities."""
 
+        # Create client with API key
+        client = anthropic.Client(api_key=api_key)
         message = client.messages.create(
             model="claude-3-5-sonnet-20241022",
             max_tokens=4096,
