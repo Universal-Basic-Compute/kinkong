@@ -93,9 +93,10 @@ class TokenSearcher:
             # Add immediate print at start
             print(f"\n{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - INFO - [SEARCH] Searching for token: {keyword}")
             
-            # First check if token exists in Airtable - only check 'token' field
+            # Add timeout to Airtable request
             existing_records = self.airtable.get_all(
-                formula=f"{{token}} = '{keyword.upper()}'"
+                formula=f"{{token}} = '{keyword.upper()}'",
+                timeout=30  # 30 seconds timeout
             )
             
             if existing_records:
@@ -122,13 +123,14 @@ class TokenSearcher:
                 "accept": "application/json"
             }
             
-            response = requests.get(url, params=params, headers=headers)
-            response.raise_for_status()
+            response = requests.get(url, params=params, headers=headers, timeout=30)
+            if not response.ok:
+                print(f"❌ Birdeye API error: {response.status_code}")
+                return None
+                
             data = response.json()
-            
             if not data.get('success'):
-                self.last_error = f"Birdeye API error: {data.get('message', 'Unknown error')}"
-                self.logger.error(self.last_error)
+                print(f"❌ Birdeye API error: {data.get('message', 'Unknown error')}")
                 return None
             
             # Find token results
@@ -140,7 +142,7 @@ class TokenSearcher:
                 self.logger.error(self.last_error)
                 return None
                 
-            tokens = token_item['result']
+            tokens = token_item['result'][:5]  # Limit to first 5 results
             
             # Find verified token with matching symbol
             token_data = next(
