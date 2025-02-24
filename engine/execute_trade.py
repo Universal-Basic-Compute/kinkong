@@ -22,6 +22,7 @@ from solders.pubkey import Pubkey
 from solders.signature import Signature
 from solders.signature import Signature
 from spl.token.instructions import get_associated_token_address
+from solana.rpc.commitment import Commitment
 
 def setup_logging():
     """Configure logging"""
