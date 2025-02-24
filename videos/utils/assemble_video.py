@@ -34,22 +34,7 @@ project_root = str(Path(__file__).parent.parent.parent.absolute())
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from videos.utils.generate_text import create_text_clips
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-logger = logging.getLogger(__name__)
-
-# Add project root to Python path
-project_root = str(Path(__file__).parent.parent.parent.absolute())
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
-
-from videos.utils.generate_text import create_text_clips
+from videos.utils.generate_text import create_text_clips, find_system_font
 
 # Configure logging
 logging.basicConfig(

@@ -52,8 +52,6 @@ def create_text_clips(
 
     # Convert text to uppercase and split into parts
     text_parts = [part.upper() for part in text.split('\n\n')]
-    if len(text_parts) == 1:
-        text_parts = [text_parts[0], text_parts[0]]
     
     clips = []
     text_box_margin = 20  # Margin around text in the box
