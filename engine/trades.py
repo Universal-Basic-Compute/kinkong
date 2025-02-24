@@ -785,28 +785,46 @@ class TradeExecutor:
     async def monitor_signals(self):
         """Single run to check trades and signals"""
         try:
-            # First check active trades for exit conditions
+            # Check both PENDING and EXECUTED trades
             active_trades = self.trades_table.get_all(
-                formula="status='EXECUTED'"
+                formula="OR(status='EXECUTED', status='PENDING')"
             )
             
-            self.logger.info(f"Checking {len(active_trades)} active trades...")
+            self.logger.info(f"Checking {len(active_trades)} active trades (PENDING + EXECUTED)...")
             
             for trade in active_trades:
                 try:
-                    exit_reason = await self.check_exit_conditions(trade)
-                    if exit_reason:
-                        self.logger.info(f"Exit condition met for trade {trade['id']}: {exit_reason}")
-                        if await self.close_trade(trade, exit_reason):
-                            self.logger.info(f"Successfully closed trade {trade['id']}")
-                        else:
-                            self.logger.error(f"Failed to close trade {trade['id']}")
+                    status = trade['fields'].get('status')
+                    
+                    if status == 'PENDING':
+                        # For PENDING trades, try to execute them
+                        signal_id = trade['fields'].get('signalId')
+                        if signal_id:
+                            # Get the signal data
+                            signal = self.signals_table.get(signal_id)
+                            if signal and self.check_entry_conditions(signal):
+                                self.logger.info(f"Attempting to execute PENDING trade {trade['id']}")
+                                if await self.execute_trade(signal):
+                                    self.logger.info(f"Successfully executed trade {trade['id']}")
+                                else:
+                                    self.logger.error(f"Failed to execute trade {trade['id']}")
+                    
+                    elif status == 'EXECUTED':
+                        # For EXECUTED trades, check exit conditions
+                        exit_reason = await self.check_exit_conditions(trade)
+                        if exit_reason:
+                            self.logger.info(f"Exit condition met for trade {trade['id']}: {exit_reason}")
+                            if await self.close_trade(trade, exit_reason):
+                                self.logger.info(f"Successfully closed trade {trade['id']}")
+                            else:
+                                self.logger.error(f"Failed to close trade {trade['id']}")
+                                
                 except Exception as e:
                     self.logger.error(f"Error processing trade {trade['id']}: {e}")
                     continue
                 
                 await asyncio.sleep(2)  # Delay between trades
-            
+
             # Then check for new signals
             self.logger.info("Checking for active signals...")
             
