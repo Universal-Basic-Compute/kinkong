@@ -49,7 +49,7 @@ async function getTokensMetadata() {
     const tokensTable = getTable('TOKENS');
     const records = await tokensTable.select().all();
     
-    return records.reduce((acc, record) => {
+    return records.reduce((acc, record: Record<FieldSet>) => {
       const fields = record.fields;
       acc[fields.mint] = {
         name: fields.name || fields.token,
@@ -58,7 +58,7 @@ async function getTokensMetadata() {
         mint: fields.mint
       };
       return acc;
-    }, {} as Record<string, {name: string; token: string; image: string; mint: string}>);
+    }, {} as Record<string, TokenMetadata>);
   } catch (error) {
     console.error('Failed to fetch tokens metadata:', error);
     return {};
