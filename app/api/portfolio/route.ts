@@ -209,6 +209,14 @@ export async function GET() {
     }));
 
     console.log('Returning portfolio data');
+    // Add final debug log
+    console.log('Portfolio balances:', balancesWithUSD.map(b => ({
+      token: b.token,
+      amount: b.uiAmount,
+      price: b.price,
+      value: b.usdValue
+    })));
+
     return NextResponse.json(balancesWithUSD, { headers });
 
   } catch (error) {
