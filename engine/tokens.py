@@ -164,7 +164,7 @@ class TokenSearcher:
                         self.logger.info("\n💧 Selected most liquid pair:")
                         self.logger.info(json.dumps(main_pair, indent=2))
                         
-                        # Extract social links and pair
+                        # Extract social links, pair, and image
                         social_links = {
                             'website': '',
                             'xAccount': '',
@@ -185,12 +185,14 @@ class TokenSearcher:
                                 elif social.get('type') == 'telegram':
                                     social_links['telegram'] = social.get('url', '')
 
-                        # Get pair address
+                        # Get pair address and image URL
                         pair = main_pair.get('pairAddress', '')
+                        image = main_pair.get('info', {}).get('imageUrl', '')
 
                         print("\n🔗 Extracted social links:")
                         print(json.dumps(social_links, indent=2))
                         print("\n🔄 Pair:", pair)
+                        print("\n🖼️ Image URL:", image)
             else:
                 self.logger.error(f"\n❌ DexScreener API error:")
                 self.logger.error(f"Status code: {response.status_code}")
@@ -219,7 +221,8 @@ class TokenSearcher:
                 'xAccount': social_links.get('xAccount', ''),
                 'telegram': social_links.get('telegram', ''),
                 # Add pair
-                'pair': pair
+                'pair': pair,
+                'image': image
             }
             
             print("\n📝 Airtable Record to Create/Update:")
