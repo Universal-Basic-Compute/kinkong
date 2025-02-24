@@ -90,6 +90,9 @@ class TokenSearcher:
     def search_token(self, keyword: str) -> Optional[Dict[str, Any]]:
         """Search for a token and create new record if it doesn't exist"""
         try:
+            # Add immediate print at start
+            print(f"\n{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - INFO - [SEARCH] Searching for token: {keyword}")
+            
             # First check if token exists in Airtable - only check 'token' field
             existing_records = self.airtable.get_all(
                 formula=f"{{token}} = '{keyword.upper()}'"
