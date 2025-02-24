@@ -90,19 +90,41 @@ def post_to_x(text: str) -> bool:
         logger.error(f"Error posting to X: {str(e)}")
         return False
 
-SYSTEM_PROMPT = """You are a cryptocurrency trading expert managing the X account for KinKong.
+def get_token_info(token: str, airtable: AirtableAPI) -> Optional[Dict]:
+    """Get token info from TOKENS table"""
+    try:
+        url = f"{airtable.base_url}/TOKENS"
+        params = {
+            "filterByFormula": f"{{token}}='{token}'"
+        }
+        
+        response = requests.get(url, headers=airtable.headers, params=params)
+        response.raise_for_status()
+        
+        records = response.json().get('records', [])
+        if records:
+            return records[0].get('fields', {})
+        return None
+        
+    except Exception as e:
+        logger.error(f"Error fetching token info: {str(e)}")
+        return None
+
+def get_system_prompt(token_info: Dict) -> str:
+    base_prompt = """You are a cryptocurrency trading expert managing the X account for KinKong.
 
 Write a short, engaging tweet about a trading signal. The tweet should:
 1. Be concise and professional
 2. Include the token symbol
 3. Mention key levels (entry, target)
 4. Use relevant emojis
-5. Include #Solana
-6. Be under 280 characters
+5. Be under 280 characters"""
 
-Format:
-[Emoji] Signal Alert: $[TOKEN]
-[Key Information]
+    # Add project mention if xAccount is present
+    if token_info.get('xAccount'):
+        base_prompt += f"\n\nMention the project's X account: {token_info['xAccount']}"
+
+    return base_prompt
 [Levels]
 #Solana"""
 
