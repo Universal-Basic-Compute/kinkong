@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { SignalHistory } from '@/components/signals/SignalHistory';
 import { StatsCards } from '@/components/dashboard/StatsCards';
 import { PortfolioSection } from '@/components/dashboard/PortfolioSection';
 import { TrackedTokensSection } from '@/components/dashboard/TrackedTokensSection';
@@ -69,11 +68,6 @@ export default function Dashboard() {
       <StatsCards investmentComponent={<InvestmentCard />} />
 
       <PortfolioSection />
-
-      <section className="mb-16">
-        <h2 className="text-2xl font-bold mb-8">Recent Signals</h2>
-        <SignalHistory />
-      </section>
 
       <section className="mb-16">
         <div className="flex items-center gap-2 mb-8">
