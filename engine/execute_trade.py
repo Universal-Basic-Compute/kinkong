@@ -513,11 +513,8 @@ class JupiterTradeExecutor:
             )
             
             try:
-                # Get fresh blockhash with version 0 support
-                blockhash_response = await client.get_latest_blockhash(
-                    commitment=Commitment("confirmed"),
-                    max_supported_transaction_version=0
-                )
+                # Get fresh blockhash - version is handled at transaction level
+                blockhash_response = await client.get_latest_blockhash()
                 if not blockhash_response or not blockhash_response.value:
                     raise Exception("Failed to get recent blockhash")
                 
