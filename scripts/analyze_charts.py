@@ -376,12 +376,23 @@ def analyze_charts_with_claude(chart_paths, token_info=None):
             snapshot_text = f"""
 
 Latest Token Metrics:
-• Price: ${latest_snapshot.get('price', 0):.4f}
-• 24h Volume: ${latest_snapshot.get('volume24h', 0):,.2f}
-• Market Cap: ${latest_snapshot.get('marketCap', 0):,.2f}
-• Liquidity: ${latest_snapshot.get('liquidity', 0):,.2f}
+• Current Price: ${latest_snapshot.get('price', 0):.4f}
+• 7d Avg Price: ${latest_snapshot.get('price7dAvg', 0):.4f}
 • Price Change 24h: {latest_snapshot.get('priceChange24h', 0):.2f}%
-• Volume Change 24h: {latest_snapshot.get('volumeChange24h', 0):.2f}%"""
+• Price Trend: {latest_snapshot.get('priceTrend', 0):.2f}%
+• Price Volatility: {latest_snapshot.get('priceVolatility', 0):.2f}%
+
+Volume Metrics:
+• 24h Volume: ${latest_snapshot.get('volume24h', 0):,.2f}
+• 7d Avg Volume: ${latest_snapshot.get('volume7d', 0):,.2f}
+• Volume Growth: {latest_snapshot.get('volumeGrowth', 0):.2f}%
+• Volume on Up Day: {latest_snapshot.get('volumeOnUpDay', False)}
+
+Market Metrics:
+• Liquidity: ${latest_snapshot.get('liquidity', 0):,.2f}
+• Market Cap: ${latest_snapshot.get('marketCap', 0):,.2f}
+• Holder Count: {latest_snapshot.get('holderCount', 0)}
+• vs SOL Performance: {latest_snapshot.get('vsSolPerformance', 0):.2f}%"""
 
         formatted_system_prompt = SYSTEM_PROMPT.format(token_metrics=snapshot_text)
 
