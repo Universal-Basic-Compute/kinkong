@@ -364,80 +364,20 @@ def analyze_charts_with_claude(chart_paths, token_info=None):
         if not api_key:
             raise ValueError("ANTHROPIC_API_KEY not found in .env file")
 
-        # Get latest token snapshot
-        token_metrics = ""
-        if token_info and token_info.get('token'):
-            try:
-                base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
-                api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
-                
-                # Build URL filtering by token name instead of mint
-                token = token_info['token']
-                url = f"https://api.airtable.com/v0/{base_id}/TOKEN_SNAPSHOTS?filterByFormula={{token}}='{token}'&sort[0][field]=createdAt&sort[0][direction]=desc&maxRecords=1"
-                
-                headers = {
-                    'Authorization': f'Bearer {api_key}'
-                }
-                
-                # Add debug logging
-                print(f"Fetching token snapshots for token: {token}")
-                print(f"Using URL: {url}")
-                
-                response = requests.get(url, headers=headers)
-                print(f"Response status: {response.status_code}")
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    records = data.get('records', [])
-                    
-                    if records:
-                        latest = records[0]['fields']
-                        token_metrics = f"""
-• Price: ${latest.get('price', 0):.4f}
-• 24h Volume: ${latest.get('volume24h', 0):,.2f}
-• 7d Volume: ${latest.get('volume7d', 0):,.2f}
-• Liquidity: ${latest.get('liquidity', 0):,.2f}
-• Price Change 24h: {latest.get('priceChange24h', 0):.2f}%
-• Volume Growth: {latest.get('volumeGrowth', 0):.2f}%
-• Holder Count: {latest.get('holderCount', 0):,}
-• Created At: {latest.get('createdAt', 'Unknown')}
-"""
-                    else:
-                        token_metrics = "No recent token metrics available"
-                else:
-                    print(f"Error fetching token metrics: {response.status_code}")
-                    print(f"Response: {response.text}")
-                    token_metrics = "Error fetching token metrics"
-                    
-            except Exception as e:
-                print(f"Error fetching token metrics: {e}")
-                token_metrics = "Error fetching token metrics"
-        
         # Format system prompt with token metrics
-        formatted_system_prompt = SYSTEM_PROMPT.format(token_metrics=token_metrics)
-        
-        # Create client with explicit API key
-        client = anthropic.Client(api_key=api_key)
-        
-        # Add debug logging for client creation
-        print("\nCreated Claude client with API key:", api_key[:8] + "..." + api_key[-4:])
-        
-        # Get market data and context
-        market_data = get_dexscreener_data(token_info['mint'] if token_info else None)
-        if not market_data:
-            print(f"Warning: No DexScreener data available for {token_info['token'] if token_info else 'token'}")
-            # Continue with analysis but without market data
-            market_data = {
-                'price': 0,
-                'price_change_24h': 0,
-                'volume_24h': 0,
-                'liquidity': 0,
-                'fdv': 0,
-                'market_cap': 0
-            }
-        market_context = get_market_context()
+        formatted_system_prompt = SYSTEM_PROMPT.format(token_metrics="")
 
-        # Prepare chart images
+        # Make request to Claude via HTTP
+        print("\n🚀 Making request to Claude API...")
+
+        claude_url = "https://api.anthropic.com/v1/messages"
+        headers = {
+            "x-api-key": api_key,
+            "anthropic-version": "2023-06-01",
+            "content-type": "application/json"
+        }
+
+        # Prepare chart images for Claude request
         chart_contents = []
         for chart_path in existing_charts:  # Use existing_charts instead of chart_paths
             try:
@@ -469,22 +409,7 @@ def analyze_charts_with_claude(chart_paths, token_info=None):
         if not chart_contents:
             raise ValueError("No chart images could be loaded")
         
-        # Format market data for prompt
-        market_data_str = ""
-        if market_data:
-            market_data_str = f"""
-Current Market Data:
-• Price: ${market_data['price']:.4f}
-• 24h Change: {market_data['price_change_24h']:.2f}%
-• 24h Volume: ${market_data['volume_24h']:,.2f}
-• Liquidity: ${market_data['liquidity']:,.2f}
-• FDV: ${market_data['fdv']:,.2f}
-• Market Cap: ${market_data['market_cap']:,.2f}
-"""
-
-        user_prompt = f"""I'm providing you with charts for {token_info['token'] if token_info else 'UBC'}/USD for a complete multi-timeframe analysis.
-
-{market_data_str}
+        user_prompt = f"""I'm providing you with charts for {token_info['token']}/USD for a complete multi-timeframe analysis.
 
 Please analyze the charts in this specific order, from highest to lowest timeframe, to build a complete top-down analysis:
 
