@@ -266,7 +266,7 @@ export function MarketSentimentDisplay() {
                 <div className="group relative">
                   <div className="cursor-help text-gray-500 hover:text-gray-300">ⓘ</div>
                   <div className="invisible group-hover:visible absolute bottom-6 left-1/2 transform -translate-x-1/2 w-64 p-2 bg-black/90 border border-gray-700 text-xs text-gray-300 rounded-lg z-50">
-                    {parsedIndicators?.price_action?.info}
+                    {parsedIndicators?.price_action?.details}
                   </div>
                 </div>
               </div>
@@ -292,7 +292,7 @@ export function MarketSentimentDisplay() {
                 <div className="group relative">
                   <div className="cursor-help text-gray-500 hover:text-gray-300">ⓘ</div>
                   <div className="invisible group-hover:visible absolute bottom-6 left-1/2 transform -translate-x-1/2 w-64 p-2 bg-black/90 border border-gray-700 text-xs text-gray-300 rounded-lg z-50">
-                    {parsedIndicators?.volume?.info}
+                    {parsedIndicators?.volume?.details}
                   </div>
                 </div>
               </div>
@@ -316,7 +316,7 @@ export function MarketSentimentDisplay() {
                 <div className="group relative">
                   <div className="cursor-help text-gray-500 hover:text-gray-300">ⓘ</div>
                   <div className="invisible group-hover:visible absolute bottom-6 left-1/2 transform -translate-x-1/2 w-64 p-2 bg-black/90 border border-gray-700 text-xs text-gray-300 rounded-lg z-50">
-                    {parsedIndicators?.position_signals?.info}
+                    {parsedIndicators?.position_signals?.details}
                   </div>
                 </div>
               </div>
@@ -342,7 +342,7 @@ export function MarketSentimentDisplay() {
                 <div className="group relative">
                   <div className="cursor-help text-gray-500 hover:text-gray-300">ⓘ</div>
                   <div className="invisible group-hover:visible absolute bottom-6 left-1/2 transform -translate-x-1/2 w-64 p-2 bg-black/90 border border-gray-700 text-xs text-gray-300 rounded-lg z-50">
-                    {parsedIndicators?.relative_strength?.info}
+                    {parsedIndicators?.relative_strength?.details}
                   </div>
                 </div>
               </div>
