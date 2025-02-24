@@ -242,6 +242,12 @@ def clean_json_string(json_str):
 
 SYSTEM_PROMPT = """You are an expert cryptocurrency technical analyst specializing in UBC/USD market analysis.
 
+Analyze the charts in order from highest to lowest timeframe:
+1. POSITION (1D chart, 30-day trades)
+2. SWING (4H chart, 7-day trades)
+3. INTRADAY (1H chart, 24-hour trades)
+4. SCALP (15m chart, 6-hour trades)
+
 For each timeframe, provide:
 1. Signal (BUY/SELL/HOLD)
 2. Confidence level (0-100%)
@@ -249,16 +255,10 @@ For each timeframe, provide:
 4. Detailed reasoning
 5. Risk/reward ratio if applicable
 
-Timeframes analyzed:
-- SCALP (15m chart, 6-hour trades)
-- INTRADAY (1H chart, 24-hour trades)
-- SWING (4H chart, 7-day trades)
-- POSITION (1D chart, 30-day trades)
-
 Format your response as JSON:
 {
     "timeframes": {
-        "SCALP": {
+        "POSITION": {
             "signal": "BUY|SELL|HOLD",
             "confidence": 0,
             "reasoning": "Detailed analysis",
@@ -268,18 +268,18 @@ Format your response as JSON:
             },
             "risk_reward_ratio": 0.0
         },
-        "INTRADAY": { ... },
         "SWING": { ... },
-        "POSITION": { ... }
+        "INTRADAY": { ... },
+        "SCALP": { ... }
     },
     "overall_analysis": {
         "primary_trend": "BULLISH|BEARISH|NEUTRAL",
         "timeframe_alignment": "ALIGNED|MIXED|CONFLICTING",
-        "best_timeframe": "SCALP|INTRADAY|SWING|POSITION",
+        "best_timeframe": "POSITION|SWING|INTRADAY|SCALP",
         "key_observations": ["List of important points"],
         "recommended_action": {
             "signal": "BUY|SELL|HOLD",
-            "timeframe": "SCALP|INTRADAY|SWING|POSITION",
+            "timeframe": "POSITION|SWING|INTRADAY|SCALP",
             "reasoning": "Why this is the best action"
         }
     }
