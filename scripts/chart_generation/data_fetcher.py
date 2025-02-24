@@ -74,26 +74,25 @@ def fetch_ubc_sol_data(timeframe='1H', hours=24, token_address=None):
     if not all_items:
         print("No data items in responses")
         return None
-            
-# Convert to DataFrame
-df_data = []
-for item in all_items:
-    date = pd.to_datetime(item['unixTime'], unit='s')
-    df_data.append({
-        'Date': date,
-        'Open': float(item['o']),
-        'High': float(item['h']),
-        'Low': float(item['l']),
-        'Close': float(item['c']),
-        'Volume': float(item['v'])
-    })
-    
-df = pd.DataFrame(df_data)
-df.set_index('Date', inplace=True)
-df = df.sort_index()
-    
-# Remove duplicates and keep only the first occurrence
-df = df[~df.index.duplicated(keep='first')]
-    
-print(f"\nFetched {len(df)} candles for token address: {token_address or 'UBC'}")
-return df
+        # Convert to DataFrame
+        df_data = []
+        for item in all_items:
+            date = pd.to_datetime(item['unixTime'], unit='s')
+            df_data.append({
+                'Date': date,
+                'Open': float(item['o']),
+                'High': float(item['h']),
+                'Low': float(item['l']),
+                'Close': float(item['c']),
+                'Volume': float(item['v'])
+            })
+        
+        df = pd.DataFrame(df_data)
+        df.set_index('Date', inplace=True)
+        df = df.sort_index()
+        
+        # Remove duplicates and keep only the first occurrence
+        df = df[~df.index.duplicated(keep='first')]
+        
+        print(f"\nFetched {len(df)} candles for token address: {token_address or 'UBC'}")
+        return df
