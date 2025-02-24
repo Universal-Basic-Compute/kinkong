@@ -244,10 +244,10 @@ class TokenSearcher:
                         pair = main_pair.get('pairAddress', '')
                         image = main_pair.get('info', {}).get('imageUrl', '')
 
-                        print("\n🔗 Extracted social links:")
-                        print(json.dumps(social_links, indent=2))
-                        print("\n🔄 Pair:", pair)
-                        print("\n🖼️ Image URL:", image)
+                        self.logger.info("\n🔗 Extracted social links:")
+                        self.logger.info(json.dumps(social_links, indent=2))
+                        self.logger.info("\n🔄 Pair: " + pair)
+                        self.logger.info("\n🖼️ Image URL: " + image)
             else:
                 self.logger.error(f"\n❌ DexScreener API error:")
                 self.logger.error(f"Status code: {response.status_code}")
@@ -282,26 +282,31 @@ class TokenSearcher:
                 'image': image
             }
             
-            print("\n📝 Airtable Record to Create/Update:")
-            print(json.dumps(airtable_record, indent=2))
+            self.logger.info("\n📝 Airtable Record to Create/Update:")
+            self.logger.info(json.dumps(airtable_record, indent=2))
             
             # Check if token already exists
             existing_records = self.airtable.get_all(
                 formula=f"{{mint}} = '{token_data.get('address')}'")
             
-            # Create/update token record first
-            if existing_records:
-                print(f"\n🔄 Updating existing token record for {token_data.get('symbol')}")
-                record_id = existing_records[0]['id']
-                # Don't update createdAt for existing records
-                del airtable_record['createdAt']
-                self.airtable.update(record_id, airtable_record)
-                print("✅ Token record updated successfully")
-            else:
-                print(f"\n➕ Creating new token record for {token_data.get('symbol')}")
-                record = self.airtable.insert(airtable_record)
-                record_id = record['id']
-                print("✅ Token record created successfully")
+            self.logger.info(f"\n🔍 Checking for existing records...")
+            self.logger.info(f"Found {len(existing_records)} existing records")
+            
+            # Create/update token record
+            try:
+                if existing_records:
+                    self.logger.info(f"\n🔄 Updating existing token record for {token_symbol}")
+                    record_id = existing_records[0]['id']
+                    # Don't update createdAt for existing records
+                    del airtable_record['createdAt']
+                    self.airtable.update(record_id, airtable_record)
+                    self.logger.info("✅ Token record updated successfully")
+                else:
+                    self.logger.info(f"\n➕ Creating new token record for {token_symbol}")
+                    record = self.airtable.insert(airtable_record)
+                    record_id = record['id']
+                    self.logger.info("✅ Token record created successfully")
+                    self.logger.info(f"New record ID: {record_id}")
 
             # Now check for bullish signals
             print(f"\n🔍 Checking social signals for {token_data.get('symbol')}...")
@@ -319,13 +324,22 @@ class TokenSearcher:
             if analysis:
                 print(f"Analysis: {analysis}")
 
-            return True
+                return True
+                
+            except Exception as e:
+                self.logger.error(f"\n❌ Airtable API Error:")
+                self.logger.error(f"Error type: {type(e).__name__}")
+                self.logger.error(f"Error message: {str(e)}")
+                if hasattr(e, 'response'):
+                    self.logger.error(f"Response status: {e.response.status_code}")
+                    self.logger.error(f"Response body: {e.response.text}")
+                return False
             
         except Exception as e:
-            print(f"\n❌ Error creating token record: {str(e)}")
+            self.logger.error(f"\n❌ Error creating token record: {str(e)}")
             if hasattr(e, '__traceback__'):
                 import traceback
-                print("Traceback:")
+                self.logger.error("Traceback:")
                 traceback.print_tb(e.__traceback__)
             return False
 
