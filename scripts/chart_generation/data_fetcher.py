@@ -28,8 +28,8 @@ def fetch_ubc_sol_data(timeframe='1H', hours=24, candles_target=60):
     }
     
     try:
-        print(f"Fetching {timeframe} candles with {multiplier}x duration multiplier")
-        print("Time range:", 
+        print(f"Fetching {timeframe} candles with 2x duration multiplier")
+        print("Time range:",
               datetime.fromtimestamp(start_time).strftime('%Y-%m-%d %H:%M'),
               "to",
               datetime.fromtimestamp(now).strftime('%Y-%m-%d %H:%M'))
