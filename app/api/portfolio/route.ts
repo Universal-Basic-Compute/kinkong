@@ -2,6 +2,7 @@ import { Connection, PublicKey } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { NextResponse } from 'next/server';
 import { getTable } from '@/backend/src/airtable/tables';
+import type { Record } from 'airtable';
 
 const KNOWN_TOKENS = {
   USDC: {
@@ -102,42 +103,24 @@ export async function GET() {
     // Filter non-zero balances
     const nonZeroBalances = balances.filter(b => b.uiAmount > 0);
 
-    // Get prices for all tokens
-    const mints = nonZeroBalances.map(b => b.mint);
-    
-    console.log('Fetching prices for mints:', mints);
+    // Get latest snapshots from TOKEN_SNAPSHOTS
+    const snapshotsTable = getTable('TOKEN_SNAPSHOTS');
+    const snapshotRecords = await snapshotsTable
+      .select({
+        sort: [{ field: 'createdAt', direction: 'desc' }],
+        filterByFormula: "IS_AFTER({createdAt}, DATEADD(NOW(), -1, 'hours'))"
+      })
+      .all();
 
-    try {
-      // Fetch prices using DexScreener API
-      console.log('Fetching prices from DexScreener for mints:', mints);
-        
-      // Add timestamp to URL to prevent caching
-      const timestamp = Date.now();
-      const dexscreenerUrl = `${DEXSCREENER_API}/${mints.join(',')}?t=${timestamp}`;
-      
-      console.log('Fetching from DexScreener:', dexscreenerUrl);
-      const pricesResponse = await fetch(dexscreenerUrl, {
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
-        }
-      });
-        
-      if (!pricesResponse.ok) {
-        throw new Error(`Failed to fetch token prices: ${pricesResponse.status}`);
+    // Create price map from snapshots
+    const priceMap: Record<string, number> = {};
+    for (const record of snapshotRecords) {
+      const token = record.get('token');
+      const mint = record.get('mint');
+      if (mint && !priceMap[mint]) {  // Only keep first (most recent) price
+        priceMap[mint] = record.get('price') || 0;
       }
-
-      const pricesData = await pricesResponse.json();
-
-      // Create price map from DexScreener response
-      const priceMap: Record<string, number> = {};
-      if (pricesData.pairs) {
-        for (const pair of pricesData.pairs) {
-          if (pair.baseToken) {
-            priceMap[pair.baseToken.address] = Number(pair.priceUsd) || 0;
-          }
-        }
-      }
+    }
 
       // Fetch tokens metadata first
       const tokensMetadata = await getTokensMetadata();
@@ -152,10 +135,10 @@ export async function GET() {
         if (knownToken) {
           price = knownToken.price;
         } else {
-          // Try DexScreener price first
+          // Get price from snapshots
           price = priceMap[balance.mint] || 0;
-          
-          // If price is 0, try Jupiter as fallback
+        
+          // If no price in snapshots, try Jupiter as fallback
           if (price === 0) {
             console.log(`Attempting Jupiter fallback for ${balance.token || balance.mint}`);
             price = await getJupiterPrice(balance.mint);
@@ -177,7 +160,7 @@ export async function GET() {
           price,
           usdValue,
           isStablecoin: !!knownToken,
-          source: knownToken ? 'fixed' : (price === priceMap[balance.mint] ? 'dexscreener' : 'jupiter'),
+          source: knownToken ? 'fixed' : (price === priceMap[balance.mint] ? 'snapshot' : 'jupiter'),
           metadata
         });
 
