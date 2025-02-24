@@ -65,6 +65,7 @@ export interface Token {
   price7dAvg: number;
   volumeOnUpDay: boolean;
   priceChange24h: number;
+  xAccount?: string;
 }
 
 interface TableTypes {
@@ -106,6 +107,7 @@ interface TableTypes {
     price7dAvg: number;
     volumeOnUpDay: boolean;
     priceChange24h: number;
+    xAccount?: string;
   };
   Signal: {
     createdAt: string;

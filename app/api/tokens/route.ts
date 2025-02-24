@@ -11,6 +11,7 @@ interface TokenRecord extends FieldSet {
   volumeGrowth: number;
   pricePerformance: number;
   holderCount: number;
+  xAccount?: string;
 }
 
 export async function GET() {
@@ -31,7 +32,8 @@ export async function GET() {
       liquidity: record.get('liquidity'),
       volumeGrowth: record.get('volumeGrowth'),
       pricePerformance: record.get('pricePerformance'),
-      holderCount: record.get('holderCount')
+      holderCount: record.get('holderCount'),
+      xAccount: record.get('xAccount')
     }));
 
     return NextResponse.json(tokens);
