@@ -1,0 +1,576 @@
+2025-02-22 20:32:02 - INFO - Starting market sentiment analysis...
+2025-02-22 20:32:03 - INFO - Analyzing price action...
+2025-02-22 20:32:33 - INFO - 
+Market Sentiment Analysis:
+2025-02-22 20:32:33 - INFO - Sentiment: BEARISH
+2025-02-22 20:32:33 - INFO - Confidence: 25.0%
+2025-02-22 20:32:33 - INFO - Bullish Signals: 1/4
+2025-02-22 20:32:33 - INFO - 
+Reasons:
+2025-02-22 20:32:33 - INFO - • Price Action: 58.8% of tokens above 7d average
+2025-02-22 20:32:33 - INFO - • Volume Trend: Volume growth: -18.2%
+2025-02-22 20:32:33 - INFO - • Volume Distribution: 45.2% of volume on up days
+2025-02-22 20:32:33 - INFO - • Relative Strength: AI tokens vs SOL: +288.4%
+2025-02-22 20:32:33 - INFO - Saving sentiment analysis to Airtable...
+2025-02-22 20:32:34 - ERROR - Script failed: ('422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT', '422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT [Error: {\'type\': \'UNKNOWN_FIELD_NAME\', \'message\': \'Unknown field name: "bullishSignals"\'}]')
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\engine\market_sentiment.py", line 260, in main
+    sentiment_table.insert(sentiment)
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 384, in insert
+    return self._post(
+           ^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 194, in _post
+    return self._request("post", url, json_data=json_data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 187, in _request
+    return self._process_response(response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 175, in _process_response
+    raise exc
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 162, in _process_response
+    response.raise_for_status()
+  File "C:\Python312\Lib\site-packages\requests\models.py", line 1024, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: ('422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT', '422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT [Error: {\'type\': \'UNKNOWN_FIELD_NAME\', \'message\': \'Unknown field name: "bullishSignals"\'}]')
+2025-02-22 20:33:39 - INFO - Starting market sentiment analysis...
+2025-02-22 20:33:40 - INFO - Analyzing price action...
+2025-02-22 20:34:13 - INFO - 
+Market Sentiment Analysis:
+2025-02-22 20:34:13 - INFO - Sentiment: BEARISH
+2025-02-22 20:34:13 - INFO - Confidence: 25.0%
+2025-02-22 20:34:13 - INFO - Bullish Signals: 1/4
+2025-02-22 20:34:13 - INFO - 
+Reasons:
+2025-02-22 20:34:13 - INFO - • Price Action: 58.8% of tokens above 7d average
+2025-02-22 20:34:13 - INFO - • Volume Trend: Volume growth: -18.2%
+2025-02-22 20:34:13 - INFO - • Volume Distribution: 45.2% of volume on up days
+2025-02-22 20:34:13 - INFO - • Relative Strength: AI tokens vs SOL: +288.4%
+2025-02-22 20:34:13 - INFO - Saving sentiment analysis to Airtable...
+2025-02-22 20:34:14 - ERROR - Script failed: ('422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT', '422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT [Error: {\'type\': \'UNKNOWN_FIELD_NAME\', \'message\': \'Unknown field name: "reasons"\'}]')
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\engine\market_sentiment.py", line 260, in main
+    sentiment_table.insert(sentiment)
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 384, in insert
+    return self._post(
+           ^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 194, in _post
+    return self._request("post", url, json_data=json_data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 187, in _request
+    return self._process_response(response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 175, in _process_response
+    raise exc
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 162, in _process_response
+    response.raise_for_status()
+  File "C:\Python312\Lib\site-packages\requests\models.py", line 1024, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: ('422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT', '422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT [Error: {\'type\': \'UNKNOWN_FIELD_NAME\', \'message\': \'Unknown field name: "reasons"\'}]')
+2025-02-22 20:37:35 - INFO - Starting market sentiment analysis...
+2025-02-22 20:37:36 - INFO - Analyzing price action...
+2025-02-22 20:38:05 - INFO - 
+Market Sentiment Analysis:
+2025-02-22 20:38:05 - INFO - Sentiment: BEARISH
+2025-02-22 20:38:05 - INFO - Confidence: 25.0%
+2025-02-22 20:38:05 - INFO - Bullish Signals: 1/4
+2025-02-22 20:38:05 - INFO - 
+Reasons:
+2025-02-22 20:38:05 - INFO - • Price Action: 58.8% of tokens above 7d average
+2025-02-22 20:38:05 - INFO - • Volume Trend: Volume growth: -18.2%
+2025-02-22 20:38:05 - INFO - • Volume Distribution: 45.2% of volume on up days
+2025-02-22 20:38:05 - INFO - • Relative Strength: AI tokens vs SOL: +288.4%
+2025-02-22 20:38:05 - INFO - Saving sentiment analysis to Airtable...
+2025-02-22 20:38:06 - ERROR - Script failed: ('422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT', '422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT [Error: {\'type\': \'UNKNOWN_FIELD_NAME\', \'message\': \'Unknown field name: "reasons"\'}]')
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\engine\market_sentiment.py", line 260, in main
+    sentiment_table.insert(sentiment)
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 384, in insert
+    return self._post(
+           ^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 194, in _post
+    return self._request("post", url, json_data=json_data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 187, in _request
+    return self._process_response(response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 175, in _process_response
+    raise exc
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 162, in _process_response
+    response.raise_for_status()
+  File "C:\Python312\Lib\site-packages\requests\models.py", line 1024, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: ('422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT', '422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT [Error: {\'type\': \'UNKNOWN_FIELD_NAME\', \'message\': \'Unknown field name: "reasons"\'}]')
+2025-02-22 20:39:05 - INFO - Starting market sentiment analysis...
+2025-02-22 20:39:06 - INFO - Analyzing price action...
+2025-02-22 20:39:32 - INFO - 
+Market Sentiment Analysis:
+2025-02-22 20:39:32 - INFO - Sentiment: BEARISH
+2025-02-22 20:39:32 - INFO - Confidence: 25.0%
+2025-02-22 20:39:32 - INFO - Bullish Signals: 1/4
+2025-02-22 20:39:32 - INFO - 
+Reasons:
+2025-02-22 20:39:32 - INFO - • Price Action: 58.8% of tokens above 7d average
+2025-02-22 20:39:32 - INFO - • Volume Trend: Volume growth: -18.2%
+2025-02-22 20:39:32 - INFO - • Volume Distribution: 45.2% of volume on up days
+2025-02-22 20:39:32 - INFO - • Relative Strength: AI tokens vs SOL: +288.4%
+2025-02-22 20:39:32 - INFO - Saving sentiment analysis to Airtable...
+2025-02-22 20:39:33 - ERROR - Script failed: ('422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT', '422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT [Error: {\'type\': \'INVALID_VALUE_FOR_COLUMN\', \'message\': \'Cannot parse value "["Price Action: 58.8% of tokens above 7d average","Volume Trend: Volume growth: -18.2%","Volume Distribution: 45.2% of volume on up days","Relative Strength: AI tokens vs SOL: +288.4%"]" for field notes\'}]')
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\engine\market_sentiment.py", line 260, in main
+    sentiment_table.insert(sentiment)
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 384, in insert
+    return self._post(
+           ^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 194, in _post
+    return self._request("post", url, json_data=json_data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 187, in _request
+    return self._process_response(response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 175, in _process_response
+    raise exc
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 162, in _process_response
+    response.raise_for_status()
+  File "C:\Python312\Lib\site-packages\requests\models.py", line 1024, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: ('422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT', '422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT [Error: {\'type\': \'INVALID_VALUE_FOR_COLUMN\', \'message\': \'Cannot parse value "["Price Action: 58.8% of tokens above 7d average","Volume Trend: Volume growth: -18.2%","Volume Distribution: 45.2% of volume on up days","Relative Strength: AI tokens vs SOL: +288.4%"]" for field notes\'}]')
+2025-02-22 20:40:06 - INFO - Starting market sentiment analysis...
+2025-02-22 20:40:07 - INFO - Analyzing price action...
+2025-02-22 20:40:33 - INFO - 
+Market Sentiment Analysis:
+2025-02-22 20:40:33 - INFO - Sentiment: BEARISH
+2025-02-22 20:40:33 - INFO - Confidence: 25.0%
+2025-02-22 20:40:33 - INFO - Bullish Signals: 1/4
+2025-02-22 20:40:33 - INFO - 
+Reasons:
+2025-02-22 20:40:33 - INFO - • Price Action: 58.8% of tokens above 7d average
+2025-02-22 20:40:33 - INFO - • Volume Trend: Volume growth: -18.2%
+2025-02-22 20:40:33 - INFO - • Volume Distribution: 45.2% of volume on up days
+2025-02-22 20:40:33 - INFO - • Relative Strength: AI tokens vs SOL: +288.4%
+2025-02-22 20:40:33 - INFO - Saving sentiment analysis to Airtable...
+2025-02-22 20:40:33 - ERROR - Script failed: ('422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT', '422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT [Error: {\'type\': \'UNKNOWN_FIELD_NAME\', \'message\': \'Unknown field name: "timestamp"\'}]')
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\engine\market_sentiment.py", line 260, in main
+    sentiment_table.insert(sentiment)
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 384, in insert
+    return self._post(
+           ^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 194, in _post
+    return self._request("post", url, json_data=json_data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 187, in _request
+    return self._process_response(response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 175, in _process_response
+    raise exc
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 162, in _process_response
+    response.raise_for_status()
+  File "C:\Python312\Lib\site-packages\requests\models.py", line 1024, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: ('422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT', '422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT [Error: {\'type\': \'UNKNOWN_FIELD_NAME\', \'message\': \'Unknown field name: "timestamp"\'}]')
+2025-02-22 20:41:38 - INFO - Starting market sentiment analysis...
+2025-02-22 20:41:38 - INFO - Analyzing price action...
+2025-02-22 20:42:05 - INFO - 
+Market Sentiment Analysis:
+2025-02-22 20:42:05 - INFO - Sentiment: BEARISH
+2025-02-22 20:42:05 - INFO - Confidence: 25.0%
+2025-02-22 20:42:05 - INFO - Bullish Signals: 1/4
+2025-02-22 20:42:05 - INFO - 
+Reasons:
+2025-02-22 20:42:05 - INFO - • Price Action: 58.8% of tokens above 7d average
+2025-02-22 20:42:05 - INFO - • Volume Trend: Volume growth: -18.2%
+2025-02-22 20:42:05 - INFO - • Volume Distribution: 45.2% of volume on up days
+2025-02-22 20:42:05 - INFO - • Relative Strength: AI tokens vs SOL: +288.4%
+2025-02-22 20:42:05 - INFO - Saving sentiment analysis to Airtable...
+2025-02-22 20:45:18 - INFO - Starting market sentiment analysis...
+2025-02-22 20:45:19 - INFO - Analyzing price action...
+2025-02-22 20:45:45 - INFO - 
+Market Sentiment Analysis:
+2025-02-22 20:45:45 - INFO - Sentiment: BEARISH
+2025-02-22 20:45:45 - INFO - Confidence: 25.0%
+2025-02-22 20:45:45 - INFO - Bullish Signals: 1/4
+2025-02-22 20:45:45 - INFO - 
+Reasons:
+2025-02-22 20:45:45 - INFO - • Price Action: 58.8% of tokens above 7d average
+2025-02-22 20:45:45 - INFO - • Volume Trend: Volume growth: -18.2%
+2025-02-22 20:45:45 - INFO - • Volume Distribution: 45.2% of volume on up days
+2025-02-22 20:45:45 - INFO - • Relative Strength: AI tokens vs SOL: +288.4%
+2025-02-22 20:45:45 - INFO - Saving sentiment analysis to Airtable...
+2025-02-22 20:45:45 - INFO - [SUCCESS] Market sentiment recorded successfully
+2025-02-22 20:47:27 - INFO - Starting market sentiment analysis...
+2025-02-22 20:47:28 - INFO - Analyzing price action...
+2025-02-22 20:47:54 - INFO - 
+Market Sentiment Analysis:
+2025-02-22 20:47:54 - INFO - Sentiment: BEARISH
+2025-02-22 20:47:54 - INFO - Confidence: 25.0%
+2025-02-22 20:47:54 - INFO - Bullish Signals: 1/4
+2025-02-22 20:47:54 - INFO - 
+Reasons:
+2025-02-22 20:47:54 - INFO - • Price Action: 58.8% of tokens above 7d average
+2025-02-22 20:47:54 - INFO - • Volume Trend: Volume growth: -18.2%
+2025-02-22 20:47:54 - INFO - • Volume Distribution: 45.2% of volume on up days
+2025-02-22 20:47:54 - INFO - • Relative Strength: AI tokens vs SOL: +294.7%
+2025-02-22 20:47:54 - INFO - Saving sentiment analysis to Airtable...
+2025-02-22 20:47:54 - INFO - [SUCCESS] Market sentiment recorded successfully
+2025-02-22 20:49:20 - INFO - Starting market sentiment analysis...
+2025-02-22 20:49:21 - INFO - Analyzing price action...
+2025-02-22 20:49:47 - INFO - 
+Market Sentiment Analysis:
+2025-02-22 20:49:47 - INFO - Sentiment: BEARISH
+2025-02-22 20:49:47 - INFO - Confidence: 25.0%
+2025-02-22 20:49:47 - INFO - Bullish Signals: 1/4
+2025-02-22 20:49:47 - INFO - 
+Reasons:
+2025-02-22 20:49:47 - INFO - • Price Action: 58.8% of tokens above 7d average
+2025-02-22 20:49:47 - INFO - • Volume Trend: Volume growth: -18.2%
+2025-02-22 20:49:47 - INFO - • Volume Distribution: 45.2% of volume on up days
+2025-02-22 20:49:47 - INFO - • Relative Strength: AI tokens vs SOL: +5.5%
+2025-02-22 20:49:47 - INFO - Saving sentiment analysis to Airtable...
+2025-02-22 20:49:48 - INFO - [SUCCESS] Market sentiment recorded successfully
+2025-02-23 16:49:50 - INFO - Starting market sentiment analysis...
+2025-02-23 16:49:51 - INFO - Analyzing price action...
+2025-02-23 16:50:17 - INFO - 
+Market Sentiment Analysis:
+2025-02-23 16:50:17 - INFO - Sentiment: NEUTRAL
+2025-02-23 16:50:17 - INFO - Confidence: 50.0%
+2025-02-23 16:50:17 - INFO - Bullish Signals: 2/4
+2025-02-23 16:50:17 - INFO - 
+Reasons:
+2025-02-23 16:50:17 - INFO - • Price Action: 64.7% of tokens above 7d average
+2025-02-23 16:50:17 - INFO - • Volume Trend: Volume growth: -14.3%
+2025-02-23 16:50:17 - INFO - • Volume Distribution: 42.2% of volume on up days
+2025-02-23 16:50:17 - INFO - • Relative Strength: AI tokens vs SOL: +2.6%
+2025-02-23 16:50:17 - INFO - Saving sentiment analysis to Airtable...
+2025-02-23 16:50:18 - INFO - [SUCCESS] Market sentiment recorded successfully
+2025-02-23 22:34:55 - INFO - Starting market sentiment analysis...
+2025-02-23 22:34:55 - INFO - Analyzing price action...
+2025-02-23 22:35:17 - ERROR - Error calculating market sentiment: 'MarketSentimentAnalyzer' object has no attribute 'logger'
+2025-02-23 22:35:17 - ERROR - Script failed: 'MarketSentimentAnalyzer' object has no attribute 'logger'
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\engine\market_sentiment.py", line 168, in analyze_position_signals
+    self.logger.info("\nPosition Signals Analysis:")
+    ^^^^^^^^^^^
+AttributeError: 'MarketSentimentAnalyzer' object has no attribute 'logger'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\engine\market_sentiment.py", line 356, in main
+    sentiment = await analyzer.calculate_sentiment()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\kinkong\engine\market_sentiment.py", line 249, in calculate_sentiment
+    position_bullish, position_notes, total_position_signals, buy_signals = await self.analyze_position_signals(active_tokens)
+                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\kinkong\engine\market_sentiment.py", line 177, in analyze_position_signals
+    self.logger.error(f"Error analyzing position signals: {e}")
+    ^^^^^^^^^^^
+AttributeError: 'MarketSentimentAnalyzer' object has no attribute 'logger'
+2025-02-23 22:38:25 - INFO - Starting market sentiment analysis...
+2025-02-23 22:38:26 - INFO - Analyzing price action...
+2025-02-23 22:38:47 - INFO - 
+Position Signals Analysis:
+2025-02-23 22:38:47 - INFO - Total signals (7d): 93
+2025-02-23 22:38:47 - INFO - BUY signals: 10
+2025-02-23 22:38:47 - INFO - BUY percentage: 10.8%
+2025-02-23 22:38:47 - INFO - Sentiment: BEARISH
+2025-02-23 22:38:54 - INFO - 
+Market Sentiment Analysis:
+2025-02-23 22:38:54 - INFO - Classification: NEUTRAL
+2025-02-23 22:38:54 - INFO - Confidence: 40.0%
+2025-02-23 22:38:54 - INFO - Bullish Indicators: 2/5
+2025-02-23 22:38:54 - INFO - 
+Indicator Details:
+2025-02-23 22:38:54 - INFO - price_action: BULLISH
+2025-02-23 22:38:54 - INFO - • 61.1% of tokens above 7d average
+2025-02-23 22:38:54 - INFO - volume: BEARISH
+2025-02-23 22:38:54 - INFO - • Volume growth: -7.3%
+2025-02-23 22:38:54 - INFO - distribution: BEARISH
+2025-02-23 22:38:54 - INFO - • 46.2% of volume on up days
+2025-02-23 22:38:54 - INFO - position_signals: BEARISH
+2025-02-23 22:38:54 - INFO - • 10.8% of POSITION signals are BUY (10/93 signals)
+2025-02-23 22:38:54 - INFO - relative_strength: BULLISH
+2025-02-23 22:38:54 - INFO - • AI tokens vs SOL: +1.9%
+2025-02-23 22:38:54 - INFO - Saving sentiment analysis to Airtable...
+2025-02-23 22:38:54 - ERROR - Script failed: ('422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT', '422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT [Error: {\'type\': \'UNKNOWN_FIELD_NAME\', \'message\': \'Unknown field name: "bullish_percentage"\'}]')
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\engine\market_sentiment.py", line 369, in main
+    sentiment_table.insert(sentiment)
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 384, in insert
+    return self._post(
+           ^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 194, in _post
+    return self._request("post", url, json_data=json_data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 187, in _request
+    return self._process_response(response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 175, in _process_response
+    raise exc
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 162, in _process_response
+    response.raise_for_status()
+  File "C:\Python312\Lib\site-packages\requests\models.py", line 1024, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: ('422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT', '422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT [Error: {\'type\': \'UNKNOWN_FIELD_NAME\', \'message\': \'Unknown field name: "bullish_percentage"\'}]')
+2025-02-23 22:41:34 - INFO - Starting market sentiment analysis...
+2025-02-23 22:41:35 - INFO - Analyzing price action...
+2025-02-23 22:41:56 - INFO - 
+Position Signals Analysis:
+2025-02-23 22:41:56 - INFO - Total signals (7d): 93
+2025-02-23 22:41:56 - INFO - BUY signals: 10
+2025-02-23 22:41:56 - INFO - BUY percentage: 10.8%
+2025-02-23 22:41:56 - INFO - Sentiment: BEARISH
+2025-02-23 22:42:02 - INFO - 
+Market Sentiment Analysis:
+2025-02-23 22:42:02 - INFO - Classification: NEUTRAL
+2025-02-23 22:42:02 - INFO - Confidence: 40.0%
+2025-02-23 22:42:02 - INFO - Bullish Indicators: 2/5
+2025-02-23 22:42:02 - INFO - 
+Indicator Details:
+2025-02-23 22:42:02 - INFO - price_action: BULLISH
+2025-02-23 22:42:02 - INFO - • 61.1% of tokens above 7d average
+2025-02-23 22:42:02 - INFO - volume: BEARISH
+2025-02-23 22:42:02 - INFO - • Volume growth: -7.3%
+2025-02-23 22:42:02 - INFO - distribution: BEARISH
+2025-02-23 22:42:02 - INFO - • 46.2% of volume on up days
+2025-02-23 22:42:02 - INFO - position_signals: BEARISH
+2025-02-23 22:42:02 - INFO - • 10.8% of POSITION signals are BUY (10/93 signals)
+2025-02-23 22:42:02 - INFO - relative_strength: BULLISH
+2025-02-23 22:42:02 - INFO - • AI tokens vs SOL: +1.9%
+2025-02-23 22:42:02 - INFO - Saving sentiment analysis to Airtable...
+2025-02-23 22:42:03 - ERROR - Script failed: ('422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT', '422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT [Error: {\'type\': \'UNKNOWN_FIELD_NAME\', \'message\': \'Unknown field name: "positionSignalsBuyPercentage"\'}]')
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\engine\market_sentiment.py", line 369, in main
+    sentiment_table.insert(sentiment)
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 384, in insert
+    return self._post(
+           ^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 194, in _post
+    return self._request("post", url, json_data=json_data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 187, in _request
+    return self._process_response(response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 175, in _process_response
+    raise exc
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 162, in _process_response
+    response.raise_for_status()
+  File "C:\Python312\Lib\site-packages\requests\models.py", line 1024, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: ('422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT', '422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT [Error: {\'type\': \'UNKNOWN_FIELD_NAME\', \'message\': \'Unknown field name: "positionSignalsBuyPercentage"\'}]')
+2025-02-23 22:45:35 - INFO - Starting market sentiment analysis...
+2025-02-23 22:45:36 - INFO - Analyzing price action...
+2025-02-23 22:45:57 - INFO - 
+Position Signals Analysis:
+2025-02-23 22:45:57 - INFO - Total signals (3d): 61
+2025-02-23 22:45:57 - INFO - BUY signals: 10
+2025-02-23 22:45:57 - INFO - BUY percentage: 16.4%
+2025-02-23 22:45:57 - INFO - Sentiment: BEARISH
+2025-02-23 22:46:04 - INFO - 
+Market Sentiment Analysis:
+2025-02-23 22:46:04 - INFO - Classification: NEUTRAL
+2025-02-23 22:46:04 - INFO - Confidence: 40.0%
+2025-02-23 22:46:04 - INFO - Bullish Indicators: 2/5
+2025-02-23 22:46:04 - INFO - 
+Indicator Details:
+2025-02-23 22:46:04 - INFO - price_action: BULLISH
+2025-02-23 22:46:04 - INFO - • 61.1% of tokens above 7d average
+2025-02-23 22:46:04 - INFO - volume: BEARISH
+2025-02-23 22:46:04 - INFO - • Volume growth: -7.3%
+2025-02-23 22:46:04 - INFO - distribution: BEARISH
+2025-02-23 22:46:04 - INFO - • 46.2% of volume on up days
+2025-02-23 22:46:04 - INFO - position_signals: BEARISH
+2025-02-23 22:46:04 - INFO - • 16.4% of POSITION signals are BUY (10/61 signals in last 3 days)
+2025-02-23 22:46:04 - INFO - relative_strength: BULLISH
+2025-02-23 22:46:04 - INFO - • AI tokens vs SOL: +1.9%
+2025-02-23 22:46:04 - INFO - Saving sentiment analysis to Airtable...
+2025-02-23 22:46:04 - ERROR - Script failed: ('422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT', '422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT [Error: {\'type\': \'INVALID_VALUE_FOR_COLUMN\', \'message\': \'Cannot parse value "{"price_action":{"is_bullish":true,"details":"61.1% of tokens above 7d average","tokens_above_avg":11,"total_tokens":18,"percentage":61.111111111111114},"volume":{"is_bullish":false,"details":"Volume growth: -7.3%","current":1038561961.0699999,"previous":1120031003.42,"growth":-7.273820287227362},"distribution":{"is_bullish":false,"details":"46.2% of volume on up days","up_day_volume":899320647.0900003},"position_signals":{"is_bullish":false,"details":"16.4% of POSITION signals are BUY (10/61 signals in last 3 days)","total_signals":61,"buy_signals":10,"buy_percentage":16.39344262295082},"relative_strength":{"is_bullish":true,"details":"AI tokens vs SOL: +1.9%","sol_performance":-2.1190657378680586,"ai_tokens_performance":-0.18904940880419158}}" for field indicators\'}]')
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\engine\market_sentiment.py", line 369, in main
+    sentiment_table.insert(sentiment)
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 384, in insert
+    return self._post(
+           ^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 194, in _post
+    return self._request("post", url, json_data=json_data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 187, in _request
+    return self._process_response(response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 175, in _process_response
+    raise exc
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 162, in _process_response
+    response.raise_for_status()
+  File "C:\Python312\Lib\site-packages\requests\models.py", line 1024, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: ('422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT', '422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT [Error: {\'type\': \'INVALID_VALUE_FOR_COLUMN\', \'message\': \'Cannot parse value "{"price_action":{"is_bullish":true,"details":"61.1% of tokens above 7d average","tokens_above_avg":11,"total_tokens":18,"percentage":61.111111111111114},"volume":{"is_bullish":false,"details":"Volume growth: -7.3%","current":1038561961.0699999,"previous":1120031003.42,"growth":-7.273820287227362},"distribution":{"is_bullish":false,"details":"46.2% of volume on up days","up_day_volume":899320647.0900003},"position_signals":{"is_bullish":false,"details":"16.4% of POSITION signals are BUY (10/61 signals in last 3 days)","total_signals":61,"buy_signals":10,"buy_percentage":16.39344262295082},"relative_strength":{"is_bullish":true,"details":"AI tokens vs SOL: +1.9%","sol_performance":-2.1190657378680586,"ai_tokens_performance":-0.18904940880419158}}" for field indicators\'}]')
+2025-02-23 22:47:32 - INFO - Starting market sentiment analysis...
+2025-02-23 22:47:33 - INFO - Analyzing price action...
+2025-02-23 22:47:54 - INFO - 
+Position Signals Analysis:
+2025-02-23 22:47:54 - INFO - Total signals (3d): 57
+2025-02-23 22:47:54 - INFO - BUY signals: 10
+2025-02-23 22:47:54 - INFO - BUY percentage: 17.5%
+2025-02-23 22:47:54 - INFO - Sentiment: BEARISH
+2025-02-23 22:48:01 - INFO - 
+Market Sentiment Analysis:
+2025-02-23 22:48:01 - INFO - Classification: NEUTRAL
+2025-02-23 22:48:01 - INFO - Confidence: 40.0%
+2025-02-23 22:48:01 - INFO - Bullish Indicators: 2/5
+2025-02-23 22:48:01 - INFO - 
+Indicator Details:
+2025-02-23 22:48:01 - ERROR - Error calculating market sentiment: 'str' object has no attribute 'items'
+2025-02-23 22:48:01 - ERROR - Script failed: 'str' object has no attribute 'items'
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\engine\market_sentiment.py", line 358, in main
+    sentiment = await analyzer.calculate_sentiment()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\kinkong\engine\market_sentiment.py", line 342, in calculate_sentiment
+    for indicator, data in result["indicators"].items():
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'str' object has no attribute 'items'
+2025-02-23 22:49:20 - INFO - Starting market sentiment analysis...
+2025-02-23 22:49:21 - INFO - Analyzing price action...
+2025-02-23 22:49:42 - INFO - 
+Position Signals Analysis:
+2025-02-23 22:49:42 - INFO - Total signals (3d): 52
+2025-02-23 22:49:42 - INFO - BUY signals: 10
+2025-02-23 22:49:42 - INFO - BUY percentage: 19.2%
+2025-02-23 22:49:42 - INFO - Sentiment: BEARISH
+2025-02-23 22:49:49 - INFO - 
+Market Sentiment Analysis:
+2025-02-23 22:49:49 - INFO - Classification: NEUTRAL
+2025-02-23 22:49:49 - INFO - Confidence: 40.0%
+2025-02-23 22:49:49 - INFO - Bullish Indicators: 2/5
+2025-02-23 22:49:49 - INFO - 
+Indicator Details:
+2025-02-23 22:49:49 - INFO - price_action: BULLISH
+2025-02-23 22:49:49 - INFO - • 61.1% of tokens above 7d average
+2025-02-23 22:49:49 - INFO - volume: BEARISH
+2025-02-23 22:49:49 - INFO - • Volume growth: -7.3%
+2025-02-23 22:49:49 - INFO - distribution: BEARISH
+2025-02-23 22:49:49 - INFO - • 46.2% of volume on up days
+2025-02-23 22:49:49 - INFO - position_signals: BEARISH
+2025-02-23 22:49:49 - INFO - • 19.2% of POSITION signals are BUY (10/52 signals in last 3 days)
+2025-02-23 22:49:49 - INFO - relative_strength: BULLISH
+2025-02-23 22:49:49 - INFO - • AI tokens vs SOL: +1.9%
+2025-02-23 22:49:49 - INFO - Saving sentiment analysis to Airtable...
+2025-02-23 22:49:49 - ERROR - Script failed: ('422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT', '422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT [Error: {\'type\': \'UNKNOWN_FIELD_NAME\', \'message\': \'Unknown field name: "portfolio_allocation"\'}]')
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\engine\market_sentiment.py", line 373, in main
+    sentiment_table.insert(sentiment)
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 384, in insert
+    return self._post(
+           ^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 194, in _post
+    return self._request("post", url, json_data=json_data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 187, in _request
+    return self._process_response(response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 175, in _process_response
+    raise exc
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 162, in _process_response
+    response.raise_for_status()
+  File "C:\Python312\Lib\site-packages\requests\models.py", line 1024, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: ('422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT', '422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT [Error: {\'type\': \'UNKNOWN_FIELD_NAME\', \'message\': \'Unknown field name: "portfolio_allocation"\'}]')
+2025-02-23 22:51:27 - INFO - Starting market sentiment analysis...
+2025-02-23 22:51:28 - INFO - Analyzing price action...
+2025-02-23 22:51:48 - INFO - 
+Position Signals Analysis:
+2025-02-23 22:51:48 - INFO - Total signals (3d): 52
+2025-02-23 22:51:48 - INFO - BUY signals: 10
+2025-02-23 22:51:48 - INFO - BUY percentage: 19.2%
+2025-02-23 22:51:48 - INFO - Sentiment: BEARISH
+2025-02-23 22:51:55 - INFO - 
+Market Sentiment Analysis:
+2025-02-23 22:51:55 - INFO - Classification: NEUTRAL
+2025-02-23 22:51:55 - INFO - Confidence: 40.0%
+2025-02-23 22:51:55 - INFO - Bullish Indicators: 2/5
+2025-02-23 22:51:55 - INFO - 
+Indicator Details:
+2025-02-23 22:51:55 - INFO - price_action: BULLISH
+2025-02-23 22:51:55 - INFO - • 61.1% of tokens above 7d average
+2025-02-23 22:51:55 - INFO - volume: BEARISH
+2025-02-23 22:51:55 - INFO - • Volume growth: -7.3%
+2025-02-23 22:51:55 - INFO - distribution: BEARISH
+2025-02-23 22:51:55 - INFO - • 46.2% of volume on up days
+2025-02-23 22:51:55 - INFO - position_signals: BEARISH
+2025-02-23 22:51:55 - INFO - • 19.2% of POSITION signals are BUY (10/52 signals in last 3 days)
+2025-02-23 22:51:55 - INFO - relative_strength: BULLISH
+2025-02-23 22:51:55 - INFO - • AI tokens vs SOL: +1.9%
+2025-02-23 22:51:55 - INFO - Saving sentiment analysis to Airtable...
+2025-02-23 22:51:56 - ERROR - Script failed: ('422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT', '422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT [Error: {\'type\': \'UNKNOWN_FIELD_NAME\', \'message\': \'Unknown field name: "bullish_indicators"\'}]')
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\engine\market_sentiment.py", line 368, in main
+    sentiment_table.insert(sentiment)
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 384, in insert
+    return self._post(
+           ^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 194, in _post
+    return self._request("post", url, json_data=json_data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 187, in _request
+    return self._process_response(response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 175, in _process_response
+    raise exc
+  File "C:\Python312\Lib\site-packages\airtable\airtable.py", line 162, in _process_response
+    response.raise_for_status()
+  File "C:\Python312\Lib\site-packages\requests\models.py", line 1024, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: ('422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT', '422 Client Error: Unprocessable Entity for url: https://api.airtable.com/v0/apprIPsnFk2qFS5ie/MARKET_SENTIMENT [Error: {\'type\': \'UNKNOWN_FIELD_NAME\', \'message\': \'Unknown field name: "bullish_indicators"\'}]')
+2025-02-23 22:53:13 - INFO - Starting market sentiment analysis...
+2025-02-23 22:53:14 - INFO - Analyzing price action...
+2025-02-23 22:53:38 - INFO - 
+Position Signals Analysis:
+2025-02-23 22:53:38 - INFO - Total signals (3d): 52
+2025-02-23 22:53:38 - INFO - BUY signals: 10
+2025-02-23 22:53:38 - INFO - BUY percentage: 19.2%
+2025-02-23 22:53:38 - INFO - Sentiment: BEARISH
+2025-02-23 22:53:48 - INFO - 
+Market Sentiment Analysis:
+2025-02-23 22:53:48 - INFO - Classification: NEUTRAL
+2025-02-23 22:53:48 - INFO - Confidence: 40.0%
+2025-02-23 22:53:48 - INFO - Bullish Indicators: 2/5
+2025-02-23 22:53:48 - INFO - 
+Indicator Details:
+2025-02-23 22:53:48 - INFO - price_action: BULLISH
+2025-02-23 22:53:48 - INFO - • 61.1% of tokens above 7d average
+2025-02-23 22:53:48 - INFO - volume: BEARISH
+2025-02-23 22:53:48 - INFO - • Volume growth: -7.3%
+2025-02-23 22:53:48 - INFO - distribution: BEARISH
+2025-02-23 22:53:48 - INFO - • 46.2% of volume on up days
+2025-02-23 22:53:48 - INFO - position_signals: BEARISH
+2025-02-23 22:53:48 - INFO - • 19.2% of POSITION signals are BUY (10/52 signals in last 3 days)
+2025-02-23 22:53:48 - INFO - relative_strength: BULLISH
+2025-02-23 22:53:48 - INFO - • AI tokens vs SOL: +1.9%
+2025-02-23 22:53:48 - INFO - Saving sentiment analysis to Airtable...
+2025-02-23 22:53:48 - INFO - [SUCCESS] Market sentiment recorded successfully
+2025-02-23 23:35:45 - INFO - Starting market sentiment analysis...
+2025-02-23 23:35:46 - INFO - Analyzing price action...
+2025-02-23 23:36:08 - INFO - 
+Position Signals Analysis:
+2025-02-23 23:36:08 - INFO - Total signals (3d): 52
+2025-02-23 23:36:08 - INFO - BUY signals: 10
+2025-02-23 23:36:08 - INFO - BUY percentage: 19.2%
+2025-02-23 23:36:08 - INFO - Sentiment: BEARISH
+2025-02-23 23:36:15 - INFO - 
+Market Sentiment Analysis:
+2025-02-23 23:36:15 - INFO - Classification: NEUTRAL
+2025-02-23 23:36:15 - INFO - Confidence: 40.0%
+2025-02-23 23:36:15 - INFO - Bullish Indicators: 2/5
+2025-02-23 23:36:15 - INFO - 
+Indicator Details:
+2025-02-23 23:36:15 - INFO - price_action: BULLISH
+2025-02-23 23:36:15 - INFO - • 61.1% of tokens above 7d average
+2025-02-23 23:36:15 - INFO - volume: BEARISH
+2025-02-23 23:36:15 - INFO - • Volume growth: -7.3%
+2025-02-23 23:36:15 - INFO - distribution: BEARISH
+2025-02-23 23:36:15 - INFO - • 46.2% of volume on up days
+2025-02-23 23:36:15 - INFO - position_signals: BEARISH
+2025-02-23 23:36:15 - INFO - • 19.2% of POSITION signals are BUY (10/52 signals in last 3 days)
+2025-02-23 23:36:15 - INFO - relative_strength: BULLISH
+2025-02-23 23:36:15 - INFO - • AI tokens vs SOL: +1.9%
+2025-02-23 23:36:15 - INFO - Saving sentiment analysis to Airtable...
+2025-02-23 23:36:15 - INFO - [SUCCESS] Market sentiment recorded successfully
