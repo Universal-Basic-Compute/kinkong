@@ -151,8 +151,18 @@ class TokenSearcher:
                         print("\n🔄 Extracted pair info:")
                         print(json.dumps(pair_info, indent=2))
             else:
-                print(f"❌ DexScreener API error: {response.status_code}")
-                print(f"Response text: {response.text}")
+                self.logger.error(f"\n❌ DexScreener API error:")
+                self.logger.error(f"Status code: {response.status_code}")
+                self.logger.error(f"Response time: {request_time:.2f}s")
+                self.logger.error(f"Response headers: {dict(response.headers)}")
+                self.logger.error(f"Response text: {response.text}")
+                    
+                # Try to parse error response
+                try:
+                    error_data = response.json()
+                    self.logger.error(f"Error details: {json.dumps(error_data, indent=2)}")
+                except:
+                    self.logger.error("Could not parse error response as JSON")
             
             # Format data for Airtable
             airtable_record = {
