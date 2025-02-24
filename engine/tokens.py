@@ -1,11 +1,20 @@
 import os
+import sys
 import json
 import requests
 from datetime import datetime, timezone
+from pathlib import Path
 from airtable import Airtable
 from dotenv import load_dotenv
 from typing import Optional, Dict, Any
 import logging
+
+# Add project root to Python path
+project_root = Path(__file__).parent.parent.absolute()
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
+from socials.monitor_posts import monitor_token
 
 def setup_logging():
     """Configure logging"""
@@ -232,6 +241,7 @@ class TokenSearcher:
             existing_records = self.airtable.get_all(
                 formula=f"{{mint}} = '{token_data.get('address')}'")
             
+            # Create/update token record first
             if existing_records:
                 print(f"\n🔄 Updating existing token record for {token_data.get('symbol')}")
                 record_id = existing_records[0]['id']
@@ -241,9 +251,26 @@ class TokenSearcher:
                 print("✅ Token record updated successfully")
             else:
                 print(f"\n➕ Creating new token record for {token_data.get('symbol')}")
-                self.airtable.insert(airtable_record)
+                record = self.airtable.insert(airtable_record)
+                record_id = record['id']
                 print("✅ Token record created successfully")
-            
+
+            # Now check for bullish signals
+            print(f"\n🔍 Checking social signals for {token_data.get('symbol')}...")
+            bullish, analysis = monitor_token(token_data.get('symbol'))
+
+            # Update token record with results
+            update_data = {
+                'isActive': bullish,  # Set active based on bullish signals
+                'explanation': analysis if analysis else "No significant bullish signals found"
+            }
+
+            self.airtable.update(record_id, update_data)
+            print(f"✅ Token record updated with signal analysis")
+            print(f"Active: {'✅' if bullish else '❌'}")
+            if analysis:
+                print(f"Analysis: {analysis}")
+
             return True
             
         except Exception as e:
