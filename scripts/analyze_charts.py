@@ -385,13 +385,11 @@ def analyze_charts_with_claude(chart_paths, token_info=None):
         # Format system prompt with token metrics
         formatted_system_prompt = SYSTEM_PROMPT.format(token_metrics=token_metrics)
         
-        # Debug print to verify the key
-        print(f"API Key from .env: {api_key[:8]}...{api_key[-4:]}")
-        
         # Create client with explicit API key
-        client = anthropic.Client(
-            api_key=api_key,
-        )
+        client = anthropic.Client(api_key=api_key)
+        
+        # Add debug logging for client creation
+        print("\nCreated Claude client with API key:", api_key[:8] + "..." + api_key[-4:])
         
         # Get market data and context
         market_data = get_dexscreener_data(token_info['mint'] if token_info else None)
