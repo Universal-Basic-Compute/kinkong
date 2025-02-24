@@ -226,39 +226,43 @@ class MarketOverviewGenerator:
                 logger.error("Failed to send Telegram message") 
                 return False
             
-            # Split into thread for Twitter
-            from socials.post_signal import post_to_x
-            
-            # Split analysis into ~280 char chunks for threading
-            chunks = []
-            current_chunk = ""
-            for line in analysis.split('\n'):
-                if len(current_chunk) + len(line) + 1 <= 280:
-                    current_chunk += line + '\n'
-                else:
+            # Post to X as thread
+            try:
+                # Import post_to_x using absolute path
+                import sys
+                from pathlib import Path
+                project_root = Path(__file__).parent.parent.absolute()
+                if str(project_root) not in sys.path:
+                    sys.path.insert(0, str(project_root))
+                
+                from socials.post_signal import post_to_x
+                
+                chunks = []
+                current_chunk = ""
+                for line in analysis.split('\n'):
+                    if len(current_chunk) + len(line) + 1 <= 280:
+                        current_chunk += line + '\n'
+                    else:
+                        chunks.append(current_chunk.strip())
+                        current_chunk = line + '\n'
+                if current_chunk:
                     chunks.append(current_chunk.strip())
-                    current_chunk = line + '\n'
-            if current_chunk:
-                chunks.append(current_chunk.strip())
-            
-            # Post thread
-            previous_tweet_id = None
-            for i, chunk in enumerate(chunks):
-                # Add thread numbering
-                numbered_chunk = f"({i+1}/{len(chunks)}) {chunk}"
                 
-                # Post as reply to previous tweet
-                success = post_to_x(
-                    numbered_chunk, 
-                    {'type': 'MARKET_UPDATE', 'reply_to': previous_tweet_id}
-                )
-                
-                if not success:
-                    logger.error(f"Failed to post thread part {i+1}")
-                    return False
+                previous_tweet_id = None
+                for i, chunk in enumerate(chunks):
+                    numbered_chunk = f"({i+1}/{len(chunks)}) {chunk}"
+                    success = post_to_x(
+                        numbered_chunk, 
+                        {'type': 'MARKET_UPDATE', 'reply_to': previous_tweet_id}
+                    )
+                    if not success:
+                        logger.error(f"Failed to post thread part {i+1}")
+                        return False
+                    previous_tweet_id = success
                     
-                # Get tweet ID for next reply
-                previous_tweet_id = success
+            except Exception as e:
+                logger.error(f"Failed to post to X: {e}")
+                return False
             
             logger.info("Successfully sent market overview")
             return True
