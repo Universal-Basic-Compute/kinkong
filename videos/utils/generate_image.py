@@ -31,6 +31,9 @@ class ImageGenerator:
     def generate_and_save_image(self, prompt: str, image_number: int, output_dir: Path) -> Optional[str]:
         """Generate image from prompt and save it"""
         try:
+            # Log the modified prompt
+            logger.info(f"Generating image with prompt: {prompt}")
+
             # Prepare request payload
             payload = {
                 "image_request": {
@@ -97,8 +100,11 @@ def generate_image(prompt: str, image_number: int, base_dir: Optional[Path] = No
                 
             base_dir = videos_dir / f'video{video_num}/images'
             base_dir.mkdir(parents=True, exist_ok=True)
+
+        # Modify the prompt to include text overlay instructions
+        modified_prompt = f'"{prompt}" in BIG bold BebasNeue letters, {prompt}'
             
-        return generator.generate_and_save_image(prompt, image_number, base_dir)
+        return generator.generate_and_save_image(modified_prompt, image_number, base_dir)
     except Exception as e:
         logger.error(f"Error in generate_image: {e}")
         return None
