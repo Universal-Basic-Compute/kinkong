@@ -125,48 +125,48 @@ class VideoGenerator:
             
             logger.info(f"✅ Image uploaded: {image_url}")
             
-            # Generate video using HTTPS URL
-            try:
-                response = self.client.image_to_video.create(
-                    model=model,
-                    prompt_image=image_url,  # Use HTTPS URL instead of local path
-                    prompt_text=prompt
-                )
+            # Start video generation
+            response = self.client.image_to_video.create(
+                model=model,
+                prompt_image=image_url,
+                prompt_text=prompt
+            )
+            
+            # Get the job ID
+            job_id = response.id
+            logger.info(f"🎬 Video generation started. Job ID: {job_id}")
+            
+            # Poll for completion
+            import time
+            max_attempts = 30  # 5 minutes total
+            for attempt in range(max_attempts):
+                status = self.client.image_to_video.get(job_id)
+                logger.info(f"Status check {attempt + 1}: {status.status}")
                 
-                # Log full response for debugging
-                logger.debug(f"RunwayML API Response: {response}")
-                
-                # Check if response has video data
-                if not hasattr(response, 'video_data'):
-                    # Try to get video URL from response
-                    if hasattr(response, 'output') and hasattr(response.output, 'url'):
-                        # Download video from URL
-                        video_response = requests.get(response.output.url)
-                        if video_response.status_code == 200:
-                            # Save the video
-                            with open(output_path, 'wb') as f:
-                                f.write(video_response.content)
-                            logger.info(f"✅ Video saved to: {output_path}")
-                            return str(output_path)
-                        else:
-                            raise ValueError(f"Failed to download video: {video_response.status_code}")
-                    else:
-                        # Log the actual response structure for debugging
-                        logger.error(f"Unexpected response structure: {response}")
-                        raise ValueError("No video data or URL in response")
-                else:
-                    # Original handling for video_data
-                    with open(output_path, 'wb') as f:
-                        f.write(response.video_data)
-                    logger.info(f"✅ Video saved to: {output_path}")
-                    return str(output_path)
+                if status.status == "completed":
+                    # Download the video
+                    video_url = status.output.url
+                    logger.info(f"✅ Downloading video from: {video_url}")
                     
-            except Exception as e:
-                logger.error(f"❌ Error during video generation: {e}")
-                # Log the full response for debugging
-                if 'response' in locals():
-                    logger.debug(f"Full response: {response}")
-                return None
+                    video_response = requests.get(video_url)
+                    if video_response.status_code == 200:
+                        with open(output_path, 'wb') as f:
+                            f.write(video_response.content)
+                        logger.info(f"✅ Video saved to: {output_path}")
+                        return str(output_path)
+                        
+                elif status.status == "failed":
+                    logger.error(f"❌ Video generation failed: {status.error}")
+                    return None
+                    
+                time.sleep(10)  # Wait 10 seconds between checks
+                
+            logger.error("❌ Video generation timed out")
+            return None
+            
+        except Exception as e:
+            logger.error(f"❌ Error during video generation: {e}")
+            return None
                 
         except Exception as e:
             logger.error(f"❌ Fatal error: {e}")
