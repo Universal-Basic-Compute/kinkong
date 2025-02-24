@@ -391,7 +391,6 @@ Volume Metrics:
 Market Metrics:
 • Liquidity: ${latest_snapshot.get('liquidity', 0):,.2f}
 • Market Cap: ${latest_snapshot.get('marketCap', 0):,.2f}
-• Holder Count: {latest_snapshot.get('holderCount', 0)}
 • vs SOL Performance: {latest_snapshot.get('vsSolPerformance', 0):.2f}%"""
 
         formatted_system_prompt = SYSTEM_PROMPT.format(token_metrics=snapshot_text)
