@@ -118,7 +118,7 @@ export async function GET() {
     console.log(`Found ${tokenAccounts.value.length} token accounts`);
 
     // Format balances
-    const balances: TokenBalance[] = tokenAccounts.value.map(account => {
+    const balances: TokenBalance[] = tokenAccounts.value.map((account: any) => {
       const parsedInfo = account.account.data.parsed.info;
       return {
         mint: parsedInfo.mint,
@@ -165,7 +165,7 @@ export async function GET() {
     console.log('Tokens metadata loaded:', Object.keys(tokensMetadata).length, 'tokens');
 
     // Add USD values and metadata
-    const balancesWithUSD = await Promise.all(nonZeroBalances.map(async balance => {
+    const balancesWithUSD = await Promise.all(nonZeroBalances.map(async (balance: TokenBalance) => {
       let price = 0;
       
       // Check if it's a known stablecoin first
