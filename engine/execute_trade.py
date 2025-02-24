@@ -360,19 +360,30 @@ class JupiterTradeExecutor:
                     for confirm_attempt in range(3):
                         try:
                             signature = Signature.from_string(signature_str)
+                            # Simple confirmation without version parameters
                             confirmation = await client.confirm_transaction(
                                 signature,
                                 commitment="finalized"
                             )
-                        
-                            if hasattr(confirmation.value, 'err') and confirmation.value.err:
-                                self.logger.error(f"Transaction failed: {confirmation.value.err}")
+                            
+                            # Verify confirmation with get_transaction
+                            tx_response = await client.get_transaction(
+                                signature,
+                                max_supported_transaction_version=0  # Add version support here
+                            )
+                            
+                            if not tx_response.value:
+                                self.logger.error("Could not verify transaction")
+                                continue
+                                
+                            if tx_response.value.meta and tx_response.value.meta.err:
+                                self.logger.error(f"Transaction failed: {tx_response.value.meta.err}")
                                 self.logger.error(f"View transaction: https://solscan.io/tx/{signature_str}")
-                                break
-                            else:
-                                self.logger.info(f"✅ Transaction confirmed!")
-                                self.logger.info(f"View transaction: https://solscan.io/tx/{signature_str}")
-                                return signature_str
+                                continue
+                            
+                            self.logger.info(f"✅ Transaction confirmed!")
+                            self.logger.info(f"View transaction: https://solscan.io/tx/{signature_str}")
+                            return signature_str
                                 
                         except Exception as confirm_error:
                             if "429" in str(confirm_error):
