@@ -74,17 +74,31 @@ class PromptGenerator:
             message = client.messages.create(
                 model="claude-3-5-sonnet-20241022",
                 max_tokens=4096,
-                system="""You are a crypto trading expert creating engaging TikTok scripts. Your scripts should be punchy, direct and split into two parts:
-                1. A catchy hook/intro
-                2. Key analysis points
-                
+                system="""You are a crypto trading expert creating engaging TikTok scripts. Break down the content into individual screens of 1-10 words each.
+
                 Return your response as JSON with this structure:
                 {
-                    "intro": "Hey traders! 👋\nBig move incoming on $SOL",
-                    "analysis": "Technical analysis shows strong support\nVolume is picking up 📈\nTime to watch this closely!"
+                    "screens": [
+                        {
+                            "text": "Hey crypto fam! 👋",
+                            "background": "Futuristic trading room, holographic screens, dark ambient lighting, crypto symbols floating --ar 9:16"
+                        },
+                        {
+                            "text": "$SOL is about to EXPLODE 🚀",
+                            "background": "Dramatic upward chart pattern, solana logo glowing, cosmic background --ar 9:16"
+                        },
+                        {
+                            "text": "Technical analysis shows strong support",
+                            "background": "Clean minimalist chart with support lines highlighted in neon, dark theme --ar 9:16"
+                        }
+                    ]
                 }
-                
-                Keep each part short and impactful. Use emojis strategically but don't overdo it.""",
+
+                Each background prompt should:
+                1. Be detailed and specific
+                2. Include --ar 9:16 for TikTok aspect ratio
+                3. Match the mood and content of the text
+                4. Create visual continuity between screens""",
                 messages=[
                     {
                         "role": "user",
@@ -102,12 +116,12 @@ class PromptGenerator:
                                 Analysis: {signal.get('analysis', 'N/A')}
 
                                 Requirements:
-                                1. Write a catchy intro (2-3 lines)
-                                2. Follow with key analysis points (2-3 lines)
-                                3. Keep it simple and direct
-                                4. Use emojis sparingly but effectively
-                                5. Total length should be 4-6 lines
-                                6. Return response as JSON with 'intro' and 'analysis' fields
+                                1. Break the script into 4-6 screens
+                                2. Each screen should have 1-10 words
+                                3. Include relevant emojis
+                                4. Create matching Midjourney prompts for backgrounds
+                                5. Keep the energy high and engaging
+                                6. Return as JSON with screens array
 
                                 Format the response as JSON only, no additional text."""
                             }
