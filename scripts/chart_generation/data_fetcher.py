@@ -16,18 +16,8 @@ def fetch_ubc_sol_data(timeframe='1H', hours=24, candles_target=60):
     
     now = int(datetime.now().timestamp())
     
-    # Calculate required time range based on timeframe
-    # Multiply the duration by a factor to get more candles
-    timeframe_multipliers = {
-        '15m': 3,    # Get 3x more 15m candles (72 candles for 6h)
-        '1H': 2,     # Get 2x more 1h candles (48 candles for 24h)
-        '4H': 1.5,   # Get 1.5x more 4h candles (63 candles for 7d)
-        '1D': 1.2    # Get 1.2x more daily candles (36 candles for 30d)
-    }
-    
-    # Calculate start time with multiplier
-    multiplier = timeframe_multipliers.get(timeframe, 1)
-    start_time = now - (int(hours * 3600 * multiplier))
+    # Double the time range to ensure we get enough candles
+    start_time = now - (hours * 3600 * 2)  # Multiply by 2 to get more candles
     
     params = {
         "address": "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump",
@@ -78,18 +68,12 @@ def fetch_ubc_sol_data(timeframe='1H', hours=24, candles_target=60):
         df = df.sort_index()
         df = df[~df.index.duplicated(keep='first')]
         
-        # Trim excess candles if we got too many
-        target_counts = {
-            '15m': 72,  # 6h = 24 candles * 3
-            '1H': 48,   # 24h = 24 candles * 2
-            '4H': 63,   # 7d = 42 candles * 1.5
-            '1D': 36    # 30d = 30 candles * 1.2
-        }
-        
-        target = target_counts.get(timeframe, candles_target)
-        if len(df) > target:
-            print(f"Trimming excess candles ({len(df)} -> {target})")
-            df = df.iloc[-target:]
+        # Always trim to target number of candles
+        if len(df) > candles_target:
+            print(f"Trimming excess candles ({len(df)} -> {candles_target})")
+            df = df.iloc[-candles_target:]
+        else:
+            print(f"Warning: Got fewer candles than target ({len(df)} < {candles_target})")
         
         print(f"Final candle count: {len(df)}")
         print(f"\nFetched {len(df)} candles for UBC/SOL")
