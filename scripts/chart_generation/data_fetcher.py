@@ -16,86 +16,78 @@ def fetch_ubc_sol_data(timeframe='1H', hours=24, candles_target=60):
     
     now = int(datetime.now().timestamp())
     
-    # Configure timeframes with specific multipliers and limits
-    timeframe_config = {
-        '15m': {'minutes': 15, 'target': 96, 'multiplier': 2.0},    # Try to get 96 15m candles
-        '1H': {'minutes': 60, 'target': 96, 'multiplier': 2.0},     # Try to get 96 1h candles
-        '4H': {'minutes': 240, 'target': 84, 'multiplier': 1.0},    # Try to get 84 4h candles
-        '1D': {'minutes': 1440, 'target': 60, 'multiplier': 1.6}    # Try to get 60 daily candles
-    }
+    # Calculate interval in seconds based on timeframe
+    interval_seconds = {
+        '15m': 15 * 60,
+        '1H': 60 * 60,
+        '4H': 4 * 60 * 60,
+        '1D': 24 * 60 * 60
+    }.get(timeframe, 60 * 60)
     
-    config = timeframe_config.get(timeframe, {'minutes': 60, 'target': 48, 'multiplier': 1.0})
-    minutes_per_candle = config['minutes']
-    target_candles = config['target']
-    multiplier = config['multiplier']
-    
-    # Calculate time range needed with specific multiplier
-    total_minutes_needed = minutes_per_candle * target_candles * multiplier
-    start_time = now - int(total_minutes_needed * 60)
-    
-    params = {
+    # Fetch data in two parts
+    # Part 1: Most recent 24 candles
+    params_recent = {
         "address": "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump",
         "type": timeframe,
         "currency": "usd",
-        "time_from": start_time,
-        "time_to": now,
-        "limit": target_candles  # Add explicit limit parameter
+        "time_from": now - (24 * interval_seconds),
+        "time_to": now
+    }
+    
+    # Part 2: Previous 24 candles
+    params_previous = {
+        "address": "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump",
+        "type": timeframe,
+        "currency": "usd",
+        "time_from": now - (48 * interval_seconds),
+        "time_to": now - (24 * interval_seconds)
     }
     
     try:
-        print(f"\nFetching {timeframe} candles...")
-        print(f"Target candles: {target_candles}")
-        print(f"Minutes per candle: {minutes_per_candle}")
-        print(f"Multiplier: {multiplier}")
-        print(f"Total minutes needed: {total_minutes_needed}")
-        print(f"Time range: {(total_minutes_needed/60/24):.1f} days")
-        print("From:", datetime.fromtimestamp(start_time).strftime('%Y-%m-%d %H:%M'))
-        print("To:", datetime.fromtimestamp(now).strftime('%Y-%m-%d %H:%M'))
-        print("Params:", params)
+        print(f"\nFetching recent {timeframe} candles...")
+        response_recent = requests.get(url, headers=headers, params=params_recent)
+        print("Recent response status:", response_recent.status_code)
         
-        response = requests.get(url, headers=headers, params=params)
-        print("Response status:", response.status_code)
+        print(f"\nFetching previous {timeframe} candles...")
+        response_previous = requests.get(url, headers=headers, params=params_previous)
+        print("Previous response status:", response_previous.status_code)
         
-        response.raise_for_status()
-        data = response.json()
-        
-        if not data.get('success'):
-            raise ValueError(f"API request failed: {data.get('message')}")
-
-        items = data.get('data', {}).get('items', [])
-        if not items:
-            raise ValueError("No data items returned from Birdeye API")
-
+        # Process both responses
         df_data = []
-        for item in items:
-            date = pd.to_datetime(item['unixTime'], unit='s')
-            df_data.append({
-                'Date': date,
-                'Open': float(item['o']),
-                'High': float(item['h']),
-                'Low': float(item['l']),
-                'Close': float(item['c']),
-                'Volume': float(item['v'])
-            })
         
+        for response in [response_previous, response_recent]:
+            data = response.json()
+            if not data.get('success'):
+                print(f"API request failed: {data.get('message')}")
+                continue
+
+            items = data.get('data', {}).get('items', [])
+            for item in items:
+                date = pd.to_datetime(item['unixTime'], unit='s')
+                df_data.append({
+                    'Date': date,
+                    'Open': float(item['o']),
+                    'High': float(item['h']),
+                    'Low': float(item['l']),
+                    'Close': float(item['c']),
+                    'Volume': float(item['v'])
+                })
+        
+        if not df_data:
+            print("No data received from API")
+            return None
+            
+        # Create DataFrame and sort by date
         df = pd.DataFrame(df_data)
         df.set_index('Date', inplace=True)
-        
-        for col in ['Open', 'High', 'Low', 'Close', 'Volume']:
-            df[col] = df[col].astype(float)
-        
         df = df.sort_index()
+        
+        # Remove duplicates
         df = df[~df.index.duplicated(keep='first')]
         
-        # Always trim to target number of candles
-        if len(df) > candles_target:
-            print(f"Trimming excess candles ({len(df)} -> {candles_target})")
-            df = df.iloc[-candles_target:]
-        else:
-            print(f"Warning: Got fewer candles than target ({len(df)} < {candles_target})")
+        print(f"\nTotal candles after merge: {len(df)}")
+        print("Date range:", df.index[0], "to", df.index[-1])
         
-        print(f"Final candle count: {len(df)}")
-        print(f"\nFetched {len(df)} candles for UBC/SOL")
         return df
         
     except Exception as e:
