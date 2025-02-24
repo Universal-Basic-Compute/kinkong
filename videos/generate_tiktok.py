@@ -203,7 +203,7 @@ async def create_tiktok_video():
                     # Resize maintaining aspect ratio
                     aspect_ratio = video_clip.size[0] / video_clip.size[1]
                     new_width = int(height * aspect_ratio)
-                    video_clip = video_clip.resize(height=height)
+                    video_clip = video_clip.resized(height=height)
                     
                     # Center crop if needed
                     if new_width > width:
