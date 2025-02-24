@@ -446,11 +446,12 @@ class TradeExecutor:
                 return False
 
             # Execute transaction
-            signature = await self.jupiter.execute_trade_with_retries(
+            # Execute transaction
+            trade_result = await self.jupiter.execute_trade_with_retries(
                 transaction,
                 token_mint  # Use mint address from TOKENS table
             )
-            if not signature:
+            if not trade_result:
                 await self.handle_failed_trade(trade['id'], "Transaction failed")
                 return False
 
@@ -458,22 +459,22 @@ class TradeExecutor:
             client = AsyncClient("https://api.mainnet-beta.solana.com")
             try:
                 # Convert string signature to Signature object
-                sig_obj = Signature.from_string(signature)
-                
+                sig_obj = Signature.from_string(trade_result['signature'])
+                    
                 # Wait for confirmation and get transaction status
                 confirmation = await client.confirm_transaction(sig_obj)
-                
+                    
                 # Check transaction status
                 if not confirmation.value:
                     await self.handle_failed_trade(trade['id'], "Transaction not confirmed")
                     return False
-                
+                    
                 # Get transaction details
                 tx_response = await client.get_transaction(sig_obj)
                 if not tx_response.value:
                     await self.handle_failed_trade(trade['id'], "Could not verify transaction")
                     return False
-                
+                    
                 # Check if transaction was successful
                 if tx_response.value.meta and tx_response.value.meta.err:
                     error_msg = f"Transaction failed: {tx_response.value.meta.err}"
@@ -483,14 +484,14 @@ class TradeExecutor:
             finally:
                 await client.close()
 
-            # If we have a signature, the transaction succeeded (balance verified)
-            if signature:
+            # If we have a trade result, the transaction succeeded (balance verified)
+            if trade_result:
                 # Update trade record
-                transaction_url = f"https://solscan.io/tx/{signature}"
+                transaction_url = f"https://solscan.io/tx/{trade_result['signature']}"
                 self.trades_table.update(trade['id'], {
                     'status': 'EXECUTED',
-                    'txSignature': signature,
-                    'amount': token_amount,
+                    'txSignature': trade_result['signature'],
+                    'amount': trade_result['amount'],
                     'value': trade_value,
                     'price': float(signal['fields']['entryPrice']),
                     'transactionUrl': transaction_url,

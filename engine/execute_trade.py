@@ -319,7 +319,7 @@ class JupiterTradeExecutor:
             self.logger.error(f"Error checking slippage: {e}")
             return False
 
-    async def execute_trade_with_retries(self, transaction: Transaction, token_mint: str, max_retries: int = 3) -> Optional[str]:
+    async def execute_trade_with_retries(self, transaction: Transaction, token_mint: str, max_retries: int = 3) -> Optional[Dict]:
         """Execute trade with balance confirmation via Birdeye API"""
         client = AsyncClient(
             "https://api.mainnet-beta.solana.com",
@@ -385,29 +385,37 @@ class JupiterTradeExecutor:
 
                                 # Vérifier la nouvelle balance
                                 success = False
+                                final_balance = None
                                 for _ in range(3):  # 3 tentatives de vérification
-                                    await asyncio.sleep(8)  # Augmenté à 8 secondes
-                                    
+                                    await asyncio.sleep(8)
+                                
                                     async with session.get(url, headers=headers, params=params) as check_response:
                                         if check_response.status == 200:
                                             check_data = await check_response.json()
-                                            
+                                        
                                             # Gérer le cas où data est null
                                             if check_data.get('success') and check_data.get('data') is None:
                                                 new_balance = 0
                                             else:
                                                 new_balance = float(check_data.get('data', {}).get('balance', 0))
-                                                
-                                            self.logger.info(f"New balance: {new_balance}")
                                             
-                                            # Pour un achat, vérifier que la balance du token a augmenté (était 0, maintenant > 0)
-                                            # Pour une vente, vérifier que la balance USDC a augmenté
+                                            self.logger.info(f"New balance: {new_balance}")
+                                        
                                             if (is_buy and new_balance > initial_balance) or (not is_buy and new_balance > initial_balance):
                                                 self.logger.info("✅ Transaction confirmed!")
-                                                # Retourner la signature dès que la balance est confirmée
-                                                return signature_str
-                                                
+                                                success = True
+                                                final_balance = new_balance
+                                                break
+                                            
                                             self.logger.info("Balance not yet updated, waiting 8 seconds...")
+
+                                if success:
+                                    return {
+                                        'signature': signature_str,
+                                        'initial_balance': initial_balance,
+                                        'final_balance': final_balance,
+                                        'amount': final_balance - initial_balance if is_buy else initial_balance - final_balance
+                                    }
                                 
                                 # Si on arrive ici, c'est qu'on n'a pas confirmé la balance après 3 tentatives
                                 self.logger.warning("Balance check timeout, moving to next attempt")
