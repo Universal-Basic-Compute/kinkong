@@ -50,39 +50,38 @@ class AirtableAPI:
             return None
 
 def post_to_x(text: str) -> bool:
-    """Post to X using API v2"""
+    """Post to X using API v2 with OAuth 1.0a"""
     try:
-        # X API v2 endpoint with correct domain
-        url = "https://api.x.com/2/tweets"
+        import tweepy
         
-        # Get bearer token and API key
-        bearer_token = os.getenv('X_BEARER_TOKEN')
+        # Get X API credentials
         api_key = os.getenv('X_API_KEY')
+        api_secret = os.getenv('X_API_SECRET')
+        access_token = os.getenv('X_ACCESS_TOKEN')
+        access_token_secret = os.getenv('X_ACCESS_TOKEN_SECRET')
         
-        if not bearer_token or not api_key:
-            logger.error("Missing X API credentials")
+        if not all([api_key, api_secret, access_token, access_token_secret]):
+            logger.error("Missing X API credentials. Required: X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET")
             return False
+            
+        # Initialize Tweepy client
+        client = tweepy.Client(
+            consumer_key=api_key,
+            consumer_secret=api_secret,
+            access_token=access_token,
+            access_token_secret=access_token_secret
+        )
         
-        headers = {
-            "Authorization": f"Bearer {bearer_token}",
-            "Content-Type": "application/json",
-            "X-API-Key": api_key
-        }
+        # Post tweet
+        response = client.create_tweet(text=text)
         
-        # Prepare request body according to API spec
-        data = {
-            "text": text
-        }
-        
-        response = requests.post(url, headers=headers, json=data)
-        
-        if response.status_code == 201:
-            logger.info(f"Successfully posted to X. Response: {response.json()}")
+        if response.data:
+            logger.info(f"Successfully posted to X. Tweet ID: {response.data['id']}")
             return True
         else:
-            logger.error(f"Failed to post to X. Status: {response.status_code}, Response: {response.text}")
+            logger.error("Failed to post to X - no response data")
             return False
-        
+            
     except Exception as e:
         logger.error(f"Error posting to X: {str(e)}")
         return False
