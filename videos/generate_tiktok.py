@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 import moviepy
+from moviepy.video.fx.FadeIn import FadeIn
+from moviepy.video.fx.FadeOut import FadeOut
 
 # Print moviepy installation info
 print(f"Moviepy installed at: {moviepy.__file__}")
@@ -50,26 +52,33 @@ def create_tiktok_video():
     
     # First part appears with fade
     clip1 = TextClip(
-        txt=text_parts[0],  # Changed: specify parameter name 'txt'
-        fontsize=70,        # Added: specify font size
+        txt=text_parts[0],
+        fontsize=70,
         color='white',
         size=(width-100, height//2),
-        method='caption'    # Removed: align parameter
+        method='caption',
+        align='center'
     ).with_duration(5)
     clip1 = clip1.set_position(('center', height//3))
-    clip1 = clip1.fadein(1).fadeout(1)
+    clip1 = clip1.with_effects([
+        FadeIn(duration=1),
+        FadeOut(duration=1, start_time=4)
+    ])
     
     # Second part slides in from right
     clip2 = TextClip(
-        txt=text_parts[1],  # Changed: specify parameter name 'txt'
-        fontsize=70,        # Added: specify font size
+        txt=text_parts[1],
+        fontsize=70,
         color='white',
         size=(width-100, height//2),
-        method='caption'    # Removed: align parameter
+        method='caption',
+        align='center'
     ).with_duration(5)
     clip2 = clip2.set_position(('center', 2*height//3))
-    clip2 = clip2.set_start(5)  # Start after first clip
-    clip2 = clip2.fx(SlideIn, duration=1, side='right')
+    clip2 = clip2.with_start(5)  # Start after first clip
+    clip2 = clip2.with_effects([
+        SlideIn(duration=1, side='right')
+    ])
 
     # Combine clips
     final_clip = CompositeVideoClip([background] + [clip1, clip2])
