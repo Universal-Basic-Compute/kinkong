@@ -123,7 +123,7 @@ def check_mentions():
         
         # Verify credentials
         if not all([api_key, api_secret, access_token, access_secret]):
-            logger.error("Missing X API credentials. Required: X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_SECRET")
+            logger.error("Missing X API credentials")
             return
             
         # Create OAuth1 auth object
@@ -139,7 +139,7 @@ def check_mentions():
         me_response = requests.get(me_url, auth=auth)
         
         if me_response.status_code == 403:
-            logger.error("Authentication failed. Please check your X_BEARER_TOKEN")
+            logger.error("Authentication failed")
             return
         elif not me_response.ok:
             logger.error(f"API request failed: {me_response.status_code} - {me_response.text}")
@@ -147,15 +147,14 @@ def check_mentions():
             
         user_id = me_response.json()['data']['id']
         
-        # Get mentions using v2 endpoint
+        # Get mentions using v2 endpoint with correct parameters
         mentions_url = f"https://api.twitter.com/2/users/{user_id}/mentions"
         
-        # Updated parameters for v2 API
         params = {
-            "tweet.fields": "created_at,text,conversation_id",
-            "expansions": "author_id,referenced_tweets",
-            "user.fields": "username,profile_image_url",
-            "max_results": 100
+            "tweet.fields": "created_at,text",  # Simplified fields
+            "expansions": "author_id",          # Only essential expansion
+            "user.fields": "username",          # Only username needed
+            "max_results": 10                   # Reduced results
         }
         
         # Add since_id if we have a last mention
@@ -163,9 +162,13 @@ def check_mentions():
         if last_mention_id:
             params["since_id"] = last_mention_id
             
-        # Make the request
+        logger.info(f"Fetching mentions for user ID: {user_id}")
         response = requests.get(mentions_url, auth=auth, params=params)
-        response.raise_for_status()
+        
+        if not response.ok:
+            logger.error(f"Mentions request failed: {response.status_code}")
+            logger.error(f"Response: {response.text}")
+            response.raise_for_status()
         
         data = response.json()
         
