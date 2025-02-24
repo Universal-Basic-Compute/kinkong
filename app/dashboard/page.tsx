@@ -13,11 +13,7 @@ interface TokenInfo {
   token: string;
   name: string;
   mint: string;
-  volume7d: number;
-  liquidity: number;
-  volumeGrowth: number;
-  pricePerformance: number;
-  marketCap: number;
+  xAccount?: string;
 }
 
 function getTokenClass(token: string): string {
@@ -117,10 +113,7 @@ export default function Dashboard() {
                       <tr className="border-b border-gold/20">
                         <th className="px-4 py-2 text-left text-gold">Token</th>
                         <th className="px-4 py-2 text-left text-gold">Name</th>
-                        <th className="px-4 py-2 text-right text-gold">7d Volume</th>
-                        <th className="px-4 py-2 text-right text-gold">Liquidity</th>
-                        <th className="px-4 py-2 text-right text-gold">Volume Growth</th>
-                        <th className="px-4 py-2 text-right text-gold">Price Change</th>
+                        <th className="px-4 py-2 text-left text-gold">X Account</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -137,25 +130,19 @@ export default function Dashboard() {
                             </a>
                           </td>
                           <td className="px-4 py-2 text-gray-300">{token.name}</td>
-                          <td className="px-4 py-2 text-right text-gray-300">
-                            ${token.volume7d.toLocaleString(undefined, {
-                              maximumFractionDigits: 0
-                            })}
-                          </td>
-                          <td className="px-4 py-2 text-right text-gray-300">
-                            ${token.liquidity.toLocaleString(undefined, {
-                              maximumFractionDigits: 0
-                            })}
-                          </td>
-                          <td className="px-4 py-2 text-right">
-                            <span className={token.volumeGrowth >= 0 ? 'text-green-400' : 'text-red-400'}>
-                              {token.volumeGrowth.toFixed(2)}%
-                            </span>
-                          </td>
-                          <td className="px-4 py-2 text-right">
-                            <span className={token.pricePerformance >= 0 ? 'text-green-400' : 'text-red-400'}>
-                              {token.pricePerformance.toFixed(2)}%
-                            </span>
+                          <td className="px-4 py-2 text-gray-300">
+                            {token.xAccount ? (
+                              <a
+                                href={`https://x.com/${token.xAccount}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-400 hover:text-blue-300"
+                              >
+                                @{token.xAccount}
+                              </a>
+                            ) : (
+                              '-'
+                            )}
                           </td>
                         </tr>
                       ))}

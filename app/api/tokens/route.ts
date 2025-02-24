@@ -6,11 +6,7 @@ interface TokenRecord extends FieldSet {
   token: string;
   name: string;
   mint: string;
-  volume7d: number;
-  liquidity: number;
-  volumeGrowth: number;
-  pricePerformance: number;
-  holderCount: number;
+  isActive: boolean;
   xAccount?: string;
 }
 
@@ -19,8 +15,7 @@ export async function GET() {
     const table = getTable('TOKENS');
     const records = await table
       .select({
-        filterByFormula: '{isActive} = 1',
-        sort: [{ field: 'volume7d', direction: 'desc' }]
+        filterByFormula: '{isActive} = 1'
       })
       .all();
 
@@ -28,11 +23,6 @@ export async function GET() {
       token: record.get('token'),
       name: record.get('name'),
       mint: record.get('mint'),
-      volume7d: record.get('volume7d'),
-      liquidity: record.get('liquidity'),
-      volumeGrowth: record.get('volumeGrowth'),
-      pricePerformance: record.get('pricePerformance'),
-      holderCount: record.get('holderCount'),
       xAccount: record.get('xAccount')
     }));
 
