@@ -50,26 +50,24 @@ class AirtableAPI:
             return None
 
 def post_to_x(text: str) -> bool:
-    """Post to X using API v2 with OAuth 1.0a"""
+    """Post to X using API v2 with OAuth 2.0"""
     try:
         import tweepy
         
-        # Get X API credentials
-        api_key = os.getenv('X_API_KEY')
-        api_secret = os.getenv('X_API_SECRET')
-        access_token = os.getenv('X_ACCESS_TOKEN')
-        access_token_secret = os.getenv('X_ACCESS_TOKEN_SECRET')
+        # Get OAuth 2.0 bearer token
+        bearer_token = os.getenv('X_BEARER_TOKEN')
+        client_id = os.getenv('X_CLIENT_ID')
+        client_secret = os.getenv('X_CLIENT_SECRET')
         
-        if not all([api_key, api_secret, access_token, access_token_secret]):
-            logger.error("Missing X API credentials. Required: X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET")
+        if not all([bearer_token, client_id, client_secret]):
+            logger.error("Missing X API credentials. Required: X_BEARER_TOKEN, X_CLIENT_ID, X_CLIENT_SECRET")
             return False
             
-        # Initialize Tweepy client
+        # Initialize Tweepy client with OAuth 2.0
         client = tweepy.Client(
-            consumer_key=api_key,
-            consumer_secret=api_secret,
-            access_token=access_token,
-            access_token_secret=access_token_secret
+            bearer_token=bearer_token,
+            consumer_key=client_id,
+            consumer_secret=client_secret
         )
         
         # Post tweet
