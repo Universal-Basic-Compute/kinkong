@@ -795,22 +795,33 @@ class TradeExecutor:
             for trade in active_trades:
                 try:
                     status = trade['fields'].get('status')
+                    signal_id = trade['fields'].get('signalId')
                     
+                    if not signal_id:
+                        self.logger.error(f"Trade {trade['id']} has no signal ID")
+                        continue
+
+                    # Get the signal data
+                    signal = self.signals_table.get(signal_id)
+                    if not signal:
+                        self.logger.error(f"Signal {signal_id} not found for trade {trade['id']}")
+                        continue
+
                     if status == 'PENDING':
-                        # For PENDING trades, try to execute them
-                        signal_id = trade['fields'].get('signalId')
-                        if signal_id:
-                            # Get the signal data
-                            signal = self.signals_table.get(signal_id)
-                            if signal and self.check_entry_conditions(signal):
-                                self.logger.info(f"Attempting to execute PENDING trade {trade['id']}")
-                                if await self.execute_trade(signal):
-                                    self.logger.info(f"Successfully executed trade {trade['id']}")
-                                else:
-                                    self.logger.error(f"Failed to execute trade {trade['id']}")
+                        # Pour les trades PENDING, vérifier les conditions d'entrée
+                        self.logger.info(f"Checking entry conditions for PENDING trade {trade['id']}")
+                        if self.check_entry_conditions(signal):
+                            self.logger.info(f"Entry conditions met for trade {trade['id']}")
+                            if await self.execute_trade(signal):
+                                self.logger.info(f"Successfully executed trade {trade['id']}")
+                            else:
+                                self.logger.error(f"Failed to execute trade {trade['id']}")
+                        else:
+                            self.logger.info(f"Entry conditions not met for trade {trade['id']}")
                     
                     elif status == 'EXECUTED':
-                        # For EXECUTED trades, check exit conditions
+                        # Pour les trades EXECUTED, vérifier les conditions de sortie
+                        self.logger.info(f"Checking exit conditions for EXECUTED trade {trade['id']}")
                         exit_reason = await self.check_exit_conditions(trade)
                         if exit_reason:
                             self.logger.info(f"Exit condition met for trade {trade['id']}: {exit_reason}")
@@ -818,6 +829,8 @@ class TradeExecutor:
                                 self.logger.info(f"Successfully closed trade {trade['id']}")
                             else:
                                 self.logger.error(f"Failed to close trade {trade['id']}")
+                        else:
+                            self.logger.info(f"No exit conditions met for trade {trade['id']}")
                                 
                 except Exception as e:
                     self.logger.error(f"Error processing trade {trade['id']}: {e}")
