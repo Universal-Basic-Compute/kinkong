@@ -328,7 +328,11 @@ class JupiterTradeExecutor:
         try:
             for attempt in range(max_retries):
                 try:
-                    # Get initial balance from Birdeye
+                    # Pour les trades d'achat (USDC -> Token), on vérifie la balance USDC
+                    # Pour les trades de vente (Token -> USDC), on vérifie la balance du token
+                    is_buy = token_mint != "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"  # USDC mint
+                    check_token = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" if is_buy else token_mint
+
                     url = "https://public-api.birdeye.so/v1/wallet/token_balance"
                     headers = {
                         'x-api-key': os.getenv('BIRDEYE_API_KEY'),
@@ -337,105 +341,73 @@ class JupiterTradeExecutor:
                     }
                     params = {
                         'wallet': self.wallet_address,
-                        'token_address': token_mint
+                        'token_address': check_token
                     }
 
-                    # Log complete request details
-                    self.logger.info("\n🔍 Birdeye API Request:")
-                    self.logger.info(f"URL: {url}")
-                    self.logger.info(f"Headers: {json.dumps(headers, indent=2)}")
-                    self.logger.info(f"Params: {json.dumps(params, indent=2)}")
+                    self.logger.info(f"\n🔍 Checking balance for {'USDC' if is_buy else 'token'}")
+                    self.logger.info(f"Wallet: {self.wallet_address}")
+                    self.logger.info(f"Token: {check_token}")
 
                     async with aiohttp.ClientSession() as session:
-                        try:
-                            async with session.get(url, headers=headers, params=params) as response:
-                                # Log response details
-                                self.logger.info(f"\n📡 Response Status: {response.status}")
-                                self.logger.info(f"Response Headers: {dict(response.headers)}")
+                        async with session.get(url, headers=headers, params=params) as response:
+                            response_text = await response.text()
+                            self.logger.info(f"Response: {response_text}")
+                            
+                            if response.status == 200:
+                                data = json.loads(response_text)
                                 
-                                response_text = await response.text()
-                                self.logger.info(f"Response Body: {response_text}")
-                                
-                                if response.status == 200:
-                                    try:
-                                        data = json.loads(response_text)
-                                        self.logger.info(f"Parsed JSON: {json.dumps(data, indent=2)}")
-                                        
-                                        if not data:
-                                            self.logger.error("Empty response data")
-                                            continue
-                                            
-                                        if not isinstance(data, dict):
-                                            self.logger.error(f"Unexpected response type: {type(data)}")
-                                            continue
-                                            
-                                        if not data.get('success'):
-                                            self.logger.error(f"API returned success=false: {data.get('message', 'No error message')}")
-                                            continue
-                                            
-                                        balance_data = data.get('data', {})
-                                        if not balance_data:
-                                            self.logger.error("No balance data in response")
-                                            continue
-                                            
-                                        initial_balance = float(balance_data.get('balance', 0))
-                                        self.logger.info(f"Initial balance: {initial_balance}")
-                                        
-                                    except json.JSONDecodeError as e:
-                                        self.logger.error(f"Failed to parse JSON response: {e}")
-                                        self.logger.error(f"Raw response: {response_text}")
-                                        continue
-                                    except Exception as e:
-                                        self.logger.error(f"Error processing response: {e}")
-                                        continue
+                                # Si data est null, on considère la balance comme 0
+                                if data.get('success') and data.get('data') is None:
+                                    initial_balance = 0
+                                    self.logger.info("No balance found, setting to 0")
                                 else:
-                                    self.logger.error(f"API request failed: {response.status}")
-                                    self.logger.error(f"Response: {response_text}")
-                                    continue
+                                    balance_data = data.get('data', {})
+                                    initial_balance = float(balance_data.get('balance', 0))
                                     
-                        except aiohttp.ClientError as e:
-                            self.logger.error(f"HTTP request failed: {e}")
-                            continue
+                                self.logger.info(f"Initial balance: {initial_balance}")
 
-                    # Send transaction
-                    result = await client.send_raw_transaction(
-                        bytes(transaction),
-                        opts=TxOpts(
-                            skip_preflight=True,
-                            max_retries=2,
-                            preflight_commitment="confirmed"
-                        )
-                    )
+                                # Envoyer la transaction
+                                result = await client.send_raw_transaction(
+                                    bytes(transaction),
+                                    opts=TxOpts(
+                                        skip_preflight=True,
+                                        max_retries=2,
+                                        preflight_commitment="confirmed"
+                                    )
+                                )
 
-                    if not result.value:
-                        self.logger.error("No transaction signature returned")
-                        continue
+                                if not result.value:
+                                    self.logger.error("No transaction signature returned")
+                                    continue
 
-                    signature_str = str(result.value)
-                    self.logger.info(f"Transaction sent: {signature_str}")
+                                signature_str = str(result.value)
+                                self.logger.info(f"Transaction sent: {signature_str}")
 
-                    # Check new balance with retries
-                    for confirm_attempt in range(3):
-                        await asyncio.sleep(2)  # Wait for transaction to process
-
-                        async with aiohttp.ClientSession() as session:
-                            async with session.get(url, headers=headers, params=params) as response:
-                                if response.status == 200:
-                                    data = await response.json()
-                                    if data.get('success'):
-                                        new_balance = float(data['data'].get('balance', 0))
-                                        self.logger.info(f"New balance: {new_balance}")
-                                        
-                                        if new_balance > initial_balance:
-                                            self.logger.info("✅ Transaction confirmed - Balance increased!")
-                                            return signature_str
-                                        
-                                        self.logger.info("Balance unchanged, waiting...")
-                                else:
-                                    self.logger.error(f"Failed to get new balance: {response.status}")
-
-                        if confirm_attempt < 2:
-                            continue
+                                # Vérifier la nouvelle balance
+                                for _ in range(3):  # 3 tentatives de vérification
+                                    await asyncio.sleep(2)
+                                    
+                                    async with session.get(url, headers=headers, params=params) as check_response:
+                                        if check_response.status == 200:
+                                            check_data = await check_response.json()
+                                            
+                                            # Gérer le cas où data est null
+                                            if check_data.get('success') and check_data.get('data') is None:
+                                                new_balance = 0
+                                            else:
+                                                new_balance = float(check_data.get('data', {}).get('balance', 0))
+                                                
+                                            self.logger.info(f"New balance: {new_balance}")
+                                            
+                                            # Pour un achat, la balance du token doit augmenter
+                                            # Pour une vente, la balance USDC doit augmenter
+                                            if (is_buy and new_balance > 0) or (not is_buy and new_balance > initial_balance):
+                                                self.logger.info("✅ Transaction confirmed!")
+                                                return signature_str
+                                                
+                                            self.logger.info("Balance not yet updated, waiting...")
+                                            
+                                self.logger.warning("Balance check timeout, moving to next attempt")
 
                 except Exception as e:
                     self.logger.error(f"Attempt {attempt + 1} failed: {e}")
