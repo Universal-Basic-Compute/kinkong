@@ -101,50 +101,40 @@ WINDOW_SECONDS = 15 * 60
 @sleep_and_retry
 @limits(calls=CALLS_PER_WINDOW, period=WINDOW_SECONDS)
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
-def get_top_tweets(token: str, bearer_token: str) -> List[Dict]:
-    """Get top tweets for a token using X API"""
+def get_account_tweets(x_account: str, bearer_token: str) -> List[Dict]:
+    """Get recent tweets from a specific X account"""
     try:
         headers = {
             "Authorization": f"Bearer {bearer_token}",
             "Content-Type": "application/json"
         }
         
-        # Use just the cashtag operator
-        query = f'cashtag:{token} -is:retweet lang:en'
+        # Remove @ if present in account name
+        x_account = x_account.lstrip('@')
         
-        url = "https://api.twitter.com/2/tweets/search/recent"
-        params = {
-            "query": query,
-            "max_results": 20,
-            "tweet.fields": "created_at,public_metrics,text",
-            "expansions": "author_id",
-            "user.fields": "username"
-        }
+        # First get the user ID
+        user_url = f"https://api.twitter.com/2/users/by/username/{x_account}"
+        user_response = requests.get(user_url, headers=headers)
+        user_response.raise_for_status()
         
-        response = requests.get(url, headers=headers, params=params)
-        response.raise_for_status()
-        
-        data = response.json()
-        tweets = data.get('data', [])
-        
-        if not tweets:
-            logger.info(f"No tweets found matching query for {token}")
+        user_id = user_response.json().get('data', {}).get('id')
+        if not user_id:
+            logger.error(f"Could not find user ID for account: {x_account}")
             return []
             
-        # Sort by engagement (likes + retweets)
-        sorted_tweets = sorted(
-            tweets,
-            key=lambda x: (
-                x.get('public_metrics', {}).get('like_count', 0) +
-                x.get('public_metrics', {}).get('retweet_count', 0)
-            ),
-            reverse=True
-        )
+        # Then get their tweets
+        tweets_url = f"https://api.twitter.com/2/users/{user_id}/tweets"
+        params = {
+            "max_results": 10,  # Get last 10 tweets
+            "tweet.fields": "created_at,public_metrics,text",
+            "exclude": "retweets,replies"
+        }
         
-        # Log some debug info
-        logger.debug(f"Found {len(tweets)} tweets for {token}, returning top {min(5, len(sorted_tweets))}")
+        response = requests.get(tweets_url, headers=headers, params=params)
+        response.raise_for_status()
         
-        return sorted_tweets[:5]  # Return top 5 most engaged tweets
+        tweets = response.json().get('data', [])
+        return tweets
         
     except requests.exceptions.RequestException as e:
         logger.error(f"Error fetching tweets for {token}: {str(e)}")
@@ -279,16 +269,18 @@ def main():
         for token_data in tokens:
             try:
                 token = token_data.get('token')
-                if not token:
+                x_account = token_data.get('xAccount')
+                
+                if not token or not x_account:
                     continue
                     
-                logger.info(f"Processing ${token}")
+                logger.info(f"Processing ${token} (X account: {x_account})")
                 metrics.increment('tokens_processed')
                 
-                # Get top tweets
-                tweets = get_top_tweets(token, os.getenv('X_BEARER_TOKEN'))
+                # Get account tweets instead of searching
+                tweets = get_account_tweets(x_account, os.getenv('X_BEARER_TOKEN'))
                 if not tweets:
-                    logger.info(f"No tweets found for ${token}")
+                    logger.info(f"No tweets found for {x_account}")
                     continue
                     
                 # Analyze sentiment
