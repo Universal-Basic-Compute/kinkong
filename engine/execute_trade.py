@@ -516,7 +516,7 @@ class JupiterTradeExecutor:
             try:
                 # Get fresh blockhash
                 blockhash_response = await client.get_latest_blockhash(
-                    commitment=Commitment("confirmed")  # Specify commitment explicitly
+                    commitment=Commitment("confirmed")
                 )
                 if not blockhash_response or not blockhash_response.value:
                     raise Exception("Failed to get recent blockhash")
@@ -537,11 +537,9 @@ class JupiterTradeExecutor:
                     address_table_lookups=message.address_table_lookups
                 )
                 
-                # Create new versioned transaction
-                new_transaction = VersionedTransaction(
-                    message=new_message,
-                    signatures=[self.wallet_keypair.sign_message(bytes(new_message))]
-                )
+                # Create new transaction and add signature separately
+                new_transaction = VersionedTransaction(message=new_message)
+                new_transaction.sign([self.wallet_keypair])
                 
                 self.logger.info("Successfully prepared versioned transaction")
                 return new_transaction
