@@ -114,7 +114,8 @@ class SignalGenerator:
                     df = fetch_token_data(
                         timeframe=config['timeframe'],
                         hours=config['hours'],
-                        token_address=token['mint']
+                        token_address=token['mint'],
+                        candles_target=config['candles_target']
                     )
                     
                     if df is None or df.empty:

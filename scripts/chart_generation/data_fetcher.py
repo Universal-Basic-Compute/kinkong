@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-def fetch_ubc_sol_data(timeframe='1H', hours=24):
+def fetch_ubc_sol_data(timeframe='1H', hours=24, candles_target=60):
     url = "https://public-api.birdeye.so/defi/ohlcv"
     headers = {
         "X-API-KEY": os.getenv('BIRDEYE_API_KEY'),
@@ -15,7 +15,18 @@ def fetch_ubc_sol_data(timeframe='1H', hours=24):
     }
     
     now = int(datetime.now().timestamp())
-    start_time = now - (hours * 60 * 60)
+    
+    # Calculate required time range based on target candle count
+    timeframe_minutes = {
+        '15m': 15,
+        '1H': 60,
+        '4H': 240,
+        '1D': 1440
+    }
+    
+    minutes_per_candle = timeframe_minutes.get(timeframe, 60)
+    total_minutes_needed = minutes_per_candle * candles_target
+    start_time = now - (total_minutes_needed * 60)  # Convert minutes to seconds
     
     params = {
         "address": "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump",
@@ -26,8 +37,11 @@ def fetch_ubc_sol_data(timeframe='1H', hours=24):
     }
     
     try:
-        print("Requesting URL:", url)
-        print("With params:", params)
+        print(f"Fetching {timeframe} candles (target: {candles_target})")
+        print("Time range:", 
+              datetime.fromtimestamp(start_time).strftime('%Y-%m-%d %H:%M'),
+              "to",
+              datetime.fromtimestamp(now).strftime('%Y-%m-%d %H:%M'))
         
         response = requests.get(url, headers=headers, params=params)
         print("Response status:", response.status_code)
@@ -62,6 +76,11 @@ def fetch_ubc_sol_data(timeframe='1H', hours=24):
         
         df = df.sort_index()
         df = df[~df.index.duplicated(keep='first')]
+        if len(df) > candles_target:
+            print(f"Trimming excess candles ({len(df)} -> {candles_target})")
+            df = df.iloc[-candles_target:]
+        
+        print(f"Final candle count: {len(df)}")
         
         print(f"\nFetched {len(df)} candles for UBC/SOL")
         return df
