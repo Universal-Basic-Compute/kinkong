@@ -77,104 +77,19 @@ def check_token_status(token: str, airtable_base_id: str, airtable_api_key: str)
         return True
 
 async def update_token(token: str):
-    """Update token data using engine/tokens.py"""
+    """Update token data using TokenSearcher"""
     try:
-        import subprocess
-        import threading
-        import queue
-
         logger.info(f"Updating token data for {token}")
         
-        # Construct path to engine/tokens.py
-        tokens_script = Path(__file__).parent.parent / 'engine' / 'tokens.py'
+        # Import TokenSearcher
+        from engine.tokens import TokenSearcher
         
-        # Get Python executable path
-        python_exe = sys.executable
+        # Initialize searcher
+        searcher = TokenSearcher()
         
-        # Create environment variables with proper paths
-        env = os.environ.copy()
-        env['PYTHONPATH'] = str(Path(__file__).parent.parent)
-        
-        # Create queues for output
-        stdout_queue = queue.Queue()
-        stderr_queue = queue.Queue()
-
-        def enqueue_output(out, queue):
-            for line in iter(out.readline, b''):
-                queue.put(line.decode('utf-8').strip())
-            out.close()
-
-        # Start process with pipes
-        process = subprocess.Popen(
-            [python_exe, str(tokens_script), token],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            env=env,
-            bufsize=1,
-            universal_newlines=False
-        )
-
-        # Start threads to read output
-        stdout_thread = threading.Thread(
-            target=enqueue_output, 
-            args=(process.stdout, stdout_queue)
-        )
-        stderr_thread = threading.Thread(
-            target=enqueue_output, 
-            args=(process.stderr, stderr_queue)
-        )
-        stdout_thread.daemon = True
-        stderr_thread.daemon = True
-        stdout_thread.start()
-        stderr_thread.start()
-
-        # Monitor process with timeout
-        start_time = datetime.now()
-        timeout = 60  # 60 seconds timeout
-        success = False
-
-        while (datetime.now() - start_time).seconds < timeout:
-            # Check if process has finished
-            if process.poll() is not None:
-                success = process.returncode == 0
-                break
-
-            # Process stdout
-            try:
-                while True:
-                    line = stdout_queue.get_nowait()
-                    logger.info(f"[tokens.py] {line}")
-                    if "Successfully updated token" in line:
-                        success = True
-            except queue.Empty:
-                pass
-
-            # Process stderr
-            try:
-                while True:
-                    line = stderr_queue.get_nowait()
-                    logger.error(f"[tokens.py ERROR] {line}")
-            except queue.Empty:
-                pass
-
-            await asyncio.sleep(0.1)
-
-        # Check if we timed out
-        if (datetime.now() - start_time).seconds >= timeout:
-            process.kill()
-            logger.error(f"Token update timed out for {token}")
-            return False
-
-        # Drain any remaining output
-        stdout_thread.join(1)
-        stderr_thread.join(1)
-
-        while not stdout_queue.empty():
-            logger.info(f"[tokens.py] {stdout_queue.get()}")
-        while not stderr_queue.empty():
-            logger.error(f"[tokens.py ERROR] {stderr_queue.get()}")
-
-        if success:
+        # Search and update token
+        token_data = searcher.search_token(token)
+        if token_data:
             logger.info(f"Successfully updated token {token}")
             return True
         else:
