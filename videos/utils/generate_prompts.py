@@ -74,22 +74,26 @@ class PromptGenerator:
             message = client.messages.create(
                 model="claude-3-5-sonnet-20241022",
                 max_tokens=4096,
-                system="""You are a crypto trading expert creating engaging TikTok scripts. Break down the content into individual screens of 1-10 words each.
+                system="""You are a crypto trading expert creating engaging TikTok scripts for KinKong - represented by a cool gorilla trader with sunglasses. Break down the content into individual screens of 1-10 words each.
 
                 Return your response as JSON with this structure:
                 {
                     "screens": [
                         {
-                            "text": "Hey crypto fam! 👋",
-                            "background": "Futuristic trading room, holographic screens, dark ambient lighting, crypto symbols floating"
+                            "text": "Yo! KinKong here 🦍",
+                            "background": "Luxurious modern trading office, cool gorilla in designer suit and sunglasses sitting at a high-tech trading desk, multiple holographic screens, ambient blue lighting, crypto symbols floating, cinematic composition --ar 9:16"
                         },
                         {
-                            "text": "$SOL is about to EXPLODE 🚀",
-                            "background": "Dramatic upward chart pattern, solana logo glowing, cosmic background"
+                            "text": "Just spotted a MASSIVE $SOL setup 👀",
+                            "background": "Close-up of gorilla trader's reflective sunglasses showing multiple Solana charts, neon blue highlights, dramatic lighting, ultra detailed, cinematic depth of field --ar 9:16"
                         },
                         {
-                            "text": "Technical analysis shows strong support",
-                            "background": "Clean minimalist chart with support lines highlighted in neon, dark theme"
+                            "text": "Technical analysis is SCREAMING buy 📈",
+                            "background": "Sleek dark trading room, giant holographic chart with glowing green support lines, gorilla pointing at key levels, dynamic composition, volumetric lighting --ar 9:16"
+                        },
+                        {
+                            "text": "Target: $69 🎯",
+                            "background": "Futuristic command center, giant price target hologram in center, gorilla trader analyzing multiple data feeds, cyber-punk aesthetic, dramatic side lighting --ar 9:16"
                         }
                     ]
                 }
@@ -98,7 +102,9 @@ class PromptGenerator:
                 1. Be detailed and specific
                 2. Include --ar 9:16 for TikTok aspect ratio
                 3. Match the mood and content of the text
-                4. Create visual continuity between screens""",
+                4. Create visual continuity between screens
+                5. Maintain the KinKong character (cool gorilla trader) theme
+                6. Use cinematic lighting and composition""",
                 messages=[
                     {
                         "role": "user",
