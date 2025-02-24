@@ -331,18 +331,18 @@ class JupiterTradeExecutor:
                     # Calculate exponential backoff delay
                     delay = (2 ** attempt) * 1.5  # 1.5s, 3s, 6s
                     
-                    # Create options with version support
+                    # Create basic options
                     opts = TxOpts(
                         skip_preflight=True,
                         max_retries=2,
-                        preflight_commitment="confirmed",
-                        max_supported_transaction_version=0  # Moved into options
+                        preflight_commitment="confirmed"
                     )
                 
                     # Send with optimized options
                     result = await client.send_transaction(
                         transaction,
-                        opts=opts
+                        opts=opts,
+                        max_supported_transaction_version=0  # Moved back as separate parameter
                     )
                     
                     if not result.value:
