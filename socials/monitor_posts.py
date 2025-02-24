@@ -1,4 +1,5 @@
 import os
+import sys
 import yaml
 import requests
 import logging
@@ -233,7 +234,8 @@ def send_telegram_notification(token: str, analysis: str):
         logger.error(f"Failed to send Telegram notification: {e}")
         return False
 
-def main():
+def monitor_token(token: Optional[str] = None) -> bool:
+    """Monitor posts for a specific token or all tokens if none specified"""
     try:
         start_time = datetime.now()
         
@@ -261,49 +263,66 @@ def main():
             os.getenv('KINKONG_AIRTABLE_API_KEY')
         )
         
-        # Get active tokens
-        tokens = airtable.get_active_tokens()
-        logger.info(f"Found {len(tokens)} active tokens")
+        # Get token data
+        if token:
+            # Get specific token
+            tokens = airtable.get_all(
+                formula=f"AND({{isActive}}=1, {{token}}='{token}')"
+            )
+            if not tokens:
+                logger.error(f"Token {token} not found or not active")
+                return False
+        else:
+            # Get all active tokens
+            tokens = airtable.get_active_tokens()
+            
+        logger.info(f"Found {len(tokens)} token(s) to process")
         
-        # Process each token with delay
+        success = True
+        # Process token(s)
         for token_data in tokens:
             try:
-                token = token_data.get('token')
+                token_symbol = token_data.get('token')
                 x_account = token_data.get('xAccount')
                 
-                if not token or not x_account:
+                if not token_symbol or not x_account:
+                    logger.warning(f"Missing data for token {token_symbol}")
                     continue
                     
-                logger.info(f"Processing ${token} (X account: {x_account})")
+                logger.info(f"Processing ${token_symbol} (X account: {x_account})")
                 metrics.increment('tokens_processed')
                 
-                # Get account tweets instead of searching
+                # Get account tweets
                 tweets = get_account_tweets(x_account, os.getenv('X_BEARER_TOKEN'))
                 if not tweets:
                     logger.info(f"No tweets found for {x_account}")
                     continue
                     
                 # Analyze sentiment
-                analysis = analyze_sentiment_with_claude(token, tweets)
+                analysis = analyze_sentiment_with_claude(token_symbol, tweets)
                 if analysis:
-                    logger.info(f"Bullish signals detected for ${token}")
+                    logger.info(f"Bullish signals detected for ${token_symbol}")
                     # Send notification
-                    if send_telegram_notification(token, analysis):
-                        logger.info(f"Notification sent for ${token}")
+                    if send_telegram_notification(token_symbol, analysis):
+                        logger.info(f"Notification sent for ${token_symbol}")
+                        metrics.increment('notifications_sent')
                     else:
-                        logger.error(f"Failed to send notification for ${token}")
+                        logger.error(f"Failed to send notification for ${token_symbol}")
+                        success = False
                 else:
-                    logger.info(f"No significant bullish signals for ${token}")
+                    logger.info(f"No significant bullish signals for ${token_symbol}")
                 
-                # Add delay between tokens
-                sleep(config['delay_between_tokens'])
+                # Add delay between tokens if processing multiple
+                if len(tokens) > 1:
+                    sleep(config['delay_between_tokens'])
                 
             except Exception as e:
-                logger.error(f"Error processing token {token}: {e}")
+                logger.error(f"Error processing token {token_symbol}: {e}")
                 metrics.increment('errors')
+                success = False
                 continue
                 
-        # Add summary at end
+        # Add summary
         duration = datetime.now() - start_time
         logger.info(f"""
         Monitor Posts Summary:
@@ -314,11 +333,30 @@ def main():
         Notifications Sent: {metrics.metrics['notifications_sent']}
         Errors: {metrics.metrics['errors']}
         """)
+        
+        return success
                 
     except Exception as e:
         logger.error(f"Script failed: {e}")
         metrics.increment('errors')
-        raise
+        return False
+
+def main():
+    try:
+        # Check for token argument
+        token = sys.argv[1] if len(sys.argv) > 1 else None
+        
+        if token:
+            logger.info(f"Monitoring posts for token: {token}")
+        else:
+            logger.info("Monitoring posts for all active tokens")
+            
+        success = monitor_token(token)
+        sys.exit(0 if success else 1)
+
+    except Exception as e:
+        logger.error(f"Fatal error: {e}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
