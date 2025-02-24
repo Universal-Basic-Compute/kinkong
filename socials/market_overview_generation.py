@@ -108,18 +108,11 @@ class MarketOverviewGenerator:
     def generate_overview_with_claude(self, tokens: List[Dict], sentiment: str) -> str:
         """Generate market overview using Claude with token metrics and sentiment"""
         try:
-            # Format token data emphasizing explanations
+            # Format token data with X accounts for single mention
             token_summaries = "\n\n".join([
                 f"${token['token']} Updates:"
+                f"\nX Account: {token.get('xAccount', 'N/A')}"
                 f"\nNews & Analysis: {token.get('explanation', 'No recent updates')}"
-                f"\nMetrics:"
-                f"\n- Price: ${token.get('price', 0):.4f} ({token.get('priceChange24h', 0):+.1f}%)"
-                f"\n- Volume 24h: ${token.get('volume24h', 0):,.0f}"
-                f"\n- Volume 7d: ${token.get('volume7d', 0):,.0f}"
-                f"\n- Liquidity: ${token.get('liquidity', 0):,.0f}"
-                f"\n- Holders: {token.get('holderCount', 0):,}"
-                f"\n- Volume Growth: {token.get('volumeGrowth', 0):+.1f}%"
-                f"\n- Price Performance: {token.get('pricePerformance', 0):+.1f}%"
                 for token in tokens
             ])
             
@@ -127,6 +120,8 @@ class MarketOverviewGenerator:
             
             system_prompt = f"""You are KinKong, an AI-powered cryptocurrency trading bot specializing in Solana ecosystem tokens.
             Write a comprehensive ecosystem update focusing on recent developments and news.
+
+            When first mentioning a project, use their X handle (provided as 'X Account') once.
 
             Current Market Context:
             Time: {current_time}
