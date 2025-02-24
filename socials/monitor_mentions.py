@@ -2,8 +2,10 @@ import os
 import tweepy
 import requests
 import logging
+import anthropic
 from dotenv import load_dotenv
 from datetime import datetime, timezone
+from typing import Optional
 
 def setup_logging():
     logging.basicConfig(
@@ -63,6 +65,72 @@ def send_telegram_notification(mention):
         logger.error(f"Failed to send Telegram notification: {e}")
         return False
 
+def generate_reply_with_claude(mention_text: str, username: str) -> Optional[str]:
+    """Generate reply content using Claude"""
+    try:
+        # Get API key from environment
+        api_key = os.getenv('ANTHROPIC_API_KEY')
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY not found")
+            
+        client = anthropic.Client(api_key=api_key)
+        
+        system_prompt = """You are KinKong, a cryptocurrency trading bot on X (formerly Twitter).
+        Generate friendly, professional replies to mentions.
+        Keep responses concise (under 280 characters) and relevant to trading/crypto.
+        Use emojis appropriately.
+        Never give financial advice or specific trading recommendations.
+        If users ask about specific trades or signals, direct them to follow @kinkong_ubc for updates."""
+
+        user_prompt = f"""Reply to this mention from @{username}:
+
+        {mention_text}"""
+
+        message = client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=1000,
+            system=system_prompt,
+            messages=[
+                {
+                    "role": "user",
+                    "content": user_prompt
+                }
+            ]
+        )
+        
+        # Extract and clean the reply text
+        reply_text = message.content[0].text.strip()
+        
+        # Ensure reply is within X's character limit
+        if len(reply_text) > 280:
+            reply_text = reply_text[:277] + "..."
+            
+        return reply_text
+        
+    except Exception as e:
+        logger.error(f"Error generating reply with Claude: {str(e)}")
+        return None
+
+def reply_to_mention(api: tweepy.API, client: tweepy.Client, mention_id: int, username: str, text: str) -> bool:
+    """Reply to a mention on X"""
+    try:
+        # Post reply
+        response = client.create_tweet(
+            text=text,
+            in_reply_to_tweet_id=mention_id
+        )
+        
+        if response.data:
+            logger.info(f"Successfully replied to @{username}")
+            return True
+        else:
+            logger.error("Failed to post reply - no response data")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Error replying to mention: {str(e)}")
+        return False
+
 def check_mentions():
     """Check mentions of @kinkong_ubc once"""
     try:
@@ -111,6 +179,16 @@ def check_mentions():
                     logger.info(f"Notification sent for mention from @{tweet.user.screen_name}")
                 else:
                     logger.error(f"Failed to send notification for mention from @{tweet.user.screen_name}")
+
+                # Generate and post reply
+                reply_text = generate_reply_with_claude(tweet.full_text, tweet.user.screen_name)
+                if reply_text:
+                    if reply_to_mention(api, client, mention.id, tweet.user.screen_name, reply_text):
+                        logger.info(f"Reply posted: {reply_text}")
+                    else:
+                        logger.error("Failed to post reply")
+                else:
+                    logger.error("Failed to generate reply")
             
             # Save newest mention ID
             if newest_id:
@@ -132,7 +210,8 @@ def main():
             'X_ACCESS_TOKEN',
             'X_ACCESS_TOKEN_SECRET',
             'TELEGRAM_BOT_TOKEN',
-            'TELEGRAM_CHAT_ID'
+            'TELEGRAM_CHAT_ID',
+            'ANTHROPIC_API_KEY'
         ]
         
         missing_vars = [var for var in required_vars if not os.getenv(var)]
