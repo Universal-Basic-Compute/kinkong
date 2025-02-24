@@ -21,16 +21,16 @@ class TokenSearcher:
     def search_token(self, keyword: str) -> Optional[Dict[str, Any]]:
         """Search for a token and create new record if it doesn't exist"""
         try:
-            # First check if token exists in Airtable
+            # First check if token exists in Airtable - only check 'token' field
             existing_records = self.airtable.get_all(
-                formula=f"OR({{token}} = '{keyword.upper()}', {{symbol}} = '{keyword.upper()}')"
+                formula=f"{{token}} = '{keyword.upper()}'"
             )
             
             if existing_records:
                 print(f"✅ Found existing token record for {keyword.upper()}")
                 token_record = existing_records[0]['fields']
                 return {
-                    'symbol': token_record.get('token'),
+                    'symbol': token_record.get('token'),  # Use token as symbol
                     'name': token_record.get('name'),
                     'address': token_record.get('mint'),
                     'verified': True
