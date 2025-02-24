@@ -52,8 +52,8 @@ class AirtableAPI:
 def post_to_x(text: str) -> bool:
     """Post to X using API v2"""
     try:
-        # X API v2 endpoint
-        url = "https://api.twitter.com/2/tweets"
+        # X API v2 endpoint with correct domain
+        url = "https://api.x.com/2/tweets"
         
         # Get bearer token and API key
         bearer_token = os.getenv('X_BEARER_TOKEN')
