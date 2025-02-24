@@ -41,6 +41,7 @@ import json
 import logging
 from typing import List, Dict, Optional
 from solders.keypair import Keypair
+from solders.signature import Signature
 from solders.pubkey import Pubkey
 from solana.rpc.async_api import AsyncClient
 from solana.rpc import types
