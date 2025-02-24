@@ -16,27 +16,18 @@ def fetch_ubc_sol_data(timeframe='1H', hours=24, candles_target=60):
     
     now = int(datetime.now().timestamp())
     
-    # Calculate required time range based on target candle count
-    timeframe_minutes = {
-        '15m': 15,
-        '1H': 60,
-        '4H': 240,
-        '1D': 1440
+    # Calculate required time range based on timeframe
+    # Multiply the duration by a factor to get more candles
+    timeframe_multipliers = {
+        '15m': 3,    # Get 3x more 15m candles (72 candles for 6h)
+        '1H': 2,     # Get 2x more 1h candles (48 candles for 24h)
+        '4H': 1.5,   # Get 1.5x more 4h candles (63 candles for 7d)
+        '1D': 1.2    # Get 1.2x more daily candles (36 candles for 30d)
     }
     
-    # Adjust candles target based on timeframe to maintain visual consistency
-    timeframe_adjustments = {
-        '15m': 120,  # More candles for shorter timeframe
-        '1H': 60,    # Base number of candles
-        '4H': 40,    # Fewer candles for longer timeframe
-        '1D': 30     # Even fewer for daily
-    }
-    
-    adjusted_target = timeframe_adjustments.get(timeframe, candles_target)
-    
-    minutes_per_candle = timeframe_minutes.get(timeframe, 60)
-    total_minutes_needed = minutes_per_candle * adjusted_target
-    start_time = now - (total_minutes_needed * 60)  # Convert minutes to seconds
+    # Calculate start time with multiplier
+    multiplier = timeframe_multipliers.get(timeframe, 1)
+    start_time = now - (int(hours * 3600 * multiplier))
     
     params = {
         "address": "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump",
@@ -47,7 +38,7 @@ def fetch_ubc_sol_data(timeframe='1H', hours=24, candles_target=60):
     }
     
     try:
-        print(f"Fetching {timeframe} candles (target: {candles_target})")
+        print(f"Fetching {timeframe} candles with {multiplier}x duration multiplier")
         print("Time range:", 
               datetime.fromtimestamp(start_time).strftime('%Y-%m-%d %H:%M'),
               "to",
@@ -86,12 +77,21 @@ def fetch_ubc_sol_data(timeframe='1H', hours=24, candles_target=60):
         
         df = df.sort_index()
         df = df[~df.index.duplicated(keep='first')]
-        if len(df) > adjusted_target:
-            print(f"Trimming excess candles ({len(df)} -> {adjusted_target})")
-            df = df.iloc[-adjusted_target:]
+        
+        # Trim excess candles if we got too many
+        target_counts = {
+            '15m': 72,  # 6h = 24 candles * 3
+            '1H': 48,   # 24h = 24 candles * 2
+            '4H': 63,   # 7d = 42 candles * 1.5
+            '1D': 36    # 30d = 30 candles * 1.2
+        }
+        
+        target = target_counts.get(timeframe, candles_target)
+        if len(df) > target:
+            print(f"Trimming excess candles ({len(df)} -> {target})")
+            df = df.iloc[-target:]
         
         print(f"Final candle count: {len(df)}")
-        
         print(f"\nFetched {len(df)} candles for UBC/SOL")
         return df
         
