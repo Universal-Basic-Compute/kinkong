@@ -77,15 +77,7 @@ project_root = str(Path(__file__).parent.parent.absolute())
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from moviepy.video.fx.FadeIn import FadeIn
-from moviepy.video.fx.FadeOut import FadeOut
-from moviepy.video.fx.Crop import Crop
-from moviepy.video.VideoClip import TextClip, ColorClip, ImageClip
-from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
-from moviepy.video.fx.SlideIn import SlideIn
-from moviepy.video.io.VideoFileClip import VideoFileClip
-
-from videos.utils.generate_text import create_text_clips
+from videos.utils.assemble_video import assemble_final_video, write_final_video
 from videos.utils.generate_prompts import PromptGenerator
 from videos.utils.generate_image import generate_image
 from videos.utils.generate_video import generate_video
@@ -236,87 +228,33 @@ async def create_tiktok_video():
                 logger.error("❌ No videos were successfully generated")
                 return
 
-            # Video settings (TikTok format)
+            # Video settings
             width = 1080
             height = 1920
-            duration_per_screen = 2.5  # seconds per screen
+            duration_per_screen = 2.5
             logger.info(f"📺 Video settings: {width}x{height}, {duration_per_screen}s per screen")
 
-            # Create clips for each screen
-            logger.info("🎞️ Creating video clips...")
-            clips = []
-            for i, (screen_num, video_path) in enumerate(video_paths):
-                logger.info(f"Processing screen {screen_num}/{len(screens)}")
-                
-                try:
-                    # Load video clip
-                    video_clip = VideoFileClip(str(video_path))
-                    
-                    # Resize maintaining aspect ratio
-                    aspect_ratio = video_clip.size[0] / video_clip.size[1]
-                    new_width = int(height * aspect_ratio)
-                    video_clip = video_clip.resized(height=height)
-                    
-                    # Center crop if needed using the Crop effect
-                    if new_width > width:
-                        x_offset = (new_width - width) // 2
-                        video_clip = video_clip.with_effects([
-                            Crop(x1=x_offset, width=width)
-                        ])
-                    
-                    # Set duration
-                    video_clip = video_clip.with_duration(duration_per_screen)
-                    
-                    # Create text clip
-                    screen = screens[i]
-                    logger.debug(f"Creating text clip: {screen['text']}")
-                    text_clips, _ = create_text_clips(
-                        screen['text'], 
-                        width, 
-                        height//3
-                    )
-                    
-                    # Combine video and text
-                    logger.debug("Combining clips and adding effects")
-                    screen_clip = CompositeVideoClip(
-                        [video_clip] + text_clips,
-                        size=(width, height)
-                    )
-                    screen_clip = screen_clip.with_effects([
-                        FadeIn(duration=0.5),
-                        FadeOut(duration=0.5)
-                    ])
-                    
-                    clips.append(screen_clip)
-                    logger.info(f"✅ Completed screen {screen_num}")
-                except Exception as e:
-                    logger.error(f"❌ Error processing screen {screen_num}: {e}")
-                    logger.exception("Detailed error trace:")  # Add stack trace for debugging
-                    continue
-
-            # Check if we have any clips before proceeding
-            if not clips:
-                logger.error("❌ No valid clips generated, cannot create video")
-                return
-
-            # Combine all clips
-            logger.info("🎬 Combining all clips into final video...")
-            final_clip = CompositeVideoClip(clips)
-
-            # Write the result
-            output_path = Path('dist/videos') / f'tiktok_video_{video_num}.mp4'
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            
-            logger.info(f"💾 Writing final video to: {output_path}")
-            final_clip.write_videofile(
-                str(output_path),
-                fps=30,
-                codec='libx264',
-                audio=False,
-                logger=None  # Suppress MoviePy's internal logging
+            # Assemble final video
+            final_clip = assemble_final_video(
+                video_paths=video_paths,
+                screens=screens,
+                width=width,
+                height=height,
+                duration_per_screen=duration_per_screen
             )
 
-            logger.info(f"✨ Video creation completed successfully!")
+            if not final_clip:
+                logger.error("❌ Failed to assemble final video")
+                return
+
+            # Write final video
+            output_path = Path('dist/videos') / f'tiktok_video_{video_num}.mp4'
+            success = write_final_video(final_clip, output_path)
+
+            if not success:
+                logger.error("❌ Failed to write final video")
+                return
+
             logger.info(f"📍 Final video saved at: {output_path}")
 
         except json.JSONDecodeError as e:
