@@ -8,9 +8,12 @@ import logging
 from typing import Dict, Optional
 
 # Add project root to Python path (go up two levels from videos/utils)
-project_root = str(Path(__file__).parent.parent.parent.absolute())
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
+project_root = Path(__file__).parent.parent.parent.absolute()
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
+# Load .env from project root
+load_dotenv(project_root / '.env')
 
 # Now import from scripts
 from scripts.analyze_charts import analyze_charts_with_claude
