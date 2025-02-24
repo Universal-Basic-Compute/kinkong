@@ -2,6 +2,52 @@
 
 > **Important**: MoviePy v2.0 introduced breaking changes from v1.X
 
+## Module Structure
+
+### Core Modules
+- `moviepy.Clip`: Base clip functionality
+- `moviepy.Effect`: Base effect class
+- `moviepy.video`: Video processing
+- `moviepy.audio`: Audio processing
+- `moviepy.config`: Configuration
+- `moviepy.tools`: Utility functions
+
+### Video Components
+- `moviepy.video.VideoClip`
+  - `BitmapClip`
+  - `ColorClip`
+  - `DataVideoClip`
+  - `ImageClip`
+  - `TextClip`
+  - `VideoClip`
+
+### Video Effects
+- `moviepy.video.fx`
+  - `AccelDecel`
+  - `BlackAndWhite`
+  - `Blink`
+  - `Crop`
+  - `FadeIn/FadeOut`
+  - `CrossFadeIn/CrossFadeOut`
+  - `Resize`
+  - `Rotate`
+  - `SlideIn/SlideOut`
+  - Many more...
+
+### Audio Components
+- `moviepy.audio.AudioClip`
+  - `AudioArrayClip`
+  - `AudioFileClip`
+  - `CompositeAudioClip`
+
+### Audio Effects
+- `moviepy.audio.fx`
+  - `AudioDelay`
+  - `AudioFadeIn/AudioFadeOut`
+  - `AudioLoop`
+  - `AudioNormalize`
+  - `MultiplyVolume`
+
 ## Core Concepts
 
 ### Clip Class
@@ -18,8 +64,6 @@ Common methods:
 - `with_speed_scaled(factor=None, final_duration=None)`: Change playback speed
 - `with_effects(effects)`: Apply list of effects
 - `subclipped(start_time=0, end_time=None)`: Extract portion of clip
-- `transform(func, apply_to=None, keep_duration=True)`: Apply custom transformation
-- `time_transform(time_func, apply_to=None)`: Modify clip timeline
 
 ## Common Imports
 
@@ -29,16 +73,9 @@ from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
 from moviepy.video.fx.SlideIn import SlideIn
 ```
 
-## TextClip Parameters
+## Video Components
 
-Current valid parameters:
-- `txt`: The text to display (required)
-- `fontsize`: Size of the font
-- `color`: Text color
-- `size`: (width, height) of the text box
-- `method`: How to render the text ('caption', 'label')
-
-Example:
+### TextClip Parameters
 ```python
 clip = TextClip(
     txt="Hello World",
@@ -49,24 +86,36 @@ clip = TextClip(
 )
 ```
 
-## Effects (fx)
+### ColorClip Parameters
+```python
+background = ColorClip(
+    size=(width, height),
+    color=[0, 0, 0.3]
+).with_duration(duration)
+```
 
-Effects are now individual modules:
-- `SlideIn`: Slide animation
-- `fadein`: Fade in effect
-- `fadeout`: Fade out effect
+## Effects and Transitions
 
-Example applying effects:
+### Visual Effects
 ```python
 clip = clip.with_effects([
     SlideIn(duration=1, side='right'),
-    fadein(1),
-    fadeout(1)
+    FadeIn(duration=1),
+    Resize(width=480)
 ])
 ```
 
-## Writing Output
+### Audio Effects
+```python
+audio = audio.with_effects([
+    AudioFadeIn(duration=2),
+    MultiplyVolume(0.8)
+])
+```
 
+## IO Operations
+
+### Video Output
 ```python
 clip.write_videofile(
     "output.mp4",
@@ -74,6 +123,12 @@ clip.write_videofile(
     codec='libx264',
     audio=False
 )
+```
+
+### Image Sequence
+```python
+from moviepy.video.io.ImageSequenceClip import ImageSequenceClip
+clip = ImageSequenceClip("path/to/images/*.jpg", fps=24)
 ```
 
 ## Advanced Features
