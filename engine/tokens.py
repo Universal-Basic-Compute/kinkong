@@ -190,7 +190,10 @@ class TokenSearcher:
                         if main_pair.get('info', {}).get('socials'):
                             for social in main_pair['info']['socials']:
                                 if social.get('type') == 'twitter':
-                                    social_links['xAccount'] = social.get('url', '')
+                                    # Strip @ and get just the username from the URL
+                                    x_url = social.get('url', '')
+                                    x_account = x_url.split('/')[-1].lstrip('@')
+                                    social_links['xAccount'] = x_account
                                 elif social.get('type') == 'telegram':
                                     social_links['telegram'] = social.get('url', '')
 
