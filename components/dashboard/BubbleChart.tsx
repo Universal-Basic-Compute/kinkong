@@ -51,8 +51,8 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
     // Calculate scales using valid tokens
     const maxVolumeGrowth = Math.max(...validTokens.map(t => t.volumeGrowth || 0));
     const minVolumeGrowth = Math.min(...validTokens.map(t => t.volumeGrowth || 0));
-    const maxPriceGrowth = Math.max(...validTokens.map(t => t.priceGrowth || 0));
-    const minPriceGrowth = Math.min(...validTokens.map(t => t.priceGrowth || 0));
+    const maxPriceTrend = Math.max(...validTokens.map(t => t.priceTrend || 0));
+    const minPriceTrend = Math.min(...validTokens.map(t => t.priceTrend || 0));
     const maxLiquidity = Math.max(...validTokens.map(t => t.liquidity || 0));
     const minLiquidity = Math.min(...validTokens.map(t => t.liquidity || 0));
 
@@ -62,9 +62,9 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
       return padding + ((volumeGrowth - minVolumeGrowth) / (maxVolumeGrowth - minVolumeGrowth)) * (width - 2 * padding);
     };
 
-    const scaleY = (priceGrowth: number) => {
-      if (isNaN(priceGrowth) || maxPriceGrowth === minPriceGrowth) return height - padding;
-      return height - (padding + ((priceGrowth - minPriceGrowth) / (maxPriceGrowth - minPriceGrowth)) * (height - 2 * padding));
+    const scaleY = (priceTrend: number) => {
+      if (isNaN(priceTrend) || maxPriceTrend === minPriceTrend) return height - padding;
+      return height - (padding + ((priceTrend - minPriceTrend) / (maxPriceTrend - minPriceTrend)) * (height - 2 * padding));
     };
 
     const scaleRadius = (liquidity: number) => {
@@ -143,7 +143,7 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
       const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
       
       const x = scaleX(token.volumeGrowth);
-      const y = scaleY(token.pricePerformance);
+      const y = scaleY(token.priceTrend);
       const radius = scaleRadius(token.liquidity);
       const colors = getColor(token.volume7d, token.liquidity);
 
@@ -241,7 +241,7 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
     yLabel.setAttribute('text-anchor', 'middle');
     yLabel.setAttribute('transform', `rotate(-90, 20, ${height / 2})`);
     yLabel.setAttribute('fill', 'rgba(255, 215, 0, 0.8)');
-    yLabel.textContent = 'Price Growth (%)';
+    yLabel.textContent = 'Price Trend (%)';
 
     svg.appendChild(xLabel);
     svg.appendChild(yLabel);
