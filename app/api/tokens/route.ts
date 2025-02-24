@@ -58,21 +58,22 @@ export async function GET() {
       const token = record.get('token');
       const snapshot = snapshotMap[token] || {};
       
-      // Calculer la croissance du prix et du volume
-      const priceGrowth = snapshot.priceGrowth || 0;
-      const volumeGrowth = snapshot.volumeGrowth || 0;
+      // Ensure all values are valid numbers
+      const priceGrowth = parseFloat(snapshot.priceGrowth) || 0;
+      const volumeGrowth = parseFloat(snapshot.volumeGrowth) || 0;
+      const liquidity = parseFloat(snapshot.liquidity) || 0;
       
       return {
         token: token,
         name: record.get('name'),
         mint: record.get('mint'),
         xAccount: record.get('xAccount'),
-        isActive: record.get('isActive') || false,
-        price: snapshot.price || 0,
-        priceGrowth: priceGrowth,
-        volumeGrowth: volumeGrowth,
-        liquidity: snapshot.liquidity || 0,
-        holderCount: snapshot.holderCount || 0
+        isActive: Boolean(record.get('isActive')),
+        price: parseFloat(snapshot.price) || 0,
+        priceGrowth,
+        volumeGrowth,
+        liquidity,
+        holderCount: parseInt(snapshot.holderCount) || 0
       };
     });
 

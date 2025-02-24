@@ -36,26 +36,41 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
     svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
     container.appendChild(svg);
 
-    // Calculate scales
-    const maxVolumeGrowth = Math.max(...tokens.map(t => t.volumeGrowth));
-    const minVolumeGrowth = Math.min(...tokens.map(t => t.volumeGrowth));
-    const maxPriceGrowth = Math.max(...tokens.map(t => t.priceGrowth));
-    const minPriceGrowth = Math.min(...tokens.map(t => t.priceGrowth));
-    const maxLiquidity = Math.max(...tokens.map(t => t.liquidity));
-    const minLiquidity = Math.min(...tokens.map(t => t.liquidity));
+    // Filter and clean data first
+    const validTokens = tokens.filter(token => {
+      return (
+        typeof token.volumeGrowth === 'number' && 
+        typeof token.priceGrowth === 'number' && 
+        typeof token.liquidity === 'number' &&
+        !isNaN(token.volumeGrowth) &&
+        !isNaN(token.priceGrowth) &&
+        !isNaN(token.liquidity)
+      );
+    });
 
-    // Scale functions
+    // Calculate scales using valid tokens
+    const maxVolumeGrowth = Math.max(...validTokens.map(t => t.volumeGrowth || 0));
+    const minVolumeGrowth = Math.min(...validTokens.map(t => t.volumeGrowth || 0));
+    const maxPriceGrowth = Math.max(...validTokens.map(t => t.priceGrowth || 0));
+    const minPriceGrowth = Math.min(...validTokens.map(t => t.priceGrowth || 0));
+    const maxLiquidity = Math.max(...validTokens.map(t => t.liquidity || 0));
+    const minLiquidity = Math.min(...validTokens.map(t => t.liquidity || 0));
+
+    // Scale functions with validation
     const scaleX = (volumeGrowth: number) => {
+      if (isNaN(volumeGrowth) || maxVolumeGrowth === minVolumeGrowth) return padding;
       return padding + ((volumeGrowth - minVolumeGrowth) / (maxVolumeGrowth - minVolumeGrowth)) * (width - 2 * padding);
     };
 
     const scaleY = (priceGrowth: number) => {
+      if (isNaN(priceGrowth) || maxPriceGrowth === minPriceGrowth) return height - padding;
       return height - (padding + ((priceGrowth - minPriceGrowth) / (maxPriceGrowth - minPriceGrowth)) * (height - 2 * padding));
     };
 
     const scaleRadius = (liquidity: number) => {
-      const minRadius = 10; // Reduced from 20
-      const maxRadius = 25; // Reduced from 50
+      if (isNaN(liquidity) || maxLiquidity === minLiquidity) return 10;
+      const minRadius = 10;
+      const maxRadius = 25;
       const scale = (liquidity - minLiquidity) / (maxLiquidity - minLiquidity);
       return minRadius + scale * (maxRadius - minRadius);
     };
@@ -123,8 +138,8 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
     // Draw grid
     drawGrid();
 
-    // Draw bubbles
-    tokens.forEach(token => {
+    // Draw bubbles using validated data
+    validTokens.forEach(token => {
       const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
       
       const x = scaleX(token.volumeGrowth);
