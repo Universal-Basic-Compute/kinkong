@@ -505,9 +505,17 @@ class JupiterTradeExecutor:
     async def prepare_transaction(self, transaction_bytes: bytes) -> Optional[Transaction]:
         """Prepare a versioned transaction by recompiling with fresh blockhash"""
         try:
-            client = AsyncClient("https://api.mainnet-beta.solana.com")
+            client = AsyncClient(
+                "https://api.mainnet-beta.solana.com",
+                commitment="confirmed",
+                # Add version configuration
+                conf = {
+                    "maxSupportedTransactionVersion": 0
+                }
+            )
+            
             try:
-                # Get fresh blockhash first
+                # Get fresh blockhash
                 blockhash_response = await client.get_latest_blockhash()
                 if not blockhash_response or not blockhash_response.value:
                     raise Exception("Failed to get recent blockhash")
@@ -515,14 +523,9 @@ class JupiterTradeExecutor:
                 fresh_blockhash = blockhash_response.value.blockhash
                 self.logger.info(f"Got fresh blockhash: {fresh_blockhash}")
 
-                # Deserialize the original transaction
+                # Deserialize and rebuild transaction
                 original_tx = VersionedTransaction.from_bytes(transaction_bytes)
-                
-                # Extract the message components
                 message = original_tx.message
-                
-                # Preserve the original address table lookups
-                address_table_lookups = getattr(message, 'address_table_lookups', [])
                 
                 # Create new message with fresh blockhash
                 new_message = MessageV0(
@@ -530,24 +533,17 @@ class JupiterTradeExecutor:
                     account_keys=message.account_keys,
                     recent_blockhash=fresh_blockhash,
                     instructions=message.instructions,
-                    address_table_lookups=address_table_lookups  # Use original lookups
+                    address_table_lookups=message.address_table_lookups
                 )
                 
-                # Create new transaction using constructor
+                # Create new transaction with version 0
                 new_transaction = VersionedTransaction(
                     message=new_message,
-                    keypairs=[self.wallet_keypair]  # Pass keypair for signing
+                    signatures=[self.wallet_keypair.sign_message(bytes(new_message))]
                 )
                 
-                self.logger.info("Successfully prepared versioned transaction with fresh blockhash")
+                self.logger.info("Successfully prepared versioned transaction")
                 return new_transaction
-
-            except Exception as e:
-                self.logger.error(f"Failed to prepare transaction: {e}")
-                if hasattr(e, '__traceback__'):
-                    self.logger.error("Traceback:")
-                    traceback.print_tb(e.__traceback__)
-                return None
 
             finally:
                 await client.close()
