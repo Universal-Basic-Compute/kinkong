@@ -77,7 +77,7 @@ project_root = str(Path(__file__).parent.parent.absolute())
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from videos.utils.assemble_video import assemble_final_video, write_final_video
+from videos.utils.assemble_video import assemble_video
 from videos.utils.generate_prompts import PromptGenerator
 from videos.utils.generate_image import generate_image
 from videos.utils.generate_video import generate_video
