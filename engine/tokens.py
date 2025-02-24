@@ -293,23 +293,22 @@ class TokenSearcher:
             self.logger.info(f"Found {len(existing_records)} existing records")
             
             # Create/update token record
-            try:
-                if existing_records:
-                    self.logger.info(f"\n🔄 Updating existing token record for {token_symbol}")
-                    record_id = existing_records[0]['id']
-                    # Don't update createdAt for existing records
-                    del airtable_record['createdAt']
-                    self.airtable.update(record_id, airtable_record)
-                    self.logger.info("✅ Token record updated successfully")
-                else:
-                    self.logger.info(f"\n➕ Creating new token record for {token_symbol}")
-                    record = self.airtable.insert(airtable_record)
-                    record_id = record['id']
-                    self.logger.info("✅ Token record created successfully")
-                    self.logger.info(f"New record ID: {record_id}")
+            if existing_records:
+                self.logger.info(f"\n🔄 Updating existing token record for {token_symbol}")
+                record_id = existing_records[0]['id']
+                # Don't update createdAt for existing records
+                del airtable_record['createdAt']
+                self.airtable.update(record_id, airtable_record)
+                self.logger.info("✅ Token record updated successfully")
+            else:
+                self.logger.info(f"\n➕ Creating new token record for {token_symbol}")
+                record = self.airtable.insert(airtable_record)
+                record_id = record['id']
+                self.logger.info("✅ Token record created successfully")
+                self.logger.info(f"New record ID: {record_id}")
 
             # Now check for bullish signals
-            print(f"\n🔍 Checking social signals for {token_data.get('symbol')}...")
+            self.logger.info(f"\n🔍 Checking social signals for {token_data.get('symbol')}...")
             bullish, analysis = monitor_token(token_data.get('symbol'))
 
             # Update token record with results
@@ -319,21 +318,12 @@ class TokenSearcher:
             }
 
             self.airtable.update(record_id, update_data)
-            print(f"✅ Token record updated with signal analysis")
-            print(f"Active: {'✅' if bullish else '❌'}")
+            self.logger.info(f"✅ Token record updated with signal analysis")
+            self.logger.info(f"Active: {'✅' if bullish else '❌'}")
             if analysis:
-                print(f"Analysis: {analysis}")
+                self.logger.info(f"Analysis: {analysis}")
 
-                return True
-                
-            except Exception as e:
-                self.logger.error(f"\n❌ Airtable API Error:")
-                self.logger.error(f"Error type: {type(e).__name__}")
-                self.logger.error(f"Error message: {str(e)}")
-                if hasattr(e, 'response'):
-                    self.logger.error(f"Response status: {e.response.status_code}")
-                    self.logger.error(f"Response body: {e.response.text}")
-                return False
+            return True
             
         except Exception as e:
             self.logger.error(f"\n❌ Error creating token record: {str(e)}")
