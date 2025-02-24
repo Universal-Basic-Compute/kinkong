@@ -183,9 +183,7 @@ class MarketOverviewGenerator:
             analysis = response.content[0].text.strip()
             
             # Add signature and call to action
-            analysis += "\n\n🦍 KinKong AI Analysis"
-            analysis += "\n📊 Real-time signals: @kinkong_ubc"
-            analysis += "\n💡 Join our community: t.me/ubccommunity"
+            analysis += "\n\n🦍 KinKong - Trader Agent"
             
             return analysis
             
