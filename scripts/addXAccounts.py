@@ -92,37 +92,39 @@ def get_dexscreener_data(token_address: str) -> Optional[Dict]:
             'xAccount': '',
             'website': '',
             'telegram': '',
-            'image': ''  # Add image field
+            'image': ''
         }
             
         # Extract info from new structure
         if 'info' in pair:
-            # Get website
+            # Get image URL first - independent of other data
+            if 'imageUrl' in pair['info']:
+                social_data['image'] = pair['info']['imageUrl']
+            
+            # Get website if available
             if 'websites' in pair['info']:
                 for website in pair['info']['websites']:
                     if website.get('label') == 'Website':
                         social_data['website'] = website.get('url', '')
                         break
                 
-            # Get socials
+            # Get socials if available
             if 'socials' in pair['info']:
                 for social in pair['info']['socials']:
                     if social.get('type') == 'twitter':
-                        # Extract handle from Twitter URL
                         twitter_url = social.get('url', '')
                         social_data['xAccount'] = twitter_url.split('/')[-1] if twitter_url else ''
                     elif social.get('type') == 'telegram':
                         social_data['telegram'] = social.get('url', '')
-            
-            # Get image URL
-            if 'imageUrl' in pair['info']:
-                social_data['image'] = pair['info']['imageUrl']
-            
-        # Log what we found
-        logger.info(f"Social info found for {token_address}:")
-        logger.info(json.dumps(social_data, indent=2))
-            
-        return social_data
+        
+        # Update Airtable even if only image is found
+        if any(social_data.values()):  # If any field has data
+            logger.info(f"Social/image info found for {token_address}:")
+            logger.info(json.dumps(social_data, indent=2))
+            return social_data
+        else:
+            logger.warning(f"No social or image data found for {token_address}")
+            return None
         
     except Exception as e:
         logger.error(f"Error fetching Dexscreener data for {token_address}: {str(e)}")
@@ -155,12 +157,13 @@ def main():
             # Get Dexscreener data
             social_data = get_dexscreener_data(token['mint'])
             
-            if social_data and social_data['xAccount']:
-                # Update token with all social data
+            if social_data:  # If any data was found (image or socials)
+                # Update token with all available data
                 airtable.update_token(token['id'], social_data)
-                logger.info(f"Updated {token['token']} with X account: {social_data['xAccount']}")
+                updates = [k for k, v in social_data.items() if v]  # List of fields that have data
+                logger.info(f"Updated {token['token']} with: {', '.join(updates)}")
             else:
-                logger.warning(f"No X account found for {token['token']}")
+                logger.warning(f"No data found for {token['token']}")
             
             # Rate limiting
             time.sleep(1)  # Be nice to the API
