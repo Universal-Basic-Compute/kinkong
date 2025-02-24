@@ -340,20 +340,20 @@ async def check_mentions():
         if "data" in data:
             mentions_count = len(data["data"])
             logger.info(f"Found {mentions_count} new mentions")
-            
+                
             newest_id = None
             for mention in data["data"]:
                 try:
                     # Track newest mention ID
                     if not newest_id or int(mention["id"]) > int(newest_id):
                         newest_id = mention["id"]
-                    
+                        
                     # Get author info
                     author = next(
                         (u for u in data["includes"]["users"] if u["id"] == mention["author_id"]),
                         None
                     )
-                    
+                        
                     # Format mention data
                     mention_data = {
                         'id': mention['id'],
@@ -361,48 +361,62 @@ async def check_mentions():
                         'created_at': mention['created_at'],
                         'author_username': author['username'] if author else None
                     }
-                    
-                    # Save mention
+                        
+                    # Save mention and process its tokens
                     await save_message(mention_data, 'X_MENTION')
-                    
-                    # Check if this is a reply and get parent tweet
-                    referenced_tweets = mention.get("referenced_tweets", [])
-                    if referenced_tweets:
-                        for ref in referenced_tweets:
-                            if ref["type"] == "replied_to":
-                                parent_id = ref["id"]
-                                # Get parent tweet
-                                parent_url = f"https://api.twitter.com/2/tweets/{parent_id}"
-                                parent_response = requests.get(parent_url, auth=auth)
-                                
-                                if parent_response.ok:
-                                    parent_data = parent_response.json()
-                                    if "data" in parent_data:
-                                        # Format parent tweet data
-                                        parent_tweet = parent_data["data"]
-                                        parent_tweet_data = {
-                                            'id': parent_tweet['id'],
-                                            'text': parent_tweet['text'],
-                                            'created_at': parent_tweet.get('created_at', mention['created_at']),
-                                            'author_username': parent_tweet.get('author_username', 'unknown')
-                                        }
-                                        
-                                        # Save parent tweet
-                                        await save_message(parent_tweet_data, 'X_MENTION')
-                                        
-                                        # Process tokens from parent tweet
-                                        parent_tokens = extract_tokens_from_text(parent_tweet['text'])
-                                        if parent_tokens:
-                                            logger.info(f"Found tokens in parent tweet: {parent_tokens}")
-                                            await process_tokens(parent_tokens)
-                    
-                    # Process tokens from mention
                     mention_tokens = extract_tokens_from_text(mention['text'])
-                    if mention_tokens:
-                        logger.info(f"Found tokens in mention: {mention_tokens}")
-                        await process_tokens(mention_tokens)
+                        
+                    # Get conversation context
+                    conversation_tokens = set()
+                        
+                    # Check referenced tweets (replies, quotes)
+                    referenced_tweets = mention.get("referenced_tweets", [])
+                    for ref in referenced_tweets:
+                        try:
+                            # Get parent tweet
+                            parent_url = f"https://api.twitter.com/2/tweets/{ref['id']}"
+                            parent_response = requests.get(parent_url, auth=auth)
+                                
+                            if parent_response.ok:
+                                parent_data = parent_response.json()
+                                if "data" in parent_data:
+                                    parent_tweet = parent_data["data"]
+                                        
+                                    # Save parent tweet
+                                    parent_tweet_data = {
+                                        'id': parent_tweet['id'],
+                                        'text': parent_tweet['text'],
+                                        'created_at': parent_tweet.get('created_at', mention['created_at']),
+                                        'author_username': parent_tweet.get('author_username', 'unknown')
+                                    }
+                                    await save_message(parent_tweet_data, 'X_MENTION')
+                                        
+                                    # Extract tokens from parent
+                                    parent_tokens = extract_tokens_from_text(parent_tweet['text'])
+                                    conversation_tokens.update(parent_tokens)
+                                        
+                                    # If this is a reply, get the conversation thread
+                                    if ref['type'] == 'replied_to':
+                                        conversation_url = f"https://api.twitter.com/2/tweets/{ref['id']}/conversation"
+                                        conv_response = requests.get(conversation_url, auth=auth)
+                                            
+                                        if conv_response.ok:
+                                            conv_data = conv_response.json()
+                                            for tweet in conv_data.get('data', []):
+                                                conv_tokens = extract_tokens_from_text(tweet['text'])
+                                                conversation_tokens.update(conv_tokens)
+                            
+                        except Exception as e:
+                            logger.error(f"Error processing referenced tweet: {e}")
+                            continue
+                        
+                    # Combine all tokens from mention and conversation
+                    all_tokens = set(mention_tokens) | conversation_tokens
+                    if all_tokens:
+                        logger.info(f"Found tokens in conversation: {list(all_tokens)}")
+                        await process_tokens(list(all_tokens))
                     else:
-                        logger.info("No tokens found in mention")
+                        logger.info("No tokens found in conversation")
                 except Exception as e:
                     logger.error(f"Error processing mention: {e}")
                     continue
