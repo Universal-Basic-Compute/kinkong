@@ -82,9 +82,10 @@ def create_tiktok_video():
     ).with_duration(5)
     clip1 = clip1.with_position(('center', height//3))
     clip1 = clip1.with_effects([
-        FadeIn(duration=1),
-        FadeOut(duration=1, start_time=4)
+        FadeIn(duration=1)
     ])
+    # Add FadeOut separately, starting 1 second before the end
+    clip1 = clip1.with_effects([FadeOut(duration=1)], start_time=4)
     
     # Second part slides in from right
     clip2 = TextClip(
