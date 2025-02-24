@@ -140,8 +140,8 @@ class VideoGenerator:
             import time
             max_attempts = 30  # 5 minutes total
             for attempt in range(max_attempts):
-                # Use get_status to check job status
-                status = self.client.image_to_video.get_status(job_id)
+                # Use status to check job status
+                status = self.client.image_to_video.status(job_id)
                 logger.info(f"Status check {attempt + 1}: {status.status}")
                     
                 if status.status == "completed":
