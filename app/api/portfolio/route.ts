@@ -138,7 +138,7 @@ export async function GET() {
     const snapshotRecords = await snapshotsTable
       .select({
         sort: [{ field: 'createdAt', direction: 'desc' }],
-        filterByFormula: "IS_AFTER({createdAt}, DATEADD(NOW(), -1, 'hours'))"
+        filterByFormula: "IS_AFTER({createdAt}, DATEADD(NOW(), -12, 'hours'))"  // Changed from -1 to -12 hours
       })
       .all();
 
@@ -147,10 +147,18 @@ export async function GET() {
     for (const record of snapshotRecords) {
       const token = record.get('token');
       const mint = record.get('mint');
-      if (mint && !priceMap[mint]) {  // Only keep first (most recent) price
+      // Only store if we don't have this token yet (since records are sorted by date desc)
+      if (mint && !priceMap[mint]) {
         priceMap[mint] = record.get('price') || 0;
       }
     }
+
+    // Add debug logging for snapshot data
+    console.log('Snapshot data loaded:', {
+      recordsFound: snapshotRecords.length,
+      uniquePrices: Object.keys(priceMap).length,
+      timeWindow: '12 hours'
+    });
 
     // Fetch tokens metadata
     const tokensMetadata = await getTokensMetadata();
