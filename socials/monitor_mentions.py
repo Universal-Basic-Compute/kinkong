@@ -14,36 +14,30 @@ from airtable import Airtable as AirtableAPI
 from airtable import Airtable
 
 def extract_tokens_from_text(text: str) -> List[str]:
-    """Extract tokens from text, with or without $ symbol"""
+    """Extract tokens that start with $ symbol"""
     import re
     
-    # Liste des tokens à ignorer
-    IGNORE_TOKENS = {'USD', 'APT', 'NFT', 'AI', 'ML', 'DM', 'GM', 'GN', 'ATH', 'IMO', 'TBH', 'IDK', 'NFA'}
+    # Liste des tokens à ignorer (stablecoins etc)
+    IGNORE_TOKENS = {'$USD', '$USDT', '$USDC'}
     
-    # Patterns pour trouver les tokens
-    patterns = [
-        r'\$([A-Za-z0-9]+)(?=[.,!?\s]|$)',  # Tokens avec $
-        r'\b([A-Z][A-Z0-9]{2,})(?=[.,!?\s]|$)',  # Tokens en majuscules
-        r'(?:token|coin)\s+([A-Za-z0-9]+)',  # Mots après "token" ou "coin"
-        r'#([A-Za-z0-9]+)(?=[.,!?\s]|$)'  # Hashtags
-    ]
+    # Pattern uniquement pour les tokens avec $
+    pattern = r'\$([A-Za-z0-9]+)(?=[.,!?\s]|$)'
     
-    all_tokens = set()
+    # Trouver tous les matches et filtrer
+    matches = re.findall(pattern, text)
+    tokens = set()
     
-    # Appliquer chaque pattern
-    for pattern in patterns:
-        matches = re.findall(pattern, text, re.IGNORECASE)
-        for token in matches:
-            token = token.upper()
-            if (token not in IGNORE_TOKENS and 
-                len(token) >= 3 and 
-                len(token) <= 10):
-                all_tokens.add(token)
+    for token in matches:
+        token = token.upper()
+        if (f"${token}" not in IGNORE_TOKENS and 
+            len(token) >= 2 and  # Au moins 2 caractères après le $
+            len(token) <= 10):   # Maximum 10 caractères
+            tokens.add(token)
     
-    if all_tokens:
-        logger.info(f"Found tokens in text: {list(all_tokens)}")
+    if tokens:
+        logger.info(f"Found tokens in text: {list(tokens)}")
     
-    return list(all_tokens)
+    return list(tokens)
 
 def check_token_status(token: str, airtable_base_id: str, airtable_api_key: str) -> bool:
     """Check if token needs updating (doesn't exist or old data)"""
