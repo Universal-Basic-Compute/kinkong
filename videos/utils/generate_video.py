@@ -35,11 +35,28 @@ class VideoGenerator:
             
             # Read image file
             with open(image_path, "rb") as file:
-                files = {"image": file}
+                # Convert image to base64
+                import base64
+                image_data = base64.b64encode(file.read())
                 
             # Make upload request with client ID
-            headers = {"Authorization": f"Client-ID {self.imgur_client_id}"}
-            response = requests.post(url, headers=headers, files=files)
+            headers = {
+                "Authorization": f"Client-ID {self.imgur_client_id}",
+                "Content-Type": "application/x-www-form-urlencoded"
+            }
+            
+            # Send as form data
+            data = {
+                'image': image_data,
+                'type': 'base64'
+            }
+            
+            logger.info(f"Sending request to Imgur...")
+            response = requests.post(url, headers=headers, data=data)
+            
+            logger.info(f"Imgur response status: {response.status_code}")
+            logger.debug(f"Imgur response headers: {response.headers}")
+            logger.debug(f"Imgur response: {response.text[:500]}...")  # First 500 chars
             
             if response.status_code != 200:
                 logger.error(f"Imgur upload failed: {response.status_code} - {response.text}")
@@ -48,12 +65,16 @@ class VideoGenerator:
             data = response.json()
             if not data.get("data", {}).get("link"):
                 logger.error("No URL in Imgur response")
+                logger.debug(f"Full response data: {data}")
                 return None
                 
-            return data["data"]["link"]
+            image_url = data["data"]["link"]
+            logger.info(f"Successfully uploaded to Imgur: {image_url}")
+            return image_url
                 
         except Exception as e:
             logger.error(f"Error uploading to Imgur: {e}")
+            logger.exception("Detailed error trace:")  # This will print the full stack trace
             return None
 
     def generate_video(
