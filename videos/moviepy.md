@@ -212,6 +212,21 @@ background = ColorClip(
 
 ## Effects and Transitions
 
+### Important Notes on Fade Effects
+
+FadeIn and FadeOut effects in MoviePy v2.0:
+- `FadeIn(duration)`: Automatically applies at clip start
+- `FadeOut(duration)`: Automatically applies at clip end
+- No need to specify start_time - timing is handled automatically
+- Can be combined in a single `with_effects` call:
+  ```python
+  clip = clip.with_effects([
+      FadeIn(duration=1),
+      FadeOut(duration=1)  # Applies at end automatically
+  ])
+  ```
+- For cross-fading between clips, use CrossFadeIn/CrossFadeOut instead
+
 ### Visual Effects
 ```python
 clip = clip.with_effects([
