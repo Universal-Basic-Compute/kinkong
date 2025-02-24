@@ -85,26 +85,52 @@ async def update_token(token: str):
         # Construct path to engine/tokens.py
         tokens_script = Path(__file__).parent.parent / 'engine' / 'tokens.py'
         
-        # Run the script with token as argument and proper encoding
+        # Run the script with token as argument
         process = subprocess.Popen(
             [sys.executable, str(tokens_script), token],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            encoding='utf-8',  # Spécifier l'encodage UTF-8
-            errors='replace'   # Remplacer les caractères non décodables
+            encoding='utf-8',
+            errors='replace',
+            bufsize=1,  # Line buffered
+            universal_newlines=True  # Text mode
         )
         
-        # Attendre la fin du processus avec timeout
+        # Function to handle output streams
+        def log_output(stream, prefix):
+            for line in stream:
+                line = line.strip()
+                if line:
+                    logger.info(f"{prefix} {line}")
+
+        # Create threads to handle stdout and stderr
+        import threading
+        stdout_thread = threading.Thread(
+            target=log_output, 
+            args=(process.stdout, "[tokens.py]")
+        )
+        stderr_thread = threading.Thread(
+            target=log_output, 
+            args=(process.stderr, "[tokens.py ERROR]")
+        )
+        
+        # Start threads
+        stdout_thread.start()
+        stderr_thread.start()
+        
+        # Wait for process to complete with timeout
         try:
-            stdout, stderr = process.communicate(timeout=30)
+            return_code = process.wait(timeout=30)
             
-            if process.returncode == 0:
+            # Wait for output threads to complete
+            stdout_thread.join()
+            stderr_thread.join()
+            
+            if return_code == 0:
                 logger.info(f"Successfully updated token {token}")
                 return True
             else:
-                logger.error(f"Failed to update token {token}")
-                if stderr:
-                    logger.error(f"Error output: {stderr}")
+                logger.error(f"Failed to update token {token} (return code: {return_code})")
                 return False
                 
         except subprocess.TimeoutExpired:
