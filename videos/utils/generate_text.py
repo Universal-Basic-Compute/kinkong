@@ -94,8 +94,7 @@ def create_text_clips(
         if i == 0:
             # First text slides in from left
             composed_clip = composed_clip.with_effects([
-                SlideIn(duration=0.7, side="left"),
-                FadeOut(duration=0.5, start_time=clip_duration-0.5)  # Specify start time for fade out
+                SlideIn(duration=0.7, side="left")
             ])
             composed_clip = composed_clip.with_position(('center', height//3))
         else:
@@ -103,8 +102,7 @@ def create_text_clips(
             composed_clip = composed_clip.with_effects([
                 SlideIn(duration=0.7, side="right")
             ])
-            composed_clip = composed_clip.with_duration(5)
-            composed_clip = composed_clip.with_start(0.5)  # Start slightly after first clip
+            composed_clip = composed_clip.with_start(0.5)
             composed_clip = composed_clip.with_position(('center', 2*height//3))
         
         clips.append(composed_clip)

@@ -88,16 +88,10 @@ def process_video_clip(
                 Crop(x1=x_offset, width=target_width)
             ])
         
-        # Set duration first
+        # Set duration
         video_clip = video_clip.with_duration(duration)
         
-        # Add fade effects
-        video_clip = video_clip.with_effects([
-            FadeIn(duration=0.3),
-            FadeOut(duration=0.3, start_time=duration-0.3)  # Specify start time
-        ])
-        
-        # Create text clips with background box
+        # Create text clips
         text_clips, _ = create_text_clips(
             screen['text'], 
             target_width, 
@@ -109,12 +103,6 @@ def process_video_clip(
             [video_clip] + text_clips,
             size=(target_width, target_height)
         ).with_duration(duration)  # Set final duration
-        
-        # Add fade effects
-        screen_clip = screen_clip.with_effects([
-            FadeIn(duration=0.5),
-            FadeOut(duration=0.5)
-        ])
         
         return screen_clip
         
