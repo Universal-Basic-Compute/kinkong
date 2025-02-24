@@ -264,18 +264,8 @@ def clean_json_string(json_str):
         # Remove any leading/trailing whitespace
         json_str = json_str.strip()
         
-        # Add proper structure if missing
-        if not json_str.startswith('{"timeframes"'):
-            json_str = '{"timeframes": ' + json_str + '}'
-        
         # Validate by parsing
         parsed = json.loads(json_str)
-        
-        # Ensure required structure exists
-        if 'timeframes' not in parsed:
-            parsed['timeframes'] = {}
-        if 'overall_analysis' not in parsed:
-            parsed['overall_analysis'] = {}
             
         return json.dumps(parsed)
         
@@ -327,17 +317,6 @@ Format your response as JSON:
         "SWING": { ... },
         "INTRADAY": { ... },
         "SCALP": { ... }
-    },
-    "overall_analysis": {
-        "primary_trend": "BULLISH|BEARISH|NEUTRAL",
-        "timeframe_alignment": "ALIGNED|MIXED|CONFLICTING",
-        "best_timeframe": "POSITION|SWING|INTRADAY|SCALP",
-        "key_observations": ["List of important points"],
-        "recommended_action": {
-            "signal": "BUY|SELL|HOLD",
-            "timeframe": "POSITION|SWING|INTRADAY|SCALP",
-            "reasoning": "Why this is the best action"
-        }
     }
 }"""
 
