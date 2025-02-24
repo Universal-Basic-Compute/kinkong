@@ -1,5 +1,4 @@
 import os
-import tweepy
 import requests
 import logging
 import anthropic
@@ -134,64 +133,95 @@ def reply_to_mention(api: tweepy.API, client: tweepy.Client, mention_id: int, us
 def check_mentions():
     """Check mentions of @kinkong_ubc once"""
     try:
-        # Initialize X API client
-        auth = tweepy.OAuthHandler(
-            os.getenv('X_API_KEY'),
-            os.getenv('X_API_SECRET')
-        )
-        auth.set_access_token(
-            os.getenv('X_ACCESS_TOKEN'),
-            os.getenv('X_ACCESS_TOKEN_SECRET')
-        )
+        # Get bearer token
+        bearer_token = os.getenv('X_BEARER_TOKEN')
+        if not bearer_token:
+            logger.error("Missing X_BEARER_TOKEN")
+            return
+            
+        # API endpoint
+        url = "https://api.twitter.com/2/users/me/mentions"
         
-        # Create API v1.1 instance for media upload
-        api = tweepy.API(auth)
-        
-        # Create API v2 client
-        client = tweepy.Client(
-            consumer_key=os.getenv('X_API_KEY'),
-            consumer_secret=os.getenv('X_API_SECRET'),
-            access_token=os.getenv('X_ACCESS_TOKEN'),
-            access_token_secret=os.getenv('X_ACCESS_TOKEN_SECRET')
-        )
+        # Headers with bearer token
+        headers = {
+            "Authorization": f"Bearer {bearer_token}",
+            "Content-Type": "application/json"
+        }
         
         # Get last processed mention ID
         last_mention_id = get_last_mention_id()
         
-        # Get mentions using v2 endpoint
-        mentions = client.get_users_mentions(
-            id=client.get_me()[0].id,
-            since_id=last_mention_id,
-            tweet_fields=['created_at', 'text'],
-            expansions=['author_id'],
-            user_fields=['username']
-        )
+        # Parameters for the request
+        params = {
+            "tweet.fields": "created_at,text",
+            "expansions": "author_id",
+            "user.fields": "username",
+            "max_results": 100
+        }
         
-        if mentions.data:
+        # Add since_id if we have a last mention
+        if last_mention_id:
+            params["since_id"] = last_mention_id
+            
+        # Make the request
+        response = requests.get(url, headers=headers, params=params)
+        response.raise_for_status()
+        
+        data = response.json()
+        
+        if "data" in data:
             newest_id = None
-            for mention in mentions.data:
+            for mention in data["data"]:
                 # Track newest mention ID
-                if not newest_id or mention.id > newest_id:
-                    newest_id = mention.id
+                if not newest_id or int(mention["id"]) > int(newest_id):
+                    newest_id = mention["id"]
                     
-                # Get full tweet object for better formatting
-                tweet = api.get_status(mention.id, tweet_mode='extended')
+                # Get author info from includes
+                author = next(
+                    (u for u in data["includes"]["users"] if u["id"] == mention["author_id"]),
+                    None
+                )
                 
-                # Send notification
-                if send_telegram_notification(tweet):
-                    logger.info(f"Notification sent for mention from @{tweet.user.screen_name}")
-                else:
-                    logger.error(f"Failed to send notification for mention from @{tweet.user.screen_name}")
-
-                # Generate and post reply
-                reply_text = generate_reply_with_claude(tweet.full_text, tweet.user.screen_name)
-                if reply_text:
-                    if reply_to_mention(api, client, mention.id, tweet.user.screen_name, reply_text):
-                        logger.info(f"Reply posted: {reply_text}")
+                if author:
+                    # Send notification
+                    notification_data = {
+                        "id": mention["id"],
+                        "created_at": mention["created_at"],
+                        "text": mention["text"],
+                        "user": {
+                            "screen_name": author["username"]
+                        }
+                    }
+                    
+                    if send_telegram_notification(notification_data):
+                        logger.info(f"Notification sent for mention from @{author['username']}")
                     else:
-                        logger.error("Failed to post reply")
-                else:
-                    logger.error("Failed to generate reply")
+                        logger.error(f"Failed to send notification for mention from @{author['username']}")
+
+                    # Generate and post reply
+                    reply_text = generate_reply_with_claude(mention["text"], author["username"])
+                    if reply_text:
+                        # Post reply using v2 endpoint
+                        reply_url = "https://api.twitter.com/2/tweets"
+                        reply_data = {
+                            "text": reply_text,
+                            "reply": {
+                                "in_reply_to_tweet_id": mention["id"]
+                            }
+                        }
+                        
+                        reply_response = requests.post(
+                            reply_url,
+                            headers=headers,
+                            json=reply_data
+                        )
+                        
+                        if reply_response.status_code == 201:
+                            logger.info(f"Reply posted: {reply_text}")
+                        else:
+                            logger.error("Failed to post reply")
+                    else:
+                        logger.error("Failed to generate reply")
             
             # Save newest mention ID
             if newest_id:
@@ -208,10 +238,7 @@ def main():
         
         # Verify required environment variables
         required_vars = [
-            'X_API_KEY',
-            'X_API_SECRET', 
-            'X_ACCESS_TOKEN',
-            'X_ACCESS_TOKEN_SECRET',
+            'X_BEARER_TOKEN',
             'TELEGRAM_BOT_TOKEN',
             'TELEGRAM_CHAT_ID',
             'ANTHROPIC_API_KEY'
