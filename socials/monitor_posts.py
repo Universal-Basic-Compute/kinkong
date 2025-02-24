@@ -113,8 +113,8 @@ def search_token_tweets(token: str, bearer_token: str) -> List[Dict]:
         # Search endpoint
         search_url = "https://api.twitter.com/2/tweets/search/recent"
         
-        # Search for cashtag and hashtag
-        query = f"(${token} OR #{token}) -is:retweet -is:reply lang:en"
+        # Search for just the token name
+        query = f"{token} -is:retweet -is:reply lang:en"
         
         params = {
             "query": query,
