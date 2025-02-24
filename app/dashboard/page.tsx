@@ -8,17 +8,7 @@ import { TrackedTokensSection } from '@/components/dashboard/TrackedTokensSectio
 import { InvestmentCard } from '@/components/dashboard/InvestmentCard';
 import { BubbleChart } from '@/components/dashboard/BubbleChart';
 
-interface TokenInfo {
-  token: string;
-  name: string;
-  mint: string;
-  xAccount?: string;
-  isActive: boolean;
-  price: number;
-  volume24h: number;
-  liquidity: number;
-  holderCount: number;
-}
+import { TokenInfo } from '@/types/token';
 
 function getTokenClass(token: string): string {
   if (!token) return 'metallic-text-argent'; // Default style if token is undefined

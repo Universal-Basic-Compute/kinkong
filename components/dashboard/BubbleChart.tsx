@@ -2,14 +2,7 @@
 
 import { useRef, useEffect } from 'react';
 
-interface TokenInfo {
-  token: string;
-  name: string;
-  mint: string;
-  priceTrend: number;
-  volumeGrowth: number;
-  liquidity: number;
-}
+import { TokenInfo } from '@/types/token';
 
 interface BubbleChartProps {
   tokens: TokenInfo[];
