@@ -95,7 +95,8 @@ class PromptGenerator:
                             "text": "Target: $69 🎯",
                             "background": "Futuristic command center, giant price target hologram in center, gorilla trader analyzing multiple data feeds, cyber-punk aesthetic, dramatic side lighting --ar 9:16"
                         }
-                    ]
+                    ],
+                    "post": "🦍 KinKong Alert: $SOL looking JUICY! 📈 Perfect setup forming with strong support at $XX. Target: $69 🎯 #cryptotrading #solana #cryptocurrency #trading #crypto #KinKongAlpha"
                 }
 
                 Each background prompt should:
@@ -104,7 +105,15 @@ class PromptGenerator:
                 3. Match the mood and content of the text
                 4. Create visual continuity between screens
                 5. Maintain the KinKong character (cool gorilla trader) theme
-                6. Use cinematic lighting and composition""",
+                6. Use cinematic lighting and composition
+
+                The post text should:
+                1. Be engaging and punchy
+                2. Include relevant emojis
+                3. Mention key price levels and targets
+                4. Include 4-6 relevant hashtags
+                5. Keep within TikTok's character limit
+                6. Maintain the KinKong brand voice""",
                 messages=[
                     {
                         "role": "user",
