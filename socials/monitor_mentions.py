@@ -85,15 +85,23 @@ async def update_token(token: str):
         # Construct path to engine/tokens.py
         tokens_script = Path(__file__).parent.parent / 'engine' / 'tokens.py'
         
+        # Get Python executable path
+        python_exe = sys.executable
+        
+        # Create environment variables with proper paths
+        env = os.environ.copy()
+        env['PYTHONPATH'] = str(Path(__file__).parent.parent)  # Add project root to PYTHONPATH
+        
         # Run the script with token as argument
         process = subprocess.Popen(
-            [sys.executable, str(tokens_script), token],
+            [python_exe, str(tokens_script), token],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             encoding='utf-8',
             errors='replace',
-            bufsize=1,  # Line buffered
-            universal_newlines=True  # Text mode
+            bufsize=1,
+            universal_newlines=True,
+            env=env  # Pass environment variables
         )
         
         # Function to handle output streams
