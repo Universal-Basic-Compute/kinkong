@@ -14,6 +14,41 @@ def setup_logging():
     )
     return logging.getLogger(__name__)
 
+def post_signal(signal_data: Dict):
+    """Post a specific signal to social media"""
+    try:
+        print("\n🚀 Posting signal to social media...")
+        
+        # Initialize Airtable API
+        base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
+        api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
+        
+        if not base_id or not api_key:
+            print("❌ Missing Airtable configuration")
+            return False
+            
+        airtable = AirtableAPI(base_id, api_key)
+        
+        # Generate tweet content
+        tweet_text = generate_tweet_with_claude(signal_data)
+        
+        if not tweet_text:
+            print("❌ Failed to generate tweet content")
+            return False
+            
+        # Post to X with signal data
+        if post_to_x(tweet_text, signal_data):
+            print("✅ Successfully posted signal to X")
+            print(f"Tweet content: {tweet_text}")
+            return True
+        else:
+            print("❌ Failed to post to X")
+            return False
+            
+    except Exception as e:
+        print(f"❌ Error posting signal: {e}")
+        return False
+
 logger = setup_logging()
 
 class AirtableAPI:

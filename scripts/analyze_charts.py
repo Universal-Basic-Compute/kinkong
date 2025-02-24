@@ -8,6 +8,7 @@ if project_root not in sys.path:
 
 # Now we can import backend modules
 from backend.src.airtable.tables import getTable
+from socials.post_signal import post_signal
 import anthropic
 import os
 import base64
@@ -597,6 +598,14 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None, addit
         print("\nSending to Airtable:", json.dumps(signal_data, indent=2))
         response = airtable.insert(signal_data)
         print(f"✅ Created signal: {response['id']}")
+
+        # Post to social media if it's a high confidence signal
+        if confidence_level == 'HIGH':
+            if post_signal(response):
+                print("✅ Signal posted to social media")
+            else:
+                print("⚠️ Failed to post signal to social media")
+
         return response
 
     except Exception as e:
