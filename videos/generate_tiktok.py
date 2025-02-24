@@ -3,6 +3,13 @@ from pathlib import Path
 import json
 import asyncio
 import logging
+import sys
+
+# Add project root to Python path
+project_root = str(Path(__file__).parent.parent.absolute())
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
 from moviepy.video.fx.FadeIn import FadeIn
 from moviepy.video.fx.FadeOut import FadeOut
 from moviepy.video.VideoClip import TextClip, ColorClip, ImageClip
