@@ -22,39 +22,38 @@ class VideoGenerator:
         if not self.api_key:
             raise ValueError("RUNWAYML_API_KEY not found in environment variables")
             
-        # Add ImgBB API key for image hosting
-        self.imgbb_api_key = os.getenv('IMGBB_API_KEY')
-        if not self.imgbb_api_key:
-            raise ValueError("IMGBB_API_KEY not found in environment variables")
+        self.imgur_client_id = os.getenv('IMGUR_CLIENT_ID')
+        if not self.imgur_client_id:
+            raise ValueError("IMGUR_CLIENT_ID not found in environment variables")
         
         self.client = RunwayML(api_key=self.api_key)
 
-    def upload_image_to_imgbb(self, image_path: Path) -> Optional[str]:
-        """Upload image to ImgBB and return HTTPS URL"""
+    def upload_to_imgur(self, image_path: Path) -> Optional[str]:
+        """Upload image to Imgur and return HTTPS URL"""
         try:
-            url = "https://api.imgbb.com/1/upload"
+            url = "https://api.imgur.com/3/image"
             
             # Read image file
             with open(image_path, "rb") as file:
                 files = {"image": file}
                 
-                # Make upload request
-                payload = {"key": self.imgbb_api_key}
-                response = requests.post(url, files=files, data=payload)
+            # Make upload request with client ID
+            headers = {"Authorization": f"Client-ID {self.imgur_client_id}"}
+            response = requests.post(url, headers=headers, files=files)
+            
+            if response.status_code != 200:
+                logger.error(f"Imgur upload failed: {response.status_code} - {response.text}")
+                return None
                 
-                if response.status_code != 200:
-                    logger.error(f"ImgBB upload failed: {response.status_code} - {response.text}")
-                    return None
-                    
-                data = response.json()
-                if not data.get("data", {}).get("url"):
-                    logger.error("No URL in ImgBB response")
-                    return None
-                    
-                return data["data"]["url"]
+            data = response.json()
+            if not data.get("data", {}).get("link"):
+                logger.error("No URL in Imgur response")
+                return None
+                
+            return data["data"]["link"]
                 
         except Exception as e:
-            logger.error(f"Error uploading to ImgBB: {e}")
+            logger.error(f"Error uploading to Imgur: {e}")
             return None
 
     def generate_video(
@@ -96,9 +95,9 @@ class VideoGenerator:
             logger.info(f"🎬 Generating video from image: {image_path}")
             logger.info(f"Using prompt: {prompt}")
             
-            # First upload image to get HTTPS URL
-            logger.info(f"📤 Uploading image to ImgBB...")
-            image_url = self.upload_image_to_imgbb(image_path)
+            # Upload to Imgur first
+            logger.info(f"📤 Uploading image to Imgur...")
+            image_url = self.upload_to_imgur(image_path)
             
             if not image_url:
                 raise ValueError("Failed to get HTTPS URL for image")
