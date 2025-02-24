@@ -42,7 +42,11 @@ def create_text_clips(
     if not font_path:
         font_path = find_system_font()
 
+    # Split text into parts, but handle case where there's no separator
     text_parts = text.split('\n\n')
+    if len(text_parts) == 1:
+        # If only one part, use it for both clips with different styling
+        text_parts = [text_parts[0], text_parts[0]]
     
     # First part appears with fade - bigger and bolder
     clip1 = TextClip(
@@ -64,9 +68,9 @@ def create_text_clips(
         FadeOut(duration=0.5)
     ])
     
-    # Second part slides in from right - different style
+    # Second part with different styling
     clip2 = TextClip(
-        text=text_parts[1],
+        text=text_parts[-1],  # Use last part or same text
         font=font_path,
         font_size=100,  # Slightly smaller than first
         color='#00ffff',  # Cyan color for contrast
