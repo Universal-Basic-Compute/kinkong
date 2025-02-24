@@ -340,18 +340,30 @@ class JupiterTradeExecutor:
                         'token_address': token_mint
                     }
 
+                    # Log request details
+                    self.logger.info(f"Checking balance for wallet {self.wallet_address}")
+                    self.logger.info(f"Token mint: {token_mint}")
+
                     async with aiohttp.ClientSession() as session:
                         async with session.get(url, headers=headers, params=params) as response:
+                            response_text = await response.text()
+                            self.logger.debug(f"Birdeye API response: {response_text}")
+                        
                             if response.status == 200:
-                                data = await response.json()
-                                if data.get('success'):
-                                    initial_balance = float(data['data'].get('balance', 0))
-                                    self.logger.info(f"Initial balance: {initial_balance}")
-                                else:
-                                    self.logger.error("Failed to get initial balance")
+                                try:
+                                    data = json.loads(response_text)
+                                    if data and isinstance(data, dict) and data.get('success'):
+                                        initial_balance = float(data.get('data', {}).get('balance', 0))
+                                        self.logger.info(f"Initial balance: {initial_balance}")
+                                    else:
+                                        self.logger.error(f"Invalid response format: {data}")
+                                        continue
+                                except json.JSONDecodeError as e:
+                                    self.logger.error(f"Failed to parse JSON response: {e}")
                                     continue
                             else:
                                 self.logger.error(f"Birdeye API error: {response.status}")
+                                self.logger.error(f"Response: {response_text}")
                                 continue
 
                     # Send transaction
