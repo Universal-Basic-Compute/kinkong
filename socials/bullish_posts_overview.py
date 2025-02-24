@@ -81,7 +81,7 @@ class MarketOverviewGenerator:
         """Get latest market sentiment"""
         try:
             records = self.sentiment_table.get_all(
-                sort=[('-createdAt', 'desc')],
+                sort=[('createdAt', 'desc')],
                 maxRecords=1
             )
             if records:
