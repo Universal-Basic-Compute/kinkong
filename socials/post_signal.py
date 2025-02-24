@@ -110,7 +110,29 @@ def get_token_info(token: str, airtable: AirtableAPI) -> Optional[Dict]:
         logger.error(f"Error fetching token info: {str(e)}")
         return None
 
-def get_system_prompt(token_info: Dict) -> str:
+def get_latest_market_sentiment(airtable: AirtableAPI) -> Optional[Dict]:
+    """Get latest market sentiment from MARKET_SENTIMENT table"""
+    try:
+        url = f"{airtable.base_url}/MARKET_SENTIMENT"
+        params = {
+            "sort[0][field]": "createdAt",
+            "sort[0][direction]": "desc",
+            "maxRecords": 1
+        }
+        
+        response = requests.get(url, headers=airtable.headers, params=params)
+        response.raise_for_status()
+        
+        records = response.json().get('records', [])
+        if records:
+            return records[0].get('fields', {})
+        return None
+        
+    except Exception as e:
+        logger.error(f"Error fetching market sentiment: {str(e)}")
+        return None
+
+def get_system_prompt(token_info: Dict, market_sentiment: Optional[Dict] = None) -> str:
     base_prompt = """You are a cryptocurrency trading expert managing the X account for KinKong.
 
 Write a short, engaging tweet about a trading signal. The tweet should:
@@ -124,6 +146,13 @@ Write a short, engaging tweet about a trading signal. The tweet should:
     if token_info.get('xAccount'):
         base_prompt += f"\n\nMention the project's X account: {token_info['xAccount']}"
 
+    # Add market sentiment context if available
+    if market_sentiment:
+        base_prompt += f"\n\nMarket Context:\n"
+        base_prompt += f"• Overall Sentiment: {market_sentiment.get('classification', 'UNKNOWN')}\n"
+        base_prompt += f"• Confidence: {market_sentiment.get('confidence')}%\n"
+        base_prompt += f"• SOL Performance: {market_sentiment.get('solPerformance')}%"
+
     return base_prompt
 
 def generate_tweet_with_claude(signal_data: Dict) -> Optional[str]:
@@ -136,16 +165,17 @@ def generate_tweet_with_claude(signal_data: Dict) -> Optional[str]:
             
         client = anthropic.Client(api_key=api_key)
         
-        # Get token info
+        # Get token info and market sentiment
         airtable = AirtableAPI(os.getenv('KINKONG_AIRTABLE_BASE_ID'), os.getenv('KINKONG_AIRTABLE_API_KEY'))
         token_info = get_token_info(signal_data.get('fields', {}).get('token'), airtable)
+        market_sentiment = get_latest_market_sentiment(airtable)
         
         if not token_info:
             logger.error(f"Token info not found for {signal_data.get('fields', {}).get('token')}")
             return None
             
-        # Get customized system prompt
-        system_prompt = get_system_prompt(token_info)
+        # Get customized system prompt with market sentiment
+        system_prompt = get_system_prompt(token_info, market_sentiment)
         
         # Prepare signal info for Claude
         fields = signal_data.get('fields', {})
@@ -156,7 +186,9 @@ Type: {fields.get('type')}
 Entry Price: ${fields.get('entryPrice', 0):.4f}
 Target Price: ${fields.get('targetPrice', 0):.4f}
 Timeframe: {fields.get('timeframe')}
-Expected Return: {fields.get('expectedReturn')}%"""
+Expected Return: {fields.get('expectedReturn')}%
+
+Market Sentiment: {market_sentiment.get('classification') if market_sentiment else 'UNKNOWN'}"""
 
         message = client.messages.create(
             model="claude-3-5-sonnet-20241022",
