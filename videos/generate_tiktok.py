@@ -79,6 +79,7 @@ if project_root not in sys.path:
 
 from moviepy.video.fx.FadeIn import FadeIn
 from moviepy.video.fx.FadeOut import FadeOut
+from moviepy.video.fx.Crop import Crop
 from moviepy.video.VideoClip import TextClip, ColorClip, ImageClip
 from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
 from moviepy.video.fx.SlideIn import SlideIn
@@ -256,11 +257,13 @@ async def create_tiktok_video():
                     new_width = int(height * aspect_ratio)
                     video_clip = video_clip.resized(height=height)
                     
-                    # Center crop if needed
+                    # Center crop if needed using the Crop effect
                     if new_width > width:
                         x_offset = (new_width - width) // 2
-                        video_clip = video_clip.crop(x1=x_offset, x2=x_offset+width)
-                        
+                        video_clip = video_clip.with_effects([
+                            Crop(x1=x_offset, width=width)
+                        ])
+                    
                     # Set duration
                     video_clip = video_clip.with_duration(duration_per_screen)
                     
