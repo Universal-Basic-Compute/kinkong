@@ -50,25 +50,38 @@ class AirtableAPI:
             return None
 
 def post_to_x(text: str) -> bool:
-    """Post to X using API"""
+    """Post to X using API v2"""
     try:
-        # X API endpoint
+        # X API v2 endpoint
         url = "https://api.twitter.com/2/tweets"
         
+        # Get bearer token and API key
+        bearer_token = os.getenv('X_BEARER_TOKEN')
+        api_key = os.getenv('X_API_KEY')
+        
+        if not bearer_token or not api_key:
+            logger.error("Missing X API credentials")
+            return False
+        
         headers = {
-            "Authorization": f"Bearer {os.getenv('X_BEARER_TOKEN')}",
-            "Content-Type": "application/json"
+            "Authorization": f"Bearer {bearer_token}",
+            "Content-Type": "application/json",
+            "X-API-Key": api_key
         }
         
+        # Prepare request body according to API spec
         data = {
             "text": text
         }
         
         response = requests.post(url, headers=headers, json=data)
-        response.raise_for_status()
         
-        logger.info("Successfully posted to X")
-        return True
+        if response.status_code == 201:
+            logger.info(f"Successfully posted to X. Response: {response.json()}")
+            return True
+        else:
+            logger.error(f"Failed to post to X. Status: {response.status_code}, Response: {response.text}")
+            return False
         
     except Exception as e:
         logger.error(f"Error posting to X: {str(e)}")
