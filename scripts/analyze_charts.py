@@ -358,12 +358,14 @@ Current Market Data:
 
 {market_data_str}
 
-Analyze each timeframe in sequence, considering how they relate to each other:
+Please analyze the charts in this specific order, from highest to lowest timeframe, to build a complete top-down analysis:
 
-1. First analyze the POSITION timeframe for long-term trend and market structure
-2. Then analyze the SWING timeframe for medium-term movements
-3. Then analyze the INTRADAY timeframe for short-term setups
-4. Finally analyze the SCALP timeframe for immediate price action and entries"""
+1. POSITION (30D chart) - First analyze the long-term trend and major market structure
+2. SWING (7D chart) - Then analyze the medium-term trend and key swing levels
+3. INTRADAY (24H chart) - Next analyze the short-term trend and intraday patterns
+4. SCALP (6H chart) - Finally analyze immediate price action and potential entry/exit points
+
+For each timeframe, consider how it relates to the higher timeframes above it. Your analysis should flow from the larger trend down to the immediate trading opportunities."""
 
         message = client.messages.create(
             model="claude-3-5-sonnet-20241022",
