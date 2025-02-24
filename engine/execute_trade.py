@@ -328,10 +328,10 @@ class JupiterTradeExecutor:
         try:
             for attempt in range(max_retries):
                 try:
-                    # Pour les trades d'achat (USDC -> Token), on vérifie la balance USDC
-                    # Pour les trades de vente (Token -> USDC), on vérifie la balance du token
+                    # Pour les achats, on vérifie la balance du token qu'on achète
+                    # Pour les ventes, on vérifie la balance USDC
                     is_buy = token_mint != "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"  # USDC mint
-                    check_token = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" if is_buy else token_mint
+                    check_token = token_mint if is_buy else "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
 
                     url = "https://public-api.birdeye.so/v1/wallet/token_balance"
                     headers = {
@@ -344,7 +344,7 @@ class JupiterTradeExecutor:
                         'token_address': check_token
                     }
 
-                    self.logger.info(f"\n🔍 Checking balance for {'USDC' if is_buy else 'token'}")
+                    self.logger.info(f"\n🔍 Checking {'token' if is_buy else 'USDC'} balance")
                     self.logger.info(f"Wallet: {self.wallet_address}")
                     self.logger.info(f"Token: {check_token}")
 
@@ -384,6 +384,7 @@ class JupiterTradeExecutor:
                                 self.logger.info(f"Transaction sent: {signature_str}")
 
                                 # Vérifier la nouvelle balance
+                                success = False
                                 for _ in range(3):  # 3 tentatives de vérification
                                     await asyncio.sleep(2)
                                     
@@ -399,15 +400,19 @@ class JupiterTradeExecutor:
                                                 
                                             self.logger.info(f"New balance: {new_balance}")
                                             
-                                            # Pour un achat, la balance du token doit augmenter
-                                            # Pour une vente, la balance USDC doit augmenter
-                                            if (is_buy and new_balance > 0) or (not is_buy and new_balance > initial_balance):
+                                            # Pour un achat, vérifier que la balance du token a augmenté (était 0, maintenant > 0)
+                                            # Pour une vente, vérifier que la balance USDC a augmenté
+                                            if (is_buy and new_balance > initial_balance) or (not is_buy and new_balance > initial_balance):
                                                 self.logger.info("✅ Transaction confirmed!")
-                                                return signature_str
+                                                success = True
+                                                break
                                                 
                                             self.logger.info("Balance not yet updated, waiting...")
-                                            
-                                self.logger.warning("Balance check timeout, moving to next attempt")
+                                
+                                if success:
+                                    return signature_str
+                                else:
+                                    self.logger.warning("Balance check timeout, moving to next attempt")
 
                 except Exception as e:
                     self.logger.error(f"Attempt {attempt + 1} failed: {e}")
