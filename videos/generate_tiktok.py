@@ -83,7 +83,7 @@ async def create_tiktok_video():
                     
                 logger.info(f"🖼️ Generating image {i}/{len(screens)}")
                 logger.debug(f"Prompt: {background_prompt[:100]}...")
-                image_path = await generate_image(background_prompt, i)
+                image_path = generate_image(background_prompt, i)
                 
                 if not image_path:
                     logger.error(f"❌ Failed to generate image {i}")
