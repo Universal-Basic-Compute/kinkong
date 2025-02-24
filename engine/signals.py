@@ -38,21 +38,21 @@ class SignalGenerator:
             {
                 'timeframe': '15m',
                 'strategy': 'SCALP',
-                'hours': 6,
+                'hours': 12,  # Doubled from 6 to get more candles
                 'title': '{token}/USD Scalp Analysis (6H)',
                 'filename': '{token}_6h_scalp.png'
             },
             {
                 'timeframe': '1H',
                 'strategy': 'INTRADAY',
-                'hours': 24,
+                'hours': 48,  # Doubled from 24 to get more candles
                 'title': '{token}/USD Intraday Analysis (24H)',
                 'filename': '{token}_24h_intraday.png'
             },
             {
                 'timeframe': '4H',
                 'strategy': 'SWING',
-                'hours': 168,  # 7 days
+                'hours': 336,  # Changed from 168 (7 days) to 14 days
                 'title': '{token}/USD Swing Analysis (7D)',
                 'filename': '{token}_7d_swing.png'
             },
