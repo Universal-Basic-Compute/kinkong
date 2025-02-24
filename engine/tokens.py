@@ -192,10 +192,8 @@ class TokenSearcher:
                 'website': social_links.get('website', ''),
                 'xAccount': social_links.get('xAccount', ''),
                 'telegram': social_links.get('telegram', ''),
-                # Add pair info
-                'pairAddress': pair_info.get('pairAddress', ''),
-                'dexId': pair_info.get('dexId', ''),
-                'pairCreatedAt': pair_info.get('pairCreatedAt', '')
+                # Add pair
+                'pair': pair
             }
             
             print("\n📝 Airtable Record to Create/Update:")
