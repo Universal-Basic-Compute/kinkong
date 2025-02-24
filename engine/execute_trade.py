@@ -386,7 +386,7 @@ class JupiterTradeExecutor:
                                 # Vérifier la nouvelle balance
                                 success = False
                                 for _ in range(3):  # 3 tentatives de vérification
-                                    await asyncio.sleep(4)  # Augmenté à 4 secondes
+                                    await asyncio.sleep(8)  # Augmenté à 8 secondes
                                     
                                     async with session.get(url, headers=headers, params=params) as check_response:
                                         if check_response.status == 200:
@@ -407,7 +407,7 @@ class JupiterTradeExecutor:
                                                 success = True
                                                 break
                                                 
-                                            self.logger.info("Balance not yet updated, waiting 4 seconds...")
+                                            self.logger.info("Balance not yet updated, waiting 8 seconds...")
                                 
                                 if success:
                                     return signature_str
