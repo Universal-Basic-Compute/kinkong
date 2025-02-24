@@ -53,7 +53,7 @@ def create_tiktok_video():
     # First part appears with fade
     clip1 = TextClip(
         text=text_parts[0],
-        font='Arial',
+        font=None,  # Use Pillow's default font
         font_size=70,
         color='white',
         size=(width-100, height//2),
@@ -71,7 +71,7 @@ def create_tiktok_video():
     # Second part slides in from right
     clip2 = TextClip(
         text=text_parts[1],
-        font='Arial',
+        font=None,  # Use Pillow's default font
         font_size=70,
         color='white',
         size=(width-100, height//2),

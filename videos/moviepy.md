@@ -132,6 +132,18 @@ clip = clip.with_effects([                      # Apply effects
 1. Font Selection:
    - Use common system fonts or provide full path to custom fonts
    - Test fallback fonts for cross-platform compatibility
+   - When font=None, uses Pillow's default font (recommended for portability)
+   - For custom fonts, use full paths:
+     ```python
+     # Windows
+     font_path = "C:\\Windows\\Fonts\\arial.ttf"
+     
+     # Linux
+     font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+     
+     # Mac
+     font_path = "/System/Library/Fonts/Helvetica.ttc"
+     ```
 
 2. Size Management:
    - Use 'label' method for auto-sized text
