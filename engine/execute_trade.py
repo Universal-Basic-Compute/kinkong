@@ -368,12 +368,9 @@ class JupiterTradeExecutor:
                             )
                             
                             try:
-                                # Try confirmation with version
+                                # Simple confirmation with just the signature
                                 confirmation = await client.confirm_transaction(
-                                    {
-                                        "signature": str(signature),
-                                        "maxSupportedTransactionVersion": 0
-                                    },
+                                    signature,  # Pass Signature object directly
                                     commitment="finalized"
                                 )
                             except Exception as confirm_error:
