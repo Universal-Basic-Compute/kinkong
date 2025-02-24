@@ -33,7 +33,7 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
     const validTokens = tokens.filter(token => {
       return (
         typeof token.volumeGrowth === 'number' && 
-        typeof token.priceGrowth === 'number' && 
+        typeof token.priceTrend === 'number' &&
         typeof token.liquidity === 'number' &&
         !isNaN(token.volumeGrowth) &&
         !isNaN(token.priceTrend) &&
