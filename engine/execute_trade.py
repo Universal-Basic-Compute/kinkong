@@ -340,31 +340,62 @@ class JupiterTradeExecutor:
                         'token_address': token_mint
                     }
 
-                    # Log request details
-                    self.logger.info(f"Checking balance for wallet {self.wallet_address}")
-                    self.logger.info(f"Token mint: {token_mint}")
+                    # Log complete request details
+                    self.logger.info("\n🔍 Birdeye API Request:")
+                    self.logger.info(f"URL: {url}")
+                    self.logger.info(f"Headers: {json.dumps(headers, indent=2)}")
+                    self.logger.info(f"Params: {json.dumps(params, indent=2)}")
 
                     async with aiohttp.ClientSession() as session:
-                        async with session.get(url, headers=headers, params=params) as response:
-                            response_text = await response.text()
-                            self.logger.debug(f"Birdeye API response: {response_text}")
-                        
-                            if response.status == 200:
-                                try:
-                                    data = json.loads(response_text)
-                                    if data and isinstance(data, dict) and data.get('success'):
-                                        initial_balance = float(data.get('data', {}).get('balance', 0))
+                        try:
+                            async with session.get(url, headers=headers, params=params) as response:
+                                # Log response details
+                                self.logger.info(f"\n📡 Response Status: {response.status}")
+                                self.logger.info(f"Response Headers: {dict(response.headers)}")
+                                
+                                response_text = await response.text()
+                                self.logger.info(f"Response Body: {response_text}")
+                                
+                                if response.status == 200:
+                                    try:
+                                        data = json.loads(response_text)
+                                        self.logger.info(f"Parsed JSON: {json.dumps(data, indent=2)}")
+                                        
+                                        if not data:
+                                            self.logger.error("Empty response data")
+                                            continue
+                                            
+                                        if not isinstance(data, dict):
+                                            self.logger.error(f"Unexpected response type: {type(data)}")
+                                            continue
+                                            
+                                        if not data.get('success'):
+                                            self.logger.error(f"API returned success=false: {data.get('message', 'No error message')}")
+                                            continue
+                                            
+                                        balance_data = data.get('data', {})
+                                        if not balance_data:
+                                            self.logger.error("No balance data in response")
+                                            continue
+                                            
+                                        initial_balance = float(balance_data.get('balance', 0))
                                         self.logger.info(f"Initial balance: {initial_balance}")
-                                    else:
-                                        self.logger.error(f"Invalid response format: {data}")
+                                        
+                                    except json.JSONDecodeError as e:
+                                        self.logger.error(f"Failed to parse JSON response: {e}")
+                                        self.logger.error(f"Raw response: {response_text}")
                                         continue
-                                except json.JSONDecodeError as e:
-                                    self.logger.error(f"Failed to parse JSON response: {e}")
+                                    except Exception as e:
+                                        self.logger.error(f"Error processing response: {e}")
+                                        continue
+                                else:
+                                    self.logger.error(f"API request failed: {response.status}")
+                                    self.logger.error(f"Response: {response_text}")
                                     continue
-                            else:
-                                self.logger.error(f"Birdeye API error: {response.status}")
-                                self.logger.error(f"Response: {response_text}")
-                                continue
+                                    
+                        except aiohttp.ClientError as e:
+                            self.logger.error(f"HTTP request failed: {e}")
+                            continue
 
                     # Send transaction
                     result = await client.send_raw_transaction(
