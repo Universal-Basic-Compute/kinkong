@@ -57,6 +57,7 @@ def create_text_clips(
     
     clips = []
     text_box_margin = 20  # Margin around text in the box
+    clip_duration = 5.0  # Set explicit duration
     
     for i, text_part in enumerate(text_parts):
         # Create background box first
@@ -66,7 +67,7 @@ def create_text_clips(
         background_box = ColorClip(
             size=(box_width, box_height),
             color=[0.5, 0, 0]  # Dark red
-        ).with_opacity(0.8)  # Slightly transparent
+        ).with_opacity(0.8).with_duration(clip_duration)  # Set duration here
         
         # Create text clip
         text_clip = TextClip(
@@ -81,22 +82,21 @@ def create_text_clips(
             text_align='center',
             horizontal_align='center',
             vertical_align='center'
-        )
+        ).with_duration(clip_duration)  # Set duration here
         
         # Combine text and background
         composed_clip = CompositeVideoClip(
             [background_box, text_clip.with_position("center")],
             size=(box_width, box_height)
-        )
+        ).with_duration(clip_duration)  # Set duration here
         
         # Add animations based on position
         if i == 0:
             # First text slides in from left
             composed_clip = composed_clip.with_effects([
                 SlideIn(duration=0.7, side="left"),
-                FadeOut(duration=0.5)
+                FadeOut(duration=0.5, start_time=clip_duration-0.5)  # Specify start time for fade out
             ])
-            composed_clip = composed_clip.with_duration(5)
             composed_clip = composed_clip.with_position(('center', height//3))
         else:
             # Second text slides in from right
