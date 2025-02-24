@@ -74,21 +74,18 @@ class PromptGenerator:
             message = client.messages.create(
                 model="claude-3-5-sonnet-20241022",
                 max_tokens=4096,
+                system="""You are a crypto trading expert creating engaging TikTok scripts. Your scripts should be punchy, direct and split into two parts:
+                1. A catchy hook/intro
+                2. Key analysis points
+                
+                Return your response as JSON with this structure:
+                {
+                    "intro": "Hey traders! 👋\nBig move incoming on $SOL",
+                    "analysis": "Technical analysis shows strong support\nVolume is picking up 📈\nTime to watch this closely!"
+                }
+                
+                Keep each part short and impactful. Use emojis strategically but don't overdo it.""",
                 messages=[
-                    {
-                        "role": "system",
-                        "content": """You are a crypto trading expert creating engaging TikTok scripts. Your scripts should be punchy, direct and split into two parts:
-                        1. A catchy hook/intro
-                        2. Key analysis points
-                        
-                        Return your response as JSON with this structure:
-                        {
-                            "intro": "Hey traders! 👋\nBig move incoming on $SOL",
-                            "analysis": "Technical analysis shows strong support\nVolume is picking up 📈\nTime to watch this closely!"
-                        }
-                        
-                        Keep each part short and impactful. Use emojis strategically but don't overdo it."""
-                    },
                     {
                         "role": "user",
                         "content": [
