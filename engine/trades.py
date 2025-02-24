@@ -362,6 +362,20 @@ class TradeExecutor:
         try:
             logger.info("🚀 Starting trade execution...")
             
+            # Get token mint from TOKENS table first
+            tokens_table = Airtable(self.base_id, 'TOKENS', self.api_key)
+            token_records = tokens_table.get_all(
+                formula=f"{{token}}='{signal['fields'].get('token')}'")
+            
+            if not token_records:
+                logger.error(f"No token record found for {signal['fields'].get('token')}")
+                return False
+                    
+            token_mint = token_records[0]['fields'].get('mint')
+            if not token_mint:
+                logger.error(f"No mint address found for {signal['fields'].get('token')}")
+                return False
+
             # Create trade record first with expiryDate from signal
             trade_data = {
                 'signalId': signal['id'],
@@ -434,7 +448,7 @@ class TradeExecutor:
             # Execute transaction
             signature = await self.jupiter.execute_trade_with_retries(
                 transaction,
-                signal['fields']['mint']  # Add mint address
+                token_mint  # Use mint address from TOKENS table
             )
             if not signature:
                 await self.handle_failed_trade(trade['id'], "Transaction failed")
