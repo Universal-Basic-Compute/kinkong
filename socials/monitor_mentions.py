@@ -148,18 +148,29 @@ async def process_tokens(tokens: list):
         logger.error(f"Error processing tokens: {e}")
         return False
 
-def get_last_mention_id():
-    """Read last processed mention ID from file"""
+async def get_last_mention_id() -> Optional[str]:
+    """Get last processed mention ID from MESSAGES table"""
     try:
-        with open('last_mention_id.txt', 'r') as f:
-            return int(f.read().strip())
-    except (FileNotFoundError, ValueError):
+        airtable = Airtable(
+            os.getenv('KINKONG_AIRTABLE_BASE_ID'),
+            'MESSAGES',
+            os.getenv('KINKONG_AIRTABLE_API_KEY')
+        )
+        
+        # Get latest X_MENTION message
+        records = airtable.get_all(
+            formula="context='X_MENTION'",
+            sort=[('createdAt', 'desc')],
+            maxRecords=1
+        )
+        
+        if records:
+            return records[0]['fields'].get('messageId')
         return None
-
-def save_last_mention_id(mention_id):
-    """Save last processed mention ID to file"""
-    with open('last_mention_id.txt', 'w') as f:
-        f.write(str(mention_id))
+            
+    except Exception as e:
+        logger.error(f"Error getting last mention ID from Airtable: {e}")
+        return None
 
 def send_telegram_notification(mention):
     """Send mention notification to Telegram"""
@@ -284,8 +295,8 @@ async def check_mentions():
         # Get mentions using v2 endpoint with correct parameters
         mentions_url = f"https://api.twitter.com/2/users/{user_id}/mentions"
         
-        # Get last mention ID
-        last_mention_id = get_last_mention_id()
+        # Get last mention ID from Airtable
+        last_mention_id = await get_last_mention_id()
         logger.info(f"Last processed mention ID: {last_mention_id}")
         
         params = {
@@ -383,10 +394,9 @@ async def check_mentions():
                     logger.error(f"Error processing mention: {e}")
                     continue
             
-            # Save newest mention ID if we found any mentions
+            # Log newest mention ID if we found any mentions
             if newest_id:
-                logger.info(f"Saving newest mention ID: {newest_id}")
-                save_last_mention_id(newest_id)
+                logger.info(f"Processed mentions up to ID: {newest_id}")
         else:
             logger.info("No new mentions found")
                 
