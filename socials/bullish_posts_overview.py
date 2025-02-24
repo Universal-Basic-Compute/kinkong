@@ -156,11 +156,11 @@ class MarketOverviewGenerator:
             Bearish Signals ({len(signals['bearish'])} tokens):
             {bearish_tokens if bearish_tokens else "None found"}"""
 
-            # Get Claude's analysis
+            # Get Claude's analysis using same model as monitor_mentions
             client = anthropic.Client(api_key=os.getenv('ANTHROPIC_API_KEY'))
             response = client.messages.create(
-                model="claude-3-opus-20240229",
-                max_tokens=2000,
+                model="claude-3-5-sonnet-20241022",
+                max_tokens=4096,  # Increased to 4096
                 system=system_prompt,
                 messages=[{"role": "user", "content": user_prompt}]
             )
@@ -168,7 +168,7 @@ class MarketOverviewGenerator:
             analysis = response.content[0].text.strip()
             
             # Add signature
-            analysis += "\n\n🤖 Analysis by KinKong AI"
+            analysis += "\n\n🤖 Analysis by KinKong AI" 
             analysis += "\nFollow @kinkong_ubc for real-time signals and analysis"
             
             return analysis
