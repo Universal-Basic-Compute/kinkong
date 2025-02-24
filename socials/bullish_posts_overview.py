@@ -33,45 +33,30 @@ class MarketOverviewGenerator:
         self.tokens_table = Airtable(self.base_id, 'TOKENS', self.api_key)
         self.sentiment_table = Airtable(self.base_id, 'MARKET_SENTIMENT', self.api_key)
 
-    def get_token_signals(self) -> Dict[str, List[Dict]]:
-        """Get all tokens with their signals grouped by sentiment"""
+    def get_token_data(self) -> List[Dict]:
+        """Get important token metrics from TOKENS table"""
         try:
-            # Get all active tokens and their analysis
+            # Get active tokens with key metrics
             records = self.tokens_table.get_all(
                 formula="AND(" +
                     "{isActive}=1, " +
                     "NOT({token}='UBC'), " +
                     "NOT({token}='COMPUTE')" +
-                ")"
+                ")",
+                fields=[
+                    'token',
+                    'price',
+                    'priceChange24h',
+                    'volume24h',
+                    'volume7d',
+                    'liquidity',
+                    'holderCount',
+                    'volumeGrowth',
+                    'pricePerformance'
+                ]
             )
             
-            signals = {
-                'bullish': [],
-                'bearish': []
-            }
-            
-            for record in records:
-                fields = record.get('fields', {})
-                analysis = fields.get('explanation', '')
-                
-                signal_data = {
-                    'token': fields.get('token'),
-                    'analysis': analysis,
-                    'price': fields.get('price', 0),
-                    'volume24h': fields.get('volume24h', 0),
-                    'priceChange24h': fields.get('priceChange24h', 0)
-                }
-                
-                if "VERDICT: BULLISH" in analysis:
-                    signals['bullish'].append(signal_data)
-                elif "VERDICT: NOT BULLISH" in analysis:
-                    signals['bearish'].append(signal_data)
-            
-            # Sort both lists by 24h volume
-            for key in signals:
-                signals[key].sort(key=lambda x: float(x['volume24h'] or 0), reverse=True)
-            
-            return signals
+            return [record['fields'] for record in records]
             
         except Exception as e:
             logger.error(f"Error getting token signals: {e}")
@@ -176,12 +161,12 @@ class MarketOverviewGenerator:
     def send_overview(self) -> bool:
         """Generate and send market overview"""
         try:
-            # Get signals and sentiment
-            signals = self.get_token_signals()
+            # Get token data and sentiment
+            tokens = self.get_token_data()
             sentiment = self.get_market_sentiment()
             
             # Generate overview
-            analysis = self.generate_overview_with_claude(signals, sentiment)
+            analysis = self.generate_overview_with_claude(tokens, sentiment)
             if not analysis:
                 logger.error("Failed to generate overview")
                 return False
