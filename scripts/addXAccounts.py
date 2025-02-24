@@ -59,7 +59,8 @@ class AirtableAPI:
                 "fields": {
                     "xAccount": social_data.get('xAccount', ''),
                     "website": social_data.get('website', ''),
-                    "telegram": social_data.get('telegram', '')
+                    "telegram": social_data.get('telegram', ''),
+                    "image": social_data.get('image', '')  # Add image field
                 }
             }
             
@@ -90,7 +91,8 @@ def get_dexscreener_data(token_address: str) -> Optional[Dict]:
         social_data = {
             'xAccount': '',
             'website': '',
-            'telegram': ''
+            'telegram': '',
+            'image': ''  # Add image field
         }
             
         # Extract info from new structure
@@ -111,6 +113,10 @@ def get_dexscreener_data(token_address: str) -> Optional[Dict]:
                         social_data['xAccount'] = twitter_url.split('/')[-1] if twitter_url else ''
                     elif social.get('type') == 'telegram':
                         social_data['telegram'] = social.get('url', '')
+            
+            # Get image URL
+            if 'imageUrl' in pair['info']:
+                social_data['image'] = pair['info']['imageUrl']
             
         # Log what we found
         logger.info(f"Social info found for {token_address}:")
