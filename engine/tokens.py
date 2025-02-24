@@ -128,6 +128,9 @@ class TokenSearcher:
         try:
             # Special tokens that are always active
             ALWAYS_ACTIVE_TOKENS = {'USDT', 'WETH', 'WBTC', 'SOL'}
+            # Tokens that are always inactive
+            ALWAYS_INACTIVE_TOKENS = {'UBC', 'COMPUTE'}
+            
             token_symbol = token_data.get('symbol')
 
             # Get current timestamp in ISO format
@@ -228,7 +231,9 @@ class TokenSearcher:
                 'tokenId': token_symbol,
                 'token': token_symbol,
                 'name': token_data.get('name', ''),
-                'isActive': True if token_symbol in ALWAYS_ACTIVE_TOKENS else token_data.get('isActive', True),
+                'isActive': True if token_symbol in ALWAYS_ACTIVE_TOKENS else (
+                    False if token_symbol in ALWAYS_INACTIVE_TOKENS else token_data.get('isActive', True)
+                ),
                 'mint': token_data.get('address', ''),
                 'description': f"Token {token_symbol} on Solana chain",
                 'createdAt': created_at,
