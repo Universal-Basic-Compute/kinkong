@@ -24,17 +24,32 @@ from socials.monitor_posts import monitor_token
 
 def setup_logging():
     """Configure logging"""
+    # Configuration basique du logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+    
+    # Récupérer le logger
     logger = logging.getLogger(__name__)
+    
+    # S'assurer que les logs sont envoyés à stdout
     if not logger.handlers:
-        handler = logging.StreamHandler()
+        handler = logging.StreamHandler(sys.stdout)
         formatter = logging.Formatter(
             '%(asctime)s - %(levelname)s - %(message)s',
             datefmt='%Y-%m-%d %H:%M:%S'
         )
         handler.setFormatter(formatter)
         logger.addHandler(handler)
+        
+    # Forcer le niveau de log
     logger.setLevel(logging.INFO)
+    
+    # Désactiver la propagation pour éviter les doublons
     logger.propagate = False
+    
     return logger
 
 # Initialize logger
@@ -42,7 +57,7 @@ logger = logging.getLogger(__name__)
 
 def log_message(message: str, level: str = 'info'):
     """Log message with emoji replacements"""
-    # Replace emojis with text
+    # Remplacer les emojis par du texte
     message = message.replace('🔍', '[SEARCH]')
     message = message.replace('✅', '[SUCCESS]') 
     message = message.replace('❌', '[ERROR]')
@@ -54,14 +69,8 @@ def log_message(message: str, level: str = 'info'):
     message = message.replace('ℹ️', '[INFO]')
     message = message.replace('⚠️', '[WARN]')
     
-    # Use print for immediate output
-    print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {level.upper()} - {message}")
-    
-    # Also log through logger
-    if level == 'error':
-        logger.error(message)
-    else:
-        logger.info(message)
+    # Utiliser print pour une sortie immédiate
+    print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {level.upper()} - {message}", flush=True)
 
 # Load environment variables
 load_dotenv()
