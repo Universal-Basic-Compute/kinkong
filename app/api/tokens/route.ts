@@ -27,7 +27,9 @@ export async function GET() {
       .select({
         filterByFormula: "AND(" + 
           "NOT({token}='UBC'), " +
-          "NOT({token}='COMPUTE')" +
+          "NOT({token}='COMPUTE'), " +
+          "NOT({token}='USDT'), " +
+          "NOT({token}='USDC')" +
         ")",
         sort: [{ field: 'isActive', direction: 'desc' }]
       })
