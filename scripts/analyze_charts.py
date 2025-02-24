@@ -412,11 +412,8 @@ For each timeframe, consider how it relates to the higher timeframes above it. Y
         message = client.messages.create(
             model="claude-3-5-sonnet-20241022",
             max_tokens=4096,
+            system=formatted_system_prompt,
             messages=[
-                {
-                    "role": "system",
-                    "content": formatted_system_prompt
-                },
                 {
                     "role": "user", 
                     "content": [
