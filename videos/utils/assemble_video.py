@@ -175,18 +175,35 @@ def write_final_video(
                 logger=None  # Suppress MoviePy's internal logging
             )
         finally:
-            # Explicitly close the clip and its reader
+            # Explicitly close clips and readers
             try:
+                # Close all video readers first
+                for clip in final_clip.clips:
+                    if hasattr(clip, 'reader') and clip.reader is not None:
+                        try:
+                            clip.reader.close()
+                            clip.reader = None
+                        except Exception as e:
+                            logger.debug(f"Non-critical error during reader cleanup: {e}")
+                    
+                    # Close the clip
+                    try:
+                        clip.close()
+                    except Exception as e:
+                        logger.debug(f"Non-critical error during clip cleanup: {e}")
+                
+                # Finally close the main clip
+                if hasattr(final_clip, 'reader') and final_clip.reader is not None:
+                    try:
+                        final_clip.reader.close()
+                        final_clip.reader = None
+                    except Exception as e:
+                        logger.debug(f"Non-critical error during final reader cleanup: {e}")
+                        
                 final_clip.close()
+                
             except Exception as e:
-                logger.debug(f"Non-critical error during clip cleanup: {e}")
-            
-            # Clean up any remaining clips
-            for clip in final_clip.clips:
-                try:
-                    clip.close()
-                except Exception as e:
-                    logger.debug(f"Non-critical error during clip cleanup: {e}")
+                logger.debug(f"Non-critical error during cleanup: {e}")
         
         logger.info(f"✨ Video {video_num} creation completed successfully!")
         return True
