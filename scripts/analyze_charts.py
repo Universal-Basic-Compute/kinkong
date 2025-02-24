@@ -227,19 +227,32 @@ def get_dexscreener_data(token_address: str = None) -> Optional[Dict]:
 
 def clean_json_string(json_str):
     """Clean and validate JSON string"""
-    # Remove control characters
-    import re
-    json_str = re.sub(r'[\x00-\x1F\x7F-\x9F]', '', json_str)
-    
-    # Fix common JSON formatting issues
-    json_str = json_str.replace('\n', ' ')
-    json_str = json_str.replace('\\', '\\\\')
-    
-    # Remove any markdown code block indicators
-    json_str = json_str.replace('```json', '')
-    json_str = json_str.replace('```', '')
-    
-    return json_str.strip()
+    try:
+        # Find first { and last }
+        start_idx = json_str.find('{')
+        end_idx = json_str.rfind('}')
+        
+        if start_idx == -1 or end_idx == -1:
+            print("No valid JSON structure found in response")
+            print("Original string:", json_str)
+            return '{"timeframes": {}, "overall_analysis": {}}'
+            
+        # Extract just the JSON part
+        json_str = json_str[start_idx:end_idx + 1]
+        
+        # Remove any remaining markdown code block indicators
+        json_str = json_str.replace('```json', '')
+        json_str = json_str.replace('```', '')
+        
+        # Validate by parsing
+        json.loads(json_str)
+        
+        return json_str
+        
+    except Exception as e:
+        print(f"Error cleaning JSON string: {e}")
+        print("Original string:", json_str)
+        return '{"timeframes": {}, "overall_analysis": {}}'
 
 SYSTEM_PROMPT = """You are an expert cryptocurrency technical analyst specializing in UBC/USD market analysis.
 
