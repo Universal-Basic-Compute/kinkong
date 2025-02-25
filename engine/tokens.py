@@ -90,27 +90,30 @@ class TokenSearcher:
     def search_token(self, keyword: str) -> Optional[Dict[str, Any]]:
         """Search for a token and create new record if it doesn't exist"""
         try:
-            # Add immediate print at start
-            print(f"\n{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - INFO - [SEARCH] Searching for token: {keyword}")
+            self.logger.info(f"[SEARCH] Searching for token: {keyword}")
             
-            # Add timeout to Airtable request
-            existing_records = self.airtable.get_all(
-                formula=f"{{token}} = '{keyword.upper()}'",
-                timeout=30  # 30 seconds timeout
-            )
-            
-            if existing_records:
-                log_message(f"[SUCCESS] Found existing token record for {keyword.upper()}")
-                token_record = existing_records[0]['fields']
-                return {
-                    'symbol': token_record.get('token'),  # Use token as symbol
-                    'name': token_record.get('name'),
-                    'address': token_record.get('mint'),
-                    'verified': True
-                }
+            # Check Airtable first
+            try:
+                existing_records = self.airtable.get_all(
+                    formula=f"{{token}} = '{keyword.upper()}'",
+                    timeout=30
+                )
+                
+                if existing_records:
+                    self.logger.info(f"Found existing token record for {keyword.upper()}")
+                    token_record = existing_records[0]['fields']
+                    return {
+                        'symbol': token_record.get('token'),
+                        'name': token_record.get('name'),
+                        'address': token_record.get('mint'),
+                        'verified': True
+                    }
+            except Exception as e:
+                self.logger.error(f"Airtable error: {e}")
+                # Continue to Birdeye search even if Airtable fails
 
-            # If not found, search Birdeye and create new record
-            log_message(f"[SEARCH] Token not found. Searching Birdeye for {keyword.upper()}")
+            # Search Birdeye
+            self.logger.info(f"Searching Birdeye for {keyword.upper()}")
             url = "https://public-api.birdeye.so/defi/v3/search"
             
             params = {
@@ -123,58 +126,54 @@ class TokenSearcher:
                 "accept": "application/json"
             }
             
-            response = requests.get(url, params=params, headers=headers, timeout=30)
-            if not response.ok:
-                print(f"❌ Birdeye API error: {response.status_code}")
+            try:
+                response = requests.get(url, params=params, headers=headers, timeout=30)
+                response.raise_for_status()
+                
+                data = response.json()
+                if not data.get('success'):
+                    self.logger.error(f"Birdeye API error: {data.get('message', 'Unknown error')}")
+                    return None
+
+                items = data.get('data', {}).get('items', [])
+                token_item = next((item for item in items if item['type'] == 'token'), None)
+                
+                if not token_item or not token_item.get('result'):
+                    self.logger.error(f"No token found matching '{keyword}'")
+                    return None
+                    
+                tokens = token_item['result'][:5]
+                
+                # Find best match
+                token_data = next(
+                    (token for token in tokens 
+                     if token.get('verified') and 
+                     token.get('symbol', '').upper() == keyword.upper()),
+                    None
+                )
+                
+                if not token_data:
+                    token_data = next((token for token in tokens if token.get('verified')), None)
+                
+                if not token_data and tokens:
+                    token_data = tokens[0]
+                    
+                if token_data:
+                    self.logger.info(f"Found token on Birdeye: {token_data.get('symbol')}")
+                    return token_data
+                    
+                self.logger.error("No token data found")
                 return None
                 
-            data = response.json()
-            if not data.get('success'):
-                print(f"❌ Birdeye API error: {data.get('message', 'Unknown error')}")
+            except requests.Timeout:
+                self.logger.error(f"Birdeye API timeout")
                 return None
-            
-            # Find token results
-            items = data.get('data', {}).get('items', [])
-            token_item = next((item for item in items if item['type'] == 'token'), None)
-            
-            if not token_item or not token_item.get('result'):
-                self.last_error = f"No token found matching '{keyword}'"
-                self.logger.error(self.last_error)
+            except Exception as e:
+                self.logger.error(f"Birdeye API error: {e}")
                 return None
-                
-            tokens = token_item['result'][:5]  # Limit to first 5 results
-            
-            # Find verified token with matching symbol
-            token_data = next(
-                (token for token in tokens 
-                 if token.get('verified') and 
-                 token.get('symbol', '').upper() == keyword.upper()),
-                None
-            )
-            
-            # If no verified match with exact symbol, try first verified token
-            if not token_data:
-                token_data = next((token for token in tokens if token.get('verified')), None)
-            
-            # If still no match, use first token
-            if not token_data:
-                token_data = tokens[0] if tokens else None
-                
-            if token_data:
-                print(f"✅ Found token on Birdeye, creating record...")
-                if self.create_token_record(token_data):
-                    print(f"✅ Created new token record for {keyword.upper()}")
-                else:
-                    print(f"❌ Failed to create token record")
-                return token_data
-                
-            return None
 
         except Exception as e:
-            print(f"❌ Request timed out searching for {keyword}")
-            return None
-        except Exception as e:
-            print(f"❌ Error searching token: {str(e)}")
+            self.logger.error(f"Search failed: {e}")
             return None
 
     def create_token_record(self, token_data: Dict[str, Any]) -> bool:
