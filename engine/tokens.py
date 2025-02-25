@@ -95,10 +95,9 @@ class TokenSearcher:
             # Check Airtable first
             try:
                 existing_records = self.airtable.get_all(
-                    formula=f"{{token}} = '{keyword.upper()}'",
-                    timeout=30
+                    formula=f"{{token}} = '{keyword.upper()}'"  # Removed timeout parameter
                 )
-                
+            
                 if existing_records:
                     self.logger.info(f"Found existing token record for {keyword.upper()}")
                     token_record = existing_records[0]['fields']
@@ -165,6 +164,9 @@ class TokenSearcher:
                 self.logger.error("No token data found")
                 return None
                 
+            except requests.Timeout:
+                self.logger.error(f"Birdeye API timeout")
+                return None
             except requests.Timeout:
                 self.logger.error(f"Birdeye API timeout")
                 return None
