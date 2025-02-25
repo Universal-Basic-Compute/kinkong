@@ -127,7 +127,10 @@ class TokenSearcher:
             
             try:
                 response = requests.get(url, params=params, headers=headers, timeout=30)
-                response.raise_for_status()
+                if not response.ok:
+                    self.logger.error(f"Birdeye API error: {response.status_code}")
+                    self.logger.error(f"Response: {response.text}")
+                    return None
                 
                 data = response.json()
                 if not data.get('success'):
