@@ -689,9 +689,22 @@ class TradeExecutor:
             self.logger.info(f"Current price: ${current_price:.4f}")
             self.logger.info(f"USD Value: ${trade_value:.2f}")
 
+            # Get original trade value from the record
+            original_value = float(trade['fields'].get('value', 0))
+            
+            # Calculate current trade value
+            current_value = token_amount * current_price
+
+            self.logger.info(f"Original amount: {original_amount:.8f} {trade['fields'].get('token')}")
+            self.logger.info(f"Current balance: {current_balance:.8f} {trade['fields'].get('token')}")
+            self.logger.info(f"Closing amount: {token_amount:.8f} {trade['fields'].get('token')}")
+            self.logger.info(f"Current price: ${current_price:.4f}")
+            self.logger.info(f"Original value: ${original_value:.2f}")
+            self.logger.info(f"Current value: ${current_value:.2f}")
+
             # Protection contre les trades trop importants
-            if trade_value > 1000:
-                error_msg = f"Trade value ${trade_value:.2f} exceeds maximum allowed ($1000)"
+            if current_value > 10000:  # Increased from 1000 to 10000 for WETH
+                error_msg = f"Trade value ${current_value:.2f} exceeds maximum allowed ($10000)"
                 self.logger.error(f"❌ {error_msg}")
                 
                 # Mettre le trade en ERROR avec les détails
@@ -718,27 +731,26 @@ class TradeExecutor:
                 return False
 
             # Execute trade if amount is significant
-            if trade_value >= 1.0:
+            if current_value >= 1.0:
                 # Add debug logging before swap
                 self.logger.info(f"🔍 Pre-swap validation:")
                 self.logger.info(f"Token amount: {token_amount}")
-                self.logger.info(f"Expected USD value: ${trade_value:.2f}")
+                self.logger.info(f"Expected USD value: ${current_value:.2f}")
 
                 # Validate the amount isn't unreasonably large
-                if trade_value > 1000:  # Add safety check for large trades
-                    self.logger.warning(f"⚠️ Trade value ${trade_value:.2f} seems unusually large!")
+                if current_value > 10000:  # Increased from 1000 to 10000 for WETH
+                    self.logger.warning(f"⚠️ Trade value ${current_value:.2f} seems unusually large!")
                     self.logger.warning("Original trade details:")
                     self.logger.warning(f"Entry amount: {trade['fields'].get('amount')}")
                     self.logger.warning(f"Entry price: ${trade['fields'].get('price', 0):.4f}")
                     
                     # Cap the trade value at the original investment + reasonable profit
-                    original_value = float(trade['fields'].get('value', 0))
                     max_value = original_value * 3  # Allow up to 200% profit
-                    if trade_value > max_value:
+                    if current_value > max_value:
                         adjusted_token_amount = max_value / current_price
                         self.logger.warning(f"Adjusting trade amount from {token_amount:.8f} to {adjusted_token_amount:.8f}")
                         token_amount = adjusted_token_amount
-                        trade_value = max_value
+                        current_value = max_value
 
                 # IMPORTANT FIX: Determine token decimals and adjust amount if needed
                 token_symbol = trade['fields'].get('token', '').upper()
@@ -749,12 +761,11 @@ class TradeExecutor:
                 self.logger.info(f"Using {decimals} decimals for {token_symbol}")
                 
                 # Add additional safety check based on original trade value
-                original_value = float(trade['fields'].get('value', 0))
-                if trade_value > original_value * 5:
-                    self.logger.warning(f"⚠️ Trade value ${trade_value:.2f} is more than 5x original value ${original_value:.2f}")
+                if original_value > 0 and current_value > original_value * 5:
+                    self.logger.warning(f"⚠️ Trade value ${current_value:.2f} is more than 5x original value ${original_value:.2f}")
                     self.logger.warning(f"Limiting to 5x original value")
                     token_amount = (original_value * 5) / current_price
-                    trade_value = original_value * 5
+                    current_value = original_value * 5
                     self.logger.warning(f"Adjusted token amount: {token_amount:.8f}")
 
                 success, transaction_bytes = await self.jupiter.execute_validated_swap(
@@ -789,20 +800,33 @@ class TradeExecutor:
                 signature = None
                 transaction_url = None
 
-            # Calculate profit/loss metrics
+            # Calculate profit/loss metrics - FIXED CALCULATION
             entry_price = float(trade['fields'].get('price', 0))
-            original_amount = float(trade['fields'].get('amount', 0))
-            original_value = float(trade['fields'].get('value', 0))
             
-            # Use original amount for P&L calculation if current amount is too small
-            if token_amount < 0.0001 or token_amount < original_amount * 0.01:
-                self.logger.info(f"Using original amount for P&L calculation: {original_amount}")
-                token_amount = original_amount
+            # IMPORTANT: Use the original value from the trade record
+            if original_value <= 0:
+                # Fallback calculation if original value is missing
+                original_value = entry_price * original_amount
                 
-            entry_value = original_value if original_value > 0 else (entry_price * token_amount)
+            # Calculate exit value based on current price and amount
             exit_value = current_price * token_amount
-            realized_pnl = exit_value - entry_value
-            roi = (realized_pnl / entry_value * 100) if entry_value > 0 else 0
+            
+            # Sanity check on exit value
+            if exit_value > original_value * 10:
+                self.logger.warning(f"⚠️ Exit value ${exit_value:.2f} is more than 10x original value ${original_value:.2f}")
+                self.logger.warning(f"Capping exit value to 10x original value for P&L calculation")
+                exit_value = original_value * 10
+                
+            # Calculate P&L and ROI
+            realized_pnl = exit_value - original_value
+            roi = (realized_pnl / original_value * 100) if original_value > 0 else 0
+            
+            # Additional sanity check on ROI
+            if roi > 1000:  # Cap ROI at 1000%
+                self.logger.warning(f"⚠️ ROI {roi:.2f}% exceeds reasonable limits, capping at 1000%")
+                roi = 1000
+                realized_pnl = (roi / 100) * original_value
+                exit_value = original_value + realized_pnl
 
             # Update trade record
             update_data = {
