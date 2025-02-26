@@ -123,6 +123,8 @@ export default function Invest() {
   const [selectedToken, setSelectedToken] = useState<'UBC' | 'COMPUTE'>('UBC');
   const [amount, setAmount] = useState<number>(100000);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [ubcPrice, setUbcPrice] = useState<number>(0.0001);
+  const [computePrice, setComputePrice] = useState<number>(0.00001);
   
   // Token-specific minimum amounts
   const MIN_AMOUNTS = {
@@ -132,6 +134,24 @@ export default function Invest() {
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [latestSnapshot, setLatestSnapshot] = useState<WalletSnapshot | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchPrices() {
+      try {
+        const fetchedUbcPrice = await getUbcPrice();
+        setUbcPrice(fetchedUbcPrice);
+        
+        const fetchedComputePrice = await getComputePrice();
+        setComputePrice(fetchedComputePrice);
+        
+        console.log(`Fetched prices - UBC: ${fetchedUbcPrice}, COMPUTE: ${fetchedComputePrice}`);
+      } catch (error) {
+        console.error("Error fetching token prices:", error);
+      }
+    }
+    
+    fetchPrices();
+  }, []);
 
   useEffect(() => {
     async function fetchData() {
@@ -599,19 +619,12 @@ export default function Invest() {
                         // Convert investment amount to USDC equivalent for calculation
                         let usdcEquivalent = 0;
                         if (selectedToken === 'UBC') {
-                          // Get UBC price from the first investment's return calculation
-                          const ubcPrice = investments.length > 0 && investments[0].return !== undefined && investments[0].ubcReturn !== undefined
-                            ? investments[0].return / investments[0].ubcReturn
-                            : 0.0001; // Fallback price
+                          // Use the state variable for UBC price
                           usdcEquivalent = amount * ubcPrice;
                         } else if (selectedToken === 'COMPUTE') {
-                          // Use the COMPUTE price from the Meteora pool
-                          getComputePrice().then(price => {
-                            console.log(`Using COMPUTE price for calculation: ${price}`);
-                          });
-                          // For immediate rendering, use a cached or estimated price
-                          const computePrice = 0.00001; // This will be replaced by the actual price from getComputePrice()
+                          // Use the state variable for COMPUTE price
                           usdcEquivalent = amount * computePrice;
+                          console.log(`Using COMPUTE price for calculation: ${computePrice}`);
                         }
                         
                         const usdcReturn = Math.max(0, ((latestSnapshot.totalValue - totalInvestment) * 0.75 * (usdcEquivalent / (totalInvestment + usdcEquivalent))));
