@@ -142,13 +142,34 @@ export default function Signals() {
 
         {/* Bottom Notice */}
         <div className="bg-darkred/10 border border-gold/20 rounded-lg p-4">
-          <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-line">
-            {`High-quality signals that lead to profitable trades increase your profit share allocation.
+          <div className="flex justify-between items-center">
+            <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-line">
+              {`High-quality signals that lead to profitable trades increase your profit share allocation.
 
 Focus on AI tokens with strong fundamentals and back your analysis with on-chain data.
 
 Regular updates to your active signals help maintain signal quality and improve community trading success.`}
-          </p>
+            </p>
+            <button 
+              onClick={async () => {
+                try {
+                  const response = await fetch('/api/cron/calculate-signals-py', {
+                    headers: {
+                      'Authorization': `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET_KEY || 'public-dev-key'}`
+                    }
+                  });
+                  if (!response.ok) throw new Error('Failed to calculate signals');
+                  alert('Signal calculation triggered successfully!');
+                } catch (err) {
+                  console.error('Error triggering signal calculation:', err);
+                  alert('Failed to trigger signal calculation');
+                }
+              }}
+              className="px-4 py-2 bg-gold/20 hover:bg-gold/30 text-gold rounded-lg text-sm transition-colors"
+            >
+              Calculate Signals
+            </button>
+          </div>
         </div>
       </div>
 
