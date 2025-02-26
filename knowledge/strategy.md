@@ -102,7 +102,7 @@ For optimal short-term results in the Solana ecosystem, KinKong implements a 4x 
   * Analysis period: Last 6 hours
   * Minimum profit target: 8%
   * Stop-loss: 10%
-  * Rationale: Accounts for DEX fees (2-5%), gas, slippage
+  * Rationale: Accounts for DEX fees (6%), gas, slippage
 
 - INTRADAY: 24 hours
   * Chart interval: 1-hour candles
@@ -129,10 +129,10 @@ For optimal short-term results in the Solana ecosystem, KinKong implements a 4x 
 - American window: 18:00 UTC ±30min
 
 #### Cost Considerations
-- LP fees: 0.8-2% per trade (varies by pool)
+- LP fees: 2-3% per trade (varies by pool)
 - Gas fees: ~0.1-0.2% per trade
 - Slippage: ~0.5-1% per trade
-- Total round-trip costs: 2.8-6.4% (entry + exit combined)
+- Total round-trip costs: 6% (entry + exit combined)
 
 #### Trade Duration Windows
 - SCALP: 6 hours
@@ -140,7 +140,7 @@ For optimal short-term results in the Solana ecosystem, KinKong implements a 4x 
   * Analysis period: Last 6 hours
   * Minimum profit target: 15%
   * Stop-loss: 10%
-  * Note: Allows for overlap between trading windows
+  * Note: Allows for overlap between trading windows and accounts for 6% trading costs
 
 - INTRADAY: 24 hours
   * Chart interval: 1-hour candles
