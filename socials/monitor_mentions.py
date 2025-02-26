@@ -289,6 +289,39 @@ def generate_reply_with_claude(mention_text: str, username: str) -> Optional[str
         return None
 
 
+async def get_latest_market_sentiment() -> Optional[str]:
+    """
+    Get the latest market sentiment from MARKET_SENTIMENT table
+    
+    Returns:
+        Market sentiment classification or None if not found
+    """
+    try:
+        # Initialize Airtable
+        airtable = Airtable(
+            os.getenv('KINKONG_AIRTABLE_BASE_ID'),
+            'MARKET_SENTIMENT',
+            os.getenv('KINKONG_AIRTABLE_API_KEY')
+        )
+        
+        # Get latest sentiment record
+        records = airtable.get_all(
+            sort=[('createdAt', 'desc')],
+            maxRecords=1
+        )
+        
+        if not records:
+            logger.warning("No market sentiment records found")
+            return None
+            
+        sentiment = records[0]['fields'].get('classification', 'NEUTRAL')
+        logger.info(f"Latest market sentiment: {sentiment}")
+        return sentiment
+        
+    except Exception as e:
+        logger.error(f"Error getting market sentiment: {e}")
+        return None
+
 async def get_recent_signals_for_token(token: str) -> List[Dict]:
     """
     Get the last 4 signals for a token created in the last hour
@@ -376,9 +409,14 @@ async def generate_signal_response(token: str, signals: List[Dict], mention_text
         else:
             signal_status = "MIXED"
         
+        # Get latest market sentiment
+        market_sentiment = await get_latest_market_sentiment() or "NEUTRAL"
+        
         system_prompt = f"""You are KinKong, an AI-powered cryptocurrency trading bot on X (formerly Twitter).
         
         Someone has mentioned ${token} in a tweet, and you've analyzed the token and generated signals.
+        
+        Current Market Sentiment: {market_sentiment}
         
         Based on the signals, craft a helpful, informative response that:
         1. Is conversational and engaging
@@ -386,6 +424,7 @@ async def generate_signal_response(token: str, signals: List[Dict], mention_text
         3. Mentions your signal(s) and reasoning
         4. Keeps your response under 240 characters for X/Twitter
         5. Uses appropriate emojis
+        6. References the current market sentiment when relevant
         
         Signal Status: {signal_status}
         
@@ -401,7 +440,7 @@ async def generate_signal_response(token: str, signals: List[Dict], mention_text
         The user's tweet: "{mention_text}"
         """
 
-        user_prompt = f"Write a reply about ${token} based on the recent signals"
+        user_prompt = f"Write a reply about ${token} based on the recent signals and current market sentiment"
 
         message = client.messages.create(
             model="claude-3-7-sonnet-20250219",
