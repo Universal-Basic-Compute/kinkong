@@ -55,6 +55,12 @@ $tasks = @(
         Script = "tokens.py refresh_active"
         Schedule = "Daily"
         StartTime = "23:00"  # Run at 11:00 PM
+    },
+    @{
+        Name = "KinKong_FindTokens"
+        Script = "find_tokens.py all"
+        Schedule = "Daily"
+        StartTime = "22:00"  # Run at 10:00 PM
     }
 )
 
