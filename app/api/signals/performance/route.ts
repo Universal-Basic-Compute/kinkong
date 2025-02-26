@@ -26,8 +26,38 @@ export async function GET() {
     const latestRecord = records[0];
     const metricsJson = latestRecord.get('metrics') as string;
     
-    // Parse the JSON string into an object
-    const metrics = JSON.parse(metricsJson);
+    // Parse the JSON string into an object with error handling
+    let metrics;
+    try {
+      metrics = JSON.parse(metricsJson);
+      
+      // Replace any remaining NaN values with null
+      const sanitizeNaN = (obj: any): any => {
+        if (obj === null || obj === undefined) return obj;
+        if (typeof obj === 'number' && isNaN(obj)) return null;
+        if (typeof obj !== 'object') return obj;
+        
+        if (Array.isArray(obj)) {
+          return obj.map(sanitizeNaN);
+        }
+        
+        const result: Record<string, any> = {};
+        for (const [key, value] of Object.entries(obj)) {
+          result[key] = sanitizeNaN(value);
+        }
+        return result;
+      };
+      
+      metrics = sanitizeNaN(metrics);
+      
+    } catch (parseError) {
+      console.error('Error parsing metrics JSON:', parseError);
+      console.error('Invalid JSON string:', metricsJson);
+      return NextResponse.json(
+        { error: 'Invalid metrics data format' },
+        { status: 500 }
+      );
+    }
     
     // Add the record ID and creation date
     const response = {

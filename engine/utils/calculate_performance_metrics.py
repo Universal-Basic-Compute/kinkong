@@ -28,6 +28,8 @@ def convert_to_serializable(obj):
     if isinstance(obj, (np.integer, np.int64, np.uint32)):
         return int(obj)
     elif isinstance(obj, (np.floating, np.float64)):
+        if np.isnan(obj):
+            return None  # Convert NaN to None (null in JSON)
         return float(obj)
     elif isinstance(obj, np.ndarray):
         return obj.tolist()
@@ -388,6 +390,19 @@ class SignalPerformanceAnalyzer:
             
             # Convert NumPy types to standard Python types
             serializable_metrics = convert_to_serializable(metrics)
+            
+            # Replace NaN values with null (None) for JSON compatibility
+            def replace_nan_with_null(obj):
+                if isinstance(obj, float) and np.isnan(obj):
+                    return None
+                elif isinstance(obj, dict):
+                    return {k: replace_nan_with_null(v) for k, v in obj.items()}
+                elif isinstance(obj, list):
+                    return [replace_nan_with_null(i) for i in obj]
+                else:
+                    return obj
+            
+            serializable_metrics = replace_nan_with_null(serializable_metrics)
             
             # Create the record with just the essential fields
             record = {
