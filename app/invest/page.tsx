@@ -185,21 +185,21 @@ export default function Invest() {
         const investmentsResponse = await fetch('/api/investments');
         if (!investmentsResponse.ok) throw new Error('Failed to fetch investments');
         const investmentsData = await investmentsResponse.json();
-        
+      
         // Fetch token prices
         const ubcPrice = await getUbcPrice();
         const computePrice = await getComputePrice();
-        
+      
         console.log('Token prices:', { UBC: ubcPrice, COMPUTE: computePrice });
-        
+      
         // Convert token amounts to USD
         const investmentsWithUSD = await convertTokensToUSD(investmentsData, ubcPrice, computePrice);
-        
+      
         // Calculate total investment amount in USD
-        const totalInvestment = investmentsWithUSD.reduce((sum: number, inv: Investment & { usdAmount?: number }) => 
+        const totalInvestmentUSD = investmentsWithUSD.reduce((sum: number, inv: Investment & { usdAmount?: number }) => 
           sum + (inv.usdAmount || 0), 0);
-        
-        console.log('Total investment in USD:', totalInvestment);
+      
+        console.log('Total investment in USD:', totalInvestmentUSD);
         
         // Fetch latest wallet snapshot from WALLET_SNAPSHOTS table
         const walletSnapshotResponse = await fetch('/api/wallet-snapshot/latest');
@@ -235,16 +235,16 @@ export default function Invest() {
         });
         
         // Calculate returns for each investment
-        const profit = Math.max(0, portfolioValue - totalInvestment); // Ensure profit is not negative
+        const profit = Math.max(0, portfolioValue - totalInvestmentUSD); // Ensure profit is not negative
         const profitShare = profit * 0.75; // 75% of profit is distributed
-        
-        console.log('Total investment:', totalInvestment);
+      
+        console.log('Total investment in USD:', totalInvestmentUSD);
         console.log('Portfolio value:', portfolioValue);
         console.log('Profit:', profit);
         console.log('Profit share (75%):', profitShare);
         
         const investmentsWithReturns = investmentsWithUSD.map((inv: Investment & { usdAmount?: number }) => {
-          const investmentRatio = (inv.usdAmount || 0) / totalInvestment;
+          const investmentRatio = (inv.usdAmount || 0) / totalInvestmentUSD;
           const calculatedReturn = profitShare * investmentRatio;
           
           // Calculate UBC return (USDC return / UBC price)
@@ -566,7 +566,9 @@ export default function Invest() {
                 </p>
                 <p>
                   <span className="text-gray-400">Total Investment:</span> 
-                  <span className="text-white ml-2 font-medium">{Math.floor(totalInvestment).toLocaleString('en-US')}</span> 
+                  <span className="text-white ml-2 font-medium">
+                    {Math.floor(investments.reduce((sum, inv) => sum + (inv.usdAmount || 0), 0)).toLocaleString('en-US')}
+                  </span> 
                   <span className="text-gray-400">$USDC</span>
                 </p>
                 <p className="text-gray-400">
