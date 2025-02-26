@@ -64,6 +64,10 @@ class SignalPerformanceAnalyzer:
         # Initialize metrics storage
         self.metrics = {}
         self.signals_df = None
+        
+        # Create output directory for reports
+        self.output_dir = Path('public/performances')
+        self.output_dir.mkdir(exist_ok=True, parents=True)
 
     def fetch_signals(self, days_back=30):
         """Fetch signals from Airtable and convert to DataFrame"""
