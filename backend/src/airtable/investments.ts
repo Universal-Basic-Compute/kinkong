@@ -19,7 +19,7 @@ export async function getInvestments(): Promise<Investment[]> {
     
     const records = await table
       .select({
-        sort: [{ field: 'createdAt', direction: 'desc' }]
+        sort: [{ field: 'amount', direction: 'desc' }]
       })
       .all();
 
