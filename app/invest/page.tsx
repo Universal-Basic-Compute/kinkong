@@ -6,7 +6,13 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 
 const USDC_MINT = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'); // Mainnet USDC
+const UBC_MINT = new PublicKey('9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump'); // UBC token
 const TREASURY_WALLET = new PublicKey('FnWyN4t1aoZWFjEEBxopMaAgk5hjL5P3K65oc2T9FBJY');
+
+interface TokenPrice {
+  price: number;
+  timestamp: number;
+}
 
 interface Investment {
   investmentId: string;
@@ -15,12 +21,31 @@ interface Investment {
   date: string;
   username?: string;
   wallet: string;
-  return?: number; // Added return field
+  return?: number; // USDC return
+  ubcReturn?: number; // UBC return
 }
 
 interface WalletSnapshot {
   totalValue: number;
   timestamp: string;
+}
+
+// Function to fetch UBC price from Birdeye
+async function getUbcPrice(): Promise<number> {
+  try {
+    const response = await fetch(`https://public-api.birdeye.so/public/price?address=${UBC_MINT.toString()}`);
+    if (!response.ok) {
+      throw new Error(`Birdeye API error: ${response.status}`);
+    }
+    const data = await response.json();
+    if (data.success && data.data && data.data.value) {
+      return data.data.value;
+    }
+    throw new Error('Invalid price data from Birdeye');
+  } catch (error) {
+    console.error('Failed to fetch UBC price:', error);
+    return 0;
+  }
 }
 
 const validateInvestment = (inv: any): inv is Investment => {
@@ -105,13 +130,23 @@ export default function Invest() {
         console.log('Profit:', profit);
         console.log('Profit share (75%):', profitShare);
         
+        // Fetch UBC price from Birdeye
+        const ubcPrice = await getUbcPrice();
+        console.log('UBC price:', ubcPrice);
+        
         const investmentsWithReturns = investmentsData.map((inv: Investment) => {
           const investmentRatio = inv.amount / totalInvestment;
           const calculatedReturn = profitShare * investmentRatio;
-          console.log(`Investment ${inv.investmentId}: $${inv.amount} (${(investmentRatio * 100).toFixed(2)}%) -> Return: $${calculatedReturn.toFixed(2)}`);
+          
+          // Calculate UBC return (USDC return / UBC price)
+          const ubcReturn = ubcPrice > 0 ? calculatedReturn / ubcPrice : 0;
+          
+          console.log(`Investment ${inv.investmentId}: $${inv.amount} (${(investmentRatio * 100).toFixed(2)}%) -> Return: $${calculatedReturn.toFixed(2)} / ${ubcReturn.toFixed(2)} UBC`);
+          
           return {
             ...inv,
-            return: calculatedReturn
+            return: calculatedReturn,
+            ubcReturn: ubcReturn
           };
         });
         
@@ -301,8 +336,8 @@ export default function Invest() {
                           : 'N/A'}
                       </td>
                       <td className="px-4 py-2 text-right">
-                        {investment.return !== undefined
-                          ? `${investment.return.toLocaleString('en-US', { maximumFractionDigits: 2 })} USDC`
+                        {investment.ubcReturn !== undefined && investment.return !== undefined
+                          ? `${investment.ubcReturn.toLocaleString('en-US', { maximumFractionDigits: 2 })} UBC ($${investment.return.toLocaleString('en-US', { maximumFractionDigits: 2 })})`
                           : 'Calculating...'}
                       </td>
                       <td className="px-4 py-2">
@@ -370,7 +405,13 @@ export default function Invest() {
                   </label>
                   <div className="text-gold text-xl font-bold">
                     {latestSnapshot && totalInvestment > 0 ? (
-                      `${Math.max(0, ((latestSnapshot.totalValue - totalInvestment) * 0.75 * (amount / (totalInvestment + amount)))).toLocaleString('en-US', { maximumFractionDigits: 2 })} USDC`
+                      (() => {
+                        const usdcReturn = Math.max(0, ((latestSnapshot.totalValue - totalInvestment) * 0.75 * (amount / (totalInvestment + amount))));
+                        const ubcReturn = investments.length > 0 && investments[0].ubcReturn !== undefined && investments[0].return !== undefined
+                          ? usdcReturn * (investments[0].ubcReturn / investments[0].return)
+                          : 0;
+                        return `${ubcReturn.toLocaleString('en-US', { maximumFractionDigits: 2 })} UBC ($${usdcReturn.toLocaleString('en-US', { maximumFractionDigits: 2 })})`;
+                      })()
                     ) : (
                       'Calculate based on amount'
                     )}
