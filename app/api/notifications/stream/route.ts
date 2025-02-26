@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 import { NextRequest } from 'next/server';
-import { clients } from './shared';
+import { clients } from '../shared';
 
 export async function GET(request: NextRequest) {
   // Create a new stream
