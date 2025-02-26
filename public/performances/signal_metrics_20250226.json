@@ -1,0 +1,71 @@
+{
+  "total_signals": 20,
+  "high_confidence": 20,
+  "medium_confidence": 0,
+  "high_confidence_percentage": 100.0,
+  "medium_confidence_percentage": 0.0,
+  "scalp_signals": 13,
+  "intraday_signals": 7,
+  "swing_signals": 0,
+  "position_signals": 0,
+  "scalp_percentage": 65.0,
+  "intraday_percentage": 35.0,
+  "swing_percentage": 0.0,
+  "position_percentage": 0.0,
+  "average_expected_return": 17.926990207892054,
+  "median_expected_return": 5.5792061505453265,
+  "max_expected_return": 164.58333333333337,
+  "min_expected_return": 2.0338709677419375,
+  "signals_with_results": 20,
+  "average_actual_return": 4.6765000000000025,
+  "median_actual_return": -3.635,
+  "max_actual_return": 164.49,
+  "min_actual_return": -37.31,
+  "return_std_dev": 39.029310750147495,
+  "sharpe_ratio": 0.11982020461333229,
+  "win_rate": 35.0,
+  "average_win": 29.44857142857143,
+  "average_loss": -8.662307692307692,
+  "win_loss_ratio": 3.399621956943687,
+  "profit_factor": 1.8305656691235237,
+  "max_drawdown": 45.159697631899995,
+  "recovery_factor": 0.10355472346423789,
+  "success_rate": 35.0,
+  "scalp_return": -6.738461538461539,
+  "intraday_return": 25.875714285714285,
+  "swing_return": 0,
+  "position_return": 0,
+  "scalp_success_rate": 15.384615384615385,
+  "intraday_success_rate": 71.42857142857143,
+  "swing_success_rate": 0,
+  "position_success_rate": 0,
+  "top_tokens": {
+    "ARC": {
+      "return": -0.792,
+      "count": 5.0,
+      "success_rate": 40.0
+    },
+    "AI16Z": {
+      "return": -3.3333333333333335,
+      "count": 3.0,
+      "success_rate": 33.33333333333333
+    }
+  },
+  "weekly_performance": {
+    "8": -4.5442857142857145,
+    "9": 26.191666666666666
+  },
+  "weekly_success_rates": {
+    "8": 35.714285714285715,
+    "9": 33.33333333333333
+  },
+  "monthly_performance": {
+    "2": 4.676500000000001
+  },
+  "monthly_success_rates": {
+    "2": 35.0
+  },
+  "positive_return_percentage": 35.0,
+  "max_consecutive_wins": 3,
+  "max_consecutive_losses": 5
+}
