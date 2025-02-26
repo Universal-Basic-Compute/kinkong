@@ -36,19 +36,19 @@ $tasks = @(
         Name = "KinKong_Signals"
         Script = "signals.py"
         Schedule = "Every4Hours"
-        StartTime = "00:05"  # 5 minutes after token snapshot
+        StartTime = "00:10"  # 10 minutes after token snapshot
     },
     @{
         Name = "KinKong_Trades"
         Script = "trades.py"
         Schedule = "Every4Hours"
-        StartTime = "00:10"  # 5 minutes after signals
+        StartTime = "00:20"  # 10 minutes after signals
     },
     @{
         Name = "KinKong_WalletSnapshot"
         Script = "wallet_snapshots.py"
         Schedule = "Every4Hours"
-        StartTime = "00:15"  # 5 minutes after trades
+        StartTime = "00:30"  # 10 minutes after trades
     },
     @{
         Name = "KinKong_TokenRefresh"
