@@ -287,6 +287,157 @@ def generate_reply_with_claude(mention_text: str, username: str) -> Optional[str
         return None
 
 
+async def check_token_active_status(token: str) -> tuple[bool, Optional[str]]:
+    """
+    Check if a token is active in Airtable and get its explanation
+    
+    Args:
+        token: Token symbol to check
+        
+    Returns:
+        Tuple of (is_active, explanation)
+    """
+    try:
+        # Initialize Airtable
+        airtable = Airtable(
+            os.getenv('KINKONG_AIRTABLE_BASE_ID'),
+            'TOKENS',
+            os.getenv('KINKONG_AIRTABLE_API_KEY')
+        )
+        
+        # Get token record
+        records = airtable.get_all(
+            formula=f"{{token}}='{token}'",
+            fields=['token', 'isActive', 'explanation']
+        )
+        
+        if not records:
+            logger.warning(f"Token {token} not found in database after update")
+            return False, None
+            
+        # Get active status and explanation
+        record = records[0]['fields']
+        is_active = record.get('isActive', False)
+        explanation = record.get('explanation', '')
+        
+        logger.info(f"Token {token} active status: {is_active}")
+        if explanation:
+            logger.info(f"Explanation: {explanation[:100]}...")
+        
+        return is_active, explanation
+        
+    except Exception as e:
+        logger.error(f"Error checking token active status: {e}")
+        return False, None
+
+async def generate_not_bullish_explanation(token: str) -> str:
+    """
+    Generate explanation for why we're not bullish on a token using Claude
+    
+    Args:
+        token: Token symbol
+        
+    Returns:
+        Generated explanation text
+    """
+    try:
+        # Get API key from environment
+        api_key = os.getenv('ANTHROPIC_API_KEY')
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY not found")
+            
+        client = anthropic.Client(api_key=api_key)
+        
+        system_prompt = f"""You are KinKong, a cryptocurrency trading bot on X (formerly Twitter).
+        
+        Someone has mentioned ${token} in a tweet, but your analysis shows you're not bullish on this token at this time.
+        
+        Generate a polite, professional response explaining why you're not bullish on ${token} right now.
+        
+        Keep your response under 240 characters (for X/Twitter) and maintain a helpful, informative tone.
+        Include 1-2 specific reasons why you're cautious about this token.
+        
+        Do not give financial advice or specific trading recommendations.
+        Use emojis appropriately to convey your message.
+        """
+
+        user_prompt = f"Write a tweet explaining why you're not bullish on ${token} at this time."
+
+        message = client.messages.create(
+            model="claude-3-7-sonnet-20250219",
+            max_tokens=500,
+            system=system_prompt,
+            messages=[
+                {
+                    "role": "user",
+                    "content": user_prompt
+                }
+            ]
+        )
+        
+        # Extract and clean the reply text
+        reply_text = message.content[0].text.strip()
+        
+        # Ensure reply is within X's character limit
+        if len(reply_text) > 240:
+            reply_text = reply_text[:237] + "..."
+            
+        return reply_text
+        
+    except Exception as e:
+        logger.error(f"Error generating not bullish explanation: {str(e)}")
+        return f"I've analyzed ${token} but I'm not seeing strong bullish signals at this time. I'll keep monitoring the situation. 🔍"
+
+async def send_tweet_reply(tweet_id: str, text: str) -> bool:
+    """
+    Send a reply tweet
+    
+    Args:
+        tweet_id: ID of the tweet to reply to
+        text: Reply text
+        
+    Returns:
+        True if successful, False otherwise
+    """
+    try:
+        # Get OAuth credentials
+        api_key = os.getenv('X_API_KEY')
+        api_secret = os.getenv('X_API_SECRET')
+        access_token = os.getenv('X_ACCESS_TOKEN')
+        access_token_secret = os.getenv('X_ACCESS_TOKEN_SECRET')
+        
+        # Verify credentials
+        if not all([api_key, api_secret, access_token, access_token_secret]):
+            logger.error("Missing X API credentials")
+            return False
+            
+        # Initialize tweepy client
+        import tweepy
+        client = tweepy.Client(
+            consumer_key=api_key,
+            consumer_secret=api_secret,
+            access_token=access_token,
+            access_token_secret=access_token_secret
+        )
+        
+        # Send reply
+        response = client.create_tweet(
+            text=text,
+            in_reply_to_tweet_id=tweet_id
+        )
+        
+        if response.data:
+            logger.info(f"Successfully sent reply tweet: {text}")
+            return True
+        else:
+            logger.error("Failed to send reply tweet - no response data")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Error sending reply tweet: {e}")
+        return False
+
+
 async def check_mentions():
     """Check mentions of @kinkong_ubc once"""
     try:
@@ -434,6 +585,23 @@ async def check_mentions():
                     if tokens:
                         logger.info(f"Found tokens in conversation: {tokens}")
                         await process_tokens(tokens)
+                        
+                        # Check if any of the tokens are not active and send a reply
+                        for token in tokens:
+                            # First check if token was updated
+                            is_active, explanation = await check_token_active_status(token)
+                            
+                            if not is_active:
+                                logger.info(f"Token {token} is not active, generating explanation")
+                                
+                                # Generate explanation
+                                reply_text = await generate_not_bullish_explanation(token)
+                                
+                                # Send reply tweet
+                                if await send_tweet_reply(mention['id'], reply_text):
+                                    logger.info(f"Sent reply for inactive token {token}")
+                                else:
+                                    logger.error(f"Failed to send reply for inactive token {token}")
                     else:
                         logger.info("No tokens found in conversation")
                 except Exception as e:
