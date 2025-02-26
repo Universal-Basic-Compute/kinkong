@@ -244,8 +244,8 @@ export default function CopilotPage() {
         SUBSCRIPTION_DURATIONS[paymentMethod]
       );
 
-      // Redirect to chat with code
-      router.push(`/copilot/chat?code=${code}`);
+      // Redirect to start page instead of chat
+      router.push(`/copilot/start`);
 
     } catch (err) {
       console.error('Subscription error:', err);
