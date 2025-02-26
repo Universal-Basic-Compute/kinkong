@@ -1,7 +1,6 @@
 'use client';
 
 import { SignalHistory } from '@/components/signals/SignalHistory'
-import { WalletConnect } from '@/components/wallet/WalletConnect'
 import { useState, useEffect } from 'react'
 
 interface TokenInfo {
@@ -54,7 +53,7 @@ export default function Signals() {
   return (
     <main className="min-h-screen p-4 max-w-7xl mx-auto">
       <div className="space-y-8">
-        {/* Header Section with Wallet Connect */}
+        {/* Header Section */}
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold mb-2">KinKong Signals</h1>
@@ -75,9 +74,6 @@ export default function Signals() {
                 Updated daily
               </span>
             </div>
-          </div>
-          <div>
-            <WalletConnect />
           </div>
         </div>
 
