@@ -33,11 +33,12 @@ export async function GET() {
     try {
       const records = await table
         .select({
+          filterByFormula: "{type}='BUY'", // Add filter for BUY signals only
           sort: [{ field: 'createdAt', direction: 'desc' }],
           maxRecords: 100
         })
         .all();
-      console.log(`Retrieved ${records.length} signals`);
+      console.log(`Retrieved ${records.length} BUY signals`);
 
       const signals = records.map((record: Record<SignalRecord>) => ({
         id: record.id,
