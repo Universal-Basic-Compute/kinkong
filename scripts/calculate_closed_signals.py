@@ -162,8 +162,8 @@ def calculate_closed_signals():
         # Initialize Airtable
         api = Api(os.environ.get('KINKONG_AIRTABLE_API_KEY'))
         base = Base(api, os.environ.get('KINKONG_AIRTABLE_BASE_ID'))
-        signals_table = Table(api, os.environ.get('KINKONG_AIRTABLE_BASE_ID'), 'SIGNALS')
-        tokens_table = Table(api, os.environ.get('KINKONG_AIRTABLE_BASE_ID'), 'TOKENS')
+        signals_table = base.table('SIGNALS')
+        tokens_table = base.table('TOKENS')
 
         logger.info("\n📊 Checking Airtable for signals...")
 
