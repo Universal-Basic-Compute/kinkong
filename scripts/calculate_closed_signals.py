@@ -47,6 +47,12 @@ def send_telegram_message(message):
 
 def get_historical_prices(token_mint, start_time, end_time):
     try:
+        # Convert to offset-naive datetimes if they're offset-aware
+        if start_time.tzinfo is not None:
+            start_time = start_time.replace(tzinfo=None)
+        if end_time.tzinfo is not None:
+            end_time = end_time.replace(tzinfo=None)
+            
         # Validate dates
         now = datetime.now()
         if start_time > now or end_time > now:
