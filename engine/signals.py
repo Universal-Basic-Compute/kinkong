@@ -222,6 +222,47 @@ class SignalGenerator:
         except Exception as e:
             logger.error(f"Error in signal generation process: {e}")
             raise
+            
+    async def analyze_specific_token(self, token_symbol: str) -> Optional[Dict]:
+        """
+        Analyze a specific token by symbol and generate signals if appropriate
+        
+        Args:
+            token_symbol: The token symbol to analyze
+            
+        Returns:
+            The created signal record or None if no signal was generated
+        """
+        try:
+            logger.info(f"\n🔍 Analyzing specific token: {token_symbol}")
+            
+            # Get token from TOKENS table
+            token_records = self.tokens_table.get_all(
+                formula=f"AND({{token}}='{token_symbol}', {{isActive}}=1)"
+            )
+            
+            if not token_records:
+                logger.error(f"Token {token_symbol} not found or not active")
+                return None
+                
+            token = {
+                'token': token_records[0]['fields'].get('token'),
+                'mint': token_records[0]['fields'].get('mint')
+            }
+            
+            # Analyze the token
+            signal = await self.analyze_token(token)
+            
+            if signal:
+                logger.info(f"✅ Generated signal for {token_symbol}")
+                return signal
+            else:
+                logger.info(f"No signal generated for {token_symbol}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"❌ Error analyzing token {token_symbol}: {e}")
+            return None
 
 def main():
     try:
