@@ -191,7 +191,8 @@ class TokenFinder:
             # Prepare request headers
             headers = {
                 "x-api-key": self.birdeye_api_key,
-                "accept": "application/json"
+                "accept": "application/json",
+                "x-chain": "solana"  # Add chain header
             }
             
             # Log request details for debugging
@@ -215,12 +216,9 @@ class TokenFinder:
             data = response.json()
             logger.info(f"Response data: {json.dumps(data)[:500]}...")  # Log first 500 chars
             
-            # Validate response structure
-            if not data.get('success'):
-                logger.error(f"Birdeye API error: {data.get('message', 'Unknown error')}")
-                return []
-            
             # Handle different response structures based on API version
+            tokens = []
+            
             if url.endswith('token_trending'):  # Legacy trending endpoint
                 # Check if data field exists
                 if 'data' not in data:
@@ -242,7 +240,13 @@ class TokenFinder:
                     logger.info(f"Full response: {json.dumps(data)}")
                     return []
                 
-                tokens = data.get('data', [])
+                # Check if items field exists in data
+                if 'items' not in data.get('data', {}):
+                    logger.error("Response missing 'data.items' field")
+                    logger.info(f"Data field content: {json.dumps(data.get('data', {}))}")
+                    return []
+                    
+                tokens = data.get('data', {}).get('items', [])
             
             if not tokens:
                 logger.warning(f"No tokens found for strategy: {self.strategy.value}")
