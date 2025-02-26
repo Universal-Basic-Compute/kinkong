@@ -100,14 +100,14 @@ For optimal short-term results in the Solana ecosystem, KinKong implements a 4x 
 - SCALP: 6 hours
   * Chart interval: 15-minute candles
   * Analysis period: Last 6 hours
-  * Minimum profit target: 8%
+  * Minimum profit target: 12%
   * Stop-loss: 10%
   * Rationale: Accounts for DEX fees (6%), gas, slippage
 
 - INTRADAY: 24 hours
   * Chart interval: 1-hour candles
   * Analysis period: Last 24 hours
-  * Minimum profit target: 12%
+  * Minimum profit target: 15%
   * Stop-loss: 15%
 
 - SWING: 7 days
@@ -119,7 +119,7 @@ For optimal short-term results in the Solana ecosystem, KinKong implements a 4x 
 - POSITION: 30 days
   * Chart interval: Daily candles
   * Analysis period: Last 30 days
-  * Minimum profit target: 30%
+  * Minimum profit target: 25%
   * Stop-loss: 25%
 
 #### Trading Windows (4x Daily)
@@ -138,21 +138,27 @@ For optimal short-term results in the Solana ecosystem, KinKong implements a 4x 
 - SCALP: 6 hours
   * Chart interval: 15-minute candles
   * Analysis period: Last 6 hours
-  * Minimum profit target: 15%
+  * Minimum profit target: 12%
   * Stop-loss: 10%
   * Note: Allows for overlap between trading windows and accounts for 6% trading costs
 
 - INTRADAY: 24 hours
   * Chart interval: 1-hour candles
   * Analysis period: Last 24 hours
-  * Minimum profit target: 20%
+  * Minimum profit target: 15%
   * Stop-loss: 15%
 
 - SWING: 7 days
   * Chart interval: 4-hour candles
   * Analysis period: Last 7 days
-  * Minimum profit target: 30%
+  * Minimum profit target: 20%
   * Stop-loss: 20%
+
+- POSITION: 30 days
+  * Chart interval: Daily candles
+  * Analysis period: Last 30 days
+  * Minimum profit target: 25%
+  * Stop-loss: 25%
 
 #### Position Management
 - Check all open positions at each trading window

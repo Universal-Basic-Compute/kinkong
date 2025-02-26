@@ -269,7 +269,8 @@ def simulate_trade(prices, signal_data):
         entry_with_fee = entry_price * (1 + fee_percentage)
         exit_with_fee = exit_price * (1 - fee_percentage)
         actual_return = ((exit_with_fee - entry_with_fee) / entry_with_fee) * 100
-        success = exit_with_fee > entry_with_fee
+        # Success if return is positive (covers 6% trading costs)
+        success = actual_return > 0
     else:  # SELL
         # For SELL: We sell at entry_price - fee and buy back at exit_price + fee
         # Entry value after fee: entry_price * (1 - fee_percentage)
@@ -278,7 +279,8 @@ def simulate_trade(prices, signal_data):
         entry_with_fee = entry_price * (1 - fee_percentage)
         exit_with_fee = exit_price * (1 + fee_percentage)
         actual_return = ((entry_with_fee - exit_with_fee) / entry_with_fee) * 100
-        success = exit_with_fee < entry_with_fee
+        # Success if return is positive (covers 6% trading costs)
+        success = actual_return > 0
 
     return {
         'exitPrice': exit_price,

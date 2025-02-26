@@ -164,7 +164,24 @@ class SignalGenerator:
                 signal_type = analysis.get('signal')
                 confidence = analysis.get('confidence', 0)
                 
+                # Only create signals for BUY/SELL (not HOLD) with confidence >= 60
+                # Also check that the expected return meets minimum targets based on timeframe
                 if signal_type and signal_type != 'HOLD' and confidence >= 60:
+                    # Get expected return from analysis
+                    expected_return = analysis.get('expectedReturn', 0)
+                    
+                    # Set minimum target based on timeframe
+                    min_target = {
+                        'SCALP': 12,      # 12% for SCALP
+                        'INTRADAY': 15,   # 15% for INTRADAY
+                        'SWING': 20,      # 20% for SWING
+                        'POSITION': 25    # 25% for POSITION
+                    }.get(timeframe, 15)  # Default to 15% if timeframe not recognized
+                    
+                    # Skip if expected return is below minimum target
+                    if expected_return < min_target:
+                        logger.info(f"Skipping {timeframe} signal for {token['token']} - expected return {expected_return:.2f}% below minimum target {min_target}%")
+                        continue
                     try:
                         result = create_airtable_signal(
                             analysis,
