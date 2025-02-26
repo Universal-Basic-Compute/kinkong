@@ -1,5 +1,4 @@
 'use client';
-import { TradeHistory } from '@/components/tables/TradeHistory'
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -603,13 +602,6 @@ export default function Performance() {
           </div>
         </section>
 
-        {/* Trade History */}
-        <section className="mb-8">
-          <h2 className="text-2xl font-bold text-gold mb-4">Recent Trades</h2>
-          <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
-            <TradeHistory showChartButton={true} />
-          </div>
-        </section>
       </main>
     </div>
   );

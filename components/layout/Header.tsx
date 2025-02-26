@@ -50,14 +50,19 @@ const Header = () => {
           description: 'Your holdings and performance'
         },
         { 
-          label: 'Performance', 
-          href: '/performance',
-          description: 'Trading history and analytics'
-        },
-        { 
           label: 'Signals', 
           href: '/signals',
           description: 'Trading signals and setups'
+        },
+        { 
+          label: 'Trades', 
+          href: '/trades',
+          description: 'Trade history and execution'
+        },
+        { 
+          label: 'Performance', 
+          href: '/performance',
+          description: 'Trading history and analytics'
         },
         { 
           label: 'Strategy', 
