@@ -165,7 +165,7 @@ class TokenManager:
         except Exception as e:
             logger.error(f"Error checking Airtable: {e}")
         
-        # Step 2: Search Birdeye API
+        # Step 2: Search Birdeye API with shorter timeout
         logger.info(f"Searching Birdeye for {symbol}")
         
         try:
@@ -176,52 +176,98 @@ class TokenManager:
                 "accept": "application/json"
             }
             
-            response = requests.get(url, params=params, headers=headers, timeout=15)
+            # Use a shorter timeout for Birdeye (8 seconds instead of 15)
+            response = requests.get(url, params=params, headers=headers, timeout=8)
             
             if not response.ok:
                 logger.error(f"Birdeye API error: {response.status_code}")
-                return None
+                # Fall through to DexScreener fallback
+            else:
+                data = response.json()
+                if data.get('success'):
+                    # Extract token data
+                    items = data.get('data', {}).get('items', [])
+                    token_item = next((item for item in items if item['type'] == 'token'), None)
+                    
+                    if token_item and token_item.get('result'):
+                        tokens = token_item['result'][:5]
+                        logger.info(f"Found {len(tokens)} token results")
+                        
+                        # Find exact match first
+                        token_data = next(
+                            (token for token in tokens if token.get('symbol', '').upper() == symbol),
+                            None
+                        )
+                        
+                        # If no exact match, use first token
+                        if not token_data and tokens:
+                            token_data = tokens[0]
+                        
+                        if token_data:
+                            logger.info(f"Selected token: {token_data.get('symbol')}")
+                            return {
+                                'symbol': token_data.get('symbol'),
+                                'name': token_data.get('name'),
+                                'address': token_data.get('address'),
+                                'verified': token_data.get('verified', False)
+                            }
+        except requests.exceptions.Timeout:
+            logger.warning(f"Birdeye API timed out, falling back to DexScreener")
+        except Exception as e:
+            logger.error(f"Error searching Birdeye: {e}")
+            logger.error(traceback.format_exc())
+        
+        # Step 3: Fallback to DexScreener API
+        logger.info(f"Falling back to DexScreener for {symbol}")
+        try:
+            # DexScreener search endpoint
+            url = f"https://api.dexscreener.com/latest/dex/search?q={symbol}"
+            headers = {
+                'User-Agent': 'Mozilla/5.0',
+                'Accept': 'application/json'
+            }
             
-            data = response.json()
-            if not data.get('success'):
-                logger.error(f"Birdeye API error: {data.get('message', 'Unknown error')}")
-                return None
+            response = requests.get(url, headers=headers, timeout=10)
             
-            # Extract token data
-            items = data.get('data', {}).get('items', [])
-            token_item = next((item for item in items if item['type'] == 'token'), None)
+            if response.ok:
+                data = response.json()
+                pairs = data.get('pairs', [])
+                
+                # Filter for Solana pairs
+                sol_pairs = [p for p in pairs if p.get('chainId') == 'solana']
+                
+                if sol_pairs:
+                    # Get the most liquid pair
+                    best_pair = max(sol_pairs, key=lambda x: float(x.get('liquidity', {}).get('usd', 0) or 0))
+                    
+                    # Extract token data
+                    base_token = best_pair.get('baseToken', {})
+                    
+                    if base_token and base_token.get('symbol', '').upper() == symbol:
+                        logger.info(f"Found token on DexScreener: {base_token.get('symbol')}")
+                        return {
+                            'symbol': base_token.get('symbol'),
+                            'name': base_token.get('name', base_token.get('symbol')),
+                            'address': base_token.get('address'),
+                            'verified': True  # Assume verified if on DexScreener
+                        }
+                    
+                    # Check quote token as fallback
+                    quote_token = best_pair.get('quoteToken', {})
+                    if quote_token and quote_token.get('symbol', '').upper() == symbol:
+                        logger.info(f"Found token on DexScreener: {quote_token.get('symbol')}")
+                        return {
+                            'symbol': quote_token.get('symbol'),
+                            'name': quote_token.get('name', quote_token.get('symbol')),
+                            'address': quote_token.get('address'),
+                            'verified': True
+                        }
             
-            if not token_item or not token_item.get('result'):
-                logger.error(f"No token found matching '{symbol}'")
-                return None
-            
-            tokens = token_item['result'][:5]
-            logger.info(f"Found {len(tokens)} token results")
-            
-            # Find exact match first
-            token_data = next(
-                (token for token in tokens if token.get('symbol', '').upper() == symbol),
-                None
-            )
-            
-            # If no exact match, use first token
-            if not token_data and tokens:
-                token_data = tokens[0]
-            
-            if token_data:
-                logger.info(f"Selected token: {token_data.get('symbol')}")
-                return {
-                    'symbol': token_data.get('symbol'),
-                    'name': token_data.get('name'),
-                    'address': token_data.get('address'),
-                    'verified': token_data.get('verified', False)
-                }
-            
-            logger.error("No token data found")
+            logger.error(f"Token {symbol} not found on DexScreener")
             return None
             
         except Exception as e:
-            logger.error(f"Error searching Birdeye: {e}")
+            logger.error(f"Error searching DexScreener: {e}")
             logger.error(traceback.format_exc())
             return None
     
