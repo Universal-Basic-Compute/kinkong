@@ -328,7 +328,7 @@ def generate_trade_chart(signal_id, output_dir=None):
         
         # Create output directory if it doesn't exist
         if output_dir is None:
-            output_dir = os.path.join('public', 'charts', 'trades')
+            output_dir = os.path.join('public', 'signals', 'charts')  # Nouveau chemin
         os.makedirs(output_dir, exist_ok=True)
         
         # Save the chart
@@ -390,16 +390,19 @@ def main():
     """Main function to run the script"""
     logger.info("Starting trade chart generation...")
     
+    # Définir le répertoire de sortie par défaut
+    default_output_dir = os.path.join('public', 'signals', 'charts')
+    
     # Check if a signal ID was provided as an argument
     import sys
     if len(sys.argv) > 1:
         signal_id = sys.argv[1]
         logger.info(f"Generating trade chart for signal {signal_id}")
-        generate_trade_chart(signal_id)
+        generate_trade_chart(signal_id, default_output_dir)
     else:
         # Generate charts for the 10 most recent closed signals
         logger.info("Generating trade charts for recent signals")
-        generate_recent_trade_charts(limit=10)
+        generate_recent_trade_charts(limit=10, output_dir=default_output_dir)
     
     logger.info("Trade chart generation complete")
 
