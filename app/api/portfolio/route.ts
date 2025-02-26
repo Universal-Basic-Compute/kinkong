@@ -244,18 +244,28 @@ export async function GET() {
       try {
         console.log(`Fetching latest snapshot for ${token.token} (${token.mint})`);
         const snapshots = await snapshotsTable.select({
-          filterByFormula: `{mint}='${token.mint}'`,
+          filterByFormula: `{tokenMint}='${token.mint}'`,
           sort: [{ field: 'createdAt', direction: 'desc' }],
           maxRecords: 1
         }).all();
         
         if (snapshots.length > 0) {
+          // Log the available fields to help debug
+          console.log(`Snapshot fields for ${token.token}:`, Object.keys(snapshots[0].fields));
+          
           const price = snapshots[0].get('price');
           if (price) {
             priceMap[token.mint] = price;
             console.log(`Found price for ${token.token} (${token.mint}): $${price}`);
           } else {
-            console.log(`No price found in snapshot for ${token.token} (${token.mint})`);
+            // Try alternative field names if 'price' doesn't work
+            const priceField = snapshots[0].get('tokenPrice') || snapshots[0].get('value');
+            if (priceField) {
+              priceMap[token.mint] = priceField;
+              console.log(`Found price in alternative field for ${token.token}: $${priceField}`);
+            } else {
+              console.log(`No price found in snapshot for ${token.token} (${token.mint})`);
+            }
           }
         } else {
           console.log(`No snapshots found for ${token.token} (${token.mint})`);
