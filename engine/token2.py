@@ -72,18 +72,25 @@ class TokenManager:
             if token_data and 'xAccount' in token_data:
                 x_account = token_data.get('xAccount')
             
-            if not x_account:
-                logger.warning(f"No X account found for {token_symbol}")
-                return False, f"No X account found for {token_symbol}"
-            
-            # Get tweets from the X account with timeout
-            tweets = self.get_account_tweets(x_account, x_bearer_token)
+            # Get tweets - either from account or search for token mentions
+            tweets = []
+            if x_account:
+                logger.info(f"Getting tweets from account @{x_account}")
+                tweets = self.get_account_tweets(x_account, x_bearer_token)
+                
+                if not tweets:
+                    logger.info(f"No tweets found for account @{x_account}, falling back to token search")
+                    # Fall back to token search if no tweets from account
+                    tweets = self.search_token_tweets(token_symbol, x_bearer_token)
+            else:
+                logger.info(f"No X account found for {token_symbol}, searching for token mentions")
+                tweets = self.search_token_tweets(token_symbol, x_bearer_token)
             
             if not tweets:
-                logger.info(f"No tweets found for account @{x_account}")
-                return False, f"No recent tweets found from @{x_account}"
+                logger.info(f"No tweets found for {token_symbol}")
+                return False, f"No recent tweets found for {token_symbol}"
             
-            logger.info(f"Found {len(tweets)} tweets from @{x_account}")
+            logger.info(f"Found {len(tweets)} tweets for analysis")
             
             # Analyze sentiment with Claude with timeout
             is_bullish, analysis = self.analyze_sentiment_with_claude(
@@ -298,6 +305,59 @@ class TokenManager:
         except Exception as e:
             logger.error(f"Error analyzing sentiment with Claude: {str(e)}")
             return False, f"Error analyzing sentiment: {str(e)}"
+    
+    def search_token_tweets(self, token_symbol: str, bearer_token: str) -> List[Dict]:
+        """
+        Search for tweets mentioning a token
+        
+        Args:
+            token_symbol: Token symbol to search for (without $ prefix)
+            bearer_token: X/Twitter API bearer token
+            
+        Returns:
+            List of tweet data dictionaries
+        """
+        try:
+            logger.info(f"Searching for tweets mentioning {token_symbol}")
+            
+            headers = {
+                "Authorization": f"Bearer {bearer_token}",
+                "Content-Type": "application/json"
+            }
+            
+            # Search endpoint
+            search_url = "https://api.twitter.com/2/tweets/search/recent"
+            
+            # Search for token with $ prefix
+            query = f"${token_symbol} -is:retweet -is:reply lang:en"
+            
+            params = {
+                "query": query,
+                "max_results": 10,
+                "tweet.fields": "created_at,public_metrics,text",
+                "sort_order": "relevancy"
+            }
+            
+            # Use requests with timeout
+            response = requests.get(search_url, headers=headers, params=params, timeout=15)
+            
+            if not response.ok:
+                logger.error(f"X/Twitter API error: {response.status_code}")
+                logger.error(f"Response: {response.text}")
+                return []
+            
+            data = response.json()
+            tweets = data.get('data', [])
+            
+            logger.info(f"Found {len(tweets)} tweets mentioning ${token_symbol}")
+            return tweets
+            
+        except requests.exceptions.Timeout:
+            logger.error(f"X/Twitter API request timed out")
+            return []
+        except Exception as e:
+            logger.error(f"Error searching tweets for {token_symbol}: {e}")
+            return []
     
     def get_account_tweets(self, x_account: str, bearer_token: str) -> List[Dict]:
         """
