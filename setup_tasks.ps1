@@ -49,6 +49,12 @@ $tasks = @(
         Script = "wallet_snapshots.py"
         Schedule = "Every4Hours"
         StartTime = "00:15"  # 5 minutes after trades
+    },
+    @{
+        Name = "KinKong_TokenRefresh"
+        Script = "tokens.py refresh_active"
+        Schedule = "Daily"
+        StartTime = "23:00"  # Run at 11:00 PM
     }
 )
 
@@ -77,6 +83,9 @@ $PYTHON_PATH $($task.Script)
     switch ($task.Schedule) {
         "Every4Hours" {
             $trigger = New-ScheduledTaskTrigger -Once -At $task.StartTime -RepetitionInterval (New-TimeSpan -Hours 4)
+        }
+        "Daily" {
+            $trigger = New-ScheduledTaskTrigger -Daily -At $task.StartTime
         }
     }
 
