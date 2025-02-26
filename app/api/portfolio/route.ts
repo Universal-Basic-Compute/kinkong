@@ -118,36 +118,14 @@ async function getTokenPrice(mint: string): Promise<number> {
     return knownToken.price;
   }
   
-  // Try Jupiter API
-  try {
-    const jupiterPrice = await getJupiterPrice(mint);
-    if (jupiterPrice > 0) {
-      console.log(`Using Jupiter price for ${mint}: ${jupiterPrice}`);
-      priceMap[mint] = jupiterPrice;
-      return jupiterPrice;
-    }
-  } catch (error) {
-    console.error(`Jupiter price fetch failed for ${mint}:`, error);
-  }
-  
-  // Try Birdeye API
-  try {
-    const birdeyePrice = await getBirdeyePrice(mint);
-    if (birdeyePrice > 0) {
-      console.log(`Using Birdeye price for ${mint}: ${birdeyePrice}`);
-      priceMap[mint] = birdeyePrice;
-      return birdeyePrice;
-    }
-  } catch (error) {
-    console.error(`Birdeye price fetch failed for ${mint}:`, error);
-  }
-  
-  // Try DexScreener API as a last resort
+  // Use DexScreener API
   try {
     console.log(`Fetching DexScreener price for ${mint}`);
     const response = await fetch(`${DEXSCREENER_API}/${mint}`);
     if (response.ok) {
       const data = await response.json();
+      console.log(`DexScreener response for ${mint}:`, data);
+      
       if (data.pairs && data.pairs.length > 0) {
         // Use the first pair with USDC or USDT as quote token
         const usdPair = data.pairs.find(p => 
@@ -160,8 +138,14 @@ async function getTokenPrice(mint: string): Promise<number> {
           console.log(`Using DexScreener price for ${mint}: ${price}`);
           priceMap[mint] = price;
           return price;
+        } else {
+          console.log(`No USD pair found in DexScreener data for ${mint}`);
         }
+      } else {
+        console.log(`No pairs found in DexScreener data for ${mint}`);
       }
+    } else {
+      console.log(`DexScreener API returned status ${response.status} for ${mint}`);
     }
   } catch (error) {
     console.error(`DexScreener price fetch failed for ${mint}:`, error);
@@ -171,67 +155,6 @@ async function getTokenPrice(mint: string): Promise<number> {
   return 0;
 }
 
-async function getJupiterPrice(mint: string): Promise<number> {
-  try {
-    console.log(`Fetching Jupiter price for ${mint}`);
-    const response = await fetch(`https://price.jup.ag/v4/price?ids=${mint}`);
-    
-    if (!response.ok) {
-      console.log(`Jupiter API returned status ${response.status}`);
-      return 0;
-    }
-    
-    const data = await response.json();
-    console.log(`Jupiter price data for ${mint}:`, data);
-    
-    if (data.data && data.data[mint] && data.data[mint].price) {
-      console.log(`Jupiter price for ${mint}: ${data.data[mint].price}`);
-      return data.data[mint].price;
-    } else {
-      console.log(`Jupiter returned no price data for ${mint}`);
-      return 0;
-    }
-  } catch (e) {
-    console.error(`Jupiter price fetch failed for ${mint}:`, e);
-    return 0;
-  }
-}
-
-async function getBirdeyePrice(mint: string): Promise<number> {
-  try {
-    console.log(`Fetching Birdeye price for ${mint}`);
-    
-    if (!process.env.BIRDEYE_API_KEY) {
-      console.log('BIRDEYE_API_KEY not configured, skipping Birdeye price fetch');
-      return 0;
-    }
-    
-    const response = await fetch(`https://public-api.birdeye.so/public/price?address=${mint}`, {
-      headers: {
-        'X-API-KEY': process.env.BIRDEYE_API_KEY
-      }
-    });
-    
-    if (!response.ok) {
-      console.log(`Birdeye API returned status ${response.status}`);
-      return 0;
-    }
-    
-    const data = await response.json();
-    console.log(`Birdeye price data for ${mint}:`, data);
-    
-    if (data.success && data.data && data.data.value) {
-      console.log(`Birdeye price for ${mint}: ${data.data.value}`);
-      return data.data.value;
-    } else {
-      console.log(`Birdeye returned no price data for ${mint}`);
-      return 0;
-    }
-  } catch (e) {
-    console.error(`Birdeye price fetch failed for ${mint}:`, e);
-    return 0;
-  }
-}
 
 const TREASURY_WALLET = new PublicKey('FnWyN4t1aoZWFjEEBxopMaAgk5hjL5P3K65oc2T9FBJY');
 const DEXSCREENER_API = 'https://api.dexscreener.com/latest/dex/tokens';
