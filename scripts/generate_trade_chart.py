@@ -361,10 +361,10 @@ def generate_recent_trade_charts(limit=10, output_dir=None):
         base = Base(api, base_id)
         signals_table = base.table('SIGNALS')
         
-        # Get recent closed signals
+        # Get recent closed signals - Fix the sort parameter format
         signals = signals_table.all(
             formula="NOT({actualReturn} = '')",  # Use curly braces around field names
-            sort=[{"field": "createdAt", "direction": "desc"}],
+            sort=["-createdAt"],  # Changed format: use string with "-" prefix for descending
             max_records=limit
         )
         
