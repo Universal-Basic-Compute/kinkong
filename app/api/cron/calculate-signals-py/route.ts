@@ -12,43 +12,6 @@ export async function GET(request: Request) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    console.log('Starting scheduled Python signal calculation...');
-    
-    // Execute the Python script
-    const { stdout, stderr } = await execPromise('python scripts/calculate_closed_signals.py');
-    
-    if (stderr) {
-      console.error('Python script error:', stderr);
-      return NextResponse.json(
-        { error: 'Python script execution failed', details: stderr },
-        { status: 500 }
-      );
-    }
-    
-    console.log('Python script output:', stdout);
-    return NextResponse.json({ success: true, output: stdout });
-  } catch (error) {
-    console.error('Failed to execute Python script:', error);
-    return NextResponse.json(
-      { error: 'Failed to execute Python script', details: error instanceof Error ? error.message : String(error) },
-      { status: 500 }
-    );
-  }
-}
-import { NextResponse } from 'next/server';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-
-const execPromise = promisify(exec);
-
-export async function GET(request: Request) {
-  try {
-    // Verify cron secret if needed
-    const authHeader = request.headers.get('authorization');
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET_KEY}`) {
-      return new NextResponse('Unauthorized', { status: 401 });
-    }
-
     console.log('Starting Python signal performance analysis...');
     
     // Execute the Python script
