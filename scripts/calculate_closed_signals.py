@@ -52,7 +52,14 @@ def send_telegram_message(message):
 def generate_and_encode_chart(signal_id):
     """Generate a trade chart for a signal and return its base64 encoding"""
     try:
-        # Import the generate_trade_chart function
+        # Import the generate_trade_chart function directly
+        import sys
+        import os
+        
+        # Add the current directory to the path to ensure imports work correctly
+        sys.path.append(os.getcwd())
+        
+        # Now import the function
         from scripts.generate_trade_chart import generate_trade_chart
         
         # Set the output directory
@@ -391,9 +398,9 @@ def calculate_closed_signals():
                     'reason': fields.get('reason')
                 })
 
-                # If the trade was unsuccessful, generate a chart and analyze it
-                if not results['success']:
-                    logger.info(f"🔍 Analyzing unsuccessful trade for signal {signal_id}...")
+                # If the trade was unsuccessful AND it's a BUY signal, generate a chart and analyze it
+                if not results['success'] and fields.get('type') == 'BUY':
+                    logger.info(f"🔍 Analyzing unsuccessful BUY trade for signal {signal_id}...")
                     
                     # Generate and encode the chart
                     chart_data = generate_and_encode_chart(signal_id)
