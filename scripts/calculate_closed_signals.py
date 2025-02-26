@@ -400,8 +400,8 @@ def calculate_closed_signals():
                     'reason': fields.get('reason')
                 })
 
-                # If the trade was unsuccessful AND it's a BUY signal, generate a chart and analyze it
-                if not results['success'] and fields.get('type') == 'BUY':
+                # If the trade was unsuccessful AND it's a BUY signal with HIGH confidence, generate a chart and analyze it
+                if not results['success'] and fields.get('type') == 'BUY' and fields.get('confidence') == 'HIGH':
                     logger.info(f"🔍 Analyzing unsuccessful BUY trade for signal {signal_id}...")
                     
                     # Generate and encode the chart
