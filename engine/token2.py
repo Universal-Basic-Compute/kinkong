@@ -41,6 +41,52 @@ class TokenManager:
     ALWAYS_ACTIVE_TOKENS = {'USDT', 'WETH', 'WBTC', 'SOL'}
     ALWAYS_INACTIVE_TOKENS = {'UBC', 'COMPUTE'}
     
+    def analyze_social_signals(self, token_symbol: str) -> tuple[bool, str]:
+        """
+        Analyze social media signals for a token
+        
+        Args:
+            token_symbol: Token symbol to analyze
+            
+        Returns:
+            Tuple of (is_bullish, analysis_text)
+        """
+        try:
+            logger.info(f"Analyzing social signals for {token_symbol}")
+            
+            # Import the monitor_token function
+            try:
+                from socials.monitor_posts import monitor_token
+                
+                # Call monitor_token with timeout protection
+                logger.info(f"Calling monitor_token for {token_symbol}")
+                is_bullish, analysis = monitor_token(token_symbol)
+                
+                if is_bullish:
+                    logger.info(f"Bullish signals detected for {token_symbol}")
+                else:
+                    logger.info(f"No bullish signals detected for {token_symbol}")
+                    
+                if analysis:
+                    logger.info(f"Analysis: {analysis[:100]}...")
+                else:
+                    logger.info("No analysis text returned")
+                    analysis = "No analysis available"
+                    
+                return is_bullish, analysis
+                
+            except ImportError as e:
+                logger.error(f"Could not import monitor_token: {e}")
+                return False, f"Error importing monitor_token: {e}"
+            except Exception as e:
+                logger.error(f"Error calling monitor_token: {e}")
+                return False, f"Error analyzing social signals: {e}"
+                
+        except Exception as e:
+            logger.error(f"Error in analyze_social_signals: {e}")
+            logger.error(traceback.format_exc())
+            return False, f"Error analyzing social signals: {e}"
+    
     def __init__(self):
         """Initialize the TokenManager with API credentials"""
         # Load environment variables
@@ -272,28 +318,44 @@ class TokenManager:
             # Get additional data from DexScreener
             dex_data = self.get_dexscreener_data(token_data.get('address'))
             
-            # Determine if token should be active - DEFAULT TO FALSE
-            is_active = False  # Changed from True to False
+            # Determine if token should be active based on social signals
+            is_active = False  # Default to False
+            explanation = ""
+
+            # Special token handling
             if symbol in self.ALWAYS_ACTIVE_TOKENS:
                 is_active = True
+                explanation = f"{symbol} is a special token - always active"
                 logger.info(f"{symbol} is a special token - always active")
             elif symbol in self.ALWAYS_INACTIVE_TOKENS:
                 is_active = False
+                explanation = f"{symbol} is a special token - always inactive"
                 logger.info(f"{symbol} is a special token - always inactive")
+            else:
+                # Analyze social signals
+                logger.info(f"Analyzing social signals for {symbol}")
+                is_bullish, analysis = self.analyze_social_signals(symbol)
+                is_active = is_bullish
+                explanation = analysis
+                
+                if is_active:
+                    logger.info(f"Setting {symbol} to active based on bullish signals")
+                else:
+                    logger.info(f"Setting {symbol} to inactive based on social analysis")
             
             # Prepare record data
             airtable_record = {
                 'token': symbol,
                 'name': token_data.get('name', ''),
                 'mint': token_data.get('address', ''),
-                'isActive': is_active,  # Now defaults to False
+                'isActive': is_active,
                 'updatedAt': current_time,
                 'website': dex_data['social_links']['website'],
                 'xAccount': dex_data['social_links']['xAccount'],
                 'telegram': dex_data['social_links']['telegram'],
                 'pair': dex_data['pair'],
                 'image': dex_data['image'],
-                # Removed price, volume24h, and liquidity fields
+                'explanation': explanation,  # Add explanation field
                 'description': f"Token {symbol} on Solana chain"
             }
             
