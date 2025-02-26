@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletConnect } from '@/components/wallet/WalletConnect';
-import { Connection, PublicKey, LAMPORTS_PER_SOL, Transaction, SystemProgram } from '@solana/web3.js';
+import { Connection, PublicKey, LAMPORTS_PER_SOL, Transaction, SystemProgram, PublicKey as SolanaPublicKey } from '@solana/web3.js';
 import { createSubscription } from '@/utils/subscription';
 
 export default function CopilotPage() {
@@ -14,7 +14,20 @@ export default function CopilotPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Add subscription constants
-  const SUBSCRIPTION_COST = 1.5; // SOL
+  const TOKEN_ADDRESSES = {
+    UBC: 'UBCGiYTxvAfxRCpubCQe5xJgxZTZhzSG4A3S3T4ch1v',
+    COMPUTE: 'CPTx4EHKR92ZMqDxP8kxQUBkQ3NHw6Mcz6MYjyuVfgXf'
+  };
+
+  const SUBSCRIPTION_COSTS = {
+    UBC: 75000,
+    COMPUTE: 750000
+  };
+
+  const SUBSCRIPTION_DURATIONS = {
+    UBC: 30, // 1 month in days
+    COMPUTE: 30 // 1 month in days
+  };
 
   const features = [
     {
@@ -64,7 +77,7 @@ export default function CopilotPage() {
       buttonStyle: "bg-gray-800 hover:bg-gray-700"
     },
     {
-      name: "Kong Pro",
+      name: "Kong Pro - UBC",
       description: "Full access to KinKong intelligence",
       features: [
         "100 messages per 8-hour block",
@@ -74,14 +87,30 @@ export default function CopilotPage() {
         "Custom trading strategies",
         "Direct ecosystem integration"
       ],
-      price: "1.5 SOL / 3 months",
-      action: () => handlePremiumSubscription(),
-      buttonText: "Upgrade to Pro", 
-      buttonStyle: "bg-gradient-to-r from-darkred to-gold text-black"
+      price: "75,000 UBC / 1 month",
+      action: () => handlePremiumSubscription('UBC'),
+      buttonText: "Upgrade with UBC", 
+      buttonStyle: "bg-gradient-to-r from-purple-600 to-blue-500 text-white"
+    },
+    {
+      name: "Kong Pro - COMPUTE",
+      description: "Full access to KinKong intelligence",
+      features: [
+        "100 messages per 8-hour block",
+        "Advanced technical analysis",
+        "Priority response time",
+        "Exclusive alpha signals",
+        "Custom trading strategies",
+        "Direct ecosystem integration"
+      ],
+      price: "750,000 COMPUTE / 1 month",
+      action: () => handlePremiumSubscription('COMPUTE'),
+      buttonText: "Upgrade with COMPUTE", 
+      buttonStyle: "bg-gradient-to-r from-blue-600 to-cyan-500 text-white"
     }
   ];
 
-  async function handlePremiumSubscription() {
+  async function handlePremiumSubscription(paymentMethod: 'UBC' | 'COMPUTE') {
     if (!connected || !publicKey) {
       // The WalletConnect component will show the connect modal
       return;
@@ -112,25 +141,64 @@ export default function CopilotPage() {
       }
       
       const connection = new Connection(rpcUrl, 'confirmed');
-
-      // Create transfer instruction
-      const transferInstruction = SystemProgram.transfer({
-        fromPubkey: publicKey,
-        toPubkey: subscriptionWallet,
-        lamports: SUBSCRIPTION_COST * LAMPORTS_PER_SOL
-      });
-
+      
+      // Handle token transfers (UBC or COMPUTE)
+      const tokenMint = new PublicKey(TOKEN_ADDRESSES[paymentMethod]);
+      const tokenAmount = SUBSCRIPTION_COSTS[paymentMethod];
+      
+      // Import required token program functions
+      const { getAssociatedTokenAddress, createAssociatedTokenAccountInstruction } = await import('@solana/spl-token');
+      const { TOKEN_PROGRAM_ID, createTransferInstruction } = await import('@solana/spl-token');
+      
+      // Get source token account (user's wallet)
+      const sourceTokenAccount = await getAssociatedTokenAddress(
+        tokenMint,
+        publicKey
+      );
+      
+      // Get destination token account (subscription wallet)
+      const destinationTokenAccount = await getAssociatedTokenAddress(
+        tokenMint,
+        subscriptionWallet
+      );
+      
+      // Check if destination token account exists
+      const destinationAccountInfo = await connection.getAccountInfo(destinationTokenAccount);
+      
       // Create transaction
-      const transaction = new Transaction().add(transferInstruction);
+      const transaction = new Transaction();
+      
+      // If destination account doesn't exist, create it
+      if (!destinationAccountInfo) {
+        transaction.add(
+          createAssociatedTokenAccountInstruction(
+            publicKey, // payer
+            destinationTokenAccount, // associated token account
+            subscriptionWallet, // owner
+            tokenMint // token mint
+          )
+        );
+      }
+      
+      // Add transfer instruction
+      transaction.add(
+        createTransferInstruction(
+          sourceTokenAccount, // source
+          destinationTokenAccount, // destination
+          publicKey, // owner
+          tokenAmount * 10**9 // amount (with decimals)
+        )
+      );
       
       // Get latest blockhash
       const { blockhash } = await connection.getLatestBlockhash();
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = publicKey;
-
+      
       // Send transaction
       const signature = await sendTransaction(transaction, connection);
-      console.log('Payment sent:', signature);
+      
+      console.log(`${paymentMethod} payment sent:`, signature);
 
       // Wait for confirmation
       const confirmation = await connection.confirmTransaction(signature);
@@ -139,9 +207,15 @@ export default function CopilotPage() {
         throw new Error('Transaction failed');
       }
 
-      // Create subscription record
+      // Create subscription record with appropriate duration
       const code = Math.random().toString(36).substring(2, 15);
-      await createSubscription(signature, publicKey.toString(), code);
+      await createSubscription(
+        signature, 
+        publicKey.toString(), 
+        code, 
+        paymentMethod, 
+        SUBSCRIPTION_DURATIONS[paymentMethod]
+      );
 
       // Redirect to chat with code
       router.push(`/copilot/chat?code=${code}`);
@@ -183,7 +257,7 @@ export default function CopilotPage() {
         </div>
 
         {/* Pricing Tiers */}
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-3 gap-6">
           {error && (
             <div className="md:col-span-2 p-4 bg-red-900/50 border border-red-500 rounded-lg text-center text-red-200">
               {error}
