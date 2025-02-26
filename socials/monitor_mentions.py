@@ -5,6 +5,7 @@ import requests
 import aiohttp
 import logging
 import anthropic
+import traceback
 from pathlib import Path
 from dotenv import load_dotenv
 from requests_oauthlib import OAuth1
@@ -487,6 +488,69 @@ async def generate_not_bullish_explanation(token: str) -> str:
     except Exception as e:
         logger.error(f"Error generating not bullish explanation: {str(e)}")
         return f"I've analyzed ${token} but I'm not seeing strong bullish signals at this time. I'll keep monitoring the situation. 🔍"
+
+def get_account_tweets(x_account: str, bearer_token: str) -> List[Dict]:
+    """
+    Get recent tweets from a specific X account
+    
+    Args:
+        x_account: X account username (without @)
+        bearer_token: X/Twitter API bearer token
+        
+    Returns:
+        List of tweet data dictionaries
+    """
+    try:
+        # Remove @ if present in account name
+        x_account = x_account.lstrip('@')
+        
+        logger.info(f"Getting tweets from account @{x_account}")
+        
+        headers = {
+            "Authorization": f"Bearer {bearer_token}",
+            "Content-Type": "application/json"
+        }
+        
+        # First get the user ID
+        user_url = f"https://api.twitter.com/2/users/by/username/{x_account}"
+        user_response = requests.get(user_url, headers=headers, timeout=15)
+        
+        if not user_response.ok:
+            logger.error(f"X/Twitter API error: {user_response.status_code}")
+            logger.error(f"Response: {user_response.text}")
+            return []
+        
+        user_data = user_response.json()
+        user_id = user_data.get('data', {}).get('id')
+        
+        if not user_id:
+            logger.error(f"Could not find user ID for account: @{x_account}")
+            return []
+            
+        # Then get their tweets
+        tweets_url = f"https://api.twitter.com/2/users/{user_id}/tweets"
+        params = {
+            "max_results": 20,  # Get last 20 tweets
+            "tweet.fields": "created_at,public_metrics,text",
+            "exclude": "retweets,replies"
+        }
+        
+        response = requests.get(tweets_url, headers=headers, params=params, timeout=15)
+        
+        if not response.ok:
+            logger.error(f"X/Twitter API error: {response.status_code}")
+            logger.error(f"Response: {response.text}")
+            return []
+        
+        data = response.json()
+        tweets = data.get('data', [])
+        
+        logger.info(f"Found {len(tweets)} tweets from @{x_account}")
+        return tweets
+        
+    except Exception as e:
+        logger.error(f"Error getting tweets for account @{x_account}: {e}")
+        return []
 
 async def send_tweet_reply(tweet_id: str, text: str) -> bool:
     """
