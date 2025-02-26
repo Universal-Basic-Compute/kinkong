@@ -274,25 +274,6 @@ export async function GET() {
 
     // Add USD values and metadata
     const balancesWithUSD = await Promise.all(nonZeroBalances.map(async (balance: TokenBalance) => {
-      let price = 0;
-      
-      // Check if it's a known stablecoin first
-      const knownToken = Object.values(KNOWN_TOKENS).find(t => t.mint === balance.mint);
-      if (knownToken) {
-        price = knownToken.price;
-      } else {
-        // Get price from snapshots using mint address
-        price = priceMap[balance.mint] || 0;
-      
-        // If no price in snapshots, try Jupiter as fallback
-        if (price === 0) {
-          console.log(`Attempting Jupiter fallback for ${balance.token || balance.mint}`);
-          const jupiterPrice = await getJupiterPrice(balance.mint);
-          console.log(`Jupiter returned price for ${balance.mint}: ${jupiterPrice}`);
-          price = jupiterPrice;
-        }
-      }
-
       // Add debug logging
       console.log('Price calculation:', {
         mint: balance.mint,
