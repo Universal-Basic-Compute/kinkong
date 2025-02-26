@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 
 // Store for active connections with last activity timestamp
-const clients = new Map<ReadableStreamController<Uint8Array>, number>();
+const clients = new Map<ReadableStreamDefaultController<Uint8Array>, number>();
 
 // Function to broadcast to all connected clients
 export function broadcastToClients(data: any) {
@@ -21,7 +21,7 @@ export function broadcastToClients(data: any) {
   }
   
   // Send to remaining clients
-  clients.forEach((lastActivity, client) => {
+  clients.forEach((lastActivity, client: ReadableStreamDefaultController<Uint8Array>) => {
     try {
       client.enqueue(encodedEvent);
       // Update last activity timestamp
@@ -40,7 +40,7 @@ export function broadcastToClients(data: any) {
 export async function GET(request: NextRequest) {
   // Create a new stream
   const stream = new ReadableStream({
-    start(controller) {
+    start(controller: ReadableStreamDefaultController<Uint8Array>) {
       // Add this client to the map with current timestamp
       clients.set(controller, Date.now());
       
