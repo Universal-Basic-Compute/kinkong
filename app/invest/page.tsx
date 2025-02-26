@@ -384,6 +384,30 @@ export default function Invest() {
         throw new Error('Transaction failed to confirm');
       }
 
+      // Create investment record in Airtable
+      try {
+        const response = await fetch('/api/investments/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            token: selectedToken,
+            amount: amount,
+            wallet: publicKey.toString(),
+            solscanUrl: `https://solscan.io/tx/${signature}`
+          })
+        });
+
+        if (!response.ok) {
+          console.error('Failed to create investment record:', await response.text());
+        } else {
+          console.log('Investment record created successfully');
+        }
+      } catch (error) {
+        console.error('Error creating investment record:', error);
+      }
+
       alert('Investment successful! Transaction signature: ' + signature);
     } catch (error) {
       console.error('Investment failed:', error);
