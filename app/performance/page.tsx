@@ -625,30 +625,77 @@ export default function Performance() {
                     Recalculate Metrics
                   </button>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div className="bg-black/50 p-4 rounded-lg border border-gold/10 hover:border-gold/30 transition-colors">
-                    <div className="text-gold font-medium mb-1">Confidence Distribution</div>
-                    <div className="text-xs text-gray-400">Distribution of signal confidence levels</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20">
+                    <h4 className="text-lg font-semibold text-gold mb-2">Confidence Distribution</h4>
+                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10">
+                      <Image 
+                        src="/performances/confidence_distribution.png" 
+                        alt="Confidence Distribution" 
+                        fill
+                        className="object-contain"
+                      />
+                    </div>
                   </div>
-                  <div className="bg-black/50 p-4 rounded-lg border border-gold/10 hover:border-gold/30 transition-colors">
-                    <div className="text-gold font-medium mb-1">Timeframe Distribution</div>
-                    <div className="text-xs text-gray-400">Breakdown by trading timeframe</div>
+                  
+                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20">
+                    <h4 className="text-lg font-semibold text-gold mb-2">Timeframe Distribution</h4>
+                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10">
+                      <Image 
+                        src="/performances/timeframe_distribution.png" 
+                        alt="Timeframe Distribution" 
+                        fill
+                        className="object-contain"
+                      />
+                    </div>
                   </div>
-                  <div className="bg-black/50 p-4 rounded-lg border border-gold/10 hover:border-gold/30 transition-colors">
-                    <div className="text-gold font-medium mb-1">Return Distribution</div>
-                    <div className="text-xs text-gray-400">Expected vs actual returns</div>
+                  
+                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20">
+                    <h4 className="text-lg font-semibold text-gold mb-2">Return Distribution</h4>
+                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10">
+                      <Image 
+                        src="/performances/return_distribution.png" 
+                        alt="Return Distribution" 
+                        fill
+                        className="object-contain"
+                      />
+                    </div>
                   </div>
-                  <div className="bg-black/50 p-4 rounded-lg border border-gold/10 hover:border-gold/30 transition-colors">
-                    <div className="text-gold font-medium mb-1">Success by Confidence</div>
-                    <div className="text-xs text-gray-400">Success rate by confidence level</div>
+                  
+                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20">
+                    <h4 className="text-lg font-semibold text-gold mb-2">Success by Timeframe</h4>
+                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10">
+                      <Image 
+                        src="/performances/success_by_timeframe.png" 
+                        alt="Success by Timeframe" 
+                        fill
+                        className="object-contain"
+                      />
+                    </div>
                   </div>
-                  <div className="bg-black/50 p-4 rounded-lg border border-gold/10 hover:border-gold/30 transition-colors">
-                    <div className="text-gold font-medium mb-1">Success by Timeframe</div>
-                    <div className="text-xs text-gray-400">Success rate by trading timeframe</div>
+                  
+                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20">
+                    <h4 className="text-lg font-semibold text-gold mb-2">Risk-Return Metrics</h4>
+                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10">
+                      <Image 
+                        src="/performances/risk_return_metrics.png" 
+                        alt="Risk-Return Metrics" 
+                        fill
+                        className="object-contain"
+                      />
+                    </div>
                   </div>
-                  <div className="bg-black/50 p-4 rounded-lg border border-gold/10 hover:border-gold/30 transition-colors">
-                    <div className="text-gold font-medium mb-1">Top Tokens Performance</div>
-                    <div className="text-xs text-gray-400">Performance of most traded tokens</div>
+                  
+                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20">
+                    <h4 className="text-lg font-semibold text-gold mb-2">Consistency Metrics</h4>
+                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10">
+                      <Image 
+                        src="/performances/consistency_metrics.png" 
+                        alt="Consistency Metrics" 
+                        fill
+                        className="object-contain"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

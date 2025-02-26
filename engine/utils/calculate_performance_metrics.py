@@ -64,10 +64,6 @@ class SignalPerformanceAnalyzer:
         # Initialize metrics storage
         self.metrics = {}
         self.signals_df = None
-        
-        # Create output directory if it doesn't exist
-        self.output_dir = Path('reports')
-        self.output_dir.mkdir(exist_ok=True)
 
     def fetch_signals(self, days_back=30):
         """Fetch signals from Airtable and convert to DataFrame"""
@@ -325,6 +321,10 @@ class SignalPerformanceAnalyzer:
         sns.set(style="darkgrid")
         plt.rcParams.update({'font.size': 12})
         
+        # Create public/performances directory if it doesn't exist
+        performances_dir = Path('public/performances')
+        performances_dir.mkdir(exist_ok=True, parents=True)
+        
         # 1. Signal Type Distribution (Pie Chart)
         if 'buy_signals' in metrics and 'sell_signals' in metrics:
             plt.figure(figsize=(10, 6))
@@ -337,7 +337,8 @@ class SignalPerformanceAnalyzer:
             )
             plt.title('Signal Type Distribution')
             plt.tight_layout()
-            plt.savefig(self.output_dir / 'signal_type_distribution.png')
+            # Save only to performances directory
+            plt.savefig(performances_dir / 'signal_type_distribution.png')
             plt.close()
         
         # 2. Confidence Level Distribution (Bar Chart)
@@ -360,7 +361,8 @@ class SignalPerformanceAnalyzer:
             plt.xlabel('Confidence Level')
             plt.ylabel('Number of Signals')
             plt.tight_layout()
-            plt.savefig(self.output_dir / 'confidence_distribution.png')
+            # Save only to performances directory
+            plt.savefig(performances_dir / 'confidence_distribution.png')
             plt.close()
         
         # 3. Timeframe Distribution (Bar Chart)
@@ -384,7 +386,8 @@ class SignalPerformanceAnalyzer:
             plt.xlabel('Timeframe')
             plt.ylabel('Number of Signals')
             plt.tight_layout()
-            plt.savefig(self.output_dir / 'timeframe_distribution.png')
+            # Save only to performances directory
+            plt.savefig(performances_dir / 'timeframe_distribution.png')
             plt.close()
         
         # 4. Expected vs Actual Return (Box Plot)
@@ -398,7 +401,8 @@ class SignalPerformanceAnalyzer:
             plt.title('Expected vs Actual Return Distribution')
             plt.ylabel('Return (%)')
             plt.tight_layout()
-            plt.savefig(self.output_dir / 'return_distribution.png')
+            # Save only to performances directory
+            plt.savefig(performances_dir / 'return_distribution.png')
             plt.close()
         
         # 5. Success Rate by Confidence (Bar Chart)
@@ -410,7 +414,8 @@ class SignalPerformanceAnalyzer:
             plt.xlabel('Confidence Level')
             plt.ylabel('Success Rate (%)')
             plt.tight_layout()
-            plt.savefig(self.output_dir / 'success_by_confidence.png')
+            # Save only to performances directory
+            plt.savefig(performances_dir / 'success_by_confidence.png')
             plt.close()
         
         # 6. Success Rate by Timeframe (Bar Chart)
@@ -422,7 +427,8 @@ class SignalPerformanceAnalyzer:
             plt.xlabel('Timeframe')
             plt.ylabel('Success Rate (%)')
             plt.tight_layout()
-            plt.savefig(self.output_dir / 'success_by_timeframe.png')
+            # Save only to performances directory
+            plt.savefig(performances_dir / 'success_by_timeframe.png')
             plt.close()
         
         # 7. Average Return by Token (Top 10)
@@ -447,7 +453,8 @@ class SignalPerformanceAnalyzer:
             plt.ylabel('Average Return (%)')
             plt.xticks(rotation=45)
             plt.tight_layout()
-            plt.savefig(self.output_dir / 'return_by_token.png')
+            # Save only to performances directory
+            plt.savefig(performances_dir / 'return_by_token.png')
             plt.close()
         
         # 8. Weekly Performance Trend
@@ -463,10 +470,77 @@ class SignalPerformanceAnalyzer:
             plt.ylabel('Average Return (%)')
             plt.grid(True, alpha=0.3)
             plt.tight_layout()
-            plt.savefig(self.output_dir / 'weekly_performance.png')
+            # Save only to performances directory
+            plt.savefig(performances_dir / 'weekly_performance.png')
             plt.close()
         
-        logger.info(f"Visualizations saved to {self.output_dir}")
+        # 9. Risk-Return Metrics
+        plt.figure(figsize=(10, 6))
+        risk_metrics = [
+            metrics.get('sharpe_ratio', 0),
+            metrics.get('win_loss_ratio', 0),
+            metrics.get('profit_factor', 0),
+            metrics.get('recovery_factor', 0)
+        ]
+        risk_labels = ['Sharpe Ratio', 'Win/Loss Ratio', 'Profit Factor', 'Recovery Factor']
+        
+        # Cap very high values for better visualization
+        risk_metrics = [min(x, 5) if x > 5 else x for x in risk_metrics]
+        
+        bars = plt.bar(risk_labels, risk_metrics, color='#4CAF50')
+        plt.title('Risk-Return Metrics')
+        plt.ylabel('Value')
+        plt.grid(axis='y', linestyle='--', alpha=0.3)
+        
+        # Add value labels on top of bars
+        for bar in bars:
+            height = bar.get_height()
+            plt.text(bar.get_x() + bar.get_width()/2., height + 0.1,
+                    f'{height:.2f}',
+                    ha='center', va='bottom', color='white')
+        
+        plt.tight_layout()
+        # Save only to performances directory
+        plt.savefig(performances_dir / 'risk_return_metrics.png')
+        plt.close()
+        
+        # 10. Consistency Metrics
+        plt.figure(figsize=(10, 6))
+        consistency_metrics = [
+            metrics.get('positive_return_percentage', 0),
+            metrics.get('max_consecutive_wins', 0),
+            metrics.get('max_consecutive_losses', 0),
+            metrics.get('average_win', 0),
+            abs(metrics.get('average_loss', 0))
+        ]
+        consistency_labels = [
+            'Positive Returns %', 
+            'Max Consecutive Wins',
+            'Max Consecutive Losses',
+            'Avg Win %',
+            'Avg Loss %'
+        ]
+        
+        colors = ['#4CAF50', '#2196F3', '#F44336', '#4CAF50', '#F44336']
+        bars = plt.bar(consistency_labels, consistency_metrics, color=colors)
+        plt.title('Consistency Metrics')
+        plt.ylabel('Value')
+        plt.grid(axis='y', linestyle='--', alpha=0.3)
+        plt.xticks(rotation=45)
+        
+        # Add value labels on top of bars
+        for bar in bars:
+            height = bar.get_height()
+            plt.text(bar.get_x() + bar.get_width()/2., height + 0.1,
+                    f'{height:.2f}',
+                    ha='center', va='bottom', color='white')
+        
+        plt.tight_layout()
+        # Save only to performances directory
+        plt.savefig(performances_dir / 'consistency_metrics.png')
+        plt.close()
+        
+        logger.info(f"Visualizations saved to {performances_dir}")
 
     def save_to_airtable(self, metrics):
         """Save performance metrics to Airtable PERFORMANCES table"""
