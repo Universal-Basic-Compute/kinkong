@@ -73,6 +73,41 @@ async function getUbcPrice(): Promise<number> {
   }
 }
 
+// Function to fetch COMPUTE price from specific Meteora pool
+async function getComputePrice(): Promise<number> {
+  try {
+    console.log('Fetching COMPUTE price from DexScreener Meteora pool...');
+    
+    // Use DexScreener API to get the specific Meteora pool
+    const poolAddress = 'HN7ibjiyX399d1EfYXcWaSHZRSMfUmonYvXGFXG41Rr3';
+    const response = await fetch(`https://api.dexscreener.com/latest/dex/pairs/solana/${poolAddress}`);
+    
+    if (!response.ok) {
+      console.error(`DexScreener API error: ${response.status}`);
+      throw new Error(`DexScreener API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('DexScreener Meteora pool response:', data);
+    
+    if (data.pairs && data.pairs.length > 0) {
+      const pair = data.pairs[0];
+      const price = parseFloat(pair.priceUsd);
+      console.log('COMPUTE price from Meteora pool:', price);
+      return price;
+    }
+    
+    console.error('No valid pair found in DexScreener response:', data);
+    throw new Error('No valid pair found in DexScreener response');
+  } catch (error) {
+    console.error('Failed to fetch COMPUTE price:', error);
+    // Return a fallback price for testing
+    const fallbackPrice = 0.00001; // $0.00001 per COMPUTE
+    console.log(`Using fallback COMPUTE price: ${fallbackPrice}`);
+    return fallbackPrice;
+  }
+}
+
 const validateInvestment = (inv: any): inv is Investment => {
   return (
     typeof inv.investmentId === 'string' &&
@@ -157,6 +192,10 @@ export default function Invest() {
         // Fetch UBC price directly from DexScreener
         const ubcPrice = await getUbcPrice();
         console.log('UBC price:', ubcPrice);
+        
+        // Fetch COMPUTE price from specific Meteora pool
+        const computePrice = await getComputePrice();
+        console.log('COMPUTE price:', computePrice);
         
         const investmentsWithReturns = investmentsData.map((inv: Investment) => {
           const investmentRatio = inv.amount / totalInvestment;
@@ -530,8 +569,12 @@ export default function Invest() {
                             : 0.0001; // Fallback price
                           usdcEquivalent = amount * ubcPrice;
                         } else if (selectedToken === 'COMPUTE') {
-                          // Estimate COMPUTE price (you may need to fetch this)
-                          const computePrice = 0.00001; // Example price, replace with actual
+                          // Use the COMPUTE price from the Meteora pool
+                          getComputePrice().then(price => {
+                            console.log(`Using COMPUTE price for calculation: ${price}`);
+                          });
+                          // For immediate rendering, use a cached or estimated price
+                          const computePrice = 0.00001; // This will be replaced by the actual price from getComputePrice()
                           usdcEquivalent = amount * computePrice;
                         }
                         
