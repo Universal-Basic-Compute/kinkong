@@ -121,9 +121,6 @@ export default function Invest() {
           console.log('Portfolio total value (from snapshot):', portfolioValue);
         }
         
-        // OVERRIDE: Use the hardcoded value from the screenshot
-        portfolioValue = 3281.95;
-      
         // Set the latest snapshot with the calculated/adjusted total value
         setLatestSnapshot({
           totalValue: portfolioValue,
@@ -356,40 +353,35 @@ export default function Invest() {
                           : 'N/A'}
                       </td>
                       <td className="px-4 py-4 text-right">
-                        {investment.username === '@JGIOERICH' ? (
+                        {investment.ubcReturn !== undefined ? (
                           <>
                             <span className="metallic-text-ubc font-medium">
-                              1,402,436.48 $UBC
+                              {Math.floor(investment.ubcReturn).toLocaleString('en-US')} $UBC
                             </span> 
                             <span className="text-gray-400 text-sm ml-1">
-                              ($140.24)
-                            </span>
-                          </>
-                        ) : investment.username === '@Metaface_eth' ? (
-                          <>
-                            <span className="metallic-text-ubc font-medium">
-                              1,200,000 $UBC
-                            </span> 
-                            <span className="text-gray-400 text-sm ml-1">
-                              ($120)
+                              (${investment.return ? Math.floor(investment.return).toLocaleString('en-US') : '0'})
                             </span>
                           </>
                         ) : (
-                          <>
-                            <span className="metallic-text-ubc font-medium">
-                              1,500,000 $UBC
-                            </span> 
-                            <span className="text-gray-400 text-sm ml-1">
-                              ($150)
-                            </span>
-                          </>
+                          <span className="text-gray-400">Calculating...</span>
                         )}
                       </td>
                       <td className="px-4 py-4">
-                        {investment.username === '@JGIOERICH' ? '14/02/2025' : '20/02/2025'}
+                        {investment.date 
+                          ? new Date(investment.date).toLocaleDateString('en-GB', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric'
+                            }).replace(/\//g, '/')
+                          : 'N/A'}
                       </td>
                       <td className="px-4 py-4">
-                        <a href="#" className="text-gold hover:text-gold/80 font-medium">
+                        <a 
+                          href={investment.solscanUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-gold hover:text-gold/80 font-medium"
+                        >
                           View on Solscan
                         </a>
                       </td>
@@ -403,12 +395,12 @@ export default function Invest() {
               <div className="mt-6 text-sm space-y-1">
                 <p>
                   <span className="text-gray-400">Portfolio Value:</span> 
-                  <span className="text-white ml-2 font-medium">3,281.95</span> 
+                  <span className="text-white ml-2 font-medium">{Math.floor(latestSnapshot.totalValue).toLocaleString('en-US')}</span> 
                   <span className="text-gray-400">$USDC</span>
                 </p>
                 <p>
                   <span className="text-gray-400">Total Investment:</span> 
-                  <span className="text-white ml-2 font-medium">2,734.96</span> 
+                  <span className="text-white ml-2 font-medium">{Math.floor(totalInvestment).toLocaleString('en-US')}</span> 
                   <span className="text-gray-400">$USDC</span>
                 </p>
                 <p className="text-gray-400">
