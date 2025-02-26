@@ -1,6 +1,110 @@
 'use client';
 import { TradeHistory } from '@/components/tables/TradeHistory';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import Image from 'next/image';
+
+// Trade chart carousel component
+const TradeChartCarousel = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [charts, setCharts] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchCharts() {
+      try {
+        const response = await fetch('/api/charts/trades');
+        if (!response.ok) throw new Error('Failed to fetch charts');
+        const data = await response.json();
+        setCharts(data.charts.slice(0, 20)); // Get only the 20 most recent
+      } catch (error) {
+        console.error('Error fetching charts:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchCharts();
+  }, []);
+
+  const nextSlide = () => {
+    setCurrentIndex((prevIndex) => 
+      prevIndex === charts.length - 1 ? 0 : prevIndex + 1
+    );
+  };
+
+  const prevSlide = () => {
+    setCurrentIndex((prevIndex) => 
+      prevIndex === 0 ? charts.length - 1 : prevIndex - 1
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gold"></div>
+      </div>
+    );
+  }
+
+  if (charts.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64 text-gray-400">
+        No trade charts available
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <div className="overflow-hidden rounded-lg aspect-video relative">
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Image
+            src={`/charts/trades/${charts[currentIndex]}`}
+            alt={`Trade chart ${currentIndex + 1}`}
+            fill
+            className="object-contain"
+          />
+        </div>
+      </div>
+      
+      <div className="absolute inset-y-0 left-0 flex items-center">
+        <button 
+          onClick={prevSlide}
+          className="bg-black/50 hover:bg-black/70 text-white p-2 rounded-full ml-2"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+      </div>
+      
+      <div className="absolute inset-y-0 right-0 flex items-center">
+        <button 
+          onClick={nextSlide}
+          className="bg-black/50 hover:bg-black/70 text-white p-2 rounded-full mr-2"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+      
+      <div className="absolute bottom-4 left-0 right-0">
+        <div className="flex justify-center gap-2">
+          {charts.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentIndex(index)}
+              className={`h-2 w-2 rounded-full ${
+                index === currentIndex ? 'bg-gold' : 'bg-gray-400/50'
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function Trades() {
   const [showChartButton, setShowChartButton] = useState(true);
@@ -38,28 +142,8 @@ export default function Trades() {
             </button>
           </div>
           <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
-            <p className="text-gray-400 mb-4">
-              Visual representation of recent trades showing entry points, targets, stop losses, and actual exit points.
-              Charts are automatically generated for closed signals.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* This would be replaced with actual chart components */}
-              <div className="bg-black/50 p-4 rounded-lg border border-gold/10 flex flex-col items-center justify-center h-64">
-                <p className="text-gray-400 text-center">
-                  Trade charts are generated on demand and stored in /public/charts/trades/
-                </p>
-                <p className="text-gray-500 text-sm mt-2">
-                  Use the "Generate Charts" button to create visualizations for recent trades
-                </p>
-              </div>
-              <div className="bg-black/50 p-4 rounded-lg border border-gold/10 flex flex-col items-center justify-center h-64">
-                <p className="text-gray-400 text-center">
-                  Individual charts can be generated for any closed signal
-                </p>
-                <p className="text-gray-500 text-sm mt-2">
-                  API endpoint: /api/signals/chart?id=[signal_id]
-                </p>
-              </div>
+            <div className="h-[400px]">
+              <TradeChartCarousel />
             </div>
           </div>
         </section>
