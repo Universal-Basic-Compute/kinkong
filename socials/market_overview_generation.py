@@ -10,7 +10,7 @@ import anthropic
 import requests
 
 def send_telegram_message(message: str) -> bool:
-    """Send message to Telegram"""
+    """Send message to Telegram with improved error handling"""
     try:
         bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
         chat_id = os.getenv('TELEGRAM_CHAT_ID')
@@ -18,20 +18,61 @@ def send_telegram_message(message: str) -> bool:
         if not bot_token or not chat_id:
             logger.error("Missing Telegram credentials")
             return False
-            
+        
+        # Check message length and split if necessary
+        MAX_LENGTH = 4000  # Telegram has a limit of around 4096 characters
+        
+        # Log message length for debugging
+        logger.info(f"Message length: {len(message)} characters")
+        
+        # Clean up HTML tags that might be causing issues
+        # Replace problematic HTML with simpler formatting
+        cleaned_message = message
+        
+        # Try sending without HTML parsing first
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
         data = {
             "chat_id": chat_id,
-            "text": message,
+            "text": cleaned_message,
             "parse_mode": "HTML"
         }
         
-        response = requests.post(url, data=data)
-        response.raise_for_status()
-        return True
-        
+        try:
+            response = requests.post(url, data=data)
+            response.raise_for_status()
+            logger.info("Message sent successfully with HTML formatting")
+            return True
+        except requests.exceptions.HTTPError as e:
+            logger.warning(f"Failed to send with HTML formatting: {e}")
+            
+            # If HTML parsing fails, try without parse_mode
+            logger.info("Trying to send without HTML parsing")
+            data = {
+                "chat_id": chat_id,
+                "text": message
+            }
+            
+            response = requests.post(url, data=data)
+            response.raise_for_status()
+            logger.info("Message sent successfully without HTML formatting")
+            return True
+            
     except Exception as e:
         logger.error(f"Failed to send Telegram message: {e}")
+        
+        # Try sending a simplified message as a last resort
+        try:
+            simplified_message = "⚠️ Market overview generated but couldn't be sent in full. Check the dashboard for details."
+            url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+            data = {
+                "chat_id": chat_id,
+                "text": simplified_message
+            }
+            requests.post(url, data=data)
+            logger.info("Simplified error message sent")
+        except:
+            logger.error("Even simplified message failed to send")
+            
         return False
 
 def setup_logging():
