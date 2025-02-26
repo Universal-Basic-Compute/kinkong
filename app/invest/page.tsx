@@ -352,12 +352,22 @@ export default function Invest() {
                       <td className="px-4 py-2">{investment.username || 'Anonymous'}</td>
                       <td className="px-4 py-2 text-right">
                         {typeof investment.amount === 'number' 
-                          ? `${investment.amount.toLocaleString('en-US')} USDC`
+                          ? (
+                            <>
+                              <span className="text-white">{investment.amount.toLocaleString('en-US')}</span> 
+                              <span className="text-gray-400">$USDC</span>
+                            </>
+                          )
                           : 'N/A'}
                       </td>
                       <td className="px-4 py-2 text-right">
                         {investment.return !== undefined
-                          ? `${(investment.ubcReturn || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })} UBC ($${investment.return.toLocaleString('en-US', { maximumFractionDigits: 2 })})`
+                          ? (
+                            <>
+                              <span className="metallic-text-ubc">{(investment.ubcReturn || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })} $UBC</span> 
+                              <span className="text-gray-400">($${investment.return.toLocaleString('en-US', { maximumFractionDigits: 2 })})</span>
+                            </>
+                          )
                           : 'Calculating...'}
                       </td>
                       <td className="px-4 py-2">
@@ -383,8 +393,8 @@ export default function Invest() {
             
             {latestSnapshot && (
               <div className="mt-4 text-sm text-gray-400">
-                <p>Portfolio Value: {latestSnapshot.totalValue.toLocaleString('en-US', { maximumFractionDigits: 2 })} USDC</p>
-                <p>Total Investment: {totalInvestment.toLocaleString('en-US', { maximumFractionDigits: 2 })} USDC</p>
+                <p>Portfolio Value: <span className="text-white">{latestSnapshot.totalValue.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span> <span className="text-gray-400">$USDC</span></p>
+                <p>Total Investment: <span className="text-white">{totalInvestment.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span> <span className="text-gray-400">$USDC</span></p>
                 <p>Last Updated: {new Date(latestSnapshot.timestamp).toLocaleString()}</p>
               </div>
             )}
@@ -408,16 +418,21 @@ export default function Invest() {
                   <label htmlFor="amount" className="block text-sm mb-2">
                     Investment Amount
                   </label>
-                  <input 
-                    id="amount"
-                    type="number" 
-                    placeholder="Amount in USDC"
-                    className="input-field"
-                    min="1"
-                    step="0.1"
-                    value={amount}
-                    onChange={(e) => setAmount(Number(e.target.value))}
-                  />
+                  <div className="relative">
+                    <input 
+                      id="amount"
+                      type="number" 
+                      placeholder="Amount in $USDC"
+                      className="input-field pr-16"
+                      min="1"
+                      step="0.1"
+                      value={amount}
+                      onChange={(e) => setAmount(Number(e.target.value))}
+                    />
+                    <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                      $USDC
+                    </span>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm mb-2">
@@ -430,7 +445,12 @@ export default function Invest() {
                         const ubcReturn = investments.length > 0 && investments[0].ubcReturn !== undefined && investments[0].return !== undefined
                           ? usdcReturn * (investments[0].ubcReturn / investments[0].return)
                           : 0;
-                        return `${ubcReturn.toLocaleString('en-US', { maximumFractionDigits: 2 })} UBC ($${usdcReturn.toLocaleString('en-US', { maximumFractionDigits: 2 })})`;
+                        return (
+                          <>
+                            <span className="metallic-text-ubc">{ubcReturn.toLocaleString('en-US', { maximumFractionDigits: 2 })} $UBC</span> 
+                            <span className="text-gray-400">($${usdcReturn.toLocaleString('en-US', { maximumFractionDigits: 2 })})</span>
+                          </>
+                        );
                       })()
                     ) : (
                       'Calculate based on amount'
@@ -445,7 +465,7 @@ export default function Invest() {
                   {isSubmitting ? 'Processing...' : 'Invest Now'}
                 </button>
                 <p className="text-sm text-gray-400 text-center">
-                  Minimum investment: 500 USDC
+                  Minimum investment: 500 <span className="text-gray-400">$USDC</span>
                 </p>
               </div>
             </div>
