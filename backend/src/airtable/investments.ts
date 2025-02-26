@@ -5,7 +5,7 @@ export interface Investment {
   amount: number;
   solscanUrl: string;
   date: string;
-  username: string;
+  username?: string;
   wallet: string;
 }
 
@@ -19,7 +19,7 @@ export async function getInvestments(): Promise<Investment[]> {
     
     const records = await table
       .select({
-        sort: [{ field: 'date', direction: 'desc' }]
+        sort: [{ field: 'createdAt', direction: 'desc' }]
       })
       .all();
 
@@ -27,8 +27,8 @@ export async function getInvestments(): Promise<Investment[]> {
       investmentId: record.get('investmentId') as string,
       amount: record.get('amount') as number,
       solscanUrl: record.get('solscanUrl') as string,
-      date: record.get('date') as string,
-      username: record.get('username') as string,
+      date: record.get('createdAt') as string,
+      username: record.get('username') as string || 'Anonymous',
       wallet: record.get('wallet') as string
     }));
   } catch (error) {
