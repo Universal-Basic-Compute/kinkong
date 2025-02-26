@@ -842,6 +842,20 @@ class TradeExecutor:
                 roi = 1000
                 realized_pnl = (roi / 100) * original_value
                 exit_value = original_value + realized_pnl
+                
+            # Fix for negative ROI - it should never be below -100%
+            if roi < -100:
+                self.logger.warning(f"⚠️ ROI {roi:.2f}% is below -100%, capping at -100%")
+                roi = -100
+                realized_pnl = -original_value
+                exit_value = 0
+                
+            # Log the calculation details for debugging
+            self.logger.info(f"P&L Calculation Details:")
+            self.logger.info(f"Original Value: ${original_value:.2f}")
+            self.logger.info(f"Exit Value: ${exit_value:.2f}")
+            self.logger.info(f"Realized P&L: ${realized_pnl:.2f}")
+            self.logger.info(f"ROI: {roi:.2f}%")
 
             # Update trade record
             update_data = {
