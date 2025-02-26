@@ -15,8 +15,8 @@ export default function CopilotPage() {
 
   // Add subscription constants
   const TOKEN_ADDRESSES = {
-    UBC: 'UBCGiYTxvAfxRCpubCQe5xJgxZTZhzSG4A3S3T4ch1v',
-    COMPUTE: 'CPTx4EHKR92ZMqDxP8kxQUBkQ3NHw6Mcz6MYjyuVfgXf'
+    UBC: '9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump',
+    COMPUTE: 'B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo'
   };
 
   const SUBSCRIPTION_COSTS = {
