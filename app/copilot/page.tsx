@@ -176,13 +176,22 @@ export default function CopilotPage() {
         );
       }
       
-      // Add transfer instruction
+      // Get token info to determine decimals
+      const tokenInfo = await connection.getTokenSupply(tokenMint);
+      const tokenDecimals = tokenInfo.value.decimals;
+      console.log(`Token decimals for ${paymentMethod}: ${tokenDecimals}`);
+      
+      // Calculate amount with proper decimals
+      const adjustedAmount = tokenAmount * Math.pow(10, tokenDecimals);
+      console.log(`Sending ${tokenAmount} ${paymentMethod} (${adjustedAmount} raw amount)`);
+      
+      // Add transfer instruction with correct decimal calculation
       transaction.add(
         createTransferInstruction(
           sourceTokenAccount, // source
           destinationTokenAccount, // destination
           publicKey, // owner
-          tokenAmount * 10**9 // amount (with decimals)
+          adjustedAmount // amount with proper decimals
         )
       );
       
