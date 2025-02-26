@@ -30,28 +30,29 @@ interface WalletSnapshot {
   timestamp: string;
 }
 
-// Function to fetch UBC price from Birdeye
+// Function to fetch UBC price from our API
 async function getUbcPrice(): Promise<number> {
   try {
-    console.log('Fetching UBC price from Birdeye...');
-    const response = await fetch(`https://public-api.birdeye.so/public/price?address=${UBC_MINT.toString()}`);
+    console.log('Fetching UBC price from our API...');
+    
+    // Use our API endpoint to get the latest UBC price from TOKEN_SNAPSHOTS
+    const response = await fetch('/api/token-price?token=UBC');
     
     if (!response.ok) {
-      console.error(`Birdeye API error: ${response.status}`);
-      throw new Error(`Birdeye API error: ${response.status}`);
+      console.error(`API error: ${response.status}`);
+      throw new Error(`API error: ${response.status}`);
     }
     
     const data = await response.json();
-    console.log('Birdeye API response:', data);
+    console.log('UBC price API response:', data);
     
-    if (data.success && data.data && data.data.value) {
-      const price = data.data.value;
-      console.log('UBC price from Birdeye:', price);
-      return price;
+    if (data.price) {
+      console.log('UBC price from API:', data.price);
+      return data.price;
     }
     
-    console.error('Invalid price data from Birdeye:', data);
-    throw new Error('Invalid price data from Birdeye');
+    console.error('Invalid price data from API:', data);
+    throw new Error('Invalid price data from API');
   } catch (error) {
     console.error('Failed to fetch UBC price:', error);
     // Return a fallback price for testing
