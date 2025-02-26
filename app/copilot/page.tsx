@@ -274,8 +274,8 @@ export default function CopilotPage() {
                 )}
                 <ul className="space-y-2 mb-6">
                   {tier.features.map((feature, i) => (
-                    <li key={i} className="flex items-center text-gray-300">
-                      {feature}
+                    <li key={i} className="flex items-start text-gray-300">
+                      <span className="text-gold mr-2">•</span> {feature}
                     </li>
                   ))}
                 </ul>
