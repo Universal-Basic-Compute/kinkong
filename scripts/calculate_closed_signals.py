@@ -103,6 +103,9 @@ def simulate_trade(prices, signal_data):
     target_price = signal_data.get('targetPrice')
     stop_loss = signal_data.get('stopLoss')
     signal_type = signal_data.get('type')
+    
+    # Fee percentage (3% per side)
+    fee_percentage = 0.03
 
     # Default to last price if no exit conditions met
     exit_price = prices[-1]['value'] if prices else entry_price
@@ -135,20 +138,33 @@ def simulate_trade(prices, signal_data):
                 time_to_exit = i
                 break
 
-    # Calculate returns and success
+    # Calculate returns and success, accounting for fees
     if signal_type == 'BUY':
-        actual_return = ((exit_price - entry_price) / entry_price) * 100
-        success = exit_price > entry_price
-    else:
-        actual_return = ((entry_price - exit_price) / entry_price) * 100
-        success = exit_price < entry_price
+        # For BUY: We buy at entry_price + fee and sell at exit_price - fee
+        # Entry cost including fee: entry_price * (1 + fee_percentage)
+        # Exit value after fee: exit_price * (1 - fee_percentage)
+        # Return = (Exit value - Entry cost) / Entry cost * 100
+        entry_with_fee = entry_price * (1 + fee_percentage)
+        exit_with_fee = exit_price * (1 - fee_percentage)
+        actual_return = ((exit_with_fee - entry_with_fee) / entry_with_fee) * 100
+        success = exit_with_fee > entry_with_fee
+    else:  # SELL
+        # For SELL: We sell at entry_price - fee and buy back at exit_price + fee
+        # Entry value after fee: entry_price * (1 - fee_percentage)
+        # Exit cost including fee: exit_price * (1 + fee_percentage)
+        # Return = (Entry value - Exit cost) / Entry value * 100
+        entry_with_fee = entry_price * (1 - fee_percentage)
+        exit_with_fee = exit_price * (1 + fee_percentage)
+        actual_return = ((entry_with_fee - exit_with_fee) / entry_with_fee) * 100
+        success = exit_with_fee < entry_with_fee
 
     return {
         'exitPrice': exit_price,
         'exitReason': exit_reason,
         'timeToExit': time_to_exit,
         'actualReturn': actual_return,
-        'success': success
+        'success': success,
+        'fees': fee_percentage * 100  # Store fee percentage for reference
     }
 
 def calculate_closed_signals():
@@ -234,7 +250,7 @@ def calculate_closed_signals():
 
                 logger.info(f"\n✅ Updated signal {signal_id}:")
                 logger.info(f"Exit Price: ${results['exitPrice']:.4f}")
-                logger.info(f"Actual Return: {results['actualReturn']:.2f}%")
+                logger.info(f"Actual Return (after {results['fees']}% fees per side): {results['actualReturn']:.2f}%")
                 logger.info(f"Success: {'✅' if results['success'] else '❌'}")
                 logger.info(f"Time to Exit: {results['timeToExit']} minutes")
 
@@ -245,7 +261,8 @@ def calculate_closed_signals():
                     'actualReturn': results['actualReturn'],
                     'exitPrice': results['exitPrice'],
                     'success': results['success'],
-                    'timeToExit': results['timeToExit']
+                    'timeToExit': results['timeToExit'],
+                    'fees': results['fees']
                 })
 
             except Exception as error:
@@ -258,7 +275,7 @@ def calculate_closed_signals():
             for signal in calculated_signals:
                 message += (
                     f"{signal['token']} {signal['type']}:\n"
-                    f"• Return: {signal['actualReturn']:.2f}%\n"
+                    f"• Return (after fees): {signal['actualReturn']:.2f}%\n"
                     f"• Exit: ${signal['exitPrice']:.4f}\n"
                     f"• Time: {signal['timeToExit']} minutes\n"
                     f"• Result: {'✅ Win' if signal['success'] else '❌ Loss'}\n\n"
