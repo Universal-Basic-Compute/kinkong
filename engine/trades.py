@@ -575,12 +575,16 @@ class TradeExecutor:
             else:
                 self.logger.info(f"Take Profit: Need {GREEN}+{((target_price/current_price)-1)*100:.2f}%{ENDC} more")
             
-            # Check stop loss
-            if current_price <= stop_loss:
+            # Check stop loss - handle differently for BUY vs SELL trades
+            trade_type = trade['fields'].get('type', 'BUY')
+            if (trade_type == 'BUY' and current_price <= stop_loss) or (trade_type == 'SELL' and current_price >= stop_loss):
                 self.logger.info(f"{RED}⚠️ Stop loss triggered!{ENDC}")
                 return "STOP_LOSS"
             else:
-                self.logger.info(f"Stop Loss: {RED}{((stop_loss/current_price)-1)*100:.2f}%{ENDC} below current price")
+                if trade_type == 'BUY':
+                    self.logger.info(f"Stop Loss: {RED}{((stop_loss/current_price)-1)*100:.2f}%{ENDC} below current price")
+                else:
+                    self.logger.info(f"Stop Loss: {RED}{((current_price/stop_loss)-1)*100:.2f}%{ENDC} above current price")
             
             # Check if we've reached minimum profit target for SCALP trades
             price_change_pct = ((current_price - entry_price) / entry_price * 100)
@@ -787,7 +791,15 @@ class TradeExecutor:
 
             # Calculate profit/loss metrics
             entry_price = float(trade['fields'].get('price', 0))
-            entry_value = entry_price * token_amount
+            original_amount = float(trade['fields'].get('amount', 0))
+            original_value = float(trade['fields'].get('value', 0))
+            
+            # Use original amount for P&L calculation if current amount is too small
+            if token_amount < 0.0001 or token_amount < original_amount * 0.01:
+                self.logger.info(f"Using original amount for P&L calculation: {original_amount}")
+                token_amount = original_amount
+                
+            entry_value = original_value if original_value > 0 else (entry_price * token_amount)
             exit_value = current_price * token_amount
             realized_pnl = exit_value - entry_value
             roi = (realized_pnl / entry_value * 100) if entry_value > 0 else 0
