@@ -730,18 +730,8 @@ class TradeExecutor:
                 # IMPORTANT FIX: Determine token decimals and adjust amount if needed
                 token_symbol = trade['fields'].get('token', '').upper()
                 
-                # Special handling for known tokens with different decimals
-                if token_symbol == 'WETH' or token_mint == '7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs':
-                    # WETH uses 8 decimals
-                    self.logger.info(f"⚠️ Detected WETH token - using 8 decimals")
-                    decimals = 8
-                    # Remove the division by 10 as it's redundant with the decimal adjustment
-                    self.logger.info(f"Using correct decimals for WETH: {decimals}")
-                elif token_mint == 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v':  # USDC
-                    decimals = 6
-                else:
-                    # Default to 9 decimals for most Solana tokens
-                    decimals = 9
+                # Get token decimals using Jupiter executor's helper method
+                decimals = self.jupiter.get_token_decimals(token_mint)
                 
                 self.logger.info(f"Using {decimals} decimals for {token_symbol}")
                 

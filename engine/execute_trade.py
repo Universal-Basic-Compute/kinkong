@@ -94,6 +94,18 @@ class JupiterTradeExecutor:
             self.logger.error(f"Error getting token price: {str(e)}")
             return None
 
+    def get_token_decimals(self, token_mint: str) -> int:
+        """Get the number of decimals for a token"""
+        # Known token decimals
+        if token_mint == "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v":  # USDC
+            return 6
+        elif token_mint == "7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs":  # WETH
+            self.logger.info(f"⚠️ Detected WETH token - using 8 decimals")
+            return 8
+        else:
+            # Default to 9 decimals for most Solana tokens
+            return 9
+            
     async def get_token_balance(self, token_mint: str) -> float:
         """Get token balance using Birdeye API"""
         try:
@@ -244,11 +256,9 @@ class JupiterTradeExecutor:
                 self.logger.error(f"USD value ${usd_value:.2f} below minimum ${min_amount}")
                 return False, None
 
-            # Convert amount to raw token amount using appropriate decimals
-            if input_token == "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v":  # USDC
-                decimals = 6
-            else:  # Other tokens typically use 9 decimals
-                decimals = 9
+            # Get token decimals using helper method
+            decimals = self.get_token_decimals(input_token)
+            self.logger.info(f"Using {decimals} decimals for token {input_token}")
                 
             # Convert to raw amount with appropriate decimals
             amount_raw = int(amount * (10 ** decimals))
