@@ -77,14 +77,15 @@ class SignalPerformanceAnalyzer:
         cutoff_date = (datetime.now() - timedelta(days=days_back)).isoformat()
         
         # Fetch signals created after the cutoff date
+        # Only include signals with non-null and non-zero actualReturn values
         signals = self.signals_table.all(
-            formula=f"createdAt >= '{cutoff_date}'"
+            formula=f"AND(createdAt >= '{cutoff_date}', NOT(actualReturn = 0), NOT(actualReturn = ''))"
         )
         
-        logger.info(f"Retrieved {len(signals)} signals")
+        logger.info(f"Retrieved {len(signals)} completed signals")
         
         if not signals:
-            logger.warning("No signals found in the specified time period")
+            logger.warning("No completed signals found in the specified time period")
             return pd.DataFrame()
         
         # Convert to DataFrame
