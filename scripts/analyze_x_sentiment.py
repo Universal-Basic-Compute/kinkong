@@ -163,7 +163,7 @@ def analyze_x_sentiment(content: str):
                 'content-type': 'application/json'
             },
             json={
-                'model': 'claude-3-5-sonnet-20241022',
+                'model': 'claude-3-7-sonnet-20250219',
                 'max_tokens': 4096,
                 'system': system_prompt,
                 'messages': [{

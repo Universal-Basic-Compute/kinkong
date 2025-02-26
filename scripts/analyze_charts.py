@@ -448,7 +448,7 @@ For each timeframe, consider how it relates to the higher timeframes above it. Y
         # Create client with API key
         client = anthropic.Client(api_key=api_key)
         message = client.messages.create(
-            model="claude-3-5-sonnet-20241022",
+            model="claude-3-7-sonnet-20250219",
             max_tokens=4096,
             system=formatted_system_prompt,
             messages=[

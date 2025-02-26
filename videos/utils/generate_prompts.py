@@ -72,7 +72,7 @@ class PromptGenerator:
             client = anthropic.Client(api_key=api_key)
             
             message = client.messages.create(
-                model="claude-3-5-sonnet-20241022",
+                model="claude-3-7-sonnet-20250219",
                 max_tokens=4096,
                 system="""You are a crypto trading expert creating engaging TikTok scripts for KinKong - represented by a cool gorilla trader with sunglasses. Break down the content into individual screens of 1-10 words each.
 

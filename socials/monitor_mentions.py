@@ -247,7 +247,7 @@ def generate_reply_with_claude(mention_text: str, username: str) -> Optional[str
         {mention_text}"""
 
         message = client.messages.create(
-            model="claude-3-5-sonnet-20241022",
+            model="claude-3-7-sonnet-20250219",
             max_tokens=1000,
             system=system_prompt,
             messages=[

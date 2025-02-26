@@ -180,7 +180,7 @@ class MarketOverviewGenerator:
             # Get Claude's analysis
             client = anthropic.Client(api_key=os.getenv('ANTHROPIC_API_KEY'))
             response = client.messages.create(
-                model="claude-3-5-sonnet-20241022",
+                model="claude-3-7-sonnet-20250219",
                 max_tokens=4096,
                 system=system_prompt,
                 messages=[{"role": "user", "content": user_prompt}]
