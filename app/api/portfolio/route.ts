@@ -233,7 +233,7 @@ export async function GET() {
     const mintToTokenMap = activeTokens.reduce((acc, token) => {
       acc[token.mint] = token.token;
       return acc;
-    }, {} as Record<string, string>);
+    }, {} as { [key: string]: string });
 
     // For each active token, get the latest snapshot
     const priceMap: { [key: string]: number } = {};
