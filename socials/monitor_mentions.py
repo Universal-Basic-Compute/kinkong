@@ -289,6 +289,145 @@ def generate_reply_with_claude(mention_text: str, username: str) -> Optional[str
         return None
 
 
+async def get_recent_signals_for_token(token: str) -> List[Dict]:
+    """
+    Get the last 4 signals for a token created in the last hour
+    
+    Args:
+        token: Token symbol to check
+        
+    Returns:
+        List of signal records
+    """
+    try:
+        # Initialize Airtable
+        airtable = Airtable(
+            os.getenv('KINKONG_AIRTABLE_BASE_ID'),
+            'SIGNALS',
+            os.getenv('KINKONG_AIRTABLE_API_KEY')
+        )
+        
+        # Calculate timestamp for 1 hour ago
+        one_hour_ago = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
+        
+        # Get signals for token created in the last hour
+        records = airtable.get_all(
+            formula=f"AND({{token}}='{token}', IS_AFTER({{createdAt}}, '{one_hour_ago}'))",
+            sort=[('createdAt', 'desc')],
+            maxRecords=4
+        )
+        
+        logger.info(f"Found {len(records)} signals for {token} created in the last hour")
+        return records
+        
+    except Exception as e:
+        logger.error(f"Error getting recent signals for {token}: {e}")
+        return []
+
+async def generate_signal_response(token: str, signals: List[Dict], mention_text: str) -> str:
+    """
+    Generate a response based on signals using Claude
+    
+    Args:
+        token: Token symbol
+        signals: List of signal records
+        mention_text: Original mention text
+        
+    Returns:
+        Generated response text
+    """
+    try:
+        # Get API key from environment
+        api_key = os.getenv('ANTHROPIC_API_KEY')
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY not found")
+            
+        client = anthropic.Client(api_key=api_key)
+        
+        # Format signals for Claude
+        signals_text = ""
+        buy_signals = []
+        sell_signals = []
+        hold_signals = []
+        
+        for signal in signals:
+            signal_type = signal['fields'].get('type', '')
+            timeframe = signal['fields'].get('timeframe', '')
+            confidence = signal['fields'].get('confidence', '')
+            reasoning = signal['fields'].get('reasoning', '')
+            
+            signal_info = f"Type: {signal_type}\nTimeframe: {timeframe}\nConfidence: {confidence}\nReasoning: {reasoning}"
+            signals_text += f"Signal {len(buy_signals) + len(sell_signals) + len(hold_signals) + 1}:\n{signal_info}\n\n"
+            
+            if signal_type == 'BUY':
+                buy_signals.append(signal)
+            elif signal_type == 'SELL':
+                sell_signals.append(signal)
+            else:
+                hold_signals.append(signal)
+        
+        # Determine signal status
+        if not signals:
+            signal_status = "NO_SIGNALS"
+        elif buy_signals and not sell_signals:
+            signal_status = "ALL_BUY"
+        elif sell_signals and not buy_signals:
+            signal_status = "ALL_SELL"
+        else:
+            signal_status = "MIXED"
+        
+        system_prompt = f"""You are KinKong, an AI-powered cryptocurrency trading bot on X (formerly Twitter).
+        
+        Someone has mentioned ${token} in a tweet, and you've analyzed the token and generated signals.
+        
+        Based on the signals, craft a helpful, informative response that:
+        1. Is conversational and engaging
+        2. Provides specific insights about ${token}
+        3. Mentions your signal(s) and reasoning
+        4. Keeps your response under 240 characters for X/Twitter
+        5. Uses appropriate emojis
+        
+        Signal Status: {signal_status}
+        
+        Recent Signals:
+        {signals_text}
+        
+        Response Guidelines:
+        - If ALL_BUY: Be enthusiastic about the token, mention your BUY signal(s) and key reasons
+        - If ALL_SELL: Politely explain you're not bullish on the token right now and briefly why
+        - If MIXED: Acknowledge the mixed signals and suggest caution/further research
+        - If NO_SIGNALS: Mention you're monitoring the token but don't have a clear signal yet
+        
+        The user's tweet: "{mention_text}"
+        """
+
+        user_prompt = f"Write a reply about ${token} based on the recent signals"
+
+        message = client.messages.create(
+            model="claude-3-7-sonnet-20250219",
+            max_tokens=500,
+            system=system_prompt,
+            messages=[
+                {
+                    "role": "user",
+                    "content": user_prompt
+                }
+            ]
+        )
+        
+        # Extract and clean the reply text
+        reply_text = message.content[0].text.strip()
+        
+        # Ensure reply is within X's character limit
+        if len(reply_text) > 240:
+            reply_text = reply_text[:237] + "..."
+            
+        return reply_text
+        
+    except Exception as e:
+        logger.error(f"Error generating signal response: {e}")
+        return f"I've analyzed ${token} recently. Check my latest signals on the KinKong dashboard for detailed insights. 🔍"
+
 async def check_token_active_status(token: str) -> tuple[bool, Optional[str]]:
     """
     Check if a token is active in Airtable and get its explanation
@@ -804,6 +943,16 @@ async def check_mentions():
                                         if signals_process.returncode == 0:
                                             logger.info(f"Successfully generated signals for {token}")
                                             logger.info(signals_process.stdout)
+                                            
+                                            # Get recent signals and generate response
+                                            signals = await get_recent_signals_for_token(token)
+                                            response_text = await generate_signal_response(token, signals, mention['text'])
+                                            
+                                            # Send response tweet
+                                            if await send_tweet_reply(mention['id'], response_text):
+                                                logger.info(f"Sent signal response for {token}")
+                                            else:
+                                                logger.error(f"Failed to send signal response for {token}")
                                         else:
                                             logger.error(f"Failed to generate signals for {token}")
                                             logger.error(f"Error: {signals_process.stderr}")
