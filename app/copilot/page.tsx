@@ -87,9 +87,9 @@ export default function CopilotPage() {
         "Custom trading strategies",
         "Direct ecosystem integration"
       ],
-      price: <span>75,000 <span className="metallic-text-ubc">UBC</span> / 1 month</span>,
+      price: <span>$75,000 <span className="metallic-text-ubc">UBC</span> / 1 month</span>,
       action: () => handlePremiumSubscription('UBC'),
-      buttonText: "Upgrade with UBC", 
+      buttonText: <span>Upgrade with <span className="metallic-text-ubc">UBC</span></span>, 
       buttonStyle: "bg-gradient-to-r from-purple-600 to-blue-500 text-white"
     },
     {
@@ -103,9 +103,9 @@ export default function CopilotPage() {
         "Custom trading strategies",
         "Direct ecosystem integration"
       ],
-      price: <span>750,000 <span className="metallic-text-compute">COMPUTE</span> / 1 month</span>,
+      price: <span>$750,000 <span className="metallic-text-compute">COMPUTE</span> / 1 month</span>,
       action: () => handlePremiumSubscription('COMPUTE'),
-      buttonText: "Upgrade with COMPUTE", 
+      buttonText: <span>Upgrade with <span className="metallic-text-compute">COMPUTE</span></span>, 
       buttonStyle: "bg-gradient-to-r from-blue-600 to-cyan-500 text-white"
     }
   ];
@@ -291,7 +291,9 @@ export default function CopilotPage() {
                   ${tier.buttonStyle}
                   ${isProcessing ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}`}
               >
-                {isProcessing ? 'Processing...' : tier.buttonText}
+                {isProcessing ? 'Processing...' : (
+                  typeof tier.buttonText === 'string' ? tier.buttonText : tier.buttonText
+                )}
               </button>
             </div>
           ))}
