@@ -250,28 +250,58 @@ class TokenFinder:
             
             logger.info(f"Found {len(tokens)} tokens")
             
+            # Log the structure of the first few tokens for debugging
+            if tokens and len(tokens) > 0:
+                logger.info(f"First token type: {type(tokens[0])}")
+                if isinstance(tokens[0], dict):
+                    logger.info(f"First token keys: {list(tokens[0].keys())}")
+                elif isinstance(tokens[0], str):
+                    logger.info(f"Tokens appear to be string values: {tokens[0]}")
+                else:
+                    logger.info(f"Unexpected token type: {type(tokens[0])}")
+            
             # Convert tokens to the format expected by process_token
             formatted_tokens = []
             for token in tokens:
-                # Handle different response structures
-                if 'address' in token:  # V3 API format
-                    formatted_token = {
-                        'symbol': token.get('symbol'),
-                        'name': token.get('name'),
-                        'address': token.get('address'),
-                        'chain': 'solana',
-                        'verified': True
-                    }
-                else:  # Legacy trending format
-                    formatted_token = {
-                        'symbol': token.get('symbol'),
-                        'name': token.get('name'),
-                        'address': token.get('address'),
-                        'chain': 'solana',
-                        'verified': True
-                    }
-                
-                formatted_tokens.append(formatted_token)
+                try:
+                    # Check if token is already a string (symbol only)
+                    if isinstance(token, str):
+                        # Handle case where token is just a string
+                        formatted_token = {
+                            'symbol': token,
+                            'name': token,
+                            'address': None,
+                            'chain': 'solana',
+                            'verified': True
+                        }
+                    # Handle different response structures
+                    elif isinstance(token, dict):
+                        if 'address' in token:  # V3 API format
+                            formatted_token = {
+                                'symbol': token.get('symbol'),
+                                'name': token.get('name'),
+                                'address': token.get('address'),
+                                'chain': 'solana',
+                                'verified': True
+                            }
+                        else:  # Legacy trending format
+                            formatted_token = {
+                                'symbol': token.get('symbol'),
+                                'name': token.get('name'),
+                                'address': token.get('address'),
+                                'chain': 'solana',
+                                'verified': True
+                            }
+                    else:
+                        logger.warning(f"Skipping token with unexpected type: {type(token)}")
+                        continue
+                    
+                    formatted_tokens.append(formatted_token)
+                except AttributeError as e:
+                    logger.error(f"Error processing token data: {e}")
+                    logger.error(f"Token data type: {type(token)}")
+                    logger.error(f"Token data: {token}")
+                    continue
             
             # Log first few tokens for debugging
             if formatted_tokens:
