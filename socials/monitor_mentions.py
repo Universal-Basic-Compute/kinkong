@@ -749,9 +749,17 @@ async def check_mentions():
                     if tokens:
                         logger.info(f"Found tokens in conversation: {tokens}")
                         
+                        # Filter out stablecoins
+                        stablecoins = ['USDC', 'USDT', 'DAI', 'BUSD', 'TUSD', 'USDH', 'USDD']
+                        non_stablecoin_tokens = [t for t in tokens if t not in stablecoins]
+                        
+                        if not non_stablecoin_tokens:
+                            logger.info("Only stablecoins mentioned, doing nothing")
+                            continue  # Skip to next mention if only stablecoins were mentioned
+                        
                         # Process regular tokens first
-                        regular_tokens = [t for t in tokens if t not in ['UBC', 'COMPUTE']]
-                        special_tokens = [t for t in tokens if t in ['UBC', 'COMPUTE']]
+                        regular_tokens = [t for t in non_stablecoin_tokens if t not in ['UBC', 'COMPUTE']]
+                        special_tokens = [t for t in non_stablecoin_tokens if t in ['UBC', 'COMPUTE']]
                         
                         # Process regular tokens
                         if regular_tokens:
