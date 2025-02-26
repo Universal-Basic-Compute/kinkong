@@ -77,19 +77,32 @@ def check_token_status(token: str, airtable_base_id: str, airtable_api_key: str)
         return True
 
 async def update_token(token: str):
-    """Update token data using TokenSearcher"""
+    """Update token data using TokenManager"""
     try:
         logger.info(f"Updating token data for {token}")
         
-        # Import TokenSearcher
-        from engine.tokens import TokenSearcher
+        # Add project root to Python path
+        import sys
+        from pathlib import Path
         
-        # Initialize searcher
-        searcher = TokenSearcher()
+        # Get absolute path to project root
+        project_root = Path(__file__).parent.parent.absolute()
         
-        # Search and update token
-        token_data = searcher.search_token(token)
-        if token_data:
+        # Add project root to Python path if not already there
+        if str(project_root) not in sys.path:
+            sys.path.insert(0, str(project_root))
+            logger.info(f"Added {project_root} to Python path")
+        
+        # Import TokenManager from engine.tokens
+        from engine.tokens import TokenManager
+        
+        # Initialize token manager
+        token_manager = TokenManager()
+        
+        # Process token
+        success = token_manager.process_token(token)
+        
+        if success:
             logger.info(f"Successfully updated token {token}")
             return True
         else:
@@ -98,6 +111,8 @@ async def update_token(token: str):
             
     except Exception as e:
         logger.error(f"Error updating token {token}: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
         return False
 
 def setup_logging():
