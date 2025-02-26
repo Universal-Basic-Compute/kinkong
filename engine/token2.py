@@ -493,6 +493,12 @@ class TokenManager:
                     if social.get('type') == 'twitter':
                         x_url = social.get('url', '')
                         x_account = x_url.split('/')[-1].lstrip('@')
+                        
+                        # Clean up the X account username by removing URL parameters
+                        if '?' in x_account:
+                            x_account = x_account.split('?')[0]
+                            logger.info(f"Cleaned X account username: {x_account}")
+                        
                         result['social_links']['xAccount'] = x_account
                     elif social.get('type') == 'telegram':
                         result['social_links']['telegram'] = social.get('url', '')
