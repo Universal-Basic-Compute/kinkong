@@ -603,9 +603,6 @@ Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 - Maximum Drawdown: {metrics.get('max_drawdown', 0):.2f}%
 - Recovery Factor: {metrics.get('recovery_factor', 0):.2f}
 
-## Confidence Level Distribution
-- High Confidence: {metrics.get('high_confidence', 0)} ({metrics.get('high_confidence_percentage', 0):.2f}%)
-- Medium Confidence: {metrics.get('medium_confidence', 0)} ({metrics.get('medium_confidence_percentage', 0):.2f}%)
 
 ## Timeframe Distribution
 - Scalp: {metrics.get('scalp_signals', 0)} ({metrics.get('scalp_percentage', 0):.2f}%)
