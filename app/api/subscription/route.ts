@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Connection, PublicKey, Message, VersionedMessage } from '@solana/web3.js';
 import { getTable } from '@/backend/src/airtable/tables';
 
-// Constants
-const SUBSCRIPTION_COST = 1.5; // SOL
-const SUBSCRIPTION_DURATION = 90; // days
+// Constants - these are now handled dynamically based on payment method
 
 // Validate environment variables at runtime rather than top-level
 function validateEnvironment(): { rpcUrl: string; strategyWallet: string } {
@@ -25,7 +23,7 @@ export async function POST(request: NextRequest) {
   try {
     // Parse request body
     const body = await request.json();
-    const { signature, code, wallet } = body; // Make wallet optional
+    const { signature, code, wallet, paymentMethod = 'UBC', durationDays = 30 } = body;
 
     if (!signature || !code) {
       return NextResponse.json(
@@ -37,7 +35,28 @@ export async function POST(request: NextRequest) {
     // Calculate subscription dates
     const startDate = new Date();
     const endDate = new Date();
-    endDate.setDate(endDate.getDate() + SUBSCRIPTION_DURATION);
+    endDate.setDate(endDate.getDate() + durationDays);
+
+    // Determine amount based on payment method
+    let amount;
+    if (paymentMethod === 'UBC') {
+      amount = 75000;
+    } else if (paymentMethod === 'COMPUTE') {
+      amount = 750000;
+    } else {
+      // Default fallback
+      amount = 0;
+    }
+
+    console.log('Creating subscription with:', {
+      code,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      amount,
+      paymentMethod,
+      signature,
+      wallet: wallet || null
+    });
 
     // Add to Airtable SUBSCRIPTIONS table
     const subscriptionsTable = getTable('SUBSCRIPTIONS');
@@ -47,7 +66,8 @@ export async function POST(request: NextRequest) {
           code,
           startDate: startDate.toISOString(),
           endDate: endDate.toISOString(),
-          amount: SUBSCRIPTION_COST,
+          amount,
+          paymentMethod,
           signature,
           status: 'ACTIVE',
           wallet: wallet || null // Store wallet if provided
