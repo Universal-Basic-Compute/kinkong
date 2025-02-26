@@ -4,6 +4,7 @@ import json
 import codecs
 import requests
 import concurrent.futures
+import traceback
 from datetime import datetime, timezone
 from pathlib import Path
 from airtable import Airtable
@@ -90,6 +91,7 @@ class TokenSearcher:
             self.logger.info(f"[SEARCH] Searching for token: {keyword}")
             
             # Check Airtable first with timeout
+            self.logger.info("Checking Airtable for existing token record...")
             try:
                 with concurrent.futures.ThreadPoolExecutor() as executor:
                     future = executor.submit(
@@ -97,6 +99,7 @@ class TokenSearcher:
                         formula=f"{{token}} = '{keyword.upper()}'"
                     )
                     existing_records = future.result(timeout=10)  # 10 second timeout
+                    self.logger.info(f"Airtable search complete, found {len(existing_records)} records")
             
                 if existing_records:
                     self.logger.info(f"Found existing token record for {keyword.upper()}")
@@ -115,6 +118,12 @@ class TokenSearcher:
 
             # Search Birdeye with timeout
             self.logger.info(f"Searching Birdeye for {keyword.upper()}")
+            
+            # Check if Birdeye API key is available
+            if not self.birdeye_api_key:
+                self.logger.error("No Birdeye API key found")
+                return None
+                
             url = "https://public-api.birdeye.so/defi/v3/search"
             
             params = {
@@ -127,19 +136,33 @@ class TokenSearcher:
                 "accept": "application/json"
             }
             
+            self.logger.info(f"Making Birdeye API request to {url}")
+            
             try:
-                response = requests.get(url, params=params, headers=headers, timeout=15)  # 15 second timeout
+                # Use a simple timeout request instead of aiohttp
+                response = requests.get(url, params=params, headers=headers, timeout=15)
+                self.logger.info(f"Birdeye API response status: {response.status_code}")
+                
                 if not response.ok:
                     self.logger.error(f"Birdeye API error: {response.status_code}")
                     self.logger.error(f"Response: {response.text}")
                     return None
                 
+                # Parse the response
+                self.logger.info("Parsing Birdeye API response")
                 data = response.json()
+                
                 if not data.get('success'):
                     self.logger.error(f"Birdeye API error: {data.get('message', 'Unknown error')}")
                     return None
 
+                # Extract token data
+                self.logger.info("Extracting token data from response")
                 items = data.get('data', {}).get('items', [])
+                
+                # Debug log the items
+                self.logger.info(f"Found {len(items)} items in response")
+                
                 token_item = next((item for item in items if item['type'] == 'token'), None)
                 
                 if not token_item or not token_item.get('result'):
@@ -147,23 +170,33 @@ class TokenSearcher:
                     return None
                     
                 tokens = token_item['result'][:5]
+                self.logger.info(f"Found {len(tokens)} token results")
                 
                 # Find best match
-                token_data = next(
-                    (token for token in tokens 
-                     if token.get('verified') and 
-                     token.get('symbol', '').upper() == keyword.upper()),
-                    None
-                )
+                token_data = None
                 
+                # First try exact match with verified token
+                for token in tokens:
+                    if token.get('verified') and token.get('symbol', '').upper() == keyword.upper():
+                        token_data = token
+                        self.logger.info(f"Found exact match verified token: {token.get('symbol')}")
+                        break
+                
+                # If no exact match, try any verified token
                 if not token_data:
-                    token_data = next((token for token in tokens if token.get('verified')), None)
+                    for token in tokens:
+                        if token.get('verified'):
+                            token_data = token
+                            self.logger.info(f"Found verified token: {token.get('symbol')}")
+                            break
                 
+                # If still no match, use first token
                 if not token_data and tokens:
                     token_data = tokens[0]
+                    self.logger.info(f"Using first available token: {token_data.get('symbol')}")
                     
                 if token_data:
-                    self.logger.info(f"Found token on Birdeye: {token_data.get('symbol')}")
+                    self.logger.info(f"Selected token on Birdeye: {token_data.get('symbol')}")
                     return token_data
                     
                 self.logger.error("No token data found")
@@ -174,10 +207,12 @@ class TokenSearcher:
                 return None
             except Exception as e:
                 self.logger.error(f"Birdeye API error: {e}")
+                self.logger.error(traceback.format_exc())
                 return None
 
         except Exception as e:
             self.logger.error(f"Search failed: {e}")
+            self.logger.error(traceback.format_exc())
             return None
 
     def create_token_record(self, token_data: Dict[str, Any]) -> bool:
