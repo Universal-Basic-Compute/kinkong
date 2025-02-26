@@ -25,14 +25,19 @@ logger = setup_logging()
 
 def convert_to_serializable(obj):
     """Convert NumPy types to Python standard types for JSON serialization"""
-    if isinstance(obj, (np.integer, np.int64)):
+    if isinstance(obj, (np.integer, np.int64, np.uint32)):
         return int(obj)
     elif isinstance(obj, (np.floating, np.float64)):
         return float(obj)
     elif isinstance(obj, np.ndarray):
         return obj.tolist()
     elif isinstance(obj, dict):
-        return {k: convert_to_serializable(v) for k, v in obj.items()}
+        # Convert both keys and values
+        return {
+            str(k) if isinstance(k, (np.integer, np.int64, np.uint32)) else k: 
+            convert_to_serializable(v) 
+            for k, v in obj.items()
+        }
     elif isinstance(obj, list):
         return [convert_to_serializable(i) for i in obj]
     else:
@@ -211,7 +216,8 @@ class SignalPerformanceAnalyzer:
         if 'createdAt' in df.columns and 'actualReturn' in df.columns:
             df['week'] = df['createdAt'].dt.isocalendar().week
             weekly_performance = df.groupby('week')['actualReturn'].mean().to_dict()
-            metrics['weekly_performance'] = weekly_performance
+            # Convert keys to strings to avoid NumPy type issues
+            metrics['weekly_performance'] = {str(k): v for k, v in weekly_performance.items()}
         
         self.metrics = metrics
         return metrics
