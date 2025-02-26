@@ -52,6 +52,7 @@ logger = setup_logging()
 
 class DiscoveryStrategy(Enum):
     """Enum for token discovery strategies"""
+    ALL = "all"  # Add this new option
     TRENDING = "trending"
     VOLUME_MOMENTUM = "volume_momentum"
     RECENT_LISTINGS = "recent_listings"
@@ -65,8 +66,8 @@ class DiscoveryStrategy(Enum):
         try:
             return cls(strategy_name.lower())
         except ValueError:
-            logger.warning(f"Invalid strategy: {strategy_name}. Using default (trending).")
-            return cls.TRENDING
+            logger.warning(f"Invalid strategy: {strategy_name}. Using default (all).")
+            return cls.ALL  # Change default to ALL
 
 class TokenFinder:
     """Finds tokens from Birdeye API using various strategies and adds them to the system"""
@@ -402,10 +403,10 @@ def main():
     try:
         # Set up argument parser
         parser = argparse.ArgumentParser(description='Find and process tokens using various discovery strategies')
-        parser.add_argument('strategy', nargs='?', default='trending',
-                            help='Discovery strategy to use (default: trending)')
-        parser.add_argument('limit', nargs='?', type=int, default=10,
-                            help='Number of tokens to process (default: 10, max: 50)')
+        parser.add_argument('strategy', nargs='?', default='all',  # Change default to 'all'
+                            help='Discovery strategy to use (default: all)')
+        parser.add_argument('limit', nargs='?', type=int, default=20,  # Change default to 20
+                            help='Number of tokens to process (default: 20, max: 50)')
         parser.add_argument('--list-strategies', action='store_true',
                             help='List available discovery strategies and exit')
         
@@ -434,17 +435,33 @@ def main():
         logger.info(f"Using strategy: {strategy.value}")
         logger.info(f"Using limit: {limit}")
         
-        # Initialize finder with the specified strategy
-        finder = TokenFinder(strategy)
-        
-        # Find and process tokens
-        results = finder.find_and_process_tokens(limit)
-        
-        logger.info(f"Script completed successfully")
-        logger.info(f"Strategy: {results['strategy']}")
-        logger.info(f"Processed {results['total']} tokens:")
-        logger.info(f"- {results['success']} successful")
-        logger.info(f"- {results['failure']} failed")
+        # Check if we should run all strategies
+        if strategy == DiscoveryStrategy.ALL:
+            # Run all strategies
+            results = run_all_strategies(limit)
+            
+            # Log summary
+            logger.info(f"Script completed successfully")
+            logger.info(f"All strategies executed")
+            
+            # Log results for each strategy
+            for strategy_name, strategy_results in results.items():
+                logger.info(f"\nStrategy: {strategy_name}")
+                logger.info(f"Processed {strategy_results.get('total', 0)} tokens:")
+                logger.info(f"- {strategy_results.get('success', 0)} successful")
+                logger.info(f"- {strategy_results.get('failure', 0)} failed")
+        else:
+            # Initialize finder with the specified strategy
+            finder = TokenFinder(strategy)
+            
+            # Find and process tokens
+            results = finder.find_and_process_tokens(limit)
+            
+            logger.info(f"Script completed successfully")
+            logger.info(f"Strategy: {results['strategy']}")
+            logger.info(f"Processed {results['total']} tokens:")
+            logger.info(f"- {results['success']} successful")
+            logger.info(f"- {results['failure']} failed")
         
         # Exit with success code
         sys.exit(0)
@@ -453,9 +470,75 @@ def main():
         logger.error(f"Script failed: {e}")
         sys.exit(1)
 
+def run_all_strategies(limit: int = 20) -> Dict[str, Dict[str, int]]:
+    """
+    Run all discovery strategies sequentially
+    
+    Args:
+        limit: Number of tokens to process per strategy
+        
+    Returns:
+        Dictionary with results for each strategy
+    """
+    results = {}
+    
+    # List of all strategies except ALL
+    strategies = [
+        strategy for strategy in DiscoveryStrategy 
+        if strategy != DiscoveryStrategy.ALL
+    ]
+    
+    logger.info(f"Running all {len(strategies)} discovery strategies with limit {limit} each")
+    
+    # Process each strategy
+    for strategy in strategies:
+        try:
+            logger.info(f"\n{'='*50}")
+            logger.info(f"Running strategy: {strategy.value}")
+            logger.info(f"{'='*50}\n")
+            
+            # Initialize finder with this strategy
+            finder = TokenFinder(strategy)
+            
+            # Find and process tokens
+            strategy_results = finder.find_and_process_tokens(limit)
+            
+            # Store results
+            results[strategy.value] = strategy_results
+            
+            # Add a small delay between strategies to avoid rate limiting
+            time.sleep(5)
+            
+        except Exception as e:
+            logger.error(f"Error running strategy {strategy.value}: {e}")
+            logger.error(traceback.format_exc())
+            results[strategy.value] = {
+                'success': 0,
+                'failure': 0,
+                'total': 0,
+                'strategy': strategy.value,
+                'error': str(e)
+            }
+    
+    # Calculate totals
+    total_success = sum(r.get('success', 0) for r in results.values())
+    total_failure = sum(r.get('failure', 0) for r in results.values())
+    total_tokens = sum(r.get('total', 0) for r in results.values())
+    
+    logger.info(f"\n{'='*50}")
+    logger.info(f"All strategies completed")
+    logger.info(f"Total tokens processed: {total_tokens}")
+    logger.info(f"Total successful: {total_success}")
+    logger.info(f"Total failed: {total_failure}")
+    logger.info(f"{'='*50}\n")
+    
+    return results
+
 def get_strategy_description(strategy: DiscoveryStrategy) -> str:
     """Get a description of the given strategy"""
     descriptions = {
+        DiscoveryStrategy.ALL:
+            "Run all discovery strategies sequentially",
         DiscoveryStrategy.TRENDING: 
             "Find trending tokens based on Birdeye's ranking algorithm",
         DiscoveryStrategy.VOLUME_MOMENTUM: 
