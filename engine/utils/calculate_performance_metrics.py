@@ -73,9 +73,9 @@ class SignalPerformanceAnalyzer:
         cutoff_date = (datetime.now() - timedelta(days=days_back)).isoformat()
         
         # Fetch signals created after the cutoff date
-        # Only include BUY signals with non-null and non-zero actualReturn values
+        # Only include failed BUY signals with HIGH confidence and non-null/non-zero actualReturn values
         signals = self.signals_table.all(
-            formula=f"AND(createdAt >= '{cutoff_date}', NOT(actualReturn = 0), NOT(actualReturn = ''), type='BUY')"
+            formula=f"AND(createdAt >= '{cutoff_date}', NOT(actualReturn = 0), NOT(actualReturn = ''), type='BUY', confidence='HIGH', actualReturn < 0)"
         )
         
         logger.info(f"Retrieved {len(signals)} completed BUY signals")
@@ -213,17 +213,7 @@ class SignalPerformanceAnalyzer:
             else:
                 metrics['success_rate'] = 0
         
-        # 6. Performance by confidence level
-        if all(col in df.columns for col in ['confidence', 'actualReturn']):
-            confidence_performance = df.groupby('confidence')['actualReturn'].mean().to_dict()
-            metrics['high_confidence_return'] = confidence_performance.get('HIGH', 0)
-            metrics['medium_confidence_return'] = confidence_performance.get('MEDIUM', 0)
-            
-            # Calculate success rate by confidence
-            if 'isSuccessful' in df.columns:
-                confidence_success = df.groupby('confidence')['isSuccessful'].mean().to_dict()
-                metrics['high_confidence_success_rate'] = confidence_success.get('HIGH', 0) * 100
-                metrics['medium_confidence_success_rate'] = confidence_success.get('MEDIUM', 0) * 100
+        # Performance by confidence level analysis removed as we're only focusing on failed HIGH confidence signals
         
         # 7. Performance by timeframe
         if all(col in df.columns for col in ['timeframe', 'actualReturn']):
@@ -405,18 +395,7 @@ class SignalPerformanceAnalyzer:
             plt.savefig(performances_dir / 'return_distribution.png')
             plt.close()
         
-        # 5. Success Rate by Confidence (Bar Chart)
-        if 'confidence' in df.columns and 'isSuccessful' in df.columns:
-            plt.figure(figsize=(10, 6))
-            success_by_confidence = df.groupby('confidence')['isSuccessful'].mean() * 100
-            success_by_confidence.plot(kind='bar', color='#4CAF50')
-            plt.title('Success Rate by Confidence Level')
-            plt.xlabel('Confidence Level')
-            plt.ylabel('Success Rate (%)')
-            plt.tight_layout()
-            # Save only to performances directory
-            plt.savefig(performances_dir / 'success_by_confidence.png')
-            plt.close()
+        # Success Rate by Confidence visualization removed as we're only focusing on failed HIGH confidence signals
         
         # 6. Success Rate by Timeframe (Bar Chart)
         if 'timeframe' in df.columns and 'isSuccessful' in df.columns:
@@ -630,11 +609,6 @@ Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 - Swing: {metrics.get('swing_signals', 0)} ({metrics.get('swing_percentage', 0):.2f}%)
 - Position: {metrics.get('position_signals', 0)} ({metrics.get('position_percentage', 0):.2f}%)
 
-## Performance by Confidence Level
-- High Confidence Return: {metrics.get('high_confidence_return', 0):.2f}%
-- High Confidence Success Rate: {metrics.get('high_confidence_success_rate', 0):.2f}%
-- Medium Confidence Return: {metrics.get('medium_confidence_return', 0):.2f}%
-- Medium Confidence Success Rate: {metrics.get('medium_confidence_success_rate', 0):.2f}%
 
 ## Performance by Timeframe
 - Scalp Return: {metrics.get('scalp_return', 0):.2f}% (Success Rate: {metrics.get('scalp_success_rate', 0):.2f}%)
