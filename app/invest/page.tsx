@@ -30,29 +30,39 @@ interface WalletSnapshot {
   timestamp: string;
 }
 
-// Function to fetch UBC price from our API
+// Function to fetch UBC price from DexScreener
 async function getUbcPrice(): Promise<number> {
   try {
-    console.log('Fetching UBC price from our API...');
+    console.log('Fetching UBC price from DexScreener...');
     
-    // Use our API endpoint to get the latest UBC price from TOKEN_SNAPSHOTS
-    const response = await fetch('/api/token-price?token=UBC');
+    // Use DexScreener API to get the UBC price
+    const response = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${UBC_MINT.toString()}`);
     
     if (!response.ok) {
-      console.error(`API error: ${response.status}`);
-      throw new Error(`API error: ${response.status}`);
+      console.error(`DexScreener API error: ${response.status}`);
+      throw new Error(`DexScreener API error: ${response.status}`);
     }
     
     const data = await response.json();
-    console.log('UBC price API response:', data);
+    console.log('DexScreener API response:', data);
     
-    if (data.price) {
-      console.log('UBC price from API:', data.price);
-      return data.price;
+    if (data.pairs && data.pairs.length > 0) {
+      // Find the most liquid Solana pair
+      const solPairs = data.pairs.filter((pair: any) => pair.chainId === 'solana');
+      if (solPairs.length > 0) {
+        // Sort by liquidity and get the most liquid pair
+        const bestPair = solPairs.sort((a: any, b: any) => 
+          (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0)
+        )[0];
+        
+        const price = parseFloat(bestPair.priceUsd);
+        console.log('UBC price from DexScreener:', price);
+        return price;
+      }
     }
     
-    console.error('Invalid price data from API:', data);
-    throw new Error('Invalid price data from API');
+    console.error('No valid pairs found in DexScreener response:', data);
+    throw new Error('No valid pairs found in DexScreener response');
   } catch (error) {
     console.error('Failed to fetch UBC price:', error);
     // Return a fallback price for testing
@@ -136,7 +146,7 @@ export default function Invest() {
         console.log('Profit:', profit);
         console.log('Profit share (75%):', profitShare);
         
-        // Fetch UBC price from Birdeye
+        // Fetch UBC price directly from DexScreener
         const ubcPrice = await getUbcPrice();
         console.log('UBC price:', ubcPrice);
         
