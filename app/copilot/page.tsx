@@ -87,8 +87,8 @@ export default function CopilotPage() {
       ],
       price: <span>75,000 <span className="metallic-text-ubc">$UBC</span> / 1 month</span>,
       action: () => handlePremiumSubscription('UBC'),
-      buttonText: <span>Upgrade with <span className="metallic-text-ubc">$UBC</span></span>, 
-      buttonStyle: "bg-gradient-to-r from-purple-900 to-blue-900 text-white"
+      buttonText: <span>Upgrade with $UBC</span>, 
+      buttonStyle: "bg-gradient-to-r from-purple-700 to-blue-700 text-white"
     },
     {
       name: "Kong Pro - $COMPUTE",
@@ -101,8 +101,8 @@ export default function CopilotPage() {
       ],
       price: <span>750,000 <span className="metallic-text-compute">$COMPUTE</span> / 1 month</span>,
       action: () => handlePremiumSubscription('COMPUTE'),
-      buttonText: <span>Upgrade with <span className="metallic-text-compute">$COMPUTE</span></span>, 
-      buttonStyle: "bg-gradient-to-r from-blue-900 to-cyan-900 text-white"
+      buttonText: <span>Upgrade with $COMPUTE</span>, 
+      buttonStyle: "bg-gradient-to-r from-blue-700 to-cyan-700 text-white"
     }
   ];
 
