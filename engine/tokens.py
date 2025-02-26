@@ -815,6 +815,70 @@ class TokenManager:
             logger.error(f"Error processing tokens: {e}")
             logger.error(traceback.format_exc())
             return results
+            
+    def refresh_active_tokens(self) -> Dict[str, int]:
+        """
+        Refresh all active tokens in the database
+        
+        Returns:
+            Dictionary with success and failure counts
+        """
+        results = {
+            'success': 0,
+            'failure': 0,
+            'total': 0,
+            'skipped': 0
+        }
+        
+        try:
+            # Get all active tokens
+            logger.info("Fetching active tokens from Airtable")
+            records = self.tokens_table.get_all(formula="{isActive}=1")
+            results['total'] = len(records)
+            
+            logger.info(f"Found {len(records)} active tokens to refresh")
+            
+            for token_record in records:
+                try:
+                    symbol = token_record['fields'].get('token')
+                    
+                    if not symbol:
+                        logger.warning(f"Token record {token_record['id']} has no symbol, skipping")
+                        results['failure'] += 1
+                        continue
+                    
+                    logger.info(f"Refreshing active token {symbol}")
+                    
+                    # Create token data from record
+                    token_data = {
+                        'symbol': symbol,
+                        'name': token_record['fields'].get('name'),
+                        'address': token_record['fields'].get('mint'),
+                        'verified': True,
+                        'record_id': token_record['id']
+                    }
+                    
+                    # Update token record
+                    record_id = self.create_or_update_token(token_data)
+                    
+                    if record_id:
+                        logger.info(f"Token {symbol} refreshed successfully")
+                        results['success'] += 1
+                    else:
+                        logger.error(f"Failed to refresh token {symbol}")
+                        results['failure'] += 1
+                        
+                except Exception as e:
+                    logger.error(f"Error refreshing token record: {e}")
+                    results['failure'] += 1
+            
+            logger.info(f"Refreshed {results['total']} active tokens: {results['success']} successful, {results['failure']} failed")
+            return results
+            
+        except Exception as e:
+            logger.error(f"Error refreshing active tokens: {e}")
+            logger.error(traceback.format_exc())
+            return results
 
 def main():
     """Main function to run the script"""
@@ -824,15 +888,24 @@ def main():
         
         # Check command line arguments
         if len(sys.argv) > 1:
-            # Process single token
-            symbol = sys.argv[1]
-            logger.info(f"Processing token: {symbol}")
-            
-            if token_manager.process_token(symbol):
-                logger.info(f"Token {symbol} processed successfully")
+            # Check for refresh_active command
+            if sys.argv[1].lower() == 'refresh_active':
+                logger.info("Refreshing all active tokens")
+                results = token_manager.refresh_active_tokens()
+                
+                logger.info(f"Refreshed {results['total']} active tokens:")
+                logger.info(f"- {results['success']} successful")
+                logger.info(f"- {results['failure']} failed")
             else:
-                logger.error(f"Failed to process token {symbol}")
-                sys.exit(1)
+                # Process single token
+                symbol = sys.argv[1]
+                logger.info(f"Processing token: {symbol}")
+                
+                if token_manager.process_token(symbol):
+                    logger.info(f"Token {symbol} processed successfully")
+                else:
+                    logger.error(f"Failed to process token {symbol}")
+                    sys.exit(1)
         else:
             # Process all tokens
             logger.info("Processing all tokens")
