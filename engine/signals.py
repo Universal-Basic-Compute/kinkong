@@ -2,6 +2,7 @@ import sys
 import codecs
 from pathlib import Path
 import os
+import traceback
 
 if sys.stdout.encoding != 'utf-8':
     sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
@@ -37,6 +38,7 @@ class SignalGenerator:
         self.base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
         self.api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
         self.tokens_table = Airtable(self.base_id, 'TOKENS', self.api_key)
+        self.snapshots_table = Airtable(self.base_id, 'TOKEN_SNAPSHOTS', self.api_key)
         
         # Chart configurations for different timeframes
         self.TIMEFRAMES = [

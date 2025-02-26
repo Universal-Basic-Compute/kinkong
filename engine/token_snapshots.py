@@ -165,14 +165,24 @@ class TokenSnapshotTaker:
             
             # Get 7-day historical data for token
             seven_days_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
-            historical_snapshots = self.snapshots_table.get_all(
-                formula=f"AND({{token}}='{token_name}', IS_AFTER({{createdAt}}, '{seven_days_ago}'))"
-            )
+            try:
+                historical_snapshots = self.snapshots_table.get_all(
+                    formula=f"AND({{token}}='{token_name}', IS_AFTER({{createdAt}}, '{seven_days_ago}'))"
+                )
+            except Exception as e:
+                self.logger.error(f"Error fetching historical snapshots: {e}")
+                self.logger.error(traceback.format_exc())
+                historical_snapshots = []
             
             # Get SOL historical data
-            sol_snapshots = self.snapshots_table.get_all(
-                formula=f"AND({{token}}='SOL', IS_AFTER({{createdAt}}, '{seven_days_ago}'))"
-            )
+            try:
+                sol_snapshots = self.snapshots_table.get_all(
+                    formula=f"AND({{token}}='SOL', IS_AFTER({{createdAt}}, '{seven_days_ago}'))"
+                )
+            except Exception as e:
+                self.logger.error(f"Error fetching SOL snapshots: {e}")
+                self.logger.error(traceback.format_exc())
+                sol_snapshots = []
             
             # Calculate metrics
             if historical_snapshots and sol_snapshots:
