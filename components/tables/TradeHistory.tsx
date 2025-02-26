@@ -18,9 +18,10 @@ interface Trade {
 interface TradeHistoryProps {
   userOnly?: boolean;
   limit?: number;
+  showChartButton?: boolean;
 }
 
-export function TradeHistory({ userOnly = false, limit = 10 }: TradeHistoryProps) {
+export function TradeHistory({ userOnly = false, limit = 10, showChartButton = false }: TradeHistoryProps) {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -96,6 +97,9 @@ export function TradeHistory({ userOnly = false, limit = 10 }: TradeHistoryProps
               <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">ROI</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Status</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Exit Reason</th>
+              {showChartButton && (
+                <th className="px-6 py-3 text-center text-xs font-medium text-gold uppercase tracking-wider">Chart</th>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-gold/10">
@@ -158,6 +162,16 @@ export function TradeHistory({ userOnly = false, limit = 10 }: TradeHistoryProps
                       <span className="text-gray-500">-</span>
                     )}
                   </td>
+                  {showChartButton && (
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                      <button 
+                        onClick={() => window.open(`/signals/charts/${trade.id}`, '_blank')}
+                        className="px-3 py-1 bg-gold/20 hover:bg-gold/30 text-gold rounded-lg text-xs transition-colors"
+                      >
+                        View Chart
+                      </button>
+                    </td>
+                  )}
                 </tr>
               );
             })}
