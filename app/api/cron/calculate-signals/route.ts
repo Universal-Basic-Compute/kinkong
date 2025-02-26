@@ -16,6 +16,7 @@ export async function GET(request: Request) {
     // Get implementation type from query params (default to 'ts')
     const { searchParams } = new URL(request.url);
     const implementation = searchParams.get('implementation') || 'ts';
+    const includePerformance = searchParams.get('performance') === 'true';
 
     if (implementation === 'py') {
       console.log('Starting scheduled Python signal calculation...');
@@ -32,11 +33,68 @@ export async function GET(request: Request) {
       }
       
       console.log('Python script output:', stdout);
+      
+      // If requested, also run performance metrics calculation
+      if (includePerformance) {
+        console.log('Also calculating performance metrics...');
+        try {
+          const { stdout: perfStdout, stderr: perfStderr } = await execPromise('python engine/utils/calculate_performance_metrics.py');
+          
+          if (perfStderr) {
+            console.warn('Performance metrics warning:', perfStderr);
+          }
+          
+          console.log('Performance metrics output:', perfStdout);
+          
+          return NextResponse.json({ 
+            success: true, 
+            implementation: 'python', 
+            output: stdout,
+            performanceOutput: perfStdout
+          });
+        } catch (perfError) {
+          console.error('Performance metrics calculation failed:', perfError);
+          return NextResponse.json({ 
+            success: true, 
+            implementation: 'python', 
+            output: stdout,
+            performanceError: perfError instanceof Error ? perfError.message : 'Unknown error'
+          });
+        }
+      }
+      
       return NextResponse.json({ success: true, implementation: 'python', output: stdout });
     } else {
       console.log('Starting scheduled TypeScript signal calculation...');
       
       await calculateClosedSignals();
+      
+      // If requested, also run performance metrics calculation
+      if (includePerformance) {
+        console.log('Also calculating performance metrics...');
+        try {
+          const { stdout: perfStdout, stderr: perfStderr } = await execPromise('python engine/utils/calculate_performance_metrics.py');
+          
+          if (perfStderr) {
+            console.warn('Performance metrics warning:', perfStderr);
+          }
+          
+          console.log('Performance metrics output:', perfStdout);
+          
+          return NextResponse.json({ 
+            success: true, 
+            implementation: 'typescript',
+            performanceOutput: perfStdout
+          });
+        } catch (perfError) {
+          console.error('Performance metrics calculation failed:', perfError);
+          return NextResponse.json({ 
+            success: true, 
+            implementation: 'typescript',
+            performanceError: perfError instanceof Error ? perfError.message : 'Unknown error'
+          });
+        }
+      }
       
       return NextResponse.json({ success: true, implementation: 'typescript' });
     }

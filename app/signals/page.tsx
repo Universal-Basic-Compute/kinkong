@@ -61,6 +61,17 @@ export default function Signals() {
             <p className="text-sm text-gray-400">
               Be part of KinKong's trading intelligence! Share your market insights and influence our trading decisions while earning extra profit share allocations. Together, we're smarter! 🚀
             </p>
+            <div className="mt-2">
+              <a 
+                href="/signals/performance" 
+                className="text-sm text-gold hover:text-gold/80 transition-colors flex items-center gap-1"
+              >
+                <span>View Performance Metrics</span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                  <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
+                </svg>
+              </a>
+            </div>
           </div>
           <div>
             <WalletConnect />
@@ -150,25 +161,46 @@ Focus on AI tokens with strong fundamentals and back your analysis with on-chain
 
 Regular updates to your active signals help maintain signal quality and improve community trading success.`}
             </p>
-            <button 
-              onClick={async () => {
-                try {
-                  const response = await fetch('/api/cron/calculate-signals-py', {
-                    headers: {
-                      'Authorization': `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET_KEY || 'public-dev-key'}`
-                    }
-                  });
-                  if (!response.ok) throw new Error('Failed to calculate signals');
-                  alert('Signal calculation triggered successfully!');
-                } catch (err) {
-                  console.error('Error triggering signal calculation:', err);
-                  alert('Failed to trigger signal calculation');
-                }
-              }}
-              className="px-4 py-2 bg-gold/20 hover:bg-gold/30 text-gold rounded-lg text-sm transition-colors"
-            >
-              Calculate Signals
-            </button>
+            <div className="flex gap-2">
+              <button 
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/cron/calculate-signals?implementation=py', {
+                      headers: {
+                        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET_KEY || 'public-dev-key'}`
+                      }
+                    });
+                    if (!response.ok) throw new Error('Failed to calculate signals');
+                    alert('Signal calculation triggered successfully!');
+                  } catch (err) {
+                    console.error('Error triggering signal calculation:', err);
+                    alert('Failed to trigger signal calculation');
+                  }
+                }}
+                className="px-4 py-2 bg-gold/20 hover:bg-gold/30 text-gold rounded-lg text-sm transition-colors"
+              >
+                Calculate Signals
+              </button>
+              <button 
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/cron/calculate-signals-py', {
+                      headers: {
+                        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET_KEY || 'public-dev-key'}`
+                      }
+                    });
+                    if (!response.ok) throw new Error('Failed to calculate performance metrics');
+                    alert('Performance metrics calculation triggered successfully!');
+                  } catch (err) {
+                    console.error('Error triggering performance calculation:', err);
+                    alert('Failed to trigger performance metrics calculation');
+                  }
+                }}
+                className="px-4 py-2 bg-gold/20 hover:bg-gold/30 text-gold rounded-lg text-sm transition-colors"
+              >
+                Calculate Performance
+              </button>
+            </div>
           </div>
         </div>
       </div>
