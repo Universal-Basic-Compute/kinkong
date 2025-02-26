@@ -20,7 +20,13 @@ export async function verifySubscription(code: string): Promise<SubscriptionResp
   }
 }
 
-export async function createSubscription(signature: string, wallet: string, code: string) {
+export async function createSubscription(
+  signature: string, 
+  wallet: string, 
+  code: string,
+  paymentMethod: string = 'SOL',
+  durationDays: number = 90
+) {
   try {
     const response = await fetch('/api/subscription', {
       method: 'POST',
@@ -30,7 +36,9 @@ export async function createSubscription(signature: string, wallet: string, code
       body: JSON.stringify({
         signature,
         wallet,
-        code
+        code,
+        paymentMethod,
+        durationDays
       })
     });
 
