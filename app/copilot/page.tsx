@@ -87,7 +87,7 @@ export default function CopilotPage() {
         "Custom trading strategies",
         "Direct ecosystem integration"
       ],
-      price: "75,000 UBC / 1 month",
+      price: <span>75,000 <span className="metallic-text-ubc">UBC</span> / 1 month</span>,
       action: () => handlePremiumSubscription('UBC'),
       buttonText: "Upgrade with UBC", 
       buttonStyle: "bg-gradient-to-r from-purple-600 to-blue-500 text-white"
@@ -103,7 +103,7 @@ export default function CopilotPage() {
         "Custom trading strategies",
         "Direct ecosystem integration"
       ],
-      price: "750,000 COMPUTE / 1 month",
+      price: <span>750,000 <span className="metallic-text-compute">COMPUTE</span> / 1 month</span>,
       action: () => handlePremiumSubscription('COMPUTE'),
       buttonText: "Upgrade with COMPUTE", 
       buttonStyle: "bg-gradient-to-r from-blue-600 to-cyan-500 text-white"
@@ -272,7 +272,9 @@ export default function CopilotPage() {
                 <h3 className="text-2xl font-bold mb-2">{tier.name}</h3>
                 <p className="text-gray-400 mb-4">{tier.description}</p>
                 {tier.price && (
-                  <div className="text-xl font-bold text-gold mb-4">{tier.price}</div>
+                  <div className="text-xl font-bold text-gold mb-4">
+                    {typeof tier.price === 'string' ? tier.price : tier.price}
+                  </div>
                 )}
                 <ul className="space-y-2 mb-6">
                   {tier.features.map((feature, i) => (
