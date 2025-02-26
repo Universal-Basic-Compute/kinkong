@@ -749,37 +749,6 @@ export default function Performance() {
           )}
         </section>
 
-        {/* Trade Charts Carousel */}
-        <section className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold text-gold">Recent Trade Charts</h2>
-            <button 
-              onClick={async () => {
-                try {
-                  const response = await fetch('/api/cron/generate-trade-charts', {
-                    headers: {
-                      'Authorization': `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET_KEY || 'public-dev-key'}`
-                    }
-                  });
-                  if (!response.ok) throw new Error('Failed to generate trade charts');
-                  alert('Trade chart generation triggered successfully!');
-                } catch (err) {
-                  console.error('Error triggering trade chart generation:', err);
-                  alert('Failed to trigger trade chart generation');
-                }
-              }}
-              className="px-4 py-2 bg-gold/20 hover:bg-gold/30 text-gold rounded-lg text-sm transition-colors"
-            >
-              Generate Charts
-            </button>
-          </div>
-          <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
-            <div className="h-[400px]">
-              <TradeChartCarousel />
-            </div>
-          </div>
-        </section>
-
       </main>
     </div>
   );
