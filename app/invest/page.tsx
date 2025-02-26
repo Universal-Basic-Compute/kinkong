@@ -339,48 +339,52 @@ export default function Invest() {
               <table className="min-w-full">
                 <thead>
                   <tr className="border-b border-gold/20">
-                    <th className="px-4 py-2 text-left">Username</th>
-                    <th className="px-4 py-2 text-right">Initial Investment</th>
-                    <th className="px-4 py-2 text-right">Return</th>
-                    <th className="px-4 py-2 text-left">Date</th>
-                    <th className="px-4 py-2 text-left">Transaction</th>
+                    <th className="px-4 py-3 text-left font-bold">Username</th>
+                    <th className="px-4 py-3 text-right font-bold">Initial Investment</th>
+                    <th className="px-4 py-3 text-right font-bold">Return</th>
+                    <th className="px-4 py-3 text-left font-bold">Date</th>
+                    <th className="px-4 py-3 text-left font-bold">Transaction</th>
                   </tr>
                 </thead>
                 <tbody>
                   {investments.filter(validateInvestment).map((investment) => (
                     <tr key={investment.investmentId} className="border-b border-gold/10 hover:bg-gold/5">
-                      <td className="px-4 py-2">{investment.username || 'Anonymous'}</td>
-                      <td className="px-4 py-2 text-right">
+                      <td className="px-4 py-4 text-white">{investment.username || 'Anonymous'}</td>
+                      <td className="px-4 py-4 text-right">
                         {typeof investment.amount === 'number' 
                           ? (
                             <>
-                              <span className="text-white">{investment.amount.toLocaleString('en-US')}</span> 
+                              <span className="text-white font-medium">{investment.amount.toLocaleString('en-US')}</span>
                               <span className="text-gray-400">$USDC</span>
                             </>
                           )
                           : 'N/A'}
                       </td>
-                      <td className="px-4 py-2 text-right">
+                      <td className="px-4 py-4 text-right">
                         {investment.return !== undefined
                           ? (
                             <>
-                              <span className="metallic-text-ubc">{(investment.ubcReturn || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })} $UBC</span> 
-                              <span className="text-gray-400">($${investment.return.toLocaleString('en-US', { maximumFractionDigits: 2 })})</span>
+                              <span className="metallic-text-ubc font-medium">{(investment.ubcReturn || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })} $UBC</span> 
+                              <span className="text-gray-400 text-sm ml-1">($${investment.return.toLocaleString('en-US', { maximumFractionDigits: 2 })})</span>
                             </>
                           )
                           : 'Calculating...'}
                       </td>
-                      <td className="px-4 py-2">
+                      <td className="px-4 py-4 text-gray-300">
                         {investment.date 
-                          ? new Date(investment.date).toLocaleDateString()
+                          ? new Date(investment.date).toLocaleDateString('en-GB', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric'
+                            }).replace(/\//g, '/')
                           : 'N/A'}
                       </td>
-                      <td className="px-4 py-2">
+                      <td className="px-4 py-4">
                         <a 
                           href={investment.solscanUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-gold hover:text-gold/80 underline"
+                          className="text-gold hover:text-gold/80 font-medium"
                         >
                           View on Solscan
                         </a>
@@ -392,10 +396,27 @@ export default function Invest() {
             </div>
             
             {latestSnapshot && (
-              <div className="mt-4 text-sm text-gray-400">
-                <p>Portfolio Value: <span className="text-white">{latestSnapshot.totalValue.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span> <span className="text-gray-400">$USDC</span></p>
-                <p>Total Investment: <span className="text-white">{totalInvestment.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span> <span className="text-gray-400">$USDC</span></p>
-                <p>Last Updated: {new Date(latestSnapshot.timestamp).toLocaleString()}</p>
+              <div className="mt-6 text-sm space-y-1">
+                <p>
+                  <span className="text-gray-400">Portfolio Value:</span> 
+                  <span className="text-white ml-2 font-medium">{latestSnapshot.totalValue.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span> 
+                  <span className="text-gray-400">$USDC</span>
+                </p>
+                <p>
+                  <span className="text-gray-400">Total Investment:</span> 
+                  <span className="text-white ml-2 font-medium">{totalInvestment.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span> 
+                  <span className="text-gray-400">$USDC</span>
+                </p>
+                <p className="text-gray-400">
+                  Last Updated: {new Date(latestSnapshot.timestamp).toLocaleString('en-GB', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                  }).replace(/\//g, '/')}
+                </p>
               </div>
             )}
           </div>
@@ -413,9 +434,9 @@ export default function Invest() {
           <section>
             <h2 className="text-2xl font-bold mb-4">Invest Now</h2>
             <div className="investment-form bg-black/30 p-6 rounded-lg border border-gold/20">
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div>
-                  <label htmlFor="amount" className="block text-sm mb-2">
+                  <label htmlFor="amount" className="block text-sm mb-2 text-gray-300">
                     Investment Amount
                   </label>
                   <div className="relative">
@@ -423,7 +444,7 @@ export default function Invest() {
                       id="amount"
                       type="number" 
                       placeholder="Amount in $USDC"
-                      className="input-field pr-16"
+                      className="input-field pr-16 py-3"
                       min="1"
                       step="0.1"
                       value={amount}
@@ -435,10 +456,10 @@ export default function Invest() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm mb-2">
+                  <label className="block text-sm mb-2 text-gray-300">
                     Estimated Weekly Returns
                   </label>
-                  <div className="text-gold text-xl font-bold">
+                  <div className="text-xl font-bold p-3 bg-black/20 rounded-lg border border-gold/10">
                     {latestSnapshot && totalInvestment > 0 ? (
                       (() => {
                         const usdcReturn = Math.max(0, ((latestSnapshot.totalValue - totalInvestment) * 0.75 * (amount / (totalInvestment + amount))));
@@ -448,7 +469,7 @@ export default function Invest() {
                         return (
                           <>
                             <span className="metallic-text-ubc">{ubcReturn.toLocaleString('en-US', { maximumFractionDigits: 2 })} $UBC</span> 
-                            <span className="text-gray-400">($${usdcReturn.toLocaleString('en-US', { maximumFractionDigits: 2 })})</span>
+                            <span className="text-gray-400 text-sm ml-1">($${usdcReturn.toLocaleString('en-US', { maximumFractionDigits: 2 })})</span>
                           </>
                         );
                       })()
@@ -458,7 +479,7 @@ export default function Invest() {
                   </div>
                 </div>
                 <button 
-                  className="btn-primary w-full py-3"
+                  className="btn-primary w-full py-3 mt-2"
                   onClick={handleInvest}
                   disabled={!connected || isSubmitting || amount < 1}
                 >
