@@ -244,7 +244,7 @@ export async function GET() {
       try {
         console.log(`Fetching latest snapshot for ${token.token} (${token.mint})`);
         const snapshots = await snapshotsTable.select({
-          filterByFormula: `{mint}='${token.mint}'`,
+          filterByFormula: `{token}='${token.token}'`,
           sort: [{ field: 'createdAt', direction: 'desc' }],
           maxRecords: 1
         }).all();
