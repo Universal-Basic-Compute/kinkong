@@ -7,6 +7,24 @@ import { WalletConnect } from '@/components/wallet/WalletConnect';
 import { Connection, PublicKey, LAMPORTS_PER_SOL, Transaction, SystemProgram, PublicKey as SolanaPublicKey } from '@solana/web3.js';
 import { createSubscription } from '@/utils/subscription';
 
+// Define proper types for the tiers
+type TierButton = {
+  text: string | JSX.Element;
+  action: () => void;
+  style: string;
+};
+
+type Tier = {
+  name: string;
+  description: string;
+  features: string[];
+  price?: string | JSX.Element;
+  action?: () => void;
+  buttonText?: string | JSX.Element;
+  buttonStyle?: string;
+  buttons?: TierButton[];
+};
+
 export default function CopilotPage() {
   const router = useRouter();
   const { connected, publicKey, sendTransaction } = useWallet();
@@ -62,7 +80,7 @@ export default function CopilotPage() {
     }
   ];
 
-  const tiers = [
+  const tiers: Tier[] = [
     {
       name: "Free Tier",
       description: "Get started with basic access",
