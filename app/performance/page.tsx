@@ -728,10 +728,6 @@ export default function Performance() {
             </button>
           </div>
           <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
-            <p className="text-gray-400 mb-4">
-              Visual representation of recent trades showing entry points, targets, stop losses, and actual exit points.
-              Displaying the 20 most recent trade charts.
-            </p>
             <div className="h-[400px]">
               <TradeChartCarousel />
             </div>
