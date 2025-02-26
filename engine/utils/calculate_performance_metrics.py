@@ -77,9 +77,9 @@ class SignalPerformanceAnalyzer:
         cutoff_date = (datetime.now() - timedelta(days=days_back)).isoformat()
         
         # Fetch signals created after the cutoff date
-        # Only include failed BUY signals with HIGH confidence and non-null/non-zero actualReturn values
+        # Only include BUY signals with HIGH confidence and non-null/non-zero actualReturn values
         signals = self.signals_table.all(
-            formula=f"AND(createdAt >= '{cutoff_date}', NOT(actualReturn = 0), NOT(actualReturn = ''), type='BUY', confidence='HIGH', actualReturn < 0)"
+            formula=f"AND(createdAt >= '{cutoff_date}', NOT(actualReturn = 0), NOT(actualReturn = ''), type='BUY', confidence='HIGH')"
         )
         
         logger.info(f"Retrieved {len(signals)} completed BUY signals")
