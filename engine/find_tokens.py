@@ -18,6 +18,7 @@ import logging
 import requests
 import subprocess
 import time
+import traceback
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 from dotenv import load_dotenv
@@ -91,8 +92,16 @@ class TrendingTokenFinder:
                 "limit": limit
             }
             
-            # Make request
-            response = requests.get(url, headers=headers, params=params, timeout=30)
+            # Log request details for debugging
+            logger.info(f"API Key prefix: {self.birdeye_api_key[:5]}...")
+            logger.info(f"Request URL: {url}")
+            logger.info(f"Request params: {params}")
+            
+            # Make request with longer timeout
+            response = requests.get(url, headers=headers, params=params, timeout=60)
+            
+            # Log response details
+            logger.info(f"Response status code: {response.status_code}")
             
             # Check response
             if not response.ok:
@@ -102,16 +111,29 @@ class TrendingTokenFinder:
             
             # Parse response
             data = response.json()
+            logger.info(f"Response data: {json.dumps(data)[:500]}...")  # Log first 500 chars
             
             # Validate response structure
             if not data.get('success'):
                 logger.error(f"Birdeye API error: {data.get('message', 'Unknown error')}")
                 return []
             
+            # Check if data field exists
+            if 'data' not in data:
+                logger.error("Response missing 'data' field")
+                logger.info(f"Full response: {json.dumps(data)}")
+                return []
+                
+            # Check if items field exists
+            if 'items' not in data.get('data', {}):
+                logger.error("Response missing 'data.items' field")
+                logger.info(f"Data field content: {json.dumps(data.get('data', {}))}")
+                return []
+            
             tokens = data.get('data', {}).get('items', [])
             
             if not tokens:
-                logger.warning("No trending tokens found")
+                logger.warning("No trending tokens found in response")
                 return []
             
             logger.info(f"Found {len(tokens)} trending tokens")
@@ -121,10 +143,27 @@ class TrendingTokenFinder:
             
             logger.info(f"Found {len(solana_tokens)} Solana trending tokens")
             
+            # Log first few tokens for debugging
+            if solana_tokens:
+                logger.info("First few tokens:")
+                for i, token in enumerate(solana_tokens[:3]):
+                    logger.info(f"Token {i+1}: {token.get('symbol')} - {token.get('name')}")
+            
             return solana_tokens
             
+        except requests.exceptions.Timeout:
+            logger.error("Request to Birdeye API timed out")
+            return []
+        except requests.exceptions.ConnectionError:
+            logger.error("Connection error when connecting to Birdeye API")
+            return []
+        except json.JSONDecodeError:
+            logger.error("Invalid JSON response from Birdeye API")
+            logger.error(f"Raw response: {response.text if 'response' in locals() else 'No response'}")
+            return []
         except Exception as e:
             logger.error(f"Error fetching trending tokens: {e}")
+            logger.error(traceback.format_exc())
             return []
     
     def process_token(self, token_data: Dict[str, Any]) -> bool:
