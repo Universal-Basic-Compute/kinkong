@@ -4,6 +4,18 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
+// Reusable tooltip component
+const InfoTooltip = ({ text }: { text: string }) => (
+  <div className="group relative inline-block ml-1">
+    <div className="cursor-help text-gray-400 border border-gray-400 rounded-full w-4 h-4 flex items-center justify-center text-xs">
+      i
+    </div>
+    <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-black/90 border border-gold/20 rounded-lg text-xs text-gray-300 z-10">
+      {text}
+    </div>
+  </div>
+);
+
 interface PerformanceMetrics {
   id: string;
   createdAt: string;
@@ -149,7 +161,10 @@ export default function Performance() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {/* Key Metric Cards */}
                   <div className="bg-black/50 p-4 rounded-lg border border-gold/10">
-                    <div className="text-gray-400 text-sm mb-1">Total Signals</div>
+                    <div className="text-gray-400 text-sm mb-1 flex items-center">
+                      Total Signals
+                      <InfoTooltip text="The total number of BUY signals analyzed in this period. A higher number provides more statistical significance to the metrics." />
+                    </div>
                     <div className="text-2xl font-bold text-white">{metrics.metrics.total_signals}</div>
                     <div className="text-xs text-gray-500 mt-1">
                       With results: {metrics.metrics.signals_with_results || 0}
@@ -157,32 +172,44 @@ export default function Performance() {
                   </div>
                   
                   <div className="bg-black/50 p-4 rounded-lg border border-gold/10">
-                    <div className="text-gray-400 text-sm mb-1">Success Rate</div>
+                    <div className="text-gray-400 text-sm mb-1 flex items-center">
+                      Success Rate
+                      <InfoTooltip text="Percentage of signals that resulted in positive returns. Higher rates indicate more accurate predictions and better trading performance." />
+                    </div>
                     <div className="text-2xl font-bold text-green-400">
                       {metrics.metrics.success_rate?.toFixed(2)}%
                     </div>
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-gray-500 mt-1 flex items-center">
                       Win/Loss Ratio: {metrics.metrics.win_loss_ratio?.toFixed(2)}
+                      <InfoTooltip text="Average win amount divided by average loss amount. Values above 1.0 indicate that winning trades are larger than losing trades." />
                     </div>
                   </div>
                   
                   <div className="bg-black/50 p-4 rounded-lg border border-gold/10">
-                    <div className="text-gray-400 text-sm mb-1">Average Return</div>
+                    <div className="text-gray-400 text-sm mb-1 flex items-center">
+                      Average Return
+                      <InfoTooltip text="The mean percentage return across all signals. This shows the typical profit or loss per trade." />
+                    </div>
                     <div className={`text-2xl font-bold ${metrics.metrics.average_actual_return >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                       {metrics.metrics.average_actual_return?.toFixed(2)}%
                     </div>
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-gray-500 mt-1 flex items-center">
                       Median: {metrics.metrics.median_actual_return?.toFixed(2)}%
+                      <InfoTooltip text="The middle value of all returns. Less affected by outliers than the average, providing a more typical result." />
                     </div>
                   </div>
                   
                   <div className="bg-black/50 p-4 rounded-lg border border-gold/10">
-                    <div className="text-gray-400 text-sm mb-1">Profit Factor</div>
+                    <div className="text-gray-400 text-sm mb-1 flex items-center">
+                      Profit Factor
+                      <InfoTooltip text="Total profit divided by total loss. Values above 1.0 indicate overall profitability, with higher values showing stronger performance." />
+                    </div>
                     <div className="text-2xl font-bold text-gold">
                       {metrics.metrics.profit_factor?.toFixed(2)}
                     </div>
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-gray-500 mt-1 flex items-center">
                       Sharpe Ratio: {metrics.metrics.sharpe_ratio?.toFixed(2)}
+                      <InfoTooltip text="Risk-adjusted return metric. Higher values indicate better returns relative to risk taken. Values above 1.0 are good, above 2.0 are excellent." />
                     </div>
                   </div>
                 </div>
@@ -191,29 +218,44 @@ export default function Performance() {
               {/* Advanced Metrics */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
-                  <h3 className="text-xl font-semibold text-gold mb-4">Risk Metrics</h3>
+                  <h3 className="text-xl font-semibold text-gold mb-4 flex items-center">
+                    Risk Metrics
+                    <InfoTooltip text="Metrics that measure the risk and consistency of trading performance." />
+                  </h3>
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="bg-black/50 p-3 rounded-lg border border-gold/10">
-                        <div className="text-gray-400 text-xs mb-1">Max Drawdown</div>
+                        <div className="text-gray-400 text-xs mb-1 flex items-center">
+                          Max Drawdown
+                          <InfoTooltip text="The largest percentage drop from peak to trough in cumulative returns. Lower values indicate better risk management." />
+                        </div>
                         <div className="text-xl font-bold text-red-400">
                           {metrics.metrics.max_drawdown?.toFixed(2)}%
                         </div>
                       </div>
                       <div className="bg-black/50 p-3 rounded-lg border border-gold/10">
-                        <div className="text-gray-400 text-xs mb-1">Recovery Factor</div>
+                        <div className="text-gray-400 text-xs mb-1 flex items-center">
+                          Recovery Factor
+                          <InfoTooltip text="Average return divided by maximum drawdown. Higher values indicate better ability to recover from losses." />
+                        </div>
                         <div className="text-xl font-bold text-green-400">
                           {metrics.metrics.recovery_factor?.toFixed(2)}
                         </div>
                       </div>
                       <div className="bg-black/50 p-3 rounded-lg border border-gold/10">
-                        <div className="text-gray-400 text-xs mb-1">Average Win</div>
+                        <div className="text-gray-400 text-xs mb-1 flex items-center">
+                          Average Win
+                          <InfoTooltip text="The mean percentage return of all profitable signals. Higher values indicate more effective profit-taking." />
+                        </div>
                         <div className="text-xl font-bold text-green-400">
                           {metrics.metrics.average_win?.toFixed(2)}%
                         </div>
                       </div>
                       <div className="bg-black/50 p-3 rounded-lg border border-gold/10">
-                        <div className="text-gray-400 text-xs mb-1">Average Loss</div>
+                        <div className="text-gray-400 text-xs mb-1 flex items-center">
+                          Average Loss
+                          <InfoTooltip text="The mean percentage loss of all unprofitable signals. Lower absolute values indicate better stop-loss discipline." />
+                        </div>
                         <div className="text-xl font-bold text-red-400">
                           {metrics.metrics.average_loss?.toFixed(2)}%
                         </div>
@@ -222,20 +264,30 @@ export default function Performance() {
                     
                     <div className="bg-black/50 p-3 rounded-lg border border-gold/10">
                       <div className="flex justify-between items-center mb-2">
-                        <div className="text-gray-400 text-xs">Consistency</div>
-                        <div className="text-xs text-gray-300">
+                        <div className="text-gray-400 text-xs flex items-center">
+                          Consistency
+                          <InfoTooltip text="Metrics that show how reliable and consistent the trading performance is over time." />
+                        </div>
+                        <div className="text-xs text-gray-300 flex items-center">
                           {metrics.metrics.positive_return_percentage?.toFixed(1)}% positive returns
+                          <InfoTooltip text="Percentage of signals that resulted in any positive return. A measure of overall directional accuracy." />
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
                         <div>
-                          <div className="text-xs text-gray-400">Max Consecutive Wins</div>
+                          <div className="text-xs text-gray-400 flex items-center">
+                            Max Consecutive Wins
+                            <InfoTooltip text="Longest streak of profitable signals. Indicates potential for sustained positive performance." />
+                          </div>
                           <div className="text-lg font-bold text-green-400">
                             {metrics.metrics.max_consecutive_wins || 0}
                           </div>
                         </div>
                         <div>
-                          <div className="text-xs text-gray-400">Max Consecutive Losses</div>
+                          <div className="text-xs text-gray-400 flex items-center">
+                            Max Consecutive Losses
+                            <InfoTooltip text="Longest streak of unprofitable signals. Helps assess worst-case drawdown scenarios." />
+                          </div>
                           <div className="text-lg font-bold text-red-400">
                             {metrics.metrics.max_consecutive_losses || 0}
                           </div>
@@ -247,7 +299,10 @@ export default function Performance() {
                 
                 {/* Top Tokens */}
                 <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
-                  <h3 className="text-xl font-semibold text-gold mb-4">Top Performing Tokens</h3>
+                  <h3 className="text-xl font-semibold text-gold mb-4 flex items-center">
+                    Top Performing Tokens
+                    <InfoTooltip text="Tokens with the highest average returns across multiple signals (minimum 3 signals)." />
+                  </h3>
                   {metrics.metrics.top_tokens && Object.keys(metrics.metrics.top_tokens).length > 0 ? (
                     <div className="space-y-3">
                       {Object.entries(metrics.metrics.top_tokens)
@@ -286,13 +341,17 @@ export default function Performance() {
               {/* Confidence Level Performance */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
-                  <h3 className="text-xl font-semibold text-gold mb-4">Confidence Level Performance</h3>
+                  <h3 className="text-xl font-semibold text-gold mb-4 flex items-center">
+                    Confidence Level Performance
+                    <InfoTooltip text="Analysis of signal performance based on the confidence level assigned to each signal." />
+                  </h3>
                   <div className="space-y-4">
                     <div className="relative pt-1">
                       <div className="flex items-center justify-between mb-2">
                         <div>
-                          <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full bg-green-900/50 text-green-400">
+                          <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full bg-green-900/50 text-green-400 flex items-center">
                             HIGH
+                            <InfoTooltip text="Signals with high confidence typically have strong technical and fundamental indicators aligned." />
                           </span>
                         </div>
                         <div className="text-right">
@@ -313,8 +372,9 @@ export default function Performance() {
                     <div className="relative pt-1">
                       <div className="flex items-center justify-between mb-2">
                         <div>
-                          <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full bg-yellow-900/50 text-yellow-400">
+                          <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full bg-yellow-900/50 text-yellow-400 flex items-center">
                             MEDIUM
+                            <InfoTooltip text="Signals with medium confidence have some strong indicators but may have conflicting signals or less certainty." />
                           </span>
                         </div>
                         <div className="text-right">
@@ -336,13 +396,17 @@ export default function Performance() {
                 
                 {/* Timeframe Performance */}
                 <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
-                  <h3 className="text-xl font-semibold text-gold mb-4">Timeframe Performance</h3>
+                  <h3 className="text-xl font-semibold text-gold mb-4 flex items-center">
+                    Timeframe Performance
+                    <InfoTooltip text="Analysis of signal performance based on the intended trading timeframe." />
+                  </h3>
                   <div className="space-y-4">
                     <div className="relative pt-1">
                       <div className="flex items-center justify-between mb-2">
                         <div>
-                          <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full bg-blue-900/50 text-blue-400">
+                          <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full bg-blue-900/50 text-blue-400 flex items-center">
                             SCALP
+                            <InfoTooltip text="Very short-term trades, typically minutes to hours. Focus on quick price movements and technical patterns." />
                           </span>
                         </div>
                         <div className="text-right">
@@ -363,8 +427,9 @@ export default function Performance() {
                     <div className="relative pt-1">
                       <div className="flex items-center justify-between mb-2">
                         <div>
-                          <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full bg-purple-900/50 text-purple-400">
+                          <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full bg-purple-900/50 text-purple-400 flex items-center">
                             INTRADAY
+                            <InfoTooltip text="Trades intended to be opened and closed within the same day. Based on short-term price movements and volatility." />
                           </span>
                         </div>
                         <div className="text-right">
@@ -385,8 +450,9 @@ export default function Performance() {
                     <div className="relative pt-1">
                       <div className="flex items-center justify-between mb-2">
                         <div>
-                          <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full bg-teal-900/50 text-teal-400">
+                          <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full bg-teal-900/50 text-teal-400 flex items-center">
                             SWING
+                            <InfoTooltip text="Medium-term trades lasting days to weeks. Based on broader market trends and momentum shifts." />
                           </span>
                         </div>
                         <div className="text-right">
@@ -407,8 +473,9 @@ export default function Performance() {
                     <div className="relative pt-1">
                       <div className="flex items-center justify-between mb-2">
                         <div>
-                          <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full bg-indigo-900/50 text-indigo-400">
+                          <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full bg-indigo-900/50 text-indigo-400 flex items-center">
                             POSITION
+                            <InfoTooltip text="Long-term trades lasting weeks to months. Based on fundamental analysis and major market trends." />
                           </span>
                         </div>
                         <div className="text-right">
