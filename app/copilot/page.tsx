@@ -176,13 +176,35 @@ export default function CopilotPage() {
         );
       }
       
-      // Get token info to determine decimals
-      const tokenInfo = await connection.getTokenSupply(tokenMint);
-      const tokenDecimals = tokenInfo.value.decimals;
-      console.log(`Token decimals for ${paymentMethod}: ${tokenDecimals}`);
+      // Check user's token balance
+      try {
+        const tokenBalance = await connection.getTokenAccountBalance(sourceTokenAccount);
+        console.log(`User's ${paymentMethod} balance:`, tokenBalance.value);
+        
+        if (Number(tokenBalance.value.amount) < tokenAmount * Math.pow(10, tokenBalance.value.decimals)) {
+          throw new Error(`Not enough ${paymentMethod} tokens. You need ${tokenAmount} ${paymentMethod}.`);
+        }
+      } catch (err) {
+        if (err instanceof Error && err.message.includes('Not enough')) {
+          throw err;
+        }
+        console.error('Error checking token balance:', err);
+        // Continue even if we can't check the balance - the transaction will fail if insufficient
+      }
+      
+      // Use the decimals from the token account balance instead of fetching token info
+      let tokenDecimals = 9; // Default to 9 decimals if we can't determine
+      
+      try {
+        const tokenBalance = await connection.getTokenAccountBalance(sourceTokenAccount);
+        tokenDecimals = tokenBalance.value.decimals;
+        console.log(`Token decimals for ${paymentMethod}: ${tokenDecimals}`);
+      } catch (err) {
+        console.warn(`Couldn't determine token decimals, using default of ${tokenDecimals}:`, err);
+      }
       
       // Calculate amount with proper decimals
-      const adjustedAmount = tokenAmount * Math.pow(10, tokenDecimals);
+      const adjustedAmount = BigInt(tokenAmount) * BigInt(10 ** tokenDecimals);
       console.log(`Sending ${tokenAmount} ${paymentMethod} (${adjustedAmount} raw amount)`);
       
       // Add transfer instruction with correct decimal calculation
