@@ -310,49 +310,6 @@ export default function Invest() {
       </section>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Left Column */}
-        <div className="space-y-8">
-          <section>
-            <h2 className="text-2xl font-bold mb-4">Investment Details</h2>
-            <div className="grid grid-cols-1 gap-4">
-              <div className="info-card">
-                <h3 className="text-lg mb-2">Focus</h3>
-                <p className="text-xl">AI token trading on Solana</p>
-              </div>
-              <div className="info-card">
-                <h3 className="text-lg mb-2">Minimum Investment</h3>
-                <p className="text-xl">500 USDC</p>
-              </div>
-            </div>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-bold mb-4">Key Benefits</h2>
-            <div className="info-card">
-              <ul className="space-y-3">
-                <li className="flex items-center">
-                  <span className="text-gold mr-2">•</span>
-                  75% Weekly profit distribution
-                </li>
-                <li className="flex items-center">
-                  <span className="text-gold mr-2">•</span>
-                  24/7 AI-powered trading
-                </li>
-                <li className="flex items-center">
-                  <span className="text-gold mr-2">•</span>
-                  Automatic USDC payments
-                </li>
-                <li className="flex items-center">
-                  <span className="text-gold mr-2">•</span>
-                  Full transparency on all trades
-                </li>
-              </ul>
-            </div>
-          </section>
-        </div>
-
-        {/* Right Column */}
-        <div className="space-y-8">
           <section>
             <h2 className="text-2xl font-bold mb-4">Connect Wallet</h2>
             <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
@@ -404,7 +361,6 @@ export default function Invest() {
               </div>
             </div>
           </section>
-        </div>
       </div>
     </main>
   )
