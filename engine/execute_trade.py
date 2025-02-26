@@ -102,9 +102,23 @@ class JupiterTradeExecutor:
         elif token_mint == "7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs":  # WETH
             self.logger.info(f"⚠️ Detected WETH token - using 8 decimals")
             return 8
+        elif token_mint == "SWARMDNxdqrGBfnNAEfDVwsXz1JjdQjVyU4aQrRCLGn":  # SWARMS
+            self.logger.info(f"⚠️ Detected SWARMS token - using 6 decimals")
+            return 6
         else:
-            # Default to 9 decimals for most Solana tokens
-            return 9
+            # Try to get decimals from token account info first before defaulting
+            try:
+                # Check if we have a cached value from a previous balance check
+                if hasattr(self, '_token_decimals_cache') and token_mint in self._token_decimals_cache:
+                    decimals = self._token_decimals_cache[token_mint]
+                    self.logger.info(f"Using cached decimals for {token_mint}: {decimals}")
+                    return decimals
+                
+                self.logger.info(f"Default to 6 decimals for {token_mint} (safer than 9)")
+                return 6
+            except Exception as e:
+                self.logger.warning(f"Error determining decimals: {e}, using 6 as safer default")
+                return 6
             
     async def get_token_balance(self, token_mint: str) -> float:
         """Get token balance using Birdeye API"""
@@ -140,12 +154,20 @@ class JupiterTradeExecutor:
                             # Get balance and handle decimals (USDC has 6 decimals)
                             raw_balance = float(token_data.get('balance', 0))
                             decimals = int(token_data.get('decimals', 6))  # Default to 6 for USDC
+                            
+                            # Store the decimals in a cache for future reference
+                            if not hasattr(self, '_token_decimals_cache'):
+                                self._token_decimals_cache = {}
+                            self._token_decimals_cache[token_mint] = decimals
+                            self.logger.info(f"Cached {decimals} decimals for token {token_mint}")
+                            
                             balance = raw_balance / (10 ** decimals)
                             
                             usd_value = float(token_data.get('usd_value', 0))
                             
                             self.logger.info(f"Token balance: {balance:.4f}")
                             self.logger.info(f"USD value: ${usd_value:.2f}")
+                            self.logger.info(f"Raw balance: {raw_balance} (using {decimals} decimals)")
                             
                             return balance if balance > 0 else usd_value  # Return either balance or USD value
                         else:

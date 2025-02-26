@@ -758,7 +758,22 @@ class TradeExecutor:
                 # Get token decimals using Jupiter executor's helper method
                 decimals = self.jupiter.get_token_decimals(token_mint)
                 
-                self.logger.info(f"Using {decimals} decimals for {token_symbol}")
+                # Log more details about the token and amount
+                self.logger.info(f"Using {decimals} decimals for {token_symbol} ({token_mint})")
+                self.logger.info(f"Token amount before adjustment: {token_amount}")
+                
+                # Double-check if the amount seems reasonable
+                if token_amount > 1000000:
+                    self.logger.warning(f"⚠️ Token amount {token_amount} seems unusually large!")
+                    # Try to get the actual balance to verify
+                    try:
+                        actual_balance = await self.jupiter.get_token_balance(token_mint)
+                        self.logger.info(f"Actual balance from API: {actual_balance}")
+                        if actual_balance < token_amount:
+                            self.logger.warning(f"⚠️ Adjusting token amount to match actual balance: {actual_balance}")
+                            token_amount = actual_balance
+                    except Exception as e:
+                        self.logger.error(f"Error checking actual balance: {e}")
                 
                 # Add additional safety check based on original trade value
                 if original_value > 0 and current_value > original_value * 5:
