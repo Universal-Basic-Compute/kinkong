@@ -13,6 +13,18 @@ interface PerformanceMetrics {
     success_rate: number;
     average_actual_return: number;
     average_expected_return: number;
+    median_actual_return: number;
+    win_rate: number;
+    win_loss_ratio: number;
+    profit_factor: number;
+    sharpe_ratio: number;
+    max_drawdown: number;
+    recovery_factor: number;
+    average_win: number;
+    average_loss: number;
+    max_consecutive_wins: number;
+    max_consecutive_losses: number;
+    positive_return_percentage: number;
     buy_signals: number;
     sell_signals: number;
     buy_percentage: number;
@@ -23,6 +35,11 @@ interface PerformanceMetrics {
     high_confidence_percentage: number;
     medium_confidence_percentage: number;
     low_confidence_percentage: number;
+    high_confidence_return: number;
+    medium_confidence_return: number;
+    low_confidence_return: number;
+    high_confidence_success_rate: number;
+    medium_confidence_success_rate: number;
     scalp_signals: number;
     intraday_signals: number;
     swing_signals: number;
@@ -31,15 +48,21 @@ interface PerformanceMetrics {
     intraday_percentage: number;
     swing_percentage: number;
     position_percentage: number;
-    high_confidence_return: number;
-    medium_confidence_return: number;
-    low_confidence_return: number;
     scalp_return: number;
     intraday_return: number;
     swing_return: number;
     position_return: number;
+    scalp_success_rate: number;
+    intraday_success_rate: number;
+    swing_success_rate: number;
+    position_success_rate: number;
     buy_return: number;
     sell_return: number;
+    top_tokens?: Record<string, {
+      return: number;
+      count: number;
+      success_rate: number;
+    }>;
     weekly_performance?: Record<string, number>;
   };
 }
@@ -139,7 +162,7 @@ export default function Performance() {
                       {metrics.metrics.success_rate?.toFixed(2)}%
                     </div>
                     <div className="text-xs text-gray-500 mt-1">
-                      Based on {metrics.metrics.signals_with_results || 0} completed signals
+                      Win/Loss Ratio: {metrics.metrics.win_loss_ratio?.toFixed(2)}
                     </div>
                   </div>
                   
@@ -149,10 +172,114 @@ export default function Performance() {
                       {metrics.metrics.average_actual_return?.toFixed(2)}%
                     </div>
                     <div className="text-xs text-gray-500 mt-1">
-                      Expected: {metrics.metrics.average_expected_return?.toFixed(2)}%
+                      Median: {metrics.metrics.median_actual_return?.toFixed(2)}%
                     </div>
                   </div>
                   
+                  <div className="bg-black/50 p-4 rounded-lg border border-gold/10">
+                    <div className="text-gray-400 text-sm mb-1">Profit Factor</div>
+                    <div className="text-2xl font-bold text-gold">
+                      {metrics.metrics.profit_factor?.toFixed(2)}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      Sharpe Ratio: {metrics.metrics.sharpe_ratio?.toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Advanced Metrics */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
+                  <h3 className="text-xl font-semibold text-gold mb-4">Risk Metrics</h3>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-black/50 p-3 rounded-lg border border-gold/10">
+                        <div className="text-gray-400 text-xs mb-1">Max Drawdown</div>
+                        <div className="text-xl font-bold text-red-400">
+                          {metrics.metrics.max_drawdown?.toFixed(2)}%
+                        </div>
+                      </div>
+                      <div className="bg-black/50 p-3 rounded-lg border border-gold/10">
+                        <div className="text-gray-400 text-xs mb-1">Recovery Factor</div>
+                        <div className="text-xl font-bold text-green-400">
+                          {metrics.metrics.recovery_factor?.toFixed(2)}
+                        </div>
+                      </div>
+                      <div className="bg-black/50 p-3 rounded-lg border border-gold/10">
+                        <div className="text-gray-400 text-xs mb-1">Average Win</div>
+                        <div className="text-xl font-bold text-green-400">
+                          {metrics.metrics.average_win?.toFixed(2)}%
+                        </div>
+                      </div>
+                      <div className="bg-black/50 p-3 rounded-lg border border-gold/10">
+                        <div className="text-gray-400 text-xs mb-1">Average Loss</div>
+                        <div className="text-xl font-bold text-red-400">
+                          {metrics.metrics.average_loss?.toFixed(2)}%
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-black/50 p-3 rounded-lg border border-gold/10">
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="text-gray-400 text-xs">Consistency</div>
+                        <div className="text-xs text-gray-300">
+                          {metrics.metrics.positive_return_percentage?.toFixed(1)}% positive returns
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div>
+                          <div className="text-xs text-gray-400">Max Consecutive Wins</div>
+                          <div className="text-lg font-bold text-green-400">
+                            {metrics.metrics.max_consecutive_wins || 0}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-400">Max Consecutive Losses</div>
+                          <div className="text-lg font-bold text-red-400">
+                            {metrics.metrics.max_consecutive_losses || 0}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Top Tokens */}
+                <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
+                  <h3 className="text-xl font-semibold text-gold mb-4">Top Performing Tokens</h3>
+                  {metrics.metrics.top_tokens && Object.keys(metrics.metrics.top_tokens).length > 0 ? (
+                    <div className="space-y-3">
+                      {Object.entries(metrics.metrics.top_tokens)
+                        .sort(([, a], [, b]) => b.return - a.return)
+                        .slice(0, 5)
+                        .map(([token, data]) => (
+                          <div key={token} className="bg-black/50 p-3 rounded-lg border border-gold/10">
+                            <div className="flex justify-between items-center">
+                              <div className="font-medium text-gold">${token}</div>
+                              <div className={`text-sm font-bold ${data.return >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                {data.return.toFixed(2)}%
+                              </div>
+                            </div>
+                            <div className="flex justify-between text-xs text-gray-400 mt-1">
+                              <div>Success Rate: {data.success_rate.toFixed(1)}%</div>
+                              <div>{data.count} signals</div>
+                            </div>
+                            <div className="mt-2 h-1 bg-black/50 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-gold" 
+                                style={{ width: `${Math.min(100, data.success_rate)}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        ))
+                      }
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-gray-400">
+                      No token performance data available
+                    </div>
+                  )}
                 </div>
               </div>
               
@@ -177,8 +304,9 @@ export default function Performance() {
                       <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-black/50">
                         <div style={{ width: `${metrics.metrics.high_confidence_percentage}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-green-500"></div>
                       </div>
-                      <div className="text-xs text-gray-400">
-                        {metrics.metrics.high_confidence} signals ({metrics.metrics.high_confidence_percentage?.toFixed(1)}%)
+                      <div className="flex justify-between text-xs text-gray-400">
+                        <div>{metrics.metrics.high_confidence} signals ({metrics.metrics.high_confidence_percentage?.toFixed(1)}%)</div>
+                        <div>Success Rate: {metrics.metrics.high_confidence_success_rate?.toFixed(1)}%</div>
                       </div>
                     </div>
                     
@@ -198,11 +326,11 @@ export default function Performance() {
                       <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-black/50">
                         <div style={{ width: `${metrics.metrics.medium_confidence_percentage}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-yellow-500"></div>
                       </div>
-                      <div className="text-xs text-gray-400">
-                        {metrics.metrics.medium_confidence} signals ({metrics.metrics.medium_confidence_percentage?.toFixed(1)}%)
+                      <div className="flex justify-between text-xs text-gray-400">
+                        <div>{metrics.metrics.medium_confidence} signals ({metrics.metrics.medium_confidence_percentage?.toFixed(1)}%)</div>
+                        <div>Success Rate: {metrics.metrics.medium_confidence_success_rate?.toFixed(1)}%</div>
                       </div>
                     </div>
-                    
                   </div>
                 </div>
                 
@@ -226,8 +354,9 @@ export default function Performance() {
                       <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-black/50">
                         <div style={{ width: `${metrics.metrics.scalp_percentage}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500"></div>
                       </div>
-                      <div className="text-xs text-gray-400">
-                        {metrics.metrics.scalp_signals} signals ({metrics.metrics.scalp_percentage?.toFixed(1)}%)
+                      <div className="flex justify-between text-xs text-gray-400">
+                        <div>{metrics.metrics.scalp_signals} signals ({metrics.metrics.scalp_percentage?.toFixed(1)}%)</div>
+                        <div>Success Rate: {metrics.metrics.scalp_success_rate?.toFixed(1)}%</div>
                       </div>
                     </div>
                     
@@ -247,8 +376,9 @@ export default function Performance() {
                       <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-black/50">
                         <div style={{ width: `${metrics.metrics.intraday_percentage}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-purple-500"></div>
                       </div>
-                      <div className="text-xs text-gray-400">
-                        {metrics.metrics.intraday_signals} signals ({metrics.metrics.intraday_percentage?.toFixed(1)}%)
+                      <div className="flex justify-between text-xs text-gray-400">
+                        <div>{metrics.metrics.intraday_signals} signals ({metrics.metrics.intraday_percentage?.toFixed(1)}%)</div>
+                        <div>Success Rate: {metrics.metrics.intraday_success_rate?.toFixed(1)}%</div>
                       </div>
                     </div>
                     
@@ -268,8 +398,9 @@ export default function Performance() {
                       <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-black/50">
                         <div style={{ width: `${metrics.metrics.swing_percentage}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-teal-500"></div>
                       </div>
-                      <div className="text-xs text-gray-400">
-                        {metrics.metrics.swing_signals} signals ({metrics.metrics.swing_percentage?.toFixed(1)}%)
+                      <div className="flex justify-between text-xs text-gray-400">
+                        <div>{metrics.metrics.swing_signals} signals ({metrics.metrics.swing_percentage?.toFixed(1)}%)</div>
+                        <div>Success Rate: {metrics.metrics.swing_success_rate?.toFixed(1)}%</div>
                       </div>
                     </div>
                     
@@ -289,8 +420,9 @@ export default function Performance() {
                       <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-black/50">
                         <div style={{ width: `${metrics.metrics.position_percentage}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-500"></div>
                       </div>
-                      <div className="text-xs text-gray-400">
-                        {metrics.metrics.position_signals} signals ({metrics.metrics.position_percentage?.toFixed(1)}%)
+                      <div className="flex justify-between text-xs text-gray-400">
+                        <div>{metrics.metrics.position_signals} signals ({metrics.metrics.position_percentage?.toFixed(1)}%)</div>
+                        <div>Success Rate: {metrics.metrics.position_success_rate?.toFixed(1)}%</div>
                       </div>
                     </div>
                   </div>
@@ -300,15 +432,29 @@ export default function Performance() {
               
               {/* Visualization Links */}
               <div className="bg-black/30 p-6 rounded-lg border border-gold/20 mb-6">
-                <h3 className="text-xl font-semibold text-gold mb-4">Performance Visualizations</h3>
-                <p className="text-gray-400 mb-4">
-                  Detailed visualizations are available in the reports directory. The following charts have been generated:
-                </p>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-xl font-semibold text-gold">Performance Visualizations</h3>
+                  <button 
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/cron/calculate-signals-py', {
+                          headers: {
+                            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET_KEY || 'public-dev-key'}`
+                          }
+                        });
+                        if (!response.ok) throw new Error('Failed to calculate performance metrics');
+                        alert('Performance metrics calculation triggered successfully!');
+                      } catch (err) {
+                        console.error('Error triggering performance calculation:', err);
+                        alert('Failed to trigger performance metrics calculation');
+                      }
+                    }}
+                    className="px-4 py-2 bg-gold/20 hover:bg-gold/30 text-gold rounded-lg text-sm transition-colors"
+                  >
+                    Recalculate Metrics
+                  </button>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div className="bg-black/50 p-4 rounded-lg border border-gold/10 hover:border-gold/30 transition-colors">
-                    <div className="text-gold font-medium mb-1">Signal Type Distribution</div>
-                    <div className="text-xs text-gray-400">Breakdown of buy vs sell signals</div>
-                  </div>
                   <div className="bg-black/50 p-4 rounded-lg border border-gold/10 hover:border-gold/30 transition-colors">
                     <div className="text-gold font-medium mb-1">Confidence Distribution</div>
                     <div className="text-xs text-gray-400">Distribution of signal confidence levels</div>
@@ -328,6 +474,10 @@ export default function Performance() {
                   <div className="bg-black/50 p-4 rounded-lg border border-gold/10 hover:border-gold/30 transition-colors">
                     <div className="text-gold font-medium mb-1">Success by Timeframe</div>
                     <div className="text-xs text-gray-400">Success rate by trading timeframe</div>
+                  </div>
+                  <div className="bg-black/50 p-4 rounded-lg border border-gold/10 hover:border-gold/30 transition-colors">
+                    <div className="text-gold font-medium mb-1">Top Tokens Performance</div>
+                    <div className="text-xs text-gray-400">Performance of most traded tokens</div>
                   </div>
                 </div>
               </div>
