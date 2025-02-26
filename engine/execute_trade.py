@@ -432,12 +432,30 @@ class JupiterTradeExecutor:
                                     # Send trade notification
                                     try:
                                         from utils.send_sse import send_trade_notification
+                                        # Get current price for the token
+                                        token_price = 0
+                                        try:
+                                            # Try to get price from DexScreener
+                                            dexscreener_url = f"https://api.dexscreener.com/latest/dex/tokens/{check_token}"
+                                            async with aiohttp.ClientSession() as price_session:
+                                                async with price_session.get(dexscreener_url) as price_response:
+                                                    if price_response.status == 200:
+                                                        price_data = await price_response.json()
+                                                        pairs = price_data.get('pairs', [])
+                                                        if pairs:
+                                                            sol_pairs = [p for p in pairs if p.get('chainId') == 'solana']
+                                                            if sol_pairs:
+                                                                best_pair = max(sol_pairs, key=lambda x: float(x.get('liquidity', {}).get('usd', 0) or 0))
+                                                                token_price = float(best_pair.get('priceUsd', 0))
+                                        except Exception as price_err:
+                                            self.logger.error(f"Error getting token price: {price_err}")
+                                            
                                         trade_notification = {
                                             'token': check_token,
                                             'type': 'BUY' if is_buy else 'SELL',
-                                            'price': float(main_pair.get('priceUsd', 0)) if 'main_pair' in locals() else 0,
+                                            'price': token_price,
                                             'amount': result['amount'],
-                                            'value': result['amount'] * float(main_pair.get('priceUsd', 0)) if 'main_pair' in locals() else 0,
+                                            'value': result['amount'] * token_price,
                                             'status': 'COMPLETED',
                                             'id': signature_str
                                         }
@@ -453,13 +471,37 @@ class JupiterTradeExecutor:
                                 # Try to send a notification about the pending trade
                                 try:
                                     from utils.send_sse import send_trade_notification
+                                    # Get current price for the token
+                                    token_price = 0
+                                    try:
+                                        # Try to get price from DexScreener
+                                        dexscreener_url = f"https://api.dexscreener.com/latest/dex/tokens/{token_mint}"
+                                        async with aiohttp.ClientSession() as price_session:
+                                            async with price_session.get(dexscreener_url) as price_response:
+                                                if price_response.status == 200:
+                                                    price_data = await price_response.json()
+                                                    pairs = price_data.get('pairs', [])
+                                                    if pairs:
+                                                        sol_pairs = [p for p in pairs if p.get('chainId') == 'solana']
+                                                        if sol_pairs:
+                                                            best_pair = max(sol_pairs, key=lambda x: float(x.get('liquidity', {}).get('usd', 0) or 0))
+                                                            token_price = float(best_pair.get('priceUsd', 0))
+                                    except Exception as price_err:
+                                        self.logger.error(f"Error getting token price: {price_err}")
+                                        
+                                    # Use estimated amount based on transaction data
+                                    estimated_amount = 0
+                                    if 'initial_balance' in locals():
+                                        # Rough estimate based on initial balance
+                                        estimated_amount = initial_balance * 0.1  # Assume using 10% of balance
+                                        
                                     trade_notification = {
                                         'token': token_mint,
                                         'type': 'BUY' if is_buy else 'SELL',
-                                        'price': market_data['price'] if 'market_data' in locals() else 0,
-                                        'amount': amount_raw if 'amount_raw' in locals() else 0,
+                                        'price': token_price,
+                                        'amount': estimated_amount,
                                         'status': 'PENDING',
-                                        'id': signature_str if 'signature_str' in locals() else ''
+                                        'id': signature_str
                                     }
                                     send_trade_notification(trade_notification)
                                 except Exception as e:
