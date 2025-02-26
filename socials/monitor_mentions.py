@@ -6,6 +6,7 @@ import aiohttp
 import logging
 import anthropic
 import traceback
+import subprocess
 from pathlib import Path
 from dotenv import load_dotenv
 from requests_oauthlib import OAuth1
@@ -770,7 +771,46 @@ async def check_mentions():
                                 # First check if token was updated
                                 is_active, explanation = await check_token_active_status(token)
                                 
-                                if not is_active:
+                                if is_active:
+                                    logger.info(f"Token {token} is active, taking snapshot and generating signals")
+                                    
+                                    # Call token_snapshots.py for the token
+                                    try:
+                                        logger.info(f"Taking snapshot for {token}")
+                                        snapshot_process = subprocess.run(
+                                            [sys.executable, str(Path(__file__).parent.parent / "engine" / "token_snapshots.py"), token],
+                                            capture_output=True,
+                                            text=True,
+                                            check=False
+                                        )
+                                        if snapshot_process.returncode == 0:
+                                            logger.info(f"Successfully took snapshot for {token}")
+                                            logger.info(snapshot_process.stdout)
+                                        else:
+                                            logger.error(f"Failed to take snapshot for {token}")
+                                            logger.error(f"Error: {snapshot_process.stderr}")
+                                    except Exception as e:
+                                        logger.error(f"Error calling token_snapshots.py: {e}")
+                                    
+                                    # Call signals.py for the token
+                                    try:
+                                        logger.info(f"Generating signals for {token}")
+                                        signals_process = subprocess.run(
+                                            [sys.executable, str(Path(__file__).parent.parent / "engine" / "signals.py"), token],
+                                            capture_output=True,
+                                            text=True,
+                                            check=False
+                                        )
+                                        if signals_process.returncode == 0:
+                                            logger.info(f"Successfully generated signals for {token}")
+                                            logger.info(signals_process.stdout)
+                                        else:
+                                            logger.error(f"Failed to generate signals for {token}")
+                                            logger.error(f"Error: {signals_process.stderr}")
+                                    except Exception as e:
+                                        logger.error(f"Error calling signals.py: {e}")
+                                    
+                                else:
                                     logger.info(f"Token {token} is not active, generating explanation")
                                     
                                     # Generate explanation
