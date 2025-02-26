@@ -363,7 +363,7 @@ def generate_recent_trade_charts(limit=10, output_dir=None):
         
         # Get recent closed signals
         signals = signals_table.all(
-            formula="NOT(actualReturn = '')",
+            formula="NOT({actualReturn} = '')",  # Use curly braces around field names
             sort=[{"field": "createdAt", "direction": "desc"}],
             max_records=limit
         )
@@ -382,6 +382,8 @@ def generate_recent_trade_charts(limit=10, output_dir=None):
         
     except Exception as e:
         logger.error(f"Error generating recent trade charts: {e}")
+        import traceback
+        logger.error(traceback.format_exc())  # Add full traceback for better debugging
         return False
 
 def main():
