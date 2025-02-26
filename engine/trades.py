@@ -582,10 +582,13 @@ class TradeExecutor:
             else:
                 self.logger.info(f"Stop Loss: {RED}{((stop_loss/current_price)-1)*100:.2f}%{ENDC} below current price")
             
-            # Check if we've reached at least 12% profit (minimum target for SCALP)
+            # Check if we've reached minimum profit target for SCALP trades
             price_change_pct = ((current_price - entry_price) / entry_price * 100)
-            if price_change_pct >= 12.0:
-                self.logger.info(f"{GREEN}✨ Minimum profit target of 12% reached: {price_change_pct:.2f}%{ENDC}")
+            timeframe = trade['fields'].get('timeframe', '')
+            
+            # Only apply minimum profit target to SCALP trades
+            if timeframe == 'SCALP' and price_change_pct >= 12.0:
+                self.logger.info(f"{GREEN}✨ Minimum profit target of 12% reached for SCALP trade: {price_change_pct:.2f}%{ENDC}")
                 return "MIN_PROFIT_TARGET"
             
             # Check expiry
