@@ -18,8 +18,8 @@ export async function POST(request: Request) {
     // Generate a unique investment ID
     const investmentId = `inv_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     
-    // Current timestamp for date
-    const date = new Date().toISOString();
+    // Current timestamp for createdAt
+    const createdAt = new Date().toISOString();
     
     const records = await table.create([
       {
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
           amount,
           wallet,
           solscanUrl,
-          date
+          createdAt
         }
       }
     ]);
