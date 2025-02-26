@@ -93,9 +93,10 @@ const Header = () => {
         <div className="flex items-center justify-between p-4">
           <Link 
             href="/" 
-            className="electric-title text-2xl tracking-tight flex items-center"
+            className="electric-title text-2xl tracking-tight flex flex-col items-center"
           >
-            Kong <span className="text-xs">TRADING</span>
+            <span>Kong</span>
+            <span className="text-xs -mt-1">TRADING</span>
           </Link>
 
           <nav className="hidden md:flex items-center space-x-8">
