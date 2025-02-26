@@ -395,8 +395,8 @@ async def generate_signal_response(token: str, signals: List[Dict], mention_text
         Response Guidelines:
         - If ALL_BUY: Be enthusiastic about the token, mention your BUY signal(s) and key reasons
         - If ALL_SELL: Politely explain you're not bullish on the token right now and briefly why
-        - If MIXED: Acknowledge the mixed signals and suggest caution/further research
-        - If NO_SIGNALS: Mention you're monitoring the token but don't have a clear signal yet
+        - If MIXED: Focus on the BUY signals if any exist, mentioning the positive aspects while acknowledging some caution
+        - If NO_SIGNALS: Suggest holding the token and monitoring for clearer signals, be encouraging but neutral
         
         The user's tweet: "{mention_text}"
         """
