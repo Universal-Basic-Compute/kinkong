@@ -95,8 +95,7 @@ const Header = () => {
             href="/" 
             className="electric-title text-2xl tracking-tight flex items-center"
           >
-            Kong <span className="text-sm">TRADING</span>
-            <span className="text-sm text-gray-500 ml-1">(alpha)</span>
+            Kong <span className="text-xs">TRADING</span>
           </Link>
 
           <nav className="hidden md:flex items-center space-x-8">
