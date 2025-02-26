@@ -494,7 +494,7 @@ export default function Performance() {
                         </div>
                       </div>
                       <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-black/50">
-                        <div style={{ width: `${metrics.metrics.scalp_percentage}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500"></div>
+                        <div style={{ width: `${Math.max(0, Math.min(100, metrics.metrics.scalp_return))}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500"></div>
                       </div>
                       <div className="flex justify-between text-xs text-gray-400">
                         <div>{metrics.metrics.scalp_signals} signals ({metrics.metrics.scalp_percentage?.toFixed(1)}%)</div>
@@ -517,7 +517,7 @@ export default function Performance() {
                         </div>
                       </div>
                       <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-black/50">
-                        <div style={{ width: `${metrics.metrics.intraday_percentage}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-purple-500"></div>
+                        <div style={{ width: `${Math.max(0, Math.min(100, metrics.metrics.intraday_return))}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-purple-500"></div>
                       </div>
                       <div className="flex justify-between text-xs text-gray-400">
                         <div>{metrics.metrics.intraday_signals} signals ({metrics.metrics.intraday_percentage?.toFixed(1)}%)</div>
@@ -540,7 +540,7 @@ export default function Performance() {
                         </div>
                       </div>
                       <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-black/50">
-                        <div style={{ width: `${metrics.metrics.swing_percentage}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-teal-500"></div>
+                        <div style={{ width: `${Math.max(0, Math.min(100, metrics.metrics.swing_return))}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-teal-500"></div>
                       </div>
                       <div className="flex justify-between text-xs text-gray-400">
                         <div>{metrics.metrics.swing_signals} signals ({metrics.metrics.swing_percentage?.toFixed(1)}%)</div>
@@ -563,7 +563,7 @@ export default function Performance() {
                         </div>
                       </div>
                       <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-black/50">
-                        <div style={{ width: `${metrics.metrics.position_percentage}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-500"></div>
+                        <div style={{ width: `${Math.max(0, Math.min(100, metrics.metrics.position_return))}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-500"></div>
                       </div>
                       <div className="flex justify-between text-xs text-gray-400">
                         <div>{metrics.metrics.position_signals} signals ({metrics.metrics.position_percentage?.toFixed(1)}%)</div>
@@ -600,21 +600,6 @@ export default function Performance() {
                   </button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20 card-3d">
-                    <h4 className="text-lg font-semibold text-gold mb-2">Confidence Distribution</h4>
-                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10 shadow-md">
-                      <div className="card-3d-image">
-                        <Image 
-                          src="/performances/confidence_distribution.png" 
-                          alt="Confidence Distribution" 
-                          width={400}
-                          height={225}
-                          className="object-contain"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  
                   <div className="bg-black/30 p-4 rounded-lg border border-gold/20 card-3d">
                     <h4 className="text-lg font-semibold text-gold mb-2">Timeframe Distribution</h4>
                     <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10 shadow-md">
