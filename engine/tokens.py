@@ -719,8 +719,8 @@ class TokenManager:
                         updated_at_dt = datetime.fromisoformat(updated_at.replace('Z', '+00:00'))
                         age = datetime.now(timezone.utc) - updated_at_dt
                         
-                        if age < timedelta(hours=24):
-                            logger.info(f"Token {symbol} was updated less than 24 hours ago ({age.total_seconds()/3600:.1f} hours). Skipping.")
+                        if age < timedelta(hours=72):
+                            logger.info(f"Token {symbol} was updated less than 72 hours ago ({age.total_seconds()/3600:.1f} hours). Skipping.")
                             return True  # Return success without processing
                 except Exception as e:
                     logger.warning(f"Error checking token update time: {e}. Will proceed with update.")
@@ -778,8 +778,8 @@ class TokenManager:
                         updated_at_dt = datetime.fromisoformat(updated_at.replace('Z', '+00:00'))
                         age = datetime.now(timezone.utc) - updated_at_dt
                         
-                        if age < timedelta(hours=24):
-                            logger.info(f"Token {symbol} was updated less than 24 hours ago ({age.total_seconds()/3600:.1f} hours). Skipping.")
+                        if age < timedelta(hours=72):
+                            logger.info(f"Token {symbol} was updated less than 72 hours ago ({age.total_seconds()/3600:.1f} hours). Skipping.")
                             results['skipped'] += 1
                             continue
                     
