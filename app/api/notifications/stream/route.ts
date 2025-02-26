@@ -4,12 +4,18 @@ export const runtime = 'nodejs';
 import { NextRequest } from 'next/server';
 import { clients } from '../shared';
 
+// Export clients for debugging
+export { clients };
+
 export async function GET(request: NextRequest) {
+  console.log(`Stream endpoint called. Current clients: ${clients.size}`);
+  
   // Create a new stream
   const stream = new ReadableStream({
     start(controller: ReadableStreamDefaultController<Uint8Array>) {
       // Add this client to the map with current timestamp
       clients.set(controller, Date.now());
+      console.log(`Client added. New client count: ${clients.size}`);
       
       // Send initial connection message
       const encoder = new TextEncoder();
@@ -24,6 +30,7 @@ export async function GET(request: NextRequest) {
         } catch (e) {
           clearInterval(keepAliveInterval);
           clients.delete(controller);
+          console.log(`Client removed due to keep-alive error. Remaining clients: ${clients.size}`);
         }
       }, 30000); // Send keep-alive every 30 seconds
       

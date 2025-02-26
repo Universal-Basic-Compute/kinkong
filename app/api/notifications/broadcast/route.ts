@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { broadcastToClients } from '../shared';
+import { broadcastToClients, clients } from '../shared';
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,14 +29,19 @@ export async function POST(request: NextRequest) {
     }
     
     console.log(`Broadcasting ${data.type} notification for ${data.data.token || 'unknown token'}`);
+    console.log(`Current client count before broadcast: ${clients.size}`);
     
     // Broadcast to all connected clients
-    broadcastToClients({
+    const activeClients = broadcastToClients({
       type: 'SERVER_PUSH',
       data: data
     });
     
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ 
+      success: true,
+      clientCount: clients.size,
+      activeClients: activeClients
+    });
     
   } catch (error) {
     console.error('Error broadcasting notification:', error);

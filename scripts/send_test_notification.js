@@ -16,7 +16,7 @@ async function sendTestNotification() {
     const testNotification = {
       type: 'SIGNAL_CREATED',
       data: {
-        id: 'test-signal-123',
+        id: 'test-signal-' + Date.now(),  // Make ID unique each time
         token: 'TEST',
         direction: 'BUY',
         timeframe: 'SCALP',
@@ -29,8 +29,13 @@ async function sendTestNotification() {
       }
     };
 
+    // Get the API URL with fallback
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    console.log(`Using API URL: ${apiUrl}`);
+
     // Send the notification
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/notifications/broadcast`, {
+    console.log('Sending POST request to /api/notifications/broadcast...');
+    const response = await fetch(`${apiUrl}/api/notifications/broadcast`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -39,6 +44,7 @@ async function sendTestNotification() {
       body: JSON.stringify(testNotification)
     });
 
+    console.log(`Response status: ${response.status}`);
     const result = await response.json();
 
     if (response.ok) {
