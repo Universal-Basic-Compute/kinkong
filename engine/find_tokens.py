@@ -124,13 +124,13 @@ class TrendingTokenFinder:
                 logger.info(f"Full response: {json.dumps(data)}")
                 return []
                 
-            # Check if items field exists
-            if 'items' not in data.get('data', {}):
-                logger.error("Response missing 'data.items' field")
+            # Check if tokens field exists (this is the actual field name in the response)
+            if 'tokens' not in data.get('data', {}):
+                logger.error("Response missing 'data.tokens' field")
                 logger.info(f"Data field content: {json.dumps(data.get('data', {}))}")
                 return []
             
-            tokens = data.get('data', {}).get('items', [])
+            tokens = data.get('data', {}).get('tokens', [])
             
             if not tokens:
                 logger.warning("No trending tokens found in response")
@@ -138,18 +138,25 @@ class TrendingTokenFinder:
             
             logger.info(f"Found {len(tokens)} trending tokens")
             
-            # Filter for Solana tokens only
-            solana_tokens = [token for token in tokens if token.get('chain') == 'solana']
-            
-            logger.info(f"Found {len(solana_tokens)} Solana trending tokens")
+            # Convert tokens to the format expected by process_token
+            formatted_tokens = []
+            for token in tokens:
+                formatted_token = {
+                    'symbol': token.get('symbol'),
+                    'name': token.get('name'),
+                    'address': token.get('address'),
+                    'chain': 'solana',  # All tokens from this endpoint are Solana tokens
+                    'verified': True    # Assume verified since they're trending
+                }
+                formatted_tokens.append(formatted_token)
             
             # Log first few tokens for debugging
-            if solana_tokens:
+            if formatted_tokens:
                 logger.info("First few tokens:")
-                for i, token in enumerate(solana_tokens[:3]):
+                for i, token in enumerate(formatted_tokens[:3]):
                     logger.info(f"Token {i+1}: {token.get('symbol')} - {token.get('name')}")
             
-            return solana_tokens
+            return formatted_tokens
             
         except requests.exceptions.Timeout:
             logger.error("Request to Birdeye API timed out")
@@ -187,7 +194,12 @@ class TrendingTokenFinder:
             
             # Build command to call engine\tokens.py
             tokens_script = Path(project_root) / "engine" / "tokens.py"
+            
+            # Add token address as an optional parameter if available
             cmd = [sys.executable, str(tokens_script), symbol]
+            if token_data.get('address'):
+                cmd.append('--address')
+                cmd.append(token_data.get('address'))
             
             # Execute command
             logger.info(f"Executing: {' '.join(cmd)}")
