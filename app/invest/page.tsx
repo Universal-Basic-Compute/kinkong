@@ -329,8 +329,11 @@ export default function Invest() {
         console.log(`Checking ${selectedToken} balance...`);
         const balance = await connection.getTokenAccountBalance(userTokenAccount);
         
-        // Both UBC and COMPUTE use 9 decimals
-        const decimals = 9;
+        // Get the correct decimals from the token account
+        const decimals = balance.value.decimals;
+        console.log(`Token decimals for ${selectedToken}: ${decimals}`);
+        
+        // Calculate user balance with correct decimals
         const userBalance = Number(balance.value.amount) / Math.pow(10, decimals);
         
         console.log(`User ${selectedToken} balance:`, userBalance);
@@ -345,16 +348,25 @@ export default function Invest() {
         return;
       }
 
-      // Add transfer instruction with appropriate decimals (9 for both UBC and COMPUTE)
-      const decimals = 9;
-      transaction.add(
-        createTransferInstruction(
-          userTokenAccount,
-          treasuryTokenAccount,
-          publicKey,
-          amount * Math.pow(10, decimals) // Convert to appropriate decimals
-        )
-      );
+      // Add transfer instruction with appropriate decimals from the token account
+      try {
+        // Get token account info to determine decimals
+        const tokenAccountInfo = await connection.getTokenAccountBalance(userTokenAccount);
+        const decimals = tokenAccountInfo.value.decimals;
+        console.log(`Using ${decimals} decimals for ${selectedToken}`);
+        
+        transaction.add(
+          createTransferInstruction(
+            userTokenAccount,
+            treasuryTokenAccount,
+            publicKey,
+            BigInt(Math.floor(amount * Math.pow(10, decimals))) // Use BigInt for large numbers
+          )
+        );
+      } catch (error) {
+        console.error('Error creating transfer instruction:', error);
+        throw new Error(`Failed to create transfer: ${error instanceof Error ? error.message : String(error)}`);
+      }
       
       // Get latest blockhash
       const { blockhash } = await connection.getLatestBlockhash();
