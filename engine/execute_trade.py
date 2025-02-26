@@ -449,6 +449,21 @@ class JupiterTradeExecutor:
                                 
                                 # Si on arrive ici, c'est qu'on n'a pas confirmé la balance après 3 tentatives
                                 self.logger.warning("Balance check timeout, moving to next attempt")
+                                
+                                # Try to send a notification about the pending trade
+                                try:
+                                    from utils.send_sse import send_trade_notification
+                                    trade_notification = {
+                                        'token': token_mint,
+                                        'type': 'BUY' if is_buy else 'SELL',
+                                        'price': market_data['price'] if 'market_data' in locals() else 0,
+                                        'amount': amount_raw if 'amount_raw' in locals() else 0,
+                                        'status': 'PENDING',
+                                        'id': signature_str if 'signature_str' in locals() else ''
+                                    }
+                                    send_trade_notification(trade_notification)
+                                except Exception as e:
+                                    self.logger.error(f"Failed to send trade notification: {e}")
 
                 except Exception as e:
                     self.logger.error(f"Attempt {attempt + 1} failed: {e}")
