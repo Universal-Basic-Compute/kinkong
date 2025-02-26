@@ -7,6 +7,7 @@ if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 # Set up variables
 $LOG_DIR = "C:\Users\conta\kinkong\logs"
 $SCRIPTS_DIR = "C:\Users\conta\kinkong\engine"
+$SOCIALS_DIR = "C:\Users\conta\kinkong\socials"
 $ERROR_LOG = "$LOG_DIR\task_errors.log"
 
 # Create logs directory if it doesn't exist
@@ -77,12 +78,24 @@ $tasks = @(
 )
 
 foreach ($task in $tasks) {
+    # Determine the script directory based on the script path
+    $scriptPath = $task.Script
+    $scriptDir = $SCRIPTS_DIR  # Default to engine directory
+    
+    # Check if the script path contains "../socials/"
+    if ($scriptPath -like "*../socials/*") {
+        $scriptDir = $SOCIALS_DIR
+        # Extract just the script name without the path
+        $scriptName = $scriptPath -replace "python ../socials/", ""
+        $scriptPath = $scriptName
+    }
+    
     # Create a wrapper script for each task
     $wrapperScript = @"
-cd $SCRIPTS_DIR
-$PYTHON_PATH $($task.Script)
+cd $scriptDir
+$PYTHON_PATH $scriptPath
 "@
-    $wrapperPath = "$SCRIPTS_DIR\wrapper_$($task.Script).cmd"
+    $wrapperPath = "$SCRIPTS_DIR\wrapper_$($task.Name).cmd"
     Set-Content -Path $wrapperPath -Value $wrapperScript
 
     # Use WindowStyle Hidden and the wrapper script
