@@ -171,7 +171,8 @@ def send_trade_notification(trade_data: Dict[str, Any]) -> bool:
                 "amount": trade_data.get('amount', 0),
                 "value": trade_data.get('value', 0),
                 "status": trade_data.get('status', ''),
-                "tradeId": trade_data.get('id', '')
+                "tradeId": trade_data.get('id', ''),
+                "reason": trade_data.get('reason', '')  # Include reason field
             }
         }
         
@@ -182,18 +183,29 @@ def send_trade_notification(trade_data: Dict[str, Any]) -> bool:
         }
         
         logger.info(f"Sending trade notification for {notification['data']['token']}")
-        response = requests.post(
-            notification_endpoint,
-            headers=headers,
-            json=notification,
-            timeout=10  # 10 second timeout
-        )
         
-        if response.status_code == 200:
-            logger.info(f"✅ Trade notification sent successfully")
-            return True
-        else:
-            logger.error(f"❌ Failed to send trade notification: {response.status_code} - {response.text}")
+        try:
+            response = requests.post(
+                notification_endpoint,
+                headers=headers,
+                json=notification,
+                timeout=10  # 10 second timeout
+            )
+            
+            if response.status_code == 200:
+                logger.info(f"✅ Trade notification sent successfully")
+                return True
+            else:
+                logger.error(f"❌ Failed to send trade notification: {response.status_code} - {response.text}")
+                return False
+        except requests.exceptions.Timeout:
+            logger.error("❌ Trade notification request timed out")
+            return False
+        except requests.exceptions.ConnectionError:
+            logger.error("❌ Connection error when sending trade notification")
+            return False
+        except requests.exceptions.RequestException as e:
+            logger.error(f"❌ Request exception when sending trade notification: {e}")
             return False
             
     except Exception as e:
