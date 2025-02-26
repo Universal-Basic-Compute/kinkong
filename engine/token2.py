@@ -328,8 +328,8 @@ class TokenManager:
             # Search endpoint
             search_url = "https://api.twitter.com/2/tweets/search/recent"
             
-            # Search for token with $ prefix
-            query = f"${token_symbol} -is:retweet -is:reply lang:en"
+            # Search for token without $ prefix
+            query = f"{token_symbol} -is:retweet -is:reply lang:en"
             
             params = {
                 "query": query,
