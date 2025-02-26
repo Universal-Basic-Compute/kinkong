@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 # Now we can import backend modules
 from backend.src.airtable.tables import getTable
 from socials.post_signal import post_signal
+from utils.send_sse import send_signal_notification
 import anthropic
 import os
 import base64
@@ -647,6 +648,18 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None, addit
         print("\nSending to Airtable:", json.dumps(signal_data, indent=2))
         response = airtable.insert(signal_data)
         print(f"✅ Created signal: {response['id']}")
+
+        # Add the record ID to the signal data for notification
+        signal_data['id'] = response['id']
+        
+        # Send notification about the new signal
+        try:
+            if send_signal_notification(signal_data):
+                print("✅ Signal notification sent successfully")
+            else:
+                print("❌ Failed to send signal notification")
+        except Exception as e:
+            print(f"❌ Error sending signal notification: {e}")
 
         # Post to social media if it's a high confidence BUY signal
         if confidence_level == 'HIGH' and signal_type == 'BUY':

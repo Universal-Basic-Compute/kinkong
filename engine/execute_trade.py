@@ -422,12 +422,30 @@ class JupiterTradeExecutor:
                                                 self.logger.info("Balance not yet updated, waiting 8 seconds...")
 
                                 if success:
-                                    return {
+                                    result = {
                                         'signature': signature_str,
                                         'initial_balance': initial_balance,
                                         'final_balance': final_balance,
                                         'amount': final_balance - initial_balance if is_buy else initial_balance - final_balance
                                     }
+                                    
+                                    # Send trade notification
+                                    try:
+                                        from utils.send_sse import send_trade_notification
+                                        trade_notification = {
+                                            'token': check_token,
+                                            'type': 'BUY' if is_buy else 'SELL',
+                                            'price': float(main_pair.get('priceUsd', 0)) if 'main_pair' in locals() else 0,
+                                            'amount': result['amount'],
+                                            'value': result['amount'] * float(main_pair.get('priceUsd', 0)) if 'main_pair' in locals() else 0,
+                                            'status': 'COMPLETED',
+                                            'id': signature_str
+                                        }
+                                        send_trade_notification(trade_notification)
+                                    except Exception as e:
+                                        self.logger.error(f"Failed to send trade notification: {e}")
+                                    
+                                    return result
                                 
                                 # Si on arrive ici, c'est qu'on n'a pas confirmé la balance après 3 tentatives
                                 self.logger.warning("Balance check timeout, moving to next attempt")
