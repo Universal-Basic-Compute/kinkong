@@ -96,7 +96,7 @@ const Header = () => {
             className="electric-title text-2xl tracking-tight flex flex-col items-center"
           >
             <span>Kong</span>
-            <span className="text-xs -mt-1">TRADING</span>
+            <span className="text-xs -mt-1">INVEST</span>
           </Link>
 
           <nav className="hidden md:flex items-center space-x-8">
