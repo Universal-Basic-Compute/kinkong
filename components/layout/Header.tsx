@@ -36,7 +36,7 @@ const Header = () => {
 
   const navItems: NavItem[] = [
     { 
-      label: 'KinKong Trading',
+      label: 'Kong Trading',
       isGroup: true,
       subItems: [
         { 
@@ -78,38 +78,12 @@ const Header = () => {
       ]
     },
     {
-      label: 'KinKong Copilot',
+      label: 'Kong Copilot',
       isGroup: false,
       href: '/copilot',
       subItems: [],
       isGlowing: true,
       customClass: 'text-orange-500 animate-pulse'
-    },
-    {
-      label: 'Shares Management',
-      isGroup: true,
-      isDisabled: true,
-      subItems: [
-        { 
-          label: 'Coming Soon',
-          href: '#',
-          description: 'Shares management features coming soon'
-        }
-      ],
-      byLine: 'by 💫 SwarmVentures'
-    },
-    {
-      label: 'Learn-to-Earn',
-      isGroup: true,
-      isDisabled: true,
-      subItems: [
-        { 
-          label: 'Coming Soon',
-          href: '#',
-          description: 'Learn-to-Earn features coming soon'
-        }
-      ],
-      byLine: 'by 🐝 WealthHive'
     }
   ];
 
@@ -121,7 +95,7 @@ const Header = () => {
             href="/" 
             className="electric-title text-2xl tracking-tight flex items-center"
           >
-            SwarmTrade
+            Kong <span className="text-sm">TRADING</span>
             <span className="text-sm text-gray-500 ml-1">(alpha)</span>
           </Link>
 
