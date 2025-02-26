@@ -15,6 +15,12 @@ interface Investment {
   date: string;
   username?: string;
   wallet: string;
+  return?: number; // Added return field
+}
+
+interface WalletSnapshot {
+  totalValue: number;
+  timestamp: string;
 }
 
 const validateInvestment = (inv: any): inv is Investment => {
@@ -32,23 +38,53 @@ export default function Invest() {
   const [amount, setAmount] = useState<number>(500);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [investments, setInvestments] = useState<Investment[]>([]);
+  const [latestSnapshot, setLatestSnapshot] = useState<WalletSnapshot | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchInvestments() {
+    async function fetchData() {
       try {
-        const response = await fetch('/api/investments');
-        if (!response.ok) throw new Error('Failed to fetch');
-        const data = await response.json();
-        setInvestments(data);
+        setIsLoading(true);
+        
+        // Fetch investments
+        const investmentsResponse = await fetch('/api/investments');
+        if (!investmentsResponse.ok) throw new Error('Failed to fetch investments');
+        const investmentsData = await investmentsResponse.json();
+        
+        // Fetch latest wallet snapshot
+        const snapshotResponse = await fetch('/api/portfolio');
+        if (!snapshotResponse.ok) throw new Error('Failed to fetch wallet snapshot');
+        const snapshotData = await snapshotResponse.json();
+        
+        // Set the latest snapshot
+        setLatestSnapshot({
+          totalValue: snapshotData.totalValue || 0,
+          timestamp: snapshotData.timestamp || new Date().toISOString()
+        });
+        
+        // Calculate returns for each investment
+        const totalInvestment = investmentsData.reduce((sum: number, inv: Investment) => sum + inv.amount, 0);
+        const profit = Math.max(0, snapshotData.totalValue - totalInvestment); // Ensure profit is not negative
+        const profitShare = profit * 0.75; // 75% of profit is distributed
+        
+        const investmentsWithReturns = investmentsData.map((inv: Investment) => {
+          const investmentRatio = inv.amount / totalInvestment;
+          const calculatedReturn = profitShare * investmentRatio;
+          return {
+            ...inv,
+            return: calculatedReturn
+          };
+        });
+        
+        setInvestments(investmentsWithReturns);
       } catch (error) {
-        console.error('Error fetching investments:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setIsLoading(false);
       }
     }
 
-    fetchInvestments();
+    fetchData();
   }, []);
 
   const handleInvest = async () => {
@@ -191,6 +227,10 @@ export default function Invest() {
       setIsSubmitting(false);
     }
   };
+
+  // Calculate total investment amount
+  const totalInvestment = investments.reduce((sum, inv) => sum + inv.amount, 0);
+  
   return (
     <main className="min-h-screen p-4 max-w-6xl mx-auto">
       <h1 className="text-4xl font-bold mb-8 text-center">Invest in KinKong</h1>
@@ -221,8 +261,10 @@ export default function Invest() {
                           ? `${investment.amount.toLocaleString('en-US')} USDC`
                           : 'N/A'}
                       </td>
-                      <td className="px-4 py-2 text-right text-gray-400 italic">
-                        Coming soon
+                      <td className="px-4 py-2 text-right">
+                        {investment.return !== undefined
+                          ? `${investment.return.toLocaleString('en-US', { maximumFractionDigits: 2 })} USDC`
+                          : 'Calculating...'}
                       </td>
                       <td className="px-4 py-2">
                         {investment.date 
@@ -244,6 +286,14 @@ export default function Invest() {
                 </tbody>
               </table>
             </div>
+            
+            {latestSnapshot && (
+              <div className="mt-4 text-sm text-gray-400">
+                <p>Portfolio Value: {latestSnapshot.totalValue.toLocaleString('en-US', { maximumFractionDigits: 2 })} USDC</p>
+                <p>Total Investment: {totalInvestment.toLocaleString('en-US', { maximumFractionDigits: 2 })} USDC</p>
+                <p>Last Updated: {new Date(latestSnapshot.timestamp).toLocaleString()}</p>
+              </div>
+            )}
           </div>
         )}
       </section>
@@ -323,7 +373,11 @@ export default function Invest() {
                     Estimated Weekly Returns
                   </label>
                   <div className="text-gold text-xl font-bold">
-                    Calculate based on amount
+                    {latestSnapshot && totalInvestment > 0 ? (
+                      `${((latestSnapshot.totalValue - totalInvestment) * 0.75 * (amount / (totalInvestment + amount))).toLocaleString('en-US', { maximumFractionDigits: 2 })} USDC`
+                    ) : (
+                      'Calculate based on amount'
+                    )}
                   </div>
                 </div>
                 <button 
