@@ -12,6 +12,13 @@ Every Friday, we conduct a comprehensive review of KinKong's trading strategy pe
 - Maximum drawdown
 - Sharpe ratio (daily)
 
+### Discovery Strategy Performance
+- Win rate by discovery strategy
+- Average ROI by discovery strategy
+- Time to profit by discovery strategy
+- False positive rate by strategy
+- Strategy correlation with market conditions
+
 ### Trading Efficiency
 - Average slippage vs estimates
 - Failed trade percentage
@@ -31,6 +38,8 @@ Every Friday, we conduct a comprehensive review of KinKong's trading strategy pe
 - New token success rate
 - Removal reason analysis
 - Liquidity requirement effectiveness
+- Discovery strategy effectiveness
+- Strategy adjustment recommendations
 
 ### Trading Schedule
 - Most/least profitable time windows
@@ -131,6 +140,9 @@ Every Friday, we conduct a comprehensive review of KinKong's trading strategy pe
 - [ ] Evaluate LLM performance
 - [ ] Adjust technical parameters
 - [ ] Update pattern recognition rules
+- [ ] Evaluate discovery strategy performance
+- [ ] Adjust discovery strategy parameters
+- [ ] Update token discovery schedule
 
 ### Timeline
 - Data collection: Friday 08:00 UTC

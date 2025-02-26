@@ -1,5 +1,73 @@
 # KinKong Trading Strategy Analysis
 
+## Token Discovery Strategies
+
+### Birdeye API Discovery Methods
+
+KinKong implements multiple token discovery strategies using the Birdeye API to identify promising opportunities:
+
+#### 1. Volume Momentum Strategy
+- **Purpose:** Identify tokens with significant trading activity growth
+- **Key Parameters:**
+  * Sort by 24-hour volume growth percentage
+  * Minimum liquidity: $100K
+  * Minimum 24h volume: $50K
+  * Minimum holders: 500
+- **Implementation:**
+  * Track tokens appearing in top results for 3+ consecutive days
+  * Prioritize consistent volume growth across multiple timeframes
+
+#### 2. Recent Listings with Traction
+- **Purpose:** Discover newly listed tokens gaining market attention
+- **Key Parameters:**
+  * Sort by listing time (newest first)
+  * Minimum liquidity: $200K
+  * Minimum 24h trades: 500
+  * Minimum holders: 300
+- **Implementation:**
+  * Monitor new listings maintaining liquidity for 7+ days
+  * Prioritize organic growth patterns over artificial pumps
+
+#### 3. Price Momentum with Volume Confirmation
+- **Purpose:** Find tokens with strong price performance backed by volume
+- **Key Parameters:**
+  * Sort by 24-hour price change percentage
+  * Minimum 24h volume: $100K
+  * Minimum volume growth: 20%
+  * Minimum liquidity: $300K
+- **Implementation:**
+  * Compare multiple timeframes to identify sustainable momentum
+  * Prioritize where volume growth matches/exceeds price growth
+
+#### 4. Liquidity Growth Detector
+- **Purpose:** Identify tokens rapidly gaining liquidity
+- **Key Parameters:**
+  * Sort by total liquidity
+  * Market cap range: $1M-$100M
+  * Minimum holders: 1,000
+  * Minimum 24h volume: $200K
+- **Implementation:**
+  * Track changes in liquidity rankings weekly
+  * Calculate liquidity-to-market-cap ratios for value assessment
+
+#### 5. High Trading Activity Filter
+- **Purpose:** Find tokens with high trading frequency
+- **Key Parameters:**
+  * Sort by 24-hour trade count
+  * Minimum liquidity: $150K
+  * Minimum 24h volume: $75K
+  * Minimum holders: 400
+- **Implementation:**
+  * Calculate trade count to market cap ratio
+  * Look for consistently high activity across multiple days
+
+### Integration Process
+- Run high-volatility queries (price/volume) daily
+- Run structural queries (liquidity/holders) weekly
+- Apply secondary filtering based on fundamentals
+- Feed discoveries into detailed analysis pipeline
+- Track discovery source for performance evaluation
+
 ## Trading Frequency Optimization
 
 For optimal short-term results in the Solana ecosystem, KinKong implements a 4x daily trading schedule rather than single daily trades. Here's the detailed analysis behind this decision:

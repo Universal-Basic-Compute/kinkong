@@ -52,7 +52,8 @@ def send_signal_notification(signal_data: Dict[str, Any]) -> bool:
                 "targetPrice": signal_data.get('targetPrice', 0),
                 "stopLoss": signal_data.get('stopLoss', 0),
                 "reasoning": signal_data.get('reasoning', '')[:100] + '...' if signal_data.get('reasoning') and len(signal_data.get('reasoning')) > 100 else signal_data.get('reasoning', ''),
-                "signalId": signal_data.get('id', '')
+                "signalId": signal_data.get('id', ''),
+                "discoveryStrategy": signal_data.get('discoveryStrategy', '')  # Add discovery strategy
             }
         }
         

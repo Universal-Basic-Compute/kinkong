@@ -624,6 +624,12 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None, addit
 
         expected_return = abs((target_price - entry_price) / entry_price * 100)
 
+        # Check if token has discovery strategy metadata
+        discovery_strategy = ''
+        if token_info.get('metadata') and 'discoveryStrategy' in token_info['metadata']:
+            discovery_strategy = token_info['metadata']['discoveryStrategy']
+            print(f"Found discovery strategy in token metadata: {discovery_strategy}")
+        
         # Create signal record with just the reasoning text
         signal_data = {
             'token': token_info['token'],
@@ -636,7 +642,8 @@ def create_airtable_signal(analysis, timeframe, token_info, analyses=None, addit
             'reason': reason_text,  # Just the raw reasoning text
             'createdAt': current_time,
             'expiryDate': expiry_date.isoformat().replace('+00:00', 'Z'),
-            'expectedReturn': round(expected_return, 2)
+            'expectedReturn': round(expected_return, 2),
+            'discoveryStrategy': discovery_strategy  # Add discovery strategy if available
         }
 
         # Add any additional fields

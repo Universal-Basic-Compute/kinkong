@@ -2,13 +2,16 @@
 """
 Find Trending Tokens Script
 
-This script fetches trending tokens from Birdeye API and adds them to the system
-by calling engine\tokens.py for each token.
+This script fetches tokens from Birdeye API using various discovery strategies
+and adds them to the system by calling engine\tokens.py for each token.
 
 Usage:
-    python engine\find_tokens.py [limit]
+    python engine\find_tokens.py [strategy] [limit]
     
-    limit: Optional. Number of trending tokens to process (default: 10, max: 20)
+    strategy: Optional. Discovery strategy to use (default: trending)
+              Options: trending, volume_momentum, recent_listings, price_momentum,
+                       liquidity_growth, high_activity
+    limit: Optional. Number of tokens to process (default: 10, max: 50)
 """
 
 import os
@@ -19,9 +22,11 @@ import requests
 import subprocess
 import time
 import traceback
+import argparse
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 from dotenv import load_dotenv
+from enum import Enum
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent.absolute()
@@ -45,11 +50,34 @@ def setup_logging():
 # Initialize logger
 logger = setup_logging()
 
-class TrendingTokenFinder:
-    """Finds trending tokens from Birdeye API and adds them to the system"""
+class DiscoveryStrategy(Enum):
+    """Enum for token discovery strategies"""
+    TRENDING = "trending"
+    VOLUME_MOMENTUM = "volume_momentum"
+    RECENT_LISTINGS = "recent_listings"
+    PRICE_MOMENTUM = "price_momentum"
+    LIQUIDITY_GROWTH = "liquidity_growth"
+    HIGH_ACTIVITY = "high_activity"
     
-    def __init__(self):
-        """Initialize the TrendingTokenFinder"""
+    @classmethod
+    def from_string(cls, strategy_name: str) -> 'DiscoveryStrategy':
+        """Convert string to DiscoveryStrategy enum"""
+        try:
+            return cls(strategy_name.lower())
+        except ValueError:
+            logger.warning(f"Invalid strategy: {strategy_name}. Using default (trending).")
+            return cls.TRENDING
+
+class TokenFinder:
+    """Finds tokens from Birdeye API using various strategies and adds them to the system"""
+    
+    def __init__(self, strategy: DiscoveryStrategy = DiscoveryStrategy.TRENDING):
+        """
+        Initialize the TokenFinder
+        
+        Args:
+            strategy: The discovery strategy to use
+        """
         # Load environment variables
         load_dotenv()
         
@@ -58,38 +86,111 @@ class TrendingTokenFinder:
         if not self.birdeye_api_key:
             raise ValueError("BIRDEYE_API_KEY not found in environment variables")
         
-        logger.info("TrendingTokenFinder initialized successfully")
+        self.strategy = strategy
+        logger.info(f"TokenFinder initialized with strategy: {strategy.value}")
     
-    def get_trending_tokens(self, limit: int = 10) -> List[Dict[str, Any]]:
+    def get_strategy_params(self) -> Tuple[str, Dict[str, Any]]:
         """
-        Get trending tokens from Birdeye API
+        Get API endpoint and parameters for the current strategy
+        
+        Returns:
+            Tuple containing (endpoint_url, request_params)
+        """
+        # Base API v3 endpoint for token listing
+        base_url = "https://public-api.birdeye.so/defi/v3/token/list"
+        
+        # Strategy-specific parameters
+        if self.strategy == DiscoveryStrategy.TRENDING:
+            # Legacy trending endpoint
+            return "https://public-api.birdeye.so/defi/token_trending", {
+                "sort_by": "rank",
+                "sort_type": "asc",
+                "offset": 0
+            }
+        
+        elif self.strategy == DiscoveryStrategy.VOLUME_MOMENTUM:
+            return base_url, {
+                "sort_by": "volume_24h_change_percent",
+                "sort_type": "desc",
+                "min_liquidity": 100000,
+                "min_volume_24h_usd": 50000,
+                "min_holder": 500
+            }
+            
+        elif self.strategy == DiscoveryStrategy.RECENT_LISTINGS:
+            return base_url, {
+                "sort_by": "recent_listing_time",
+                "sort_type": "desc",
+                "min_liquidity": 200000,
+                "min_trade_24h_count": 500,
+                "min_holder": 300
+            }
+            
+        elif self.strategy == DiscoveryStrategy.PRICE_MOMENTUM:
+            return base_url, {
+                "sort_by": "price_change_24h_percent",
+                "sort_type": "desc",
+                "min_volume_24h_usd": 100000,
+                "min_volume_24h_change_percent": 20,
+                "min_liquidity": 300000,
+                "min_trade_24h_count": 700
+            }
+            
+        elif self.strategy == DiscoveryStrategy.LIQUIDITY_GROWTH:
+            return base_url, {
+                "sort_by": "liquidity",
+                "sort_type": "desc",
+                "min_market_cap": 1000000,
+                "max_market_cap": 100000000,
+                "min_holder": 1000,
+                "min_volume_24h_usd": 200000
+            }
+            
+        elif self.strategy == DiscoveryStrategy.HIGH_ACTIVITY:
+            return base_url, {
+                "sort_by": "trade_24h_count",
+                "sort_type": "desc",
+                "min_liquidity": 150000,
+                "min_volume_24h_usd": 75000,
+                "min_holder": 400
+            }
+        
+        # Default to trending if strategy not recognized
+        return "https://public-api.birdeye.so/defi/token_trending", {
+            "sort_by": "rank",
+            "sort_type": "asc",
+            "offset": 0
+        }
+
+    def get_tokens(self, limit: int = 10) -> List[Dict[str, Any]]:
+        """
+        Get tokens from Birdeye API using the current strategy
         
         Args:
-            limit: Number of tokens to retrieve (max 20)
+            limit: Number of tokens to retrieve (max 50)
             
         Returns:
-            List of trending token data
+            List of token data
         """
         try:
             # Ensure limit is within valid range
             if limit < 1:
                 limit = 1
-            elif limit > 20:
-                limit = 20
+            elif limit > 50:
+                limit = 50
                 
-            logger.info(f"Fetching top {limit} trending tokens from Birdeye")
+            logger.info(f"Fetching top {limit} tokens using strategy: {self.strategy.value}")
             
-            # Prepare request
-            url = "https://public-api.birdeye.so/defi/token_trending"
+            # Get endpoint and parameters for the current strategy
+            url, params = self.get_strategy_params()
+            
+            # Add limit to parameters
+            params["limit"] = limit
+            
+            # Prepare request headers
             headers = {
                 "x-api-key": self.birdeye_api_key,
                 "accept": "application/json"
-            }
-            params = {
-                "sort_by": "rank",
-                "sort_type": "asc",
-                "offset": 0,
-                "limit": limit
             }
             
             # Log request details for debugging
@@ -118,36 +219,57 @@ class TrendingTokenFinder:
                 logger.error(f"Birdeye API error: {data.get('message', 'Unknown error')}")
                 return []
             
-            # Check if data field exists
-            if 'data' not in data:
-                logger.error("Response missing 'data' field")
-                logger.info(f"Full response: {json.dumps(data)}")
-                return []
+            # Handle different response structures based on API version
+            if url.endswith('token_trending'):  # Legacy trending endpoint
+                # Check if data field exists
+                if 'data' not in data:
+                    logger.error("Response missing 'data' field")
+                    logger.info(f"Full response: {json.dumps(data)}")
+                    return []
+                    
+                # Check if tokens field exists
+                if 'tokens' not in data.get('data', {}):
+                    logger.error("Response missing 'data.tokens' field")
+                    logger.info(f"Data field content: {json.dumps(data.get('data', {}))}")
+                    return []
                 
-            # Check if tokens field exists (this is the actual field name in the response)
-            if 'tokens' not in data.get('data', {}):
-                logger.error("Response missing 'data.tokens' field")
-                logger.info(f"Data field content: {json.dumps(data.get('data', {}))}")
-                return []
-            
-            tokens = data.get('data', {}).get('tokens', [])
+                tokens = data.get('data', {}).get('tokens', [])
+            else:  # V3 API endpoints
+                # Check if data field exists
+                if 'data' not in data:
+                    logger.error("Response missing 'data' field")
+                    logger.info(f"Full response: {json.dumps(data)}")
+                    return []
+                
+                tokens = data.get('data', [])
             
             if not tokens:
-                logger.warning("No trending tokens found in response")
+                logger.warning(f"No tokens found for strategy: {self.strategy.value}")
                 return []
             
-            logger.info(f"Found {len(tokens)} trending tokens")
+            logger.info(f"Found {len(tokens)} tokens")
             
             # Convert tokens to the format expected by process_token
             formatted_tokens = []
             for token in tokens:
-                formatted_token = {
-                    'symbol': token.get('symbol'),
-                    'name': token.get('name'),
-                    'address': token.get('address'),
-                    'chain': 'solana',  # All tokens from this endpoint are Solana tokens
-                    'verified': True    # Assume verified since they're trending
-                }
+                # Handle different response structures
+                if 'address' in token:  # V3 API format
+                    formatted_token = {
+                        'symbol': token.get('symbol'),
+                        'name': token.get('name'),
+                        'address': token.get('address'),
+                        'chain': 'solana',
+                        'verified': True
+                    }
+                else:  # Legacy trending format
+                    formatted_token = {
+                        'symbol': token.get('symbol'),
+                        'name': token.get('name'),
+                        'address': token.get('address'),
+                        'chain': 'solana',
+                        'verified': True
+                    }
+                
                 formatted_tokens.append(formatted_token)
             
             # Log first few tokens for debugging
@@ -223,7 +345,7 @@ class TrendingTokenFinder:
     
     def find_and_process_tokens(self, limit: int = 10) -> Dict[str, int]:
         """
-        Find trending tokens and process them
+        Find tokens using the current strategy and process them
         
         Args:
             limit: Number of tokens to process
@@ -234,19 +356,20 @@ class TrendingTokenFinder:
         results = {
             'success': 0,
             'failure': 0,
-            'total': 0
+            'total': 0,
+            'strategy': self.strategy.value
         }
         
         try:
-            # Get trending tokens
-            tokens = self.get_trending_tokens(limit)
+            # Get tokens using the current strategy
+            tokens = self.get_tokens(limit)
             results['total'] = len(tokens)
             
             if not tokens:
-                logger.warning("No tokens to process")
+                logger.warning(f"No tokens found for strategy: {self.strategy.value}")
                 return results
             
-            logger.info(f"Processing {len(tokens)} trending tokens")
+            logger.info(f"Processing {len(tokens)} tokens using strategy: {self.strategy.value}")
             
             # Process each token
             for i, token in enumerate(tokens, 1):
@@ -277,22 +400,48 @@ class TrendingTokenFinder:
 def main():
     """Main function to run the script"""
     try:
-        # Parse command line arguments
-        limit = 10  # Default limit
-        if len(sys.argv) > 1:
-            try:
-                limit = int(sys.argv[1])
-                logger.info(f"Using limit from command line: {limit}")
-            except ValueError:
-                logger.warning(f"Invalid limit: {sys.argv[1]}, using default: {limit}")
+        # Set up argument parser
+        parser = argparse.ArgumentParser(description='Find and process tokens using various discovery strategies')
+        parser.add_argument('strategy', nargs='?', default='trending',
+                            help='Discovery strategy to use (default: trending)')
+        parser.add_argument('limit', nargs='?', type=int, default=10,
+                            help='Number of tokens to process (default: 10, max: 50)')
+        parser.add_argument('--list-strategies', action='store_true',
+                            help='List available discovery strategies and exit')
         
-        # Initialize finder
-        finder = TrendingTokenFinder()
+        # Parse arguments
+        args = parser.parse_args()
+        
+        # If --list-strategies flag is provided, list available strategies and exit
+        if args.list_strategies:
+            logger.info("Available discovery strategies:")
+            for strategy in DiscoveryStrategy:
+                logger.info(f"- {strategy.value}: {get_strategy_description(strategy)}")
+            sys.exit(0)
+        
+        # Convert strategy string to enum
+        strategy = DiscoveryStrategy.from_string(args.strategy)
+        
+        # Validate limit
+        limit = args.limit
+        if limit < 1:
+            limit = 1
+            logger.warning(f"Invalid limit: {args.limit}, using minimum: {limit}")
+        elif limit > 50:
+            limit = 50
+            logger.warning(f"Limit too high: {args.limit}, using maximum: {limit}")
+        
+        logger.info(f"Using strategy: {strategy.value}")
+        logger.info(f"Using limit: {limit}")
+        
+        # Initialize finder with the specified strategy
+        finder = TokenFinder(strategy)
         
         # Find and process tokens
         results = finder.find_and_process_tokens(limit)
         
         logger.info(f"Script completed successfully")
+        logger.info(f"Strategy: {results['strategy']}")
         logger.info(f"Processed {results['total']} tokens:")
         logger.info(f"- {results['success']} successful")
         logger.info(f"- {results['failure']} failed")
@@ -303,6 +452,24 @@ def main():
     except Exception as e:
         logger.error(f"Script failed: {e}")
         sys.exit(1)
+
+def get_strategy_description(strategy: DiscoveryStrategy) -> str:
+    """Get a description of the given strategy"""
+    descriptions = {
+        DiscoveryStrategy.TRENDING: 
+            "Find trending tokens based on Birdeye's ranking algorithm",
+        DiscoveryStrategy.VOLUME_MOMENTUM: 
+            "Identify tokens with significant trading activity growth (24h volume change)",
+        DiscoveryStrategy.RECENT_LISTINGS: 
+            "Discover newly listed tokens that are gaining significant market attention",
+        DiscoveryStrategy.PRICE_MOMENTUM: 
+            "Find tokens with strong price performance backed by increasing trading volume",
+        DiscoveryStrategy.LIQUIDITY_GROWTH: 
+            "Detect tokens that are rapidly gaining liquidity (often precedes price movements)",
+        DiscoveryStrategy.HIGH_ACTIVITY: 
+            "Discover tokens with unusually high trading activity relative to market cap"
+    }
+    return descriptions.get(strategy, "Unknown strategy")
 
 if __name__ == "__main__":
     main()
