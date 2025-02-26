@@ -54,7 +54,7 @@ export default function CopilotPage() {
       name: "Free Tier",
       description: "Get started with basic access",
       features: [
-        "20 messages per 8-hour block",
+        "10 messages per day",
         "Basic technical analysis",
         "Standard response time",
         "Public signals access"

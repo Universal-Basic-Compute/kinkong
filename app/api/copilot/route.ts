@@ -11,31 +11,16 @@ interface CopilotRequest {
   screenshot?: string; // Base64 encoded image
 }
 
-// Helper function to get hours until next block with proper formatting
-function getHoursUntilNext(): string {
-  const now = new Date();
-  const currentBlock = Math.floor(now.getUTCHours() / 8);
-  const nextBlockStart = new Date(now);
-  nextBlockStart.setUTCHours((currentBlock + 1) * 8, 0, 0, 0);
-  
-  const hoursRemaining = Math.ceil((nextBlockStart.getTime() - now.getTime()) / (1000 * 60 * 60));
-  
-  // Handle special cases
-  if (hoursRemaining <= 0) return "1 hour"; // Prevent 0 hours
-  if (hoursRemaining === 1) return "1 hour";
-  return `${hoursRemaining} hours`;
-}
-
 const RATE_LIMIT_MESSAGES = [
-  `Time for a quick break! 🎯 Hit my message limit. Want more trading insights? [Premium awaits](https://swarmtrade.ai/copilot)! 🚀\n\nKinKong will be back in ${getHoursUntilNext()}! 🕒`,
+  `Time for a quick break! 🎯 Hit my message limit. Want more trading insights? [Premium awaits](https://swarmtrade.ai/copilot)! 🚀\n\nKinKong will be back tomorrow! 🕒`,
   
-  `Whew, what a chat! 💬 Need to recharge for a bit. Get more trading insights with [premium](https://swarmtrade.ai/copilot) ✨\n\nKinKong will be back in ${getHoursUntilNext()}! 🕒`,
+  `Whew, what a chat! 💬 Need to recharge for a bit. Get more trading insights with [premium](https://swarmtrade.ai/copilot) ✨\n\nKinKong will be back tomorrow! 🕒`,
   
-  `Hold that thought! 🤔 Message limit reached. Want more trading chats? Join [premium](https://swarmtrade.ai/copilot) 💪\n\nKinKong will be back in ${getHoursUntilNext()}! 🕒`,
+  `Hold that thought! 🤔 Daily message limit reached. Want more trading chats? Join [premium](https://swarmtrade.ai/copilot) 💪\n\nKinKong will be back tomorrow! 🕒`,
   
-  `Taking a breather! 😅 Max messages hit. Want more trading time? [Upgrade here](https://swarmtrade.ai/copilot) 🎓\n\nKinKong will be back in ${getHoursUntilNext()}! 🕒`,
+  `Taking a breather! 😅 Max messages hit. Want more trading time? [Upgrade here](https://swarmtrade.ai/copilot) 🎓\n\nKinKong will be back tomorrow! 🕒`,
   
-  `Energy check! ⚡ Need to rest my circuits. Want more trading convos? [Premium's calling](https://swarmtrade.ai/copilot) 🌟\n\nKinKong will be back in ${getHoursUntilNext()}! 🕒`
+  `Energy check! ⚡ Need to rest my circuits. Want more trading convos? [Premium's calling](https://swarmtrade.ai/copilot) 🌟\n\nKinKong will be back tomorrow! 🕒`
 ];
 
 // Initialize global rate limiter
@@ -58,33 +43,53 @@ async function checkMessageLimit(code: string): Promise<boolean> {
     }).firstPage();
 
     // If has active subscription, allow 100 messages per block
-    const messageLimit = subscriptions.length > 0 ? 100 : 20;
+    // If free tier, allow 10 messages per day
+    const isPremium = subscriptions.length > 0;
+    const messageLimit = isPremium ? 100 : 10;
 
-    // Calculate current 8-hour block
+    // For premium users, check 8-hour block
+    // For free users, check daily limit
     const now = new Date();
-    const blockNumber = Math.floor(now.getUTCHours() / 8);
-    const blockStart = new Date(now);
-    blockStart.setUTCHours(blockNumber * 8, 0, 0, 0); // Start of current 8-hour block
-    const blockEnd = new Date(blockStart);
-    blockEnd.setUTCHours(blockStart.getUTCHours() + 8); // End of current 8-hour block
+    let periodStart: Date;
+    let periodEnd: Date;
+    
+    if (isPremium) {
+      // Calculate current 8-hour block for premium users
+      const blockNumber = Math.floor(now.getUTCHours() / 8);
+      periodStart = new Date(now);
+      periodStart.setUTCHours(blockNumber * 8, 0, 0, 0); // Start of current 8-hour block
+      periodEnd = new Date(periodStart);
+      periodEnd.setUTCHours(periodStart.getUTCHours() + 8); // End of current 8-hour block
+    } else {
+      // Calculate current day for free users
+      periodStart = new Date(now);
+      periodStart.setUTCHours(0, 0, 0, 0); // Start of current day
+      periodEnd = new Date(periodStart);
+      periodEnd.setUTCHours(24, 0, 0, 0); // End of current day
+    }
 
     const messagesTable = getTable('MESSAGES');
     
-    // Query messages from this code in current 8-hour block
+    // Query messages from this code in current period
     const records = await messagesTable.select({
       filterByFormula: `AND(
         {code}='${code}',
-        IS_AFTER({createdAt}, '${blockStart.toISOString()}'),
-        IS_BEFORE({createdAt}, '${blockEnd.toISOString()}')
+        IS_AFTER({createdAt}, '${periodStart.toISOString()}'),
+        IS_BEFORE({createdAt}, '${periodEnd.toISOString()}')
       )`
     }).all();
 
-    console.log(`Found ${records.length} messages for code ${code} in current block`);
-    console.log(`Current block: ${blockNumber} (${blockStart.toISOString()} - ${blockEnd.toISOString()})`);
-    console.log(`Code has active subscription: ${subscriptions.length > 0}`);
+    console.log(`Found ${records.length} messages for code ${code} in current period`);
+    console.log(`Period: ${periodStart.toISOString()} - ${periodEnd.toISOString()}`);
+    console.log(`Code has active subscription: ${isPremium}`);
     console.log(`Message limit: ${messageLimit}`);
-    console.log(`Messages used in current block: ${records.length}`);
-    console.log(`Time until next block: ${new Date(blockEnd).getTime() - now.getTime()}ms`);
+    console.log(`Messages used in current period: ${records.length}`);
+    
+    if (isPremium) {
+      console.log(`Time until next block: ${new Date(periodEnd).getTime() - now.getTime()}ms`);
+    } else {
+      console.log(`Time until next day: ${new Date(periodEnd).getTime() - now.getTime()}ms`);
+    }
 
     return records.length < messageLimit; // Return true if under limit
   } catch (error) {
