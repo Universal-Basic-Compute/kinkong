@@ -16,7 +16,7 @@ export default function CopilotStartPage() {
         <div>
           Download the KinKong Copilot extension files{' '}
           <a 
-            href="https://github.com/Universal-Basic-Compute/kinkong-copilot/archive/refs/heads/main.zip"
+            href="https://github.com/Universal-Basic-Compute/kinkong-copilot/blob/main/kinkong-copilot.zip"
             target="_blank"
             rel="noopener noreferrer"
             className="text-gold hover:text-gold/80 underline"
@@ -137,7 +137,7 @@ export default function CopilotStartPage() {
         {/* Download Button */}
         <div className="text-center">
           <a 
-            href="https://github.com/Universal-Basic-Compute/kinkong-copilot/archive/refs/heads/main.zip"
+            href="https://github.com/Universal-Basic-Compute/kinkong-copilot/blob/main/kinkong-copilot.zip"
             className="inline-block px-8 py-4 bg-gold hover:bg-gold/80 text-black font-bold rounded-lg transition-colors duration-200"
             target="_blank"
             rel="noopener noreferrer"
@@ -254,7 +254,7 @@ export default function CopilotStartPage() {
         {/* Download Button */}
         <div className="text-center">
           <a 
-            href="https://github.com/Universal-Basic-Compute/kinkong-copilot/archive/refs/heads/main.zip"
+            href="https://github.com/Universal-Basic-Compute/kinkong-copilot/blob/main/kinkong-copilot.zip"
             className="inline-block px-8 py-4 bg-gold hover:bg-gold/80 text-black font-bold rounded-lg transition-colors duration-200"
             target="_blank"
             rel="noopener noreferrer"
