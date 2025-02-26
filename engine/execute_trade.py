@@ -410,14 +410,16 @@ class JupiterTradeExecutor:
                                                 new_balance = float(check_data.get('data', {}).get('balance', 0))
                                             
                                             self.logger.info(f"New balance: {new_balance}")
-                                        
-                                            if (is_buy and new_balance > initial_balance) or (not is_buy and new_balance > initial_balance):
-                                                self.logger.info("✅ Transaction confirmed!")
+                                            
+                                            self.logger.info(f"Checking if balance changed: initial={initial_balance}, new={new_balance}")
+                                            if new_balance != initial_balance:
+                                                self.logger.info(f"✅ Balance changed! From {initial_balance} to {new_balance}")
                                                 success = True
                                                 final_balance = new_balance
                                                 break
-                                            
-                                            self.logger.info("Balance not yet updated, waiting 8 seconds...")
+                                            else:
+                                                self.logger.info(f"⏳ No balance change detected yet ({initial_balance} → {new_balance})")
+                                                self.logger.info("Balance not yet updated, waiting 8 seconds...")
 
                                 if success:
                                     return {
