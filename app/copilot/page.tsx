@@ -278,13 +278,22 @@ export default function CopilotPage() {
       <div className="max-w-6xl mx-auto space-y-16">
         {/* Hero Section */}
         <div className="text-center space-y-6">
-          <h1 className="text-4xl md:text-5xl font-bold">
-            KinKong <span className="white-glow-text">Copilot</span>
-          </h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Your AI-powered trading assistant with direct access to KinKong's intelligence
-            and the UBC ecosystem's collective wisdom.
-          </p>
+          <div className="flex flex-col md:flex-row items-center justify-center gap-6">
+            <img 
+              src="/copilot.png" 
+              alt="KinKong Copilot" 
+              className="w-32 h-32 object-contain"
+            />
+            <div>
+              <h1 className="text-4xl md:text-5xl font-bold">
+                KinKong <span className="white-glow-text">Copilot</span>
+              </h1>
+              <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+                Your AI-powered trading assistant with direct access to KinKong's intelligence
+                and the UBC ecosystem's collective wisdom.
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Features Grid */}
