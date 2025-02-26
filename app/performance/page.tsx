@@ -471,61 +471,7 @@ export default function Performance() {
               </div>
               
               {/* Confidence Level Performance */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
-                  <h3 className="text-xl font-semibold text-gold mb-4 flex items-center">
-                    Confidence Level Performance
-                    <InfoTooltip text="Analysis of signal performance based on the confidence level assigned to each signal." />
-                  </h3>
-                  <div className="space-y-4">
-                    <div className="relative pt-1">
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full bg-green-900/50 text-green-400 flex items-center">
-                            HIGH
-                            <InfoTooltip text="Signals with high confidence typically have strong technical and fundamental indicators aligned." />
-                          </span>
-                        </div>
-                        <div className="text-right">
-                          <span className={`text-xs font-semibold inline-block ${metrics.metrics.high_confidence_return >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                            {metrics.metrics.high_confidence_return?.toFixed(2)}%
-                          </span>
-                        </div>
-                      </div>
-                      <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-black/50">
-                        <div style={{ width: `${metrics.metrics.high_confidence_percentage}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-green-500"></div>
-                      </div>
-                      <div className="flex justify-between text-xs text-gray-400">
-                        <div>{metrics.metrics.high_confidence} signals ({metrics.metrics.high_confidence_percentage?.toFixed(1)}%)</div>
-                        <div>Success Rate: {metrics.metrics.high_confidence_success_rate?.toFixed(1)}%</div>
-                      </div>
-                    </div>
-                    
-                    <div className="relative pt-1">
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full bg-yellow-900/50 text-yellow-400 flex items-center">
-                            MEDIUM
-                            <InfoTooltip text="Signals with medium confidence have some strong indicators but may have conflicting signals or less certainty." />
-                          </span>
-                        </div>
-                        <div className="text-right">
-                          <span className={`text-xs font-semibold inline-block ${metrics.metrics.medium_confidence_return >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                            {metrics.metrics.medium_confidence_return?.toFixed(2)}%
-                          </span>
-                        </div>
-                      </div>
-                      <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-black/50">
-                        <div style={{ width: `${metrics.metrics.medium_confidence_percentage}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-yellow-500"></div>
-                      </div>
-                      <div className="flex justify-between text-xs text-gray-400">
-                        <div>{metrics.metrics.medium_confidence} signals ({metrics.metrics.medium_confidence_percentage?.toFixed(1)}%)</div>
-                        <div>Success Rate: {metrics.metrics.medium_confidence_success_rate?.toFixed(1)}%</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
+              <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mb-6">
                 {/* Timeframe Performance */}
                 <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
                   <h3 className="text-xl font-semibold text-gold mb-4 flex items-center">
