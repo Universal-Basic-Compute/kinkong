@@ -11,7 +11,7 @@ import requests
 from airtable import Airtable
 from dotenv import load_dotenv
 import asyncio
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 from datetime import timedelta
 import logging
 
@@ -243,6 +243,73 @@ class TokenSnapshotTaker:
             self.logger.error(f"Error calculating metrics for {token['fields'].get('token')}: {e}")
             return {}
 
+    async def take_snapshot_for_token(self, token_symbol: str) -> Optional[Dict]:
+        """Take snapshot for a specific token by symbol
+        
+        Args:
+            token_symbol: The token symbol to take snapshot for
+            
+        Returns:
+            The created snapshot record or None if failed
+        """
+        try:
+            logger.info(f"\n📸 Taking snapshot for token: {token_symbol}")
+            
+            # Get token from TOKENS table
+            token_records = self.tokens_table.get_all(
+                formula=f"{{token}}='{token_symbol}'"
+            )
+            
+            if not token_records:
+                logger.error(f"Token {token_symbol} not found in database")
+                return None
+                
+            token = token_records[0]
+            
+            # Current timestamp
+            created_at = datetime.now(timezone.utc).isoformat()
+            
+            token_name = token['fields'].get('token')
+            mint = token['fields'].get('mint')
+            
+            if not token_name or not mint:
+                logger.error(f"Token {token_symbol} has missing data (name or mint)")
+                return None
+                
+            logger.info(f"\nProcessing {token_name}...")
+            
+            # Get current metrics
+            metrics = self.get_token_price(mint)
+            
+            # Create snapshot
+            snapshot = {
+                'token': token_name,
+                'price': metrics['price'],
+                'volume24h': metrics['volume24h'],
+                'liquidity': metrics['liquidity'],
+                'priceChange24h': metrics['priceChange24h'],
+                'createdAt': created_at,
+                'isActive': True
+            }
+            
+            # Calculate additional metrics using snapshot data
+            calculated_metrics = await self.calculate_metrics(token, snapshot)
+            
+            # Update snapshot with calculated metrics
+            snapshot.update(calculated_metrics)
+            
+            # Save snapshot
+            record = self.snapshots_table.insert(snapshot)
+            logger.info(f"✅ Snapshot saved for {token_name}")
+            
+            # Return the created snapshot with record ID
+            snapshot['id'] = record['id']
+            return snapshot
+            
+        except Exception as e:
+            logger.error(f"❌ Error taking snapshot for {token_symbol}: {e}")
+            return None
+
     async def take_snapshot(self):
         """Take snapshots of all active tokens"""
         try:
@@ -312,13 +379,44 @@ async def main():
         if missing:
             raise ValueError(f"Missing environment variables: {', '.join(missing)}")
 
-        # Take snapshots
+        # Initialize snapshot taker
         snapshot_taker = TokenSnapshotTaker()
-        await snapshot_taker.take_snapshot()
+        
+        # Check if a specific token was provided as argument
+        if len(sys.argv) > 1:
+            token_symbol = sys.argv[1].upper()
+            logger.info(f"Taking snapshot for specific token: {token_symbol}")
+            
+            # Take snapshot for the specified token
+            snapshot = await snapshot_taker.take_snapshot_for_token(token_symbol)
+            
+            if snapshot:
+                logger.info(f"✅ Successfully created snapshot for {token_symbol}")
+                # Print snapshot details
+                logger.info(f"Snapshot details:")
+                logger.info(f"Price: ${snapshot['price']:.6f}")
+                logger.info(f"24h Volume: ${snapshot['volume24h']:,.2f}")
+                logger.info(f"Liquidity: ${snapshot['liquidity']:,.2f}")
+                logger.info(f"24h Price Change: {snapshot['priceChange24h']:+.2f}%")
+                if 'volume7d' in snapshot:
+                    logger.info(f"7d Avg Volume: ${snapshot['volume7d']:,.2f}")
+                if 'volumeGrowth' in snapshot:
+                    logger.info(f"Volume Growth: {snapshot['volumeGrowth']:+.2f}%")
+                
+                # Return success
+                sys.exit(0)
+            else:
+                logger.error(f"❌ Failed to create snapshot for {token_symbol}")
+                sys.exit(1)
+        else:
+            # Take snapshots for all active tokens
+            await snapshot_taker.take_snapshot()
+            logger.info("\n✅ Token snapshots completed for all active tokens")
+            sys.exit(0)
 
     except Exception as e:
-        print(f"\n❌ Script failed: {str(e)}")
-        exit(1)
+        logger.error(f"\n❌ Script failed: {str(e)}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     try:
