@@ -2,7 +2,24 @@
 const nextConfig = {
   output: 'standalone',
   images: {
-    domains: ['localhost', 'vercel.app'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'localhost',
+      },
+      {
+        protocol: 'https',
+        hostname: 'vercel.app',
+      },
+      {
+        protocol: 'https',
+        hostname: 'raw.githubusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'dd.dexscreener.com',
+      }
+    ],
   },
   env: {
     NEXT_PUBLIC_HELIUS_RPC_URL: process.env.NEXT_PUBLIC_HELIUS_RPC_URL,

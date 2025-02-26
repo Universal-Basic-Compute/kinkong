@@ -7,14 +7,26 @@ import path from 'path';
 
 // Add this after the imports
 const perspectiveStyles = `
-  .perspective-500 {
-    perspective: 500px;
+  .card-3d {
+    transform-style: preserve-3d;
+    transition: all 0.5s ease;
+    perspective: 1000px;
+    position: relative;
+  }
+  
+  .card-3d:hover {
+    transform: rotateY(10deg) rotateX(5deg);
+    box-shadow: -10px 10px 20px rgba(218, 165, 32, 0.2);
+    z-index: 10;
+  }
+  
+  .card-3d-image {
+    transition: all 0.3s ease;
     transform-style: preserve-3d;
   }
   
-  .perspective-500:hover {
-    transform: rotateY(5deg) rotateX(5deg);
-    transition: transform 0.3s ease;
+  .card-3d:hover .card-3d-image {
+    transform: translateZ(20px) scale(1.05);
   }
 `;
 
@@ -642,81 +654,93 @@ export default function Performance() {
                   </button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20 transform transition-transform hover:scale-105 hover:rotate-1 hover:shadow-lg hover:shadow-gold/10 duration-300">
+                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20 card-3d">
                     <h4 className="text-lg font-semibold text-gold mb-2">Confidence Distribution</h4>
-                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10 shadow-md transform perspective-500">
-                      <Image 
-                        src="/performances/confidence_distribution.png" 
-                        alt="Confidence Distribution" 
-                        width={400}
-                        height={225}
-                        className="object-contain hover:scale-110 transition-transform duration-300"
-                      />
+                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10 shadow-md">
+                      <div className="card-3d-image">
+                        <Image 
+                          src="/performances/confidence_distribution.png" 
+                          alt="Confidence Distribution" 
+                          width={400}
+                          height={225}
+                          className="object-contain"
+                        />
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20 transform transition-transform hover:scale-105 hover:rotate-1 hover:shadow-lg hover:shadow-gold/10 duration-300">
+                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20 card-3d">
                     <h4 className="text-lg font-semibold text-gold mb-2">Timeframe Distribution</h4>
-                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10 shadow-md transform perspective-500">
-                      <Image 
-                        src="/performances/timeframe_distribution.png" 
-                        alt="Timeframe Distribution" 
-                        width={400}
-                        height={225}
-                        className="object-contain hover:scale-110 transition-transform duration-300"
-                      />
+                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10 shadow-md">
+                      <div className="card-3d-image">
+                        <Image 
+                          src="/performances/timeframe_distribution.png" 
+                          alt="Timeframe Distribution" 
+                          width={400}
+                          height={225}
+                          className="object-contain"
+                        />
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20 transform transition-transform hover:scale-105 hover:rotate-1 hover:shadow-lg hover:shadow-gold/10 duration-300">
+                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20 card-3d">
                     <h4 className="text-lg font-semibold text-gold mb-2">Return Distribution</h4>
-                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10 shadow-md transform perspective-500">
-                      <Image 
-                        src="/performances/return_distribution.png" 
-                        alt="Return Distribution" 
-                        width={400}
-                        height={225}
-                        className="object-contain hover:scale-110 transition-transform duration-300"
-                      />
+                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10 shadow-md">
+                      <div className="card-3d-image">
+                        <Image 
+                          src="/performances/return_distribution.png" 
+                          alt="Return Distribution" 
+                          width={400}
+                          height={225}
+                          className="object-contain"
+                        />
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20 transform transition-transform hover:scale-105 hover:rotate-1 hover:shadow-lg hover:shadow-gold/10 duration-300">
+                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20 card-3d">
                     <h4 className="text-lg font-semibold text-gold mb-2">Success by Timeframe</h4>
-                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10 shadow-md transform perspective-500">
-                      <Image 
-                        src="/performances/success_by_timeframe.png" 
-                        alt="Success by Timeframe" 
-                        width={400}
-                        height={225}
-                        className="object-contain hover:scale-110 transition-transform duration-300"
-                      />
+                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10 shadow-md">
+                      <div className="card-3d-image">
+                        <Image 
+                          src="/performances/success_by_timeframe.png" 
+                          alt="Success by Timeframe" 
+                          width={400}
+                          height={225}
+                          className="object-contain"
+                        />
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20 transform transition-transform hover:scale-105 hover:rotate-1 hover:shadow-lg hover:shadow-gold/10 duration-300">
+                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20 card-3d">
                     <h4 className="text-lg font-semibold text-gold mb-2">Risk-Return Metrics</h4>
-                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10 shadow-md transform perspective-500">
-                      <Image 
-                        src="/performances/risk_return_metrics.png" 
-                        alt="Risk-Return Metrics" 
-                        width={400}
-                        height={225}
-                        className="object-contain hover:scale-110 transition-transform duration-300"
-                      />
+                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10 shadow-md">
+                      <div className="card-3d-image">
+                        <Image 
+                          src="/performances/risk_return_metrics.png" 
+                          alt="Risk-Return Metrics" 
+                          width={400}
+                          height={225}
+                          className="object-contain"
+                        />
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20 transform transition-transform hover:scale-105 hover:rotate-1 hover:shadow-lg hover:shadow-gold/10 duration-300">
+                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20 card-3d">
                     <h4 className="text-lg font-semibold text-gold mb-2">Consistency Metrics</h4>
-                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10 shadow-md transform perspective-500">
-                      <Image 
-                        src="/performances/consistency_metrics.png" 
-                        alt="Consistency Metrics" 
-                        width={400}
-                        height={225}
-                        className="object-contain hover:scale-110 transition-transform duration-300"
-                      />
+                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10 shadow-md">
+                      <div className="card-3d-image">
+                        <Image 
+                          src="/performances/consistency_metrics.png" 
+                          alt="Consistency Metrics" 
+                          width={400}
+                          height={225}
+                          className="object-contain"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
