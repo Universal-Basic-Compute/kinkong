@@ -342,7 +342,6 @@ export default function Invest() {
                     <th className="px-4 py-3 text-left font-bold">Username</th>
                     <th className="px-4 py-3 text-right font-bold">Initial Investment</th>
                     <th className="px-4 py-3 text-right font-bold">Return</th>
-                    <th className="px-4 py-3 text-left font-bold">Date</th>
                     <th className="px-4 py-3 text-left font-bold">Transaction</th>
                   </tr>
                 </thead>
@@ -354,7 +353,7 @@ export default function Invest() {
                         {typeof investment.amount === 'number' 
                           ? (
                             <>
-                              <span className="text-white font-medium">{investment.amount.toLocaleString('en-US')}</span>
+                              <span className="text-white font-medium">{Math.floor(investment.amount).toLocaleString('en-US')}</span>{' '}
                               <span className="text-gray-400">$USDC</span>
                             </>
                           )
@@ -364,30 +363,24 @@ export default function Invest() {
                         {investment.return !== undefined
                           ? (
                             <>
-                              <span className="metallic-text-ubc font-medium">{(investment.ubcReturn || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })} $UBC</span> 
-                              <span className="text-gray-400 text-sm ml-1">($${investment.return.toLocaleString('en-US', { maximumFractionDigits: 2 })})</span>
+                              <span className="metallic-text-ubc font-medium">
+                                {Math.floor((investment.ubcReturn || 0)).toLocaleString('en-US')} $UBC
+                              </span> 
+                              <span className="text-gray-400 text-sm ml-1">
+                                (${Math.floor(investment.return).toLocaleString('en-US')})
+                              </span>
                             </>
                           )
                           : 'Calculating...'}
                       </td>
-                      <td className="px-4 py-4 text-gray-300">
-                        {investment.date 
-                          ? new Date(investment.date).toLocaleDateString('en-GB', {
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric'
-                            }).replace(/\//g, '/')
-                          : 'N/A'}
-                      </td>
                       <td className="px-4 py-4">
-                        <a 
-                          href={investment.solscanUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-gold hover:text-gold/80 font-medium"
-                        >
-                          View on Solscan
-                        </a>
+                        {investment.wallet ? (
+                          <span className="text-gold hover:text-gold/80 font-medium">
+                            {`${investment.wallet.substring(0, 4)}...${investment.wallet.substring(investment.wallet.length - 4)}`}
+                          </span>
+                        ) : (
+                          'Unknown'
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -399,12 +392,12 @@ export default function Invest() {
               <div className="mt-6 text-sm space-y-1">
                 <p>
                   <span className="text-gray-400">Portfolio Value:</span> 
-                  <span className="text-white ml-2 font-medium">{latestSnapshot.totalValue.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span> 
+                  <span className="text-white ml-2 font-medium">{Math.floor(latestSnapshot.totalValue).toLocaleString('en-US')}</span> 
                   <span className="text-gray-400">$USDC</span>
                 </p>
                 <p>
                   <span className="text-gray-400">Total Investment:</span> 
-                  <span className="text-white ml-2 font-medium">{totalInvestment.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span> 
+                  <span className="text-white ml-2 font-medium">{Math.floor(totalInvestment).toLocaleString('en-US')}</span> 
                   <span className="text-gray-400">$USDC</span>
                 </p>
                 <p className="text-gray-400">
