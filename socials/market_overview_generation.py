@@ -301,7 +301,8 @@ class MarketOverviewGenerator:
                     access_token_secret=access_token_secret
                 )
                 
-                # Post single long tweet
+                # Post single long tweet - no length limitation for X Premium+
+                logger.info("Posting to X with Premium+ (no length limitation)")
                 response = client.create_tweet(text=analysis)
                 
                 if response.data:
