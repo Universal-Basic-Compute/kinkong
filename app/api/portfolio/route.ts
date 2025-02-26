@@ -56,12 +56,17 @@ async function getTokenSymbol(mint: string, tokensMetadata: any): Promise<string
     }).firstPage();
 
     if (records && records.length > 0) {
-      return records[0].get('token') || 'Unknown';
+      const token = records[0].get('token');
+      if (token) {
+        console.log(`Found token symbol for ${mint} in TOKENS table: ${token}`);
+        return token;
+      }
     }
   } catch (e) {
     console.error(`Error fetching token symbol for mint ${mint}:`, e);
   }
 
+  console.log(`Could not find token symbol for mint ${mint}, using 'Unknown'`);
   return 'Unknown';
 }
 
@@ -168,30 +173,50 @@ export async function GET() {
 
     // Get latest snapshots from TOKEN_SNAPSHOTS
     const snapshotsTable = getTable('TOKEN_SNAPSHOTS');
-    const snapshotRecords = await snapshotsTable
-      .select({
-        sort: [{ field: 'createdAt', direction: 'desc' }],
-        filterByFormula: "IS_AFTER({createdAt}, DATEADD(NOW(), -12, 'hours'))"  // Changed from -1 to -12 hours
-      })
-      .all();
+    console.log('Fetching token snapshots...');
 
-    // Create price map from snapshots using mint addresses
+    // First, get all active tokens from the TOKENS table
+    const tokensTable = getTable('TOKENS');
+    const tokenRecords = await tokensTable.select({
+      filterByFormula: '{isActive}=1'
+    }).all();
+
+    const activeTokens = tokenRecords.map(record => ({
+      mint: record.get('mint') as string,
+      token: record.get('token') as string
+    }));
+
+    console.log(`Found ${activeTokens.length} active tokens`);
+
+    // Create a map of mint addresses to token symbols
+    const mintToTokenMap = activeTokens.reduce((acc, token) => {
+      acc[token.mint] = token.token;
+      return acc;
+    }, {} as Record<string, string>);
+
+    // For each active token, get the latest snapshot
     const priceMap: { [key: string]: number } = {};
-    for (const record of snapshotRecords) {
-      const token = record.get('token');
-      const mint = record.get('mint');
-      // Only store if we don't have this token yet (since records are sorted by date desc)
-      if (mint && !priceMap[mint]) {
-        priceMap[mint] = record.get('price') || 0;
+    for (const token of activeTokens) {
+      try {
+        const snapshots = await snapshotsTable.select({
+          filterByFormula: `{mint}='${token.mint}'`,
+          sort: [{ field: 'createdAt', direction: 'desc' }],
+          maxRecords: 1
+        }).all();
+        
+        if (snapshots.length > 0) {
+          const price = snapshots[0].get('price');
+          if (price) {
+            priceMap[token.mint] = price;
+            console.log(`Found price for ${token.token} (${token.mint}): $${price}`);
+          }
+        }
+      } catch (error) {
+        console.error(`Error fetching price for ${token.token}:`, error);
       }
     }
 
-    // Add debug logging for snapshot data
-    console.log('Snapshot data loaded:', {
-      recordsFound: snapshotRecords.length,
-      uniquePrices: Object.keys(priceMap).length,
-      timeWindow: '12 hours'
-    });
+    console.log(`Loaded prices for ${Object.keys(priceMap).length} tokens`);
 
     // Fetch tokens metadata
     const tokensMetadata = await getTokensMetadata();
@@ -221,6 +246,7 @@ export async function GET() {
       // Add debug logging
       console.log('Price calculation:', {
         mint: balance.mint,
+        token: balance.token || mintToTokenMap[balance.mint] || 'Unknown',
         uiAmount: balance.uiAmount,
         knownToken: !!knownToken,
         snapshotPrice: priceMap[balance.mint],
