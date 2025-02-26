@@ -65,7 +65,7 @@ export async function GET(request: Request) {
     console.log('Python script output:', stdout);
     return NextResponse.json({ 
       success: true, 
-      message: 'Signal performance metrics calculated successfully',
+      message: 'Signal performance metrics calculated and saved to Airtable successfully',
       output: stdout 
     });
   } catch (error) {

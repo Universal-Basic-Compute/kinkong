@@ -345,6 +345,31 @@ class SignalPerformanceAnalyzer:
         
         logger.info(f"Visualizations saved to {self.output_dir}")
 
+    def save_to_airtable(self, metrics):
+        """Save performance metrics to Airtable PERFORMANCES table"""
+        try:
+            logger.info("Saving performance metrics to Airtable...")
+            
+            # Initialize the PERFORMANCES table
+            performances_table = self.base.table('PERFORMANCES')
+            
+            # Create the record with just the essential fields
+            record = {
+                'type': 'signals',
+                'metrics': json.dumps(metrics),  # Store all metrics as a JSON string
+                'createdAt': datetime.now().isoformat()
+            }
+            
+            # Create the record in Airtable
+            result = performances_table.create(record)
+            
+            logger.info(f"✅ Performance metrics saved to Airtable with ID: {result['id']}")
+            return result
+            
+        except Exception as e:
+            logger.error(f"❌ Error saving performance metrics to Airtable: {e}")
+            return None
+            
     def generate_report(self, days_back=30):
         """Generate a comprehensive performance report"""
         # Fetch data
@@ -359,6 +384,9 @@ class SignalPerformanceAnalyzer:
         
         # Generate visualizations
         self.generate_visualizations()
+        
+        # Save metrics to Airtable
+        self.save_to_airtable(metrics)
         
         # Create report text
         report = f"""
@@ -433,6 +461,7 @@ def main():
         
         if result:
             logger.info(f"Analysis complete. Report saved to {result['report_path']}")
+            logger.info(f"Performance metrics saved to Airtable")
             
             # Print key metrics to console
             metrics = result['metrics']

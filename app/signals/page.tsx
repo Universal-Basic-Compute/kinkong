@@ -61,7 +61,7 @@ export default function Signals() {
             <p className="text-sm text-gray-400">
               Be part of KinKong's trading intelligence! Share your market insights and influence our trading decisions while earning extra profit share allocations. Together, we're smarter! 🚀
             </p>
-            <div className="mt-2">
+            <div className="mt-2 flex items-center gap-4">
               <a 
                 href="/signals/performance" 
                 className="text-sm text-gold hover:text-gold/80 transition-colors flex items-center gap-1"
@@ -71,6 +71,9 @@ export default function Signals() {
                   <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
                 </svg>
               </a>
+              <span className="text-xs px-2 py-1 bg-gold/20 text-gold rounded-full">
+                Updated daily
+              </span>
             </div>
           </div>
           <div>
