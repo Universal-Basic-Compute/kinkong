@@ -3,6 +3,10 @@ import json
 import time
 import logging
 import requests
+import base64
+import anthropic
+from PIL import Image
+import io
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from pyairtable import Api, Base, Table
@@ -44,6 +48,115 @@ def send_telegram_message(message):
             raise Exception(f"Telegram API error: {response.status_code}")
     except Exception as error:
         logger.error(f'❌ Failed to send Telegram message: {error}')
+
+def generate_and_encode_chart(signal_id):
+    """Generate a trade chart for a signal and return its base64 encoding"""
+    try:
+        # Import the generate_trade_chart function
+        from scripts.generate_trade_chart import generate_trade_chart
+        
+        # Set the output directory
+        output_dir = os.path.join('temp_charts')
+        os.makedirs(output_dir, exist_ok=True)
+        
+        # Generate the chart
+        chart_success = generate_trade_chart(signal_id, output_dir)
+        
+        if not chart_success:
+            logger.error(f"Failed to generate chart for signal {signal_id}")
+            return None
+        
+        # Find the generated chart file
+        chart_files = [f for f in os.listdir(output_dir) if signal_id in f]
+        if not chart_files:
+            logger.error(f"No chart file found for signal {signal_id}")
+            return None
+        
+        chart_path = os.path.join(output_dir, chart_files[0])
+        
+        # Read and encode the image
+        with open(chart_path, "rb") as image_file:
+            encoded_image = base64.b64encode(image_file.read()).decode('utf-8')
+        
+        return {
+            "path": chart_path,
+            "base64": encoded_image
+        }
+    
+    except Exception as e:
+        logger.error(f"Error generating and encoding chart: {e}")
+        return None
+
+def analyze_failed_trade_with_claude(signal_data, chart_data):
+    """Use Claude to analyze why a trade failed"""
+    try:
+        # Initialize Claude client
+        client = anthropic.Anthropic(api_key=os.environ.get('ANTHROPIC_API_KEY'))
+        
+        # Prepare the prompt
+        prompt = f"""
+        I'm analyzing a failed trading signal and need your expert analysis on what went wrong.
+
+        Here are the details of the trade:
+        - Token: {signal_data['token']}
+        - Type: {signal_data['type']}
+        - Timeframe: {signal_data['timeframe']}
+        - Entry Price: ${signal_data['entryPrice']:.4f}
+        - Target Price: ${signal_data['targetPrice']:.4f}
+        - Stop Loss: ${signal_data['stopLoss']:.4f}
+        - Exit Price: ${signal_data['exitPrice']:.4f}
+        - Actual Return: {signal_data['actualReturn']:.2f}%
+        - Created At: {signal_data['createdAt']}
+        - Confidence: {signal_data['confidence']}
+        
+        Original Reason for Signal:
+        {signal_data['reason']}
+        
+        I'm attaching a chart showing the price action during this trade. The chart shows the entry price (gold line), target price (green dashed line), stop loss (red dashed line), and exit point (orange dot).
+        
+        Please analyze what went wrong with this trade. Consider:
+        1. Market conditions and price action
+        2. Entry timing and price level
+        3. Target and stop loss placement
+        4. Any technical or fundamental factors visible in the chart
+        5. What could have been done differently
+        
+        Provide a concise but thorough analysis of why this trade failed and what lessons can be learned.
+        """
+        
+        # Create the message with the image
+        message = client.messages.create(
+            model="claude-3-opus-20240229",
+            max_tokens=1000,
+            temperature=0.2,
+            system="You are an expert trading analyst specializing in cryptocurrency markets. You provide clear, insightful analysis of failed trades to help traders improve their strategies.",
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": prompt
+                        },
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": "image/png",
+                                "data": chart_data["base64"]
+                            }
+                        }
+                    ]
+                }
+            ]
+        )
+        
+        # Return Claude's analysis
+        return message.content[0].text
+    
+    except Exception as e:
+        logger.error(f"Error analyzing trade with Claude: {e}")
+        return f"Error analyzing trade: {str(e)}"
 
 def get_historical_prices(token_mint, start_time, end_time):
     try:
@@ -178,6 +291,9 @@ def calculate_closed_signals():
 
         if not os.environ.get('KINKONG_AIRTABLE_API_KEY') or not os.environ.get('KINKONG_AIRTABLE_BASE_ID'):
             raise Exception("Missing Airtable configuration")
+            
+        if not os.environ.get('ANTHROPIC_API_KEY'):
+            raise Exception("ANTHROPIC_API_KEY not found in environment variables")
 
         calculated_signals = []
 
@@ -186,6 +302,7 @@ def calculate_closed_signals():
         base = Base(api, os.environ.get('KINKONG_AIRTABLE_BASE_ID'))
         signals_table = base.table('SIGNALS')
         tokens_table = base.table('TOKENS')
+        analysis_table = base.table('ANALYSIS')  # New table for analyses
 
         logger.info("\n📊 Checking Airtable for signals...")
 
@@ -257,14 +374,62 @@ def calculate_closed_signals():
 
                 # After successful update, add to calculated signals
                 calculated_signals.append({
+                    'id': signal_id,
                     'token': fields.get('token'),
                     'type': fields.get('type'),
-                    'actualReturn': results['actualReturn'],
+                    'timeframe': fields.get('timeframe'),
+                    'entryPrice': fields.get('entryPrice'),
+                    'targetPrice': fields.get('targetPrice'),
+                    'stopLoss': fields.get('stopLoss'),
                     'exitPrice': results['exitPrice'],
+                    'actualReturn': results['actualReturn'],
                     'success': results['success'],
                     'timeToExit': results['timeToExit'],
-                    'fees': results['fees']
+                    'fees': results['fees'],
+                    'createdAt': fields.get('createdAt'),
+                    'confidence': fields.get('confidence'),
+                    'reason': fields.get('reason')
                 })
+
+                # If the trade was unsuccessful, generate a chart and analyze it
+                if not results['success']:
+                    logger.info(f"🔍 Analyzing unsuccessful trade for signal {signal_id}...")
+                    
+                    # Generate and encode the chart
+                    chart_data = generate_and_encode_chart(signal_id)
+                    
+                    if chart_data:
+                        # Get analysis from Claude
+                        signal_data = calculated_signals[-1]  # Get the last added signal
+                        analysis = analyze_failed_trade_with_claude(signal_data, chart_data)
+                        
+                        # Save analysis to Airtable
+                        analysis_record = {
+                            'type': 'signal',
+                            'content': analysis,
+                            'metrics': json.dumps({
+                                'signal_id': signal_id,
+                                'token': signal_data['token'],
+                                'type': signal_data['type'],
+                                'timeframe': signal_data['timeframe'],
+                                'entryPrice': signal_data['entryPrice'],
+                                'targetPrice': signal_data['targetPrice'],
+                                'stopLoss': signal_data['stopLoss'],
+                                'exitPrice': signal_data['exitPrice'],
+                                'actualReturn': signal_data['actualReturn'],
+                                'success': signal_data['success']
+                            }),
+                            'createdAt': datetime.now().isoformat()
+                        }
+                        
+                        analysis_result = analysis_table.create(analysis_record)
+                        logger.info(f"✅ Analysis saved to Airtable with ID: {analysis_result['id']}")
+                        
+                        # Clean up the temporary chart file
+                        try:
+                            os.remove(chart_data["path"])
+                        except Exception as e:
+                            logger.warning(f"Could not remove temporary chart file: {e}")
 
             except Exception as error:
                 logger.error(f"❌ Error processing signal {signal.get('id')}: {error}")
