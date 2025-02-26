@@ -764,7 +764,7 @@ def main():
             # Generate market overview (optional)
             try:
                 logger.info("Generating market overview")
-                from socials.bullish_posts_overview import MarketOverviewGenerator
+                from socials.market_overview_generation import MarketOverviewGenerator
                 generator = MarketOverviewGenerator()
                 if generator.send_overview():
                     logger.info("Market overview posted successfully")
