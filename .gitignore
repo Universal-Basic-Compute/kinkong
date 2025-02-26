@@ -40,4 +40,11 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Python virtual environments
+venv/
+env/
+.venv/
+.env/
+ENV/
+
 .aider*
