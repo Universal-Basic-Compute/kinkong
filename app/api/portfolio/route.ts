@@ -95,9 +95,14 @@ async function getTokensMetadata() {
 
 async function getJupiterPrice(mint: string): Promise<number> {
   try {
+    console.log(`Fetching Jupiter price for ${mint}`);
     const response = await fetch(`https://price.jup.ag/v4/price?ids=${mint}`);
-    if (!response.ok) return 0;
+    if (!response.ok) {
+      console.log(`Jupiter API returned status ${response.status}`);
+      return 0;
+    }
     const data = await response.json();
+    console.log(`Jupiter price data for ${mint}:`, data);
     return data.data[mint]?.price || 0;
   } catch (e) {
     console.error('Jupiter price fetch failed:', e);
@@ -207,7 +212,9 @@ export async function GET() {
         // If no price in snapshots, try Jupiter as fallback
         if (price === 0) {
           console.log(`Attempting Jupiter fallback for ${balance.token || balance.mint}`);
-          price = await getJupiterPrice(balance.mint);
+          const jupiterPrice = await getJupiterPrice(balance.mint);
+          console.log(`Jupiter returned price for ${balance.mint}: ${jupiterPrice}`);
+          price = jupiterPrice;
         }
       }
 
@@ -217,7 +224,9 @@ export async function GET() {
         uiAmount: balance.uiAmount,
         knownToken: !!knownToken,
         snapshotPrice: priceMap[balance.mint],
-        finalPrice: price
+        jupiterPrice: price === 0 ? await getJupiterPrice(balance.mint) : null,
+        finalPrice: price,
+        calculatedUsdValue: balance.uiAmount * price
       });
 
       // Calculate USD value using uiAmount (which is already adjusted for decimals)

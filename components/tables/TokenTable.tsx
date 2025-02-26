@@ -208,6 +208,7 @@ export const TokenTable = ({ showAllTokens = false }: TokenTableProps) => {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2
                   })}
+                  {usdValue === 0 && <span className="text-xs text-yellow-500 ml-1">(no price)</span>}
                 </td>
                 <td className="text-right px-4 py-2 text-gray-300">
                   {percentage.toFixed(1)}%
