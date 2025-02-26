@@ -102,15 +102,60 @@ async function getJupiterPrice(mint: string): Promise<number> {
   try {
     console.log(`Fetching Jupiter price for ${mint}`);
     const response = await fetch(`https://price.jup.ag/v4/price?ids=${mint}`);
+    
     if (!response.ok) {
       console.log(`Jupiter API returned status ${response.status}`);
       return 0;
     }
+    
     const data = await response.json();
     console.log(`Jupiter price data for ${mint}:`, data);
-    return data.data[mint]?.price || 0;
+    
+    if (data.data && data.data[mint] && data.data[mint].price) {
+      console.log(`Jupiter price for ${mint}: ${data.data[mint].price}`);
+      return data.data[mint].price;
+    } else {
+      console.log(`Jupiter returned no price data for ${mint}`);
+      return 0;
+    }
   } catch (e) {
-    console.error('Jupiter price fetch failed:', e);
+    console.error(`Jupiter price fetch failed for ${mint}:`, e);
+    return 0;
+  }
+}
+
+async function getBirdeyePrice(mint: string): Promise<number> {
+  try {
+    console.log(`Fetching Birdeye price for ${mint}`);
+    
+    if (!process.env.BIRDEYE_API_KEY) {
+      console.log('BIRDEYE_API_KEY not configured, skipping Birdeye price fetch');
+      return 0;
+    }
+    
+    const response = await fetch(`https://public-api.birdeye.so/public/price?address=${mint}`, {
+      headers: {
+        'X-API-KEY': process.env.BIRDEYE_API_KEY
+      }
+    });
+    
+    if (!response.ok) {
+      console.log(`Birdeye API returned status ${response.status}`);
+      return 0;
+    }
+    
+    const data = await response.json();
+    console.log(`Birdeye price data for ${mint}:`, data);
+    
+    if (data.success && data.data && data.data.value) {
+      console.log(`Birdeye price for ${mint}: ${data.data.value}`);
+      return data.data.value;
+    } else {
+      console.log(`Birdeye returned no price data for ${mint}`);
+      return 0;
+    }
+  } catch (e) {
+    console.error(`Birdeye price fetch failed for ${mint}:`, e);
     return 0;
   }
 }
@@ -198,6 +243,7 @@ export async function GET() {
     const priceMap: { [key: string]: number } = {};
     for (const token of activeTokens) {
       try {
+        console.log(`Fetching latest snapshot for ${token.token} (${token.mint})`);
         const snapshots = await snapshotsTable.select({
           filterByFormula: `{mint}='${token.mint}'`,
           sort: [{ field: 'createdAt', direction: 'desc' }],
@@ -209,7 +255,11 @@ export async function GET() {
           if (price) {
             priceMap[token.mint] = price;
             console.log(`Found price for ${token.token} (${token.mint}): $${price}`);
+          } else {
+            console.log(`No price found in snapshot for ${token.token} (${token.mint})`);
           }
+        } else {
+          console.log(`No snapshots found for ${token.token} (${token.mint})`);
         }
       } catch (error) {
         console.error(`Error fetching price for ${token.token}:`, error);
@@ -247,16 +297,45 @@ export async function GET() {
       console.log('Price calculation:', {
         mint: balance.mint,
         token: balance.token || mintToTokenMap[balance.mint] || 'Unknown',
-        uiAmount: balance.uiAmount,
-        knownToken: !!knownToken,
-        snapshotPrice: priceMap[balance.mint],
-        jupiterPrice: price === 0 ? await getJupiterPrice(balance.mint) : null,
-        finalPrice: price,
-        calculatedUsdValue: balance.uiAmount * price
+        uiAmount: balance.uiAmount
       });
+
+      let price = 0;
+
+      // Check if it's a known stablecoin first
+      const knownToken = Object.values(KNOWN_TOKENS).find(t => t.mint === balance.mint);
+      if (knownToken) {
+        price = knownToken.price;
+        console.log(`Using known token price for ${balance.mint}: ${price}`);
+      } else {
+        // Get price from snapshots using mint address
+        price = priceMap[balance.mint] || 0;
+        console.log(`Snapshot price for ${balance.mint}: ${price}`);
+
+        // If no price in snapshots, try Jupiter as fallback
+        if (price === 0) {
+          console.log(`Attempting Jupiter fallback for ${balance.token || balance.mint}`);
+          const jupiterPrice = await getJupiterPrice(balance.mint);
+          if (jupiterPrice > 0) {
+            price = jupiterPrice;
+            console.log(`Using Jupiter price for ${balance.mint}: ${price}`);
+          } else {
+            // If Jupiter fails, try Birdeye as a second fallback
+            console.log(`Attempting Birdeye fallback for ${balance.token || balance.mint}`);
+            const birdeyePrice = await getBirdeyePrice(balance.mint);
+            if (birdeyePrice > 0) {
+              price = birdeyePrice;
+              console.log(`Using Birdeye price for ${balance.mint}: ${price}`);
+            } else {
+              console.log(`No price found for ${balance.mint} from any source`);
+            }
+          }
+        }
+      }
 
       // Calculate USD value using uiAmount (which is already adjusted for decimals)
       const usdValue = balance.uiAmount * price;
+      console.log(`Calculated USD value for ${balance.mint}: ${usdValue} (${balance.uiAmount} * ${price})`);
       
       // Get token symbol and metadata
       const tokenSymbol = await getTokenSymbol(balance.mint, tokensMetadata);
