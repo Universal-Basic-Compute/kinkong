@@ -18,6 +18,8 @@ interface TokenPrice {
 interface Investment {
   investmentId: string;
   amount: number;
+  token?: string; // Token type (UBC, COMPUTE, USDC)
+  usdAmount?: number; // USD equivalent amount
   solscanUrl: string;
   date: string;
   username?: string;
@@ -118,6 +120,27 @@ const validateInvestment = (inv: any): inv is Investment => {
   );
 };
 
+// Add a function to convert token amounts to USD
+async function convertTokensToUSD(investments: Investment[], ubcPrice: number, computePrice: number): Promise<Investment[]> {
+  return investments.map(investment => {
+    const token = investment.token || 'USDC'; // Default to USDC if token is not specified
+    let usdAmount = investment.amount;
+    
+    // Convert token amounts to USD based on token type
+    if (token === 'UBC') {
+      usdAmount = investment.amount * ubcPrice;
+    } else if (token === 'COMPUTE') {
+      usdAmount = investment.amount * computePrice;
+    }
+    // USDC is already in USD, no conversion needed
+    
+    return {
+      ...investment,
+      usdAmount // Add a new field for USD amount
+    };
+  });
+}
+
 export default function Invest() {
   const { connected, publicKey, signTransaction } = useWallet();
   const [selectedToken, setSelectedToken] = useState<'UBC' | 'COMPUTE'>('UBC');
@@ -163,9 +186,20 @@ export default function Invest() {
         if (!investmentsResponse.ok) throw new Error('Failed to fetch investments');
         const investmentsData = await investmentsResponse.json();
         
-        // Calculate total investment amount directly from investments data
-        const totalInvestment = investmentsData.reduce((sum: number, inv: Investment) => sum + inv.amount, 0);
-        console.log('Total investment from investments data:', totalInvestment);
+        // Fetch token prices
+        const ubcPrice = await getUbcPrice();
+        const computePrice = await getComputePrice();
+        
+        console.log('Token prices:', { UBC: ubcPrice, COMPUTE: computePrice });
+        
+        // Convert token amounts to USD
+        const investmentsWithUSD = await convertTokensToUSD(investmentsData, ubcPrice, computePrice);
+        
+        // Calculate total investment amount in USD
+        const totalInvestment = investmentsWithUSD.reduce((sum: number, inv: Investment & { usdAmount?: number }) => 
+          sum + (inv.usdAmount || 0), 0);
+        
+        console.log('Total investment in USD:', totalInvestment);
         
         // Fetch latest wallet snapshot from WALLET_SNAPSHOTS table
         const walletSnapshotResponse = await fetch('/api/wallet-snapshot/latest');
@@ -209,16 +243,8 @@ export default function Invest() {
         console.log('Profit:', profit);
         console.log('Profit share (75%):', profitShare);
         
-        // Fetch UBC price directly from DexScreener
-        const ubcPrice = await getUbcPrice();
-        console.log('UBC price:', ubcPrice);
-        
-        // Fetch COMPUTE price from specific Meteora pool
-        const computePrice = await getComputePrice();
-        console.log('COMPUTE price:', computePrice);
-        
-        const investmentsWithReturns = investmentsData.map((inv: Investment) => {
-          const investmentRatio = inv.amount / totalInvestment;
+        const investmentsWithReturns = investmentsWithUSD.map((inv: Investment & { usdAmount?: number }) => {
+          const investmentRatio = (inv.usdAmount || 0) / totalInvestment;
           const calculatedReturn = profitShare * investmentRatio;
           
           // Calculate UBC return (USDC return / UBC price)
@@ -230,7 +256,7 @@ export default function Invest() {
             console.warn(`Cannot calculate UBC return: UBC price is ${ubcPrice}`);
           }
           
-          console.log(`Investment ${inv.investmentId}: $${inv.amount} (${(investmentRatio * 100).toFixed(2)}%) -> Return: $${calculatedReturn.toFixed(2)} / ${ubcReturn.toFixed(2)} UBC`);
+          console.log(`Investment ${inv.investmentId}: $${inv.usdAmount} (${(investmentRatio * 100).toFixed(2)}%) -> Return: $${calculatedReturn.toFixed(2)} / ${ubcReturn.toFixed(2)} UBC`);
           
           return {
             ...inv,
@@ -240,6 +266,10 @@ export default function Invest() {
         });
         
         setInvestments(investmentsWithReturns);
+        
+        // Store token prices in state for later use
+        setUbcPrice(ubcPrice);
+        setComputePrice(computePrice);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -470,14 +500,23 @@ export default function Invest() {
                     <tr key={investment.investmentId} className="border-b border-gold/10 hover:bg-gold/5">
                       <td className="px-4 py-4 text-white">{investment.username || 'Anonymous'}</td>
                       <td className="px-4 py-4 text-right">
-                        {typeof investment.amount === 'number' 
-                          ? (
-                            <>
-                              <span className="text-white font-medium">{investment.amount.toLocaleString('en-US')}</span>{' '}
-                              <span className="text-gray-400">$USDC</span>
-                            </>
-                          )
-                          : 'N/A'}
+                        {typeof investment.amount === 'number' ? (
+                          <>
+                            <div>
+                              <span className="text-white font-medium">{Math.floor(investment.amount).toLocaleString('en-US')}</span>{' '}
+                              <span className={`text-gray-400 ${investment.token === 'UBC' ? 'metallic-text-ubc' : investment.token === 'COMPUTE' ? 'metallic-text-compute' : ''}`}>
+                                ${investment.token || 'USDC'}
+                              </span>
+                            </div>
+                            {investment.usdAmount && (
+                              <div className="text-gray-400 text-sm">
+                                (${Math.floor(investment.usdAmount).toLocaleString('en-US')})
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          'N/A'
+                        )}
                       </td>
                       <td className="px-4 py-4 text-right">
                         {investment.ubcReturn !== undefined ? (

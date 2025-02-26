@@ -7,8 +7,10 @@ export function InvestmentCard() {
   const { publicKey } = useWallet();
   const [investment, setInvestment] = useState<{
     amount: number;
+    token: string;
     date: string;
     solscanUrl: string;
+    usdAmount?: number;
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -56,8 +58,16 @@ export function InvestmentCard() {
         {investment.amount.toLocaleString(undefined, {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2
-        })} USDC
+        })} {investment.token || 'USDC'}
       </p>
+      {investment.usdAmount && investment.token !== 'USDC' && (
+        <p className="text-sm text-gray-400">
+          (${investment.usdAmount.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          })})
+        </p>
+      )}
       <a 
         href={investment.solscanUrl}
         target="_blank"

@@ -3,6 +3,7 @@ import { getTable } from './tables';
 export interface Investment {
   investmentId: string;
   amount: number;
+  token: string;
   solscanUrl: string;
   date: string;
   username?: string;
@@ -26,6 +27,7 @@ export async function getInvestments(): Promise<Investment[]> {
     return records.map(record => ({
       investmentId: record.get('investmentId') as string,
       amount: record.get('amount') as number,
+      token: record.get('token') as string || 'USDC', // Default to USDC if not specified
       solscanUrl: record.get('solscanUrl') as string,
       date: record.get('createdAt') as string,
       username: record.get('username') as string || 'Anonymous',
