@@ -641,7 +641,7 @@ export default function Invest() {
                       placeholder={`Amount in ${selectedToken}`}
                       className="input-field pr-16 py-3"
                       min="1"
-                      step={selectedToken === 'USDC' ? '0.1' : '1'}
+                      step="1"
                       value={amount}
                       onChange={(e) => setAmount(Number(e.target.value))}
                     />
