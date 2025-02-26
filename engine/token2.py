@@ -41,12 +41,13 @@ class TokenManager:
     ALWAYS_ACTIVE_TOKENS = {'USDT', 'WETH', 'WBTC', 'SOL'}
     ALWAYS_INACTIVE_TOKENS = {'UBC', 'COMPUTE'}
     
-    def analyze_social_signals(self, token_symbol: str) -> tuple[bool, str]:
+    def analyze_social_signals(self, token_symbol: str, token_data: Dict[str, Any] = None) -> tuple[bool, str]:
         """
-        Analyze social media signals for a token
+        Analyze social media signals for a token with proper timeout handling
         
         Args:
             token_symbol: Token symbol to analyze
+            token_data: Optional token data containing xAccount
             
         Returns:
             Tuple of (is_bullish, analysis_text)
@@ -54,33 +55,49 @@ class TokenManager:
         try:
             logger.info(f"Analyzing social signals for {token_symbol}")
             
-            # Import the monitor_token function
-            try:
-                from socials.monitor_posts import monitor_token
+            # Check if we have the required API keys
+            anthropic_api_key = os.getenv('ANTHROPIC_API_KEY')
+            x_bearer_token = os.getenv('X_BEARER_TOKEN')
+            
+            if not anthropic_api_key:
+                logger.warning("ANTHROPIC_API_KEY not found, skipping sentiment analysis")
+                return False, "Sentiment analysis skipped (missing API key)"
                 
-                # Call monitor_token with timeout protection
-                logger.info(f"Calling monitor_token for {token_symbol}")
-                is_bullish, analysis = monitor_token(token_symbol)
+            if not x_bearer_token:
+                logger.warning("X_BEARER_TOKEN not found, skipping X/Twitter analysis")
+                return False, "X/Twitter analysis skipped (missing API key)"
+            
+            # Get X account from token data
+            x_account = None
+            if token_data and 'xAccount' in token_data:
+                x_account = token_data.get('xAccount')
+            
+            if not x_account:
+                logger.warning(f"No X account found for {token_symbol}")
+                return False, f"No X account found for {token_symbol}"
+            
+            # Get tweets from the X account with timeout
+            tweets = self.get_account_tweets(x_account, x_bearer_token)
+            
+            if not tweets:
+                logger.info(f"No tweets found for account @{x_account}")
+                return False, f"No recent tweets found from @{x_account}"
+            
+            logger.info(f"Found {len(tweets)} tweets from @{x_account}")
+            
+            # Analyze sentiment with Claude with timeout
+            is_bullish, analysis = self.analyze_sentiment_with_claude(
+                token_symbol, 
+                tweets, 
+                anthropic_api_key
+            )
+            
+            if is_bullish:
+                logger.info(f"Bullish signals detected for {token_symbol}")
+            else:
+                logger.info(f"No bullish signals detected for {token_symbol}")
                 
-                if is_bullish:
-                    logger.info(f"Bullish signals detected for {token_symbol}")
-                else:
-                    logger.info(f"No bullish signals detected for {token_symbol}")
-                    
-                if analysis:
-                    logger.info(f"Analysis: {analysis[:100]}...")
-                else:
-                    logger.info("No analysis text returned")
-                    analysis = "No analysis available"
-                    
-                return is_bullish, analysis
-                
-            except ImportError as e:
-                logger.error(f"Could not import monitor_token: {e}")
-                return False, f"Error importing monitor_token: {e}"
-            except Exception as e:
-                logger.error(f"Error calling monitor_token: {e}")
-                return False, f"Error analyzing social signals: {e}"
+            return is_bullish, analysis
                 
         except Exception as e:
             logger.error(f"Error in analyze_social_signals: {e}")
@@ -200,6 +217,156 @@ class TokenManager:
             logger.error(f"Error searching Birdeye: {e}")
             logger.error(traceback.format_exc())
             return None
+    
+    def analyze_sentiment_with_claude(self, token_symbol: str, tweets: List[Dict], api_key: str) -> tuple[bool, str]:
+        """
+        Analyze tweet sentiment using Claude
+        
+        Args:
+            token_symbol: Token symbol to analyze
+            tweets: List of tweet data dictionaries
+            api_key: Anthropic API key
+            
+        Returns:
+            Tuple of (is_bullish, analysis_text)
+        """
+        try:
+            import anthropic
+            
+            client = anthropic.Client(api_key=api_key)
+            
+            # Format tweets for analysis
+            tweets_text = "\n\n".join([
+                f"Tweet {i+1}:\n{tweet.get('text', '')}\n"
+                f"Likes: {tweet.get('public_metrics', {}).get('like_count', 0)}\n"
+                f"Retweets: {tweet.get('public_metrics', {}).get('retweet_count', 0)}"
+                for i, tweet in enumerate(tweets[:5])  # Limit to 5 tweets
+            ])
+            
+            system_prompt = """You are KinKong, an AI-powered cryptocurrency trading bot and market sentiment analyst.
+            You specialize in analyzing Solana ecosystem tokens with a focus on AI/ML projects.
+            
+            Analyze these tweets about a token and provide a detailed analysis followed by your verdict.
+            
+            Start directly with the analysis covering:
+            1. Content summary - key themes and topics
+            2. Engagement analysis - likes, retweets, discussions
+            3. Notable signals:
+               - Announcements or news
+               - Community sentiment
+               - Endorsements or partnerships
+               - Technical analysis mentions
+               - Volume and liquidity discussions
+               - Development updates
+               - Ecosystem growth indicators
+            
+            Then end your response with one of these verdicts:
+            "VERDICT: BULLISH" - if there are clear, strong positive signals
+            "VERDICT: NOT BULLISH" - if signals are weak, mixed, or negative
+            
+            Your analysis should be thorough and evidence-based, regardless of the final verdict.
+            Do not include any introductory text - begin immediately with your analysis.
+            
+            Remember: You are KinKong - maintain a professional but engaging tone that reflects your identity as a sophisticated trading bot."""
+
+            user_prompt = f"""As KinKong, analyze these tweets about ${token_symbol}:
+
+            {tweets_text}
+
+            Start directly with analysis and end with your VERDICT."""
+
+            message = client.messages.create(
+                model="claude-3-7-sonnet-20250219",
+                max_tokens=1000,
+                system=system_prompt,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": user_prompt
+                    }
+                ]
+            )
+            
+            analysis = message.content[0].text.strip()
+            
+            # Check if analysis ends with a verdict
+            if "VERDICT: BULLISH" in analysis:
+                return True, analysis
+            else:
+                return False, analysis
+                
+        except Exception as e:
+            logger.error(f"Error analyzing sentiment with Claude: {str(e)}")
+            return False, f"Error analyzing sentiment: {str(e)}"
+    
+    def get_account_tweets(self, x_account: str, bearer_token: str) -> List[Dict]:
+        """
+        Get recent tweets from a specific X account with timeout
+        
+        Args:
+            x_account: X account username (without @)
+            bearer_token: X/Twitter API bearer token
+            
+        Returns:
+            List of tweet data dictionaries
+        """
+        try:
+            # Remove @ if present in account name
+            x_account = x_account.lstrip('@')
+            
+            logger.info(f"Getting tweets from account @{x_account}")
+            
+            headers = {
+                "Authorization": f"Bearer {bearer_token}",
+                "Content-Type": "application/json"
+            }
+            
+            # First get the user ID
+            user_url = f"https://api.twitter.com/2/users/by/username/{x_account}"
+            
+            # Use requests with timeout
+            user_response = requests.get(user_url, headers=headers, timeout=15)
+            
+            if not user_response.ok:
+                logger.error(f"X/Twitter API error: {user_response.status_code}")
+                logger.error(f"Response: {user_response.text}")
+                return []
+            
+            user_data = user_response.json()
+            user_id = user_data.get('data', {}).get('id')
+            
+            if not user_id:
+                logger.error(f"Could not find user ID for account: @{x_account}")
+                return []
+                
+            # Then get their tweets
+            tweets_url = f"https://api.twitter.com/2/users/{user_id}/tweets"
+            params = {
+                "max_results": 10,  # Get last 10 tweets
+                "tweet.fields": "created_at,public_metrics,text",
+                "exclude": "retweets,replies"
+            }
+            
+            # Use requests with timeout
+            response = requests.get(tweets_url, headers=headers, params=params, timeout=15)
+            
+            if not response.ok:
+                logger.error(f"X/Twitter API error: {response.status_code}")
+                logger.error(f"Response: {response.text}")
+                return []
+            
+            data = response.json()
+            tweets = data.get('data', [])
+            
+            logger.info(f"Found {len(tweets)} tweets from @{x_account}")
+            return tweets
+            
+        except requests.exceptions.Timeout:
+            logger.error(f"X/Twitter API request timed out")
+            return []
+        except Exception as e:
+            logger.error(f"Error getting tweets for account @{x_account}: {e}")
+            return []
     
     def get_dexscreener_data(self, token_address: str) -> Dict[str, Any]:
         """
@@ -332,9 +499,15 @@ class TokenManager:
                 explanation = f"{symbol} is a special token - always inactive"
                 logger.info(f"{symbol} is a special token - always inactive")
             else:
-                # Analyze social signals
+                # Analyze social signals - pass token data with xAccount
                 logger.info(f"Analyzing social signals for {symbol}")
-                is_bullish, analysis = self.analyze_social_signals(symbol)
+                
+                # Create token data with xAccount from DexScreener
+                token_social_data = {
+                    'xAccount': dex_data['social_links']['xAccount']
+                }
+                
+                is_bullish, analysis = self.analyze_social_signals(symbol, token_social_data)
                 is_active = is_bullish
                 explanation = analysis
                 
