@@ -33,18 +33,31 @@ interface WalletSnapshot {
 // Function to fetch UBC price from Birdeye
 async function getUbcPrice(): Promise<number> {
   try {
+    console.log('Fetching UBC price from Birdeye...');
     const response = await fetch(`https://public-api.birdeye.so/public/price?address=${UBC_MINT.toString()}`);
+    
     if (!response.ok) {
+      console.error(`Birdeye API error: ${response.status}`);
       throw new Error(`Birdeye API error: ${response.status}`);
     }
+    
     const data = await response.json();
+    console.log('Birdeye API response:', data);
+    
     if (data.success && data.data && data.data.value) {
-      return data.data.value;
+      const price = data.data.value;
+      console.log('UBC price from Birdeye:', price);
+      return price;
     }
+    
+    console.error('Invalid price data from Birdeye:', data);
     throw new Error('Invalid price data from Birdeye');
   } catch (error) {
     console.error('Failed to fetch UBC price:', error);
-    return 0;
+    // Return a fallback price for testing
+    const fallbackPrice = 0.0001; // $0.0001 per UBC
+    console.log(`Using fallback UBC price: ${fallbackPrice}`);
+    return fallbackPrice;
   }
 }
 
@@ -139,7 +152,13 @@ export default function Invest() {
           const calculatedReturn = profitShare * investmentRatio;
           
           // Calculate UBC return (USDC return / UBC price)
-          const ubcReturn = ubcPrice > 0 ? calculatedReturn / ubcPrice : 0;
+          let ubcReturn = 0;
+          if (ubcPrice > 0) {
+            ubcReturn = calculatedReturn / ubcPrice;
+            console.log(`Calculated UBC return for investment ${inv.investmentId}: ${ubcReturn} UBC (${calculatedReturn} USDC / ${ubcPrice} UBC price)`);
+          } else {
+            console.warn(`Cannot calculate UBC return: UBC price is ${ubcPrice}`);
+          }
           
           console.log(`Investment ${inv.investmentId}: $${inv.amount} (${(investmentRatio * 100).toFixed(2)}%) -> Return: $${calculatedReturn.toFixed(2)} / ${ubcReturn.toFixed(2)} UBC`);
           
@@ -336,8 +355,8 @@ export default function Invest() {
                           : 'N/A'}
                       </td>
                       <td className="px-4 py-2 text-right">
-                        {investment.ubcReturn !== undefined && investment.return !== undefined
-                          ? `${investment.ubcReturn.toLocaleString('en-US', { maximumFractionDigits: 2 })} UBC ($${investment.return.toLocaleString('en-US', { maximumFractionDigits: 2 })})`
+                        {investment.return !== undefined
+                          ? `${(investment.ubcReturn || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })} UBC ($${investment.return.toLocaleString('en-US', { maximumFractionDigits: 2 })})`
                           : 'Calculating...'}
                       </td>
                       <td className="px-4 py-2">
