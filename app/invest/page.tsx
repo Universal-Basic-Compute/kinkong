@@ -100,18 +100,18 @@ export default function Invest() {
         if (!investmentsResponse.ok) throw new Error('Failed to fetch investments');
         const investmentsData = await investmentsResponse.json();
         
-        // Calculate total investment amount
+        // Calculate total investment amount directly from investments data
         const totalInvestment = investmentsData.reduce((sum: number, inv: Investment) => sum + inv.amount, 0);
-        console.log('Total investment from API:', totalInvestment);
+        console.log('Total investment from investments data:', totalInvestment);
         
-        // Fetch latest wallet snapshot from PORTFOLIO_SNAPSHOT table
-        const snapshotResponse = await fetch('/api/portfolio-snapshot/latest');
+        // Fetch latest wallet snapshot from WALLET_SNAPSHOTS table
+        const walletSnapshotResponse = await fetch('/api/wallet-snapshot/latest');
         
         let portfolioValue = 0;
         let snapshotTimestamp = new Date().toISOString();
         
-        if (!snapshotResponse.ok) {
-          console.error('Failed to fetch portfolio snapshot, falling back to portfolio API');
+        if (!walletSnapshotResponse.ok) {
+          console.error('Failed to fetch wallet snapshot, falling back to portfolio API');
           // Fallback to portfolio API
           const portfolioResponse = await fetch('/api/portfolio');
           if (!portfolioResponse.ok) throw new Error('Failed to fetch portfolio data');
@@ -123,12 +123,12 @@ export default function Invest() {
           
           console.log('Portfolio total value (from token balances):', portfolioValue);
         } else {
-          // Use the portfolio snapshot data
-          const snapshotData = await snapshotResponse.json();
+          // Use the wallet snapshot data
+          const snapshotData = await walletSnapshotResponse.json();
           portfolioValue = snapshotData.totalValue || 0;
           snapshotTimestamp = snapshotData.createdAt || new Date().toISOString();
           
-          console.log('Portfolio total value (from snapshot):', portfolioValue);
+          console.log('Portfolio total value (from wallet snapshot):', portfolioValue);
         }
         
         // Set the latest snapshot with the calculated/adjusted total value
