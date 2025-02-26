@@ -361,7 +361,7 @@ export function SignalHistory() {
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Reason</th>
             <th className="px-6 py-3 text-center text-xs font-medium text-gold uppercase tracking-wider">Success</th>
             <th className="px-6 py-3 text-right text-xs font-medium text-gold uppercase tracking-wider">
-              <div className="flex justify-end">
+              <div className="flex flex-col items-end">
                 <SortHeader
                   field="actualReturn"
                   label="Return"
@@ -369,6 +369,7 @@ export function SignalHistory() {
                   currentDirection={sortDirection}
                   onSort={handleSort}
                 />
+                <span className="text-[10px] text-gray-500 font-normal normal-case mt-1">incl. 6% trading cost</span>
               </div>
             </th>
           </tr>
