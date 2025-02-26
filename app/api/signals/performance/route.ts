@@ -26,10 +26,13 @@ export async function GET() {
     const latestRecord = records[0];
     const metricsJson = latestRecord.get('metrics') as string;
     
-    // Parse the JSON string into an object with error handling
+    // Fix NaN values in the JSON string before parsing
+    const fixedJson = metricsJson.replace(/"position_return": NaN/g, '"position_return": null');
+    
+    // Parse the fixed JSON string into an object with error handling
     let metrics;
     try {
-      metrics = JSON.parse(metricsJson);
+      metrics = JSON.parse(fixedJson);
       
       // Replace any remaining NaN values with null
       const sanitizeNaN = (obj: any): any => {
@@ -53,10 +56,24 @@ export async function GET() {
     } catch (parseError) {
       console.error('Error parsing metrics JSON:', parseError);
       console.error('Invalid JSON string:', metricsJson);
-      return NextResponse.json(
-        { error: 'Invalid metrics data format' },
-        { status: 500 }
-      );
+      
+      // If parsing fails, try a more aggressive approach to fix the JSON
+      try {
+        // Replace all NaN, Infinity, -Infinity with null
+        const aggressivelyFixedJson = metricsJson
+          .replace(/: NaN/g, ': null')
+          .replace(/: Infinity/g, ': null')
+          .replace(/: -Infinity/g, ': null');
+        
+        metrics = JSON.parse(aggressivelyFixedJson);
+        console.log('Successfully parsed JSON after aggressive fixing');
+      } catch (secondError) {
+        console.error('Failed to parse JSON even after aggressive fixing:', secondError);
+        return NextResponse.json(
+          { error: 'Invalid metrics data format' },
+          { status: 500 }
+        );
+      }
     }
     
     // Add the record ID and creation date
