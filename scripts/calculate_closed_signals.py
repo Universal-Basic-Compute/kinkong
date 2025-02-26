@@ -62,8 +62,8 @@ def generate_and_encode_chart(signal_id):
         # Now import the function
         from scripts.generate_trade_chart import generate_trade_chart
         
-        # Set the output directory
-        output_dir = os.path.join('temp_charts')
+        # Set the output directory to public/signals/charts
+        output_dir = os.path.join('public', 'signals', 'charts')
         os.makedirs(output_dir, exist_ok=True)
         
         # Generate the chart
@@ -92,6 +92,8 @@ def generate_and_encode_chart(signal_id):
     
     except Exception as e:
         logger.error(f"Error generating and encoding chart: {e}")
+        import traceback
+        logger.error(traceback.format_exc())  # Add full traceback for better debugging
         return None
 
 def analyze_failed_trade_with_claude(signal_data, chart_data):
@@ -432,11 +434,7 @@ def calculate_closed_signals():
                         analysis_result = analysis_table.create(analysis_record)
                         logger.info(f"✅ Analysis saved to Airtable with ID: {analysis_result['id']}")
                         
-                        # Clean up the temporary chart file
-                        try:
-                            os.remove(chart_data["path"])
-                        except Exception as e:
-                            logger.warning(f"Could not remove temporary chart file: {e}")
+                        # We no longer delete the chart file as we want to keep it for the website
 
             except Exception as error:
                 logger.error(f"❌ Error processing signal {signal.get('id')}: {error}")
