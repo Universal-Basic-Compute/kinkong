@@ -234,6 +234,12 @@ class TokenManager:
             result['liquidity'] = float(main_pair.get('liquidity', {}).get('usd', 0) or 0)
             
             logger.info(f"DexScreener data retrieved successfully")
+            logger.info(f"Website: {result['social_links']['website']}")
+            logger.info(f"X Account: {result['social_links']['xAccount']}")
+            logger.info(f"Telegram: {result['social_links']['telegram']}")
+            logger.info(f"Pair: {result['pair']}")
+            logger.info(f"Image: {result['image']}")
+            
             return result
             
         except Exception as e:
@@ -290,6 +296,15 @@ class TokenManager:
                 # Removed price, volume24h, and liquidity fields
                 'description': f"Token {symbol} on Solana chain"
             }
+            
+            # Log the record we're about to save
+            logger.info(f"Saving token record with the following data:")
+            logger.info(f"Token: {symbol}")
+            logger.info(f"Website: {dex_data['social_links']['website']}")
+            logger.info(f"X Account: {dex_data['social_links']['xAccount']}")
+            logger.info(f"Telegram: {dex_data['social_links']['telegram']}")
+            logger.info(f"Pair: {dex_data['pair']}")
+            logger.info(f"Image: {dex_data['image']}")
             
             # Check if record exists
             record_id = token_data.get('record_id')
