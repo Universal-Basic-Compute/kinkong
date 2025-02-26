@@ -236,12 +236,44 @@ def main():
         if missing:
             raise ValueError(f"Missing environment variables: {', '.join(missing)}")
 
-        # Run signal generation
+        # Initialize signal generator
         generator = SignalGenerator()
-        asyncio.run(generator.generate_signals())
+        
+        # Check if a specific token was provided as argument
+        if len(sys.argv) > 1:
+            token_symbol = sys.argv[1].upper()
+            logger.info(f"Analyzing specific token: {token_symbol}")
+            
+            # Analyze the specified token
+            signal = asyncio.run(generator.analyze_specific_token(token_symbol))
+            
+            if signal:
+                logger.info(f"✅ Successfully generated signal for {token_symbol}")
+                # Print signal details
+                logger.info(f"Signal details:")
+                logger.info(f"Type: {signal.get('type')}")
+                logger.info(f"Timeframe: {signal.get('timeframe')}")
+                logger.info(f"Confidence: {signal.get('confidence')}")
+                if 'entryPrice' in signal:
+                    logger.info(f"Entry Price: ${signal['entryPrice']:.6f}")
+                if 'targetPrice' in signal:
+                    logger.info(f"Target Price: ${signal['targetPrice']:.6f}")
+                if 'stopLoss' in signal:
+                    logger.info(f"Stop Loss: ${signal['stopLoss']:.6f}")
+                
+                # Return success
+                sys.exit(0)
+            else:
+                logger.error(f"❌ No signal generated for {token_symbol}")
+                sys.exit(1)
+        else:
+            # Generate signals for all active tokens
+            asyncio.run(generator.generate_signals())
+            logger.info("\n✅ Signal generation completed for all active tokens")
+            sys.exit(0)
 
     except Exception as e:
-        logger.error(f"Fatal error: {e}")
+        logger.error(f"\n❌ Script failed: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":
