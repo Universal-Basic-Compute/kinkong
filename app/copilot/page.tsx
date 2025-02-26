@@ -64,7 +64,7 @@ export default function CopilotPage() {
       buttonStyle: "bg-gray-800 hover:bg-gray-700"
     },
     {
-      name: "Premium Tier",
+      name: "Kong Pro",
       description: "Full access to KinKong intelligence",
       features: [
         "100 messages per 8-hour block",
@@ -76,7 +76,7 @@ export default function CopilotPage() {
       ],
       price: "1.5 SOL / 3 months",
       action: () => handlePremiumSubscription(),
-      buttonText: "Upgrade to Premium", 
+      buttonText: "Upgrade to Pro", 
       buttonStyle: "bg-gradient-to-r from-darkred to-gold text-black"
     }
   ];
