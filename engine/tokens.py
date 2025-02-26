@@ -86,20 +86,20 @@ class TokenSearcher:
         self.logger = setup_logging()
         
     def search_token(self, keyword: str) -> Optional[Dict[str, Any]]:
-        """Search for a token and create new record if it doesn't exist"""
+        """Search for a token by symbol"""
         try:
             self.logger.info(f"[SEARCH] Searching for token: {keyword}")
             
-            # Check Airtable first with timeout
+            # Check Airtable first - simple direct approach
             self.logger.info("Checking Airtable for existing token record...")
+            
             try:
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    future = executor.submit(
-                        self.airtable.get_all,
-                        formula=f"{{token}} = '{keyword.upper()}'"
-                    )
-                    existing_records = future.result(timeout=10)  # 10 second timeout
-                    self.logger.info(f"Airtable search complete, found {len(existing_records)} records")
+                # Simple direct formula search
+                existing_records = self.airtable.get_all(
+                    formula=f"{{token}} = '{keyword.upper()}'"
+                )
+                
+                self.logger.info(f"Airtable search complete, found {len(existing_records)} records")
             
                 if existing_records:
                     self.logger.info(f"Found existing token record for {keyword.upper()}")
@@ -110,105 +110,67 @@ class TokenSearcher:
                         'address': token_record.get('mint'),
                         'verified': True
                     }
-            except concurrent.futures.TimeoutError:
-                self.logger.error("Airtable search timed out after 10 seconds")
+                    
+                self.logger.info(f"No existing record found for {keyword.upper()}, searching Birdeye...")
+                
             except Exception as e:
                 self.logger.error(f"Airtable error: {e}")
                 # Continue to Birdeye search even if Airtable fails
 
-            # Search Birdeye with timeout
-            self.logger.info(f"Searching Birdeye for {keyword.upper()}")
-            
-            # Check if Birdeye API key is available
+            # Search Birdeye with simple approach
             if not self.birdeye_api_key:
                 self.logger.error("No Birdeye API key found")
                 return None
                 
             url = "https://public-api.birdeye.so/defi/v3/search"
-            
-            params = {
-                "keyword": keyword,
-                "chain": "solana"
-            }
-            
+            params = {"keyword": keyword, "chain": "solana"}
             headers = {
                 "x-api-key": self.birdeye_api_key,
                 "accept": "application/json"
             }
             
-            self.logger.info(f"Making Birdeye API request to {url}")
+            self.logger.info(f"Making Birdeye API request for {keyword.upper()}")
             
-            try:
-                # Use a simple timeout request instead of aiohttp
-                response = requests.get(url, params=params, headers=headers, timeout=15)
-                self.logger.info(f"Birdeye API response status: {response.status_code}")
-                
-                if not response.ok:
-                    self.logger.error(f"Birdeye API error: {response.status_code}")
-                    self.logger.error(f"Response: {response.text}")
-                    return None
-                
-                # Parse the response
-                self.logger.info("Parsing Birdeye API response")
-                data = response.json()
-                
-                if not data.get('success'):
-                    self.logger.error(f"Birdeye API error: {data.get('message', 'Unknown error')}")
-                    return None
+            response = requests.get(url, params=params, headers=headers, timeout=15)
+            self.logger.info(f"Birdeye API response status: {response.status_code}")
+            
+            if not response.ok:
+                self.logger.error(f"Birdeye API error: {response.status_code}")
+                return None
+            
+            data = response.json()
+            if not data.get('success'):
+                self.logger.error(f"Birdeye API error: {data.get('message', 'Unknown error')}")
+                return None
 
-                # Extract token data
-                self.logger.info("Extracting token data from response")
-                items = data.get('data', {}).get('items', [])
-                
-                # Debug log the items
-                self.logger.info(f"Found {len(items)} items in response")
-                
-                token_item = next((item for item in items if item['type'] == 'token'), None)
-                
-                if not token_item or not token_item.get('result'):
-                    self.logger.error(f"No token found matching '{keyword}'")
-                    return None
-                    
-                tokens = token_item['result'][:5]
-                self.logger.info(f"Found {len(tokens)} token results")
-                
-                # Find best match
-                token_data = None
-                
-                # First try exact match with verified token
-                for token in tokens:
-                    if token.get('verified') and token.get('symbol', '').upper() == keyword.upper():
-                        token_data = token
-                        self.logger.info(f"Found exact match verified token: {token.get('symbol')}")
-                        break
-                
-                # If no exact match, try any verified token
-                if not token_data:
-                    for token in tokens:
-                        if token.get('verified'):
-                            token_data = token
-                            self.logger.info(f"Found verified token: {token.get('symbol')}")
-                            break
-                
-                # If still no match, use first token
-                if not token_data and tokens:
-                    token_data = tokens[0]
-                    self.logger.info(f"Using first available token: {token_data.get('symbol')}")
-                    
-                if token_data:
-                    self.logger.info(f"Selected token on Birdeye: {token_data.get('symbol')}")
-                    return token_data
-                    
-                self.logger.error("No token data found")
+            # Extract token data
+            items = data.get('data', {}).get('items', [])
+            self.logger.info(f"Found {len(items)} items in response")
+            
+            token_item = next((item for item in items if item['type'] == 'token'), None)
+            if not token_item or not token_item.get('result'):
+                self.logger.error(f"No token found matching '{keyword}'")
                 return None
                 
-            except requests.Timeout:
-                self.logger.error(f"Birdeye API timeout after 15 seconds")
-                return None
-            except Exception as e:
-                self.logger.error(f"Birdeye API error: {e}")
-                self.logger.error(traceback.format_exc())
-                return None
+            tokens = token_item['result'][:5]
+            self.logger.info(f"Found {len(tokens)} token results")
+            
+            # Find exact match first
+            token_data = next(
+                (token for token in tokens if token.get('symbol', '').upper() == keyword.upper()),
+                None
+            )
+            
+            # If no exact match, use first token
+            if not token_data and tokens:
+                token_data = tokens[0]
+                
+            if token_data:
+                self.logger.info(f"Selected token: {token_data.get('symbol')}")
+                return token_data
+                
+            self.logger.error("No token data found")
+            return None
 
         except Exception as e:
             self.logger.error(f"Search failed: {e}")
