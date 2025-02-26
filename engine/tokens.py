@@ -23,37 +23,33 @@ if str(project_root) not in sys.path:
 from socials.monitor_posts import monitor_token
 
 def setup_logging():
-    """Configure logging"""
-    # Configuration basique du logging
+    """Configure logging with consistent output"""
+    # Clear any existing handlers to avoid duplicates
+    root_logger = logging.getLogger()
+    for handler in root_logger.handlers[:]:
+        root_logger.removeHandler(handler)
+    
+    # Configure the root logger
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        datefmt='%Y-%m-%d %H:%M:%S',
+        stream=sys.stdout  # Explicitly use stdout
     )
     
-    # Récupérer le logger
+    # Get the module logger
     logger = logging.getLogger(__name__)
     
-    # S'assurer que les logs sont envoyés à stdout
-    if not logger.handlers:
-        handler = logging.StreamHandler(sys.stdout)
-        formatter = logging.Formatter(
-            '%(asctime)s - %(levelname)s - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
-        )
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-        
-    # Forcer le niveau de log
+    # Force the level to INFO
     logger.setLevel(logging.INFO)
     
-    # Désactiver la propagation pour éviter les doublons
-    logger.propagate = False
+    # Test log to verify configuration
+    logger.info("Logging initialized successfully")
     
     return logger
 
 # Initialize logger
-logger = logging.getLogger(__name__)
+logger = setup_logging()
 
 def log_message(message: str, level: str = 'info'):
     """Log message with emoji replacements"""
@@ -375,6 +371,10 @@ class TokenSearcher:
 
 def main():
     try:
+        # Initialize logger first thing
+        logger = setup_logging()
+        logger.info(f"Starting token search with arguments: {sys.argv}")
+        
         # Initialize searcher
         searcher = TokenSearcher()
         
