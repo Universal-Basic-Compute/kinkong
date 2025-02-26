@@ -5,6 +5,19 @@ import Image from 'next/image';
 import fs from 'fs';
 import path from 'path';
 
+// Client ID management for notifications
+const getClientId = () => {
+  if (typeof window !== 'undefined') {
+    let clientId = localStorage.getItem('notificationClientId');
+    if (!clientId) {
+      clientId = `client-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      localStorage.setItem('notificationClientId', clientId);
+    }
+    return clientId;
+  }
+  return null;
+};
+
 // Add this after the imports
 const perspectiveStyles = `
   .card-3d {

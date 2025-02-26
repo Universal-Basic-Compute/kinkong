@@ -11,6 +11,7 @@ async function sendTestNotification() {
     }
 
     console.log('🔔 Sending test notification to KinKong Copilot...');
+    console.log('Test run timestamp:', new Date().toISOString());
 
     // Create a test notification
     const testNotification = {
