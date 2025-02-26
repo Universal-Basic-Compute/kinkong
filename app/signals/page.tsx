@@ -198,23 +198,23 @@ Regular updates to your active signals help maintain signal quality and improve 
                       </td>
                       <td className="px-4 py-2 text-gray-300">{token.name}</td>
                       <td className="px-4 py-2 text-right text-gray-300">
-                        ${token.volume7d.toLocaleString(undefined, {
+                        ${(token.volume7d || 0).toLocaleString(undefined, {
                           maximumFractionDigits: 0
                         })}
                       </td>
                       <td className="px-4 py-2 text-right text-gray-300">
-                        ${token.liquidity.toLocaleString(undefined, {
+                        ${(token.liquidity || 0).toLocaleString(undefined, {
                           maximumFractionDigits: 0
                         })}
                       </td>
                       <td className="px-4 py-2 text-right">
-                        <span className={token.volumeGrowth >= 0 ? 'text-green-400' : 'text-red-400'}>
-                          {token.volumeGrowth.toFixed(2)}%
+                        <span className={(token.volumeGrowth || 0) >= 0 ? 'text-green-400' : 'text-red-400'}>
+                          {(token.volumeGrowth || 0).toFixed(2)}%
                         </span>
                       </td>
                       <td className="px-4 py-2 text-right">
-                        <span className={token.pricePerformance >= 0 ? 'text-green-400' : 'text-red-400'}>
-                          {token.pricePerformance.toFixed(2)}%
+                        <span className={(token.pricePerformance || 0) >= 0 ? 'text-green-400' : 'text-red-400'}>
+                          {(token.pricePerformance || 0).toFixed(2)}%
                         </span>
                       </td>
                     </tr>
