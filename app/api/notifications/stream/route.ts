@@ -4,8 +4,7 @@ export const runtime = 'nodejs';
 import { NextRequest } from 'next/server';
 import { clients } from '../shared';
 
-// Export clients for debugging
-export { clients };
+// Clients are managed internally
 
 export async function GET(request: NextRequest) {
   // Get client ID from query param or generate a new one

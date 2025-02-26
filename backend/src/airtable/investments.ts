@@ -1,4 +1,4 @@
-import { getTable } from './client';
+import { getTable } from './tables';
 
 export interface Investment {
   investmentId: string;
