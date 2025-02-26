@@ -197,6 +197,18 @@ def send_trade_notification(trade_data: Dict[str, Any]) -> bool:
                 return True
             else:
                 logger.error(f"❌ Failed to send trade notification: {response.status_code} - {response.text}")
+                # Retry once for server errors (500+)
+                if response.status_code >= 500:
+                    logger.info("Retrying notification due to server error...")
+                    retry_response = requests.post(
+                        notification_endpoint,
+                        headers=headers,
+                        json=notification,
+                        timeout=15  # Longer timeout for retry
+                    )
+                    if retry_response.status_code == 200:
+                        logger.info(f"✅ Trade notification sent successfully on retry")
+                        return True
                 return False
         except requests.exceptions.Timeout:
             logger.error("❌ Trade notification request timed out")
