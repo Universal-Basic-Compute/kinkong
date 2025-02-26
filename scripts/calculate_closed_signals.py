@@ -415,6 +415,7 @@ def calculate_closed_signals():
                         # Save analysis to Airtable
                         analysis_record = {
                             'type': 'signal',
+                            'signalId': signal_id,  # Add this line to save the signalId
                             'content': analysis,
                             'metrics': json.dumps({
                                 'signal_id': signal_id,
