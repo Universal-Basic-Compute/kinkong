@@ -135,26 +135,16 @@ class SignalPerformanceAnalyzer:
         # 1. Total number of signals
         metrics['total_signals'] = len(df)
         
-        # 2. Signal type distribution (BUY/SELL)
-        if 'type' in df.columns:
-            type_counts = df['type'].value_counts()
-            metrics['buy_signals'] = type_counts.get('BUY', 0)
-            metrics['sell_signals'] = type_counts.get('SELL', 0)
-            metrics['buy_percentage'] = (metrics['buy_signals'] / metrics['total_signals'] * 100) if metrics['total_signals'] > 0 else 0
-            metrics['sell_percentage'] = (metrics['sell_signals'] / metrics['total_signals'] * 100) if metrics['total_signals'] > 0 else 0
-        
-        # 3. Confidence level distribution
+        # 2. Confidence level distribution
         if 'confidence' in df.columns:
             confidence_counts = df['confidence'].value_counts()
             metrics['high_confidence'] = confidence_counts.get('HIGH', 0)
             metrics['medium_confidence'] = confidence_counts.get('MEDIUM', 0)
-            metrics['low_confidence'] = confidence_counts.get('LOW', 0)
             
             metrics['high_confidence_percentage'] = (metrics['high_confidence'] / metrics['total_signals'] * 100) if metrics['total_signals'] > 0 else 0
             metrics['medium_confidence_percentage'] = (metrics['medium_confidence'] / metrics['total_signals'] * 100) if metrics['total_signals'] > 0 else 0
-            metrics['low_confidence_percentage'] = (metrics['low_confidence'] / metrics['total_signals'] * 100) if metrics['total_signals'] > 0 else 0
         
-        # 4. Timeframe distribution
+        # 3. Timeframe distribution
         if 'timeframe' in df.columns:
             timeframe_counts = df['timeframe'].value_counts()
             metrics['scalp_signals'] = timeframe_counts.get('SCALP', 0)
@@ -167,7 +157,7 @@ class SignalPerformanceAnalyzer:
             metrics['swing_percentage'] = (metrics['swing_signals'] / metrics['total_signals'] * 100) if metrics['total_signals'] > 0 else 0
             metrics['position_percentage'] = (metrics['position_signals'] / metrics['total_signals'] * 100) if metrics['total_signals'] > 0 else 0
         
-        # 5. Return metrics
+        # 4. Return metrics
         if 'expectedReturn' in df.columns:
             metrics['average_expected_return'] = df['expectedReturn'].mean()
             metrics['median_expected_return'] = df['expectedReturn'].median()
@@ -183,10 +173,43 @@ class SignalPerformanceAnalyzer:
                 metrics['median_actual_return'] = actual_returns.median()
                 metrics['max_actual_return'] = actual_returns.max()
                 metrics['min_actual_return'] = actual_returns.min()
+                
+                # Calculate standard deviation of returns
+                metrics['return_std_dev'] = actual_returns.std()
+                
+                # Calculate risk-adjusted return (Sharpe ratio with 0% risk-free rate)
+                metrics['sharpe_ratio'] = actual_returns.mean() / actual_returns.std() if actual_returns.std() > 0 else 0
+                
+                # Calculate win rate
+                metrics['win_rate'] = (actual_returns > 0).mean() * 100
+                
+                # Calculate average win and average loss
+                wins = actual_returns[actual_returns > 0]
+                losses = actual_returns[actual_returns <= 0]
+                
+                metrics['average_win'] = wins.mean() if not wins.empty else 0
+                metrics['average_loss'] = losses.mean() if not losses.empty else 0
+                
+                # Calculate win/loss ratio
+                metrics['win_loss_ratio'] = abs(metrics['average_win'] / metrics['average_loss']) if metrics['average_loss'] != 0 else float('inf')
+                
+                # Calculate profit factor
+                total_wins = wins.sum() if not wins.empty else 0
+                total_losses = abs(losses.sum()) if not losses.empty else 0
+                metrics['profit_factor'] = total_wins / total_losses if total_losses > 0 else float('inf')
+                
+                # Calculate maximum drawdown
+                cumulative_returns = (1 + actual_returns / 100).cumprod()
+                running_max = cumulative_returns.cummax()
+                drawdown = (cumulative_returns / running_max - 1) * 100
+                metrics['max_drawdown'] = abs(drawdown.min())
+                
+                # Calculate recovery factor
+                metrics['recovery_factor'] = actual_returns.mean() / metrics['max_drawdown'] if metrics['max_drawdown'] > 0 else float('inf')
             else:
                 metrics['signals_with_results'] = 0
         
-        # 6. Success rate
+        # 5. Success rate
         if 'isSuccessful' in df.columns:
             successful_signals = df['isSuccessful'].dropna()
             if not successful_signals.empty:
@@ -194,33 +217,97 @@ class SignalPerformanceAnalyzer:
             else:
                 metrics['success_rate'] = 0
         
-        # 7. Performance by confidence level
+        # 6. Performance by confidence level
         if all(col in df.columns for col in ['confidence', 'actualReturn']):
             confidence_performance = df.groupby('confidence')['actualReturn'].mean().to_dict()
             metrics['high_confidence_return'] = confidence_performance.get('HIGH', 0)
             metrics['medium_confidence_return'] = confidence_performance.get('MEDIUM', 0)
-            metrics['low_confidence_return'] = confidence_performance.get('LOW', 0)
+            
+            # Calculate success rate by confidence
+            if 'isSuccessful' in df.columns:
+                confidence_success = df.groupby('confidence')['isSuccessful'].mean().to_dict()
+                metrics['high_confidence_success_rate'] = confidence_success.get('HIGH', 0) * 100
+                metrics['medium_confidence_success_rate'] = confidence_success.get('MEDIUM', 0) * 100
         
-        # 8. Performance by timeframe
+        # 7. Performance by timeframe
         if all(col in df.columns for col in ['timeframe', 'actualReturn']):
             timeframe_performance = df.groupby('timeframe')['actualReturn'].mean().to_dict()
             metrics['scalp_return'] = timeframe_performance.get('SCALP', 0)
             metrics['intraday_return'] = timeframe_performance.get('INTRADAY', 0)
             metrics['swing_return'] = timeframe_performance.get('SWING', 0)
             metrics['position_return'] = timeframe_performance.get('POSITION', 0)
+            
+            # Calculate success rate by timeframe
+            if 'isSuccessful' in df.columns:
+                timeframe_success = df.groupby('timeframe')['isSuccessful'].mean().to_dict()
+                metrics['scalp_success_rate'] = timeframe_success.get('SCALP', 0) * 100
+                metrics['intraday_success_rate'] = timeframe_success.get('INTRADAY', 0) * 100
+                metrics['swing_success_rate'] = timeframe_success.get('SWING', 0) * 100
+                metrics['position_success_rate'] = timeframe_success.get('POSITION', 0) * 100
         
-        # 9. Performance by signal type
-        if all(col in df.columns for col in ['type', 'actualReturn']):
-            type_performance = df.groupby('type')['actualReturn'].mean().to_dict()
-            metrics['buy_return'] = type_performance.get('BUY', 0)
-            metrics['sell_return'] = type_performance.get('SELL', 0)
+        # 8. Performance by token (top tokens)
+        if all(col in df.columns for col in ['token', 'actualReturn']):
+            token_performance = df.groupby('token').agg({
+                'actualReturn': ['mean', 'count'],
+                'isSuccessful': ['mean'] if 'isSuccessful' in df.columns else []
+            })
+            
+            # Flatten the multi-index columns
+            token_performance.columns = ['_'.join(col).strip('_') for col in token_performance.columns.values]
+            
+            # Filter tokens with at least 3 signals
+            token_performance = token_performance[token_performance['actualReturn_count'] >= 3]
+            
+            # Sort by mean return
+            top_tokens = token_performance.sort_values('actualReturn_mean', ascending=False).head(10)
+            
+            # Store top token performance
+            metrics['top_tokens'] = {
+                token: {
+                    'return': row['actualReturn_mean'],
+                    'count': row['actualReturn_count'],
+                    'success_rate': row['isSuccessful_mean'] * 100 if 'isSuccessful_mean' in row else 0
+                }
+                for token, row in top_tokens.iterrows()
+            }
         
-        # 10. Weekly performance
+        # 9. Weekly performance
         if 'createdAt' in df.columns and 'actualReturn' in df.columns:
             df['week'] = df['createdAt'].dt.isocalendar().week
             weekly_performance = df.groupby('week')['actualReturn'].mean().to_dict()
             # Convert keys to strings to avoid NumPy type issues
             metrics['weekly_performance'] = {str(k): v for k, v in weekly_performance.items()}
+            
+            # Calculate weekly success rates
+            if 'isSuccessful' in df.columns:
+                weekly_success = df.groupby('week')['isSuccessful'].mean().to_dict()
+                metrics['weekly_success_rates'] = {str(k): v * 100 for k, v in weekly_success.items()}
+        
+        # 10. Monthly performance
+        if 'createdAt' in df.columns and 'actualReturn' in df.columns:
+            df['month'] = df['createdAt'].dt.month
+            monthly_performance = df.groupby('month')['actualReturn'].mean().to_dict()
+            metrics['monthly_performance'] = {str(k): v for k, v in monthly_performance.items()}
+            
+            # Calculate monthly success rates
+            if 'isSuccessful' in df.columns:
+                monthly_success = df.groupby('month')['isSuccessful'].mean().to_dict()
+                metrics['monthly_success_rates'] = {str(k): v * 100 for k, v in monthly_success.items()}
+        
+        # 11. Consistency metrics
+        if 'actualReturn' in df.columns:
+            actual_returns = df['actualReturn'].dropna()
+            if len(actual_returns) > 1:
+                # Calculate percentage of positive days
+                metrics['positive_return_percentage'] = (actual_returns > 0).mean() * 100
+                
+                # Calculate consecutive wins/losses
+                is_win = (actual_returns > 0).astype(int)
+                win_groups = (is_win != is_win.shift()).cumsum()
+                consecutive_wins = is_win.groupby(win_groups).sum()
+                
+                metrics['max_consecutive_wins'] = consecutive_wins[consecutive_wins > 0].max() if any(consecutive_wins > 0) else 0
+                metrics['max_consecutive_losses'] = (consecutive_wins[consecutive_wins == 0].count()).max() if any(consecutive_wins == 0) else 0
         
         self.metrics = metrics
         return metrics
@@ -452,6 +539,12 @@ Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 - Overall Success Rate: {metrics.get('success_rate', 0):.2f}%
 - Average Actual Return: {metrics.get('average_actual_return', 0):.2f}%
 - Average Expected Return: {metrics.get('average_expected_return', 0):.2f}%
+- Median Actual Return: {metrics.get('median_actual_return', 0):.2f}%
+- Win/Loss Ratio: {metrics.get('win_loss_ratio', 0):.2f}
+- Profit Factor: {metrics.get('profit_factor', 0):.2f}
+- Sharpe Ratio: {metrics.get('sharpe_ratio', 0):.2f}
+- Maximum Drawdown: {metrics.get('max_drawdown', 0):.2f}%
+- Recovery Factor: {metrics.get('recovery_factor', 0):.2f}
 
 ## Confidence Level Distribution
 - High Confidence: {metrics.get('high_confidence', 0)} ({metrics.get('high_confidence_percentage', 0):.2f}%)
@@ -465,13 +558,22 @@ Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
 ## Performance by Confidence Level
 - High Confidence Return: {metrics.get('high_confidence_return', 0):.2f}%
+- High Confidence Success Rate: {metrics.get('high_confidence_success_rate', 0):.2f}%
 - Medium Confidence Return: {metrics.get('medium_confidence_return', 0):.2f}%
+- Medium Confidence Success Rate: {metrics.get('medium_confidence_success_rate', 0):.2f}%
 
 ## Performance by Timeframe
-- Scalp Return: {metrics.get('scalp_return', 0):.2f}%
-- Intraday Return: {metrics.get('intraday_return', 0):.2f}%
-- Swing Return: {metrics.get('swing_return', 0):.2f}%
-- Position Return: {metrics.get('position_return', 0):.2f}%
+- Scalp Return: {metrics.get('scalp_return', 0):.2f}% (Success Rate: {metrics.get('scalp_success_rate', 0):.2f}%)
+- Intraday Return: {metrics.get('intraday_return', 0):.2f}% (Success Rate: {metrics.get('intraday_success_rate', 0):.2f}%)
+- Swing Return: {metrics.get('swing_return', 0):.2f}% (Success Rate: {metrics.get('swing_success_rate', 0):.2f}%)
+- Position Return: {metrics.get('position_return', 0):.2f}% (Success Rate: {metrics.get('position_success_rate', 0):.2f}%)
+
+## Consistency Metrics
+- Positive Return Percentage: {metrics.get('positive_return_percentage', 0):.2f}%
+- Maximum Consecutive Wins: {metrics.get('max_consecutive_wins', 0)}
+- Maximum Consecutive Losses: {metrics.get('max_consecutive_losses', 0)}
+- Average Win: {metrics.get('average_win', 0):.2f}%
+- Average Loss: {metrics.get('average_loss', 0):.2f}%
 """
         
         # Add top tokens section if available
