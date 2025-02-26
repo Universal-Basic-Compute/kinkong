@@ -3,6 +3,7 @@ import sys
 import json
 import codecs
 import requests
+import concurrent.futures
 from datetime import datetime, timezone
 from pathlib import Path
 from airtable import Airtable
@@ -88,11 +89,14 @@ class TokenSearcher:
         try:
             self.logger.info(f"[SEARCH] Searching for token: {keyword}")
             
-            # Check Airtable first
+            # Check Airtable first with timeout
             try:
-                existing_records = self.airtable.get_all(
-                    formula=f"{{token}} = '{keyword.upper()}'"  # Removed timeout parameter
-                )
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    future = executor.submit(
+                        self.airtable.get_all,
+                        formula=f"{{token}} = '{keyword.upper()}'"
+                    )
+                    existing_records = future.result(timeout=10)  # 10 second timeout
             
                 if existing_records:
                     self.logger.info(f"Found existing token record for {keyword.upper()}")
@@ -103,11 +107,13 @@ class TokenSearcher:
                         'address': token_record.get('mint'),
                         'verified': True
                     }
+            except concurrent.futures.TimeoutError:
+                self.logger.error("Airtable search timed out after 10 seconds")
             except Exception as e:
                 self.logger.error(f"Airtable error: {e}")
                 # Continue to Birdeye search even if Airtable fails
 
-            # Search Birdeye
+            # Search Birdeye with timeout
             self.logger.info(f"Searching Birdeye for {keyword.upper()}")
             url = "https://public-api.birdeye.so/defi/v3/search"
             
@@ -122,7 +128,7 @@ class TokenSearcher:
             }
             
             try:
-                response = requests.get(url, params=params, headers=headers, timeout=30)
+                response = requests.get(url, params=params, headers=headers, timeout=15)  # 15 second timeout
                 if not response.ok:
                     self.logger.error(f"Birdeye API error: {response.status_code}")
                     self.logger.error(f"Response: {response.text}")
@@ -164,10 +170,7 @@ class TokenSearcher:
                 return None
                 
             except requests.Timeout:
-                self.logger.error(f"Birdeye API timeout")
-                return None
-            except requests.Timeout:
-                self.logger.error(f"Birdeye API timeout")
+                self.logger.error(f"Birdeye API timeout after 15 seconds")
                 return None
             except Exception as e:
                 self.logger.error(f"Birdeye API error: {e}")
@@ -211,7 +214,7 @@ class TokenSearcher:
             
             # Time the request
             start_time = datetime.now()
-            response = requests.get(url, headers=headers)
+            response = requests.get(url, headers=headers, timeout=15)  # Add 15 second timeout
             request_time = (datetime.now() - start_time).total_seconds()
             self.logger.info(f"Request time: {request_time:.2f}s")
             self.logger.info(f"Response status: {response.status_code}")
@@ -310,29 +313,61 @@ class TokenSearcher:
             self.logger.info("\n📝 Airtable Record to Create/Update:")
             self.logger.info(json.dumps(airtable_record, indent=2))
             
-            # Check if token already exists
-            existing_records = self.airtable.get_all(
-                formula=f"{{mint}} = '{token_data.get('address')}'")
+            # Check if token already exists with timeout
+            try:
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    future = executor.submit(
+                        self.airtable.get_all,
+                        formula=f"{{mint}} = '{token_data.get('address')}'"
+                    )
+                    existing_records = future.result(timeout=10)  # 10 second timeout
+                
+                self.logger.info(f"\n🔍 Checking for existing records...")
+                self.logger.info(f"Found {len(existing_records)} existing records")
+            except concurrent.futures.TimeoutError:
+                self.logger.error("Airtable search for existing records timed out after 10 seconds")
+                existing_records = []
+            except Exception as e:
+                self.logger.error(f"Error checking existing records: {e}")
+                existing_records = []
             
-            self.logger.info(f"\n🔍 Checking for existing records...")
-            self.logger.info(f"Found {len(existing_records)} existing records")
-            
-            # Create/update token record
-            if existing_records:
-                self.logger.info(f"\n🔄 Updating existing token record for {token_symbol}")
-                record_id = existing_records[0]['id']
-                # Don't update createdAt for existing records but DO update updatedAt
-                del airtable_record['createdAt']
-                # Keep updatedAt for updates
-                airtable_record['updatedAt'] = current_time
-                self.airtable.update(record_id, airtable_record)
-                self.logger.info("✅ Token record updated successfully")
-            else:
-                self.logger.info(f"\n➕ Creating new token record for {token_symbol}")
-                record = self.airtable.insert(airtable_record)
-                record_id = record['id']
-                self.logger.info("✅ Token record created successfully")
-                self.logger.info(f"New record ID: {record_id}")
+            # Create/update token record with timeout
+            try:
+                if existing_records:
+                    self.logger.info(f"\n🔄 Updating existing token record for {token_symbol}")
+                    record_id = existing_records[0]['id']
+                    # Don't update createdAt for existing records but DO update updatedAt
+                    del airtable_record['createdAt']
+                    # Keep updatedAt for updates
+                    airtable_record['updatedAt'] = current_time
+                    
+                    with concurrent.futures.ThreadPoolExecutor() as executor:
+                        future = executor.submit(
+                            self.airtable.update,
+                            record_id, airtable_record
+                        )
+                        future.result(timeout=15)  # 15 second timeout
+                    
+                    self.logger.info("✅ Token record updated successfully")
+                else:
+                    self.logger.info(f"\n➕ Creating new token record for {token_symbol}")
+                    
+                    with concurrent.futures.ThreadPoolExecutor() as executor:
+                        future = executor.submit(
+                            self.airtable.insert,
+                            airtable_record
+                        )
+                        record = future.result(timeout=15)  # 15 second timeout
+                    
+                    record_id = record['id']
+                    self.logger.info("✅ Token record created successfully")
+                    self.logger.info(f"New record ID: {record_id}")
+            except concurrent.futures.TimeoutError:
+                self.logger.error("Airtable update/insert timed out after 15 seconds")
+                return False
+            except Exception as e:
+                self.logger.error(f"Error updating/inserting record: {e}")
+                return False
 
             # Now check for bullish signals with timeout protection
             self.logger.info(f"\n🔍 Checking social signals for {token_data.get('symbol')}...")
@@ -342,22 +377,43 @@ class TokenSearcher:
                 bullish = True  # Default to active
                 analysis = "Social signal check skipped to prevent script hanging"
                 
-                # Update token record with results
+                # Update token record with results using timeout
                 update_data = {
                     'isActive': bullish,  # Set active based on bullish signals
                     'explanation': analysis
                 }
 
-                self.airtable.update(record_id, update_data)
-                self.logger.info(f"✅ Token record updated (social check skipped)")
+                try:
+                    with concurrent.futures.ThreadPoolExecutor() as executor:
+                        future = executor.submit(
+                            self.airtable.update,
+                            record_id, update_data
+                        )
+                        future.result(timeout=10)  # 10 second timeout
+                    
+                    self.logger.info(f"✅ Token record updated (social check skipped)")
+                except concurrent.futures.TimeoutError:
+                    self.logger.error("Final Airtable update timed out after 10 seconds")
+                except Exception as e:
+                    self.logger.error(f"Error in final update: {e}")
                 
             except Exception as e:
                 self.logger.error(f"⚠️ Error checking social signals: {str(e)}")
-                # Still update the record but without social signal data
-                self.airtable.update(record_id, {
-                    'updatedAt': current_time,
-                    'explanation': f"Error checking social signals: {str(e)}"
-                })
+                # Still update the record but without social signal data, with timeout
+                try:
+                    with concurrent.futures.ThreadPoolExecutor() as executor:
+                        future = executor.submit(
+                            self.airtable.update,
+                            record_id, {
+                                'updatedAt': current_time,
+                                'explanation': f"Error checking social signals: {str(e)}"
+                            }
+                        )
+                        future.result(timeout=10)  # 10 second timeout
+                except concurrent.futures.TimeoutError:
+                    self.logger.error("Error update timed out after 10 seconds")
+                except Exception as update_error:
+                    self.logger.error(f"Error updating record after social signal error: {update_error}")
 
             return True
             
