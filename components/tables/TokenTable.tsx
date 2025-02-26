@@ -204,11 +204,14 @@ export const TokenTable = ({ showAllTokens = false }: TokenTableProps) => {
                   })}
                 </td>
                 <td className="text-right px-4 py-2 text-gray-300">
-                  ${usdValue.toLocaleString('en-US', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                  })}
-                  {usdValue === 0 && <span className="text-xs text-yellow-500 ml-1">(no price)</span>}
+                  {usdValue > 0 ? (
+                    `$${usdValue.toLocaleString('en-US', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2
+                    })}`
+                  ) : (
+                    <span className="text-yellow-500">$0.00 (no price data)</span>
+                  )}
                 </td>
                 <td className="text-right px-4 py-2 text-gray-300">
                   {percentage.toFixed(1)}%
