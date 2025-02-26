@@ -5,6 +5,19 @@ import Image from 'next/image';
 import fs from 'fs';
 import path from 'path';
 
+// Add this after the imports
+const perspectiveStyles = `
+  .perspective-500 {
+    perspective: 500px;
+    transform-style: preserve-3d;
+  }
+  
+  .perspective-500:hover {
+    transform: rotateY(5deg) rotateX(5deg);
+    transition: transform 0.3s ease;
+  }
+`;
+
 // Trade chart carousel component
 const TradeChartCarousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -221,6 +234,9 @@ export default function Performance() {
 
   return (
     <div className="min-h-screen bg-black">
+      {/* Add this style tag */}
+      <style jsx global>{perspectiveStyles}</style>
+      
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gold mb-2">Performance & Analytics</h1>
@@ -601,10 +617,10 @@ export default function Performance() {
               </div>
               
               
-              {/* Visualization Links */}
-              <div className="bg-black/30 p-6 rounded-lg border border-gold/20 mb-6">
+              {/* Performance Visualizations */}
+              <section className="mb-8">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-semibold text-gold">Performance Visualizations</h3>
+                  <h3 className="text-2xl font-semibold text-gold">Performance Visualizations</h3>
                   <button 
                     onClick={async () => {
                       try {
@@ -625,80 +641,86 @@ export default function Performance() {
                     Recalculate Metrics
                   </button>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20 transform transition-transform hover:scale-105 hover:rotate-1 hover:shadow-lg hover:shadow-gold/10 duration-300">
                     <h4 className="text-lg font-semibold text-gold mb-2">Confidence Distribution</h4>
-                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10">
+                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10 shadow-md transform perspective-500">
                       <Image 
                         src="/performances/confidence_distribution.png" 
                         alt="Confidence Distribution" 
-                        fill
-                        className="object-contain"
+                        width={400}
+                        height={225}
+                        className="object-contain hover:scale-110 transition-transform duration-300"
                       />
                     </div>
                   </div>
                   
-                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20">
+                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20 transform transition-transform hover:scale-105 hover:rotate-1 hover:shadow-lg hover:shadow-gold/10 duration-300">
                     <h4 className="text-lg font-semibold text-gold mb-2">Timeframe Distribution</h4>
-                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10">
+                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10 shadow-md transform perspective-500">
                       <Image 
                         src="/performances/timeframe_distribution.png" 
                         alt="Timeframe Distribution" 
-                        fill
-                        className="object-contain"
+                        width={400}
+                        height={225}
+                        className="object-contain hover:scale-110 transition-transform duration-300"
                       />
                     </div>
                   </div>
                   
-                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20">
+                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20 transform transition-transform hover:scale-105 hover:rotate-1 hover:shadow-lg hover:shadow-gold/10 duration-300">
                     <h4 className="text-lg font-semibold text-gold mb-2">Return Distribution</h4>
-                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10">
+                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10 shadow-md transform perspective-500">
                       <Image 
                         src="/performances/return_distribution.png" 
                         alt="Return Distribution" 
-                        fill
-                        className="object-contain"
+                        width={400}
+                        height={225}
+                        className="object-contain hover:scale-110 transition-transform duration-300"
                       />
                     </div>
                   </div>
                   
-                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20">
+                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20 transform transition-transform hover:scale-105 hover:rotate-1 hover:shadow-lg hover:shadow-gold/10 duration-300">
                     <h4 className="text-lg font-semibold text-gold mb-2">Success by Timeframe</h4>
-                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10">
+                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10 shadow-md transform perspective-500">
                       <Image 
                         src="/performances/success_by_timeframe.png" 
                         alt="Success by Timeframe" 
-                        fill
-                        className="object-contain"
+                        width={400}
+                        height={225}
+                        className="object-contain hover:scale-110 transition-transform duration-300"
                       />
                     </div>
                   </div>
                   
-                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20">
+                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20 transform transition-transform hover:scale-105 hover:rotate-1 hover:shadow-lg hover:shadow-gold/10 duration-300">
                     <h4 className="text-lg font-semibold text-gold mb-2">Risk-Return Metrics</h4>
-                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10">
+                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10 shadow-md transform perspective-500">
                       <Image 
                         src="/performances/risk_return_metrics.png" 
                         alt="Risk-Return Metrics" 
-                        fill
-                        className="object-contain"
+                        width={400}
+                        height={225}
+                        className="object-contain hover:scale-110 transition-transform duration-300"
                       />
                     </div>
                   </div>
                   
-                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20">
+                  <div className="bg-black/30 p-4 rounded-lg border border-gold/20 transform transition-transform hover:scale-105 hover:rotate-1 hover:shadow-lg hover:shadow-gold/10 duration-300">
                     <h4 className="text-lg font-semibold text-gold mb-2">Consistency Metrics</h4>
-                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10">
+                    <div className="relative aspect-video overflow-hidden rounded-lg border border-gold/10 shadow-md transform perspective-500">
                       <Image 
                         src="/performances/consistency_metrics.png" 
                         alt="Consistency Metrics" 
-                        fill
-                        className="object-contain"
+                        width={400}
+                        height={225}
+                        className="object-contain hover:scale-110 transition-transform duration-300"
                       />
                     </div>
                   </div>
                 </div>
-              </div>
+              </section>
             </>
           )}
         </section>
