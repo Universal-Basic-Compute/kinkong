@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from requests_oauthlib import OAuth1
 from datetime import datetime, timezone, timedelta
 import subprocess
-from typing import Optional, List
+from typing import Optional, List, Dict
 from airtable import Airtable as AirtableAPI
 from airtable import Airtable
 
