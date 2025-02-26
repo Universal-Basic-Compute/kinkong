@@ -70,7 +70,7 @@ const Header = () => {
           description: 'Portfolio strategy and settings'
         },
         { 
-          label: 'Invest', 
+          label: 'Kong Invest', 
           href: '/invest',
           description: 'Investment opportunities and allocation',
           isGlowing: true
