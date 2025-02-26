@@ -330,6 +330,106 @@ async def check_token_active_status(token: str) -> tuple[bool, Optional[str]]:
         logger.error(f"Error checking token active status: {e}")
         return False, None
 
+async def handle_special_token(token: str, mention_id: str, mention_text: str, username: str) -> bool:
+    """
+    Handle special tokens (UBC, COMPUTE) by getting @ubc4ai tweets and generating a response
+    
+    Args:
+        token: The special token (UBC or COMPUTE)
+        mention_id: ID of the mention tweet
+        mention_text: Text of the mention
+        username: Username of the person who mentioned
+        
+    Returns:
+        True if successful, False otherwise
+    """
+    try:
+        logger.info(f"Handling special token: {token}")
+        
+        # Get X bearer token
+        x_bearer_token = os.getenv('X_BEARER_TOKEN')
+        if not x_bearer_token:
+            logger.error("X_BEARER_TOKEN not found")
+            return False
+            
+        # Get last 20 tweets from @ubc4ai
+        logger.info("Getting last 20 tweets from @ubc4ai")
+        ubc_tweets = get_account_tweets("ubc4ai", x_bearer_token)
+        
+        if not ubc_tweets:
+            logger.warning("No tweets found from @ubc4ai")
+            # Still continue with empty tweets list
+            ubc_tweets = []
+            
+        # Format tweets for Claude
+        tweets_text = "\n\n".join([
+            f"Tweet {i+1}:\n{tweet.get('text', '')}\n"
+            f"Likes: {tweet.get('public_metrics', {}).get('like_count', 0)}\n"
+            f"Retweets: {tweet.get('public_metrics', {}).get('retweet_count', 0)}"
+            for i, tweet in enumerate(ubc_tweets[:20])  # Limit to 20 tweets
+        ])
+        
+        # Get API key from environment
+        api_key = os.getenv('ANTHROPIC_API_KEY')
+        if not api_key:
+            logger.error("ANTHROPIC_API_KEY not found")
+            return False
+            
+        client = anthropic.Client(api_key=api_key)
+        
+        system_prompt = f"""You are KinKong, an AI-powered cryptocurrency trading bot on X (formerly Twitter).
+        
+        Someone has mentioned ${token} in a tweet. ${token} is a special token related to Universal Basic Compute (UBC), 
+        a project you're closely associated with.
+        
+        Here are the recent tweets from the UBC account (@ubc4ai) to give you context on the latest developments:
+        
+        {tweets_text}
+        
+        Generate a friendly, informative response to the user's mention. Your response should:
+        1. Be conversational and engaging
+        2. Reference relevant information from UBC's recent tweets if applicable
+        3. Answer any questions they might have about ${token} or UBC
+        4. Include a call to action to follow @ubc4ai for updates
+        5. Keep your response under 240 characters for X/Twitter
+        
+        The user's tweet: "{mention_text}"
+        """
+
+        user_prompt = f"Write a reply to @{username}'s mention of ${token}"
+
+        message = client.messages.create(
+            model="claude-3-7-sonnet-20250219",
+            max_tokens=500,
+            system=system_prompt,
+            messages=[
+                {
+                    "role": "user",
+                    "content": user_prompt
+                }
+            ]
+        )
+        
+        # Extract and clean the reply text
+        reply_text = message.content[0].text.strip()
+        
+        # Ensure reply is within X's character limit
+        if len(reply_text) > 240:
+            reply_text = reply_text[:237] + "..."
+            
+        # Send reply tweet
+        if await send_tweet_reply(mention_id, reply_text):
+            logger.info(f"Sent special token reply for ${token}")
+            return True
+        else:
+            logger.error(f"Failed to send special token reply for ${token}")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Error handling special token {token}: {e}")
+        logger.error(traceback.format_exc())
+        return False
+
 async def generate_not_bullish_explanation(token: str) -> str:
     """
     Generate explanation for why we're not bullish on a token using Claude
@@ -584,24 +684,41 @@ async def check_mentions():
                     
                     if tokens:
                         logger.info(f"Found tokens in conversation: {tokens}")
-                        await process_tokens(tokens)
                         
-                        # Check if any of the tokens are not active and send a reply
-                        for token in tokens:
-                            # First check if token was updated
-                            is_active, explanation = await check_token_active_status(token)
+                        # Process regular tokens first
+                        regular_tokens = [t for t in tokens if t not in ['UBC', 'COMPUTE']]
+                        special_tokens = [t for t in tokens if t in ['UBC', 'COMPUTE']]
+                        
+                        # Process regular tokens
+                        if regular_tokens:
+                            await process_tokens(regular_tokens)
                             
-                            if not is_active:
-                                logger.info(f"Token {token} is not active, generating explanation")
+                            # Check if any of the regular tokens are not active and send a reply
+                            for token in regular_tokens:
+                                # First check if token was updated
+                                is_active, explanation = await check_token_active_status(token)
                                 
-                                # Generate explanation
-                                reply_text = await generate_not_bullish_explanation(token)
-                                
-                                # Send reply tweet
-                                if await send_tweet_reply(mention['id'], reply_text):
-                                    logger.info(f"Sent reply for inactive token {token}")
-                                else:
-                                    logger.error(f"Failed to send reply for inactive token {token}")
+                                if not is_active:
+                                    logger.info(f"Token {token} is not active, generating explanation")
+                                    
+                                    # Generate explanation
+                                    reply_text = await generate_not_bullish_explanation(token)
+                                    
+                                    # Send reply tweet
+                                    if await send_tweet_reply(mention['id'], reply_text):
+                                        logger.info(f"Sent reply for inactive token {token}")
+                                    else:
+                                        logger.error(f"Failed to send reply for inactive token {token}")
+                        
+                        # Handle special tokens (UBC, COMPUTE)
+                        for token in special_tokens:
+                            logger.info(f"Processing special token: {token}")
+                            await handle_special_token(
+                                token, 
+                                mention['id'], 
+                                mention['text'], 
+                                mention_data.get('author_username', '')
+                            )
                     else:
                         logger.info("No tokens found in conversation")
                 except Exception as e:
