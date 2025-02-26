@@ -3,6 +3,14 @@ import { rateLimit } from '@/utils/rate-limit';
 import { getTable } from '@/backend/src/airtable/tables';
 import { COPILOT_PROMPT } from '@/prompts/copilot';
 
+// Interface for the copilot request
+interface CopilotRequest {
+  message: string;
+  code: string;
+  wallet?: string;
+  screenshot?: string; // Base64 encoded image
+}
+
 // Helper function to get hours until next block with proper formatting
 function getHoursUntilNext(): string {
   const now = new Date();
@@ -162,8 +170,8 @@ export async function POST(request: NextRequest) {
     // Global rate limit check
     await rateLimiter.check(5, 'copilot_api');
 
-    const requestBody = await request.json();
-    const { message, code } = requestBody;
+    const requestBody: CopilotRequest = await request.json();
+    const { message, code, screenshot } = requestBody;
 
     // Validate code
     if (!code) {
@@ -221,11 +229,52 @@ export async function POST(request: NextRequest) {
     const bodyContent = JSON.stringify(fullContext);
 
     let systemPrompt = COPILOT_PROMPT;
+    
+    // Add explanation about the screenshot to the system prompt if one is provided
+    if (screenshot) {
+      systemPrompt += `\n\nYou have access to a screenshot of the webpage the user is currently viewing. This screenshot is included in the user's message to help you understand the context of their question or request. Reference visual elements from the screenshot when relevant to your response.`;
+    }
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
     try {
+      // Prepare messages array with conversation history
+      const messages = [
+        ...contextData.conversationHistory.map(msg => ({
+          role: msg.role,
+          content: msg.content
+        }))
+      ];
+      
+      // Add the current message with screenshot if available
+      if (screenshot) {
+        // Add the message with both text and image
+        messages.push({
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: message
+            },
+            {
+              type: 'image',
+              source: {
+                type: 'base64',
+                media_type: 'image/jpeg',
+                data: screenshot.replace(/^data:image\/[a-z]+;base64,/, '') // Remove data URL prefix if present
+              }
+            }
+          ]
+        });
+      } else {
+        // Add text-only message if no screenshot
+        messages.push({
+          role: 'user',
+          content: message
+        });
+      }
+
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -236,16 +285,7 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify({
           model: "claude-3-7-sonnet-20250219",
           max_tokens: 1024,
-          messages: [
-            ...contextData.conversationHistory.map(msg => ({
-              role: msg.role,
-              content: msg.content
-            })),
-            {
-              role: 'user',
-              content: message
-            }
-          ],
+          messages: messages,
           system: `${systemPrompt}\n\nPage Content:\n${bodyContent}`
         }),
         signal: controller.signal
@@ -281,25 +321,29 @@ export async function POST(request: NextRequest) {
 
       if (code) {
         const messagesTable = getTable('MESSAGES');
+        
+        // Create user message record - store screenshot info in notes if present
+        const userMessageFields = {
+          code,
+          role: 'user',
+          content: message,
+          createdAt: new Date().toISOString(),
+          wallet: requestBody.wallet || null,
+          notes: screenshot ? 'Contains screenshot' : null
+        };
+        
+        // Create assistant message record
+        const assistantMessageFields = {
+          code,
+          role: 'assistant',
+          content: assistantMessage,
+          createdAt: new Date().toISOString(),
+          wallet: requestBody.wallet || null
+        };
+        
         await messagesTable.create([
-          {
-            fields: {
-              code,
-              role: 'user',
-              content: message,
-              createdAt: new Date().toISOString(),
-              wallet: requestBody.wallet || null // Store wallet if provided
-            }
-          },
-          {
-            fields: {
-              code,
-              role: 'assistant',
-              content: assistantMessage,
-              createdAt: new Date().toISOString(),
-              wallet: requestBody.wallet || null // Store wallet if provided
-            }
-          }
+          { fields: userMessageFields },
+          { fields: assistantMessageFields }
         ]);
       }
 
