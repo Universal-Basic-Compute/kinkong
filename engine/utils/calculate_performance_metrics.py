@@ -2,6 +2,7 @@ import os
 import json
 import logging
 import pandas as pd
+import numpy as np
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from pyairtable import Api, Base
@@ -21,6 +22,21 @@ def setup_logging():
     return logging.getLogger(__name__)
 
 logger = setup_logging()
+
+def convert_to_serializable(obj):
+    """Convert NumPy types to Python standard types for JSON serialization"""
+    if isinstance(obj, (np.integer, np.int64)):
+        return int(obj)
+    elif isinstance(obj, (np.floating, np.float64)):
+        return float(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, dict):
+        return {k: convert_to_serializable(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_to_serializable(i) for i in obj]
+    else:
+        return obj
 
 class SignalPerformanceAnalyzer:
     def __init__(self):
@@ -236,10 +252,13 @@ class SignalPerformanceAnalyzer:
                 metrics['medium_confidence'],
                 metrics['low_confidence']
             ]
+            confidence_labels = ['HIGH', 'MEDIUM', 'LOW']
             sns.barplot(
-                x=['HIGH', 'MEDIUM', 'LOW'],
+                x=confidence_labels,
                 y=confidence_data,
-                palette=['#4CAF50', '#FFC107', '#F44336']
+                hue=confidence_labels,
+                palette=['#4CAF50', '#FFC107', '#F44336'],
+                legend=False
             )
             plt.title('Confidence Level Distribution')
             plt.xlabel('Confidence Level')
@@ -257,10 +276,13 @@ class SignalPerformanceAnalyzer:
                 metrics['swing_signals'],
                 metrics['position_signals']
             ]
+            timeframe_labels = ['SCALP', 'INTRADAY', 'SWING', 'POSITION']
             sns.barplot(
-                x=['SCALP', 'INTRADAY', 'SWING', 'POSITION'],
+                x=timeframe_labels,
                 y=timeframe_data,
-                palette='viridis'
+                hue=timeframe_labels,
+                palette='viridis',
+                legend=False
             )
             plt.title('Timeframe Distribution')
             plt.xlabel('Timeframe')
@@ -314,10 +336,15 @@ class SignalPerformanceAnalyzer:
             token_returns = token_returns[token_returns['count'] >= 3]  # At least 3 signals
             token_returns = token_returns.sort_values('mean', ascending=False).head(10)
             
+            tokens = token_returns.index.tolist()
+            returns = token_returns['mean'].tolist()
+            
             sns.barplot(
-                x=token_returns.index,
-                y=token_returns['mean'],
-                palette='viridis'
+                x=tokens,
+                y=returns,
+                hue=tokens,
+                palette='viridis',
+                legend=False
             )
             plt.title('Average Return by Token (Top 10)')
             plt.xlabel('Token')
@@ -353,10 +380,13 @@ class SignalPerformanceAnalyzer:
             # Initialize the PERFORMANCES table
             performances_table = self.base.table('PERFORMANCES')
             
+            # Convert NumPy types to standard Python types
+            serializable_metrics = convert_to_serializable(metrics)
+            
             # Create the record with just the essential fields
             record = {
                 'type': 'signals',
-                'metrics': json.dumps(metrics),  # Store all metrics as a JSON string
+                'metrics': json.dumps(serializable_metrics),  # Store all metrics as a JSON string
                 'createdAt': datetime.now().isoformat()
             }
             
@@ -440,7 +470,7 @@ Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         # Save metrics as JSON
         metrics_path = self.output_dir / f'signal_metrics_{datetime.now().strftime("%Y%m%d")}.json'
         with open(metrics_path, 'w') as f:
-            json.dump(metrics, f, indent=2)
+            json.dump(convert_to_serializable(metrics), f, indent=2)
         
         logger.info(f"Report saved to {report_path}")
         logger.info(f"Metrics saved to {metrics_path}")
