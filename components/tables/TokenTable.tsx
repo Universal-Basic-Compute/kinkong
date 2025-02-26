@@ -198,13 +198,13 @@ export const TokenTable = ({ showAllTokens = false }: TokenTableProps) => {
                   </a>
                 </td>
                 <td className="text-right px-4 py-2 text-gray-300">
-                  {Number(token.uiAmount).toLocaleString(undefined, {
+                  {Number(token.uiAmount).toLocaleString('en-US', {
                     minimumFractionDigits: token.uiAmount > 0 && token.uiAmount < 1 ? 4 : 0,
                     maximumFractionDigits: token.uiAmount > 0 && token.uiAmount < 1 ? 4 : 0
                   })}
                 </td>
                 <td className="text-right px-4 py-2 text-gray-300">
-                  ${usdValue.toLocaleString(undefined, {
+                  ${usdValue.toLocaleString('en-US', {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2
                   })}
@@ -221,7 +221,7 @@ export const TokenTable = ({ showAllTokens = false }: TokenTableProps) => {
             <td className="px-4 py-2 font-bold text-gold">Total</td>
             <td></td>
             <td className="text-right px-4 py-2 font-bold text-gold">
-              ${totalValue.toLocaleString(undefined, {
+              ${totalValue.toLocaleString('en-US', {
                 maximumFractionDigits: 2
               })}
             </td>
