@@ -361,16 +361,13 @@ export function SignalHistory() {
             <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Reason</th>
             <th className="px-6 py-3 text-center text-xs font-medium text-gold uppercase tracking-wider">Success</th>
             <th className="px-6 py-3 text-right text-xs font-medium text-gold uppercase tracking-wider">
-              <div className="flex flex-col items-end">
-                <SortHeader
-                  field="actualReturn"
-                  label="Return"
-                  currentSort={sortField}
-                  currentDirection={sortDirection}
-                  onSort={handleSort}
-                />
-                <span className="text-[10px] text-gray-500 font-normal normal-case mt-1">incl. 6% trading cost</span>
-              </div>
+              <SortHeader
+                field="actualReturn"
+                label="Return"
+                currentSort={sortField}
+                currentDirection={sortDirection}
+                onSort={handleSort}
+              />
             </th>
           </tr>
         </thead>
@@ -446,9 +443,12 @@ export function SignalHistory() {
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-right">
                 {typeof signal.actualReturn !== 'undefined' && signal.actualReturn !== null ? (
-                  <span className={signal.actualReturn >= 0 ? 'text-green-400' : 'text-red-400'}>
-                    {signal.actualReturn.toFixed(2)}%
-                  </span>
+                  <div>
+                    <span className={signal.actualReturn >= 0 ? 'text-green-400' : 'text-red-400'}>
+                      {signal.actualReturn.toFixed(2)}%
+                    </span>
+                    <div className="text-[10px] text-gray-500">incl. 6% trading cost</div>
+                  </div>
                 ) : (
                   '-'
                 )}
