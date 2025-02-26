@@ -735,9 +735,8 @@ class TradeExecutor:
                     # WETH uses 8 decimals
                     self.logger.info(f"⚠️ Detected WETH token - using 8 decimals")
                     decimals = 8
-                    # Adjust token amount by dividing by 10 to prevent overselling
-                    token_amount = token_amount / 10
-                    self.logger.info(f"Adjusted WETH amount to: {token_amount:.8f}")
+                    # Remove the division by 10 as it's redundant with the decimal adjustment
+                    self.logger.info(f"Using correct decimals for WETH: {decimals}")
                 elif token_mint == 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v':  # USDC
                     decimals = 6
                 else:
