@@ -727,6 +727,34 @@ class TradeExecutor:
                         token_amount = adjusted_token_amount
                         trade_value = max_value
 
+                # IMPORTANT FIX: Determine token decimals and adjust amount if needed
+                token_symbol = trade['fields'].get('token', '').upper()
+                
+                # Special handling for known tokens with different decimals
+                if token_symbol == 'WETH' or token_mint == '7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs':
+                    # WETH uses 8 decimals
+                    self.logger.info(f"⚠️ Detected WETH token - using 8 decimals")
+                    decimals = 8
+                    # Adjust token amount by dividing by 10 to prevent overselling
+                    token_amount = token_amount / 10
+                    self.logger.info(f"Adjusted WETH amount to: {token_amount:.8f}")
+                elif token_mint == 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v':  # USDC
+                    decimals = 6
+                else:
+                    # Default to 9 decimals for most Solana tokens
+                    decimals = 9
+                
+                self.logger.info(f"Using {decimals} decimals for {token_symbol}")
+                
+                # Add additional safety check based on original trade value
+                original_value = float(trade['fields'].get('value', 0))
+                if trade_value > original_value * 5:
+                    self.logger.warning(f"⚠️ Trade value ${trade_value:.2f} is more than 5x original value ${original_value:.2f}")
+                    self.logger.warning(f"Limiting to 5x original value")
+                    token_amount = (original_value * 5) / current_price
+                    trade_value = original_value * 5
+                    self.logger.warning(f"Adjusted token amount: {token_amount:.8f}")
+
                 success, transaction_bytes = await self.jupiter.execute_validated_swap(
                     input_token=token_mint,
                     output_token="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",  # USDC
