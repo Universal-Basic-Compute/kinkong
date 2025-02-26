@@ -62,6 +62,9 @@ export default function Signals() {
               Be part of KinKong's trading intelligence! Share your market insights and influence our trading decisions while earning extra profit share allocations. Together, we're smarter! 🚀
             </p>
           </div>
+          <div>
+            <WalletConnect />
+          </div>
         </div>
 
         {/* Signal History Section */}

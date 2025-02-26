@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 
-// Store for active connections
-const clients = new Set<ReadableStreamController<Uint8Array>>();
+// Store for active connections with last activity timestamp
+const clients = new Map<ReadableStreamController<Uint8Array>, number>();
 
 // Function to broadcast to all connected clients
 export function broadcastToClients(data: any) {
@@ -10,9 +10,22 @@ export function broadcastToClients(data: any) {
   const encodedEvent = encoder.encode(eventString);
   
   let activeClients = 0;
-  clients.forEach(client => {
+  const now = Date.now();
+  
+  // Remove stale clients (no activity for more than 2 minutes)
+  for (const [client, lastActivity] of clients.entries()) {
+    if (now - lastActivity > 120000) {
+      console.log('Removing stale client connection');
+      clients.delete(client);
+    }
+  }
+  
+  // Send to remaining clients
+  clients.forEach((lastActivity, client) => {
     try {
       client.enqueue(encodedEvent);
+      // Update last activity timestamp
+      clients.set(client, now);
       activeClients++;
     } catch (err) {
       console.error('Error sending event to client:', err);
@@ -28,8 +41,8 @@ export async function GET(request: NextRequest) {
   // Create a new stream
   const stream = new ReadableStream({
     start(controller) {
-      // Add this client to the set
-      clients.add(controller);
+      // Add this client to the map with current timestamp
+      clients.set(controller, Date.now());
       
       // Send initial connection message
       const encoder = new TextEncoder();
@@ -39,6 +52,8 @@ export async function GET(request: NextRequest) {
       const keepAliveInterval = setInterval(() => {
         try {
           controller.enqueue(encoder.encode(`: keep-alive\n\n`));
+          // Update last activity timestamp
+          clients.set(controller, Date.now());
         } catch (e) {
           clearInterval(keepAliveInterval);
           clients.delete(controller);
@@ -53,6 +68,16 @@ export async function GET(request: NextRequest) {
       });
       
       console.log(`New client connected. Total clients: ${clients.size}`);
+      
+      // Log active connections every minute
+      const logInterval = setInterval(() => {
+        console.log(`Active SSE connections: ${clients.size}`);
+      }, 60000);
+      
+      // Clear log interval when connection closes
+      request.signal.addEventListener('abort', () => {
+        clearInterval(logInterval);
+      });
     }
   });
 
