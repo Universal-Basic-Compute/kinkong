@@ -51,25 +51,36 @@ export default function Invest() {
         if (!investmentsResponse.ok) throw new Error('Failed to fetch investments');
         const investmentsData = await investmentsResponse.json();
         
-        // Fetch latest wallet snapshot
-        const snapshotResponse = await fetch('/api/portfolio');
-        if (!snapshotResponse.ok) throw new Error('Failed to fetch wallet snapshot');
-        const snapshotData = await snapshotResponse.json();
+        // Fetch latest wallet snapshot (portfolio)
+        const portfolioResponse = await fetch('/api/portfolio');
+        if (!portfolioResponse.ok) throw new Error('Failed to fetch portfolio data');
+        const portfolioData = await portfolioResponse.json();
         
-        // Set the latest snapshot
+        // Calculate total portfolio value from the token balances
+        const totalValue = portfolioData.reduce((sum: number, token: any) => 
+          sum + (token.usdValue || 0), 0);
+        
+        // Set the latest snapshot with the calculated total value
         setLatestSnapshot({
-          totalValue: snapshotData.totalValue || 0,
-          timestamp: snapshotData.timestamp || new Date().toISOString()
+          totalValue: totalValue,
+          timestamp: new Date().toISOString() // Use current time as the snapshot time
         });
+        
+        console.log('Portfolio total value:', totalValue);
         
         // Calculate returns for each investment
         const totalInvestment = investmentsData.reduce((sum: number, inv: Investment) => sum + inv.amount, 0);
-        const profit = Math.max(0, snapshotData.totalValue - totalInvestment); // Ensure profit is not negative
+        const profit = Math.max(0, totalValue - totalInvestment); // Ensure profit is not negative
         const profitShare = profit * 0.75; // 75% of profit is distributed
+        
+        console.log('Total investment:', totalInvestment);
+        console.log('Profit:', profit);
+        console.log('Profit share (75%):', profitShare);
         
         const investmentsWithReturns = investmentsData.map((inv: Investment) => {
           const investmentRatio = inv.amount / totalInvestment;
           const calculatedReturn = profitShare * investmentRatio;
+          console.log(`Investment ${inv.investmentId}: $${inv.amount} (${(investmentRatio * 100).toFixed(2)}%) -> Return: $${calculatedReturn.toFixed(2)}`);
           return {
             ...inv,
             return: calculatedReturn
