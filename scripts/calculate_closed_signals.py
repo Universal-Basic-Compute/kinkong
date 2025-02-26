@@ -244,7 +244,8 @@ def calculate_closed_signals():
                     signal_id,
                     {
                         'exitPrice': results['exitPrice'],
-                        'actualReturn': round(results['actualReturn'] * 100) / 100
+                        'actualReturn': round(results['actualReturn'] * 100) / 100,
+                        'tradingCosts': 0.06  # Add trading costs of 6%
                     }
                 )
 
