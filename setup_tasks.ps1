@@ -61,6 +61,18 @@ $tasks = @(
         Script = "find_tokens.py all"
         Schedule = "Daily"
         StartTime = "22:00"  # Run at 10:00 PM
+    },
+    @{
+        Name = "KinKong_MarketOverview"
+        Script = "python ../socials/market_overview_generation.py"
+        Schedule = "Daily"
+        StartTime = "19:00"  # Run at 7:00 PM
+    },
+    @{
+        Name = "KinKong_MonitorMentions"
+        Script = "python ../socials/monitor_mentions.py"
+        Schedule = "Every10Minutes"
+        StartTime = "00:00"  # Start at midnight, then every 10 minutes
     }
 )
 
@@ -92,6 +104,9 @@ $PYTHON_PATH $($task.Script)
         }
         "Daily" {
             $trigger = New-ScheduledTaskTrigger -Daily -At $task.StartTime
+        }
+        "Every10Minutes" {
+            $trigger = New-ScheduledTaskTrigger -Once -At $task.StartTime -RepetitionInterval (New-TimeSpan -Minutes 10)
         }
     }
 
