@@ -74,6 +74,12 @@ $tasks = @(
         Script = "python ../socials/monitor_mentions.py"
         Schedule = "Every10Minutes"
         StartTime = "00:00"  # Start at midnight, then every 10 minutes
+    },
+    @{
+        Name = "KinKong_CalculateClosedSignals"
+        Script = "python ../scripts/calculate_closed_signals.py"
+        Schedule = "Hourly"
+        StartTime = "00:05"  # Start at 5 minutes past the hour
     }
 )
 
@@ -120,6 +126,9 @@ $PYTHON_PATH $scriptPath
         }
         "Every10Minutes" {
             $trigger = New-ScheduledTaskTrigger -Once -At $task.StartTime -RepetitionInterval (New-TimeSpan -Minutes 10)
+        }
+        "Hourly" {
+            $trigger = New-ScheduledTaskTrigger -Once -At $task.StartTime -RepetitionInterval (New-TimeSpan -Hours 1)
         }
     }
 
