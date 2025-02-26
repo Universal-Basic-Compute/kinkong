@@ -36,7 +36,7 @@ const Header = () => {
 
   const navItems: NavItem[] = [
     { 
-      label: 'Kong Trading',
+      label: 'Kong Invest',
       isGroup: true,
       subItems: [
         { 
@@ -70,7 +70,7 @@ const Header = () => {
           description: 'Portfolio strategy and settings'
         },
         { 
-          label: 'Kong Invest', 
+          label: 'Invest', 
           href: '/invest',
           description: 'Investment opportunities and allocation',
           isGlowing: true
