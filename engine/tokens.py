@@ -658,6 +658,27 @@ class TokenManager:
                 logger.error(f"Token {symbol} not found")
                 return False
             
+            # Check if token has a record_id (exists in Airtable)
+            record_id = token_data.get('record_id')
+            if record_id:
+                # Check when the token was last updated
+                try:
+                    # Get the token record to check updatedAt
+                    token_record = self.tokens_table.get(record_id)
+                    updated_at = token_record['fields'].get('updatedAt')
+                    
+                    if updated_at:
+                        # Convert to datetime and check if older than 24 hours
+                        from datetime import datetime, timezone, timedelta
+                        updated_at_dt = datetime.fromisoformat(updated_at.replace('Z', '+00:00'))
+                        age = datetime.now(timezone.utc) - updated_at_dt
+                        
+                        if age < timedelta(hours=24):
+                            logger.info(f"Token {symbol} was updated less than 24 hours ago ({age.total_seconds()/3600:.1f} hours). Skipping.")
+                            return True  # Return success without processing
+                except Exception as e:
+                    logger.warning(f"Error checking token update time: {e}. Will proceed with update.")
+            
             # Create or update token record
             record_id = self.create_or_update_token(token_data)
             
@@ -683,7 +704,8 @@ class TokenManager:
         results = {
             'success': 0,
             'failure': 0,
-            'total': 0
+            'total': 0,
+            'skipped': 0  # Add skipped counter
         }
         
         try:
@@ -701,6 +723,19 @@ class TokenManager:
                         logger.warning(f"Token record {token_record['id']} has no symbol, skipping")
                         results['failure'] += 1
                         continue
+                    
+                    # Check when the token was last updated
+                    updated_at = token_record['fields'].get('updatedAt')
+                    if updated_at:
+                        # Convert to datetime and check if older than 24 hours
+                        from datetime import datetime, timezone, timedelta
+                        updated_at_dt = datetime.fromisoformat(updated_at.replace('Z', '+00:00'))
+                        age = datetime.now(timezone.utc) - updated_at_dt
+                        
+                        if age < timedelta(hours=24):
+                            logger.info(f"Token {symbol} was updated less than 24 hours ago ({age.total_seconds()/3600:.1f} hours). Skipping.")
+                            results['skipped'] += 1
+                            continue
                     
                     logger.info(f"Processing token {symbol}")
                     
@@ -727,7 +762,7 @@ class TokenManager:
                     logger.error(f"Error processing token record: {e}")
                     results['failure'] += 1
             
-            logger.info(f"Processed {results['total']} tokens: {results['success']} successful, {results['failure']} failed")
+            logger.info(f"Processed {results['total']} tokens: {results['success']} successful, {results['failure']} failed, {results['skipped']} skipped")
             return results
             
         except Exception as e:
