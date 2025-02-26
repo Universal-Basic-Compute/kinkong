@@ -77,36 +77,32 @@ export default function CopilotPage() {
       buttonStyle: "bg-gray-800 hover:bg-gray-700"
     },
     {
-      name: "Kong Pro - UBC",
+      name: "Kong Pro - $UBC",
       description: "Full access to KinKong intelligence",
       features: [
-        "100 messages per 8-hour block",
+        "Extended message capacity",
         "Advanced technical analysis",
         "Priority response time",
-        "Exclusive alpha signals",
-        "Custom trading strategies",
-        "Direct ecosystem integration"
+        "Exclusive alpha signals"
       ],
-      price: <span>$75,000 <span className="metallic-text-ubc">UBC</span> / 1 month</span>,
+      price: <span>75,000 <span className="metallic-text-ubc">$UBC</span> / 1 month</span>,
       action: () => handlePremiumSubscription('UBC'),
-      buttonText: <span>Upgrade with <span className="metallic-text-ubc">UBC</span></span>, 
-      buttonStyle: "bg-gradient-to-r from-purple-600 to-blue-500 text-white"
+      buttonText: <span>Upgrade with <span className="metallic-text-ubc">$UBC</span></span>, 
+      buttonStyle: "bg-gradient-to-r from-purple-900 to-blue-900 text-white"
     },
     {
-      name: "Kong Pro - COMPUTE",
+      name: "Kong Pro - $COMPUTE",
       description: "Full access to KinKong intelligence",
       features: [
-        "100 messages per 8-hour block",
+        "Extended message capacity",
         "Advanced technical analysis",
         "Priority response time",
-        "Exclusive alpha signals",
-        "Custom trading strategies",
-        "Direct ecosystem integration"
+        "Exclusive alpha signals"
       ],
-      price: <span>$750,000 <span className="metallic-text-compute">COMPUTE</span> / 1 month</span>,
+      price: <span>750,000 <span className="metallic-text-compute">$COMPUTE</span> / 1 month</span>,
       action: () => handlePremiumSubscription('COMPUTE'),
-      buttonText: <span>Upgrade with <span className="metallic-text-compute">COMPUTE</span></span>, 
-      buttonStyle: "bg-gradient-to-r from-blue-600 to-cyan-500 text-white"
+      buttonText: <span>Upgrade with <span className="metallic-text-compute">$COMPUTE</span></span>, 
+      buttonStyle: "bg-gradient-to-r from-blue-900 to-cyan-900 text-white"
     }
   ];
 
@@ -279,7 +275,7 @@ export default function CopilotPage() {
                 <ul className="space-y-2 mb-6">
                   {tier.features.map((feature, i) => (
                     <li key={i} className="flex items-center text-gray-300">
-                      <span className="text-gold mr-2">✓</span> {feature}
+                      {feature}
                     </li>
                   ))}
                 </ul>
