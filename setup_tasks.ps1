@@ -42,8 +42,8 @@ $tasks = @(
     @{
         Name = "KinKong_Trades"
         Script = "trades.py"
-        Schedule = "Every4Hours"
-        StartTime = "00:20"  # 10 minutes after signals
+        Schedule = "Every10Minutes"
+        StartTime = "00:20"  # Start at 00:20, then every 10 minutes
     },
     @{
         Name = "KinKong_WalletSnapshot"

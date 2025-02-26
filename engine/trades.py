@@ -926,6 +926,8 @@ class TradeExecutor:
 
 def main():
     try:
+        logger.info("🔄 Trade monitor running in 10-minute interval mode")
+        
         # Verify environment variables
         required_vars = [
             'KINKONG_AIRTABLE_BASE_ID',
