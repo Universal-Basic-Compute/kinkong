@@ -85,13 +85,12 @@ const validateInvestment = (inv: any): inv is Investment => {
 
 export default function Invest() {
   const { connected, publicKey, signTransaction } = useWallet();
-  const [selectedToken, setSelectedToken] = useState<'USDC' | 'UBC' | 'COMPUTE'>('USDC');
-  const [amount, setAmount] = useState<number>(500);
+  const [selectedToken, setSelectedToken] = useState<'UBC' | 'COMPUTE'>('UBC');
+  const [amount, setAmount] = useState<number>(100000);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Token-specific minimum amounts
   const MIN_AMOUNTS = {
-    USDC: 500,
     UBC: 100000,
     COMPUTE: 1000000
   };
@@ -227,9 +226,7 @@ export default function Invest() {
 
       // Determine source token mint based on selection
       let sourceMint: PublicKey;
-      if (selectedToken === 'USDC') {
-        sourceMint = USDC_MINT;
-      } else if (selectedToken === 'UBC') {
+      if (selectedToken === 'UBC') {
         sourceMint = UBC_MINT;
       } else { // COMPUTE
         sourceMint = COMPUTE_MINT;
@@ -293,8 +290,8 @@ export default function Invest() {
         console.log(`Checking ${selectedToken} balance...`);
         const balance = await connection.getTokenAccountBalance(userTokenAccount);
         
-        // Get decimals for the selected token
-        const decimals = selectedToken === 'USDC' ? 6 : 9; // UBC and COMPUTE use 9 decimals
+        // Both UBC and COMPUTE use 9 decimals
+        const decimals = 9;
         const userBalance = Number(balance.value.amount) / Math.pow(10, decimals);
         
         console.log(`User ${selectedToken} balance:`, userBalance);
@@ -309,8 +306,8 @@ export default function Invest() {
         return;
       }
 
-      // Add transfer instruction with appropriate decimals
-      const decimals = selectedToken === 'USDC' ? 6 : 9; // UBC and COMPUTE use 9 decimals
+      // Add transfer instruction with appropriate decimals (9 for both UBC and COMPUTE)
+      const decimals = 9;
       transaction.add(
         createTransferInstruction(
           userTokenAccount,
@@ -471,18 +468,7 @@ export default function Invest() {
                   <label className="block text-sm mb-2 text-gray-300">
                     Select Token
                   </label>
-                  <div className="grid grid-cols-3 gap-2 mb-4">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedToken('USDC')}
-                      className={`py-2 px-4 rounded-lg border ${
-                        selectedToken === 'USDC' 
-                          ? 'bg-gold/20 border-gold text-white' 
-                          : 'bg-black/20 border-gray-700 text-gray-400'
-                      }`}
-                    >
-                      $USDC
-                    </button>
+                  <div className="grid grid-cols-2 gap-2 mb-4">
                     <button
                       type="button"
                       onClick={() => setSelectedToken('UBC')}
@@ -536,7 +522,7 @@ export default function Invest() {
                     {latestSnapshot && totalInvestment > 0 ? (
                       (() => {
                         // Convert investment amount to USDC equivalent for calculation
-                        let usdcEquivalent = amount;
+                        let usdcEquivalent = 0;
                         if (selectedToken === 'UBC') {
                           // Get UBC price from the first investment's return calculation
                           const ubcPrice = investments.length > 0 && investments[0].return !== undefined && investments[0].ubcReturn !== undefined
