@@ -153,15 +153,6 @@ export default function Performance() {
                     </div>
                   </div>
                   
-                  <div className="bg-black/50 p-4 rounded-lg border border-gold/10">
-                    <div className="text-gray-400 text-sm mb-1">Signal Type</div>
-                    <div className="text-2xl font-bold text-white">
-                      {metrics.metrics.buy_percentage?.toFixed(1)}% / {metrics.metrics.sell_percentage?.toFixed(1)}%
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      Buy: {metrics.metrics.buy_signals} / Sell: {metrics.metrics.sell_signals}
-                    </div>
-                  </div>
                 </div>
               </div>
               
@@ -212,26 +203,6 @@ export default function Performance() {
                       </div>
                     </div>
                     
-                    <div className="relative pt-1">
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full bg-red-900/50 text-red-400">
-                            LOW
-                          </span>
-                        </div>
-                        <div className="text-right">
-                          <span className={`text-xs font-semibold inline-block ${metrics.metrics.low_confidence_return >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                            {metrics.metrics.low_confidence_return?.toFixed(2)}%
-                          </span>
-                        </div>
-                      </div>
-                      <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-black/50">
-                        <div style={{ width: `${metrics.metrics.low_confidence_percentage}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-red-500"></div>
-                      </div>
-                      <div className="text-xs text-gray-400">
-                        {metrics.metrics.low_confidence} signals ({metrics.metrics.low_confidence_percentage?.toFixed(1)}%)
-                      </div>
-                    </div>
                   </div>
                 </div>
                 
@@ -326,47 +297,6 @@ export default function Performance() {
                 </div>
               </div>
               
-              {/* Signal Type Performance */}
-              <div className="bg-black/30 p-6 rounded-lg border border-gold/20 mb-6">
-                <h3 className="text-xl font-semibold text-gold mb-4">Signal Type Performance</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-black/50 p-4 rounded-lg border border-gold/10">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm font-semibold inline-block py-1 px-3 uppercase rounded-full bg-green-900/50 text-green-400">
-                        BUY
-                      </span>
-                      <span className={`text-lg font-bold ${metrics.metrics.buy_return >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {metrics.metrics.buy_return?.toFixed(2)}%
-                      </span>
-                    </div>
-                    <div className="overflow-hidden h-3 mb-3 text-xs flex rounded bg-black/50">
-                      <div style={{ width: `${metrics.metrics.buy_percentage}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-green-500"></div>
-                    </div>
-                    <div className="text-xs text-gray-400 flex justify-between">
-                      <span>{metrics.metrics.buy_signals} signals</span>
-                      <span>{metrics.metrics.buy_percentage?.toFixed(1)}% of total</span>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-black/50 p-4 rounded-lg border border-gold/10">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm font-semibold inline-block py-1 px-3 uppercase rounded-full bg-red-900/50 text-red-400">
-                        SELL
-                      </span>
-                      <span className={`text-lg font-bold ${metrics.metrics.sell_return >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {metrics.metrics.sell_return?.toFixed(2)}%
-                      </span>
-                    </div>
-                    <div className="overflow-hidden h-3 mb-3 text-xs flex rounded bg-black/50">
-                      <div style={{ width: `${metrics.metrics.sell_percentage}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-red-500"></div>
-                    </div>
-                    <div className="text-xs text-gray-400 flex justify-between">
-                      <span>{metrics.metrics.sell_signals} signals</span>
-                      <span>{metrics.metrics.sell_percentage?.toFixed(1)}% of total</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
               
               {/* Visualization Links */}
               <div className="bg-black/30 p-6 rounded-lg border border-gold/20 mb-6">

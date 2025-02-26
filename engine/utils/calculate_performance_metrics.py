@@ -77,12 +77,12 @@ class SignalPerformanceAnalyzer:
         cutoff_date = (datetime.now() - timedelta(days=days_back)).isoformat()
         
         # Fetch signals created after the cutoff date
-        # Only include signals with non-null and non-zero actualReturn values
+        # Only include BUY signals with non-null and non-zero actualReturn values
         signals = self.signals_table.all(
-            formula=f"AND(createdAt >= '{cutoff_date}', NOT(actualReturn = 0), NOT(actualReturn = ''))"
+            formula=f"AND(createdAt >= '{cutoff_date}', NOT(actualReturn = 0), NOT(actualReturn = ''), type='BUY')"
         )
         
-        logger.info(f"Retrieved {len(signals)} completed signals")
+        logger.info(f"Retrieved {len(signals)} completed BUY signals")
         
         if not signals:
             logger.warning("No completed signals found in the specified time period")
@@ -453,14 +453,9 @@ Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 - Average Actual Return: {metrics.get('average_actual_return', 0):.2f}%
 - Average Expected Return: {metrics.get('average_expected_return', 0):.2f}%
 
-## Signal Type Distribution
-- Buy Signals: {metrics.get('buy_signals', 0)} ({metrics.get('buy_percentage', 0):.2f}%)
-- Sell Signals: {metrics.get('sell_signals', 0)} ({metrics.get('sell_percentage', 0):.2f}%)
-
 ## Confidence Level Distribution
 - High Confidence: {metrics.get('high_confidence', 0)} ({metrics.get('high_confidence_percentage', 0):.2f}%)
 - Medium Confidence: {metrics.get('medium_confidence', 0)} ({metrics.get('medium_confidence_percentage', 0):.2f}%)
-- Low Confidence: {metrics.get('low_confidence', 0)} ({metrics.get('low_confidence_percentage', 0):.2f}%)
 
 ## Timeframe Distribution
 - Scalp: {metrics.get('scalp_signals', 0)} ({metrics.get('scalp_percentage', 0):.2f}%)
@@ -471,17 +466,12 @@ Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 ## Performance by Confidence Level
 - High Confidence Return: {metrics.get('high_confidence_return', 0):.2f}%
 - Medium Confidence Return: {metrics.get('medium_confidence_return', 0):.2f}%
-- Low Confidence Return: {metrics.get('low_confidence_return', 0):.2f}%
 
 ## Performance by Timeframe
 - Scalp Return: {metrics.get('scalp_return', 0):.2f}%
 - Intraday Return: {metrics.get('intraday_return', 0):.2f}%
 - Swing Return: {metrics.get('swing_return', 0):.2f}%
 - Position Return: {metrics.get('position_return', 0):.2f}%
-
-## Performance by Signal Type
-- Buy Return: {metrics.get('buy_return', 0):.2f}%
-- Sell Return: {metrics.get('sell_return', 0):.2f}%
 """
         
         # Save report to file
