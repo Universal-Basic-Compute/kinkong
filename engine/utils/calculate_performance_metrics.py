@@ -474,6 +474,12 @@ Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 - Position Return: {metrics.get('position_return', 0):.2f}%
 """
         
+        # Add top tokens section if available
+        if 'top_tokens' in metrics and metrics['top_tokens']:
+            report += "\n## Top Performing Tokens (min. 3 signals)\n"
+            for token, data in metrics['top_tokens'].items():
+                report += f"- {token}: {data['return']:.2f}% (Success Rate: {data['success_rate']:.2f}%, Signals: {data['count']})\n"
+        
         # Save report to file
         report_path = self.output_dir / f'signal_performance_report_{datetime.now().strftime("%Y%m%d")}.md'
         with open(report_path, 'w') as f:
@@ -511,8 +517,18 @@ def main():
             print(f"Total Signals: {metrics.get('total_signals', 0)}")
             print(f"Success Rate: {metrics.get('success_rate', 0):.2f}%")
             print(f"Average Return: {metrics.get('average_actual_return', 0):.2f}%")
-            print(f"Buy/Sell Ratio: {metrics.get('buy_percentage', 0):.1f}% / {metrics.get('sell_percentage', 0):.1f}%")
+            print(f"Win/Loss Ratio: {metrics.get('win_loss_ratio', 0):.2f}")
+            print(f"Profit Factor: {metrics.get('profit_factor', 0):.2f}")
+            print(f"Sharpe Ratio: {metrics.get('sharpe_ratio', 0):.2f}")
+            print(f"Max Drawdown: {metrics.get('max_drawdown', 0):.2f}%")
             print("===============================\n")
+            
+            # Print top tokens if available
+            if 'top_tokens' in metrics and metrics['top_tokens']:
+                print("=== TOP PERFORMING TOKENS ===")
+                for token, data in list(metrics['top_tokens'].items())[:5]:  # Show top 5
+                    print(f"{token}: {data['return']:.2f}% (Success: {data['success_rate']:.1f}%)")
+                print("===============================\n")
         else:
             logger.error("Failed to generate report")
     
