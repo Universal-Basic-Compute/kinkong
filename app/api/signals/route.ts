@@ -1,3 +1,6 @@
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 import { getTable, TABLES } from '@/backend/src/airtable/tables';
 import { NextResponse } from 'next/server';
 import { parseAndFormatDate } from '@/backend/src/utils/dates';
