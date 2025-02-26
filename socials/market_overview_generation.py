@@ -214,7 +214,15 @@ class MarketOverviewGenerator:
             - Include specific project updates
             - Keep technical analysis minimal
             - Maintain KinKong's voice
-            - Emphasize fundamental developments over price action"""
+            - Emphasize fundamental developments over price action
+
+            Formatting instructions:
+            - Do not use bold text formatting
+            - Do not use headers or titles
+            - Use plain text with emojis for section breaks
+            - Use simple paragraph structure
+            - Avoid using HTML tags like <b> or <strong>
+            - Separate sections with line breaks and emojis only"""
 
             user_prompt = "Generate a market overview based on the provided token metrics and market sentiment."
 
