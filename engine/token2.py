@@ -266,8 +266,8 @@ class TokenManager:
             # Get additional data from DexScreener
             dex_data = self.get_dexscreener_data(token_data.get('address'))
             
-            # Determine if token should be active
-            is_active = True
+            # Determine if token should be active - DEFAULT TO FALSE
+            is_active = False  # Changed from True to False
             if symbol in self.ALWAYS_ACTIVE_TOKENS:
                 is_active = True
                 logger.info(f"{symbol} is a special token - always active")
@@ -280,16 +280,14 @@ class TokenManager:
                 'token': symbol,
                 'name': token_data.get('name', ''),
                 'mint': token_data.get('address', ''),
-                'isActive': is_active,
+                'isActive': is_active,  # Now defaults to False
                 'updatedAt': current_time,
                 'website': dex_data['social_links']['website'],
                 'xAccount': dex_data['social_links']['xAccount'],
                 'telegram': dex_data['social_links']['telegram'],
                 'pair': dex_data['pair'],
                 'image': dex_data['image'],
-                'price': dex_data['price'],
-                'volume24h': dex_data['volume24h'],
-                'liquidity': dex_data['liquidity'],
+                # Removed price, volume24h, and liquidity fields
                 'description': f"Token {symbol} on Solana chain"
             }
             
