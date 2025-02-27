@@ -1,4 +1,5 @@
 'use client';
+export const dynamic = 'force-dynamic';
 import { TradeHistory } from '@/components/tables/TradeHistory';
 
 export default function Trades() {
