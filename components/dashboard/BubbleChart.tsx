@@ -353,33 +353,21 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
       // token text
       const tokenText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       tokenText.setAttribute('x', x.toString());
-      tokenText.setAttribute('y', (y - 2).toString()); // Move up slightly
+      tokenText.setAttribute('y', y.toString()); // Center vertically
       tokenText.setAttribute('text-anchor', 'middle');
-      tokenText.setAttribute('dominant-baseline', 'bottom');
+      tokenText.setAttribute('dominant-baseline', 'middle'); // Center vertically
       tokenText.setAttribute('fill', 'white');
       tokenText.setAttribute('font-size', '10');
       tokenText.setAttribute('font-weight', 'bold');
       tokenText.textContent = token.token;
 
-      // Name text
-      const nameText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      nameText.setAttribute('x', x.toString());
-      nameText.setAttribute('y', (y + 2).toString()); // Move down slightly
-      nameText.setAttribute('text-anchor', 'middle');
-      nameText.setAttribute('dominant-baseline', 'top');
-      nameText.setAttribute('fill', 'rgba(255, 255, 255, 0.6)'); // Slightly transparent
-      nameText.setAttribute('font-size', '8');
-      nameText.textContent = token.name;
-
-      // Add both texts to the group
+      // Add text to the group
       textGroup.appendChild(tokenText);
-      textGroup.appendChild(nameText);
 
       // Hover effects
       group.addEventListener('mouseenter', (e) => {
         circle.setAttribute('stroke-width', '3');
         tokenText.setAttribute('fill', colors.stroke); // Highlight text
-        nameText.setAttribute('fill', colors.stroke); // Highlight text
         tooltip.innerHTML = `
           <div class="font-bold mb-1">${token.token}</div>
           <div class="text-gray-400 text-xs mb-2">${token.name}</div>
@@ -402,7 +390,6 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
       group.addEventListener('mouseleave', () => {
         circle.setAttribute('stroke-width', '2');
         tokenText.setAttribute('fill', 'white'); // Reset text color
-        nameText.setAttribute('fill', 'rgba(255, 255, 255, 0.6)'); // Reset text color
         tooltip.style.display = 'none';
       });
 
