@@ -429,7 +429,7 @@ class TradeExecutor:
             token_amount = trade_value / entry_price  # This amount is already in correct token units
 
             # Execute validated swap with calculated amount
-            success, transaction_bytes = await self.jupiter.execute_validated_swap(
+            success, transaction_bytes, quote_data = await self.jupiter.execute_validated_swap(
                 input_token="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
                 output_token=signal['fields']['mint'],
                 amount=trade_value,  # Using USD value for swap
@@ -451,7 +451,8 @@ class TradeExecutor:
             # Execute transaction
             trade_result = await self.jupiter.execute_trade_with_retries(
                 transaction,
-                token_mint
+                token_mint,
+                quote_data
             )
             
             # Si on a un résultat avec signature, la transaction a réussi (balance vérifiée)
@@ -785,7 +786,7 @@ class TradeExecutor:
                     current_value = original_value * 5
                     self.logger.warning(f"Adjusted token amount: {token_amount:.8f}")
 
-                success, transaction_bytes = await self.jupiter.execute_validated_swap(
+                success, transaction_bytes, quote_data = await self.jupiter.execute_validated_swap(
                     input_token=token_mint,
                     output_token="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",  # USDC
                     amount=token_amount,
@@ -805,7 +806,8 @@ class TradeExecutor:
                     
                 signature = await self.jupiter.execute_trade_with_retries(
                     transaction,
-                    token_mint  # We already have token_mint in this function
+                    token_mint,  # We already have token_mint in this function
+                    quote_data
                 )
                 if not signature:
                     self.logger.error(f"Failed to execute transaction")
@@ -1217,7 +1219,7 @@ class TradeExecutor:
             
             # Étape 1: USDC -> USDT
             self.logger.info("\n🔄 Step 1: USDC -> USDT")
-            success1, transaction_bytes1 = await self.jupiter.execute_validated_swap(
+            success1, transaction_bytes1, quote_data1 = await self.jupiter.execute_validated_swap(
                 input_token=usdc_mint,
                 output_token=usdt_mint,
                 amount=1.0,  # 1 USDC
@@ -1238,7 +1240,8 @@ class TradeExecutor:
             # Exécuter la transaction
             result1 = await self.jupiter.execute_trade_with_retries(
                 transaction1,
-                usdt_mint
+                usdt_mint,
+                quote_data1  # Passer les données du quote
             )
             
             if not result1 or not result1.get('signature'):
@@ -1269,7 +1272,7 @@ class TradeExecutor:
                 return False
             
             # Utiliser tout le solde USDT pour revenir en USDC
-            success2, transaction_bytes2 = await self.jupiter.execute_validated_swap(
+            success2, transaction_bytes2, quote_data2 = await self.jupiter.execute_validated_swap(
                 input_token=usdt_mint,
                 output_token=usdc_mint,
                 amount=usdt_balance,
@@ -1290,7 +1293,8 @@ class TradeExecutor:
             # Exécuter la transaction
             result2 = await self.jupiter.execute_trade_with_retries(
                 transaction2,
-                usdc_mint
+                usdc_mint,
+                quote_data2  # Passer les données du quote
             )
             
             if not result2 or not result2.get('signature'):

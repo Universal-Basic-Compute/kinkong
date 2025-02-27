@@ -349,47 +349,48 @@ class JupiterTradeExecutor:
         amount: float,
         min_amount: float = 1.0,
         max_slippage: float = 1.0
-    ) -> tuple[bool, Optional[bytes]]:
+    ) -> tuple[bool, Optional[bytes], Optional[dict]]:  # Ajout d'un troisième élément dans le tuple de retour
         """Execute swap with validation"""
         try:
             # Calculer la valeur USD correctement
             usd_value = amount
-            
+        
             # Si le token d'entrée n'est pas un stablecoin, obtenir son prix
             if input_token != "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" and input_token != "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB":  # Si ce n'est ni USDC ni USDT
                 current_price = await self.get_token_price(input_token)
                 if not current_price:
                     self.logger.error(f"Could not get price for {input_token}")
-                    return False, None
+                    return False, None, None
                 usd_value = amount * current_price
-            
+        
             self.logger.info(f"Trade value: ${usd_value:.2f} USD")
 
             # Validate trade first
             if usd_value < min_amount:
                 self.logger.error(f"USD value ${usd_value:.2f} below minimum ${min_amount}")
-                return False, None
+                return False, None, None
 
             # Get token decimals using helper method
             decimals = self.get_token_decimals(input_token)
             self.logger.info(f"Using {decimals} decimals for token {input_token}")
-                
+            
             # Convert to raw amount with appropriate decimals
             amount_raw = int(amount * (10 ** decimals))
 
             self.logger.info(f"Converting amount {amount} to raw amount {amount_raw} (using {decimals} decimals)")
-            
+        
             # Get quote with raw token amount
             quote = await self.get_jupiter_quote(input_token, output_token, amount_raw, is_raw=True)
             if not quote:
-                return False, None
+                return False, None, None
 
             # Get transaction bytes
             transaction_bytes = await self.get_jupiter_transaction(quote, self.wallet_address)
             if not transaction_bytes:
-                return False, None
+                return False, None, None
 
-            return True, transaction_bytes
+            # Retourner également les données du quote
+            return True, transaction_bytes, quote
             
         except Exception as e:
             self.logger.error(f"Validated swap failed: {e}")
@@ -443,14 +444,12 @@ class JupiterTradeExecutor:
             self.logger.error(f"Error checking slippage: {e}")
             return False
 
-    async def execute_trade_with_retries(self, transaction: Transaction, token_mint: str, max_retries: int = 3) -> Optional[Dict]:
+    async def execute_trade_with_retries(self, transaction: Transaction, token_mint: str, quote_data: Optional[dict] = None, max_retries: int = 3) -> Optional[Dict]:
         """Execute trade with balance confirmation via Birdeye API"""
         client = AsyncClient(
             "https://api.mainnet-beta.solana.com",
             commitment="confirmed"
         )
-        # Initialize quote_data as None to avoid undefined variable errors
-        quote_data = None
         try:
             for attempt in range(max_retries):
                 try:
