@@ -1205,18 +1205,121 @@ class TradeExecutor:
                 
         except Exception as e:
             self.logger.error(f"Error closing specific trade: {e}")
+            
+    async def execute_test_trade(self):
+        """Execute a test trade: 1 USDC -> USDT -> USDC"""
+        try:
+            self.logger.info("🧪 Starting test trade: 1 USDC -> USDT -> USDC")
+            
+            # Définir les adresses des tokens
+            usdc_mint = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"  # USDC
+            usdt_mint = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"  # USDT
+            
+            # Étape 1: USDC -> USDT
+            self.logger.info("\n🔄 Step 1: USDC -> USDT")
+            success1, transaction_bytes1 = await self.jupiter.execute_validated_swap(
+                input_token=usdc_mint,
+                output_token=usdt_mint,
+                amount=1.0,  # 1 USDC
+                min_amount=0.01,
+                max_slippage=1.0
+            )
+            
+            if not success1 or not transaction_bytes1:
+                self.logger.error("❌ Failed to prepare USDC -> USDT swap")
+                return False
+                
+            # Préparer la transaction
+            transaction1 = await self.jupiter.prepare_transaction(transaction_bytes1)
+            if not transaction1:
+                self.logger.error("❌ Failed to prepare transaction for USDC -> USDT")
+                return False
+                
+            # Exécuter la transaction
+            result1 = await self.jupiter.execute_trade_with_retries(
+                transaction1,
+                usdt_mint
+            )
+            
+            if not result1 or not result1.get('signature'):
+                self.logger.error("❌ Failed to execute USDC -> USDT swap")
+                return False
+                
+            self.logger.info(f"✅ USDC -> USDT swap successful: {result1['signature']}")
+            
+            # Attendre un peu pour que la transaction soit confirmée
+            self.logger.info("⏳ Waiting 10 seconds for transaction confirmation...")
+            await asyncio.sleep(10)
+            
+            # Étape 2: USDT -> USDC
+            self.logger.info("\n🔄 Step 2: USDT -> USDC")
+            
+            # Vérifier le solde USDT
+            usdt_balance = await self.jupiter.get_token_balance(usdt_mint)
+            self.logger.info(f"Current USDT balance: {usdt_balance}")
+            
+            if usdt_balance <= 0:
+                self.logger.error("❌ No USDT balance available for swap back")
+                return False
+            
+            # Utiliser tout le solde USDT pour revenir en USDC
+            success2, transaction_bytes2 = await self.jupiter.execute_validated_swap(
+                input_token=usdt_mint,
+                output_token=usdc_mint,
+                amount=usdt_balance,
+                min_amount=0.01,
+                max_slippage=1.0
+            )
+            
+            if not success2 or not transaction_bytes2:
+                self.logger.error("❌ Failed to prepare USDT -> USDC swap")
+                return False
+                
+            # Préparer la transaction
+            transaction2 = await self.jupiter.prepare_transaction(transaction_bytes2)
+            if not transaction2:
+                self.logger.error("❌ Failed to prepare transaction for USDT -> USDC")
+                return False
+                
+            # Exécuter la transaction
+            result2 = await self.jupiter.execute_trade_with_retries(
+                transaction2,
+                usdc_mint
+            )
+            
+            if not result2 or not result2.get('signature'):
+                self.logger.error("❌ Failed to execute USDT -> USDC swap")
+                return False
+                
+            self.logger.info(f"✅ USDT -> USDC swap successful: {result2['signature']}")
+            
+            # Résumé du test
+            self.logger.info("\n📊 Test Trade Summary:")
+            self.logger.info(f"USDC -> USDT: {result1['signature']}")
+            self.logger.info(f"USDT -> USDC: {result2['signature']}")
+            self.logger.info("✅ Test trade completed successfully")
+            
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"❌ Test trade failed: {e}")
+            return False
 
 def main():
     try:
         # Configurer l'analyseur d'arguments
         parser = argparse.ArgumentParser(description='KinKong Trade Executor')
-        parser.add_argument('--action', type=str, choices=['monitor', 'open', 'close', 'all'], 
-                            default='all', help='Action to perform: monitor, open, close, or all')
-        parser.add_argument('--trade-id', type=str, help='Specific trade ID to close (only with --action=close)')
+        parser.add_argument('--action', type=str, 
+                            choices=['monitor', 'open', 'close', 'all', 'test'], 
+                            default='all', 
+                            help='Action to perform: monitor, open, close, all, or test')
+        parser.add_argument('--trade-id', type=str, 
+                            help='Specific trade ID to close (only with --action=close)')
         parser.add_argument('--exit-reason', type=str, 
                             choices=['TAKE_PROFIT', 'STOP_LOSS', 'EXPIRED', 'MANUAL', 'MIN_PROFIT_TARGET'],
                             help='Exit reason when closing a specific trade')
-        parser.add_argument('--signal-id', type=str, help='Specific signal ID to open (only with --action=open)')
+        parser.add_argument('--signal-id', type=str, 
+                            help='Specific signal ID to open (only with --action=open)')
         
         args = parser.parse_args()
         
@@ -1238,7 +1341,11 @@ def main():
         executor = TradeExecutor()
         
         # Execute based on action parameter
-        if args.action == 'all':
+        if args.action == 'test':
+            # Run test trade
+            asyncio.run(executor.execute_test_trade())
+            
+        elif args.action == 'all':
             # Run full monitoring process
             asyncio.run(executor.monitor_signals())
             
