@@ -43,11 +43,31 @@ export default function TokensPage() {
           <h2 className="text-2xl font-bold mb-4">Tracked Tokens</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="stat-card">
-              <h3>Total Tokens</h3>
+              <div className="flex items-center gap-2">
+                <h3>Total Tokens</h3>
+                <div className="group relative">
+                  <div className="cursor-help text-gray-400 border border-gray-400 rounded-full w-4 h-4 flex items-center justify-center text-xs">
+                    i
+                  </div>
+                  <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-black/90 border border-gold/20 rounded-lg text-xs text-gray-300 z-10">
+                    Tokens monitored for price action, volume trends, and market developments
+                  </div>
+                </div>
+              </div>
               <p className="text-2xl">{isLoading ? 'Loading...' : totalTokens}</p>
             </div>
             <div className="stat-card">
-              <h3>Active Tokens</h3>
+              <div className="flex items-center gap-2">
+                <h3>Active Tokens</h3>
+                <div className="group relative">
+                  <div className="cursor-help text-gray-400 border border-gray-400 rounded-full w-4 h-4 flex items-center justify-center text-xs">
+                    i
+                  </div>
+                  <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-black/90 border border-gold/20 rounded-lg text-xs text-gray-300 z-10">
+                    Tokens currently included in our active trading strategy
+                  </div>
+                </div>
+              </div>
               <p className="text-2xl">
                 {isLoading 
                   ? 'Loading...' 
