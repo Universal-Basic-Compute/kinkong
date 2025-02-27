@@ -28,6 +28,69 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
     svg.setAttribute('height', '100%');
     svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
     container.appendChild(svg);
+    
+    // Add quadrant background colors
+    const midX = width / 2;
+    const midY = height / 2;
+    
+    // Create quadrant rectangles with colors indicating performance
+    // Top-right (green): High volume growth, positive price trend
+    const topRightQuadrant = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    topRightQuadrant.setAttribute('x', midX.toString());
+    topRightQuadrant.setAttribute('y', padding.toString());
+    topRightQuadrant.setAttribute('width', (width - midX - padding).toString());
+    topRightQuadrant.setAttribute('height', (midY - padding).toString());
+    topRightQuadrant.setAttribute('fill', 'rgba(0, 128, 0, 0.05)'); // Light green
+    topRightQuadrant.setAttribute('stroke', 'rgba(0, 128, 0, 0.2)');
+    svg.appendChild(topRightQuadrant);
+    
+    // Top-left (yellow): Low volume growth, positive price trend
+    const topLeftQuadrant = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    topLeftQuadrant.setAttribute('x', padding.toString());
+    topLeftQuadrant.setAttribute('y', padding.toString());
+    topLeftQuadrant.setAttribute('width', (midX - padding).toString());
+    topLeftQuadrant.setAttribute('height', (midY - padding).toString());
+    topLeftQuadrant.setAttribute('fill', 'rgba(255, 215, 0, 0.05)'); // Light gold
+    topLeftQuadrant.setAttribute('stroke', 'rgba(255, 215, 0, 0.2)');
+    svg.appendChild(topLeftQuadrant);
+    
+    // Bottom-right (orange): High volume growth, negative price trend
+    const bottomRightQuadrant = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    bottomRightQuadrant.setAttribute('x', midX.toString());
+    bottomRightQuadrant.setAttribute('y', midY.toString());
+    bottomRightQuadrant.setAttribute('width', (width - midX - padding).toString());
+    bottomRightQuadrant.setAttribute('height', (height - midY - padding).toString());
+    bottomRightQuadrant.setAttribute('fill', 'rgba(255, 165, 0, 0.05)'); // Light orange
+    bottomRightQuadrant.setAttribute('stroke', 'rgba(255, 165, 0, 0.2)');
+    svg.appendChild(bottomRightQuadrant);
+    
+    // Bottom-left (red): Low volume growth, negative price trend
+    const bottomLeftQuadrant = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    bottomLeftQuadrant.setAttribute('x', padding.toString());
+    bottomLeftQuadrant.setAttribute('y', midY.toString());
+    bottomLeftQuadrant.setAttribute('width', (midX - padding).toString());
+    bottomLeftQuadrant.setAttribute('height', (height - midY - padding).toString());
+    bottomLeftQuadrant.setAttribute('fill', 'rgba(139, 0, 0, 0.05)'); // Light dark red
+    bottomLeftQuadrant.setAttribute('stroke', 'rgba(139, 0, 0, 0.2)');
+    svg.appendChild(bottomLeftQuadrant);
+    
+    // Add quadrant labels
+    const addQuadrantLabel = (x: number, y: number, text: string, color: string) => {
+      const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      label.setAttribute('x', x.toString());
+      label.setAttribute('y', y.toString());
+      label.setAttribute('fill', color);
+      label.setAttribute('font-size', '10');
+      label.setAttribute('text-anchor', 'middle');
+      label.textContent = text;
+      svg.appendChild(label);
+    };
+    
+    // Add labels to each quadrant
+    addQuadrantLabel(midX + (width - midX - padding) / 2, padding + 15, 'BULLISH', 'rgba(0, 128, 0, 0.8)');
+    addQuadrantLabel(padding + (midX - padding) / 2, padding + 15, 'STABLE', 'rgba(255, 215, 0, 0.8)');
+    addQuadrantLabel(midX + (width - midX - padding) / 2, height - padding - 15, 'VOLATILE', 'rgba(255, 165, 0, 0.8)');
+    addQuadrantLabel(padding + (midX - padding) / 2, height - padding - 15, 'BEARISH', 'rgba(139, 0, 0, 0.8)');
 
     // Filter out stablecoins first
     const nonStableTokens = tokens.filter(token => 
@@ -154,9 +217,14 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
   
       // Cap extreme values to prevent squishing
       const cappedValue = Math.min(Math.max(volumeGrowth, minVolumeGrowth), maxVolumeGrowth);
-  
-      // Calculate position with padding
-      return padding + ((cappedValue - minVolumeGrowth) / volumeGrowthRange) * (width - 2 * padding);
+      
+      // Calculate position with padding, ensuring 0 is at the center
+      const zeroPoint = width / 2;
+      if (cappedValue >= 0) {
+        return zeroPoint + (cappedValue / maxVolumeGrowth) * (width / 2 - padding);
+      } else {
+        return zeroPoint - (Math.abs(cappedValue) / Math.abs(minVolumeGrowth)) * (width / 2 - padding);
+      }
     };
 
     const scaleY = (priceTrend: number) => {
@@ -167,9 +235,14 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
   
       // Cap extreme values to prevent squishing
       const cappedValue = Math.min(Math.max(priceTrend, minPriceTrend), maxPriceTrend);
-  
-      // Calculate position with padding (inverted Y axis)
-      return height - (padding + ((cappedValue - minPriceTrend) / priceTrendRange) * (height - 2 * padding));
+      
+      // Calculate position with padding (inverted Y axis), ensuring 0 is at the center
+      const zeroPoint = height / 2;
+      if (cappedValue >= 0) {
+        return zeroPoint - (cappedValue / maxPriceTrend) * (height / 2 - padding);
+      } else {
+        return zeroPoint + (Math.abs(cappedValue) / Math.abs(minPriceTrend)) * (height / 2 - padding);
+      }
     };
 
     const scaleRadius = (liquidity: number) => {
