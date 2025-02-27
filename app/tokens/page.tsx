@@ -28,10 +28,7 @@ export default function TokensPage() {
 
   // Calculate token statistics
   const totalTokens = trackedTokens.length;
-  const totalVolume = trackedTokens.reduce((sum, token) => sum + (token.volume7d || 0), 0);
-  const avgLiquidity = trackedTokens.length > 0 
-    ? trackedTokens.reduce((sum, token) => sum + (token.liquidity || 0), 0) / trackedTokens.length 
-    : 0;
+  // Removed unused calculations that referenced removed properties
 
   return (
     <main className="min-h-screen p-4 max-w-7xl mx-auto">
