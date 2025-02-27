@@ -6,8 +6,9 @@ This document outlines KinKong's strategy for providing liquidity to UBC/SOL and
 ## Core Strategy
 
 ### Liquidity Allocation
-- **UBC/SOL Pool**: 60% of liquidity budget
-- **COMPUTE/SOL Pool**: 40% of liquidity budget
+- **Total Portfolio Allocation**: 30% of total portfolio
+- **UBC/SOL Pool**: 15% of total portfolio (50% of LP budget)
+- **COMPUTE/SOL Pool**: 15% of total portfolio (50% of LP budget)
 - **Rebalance Frequency**: Weekly (every Friday)
 
 ### Pool Selection Criteria
@@ -43,7 +44,8 @@ This document outlines KinKong's strategy for providing liquidity to UBC/SOL and
 ### Risk Management
 
 #### Impermanent Loss Mitigation
-- Maximum 30% of total portfolio in liquidity positions
+- Total 30% of portfolio allocated to liquidity positions
+- Equal 15% allocation to UBC/SOL and COMPUTE/SOL pools
 - Hedging with 5% allocation to out-of-range options
 - Weekly IL calculation and threshold monitoring
 - Partial exit when IL exceeds 5% of position value
