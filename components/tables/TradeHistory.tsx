@@ -1,6 +1,5 @@
 'use client';
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 
 interface Trade {
   id: string;
@@ -82,6 +81,28 @@ export function TradeHistory({ userOnly = false, limit = 10, showChartButton = f
     }
   }
 
+  function formatTimeAgo(dateString: string): string {
+    const date = new Date(dateString.replace(' ', 'T'));
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    
+    // Convert to seconds, minutes, hours, days
+    const diffSecs = Math.floor(diffMs / 1000);
+    const diffMins = Math.floor(diffSecs / 60);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    
+    if (diffDays > 0) {
+      return `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`;
+    } else if (diffHours > 0) {
+      return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
+    } else if (diffMins > 0) {
+      return `${diffMins} ${diffMins === 1 ? 'minute' : 'minutes'} ago`;
+    } else {
+      return 'just now';
+    }
+  }
+
   return (
     <div>
 
@@ -97,27 +118,16 @@ export function TradeHistory({ userOnly = false, limit = 10, showChartButton = f
               <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">ROI</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Status</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gold uppercase tracking-wider">Exit Reason</th>
-              {showChartButton && (
-                <th className="px-6 py-3 text-center text-xs font-medium text-gold uppercase tracking-wider">Chart</th>
-              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-gold/10">
             {trades.map((trade) => {
-              const formattedDate = trade.createdAt 
-                ? new Date(trade.createdAt.replace(' ', 'T')).toLocaleString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: false
-                  })
-                : '-';
+              const timeAgo = trade.createdAt ? formatTimeAgo(trade.createdAt) : '-';
 
               return (
                 <tr key={trade.id} className="hover:bg-gold/5">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                    {formattedDate}
+                    {timeAgo}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <span className={getTokenClass(trade.token)}>
@@ -162,16 +172,6 @@ export function TradeHistory({ userOnly = false, limit = 10, showChartButton = f
                       <span className="text-gray-500">-</span>
                     )}
                   </td>
-                  {showChartButton && (
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                      <button 
-                        onClick={() => window.open(`/signals/charts/${trade.id}`, '_blank')}
-                        className="px-3 py-1 bg-gold/20 hover:bg-gold/30 text-gold rounded-lg text-xs transition-colors"
-                      >
-                        View Chart
-                      </button>
-                    </td>
-                  )}
                 </tr>
               );
             })}

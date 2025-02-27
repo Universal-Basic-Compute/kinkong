@@ -1,9 +1,7 @@
 'use client';
 import { TradeHistory } from '@/components/tables/TradeHistory';
-import { useState } from 'react';
 
 export default function Trades() {
-  const [showChartButton, setShowChartButton] = useState(true);
 
   return (
     <div className="min-h-screen bg-black">
@@ -17,7 +15,7 @@ export default function Trades() {
         <section>
           <h2 className="text-2xl font-bold text-gold mb-4">Trade History</h2>
           <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
-            <TradeHistory showChartButton={showChartButton} />
+            <TradeHistory />
           </div>
         </section>
       </main>
