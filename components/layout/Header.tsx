@@ -70,6 +70,11 @@ const Header = () => {
           description: 'Portfolio strategy and settings'
         },
         { 
+          label: 'Tokens', 
+          href: '/tokens',
+          description: 'Tracked tokens and metrics'
+        },
+        { 
           label: 'Invest', 
           href: '/invest',
           description: 'Investment opportunities and allocation',
