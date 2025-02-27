@@ -84,16 +84,48 @@ class WalletSnapshotTaker:
             }
             
             response = requests.get(url, params=params, headers=headers)
-            response.raise_for_status()
-            pool_data = response.json()
             
-            if pool_data.get('success'):
-                compute_price = float(pool_data.get('data', {}).get('price', 0))
-                print(f"✓ Got COMPUTE price from Meteora pool: ${compute_price:.6f}")
+            # Debug the response
+            print(f"Meteora pool API response status: {response.status_code}")
+            print(f"Meteora pool API response headers: {response.headers}")
+            
+            # Only try to parse JSON if we have content
+            if response.content:
+                pool_data = response.json()
+                
+                if pool_data.get('success'):
+                    compute_price = float(pool_data.get('data', {}).get('price', 0))
+                    print(f"✓ Got COMPUTE price from Meteora pool: ${compute_price:.6f}")
+                else:
+                    print(f"⚠️ Failed to get COMPUTE price from Meteora pool: {pool_data.get('message')}")
             else:
-                print(f"⚠️ Failed to get COMPUTE price from Meteora pool: {pool_data.get('message')}")
+                print(f"⚠️ Empty response from Meteora pool API")
+                
+        except requests.exceptions.RequestException as e:
+            print(f"❌ HTTP error fetching COMPUTE price from Meteora pool: {str(e)}")
+        except json.JSONDecodeError as e:
+            print(f"❌ JSON decode error from Meteora pool: {str(e)}")
+            print(f"Response content: {response.content[:100]}...")  # Print first 100 chars of response
         except Exception as e:
             print(f"❌ Error fetching COMPUTE price from Meteora pool: {str(e)}")
+            
+        # If Meteora pool fails, try getting price from Jupiter API
+        if compute_price is None:
+            try:
+                jupiter_url = "https://price.jup.ag/v4/price"
+                jupiter_params = {
+                    "ids": "B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo"
+                }
+                
+                jupiter_response = requests.get(jupiter_url, params=jupiter_params)
+                jupiter_response.raise_for_status()
+                jupiter_data = jupiter_response.json()
+                
+                if jupiter_data.get('data') and jupiter_data['data'].get('B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo'):
+                    compute_price = float(jupiter_data['data']['B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo'].get('price', 0))
+                    print(f"✓ Got COMPUTE price from Jupiter API: ${compute_price:.6f}")
+            except Exception as e:
+                print(f"❌ Error fetching COMPUTE price from Jupiter API: {str(e)}")
 
         for balance_data in token_balances:
             try:
