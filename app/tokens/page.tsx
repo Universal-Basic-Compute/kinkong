@@ -185,7 +185,7 @@ export default function TokensPage() {
                         
                         {/* Tooltip that appears on row hover */}
                         {token.explanation && (
-                          <div className="absolute hidden group-hover:block w-80 p-3 bg-black/90 border border-gold/20 rounded-lg text-xs text-gray-300 z-50 whitespace-pre-wrap left-1/2 -translate-x-1/2 bottom-full mb-2">
+                          <div className="absolute hidden group-hover:block w-96 p-4 bg-black/90 border border-gold/20 rounded-lg text-xs text-gray-300 z-50 whitespace-pre-wrap left-[60%] bottom-full mb-2">
                             {token.explanation.split('\n').map((line, i) => (
                               <div key={i} className="mb-1">
                                 {line.startsWith('- ') ? (
@@ -197,6 +197,12 @@ export default function TokensPage() {
                                   <div className="font-bold text-sm">{line.substring(2)}</div>
                                 ) : line.startsWith('## ') ? (
                                   <div className="font-semibold">{line.substring(3)}</div>
+                                ) : line.startsWith('**') && line.endsWith('**') ? (
+                                  <span className="font-bold">{line.substring(2, line.length - 2)}</span>
+                                ) : line.startsWith('*') && line.endsWith('*') ? (
+                                  <span className="italic">{line.substring(1, line.length - 1)}</span>
+                                ) : line.startsWith('> ') ? (
+                                  <div className="border-l-2 border-gold/50 pl-2 italic text-gray-400">{line.substring(2)}</div>
                                 ) : (
                                   line
                                 )}
