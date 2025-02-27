@@ -117,11 +117,11 @@ export default function TokensPage() {
                       <th className="px-4 py-2 text-left text-gold">Active</th>
                       <th className="px-4 py-2 text-left text-gold">Token</th>
                       <th className="px-4 py-2 text-left text-gold">Name</th>
-                      <th className="px-4 py-2 text-right text-gold">7d Volume</th>
-                      <th className="px-4 py-2 text-right text-gold">Liquidity</th>
                       <th className="px-4 py-2 text-right text-gold">Volume Growth</th>
                       <th className="px-4 py-2 text-right text-gold">Price Change</th>
                       <th className="px-4 py-2 text-left text-gold">X Account</th>
+                      <th className="px-4 py-2 text-left text-gold">Explanation</th>
+                      <th className="px-4 py-2 text-left text-gold">Website</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -145,16 +145,6 @@ export default function TokensPage() {
                           </a>
                         </td>
                         <td className="px-4 py-2 text-gray-300">{token.name}</td>
-                        <td className="px-4 py-2 text-right text-gray-300">
-                          ${(token.volume7d || 0).toLocaleString(undefined, {
-                            maximumFractionDigits: 0
-                          })}
-                        </td>
-                        <td className="px-4 py-2 text-right text-gray-300">
-                          ${(token.liquidity || 0).toLocaleString(undefined, {
-                            maximumFractionDigits: 0
-                          })}
-                        </td>
                         <td className="px-4 py-2 text-right">
                           <span className={(token.volumeGrowth || 0) >= 0 ? 'text-green-400' : 'text-red-400'}>
                             {(token.volumeGrowth || 0).toFixed(2)}%
@@ -174,6 +164,23 @@ export default function TokensPage() {
                               className="text-blue-400 hover:text-blue-300"
                             >
                               @{token.xAccount}
+                            </a>
+                          ) : (
+                            '-'
+                          )}
+                        </td>
+                        <td className="px-4 py-2 text-gray-300 max-w-xs truncate">
+                          {token.explanation || '-'}
+                        </td>
+                        <td className="px-4 py-2 text-gray-300">
+                          {token.website ? (
+                            <a
+                              href={token.website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-400 hover:text-blue-300"
+                            >
+                              Visit
                             </a>
                           ) : (
                             '-'
