@@ -449,6 +449,8 @@ class JupiterTradeExecutor:
             "https://api.mainnet-beta.solana.com",
             commitment="confirmed"
         )
+        # Initialize quote_data as None to avoid undefined variable errors
+        quote_data = None
         try:
             for attempt in range(max_retries):
                 try:
@@ -546,7 +548,7 @@ class JupiterTradeExecutor:
                                     # Ajouter ce code pour calculer et enregistrer les pertes
                                     try:
                                         # Récupérer les données du quote si disponibles
-                                        if 'quote_data' in locals() and quote_data:
+                                        if quote_data:
                                             # Pour les achats (BUY), le token d'entrée est USDC et le token de sortie est le token acheté
                                             # Pour les ventes (SELL), c'est l'inverse
                                             if is_buy:
