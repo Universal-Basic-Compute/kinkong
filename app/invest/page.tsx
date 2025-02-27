@@ -1,5 +1,4 @@
 'use client';
-export const dynamic = 'force-dynamic';
 import { useState, useEffect } from 'react';
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import { WalletConnect } from '@/components/wallet/WalletConnect';
@@ -184,7 +183,13 @@ export default function Invest() {
         setIsLoading(true);
         
         // Fetch investments
-        const investmentsResponse = await fetch('/api/investments');
+        const investmentsResponse = await fetch('/api/investments', {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          }
+        });
         if (!investmentsResponse.ok) throw new Error('Failed to fetch investments');
         const investmentsData = await investmentsResponse.json();
       
@@ -204,7 +209,13 @@ export default function Invest() {
         console.log('Total investment in USD:', totalInvestmentUSD);
         
         // Fetch latest wallet snapshot from WALLET_SNAPSHOTS table
-        const walletSnapshotResponse = await fetch('/api/wallet-snapshot/latest');
+        const walletSnapshotResponse = await fetch('/api/wallet-snapshot/latest', {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          }
+        });
         
         let portfolioValue = 0;
         let snapshotTimestamp = new Date().toISOString();
@@ -212,7 +223,13 @@ export default function Invest() {
         if (!walletSnapshotResponse.ok) {
           console.error('Failed to fetch wallet snapshot, falling back to portfolio API');
           // Fallback to portfolio API
-          const portfolioResponse = await fetch('/api/portfolio');
+          const portfolioResponse = await fetch('/api/portfolio', {
+            cache: 'no-store',
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache'
+            }
+          });
           if (!portfolioResponse.ok) throw new Error('Failed to fetch portfolio data');
           const portfolioData = await portfolioResponse.json();
           
@@ -706,3 +723,6 @@ export default function Invest() {
     </main>
   )
 }
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
