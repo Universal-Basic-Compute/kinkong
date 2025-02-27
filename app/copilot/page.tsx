@@ -278,22 +278,27 @@ export default function CopilotPage() {
     <div className="min-h-screen pt-20 px-4">
       <div className="max-w-6xl mx-auto space-y-16">
         {/* Hero Section */}
-        <div className="text-center space-y-6">
-          <div className="flex flex-col md:flex-row items-center justify-center gap-6">
+        <div className="text-center space-y-10 py-12 mb-8">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-8">
             <img 
               src="/copilot.png" 
               alt="KinKong Copilot" 
-              className="w-32 h-32 object-contain"
+              className="w-40 h-40 md:w-48 md:h-48 object-contain"
             />
-            <div>
-              <h1 className="text-4xl md:text-5xl font-bold">
+            <div className="space-y-4">
+              <h1 className="text-5xl md:text-6xl font-bold">
                 KinKong <span className="white-glow-text">Copilot</span>
               </h1>
-              <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
                 Your AI-powered trading assistant with direct access to KinKong's intelligence
                 and the UBC ecosystem's collective wisdom.
               </p>
             </div>
+          </div>
+          <div className="max-w-2xl mx-auto">
+            <p className="text-lg text-gray-400">
+              Get real-time market insights, trading signals, and AI-powered analysis to stay ahead in the Solana ecosystem.
+            </p>
           </div>
         </div>
 
