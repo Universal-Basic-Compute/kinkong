@@ -424,8 +424,8 @@ export function SignalHistory() {
                 <p className="text-xs text-gray-300 line-clamp-3 max-h-[4.5rem] overflow-hidden">
                   {signal.reason || '-'}
                 </p>
-                <div className="hidden group-hover:block absolute left-0 top-full mt-2 z-50">
-                  <div className="bg-black/90 border border-gold/20 rounded-lg p-4 w-[500px] text-sm text-gray-300 whitespace-pre-line shadow-lg">
+                <div className="hidden group-hover:block fixed left-1/4 top-1/4 z-50">
+                  <div className="bg-black/90 border border-gold/20 rounded-lg p-4 w-[600px] text-sm text-gray-300 whitespace-pre-line shadow-lg">
                     {signal.reason || '-'}
                   </div>
                 </div>
