@@ -8,6 +8,8 @@ interface TokenRecord extends FieldSet {
   mint: string;
   isActive: boolean;
   xAccount?: string;
+  explanation?: string;
+  website?: string;
 }
 
 interface SnapshotRecord extends FieldSet {
@@ -73,6 +75,8 @@ export async function GET() {
         mint: record.get('mint'),
         xAccount: record.get('xAccount'),
         isActive: Boolean(record.get('isActive')),
+        explanation: record.get('explanation'),
+        website: record.get('website'),
         price: parseFloat(snapshot.price) || 0,
         priceTrend: parseFloat(snapshot.priceTrend) || 0,
         volumeGrowth: parseFloat(snapshot.volumeGrowth) || 0,
