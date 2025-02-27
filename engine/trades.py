@@ -1247,6 +1247,12 @@ class TradeExecutor:
                 
             self.logger.info(f"✅ USDC -> USDT swap successful: {result1['signature']}")
             
+            if result1 and 'swap_analysis' in result1:
+                self.logger.info("\n📊 Analyse du swap USDC -> USDT:")
+                self.logger.info(f"Perte totale: {result1['swap_analysis']['total_loss_percent']:.2f}%")
+                self.logger.info(f"Slippage: {result1['swap_analysis']['slippage_percent']:.2f}%")
+                self.logger.info(f"Frais: {result1['swap_analysis']['fees_percent']:.2f}%")
+            
             # Attendre un peu pour que la transaction soit confirmée
             self.logger.info("⏳ Waiting 10 seconds for transaction confirmation...")
             await asyncio.sleep(10)
@@ -1293,10 +1299,26 @@ class TradeExecutor:
                 
             self.logger.info(f"✅ USDT -> USDC swap successful: {result2['signature']}")
             
+            if result2 and 'swap_analysis' in result2:
+                self.logger.info("\n📊 Analyse du swap USDT -> USDC:")
+                self.logger.info(f"Perte totale: {result2['swap_analysis']['total_loss_percent']:.2f}%")
+                self.logger.info(f"Slippage: {result2['swap_analysis']['slippage_percent']:.2f}%")
+                self.logger.info(f"Frais: {result2['swap_analysis']['fees_percent']:.2f}%")
+            
             # Résumé du test
             self.logger.info("\n📊 Test Trade Summary:")
             self.logger.info(f"USDC -> USDT: {result1['signature']}")
             self.logger.info(f"USDT -> USDC: {result2['signature']}")
+            
+            # Résumé des pertes
+            self.logger.info("\n💰 Résumé des pertes:")
+            total_loss_pct = 0
+            if result1 and 'swap_analysis' in result1:
+                total_loss_pct += result1['swap_analysis']['total_loss_percent']
+            if result2 and 'swap_analysis' in result2:
+                total_loss_pct += result2['swap_analysis']['total_loss_percent']
+            self.logger.info(f"Perte totale sur les deux swaps: {total_loss_pct:.2f}%")
+            
             self.logger.info("✅ Test trade completed successfully")
             
             return True
