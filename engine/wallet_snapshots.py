@@ -66,9 +66,47 @@ class WalletSnapshotTaker:
         balances = []
         created_at = datetime.now(timezone.utc).isoformat()
 
+        # Special case: Get COMPUTE price from Meteora dynamic pool
+        compute_price = None
+        compute_mint = "B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo"
+        meteora_pool_id = "HN7ibjiyX399d1EfYXcWaSHZRSMfUmonYvXGFXG41Rr3"
+        
+        try:
+            # Fetch price from Meteora dynamic pool
+            url = "https://public-api.birdeye.so/v1/pool/price"
+            params = {
+                "pool_address": meteora_pool_id
+            }
+            headers = {
+                "x-api-key": self.birdeye_api_key,
+                "x-chain": "solana",
+                "accept": "application/json"
+            }
+            
+            response = requests.get(url, params=params, headers=headers)
+            response.raise_for_status()
+            pool_data = response.json()
+            
+            if pool_data.get('success'):
+                compute_price = float(pool_data.get('data', {}).get('price', 0))
+                print(f"✓ Got COMPUTE price from Meteora pool: ${compute_price:.6f}")
+            else:
+                print(f"⚠️ Failed to get COMPUTE price from Meteora pool: {pool_data.get('message')}")
+        except Exception as e:
+            print(f"❌ Error fetching COMPUTE price from Meteora pool: {str(e)}")
+
         for balance_data in token_balances:
             try:
+                # Override price for COMPUTE token if we got it from Meteora
+                if balance_data['address'] == compute_mint and compute_price is not None:
+                    balance_data['priceUsd'] = str(compute_price)
+                    print(f"✓ Using Meteora pool price for COMPUTE: ${compute_price:.6f}")
+                
                 value = float(balance_data.get('valueUsd', 0))
+                
+                # If using Meteora price for COMPUTE, recalculate value
+                if balance_data['address'] == compute_mint and compute_price is not None:
+                    value = float(balance_data.get('uiAmount', 0)) * compute_price
                 
                 # Skip tokens with no value
                 if value <= 0:
