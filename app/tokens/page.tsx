@@ -120,13 +120,12 @@ export default function TokensPage() {
                       <th className="px-4 py-2 text-right text-gold">Volume Growth</th>
                       <th className="px-4 py-2 text-right text-gold">Price Change</th>
                       <th className="px-4 py-2 text-left text-gold">X Account</th>
-                      <th className="px-4 py-2 text-left text-gold">Explanation</th>
                       <th className="px-4 py-2 text-left text-gold">Website</th>
                     </tr>
                   </thead>
                   <tbody>
                     {trackedTokens.map((token, index) => (
-                      <tr key={`token-${token.mint}-${index}`} className="border-b border-gold/10 hover:bg-gold/5 relative group">
+                      <tr key={`token-${token.mint}-${index}`} className="border-b border-gold/10 hover:bg-gold/5 relative group cursor-default">
                         <td className="px-4 py-2">
                           {token.isActive ? (
                             <span className="text-green-500">✓</span>
@@ -165,15 +164,6 @@ export default function TokensPage() {
                             >
                               @{token.xAccount}
                             </a>
-                          ) : (
-                            '-'
-                          )}
-                        </td>
-                        <td className="px-4 py-2 text-gray-300">
-                          {token.explanation ? (
-                            <span className="cursor-help underline decoration-dotted">
-                              View
-                            </span>
                           ) : (
                             '-'
                           )}
