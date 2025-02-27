@@ -1,6 +1,8 @@
 import sys
 from pathlib import Path
 import os
+import argparse
+from typing import List, Dict, Optional, Literal
 
 # Get absolute path to project root
 project_root = Path(__file__).parent.parent.absolute()
@@ -1017,10 +1019,208 @@ class TradeExecutor:
 
         except Exception as e:
             self.logger.error(f"Error in monitor process: {e}")
+            
+    async def monitor_existing_trades(self):
+        """Check only existing trades for exit conditions"""
+        try:
+            # Check both PENDING and EXECUTED trades
+            active_trades = self.trades_table.get_all(
+                formula="OR(status='EXECUTED', status='PENDING')"
+            )
+            
+            self.logger.info(f"Checking {len(active_trades)} active trades (PENDING + EXECUTED)...")
+            
+            for trade in active_trades:
+                try:
+                    status = trade['fields'].get('status')
+                    signal_id = trade['fields'].get('signalId')
+                    
+                    if not signal_id:
+                        self.logger.error(f"Trade {trade['id']} has no signal ID")
+                        continue
+
+                    # Get the signal data
+                    signal = self.signals_table.get(signal_id)
+                    if not signal:
+                        self.logger.error(f"Signal {signal_id} not found for trade {trade['id']}")
+                        continue
+
+                    if status == 'PENDING':
+                        # Pour les trades PENDING, vérifier les conditions d'entrée
+                        self.logger.info(f"Checking entry conditions for PENDING trade {trade['id']}")
+                        if self.check_entry_conditions(signal):
+                            self.logger.info(f"Entry conditions met for trade {trade['id']}")
+                            if await self.execute_trade(signal):
+                                self.logger.info(f"Successfully executed trade {trade['id']}")
+                            else:
+                                self.logger.error(f"Failed to execute trade {trade['id']}")
+                        else:
+                            self.logger.info(f"Entry conditions not met for trade {trade['id']}")
+                    
+                    elif status == 'EXECUTED':
+                        # Pour les trades EXECUTED, vérifier les conditions de sortie
+                        self.logger.info(f"Checking exit conditions for EXECUTED trade {trade['id']}")
+                        exit_reason = await self.check_exit_conditions(trade)
+                        if exit_reason:
+                            self.logger.info(f"Exit condition met for trade {trade['id']}: {exit_reason}")
+                            if await self.close_trade(trade, exit_reason):
+                                self.logger.info(f"Successfully closed trade {trade['id']}")
+                            else:
+                                self.logger.error(f"Failed to close trade {trade['id']}")
+                        else:
+                            self.logger.info(f"No exit conditions met for trade {trade['id']}")
+                                
+                except Exception as e:
+                    self.logger.error(f"Error processing trade {trade['id']}: {e}")
+                    continue
+                
+                await asyncio.sleep(2)  # Delay between trades
+                
+            self.logger.info("✅ Finished monitoring existing trades")
+            
+        except Exception as e:
+            self.logger.error(f"Error in monitor_existing_trades: {e}")
+
+    async def open_new_trades(self):
+        """Check for new signals and open trades"""
+        try:
+            self.logger.info("Checking for active signals...")
+            
+            try:
+                signals = await self.get_active_buy_signals()
+            except Exception as e:
+                self.logger.error(f"Failed to fetch active signals: {e}")
+                return  # Exit if we can't get signals
+
+            for signal in signals:
+                try:
+                    if self.check_entry_conditions(signal):
+                        self.logger.info(f"Entry conditions met for signal {signal['id']}")
+                        
+                        # Execute trade with timeout
+                        try:
+                            async with asyncio.timeout(30):  # 30 second timeout
+                                if await self.execute_trade(signal):
+                                    self.logger.info(f"Successfully executed trade for signal {signal['id']}")
+                                else:
+                                    self.logger.error(f"Failed to execute trade for signal {signal['id']}")
+                        except asyncio.TimeoutError:
+                            self.logger.error(f"Trade execution timed out for signal {signal['id']}")
+                        except Exception as e:
+                            self.logger.error(f"Error executing trade: {e}")
+            
+                except Exception as e:
+                    self.logger.error(f"Error processing signal {signal['id']}: {e}")
+                    continue
+
+                await asyncio.sleep(2)  # Delay between signals
+
+            self.logger.info("✅ Finished opening new trades")
+            
+        except Exception as e:
+            self.logger.error(f"Error in open_new_trades: {e}")
+
+    async def close_eligible_trades(self):
+        """Check all executed trades and close those meeting exit conditions"""
+        try:
+            # Get all EXECUTED trades
+            executed_trades = self.trades_table.get_all(
+                formula="status='EXECUTED'"
+            )
+            
+            self.logger.info(f"Checking {len(executed_trades)} executed trades for exit conditions...")
+            
+            for trade in executed_trades:
+                try:
+                    # Check exit conditions
+                    exit_reason = await self.check_exit_conditions(trade)
+                    if exit_reason:
+                        self.logger.info(f"Exit condition met for trade {trade['id']}: {exit_reason}")
+                        if await self.close_trade(trade, exit_reason):
+                            self.logger.info(f"Successfully closed trade {trade['id']}")
+                        else:
+                            self.logger.error(f"Failed to close trade {trade['id']}")
+                    else:
+                        self.logger.info(f"No exit conditions met for trade {trade['id']}")
+                            
+                except Exception as e:
+                    self.logger.error(f"Error processing trade {trade['id']}: {e}")
+                    continue
+                
+                await asyncio.sleep(2)  # Delay between trades
+                
+            self.logger.info("✅ Finished checking trades for exit conditions")
+            
+        except Exception as e:
+            self.logger.error(f"Error in close_eligible_trades: {e}")
+
+    async def open_specific_trade(self, signal_id: str):
+        """Open a specific trade by signal ID"""
+        try:
+            self.logger.info(f"Opening specific trade for signal {signal_id}")
+            
+            # Get the signal
+            signal = self.signals_table.get(signal_id)
+            if not signal:
+                self.logger.error(f"Signal {signal_id} not found")
+                return
+                
+            # Check entry conditions
+            if self.check_entry_conditions(signal):
+                self.logger.info(f"Entry conditions met for signal {signal_id}")
+                
+                # Execute trade
+                if await self.execute_trade(signal):
+                    self.logger.info(f"Successfully executed trade for signal {signal_id}")
+                else:
+                    self.logger.error(f"Failed to execute trade for signal {signal_id}")
+            else:
+                self.logger.info(f"Entry conditions not met for signal {signal_id}")
+                
+        except Exception as e:
+            self.logger.error(f"Error opening specific trade: {e}")
+
+    async def close_specific_trade(self, trade_id: str, exit_reason: str):
+        """Close a specific trade by ID with given exit reason"""
+        try:
+            self.logger.info(f"Closing specific trade {trade_id} with reason: {exit_reason}")
+            
+            # Get the trade
+            trade = self.trades_table.get(trade_id)
+            if not trade:
+                self.logger.error(f"Trade {trade_id} not found")
+                return
+                
+            # Check if trade is in EXECUTED status
+            status = trade['fields'].get('status')
+            if status != 'EXECUTED':
+                self.logger.error(f"Trade {trade_id} is not in EXECUTED status (current: {status})")
+                return
+                
+            # Close the trade
+            if await self.close_trade(trade, exit_reason):
+                self.logger.info(f"Successfully closed trade {trade_id}")
+            else:
+                self.logger.error(f"Failed to close trade {trade_id}")
+                
+        except Exception as e:
+            self.logger.error(f"Error closing specific trade: {e}")
 
 def main():
     try:
-        logger.info("🔄 Trade monitor running in 10-minute interval mode")
+        # Configurer l'analyseur d'arguments
+        parser = argparse.ArgumentParser(description='KinKong Trade Executor')
+        parser.add_argument('--action', type=str, choices=['monitor', 'open', 'close', 'all'], 
+                            default='all', help='Action to perform: monitor, open, close, or all')
+        parser.add_argument('--trade-id', type=str, help='Specific trade ID to close (only with --action=close)')
+        parser.add_argument('--exit-reason', type=str, 
+                            choices=['TAKE_PROFIT', 'STOP_LOSS', 'EXPIRED', 'MANUAL', 'MIN_PROFIT_TARGET'],
+                            help='Exit reason when closing a specific trade')
+        parser.add_argument('--signal-id', type=str, help='Specific signal ID to open (only with --action=open)')
+        
+        args = parser.parse_args()
+        
+        logger.info(f"🔄 Trade executor running with action: {args.action}")
         
         # Verify environment variables
         required_vars = [
@@ -1034,9 +1234,38 @@ def main():
         if missing:
             raise ValueError(f"Missing environment variables: {', '.join(missing)}")
 
-        # Create and run trade executor
+        # Create trade executor
         executor = TradeExecutor()
-        asyncio.run(executor.monitor_signals())
+        
+        # Execute based on action parameter
+        if args.action == 'all':
+            # Run full monitoring process
+            asyncio.run(executor.monitor_signals())
+            
+        elif args.action == 'monitor':
+            # Only check exit conditions for existing trades
+            asyncio.run(executor.monitor_existing_trades())
+            
+        elif args.action == 'open':
+            # Only open new trades
+            if args.signal_id:
+                # Open specific trade by signal ID
+                asyncio.run(executor.open_specific_trade(args.signal_id))
+            else:
+                # Open all eligible trades
+                asyncio.run(executor.open_new_trades())
+                
+        elif args.action == 'close':
+            # Only close trades
+            if args.trade_id:
+                # Close specific trade
+                if not args.exit_reason:
+                    logger.error("--exit-reason is required when closing a specific trade")
+                    sys.exit(1)
+                asyncio.run(executor.close_specific_trade(args.trade_id, args.exit_reason))
+            else:
+                # Close all eligible trades
+                asyncio.run(executor.close_eligible_trades())
 
     except Exception as e:
         logger.error(f"Fatal error: {e}")
