@@ -169,8 +169,19 @@ export default function TokensPage() {
                             '-'
                           )}
                         </td>
-                        <td className="px-4 py-2 text-gray-300 max-w-xs truncate">
-                          {token.explanation || '-'}
+                        <td className="px-4 py-2 text-gray-300 relative group">
+                          {token.explanation ? (
+                            <>
+                              <span className="cursor-help underline decoration-dotted">
+                                View
+                              </span>
+                              <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-black/90 border border-gold/20 rounded-lg text-xs text-gray-300 z-10 max-h-48 overflow-y-auto">
+                                {token.explanation}
+                              </div>
+                            </>
+                          ) : (
+                            '-'
+                          )}
                         </td>
                         <td className="px-4 py-2 text-gray-300">
                           {token.website ? (
