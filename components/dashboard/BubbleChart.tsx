@@ -61,29 +61,46 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
     // Add outlier detection before calculating scales
     const detectAndHandleOutliers = (data: number[], factor: number = 1.5) => {
       if (data.length < 4) return { min: Math.min(...data), max: Math.max(...data) };
-      
+  
+      // Filter out zeros and NaN values first
+      const validData = data.filter(value => value !== 0 && !isNaN(value));
+      if (validData.length === 0) return { min: -1, max: 1 }; // Default range if no valid data
+  
       // Sort the data
-      const sorted = [...data].sort((a, b) => a - b);
-      
+      const sorted = [...validData].sort((a, b) => a - b);
+  
       // Calculate quartiles
       const q1Index = Math.floor(sorted.length / 4);
       const q3Index = Math.floor(sorted.length * 3 / 4);
       const q1 = sorted[q1Index];
       const q3 = sorted[q3Index];
-      
+  
       // Calculate IQR (Interquartile Range)
       const iqr = q3 - q1;
-      
+  
+      // If IQR is too small, use a percentage of the range instead
+      if (iqr < 0.001) {
+        const range = sorted[sorted.length - 1] - sorted[0];
+        const min = sorted[0] - range * 0.1;
+        const max = sorted[sorted.length - 1] + range * 0.1;
+        return { min, max };
+      }
+  
       // Define bounds for outliers
       const lowerBound = q1 - factor * iqr;
       const upperBound = q3 + factor * iqr;
-      
+  
       // Filter out outliers for min/max calculation
       const filteredData = sorted.filter(value => value >= lowerBound && value <= upperBound);
-      
+  
+      // If filtering removed all values, use the original data
+      if (filteredData.length === 0) {
+        return { min: sorted[0], max: sorted[sorted.length - 1] };
+      }
+  
       return {
-        min: filteredData.length > 0 ? Math.min(...filteredData) : Math.min(...data),
-        max: filteredData.length > 0 ? Math.max(...filteredData) : Math.max(...data)
+        min: Math.min(...filteredData),
+        max: Math.max(...filteredData)
       };
     };
 
@@ -108,12 +125,21 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
       liquidity: [liquidityBounds.min, liquidityBounds.max]
     });
 
+    // Ensure we have valid ranges by adding a minimum range if needed
     const minVolumeGrowth = volumeGrowthBounds.min;
-    const maxVolumeGrowth = volumeGrowthBounds.max;
+    const maxVolumeGrowth = volumeGrowthBounds.max === volumeGrowthBounds.min 
+      ? volumeGrowthBounds.min + 1 
+      : volumeGrowthBounds.max;
+
     const minPriceTrend = priceTrendBounds.min;
-    const maxPriceTrend = priceTrendBounds.max;
+    const maxPriceTrend = priceTrendBounds.max === priceTrendBounds.min 
+      ? priceTrendBounds.min + 1 
+      : priceTrendBounds.max;
+
     const minLiquidity = liquidityBounds.min;
-    const maxLiquidity = liquidityBounds.max;
+    const maxLiquidity = liquidityBounds.max === liquidityBounds.min 
+      ? liquidityBounds.min + 1 
+      : liquidityBounds.max;
 
     // Ensure we have valid ranges to prevent division by zero
     const volumeGrowthRange = maxVolumeGrowth - minVolumeGrowth;
@@ -121,46 +147,48 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
   
     // Scale functions with validation and fallbacks
     const scaleX = (volumeGrowth: number) => {
-      // If the range is too small or invalid, position in the middle
-      if (isNaN(volumeGrowth) || volumeGrowthRange <= 0.001) {
+      // If the value is invalid, position in the middle
+      if (isNaN(volumeGrowth)) {
         return width / 2;
       }
-    
+  
       // Cap extreme values to prevent squishing
       const cappedValue = Math.min(Math.max(volumeGrowth, minVolumeGrowth), maxVolumeGrowth);
-    
+  
       // Calculate position with padding
       return padding + ((cappedValue - minVolumeGrowth) / volumeGrowthRange) * (width - 2 * padding);
     };
 
     const scaleY = (priceTrend: number) => {
-      // If the range is too small or invalid, position in the middle
-      if (isNaN(priceTrend) || priceTrendRange <= 0.001) {
+      // If the value is invalid, position in the middle
+      if (isNaN(priceTrend)) {
         return height / 2;
       }
-    
+  
       // Cap extreme values to prevent squishing
       const cappedValue = Math.min(Math.max(priceTrend, minPriceTrend), maxPriceTrend);
-    
+  
       // Calculate position with padding (inverted Y axis)
       return height - (padding + ((cappedValue - minPriceTrend) / priceTrendRange) * (height - 2 * padding));
     };
 
     const scaleRadius = (liquidity: number) => {
-      if (isNaN(liquidity) || maxLiquidity === minLiquidity) return 10;
-      
+      if (isNaN(liquidity)) return 10;
+  
       const minRadius = 10;
       const maxRadius = 25;
-      
+  
       // Use logarithmic scale for radius calculation
       // Add 1 to avoid log(0) and to ensure small values get a reasonable size
       const logMin = Math.log(minLiquidity + 1);
       const logMax = Math.log(maxLiquidity + 1);
       const logValue = Math.log(liquidity + 1);
-      
+  
       // Calculate normalized position in log scale
-      const logScale = (logValue - logMin) / (logMax - logMin);
-      
+      const logScale = (logMax > logMin) 
+        ? (logValue - logMin) / (logMax - logMin)
+        : 0.5; // Default to middle if range is invalid
+  
       // Apply the scale to the radius range
       return minRadius + logScale * (maxRadius - minRadius);
     };
