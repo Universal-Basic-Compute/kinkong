@@ -175,8 +175,23 @@ export default function TokensPage() {
                               <span className="cursor-help underline decoration-dotted">
                                 View
                               </span>
-                              <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-black/90 border border-gold/20 rounded-lg text-xs text-gray-300 z-10 max-h-48 overflow-y-auto">
-                                {token.explanation}
+                              <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-80 p-3 bg-black/90 border border-gold/20 rounded-lg text-xs text-gray-300 z-10 whitespace-pre-wrap">
+                                {token.explanation.split('\n').map((line, i) => (
+                                  <div key={i} className="mb-1">
+                                    {line.startsWith('- ') ? (
+                                      <div className="flex">
+                                        <span className="mr-1">•</span>
+                                        <span>{line.substring(2)}</span>
+                                      </div>
+                                    ) : line.startsWith('# ') ? (
+                                      <div className="font-bold text-sm">{line.substring(2)}</div>
+                                    ) : line.startsWith('## ') ? (
+                                      <div className="font-semibold">{line.substring(3)}</div>
+                                    ) : (
+                                      line
+                                    )}
+                                  </div>
+                                ))}
                               </div>
                             </>
                           ) : (
