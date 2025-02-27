@@ -69,6 +69,95 @@ class JupiterTradeExecutor:
             self.logger.error(f"Failed to initialize wallet: {e}")
             self.wallet_keypair = None
             self.wallet_address = None
+            
+    async def calculate_swap_losses(self, quote_data: dict, input_amount: float, output_amount: float) -> dict:
+        """
+        Calcule les pertes dues aux frais et au slippage
+        
+        Args:
+            quote_data: Données du quote Jupiter
+            input_amount: Montant d'entrée en unités normales (pas raw)
+            output_amount: Montant de sortie réel reçu en unités normales
+        
+        Returns:
+            dict: Détails des pertes (pourcentages et valeurs)
+        """
+        try:
+            # Récupérer les informations du quote
+            expected_output_raw = int(quote_data.get('outAmount', 0))
+            input_mint = quote_data.get('inputMint')
+            output_mint = quote_data.get('outputMint')
+            
+            # Obtenir les décimales pour les tokens
+            input_decimals = self.get_token_decimals(input_mint)
+            output_decimals = self.get_token_decimals(output_mint)
+            
+            # Convertir le montant de sortie attendu en unités normales
+            expected_output = expected_output_raw / (10 ** output_decimals)
+            
+            # Obtenir les prix des tokens
+            input_price = await self.get_token_price(input_mint)
+            output_price = await self.get_token_price(output_mint)
+            
+            if not input_price or not output_price:
+                self.logger.warning("Impossible d'obtenir les prix des tokens pour calculer les pertes")
+                return {
+                    "slippage_percent": 0,
+                    "fees_percent": 0,
+                    "total_loss_percent": 0,
+                    "details": "Prix des tokens non disponibles"
+                }
+            
+            # Valeur en USD
+            input_value_usd = input_amount * input_price
+            expected_output_value_usd = expected_output * output_price
+            actual_output_value_usd = output_amount * output_price
+            
+            # Calcul des pertes
+            total_loss_usd = input_value_usd - actual_output_value_usd
+            total_loss_percent = (total_loss_usd / input_value_usd) * 100 if input_value_usd > 0 else 0
+            
+            # Estimation du slippage (différence entre le montant attendu et réel)
+            slippage_usd = expected_output_value_usd - actual_output_value_usd
+            slippage_percent = (slippage_usd / input_value_usd) * 100 if input_value_usd > 0 else 0
+            
+            # Les frais sont la différence entre la perte totale et le slippage
+            # Note: C'est une approximation car il y a d'autres facteurs
+            fees_usd = total_loss_usd - slippage_usd
+            fees_percent = (fees_usd / input_value_usd) * 100 if input_value_usd > 0 else 0
+            
+            # Journaliser les résultats
+            self.logger.info("\n📊 Analyse des pertes de swap:")
+            self.logger.info(f"Montant d'entrée: {input_amount:.6f} (${input_value_usd:.2f})")
+            self.logger.info(f"Sortie attendue: {expected_output:.6f} (${expected_output_value_usd:.2f})")
+            self.logger.info(f"Sortie réelle: {output_amount:.6f} (${actual_output_value_usd:.2f})")
+            self.logger.info(f"Perte totale: ${total_loss_usd:.2f} ({total_loss_percent:.2f}%)")
+            self.logger.info(f"Slippage estimé: ${slippage_usd:.2f} ({slippage_percent:.2f}%)")
+            self.logger.info(f"Frais estimés: ${fees_usd:.2f} ({fees_percent:.2f}%)")
+            
+            return {
+                "input_amount": input_amount,
+                "input_value_usd": input_value_usd,
+                "expected_output": expected_output,
+                "expected_output_value_usd": expected_output_value_usd,
+                "actual_output": output_amount,
+                "actual_output_value_usd": actual_output_value_usd,
+                "total_loss_usd": total_loss_usd,
+                "total_loss_percent": total_loss_percent,
+                "slippage_usd": slippage_usd,
+                "slippage_percent": slippage_percent,
+                "fees_usd": fees_usd,
+                "fees_percent": fees_percent
+            }
+            
+        except Exception as e:
+            self.logger.error(f"Erreur lors du calcul des pertes de swap: {e}")
+            return {
+                "slippage_percent": 0,
+                "fees_percent": 0,
+                "total_loss_percent": 0,
+                "error": str(e)
+            }
 
     async def get_token_price(self, token_mint: str) -> Optional[float]:
         """Get current token price directly from DexScreener"""
@@ -450,6 +539,44 @@ class JupiterTradeExecutor:
                                         'final_balance': final_balance,
                                         'amount': final_balance - initial_balance if is_buy else initial_balance - final_balance
                                     }
+                                    
+                                    # Ajouter ce code pour calculer et enregistrer les pertes
+                                    try:
+                                        # Récupérer les données du quote si disponibles
+                                        if 'quote_data' in locals() and quote_data:
+                                            # Pour les achats (BUY), le token d'entrée est USDC et le token de sortie est le token acheté
+                                            # Pour les ventes (SELL), c'est l'inverse
+                                            if is_buy:
+                                                input_token = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"  # USDC
+                                                output_token = token_mint
+                                                input_amount = initial_balance - final_balance  # USDC dépensé
+                                                output_amount = result['amount']  # Tokens reçus
+                                            else:
+                                                input_token = token_mint  # Token vendu
+                                                output_token = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"  # USDC
+                                                input_amount = result['amount']  # Tokens vendus
+                                                output_amount = final_balance - initial_balance  # USDC reçu
+                                            
+                                            # Calculer les pertes
+                                            loss_analysis = await self.calculate_swap_losses(
+                                                quote_data,
+                                                input_amount,
+                                                output_amount
+                                            )
+                                            
+                                            # Ajouter les informations de perte au résultat
+                                            result['swap_analysis'] = loss_analysis
+                                            
+                                            # Journaliser un résumé
+                                            self.logger.info(f"\n💰 Résumé du swap:")
+                                            self.logger.info(f"Perte totale: {loss_analysis['total_loss_percent']:.2f}%")
+                                            self.logger.info(f"Slippage: {loss_analysis['slippage_percent']:.2f}%")
+                                            self.logger.info(f"Frais: {loss_analysis['fees_percent']:.2f}%")
+                                        else:
+                                            self.logger.warning("Données du quote non disponibles pour l'analyse des pertes")
+                                    except Exception as e:
+                                        self.logger.error(f"Erreur lors de l'analyse des pertes: {e}")
+                                        # Ne pas bloquer l'exécution en cas d'erreur dans l'analyse
                                     
                                     # Send trade notification only for Take Profit trades
                                     try:
