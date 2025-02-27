@@ -17,8 +17,8 @@ This document outlines KinKong's strategy for providing liquidity to UBC/SOL and
    - Adjust ranges based on 30-day volatility metrics
 
 2. **Fee Tier Selection**
-   - UBC/SOL: 0.3% fee tier (balanced approach)
-   - COMPUTE/SOL: 0.3% fee tier (balanced approach)
+   - UBC/SOL: 2% fee tier (optimized for current market conditions)
+   - COMPUTE/SOL: 2% fee tier (optimized for current market conditions)
    - Review fee performance monthly
 
 ### Position Management
