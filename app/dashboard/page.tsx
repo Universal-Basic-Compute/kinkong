@@ -7,24 +7,9 @@ import { PortfolioSection } from '@/components/dashboard/PortfolioSection';
 import { TrackedTokensSection } from '@/components/dashboard/TrackedTokensSection';
 import { InvestmentCard } from '@/components/dashboard/InvestmentCard';
 import { BubbleChart } from '@/components/dashboard/BubbleChart';
+import { TokenDisplay } from '@/utils/tokenDisplay';
 
 import { TokenInfo } from '@/types/token';
-
-function getTokenClass(token: string): string {
-  if (!token) return 'metallic-text-argent'; // Default style if token is undefined
-  
-  const upperToken = token.toUpperCase();
-  switch (upperToken) {
-    case 'UBC':
-      return 'metallic-text-ubc';
-    case 'COMPUTE':
-      return 'metallic-text-compute';
-    case 'SOL':
-      return 'metallic-text-sol';
-    default:
-      return 'metallic-text-argent';
-  }
-}
 
 export default function Dashboard() {
   const { publicKey } = useWallet();
@@ -101,14 +86,10 @@ export default function Dashboard() {
                       )}
                     </td>
                     <td className="px-4 py-2">
-                      <a 
-                        href={`https://solscan.io/token/${token.mint}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`font-medium ${getTokenClass(token.token)}`}
-                      >
-                        ${token.token}
-                      </a>
+                      <TokenDisplay 
+                        token={token.token} 
+                        mint={token.mint} 
+                      />
                     </td>
                     <td className="px-4 py-2 text-gray-300">{token.name}</td>
                     <td className="px-4 py-2 text-gray-300">

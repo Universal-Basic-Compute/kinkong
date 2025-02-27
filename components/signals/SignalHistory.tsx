@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { fetchAirtableData } from '@/utils/airtable';
-import { getTokenClass, formatTokenSymbol } from '@/components/utils/tokenUtils';
+import { TokenDisplay } from '@/utils/tokenDisplay';
 
 type SignalUpdateListener = () => void;
 const signalUpdateListeners: SignalUpdateListener[] = [];
@@ -368,9 +368,7 @@ export function SignalHistory() {
                 {getRelativeTime(signal.createdAt)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">
-                <span className={getTokenClass(signal.token)}>
-                  {formatTokenSymbol(signal.token)}
-                </span>
+                <TokenDisplay token={signal.token} />
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">
                 <span className={`px-2 py-1 rounded-full text-xs ${

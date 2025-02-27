@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { getTokenClass, formatTokenSymbol } from '@/components/utils/tokenUtils';
+import { TokenDisplay } from '@/utils/tokenDisplay';
 
 interface Trade {
   id: string;
@@ -114,9 +114,7 @@ export function TradeHistory({ userOnly = false, limit = 10, showChartButton = f
                     {timeAgo}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <span className={getTokenClass(trade.token)}>
-                      {formatTokenSymbol(trade.token)}
-                    </span>
+                    <TokenDisplay token={trade.token} />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                     ${(trade.value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

@@ -504,9 +504,10 @@ export default function Invest() {
                           <>
                             <div>
                               <span className="text-white font-medium">{Math.floor(investment.amount).toLocaleString('en-US')}</span>{' '}
-                              <span className={`text-gray-400 ${investment.token === 'UBC' ? 'metallic-text-ubc' : investment.token === 'COMPUTE' ? 'metallic-text-compute' : ''}`}>
-                                ${investment.token || 'USDC'}
-                              </span>
+                              <TokenDisplay 
+                                token={investment.token || 'USDC'} 
+                                options={{ className: 'text-gray-400' }}
+                              />
                             </div>
                             {investment.usdAmount && (
                               <div className="text-gray-400 text-sm">
@@ -674,7 +675,8 @@ export default function Invest() {
                           : 0;
                         return (
                           <>
-                            <span className="metallic-text-ubc">{Math.floor(ubcReturn).toLocaleString()} $UBC</span> 
+                            <TokenDisplay token="UBC" options={{ showSymbolPrefix: false }} />{' '}
+                            <span className="metallic-text-ubc">{Math.floor(ubcReturn).toLocaleString()}</span>{' '}
                             <span className="text-gray-400 text-sm ml-1">(${Math.floor(usdcReturn).toLocaleString()})</span>
                           </>
                         );
@@ -692,7 +694,8 @@ export default function Invest() {
                   {isSubmitting ? 'Processing...' : 'Invest Now'}
                 </button>
                 <p className="text-sm text-gray-400 text-center">
-                  Minimum investment: {MIN_AMOUNTS[selectedToken].toLocaleString()} <span className="text-gray-400">${selectedToken}</span>
+                  Minimum investment: {MIN_AMOUNTS[selectedToken].toLocaleString()}{' '}
+                  <TokenDisplay token={selectedToken} options={{ className: 'text-gray-400' }} />
                 </p>
               </div>
             </div>
