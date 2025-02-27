@@ -126,7 +126,7 @@ export default function TokensPage() {
                   </thead>
                   <tbody>
                     {trackedTokens.map((token, index) => (
-                      <tr key={`token-${token.mint}-${index}`} className="border-b border-gold/10 hover:bg-gold/5">
+                      <tr key={`token-${token.mint}-${index}`} className="border-b border-gold/10 hover:bg-gold/5 relative group">
                         <td className="px-4 py-2">
                           {token.isActive ? (
                             <span className="text-green-500">✓</span>
@@ -169,31 +169,11 @@ export default function TokensPage() {
                             '-'
                           )}
                         </td>
-                        <td className="px-4 py-2 text-gray-300 relative group">
+                        <td className="px-4 py-2 text-gray-300">
                           {token.explanation ? (
-                            <>
-                              <span className="cursor-help underline decoration-dotted">
-                                View
-                              </span>
-                              <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-80 p-3 bg-black/90 border border-gold/20 rounded-lg text-xs text-gray-300 z-10 whitespace-pre-wrap">
-                                {token.explanation.split('\n').map((line, i) => (
-                                  <div key={i} className="mb-1">
-                                    {line.startsWith('- ') ? (
-                                      <div className="flex">
-                                        <span className="mr-1">•</span>
-                                        <span>{line.substring(2)}</span>
-                                      </div>
-                                    ) : line.startsWith('# ') ? (
-                                      <div className="font-bold text-sm">{line.substring(2)}</div>
-                                    ) : line.startsWith('## ') ? (
-                                      <div className="font-semibold">{line.substring(3)}</div>
-                                    ) : (
-                                      line
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            </>
+                            <span className="cursor-help underline decoration-dotted">
+                              View
+                            </span>
                           ) : (
                             '-'
                           )}
@@ -212,6 +192,28 @@ export default function TokensPage() {
                             '-'
                           )}
                         </td>
+                        
+                        {/* Tooltip that appears on row hover */}
+                        {token.explanation && (
+                          <div className="fixed hidden group-hover:block w-80 p-3 bg-black/90 border border-gold/20 rounded-lg text-xs text-gray-300 z-50 whitespace-pre-wrap left-1/4 top-0 -translate-y-full">
+                            {token.explanation.split('\n').map((line, i) => (
+                              <div key={i} className="mb-1">
+                                {line.startsWith('- ') ? (
+                                  <div className="flex">
+                                    <span className="mr-1">•</span>
+                                    <span>{line.substring(2)}</span>
+                                  </div>
+                                ) : line.startsWith('# ') ? (
+                                  <div className="font-bold text-sm">{line.substring(2)}</div>
+                                ) : line.startsWith('## ') ? (
+                                  <div className="font-semibold">{line.substring(3)}</div>
+                                ) : (
+                                  line
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </tr>
                     ))}
                   </tbody>
