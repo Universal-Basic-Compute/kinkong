@@ -291,15 +291,11 @@ export default function CopilotPage() {
                 KinKong <span className="white-glow-text">Copilot</span>
               </h1>
               <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-                Your AI-powered trading assistant with direct access to KinKong's intelligence
-                and the UBC ecosystem's collective wisdom.
+                Your AI-powered trading assistant with KinKong's market intelligence, directly in your browser
               </p>
             </div>
           </div>
           <div className="max-w-2xl mx-auto">
-            <p className="text-lg text-gray-400">
-              Get real-time market insights, trading signals, and AI-powered analysis to stay ahead in the Solana ecosystem.
-            </p>
           </div>
         </div>
 
