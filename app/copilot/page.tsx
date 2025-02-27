@@ -7,6 +7,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletConnect } from '@/components/wallet/WalletConnect';
 import { Connection, PublicKey, LAMPORTS_PER_SOL, Transaction, SystemProgram, PublicKey as SolanaPublicKey } from '@solana/web3.js';
 import { createSubscription } from '@/utils/subscription';
+import AnimatedAdvice from '@/components/copilot/AnimatedAdvice';
 
 // Define proper types for the tiers
 type TierButton = {
@@ -365,6 +366,12 @@ export default function CopilotPage() {
             <WalletConnect />
           </div>
         )}
+
+        {/* Trading Advice Section */}
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-2xl font-bold mb-4 text-center">Trading Wisdom</h2>
+          <AnimatedAdvice />
+        </div>
 
         {/* Bottom CTA */}
         <div className="text-center pb-8">
