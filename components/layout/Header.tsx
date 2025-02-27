@@ -9,6 +9,7 @@ type SubItem = {
   href: string;
   description: string;
   isGlowing?: boolean;
+  emoji?: string; // Add emoji property
 };
 
 type BaseNavItem = {
@@ -42,37 +43,44 @@ const Header = () => {
         { 
           label: 'Tokens', 
           href: '/tokens',
-          description: 'Tracked tokens and metrics'
+          description: 'Tracked tokens and metrics',
+          emoji: '🪙'
         },
         { 
           label: 'Portfolio', 
           href: '/portfolio',
-          description: 'Portfolio dashboard and analytics'
+          description: 'Portfolio dashboard and analytics',
+          emoji: '📊'
         },
         { 
           label: 'Signals', 
           href: '/signals',
-          description: 'Trading signals and setups'
+          description: 'Trading signals and setups',
+          emoji: '📡'
         },
         { 
           label: 'Trades', 
           href: '/trades',
-          description: 'Trade history and execution'
+          description: 'Trade history and execution',
+          emoji: '🔄'
         },
         { 
           label: 'Performance', 
           href: '/performance',
-          description: 'Trading history and analytics'
+          description: 'Trading history and analytics',
+          emoji: '📈'
         },
         { 
           label: 'Strategy', 
           href: '/strategy',
-          description: 'Portfolio strategy and settings'
+          description: 'Portfolio strategy and settings',
+          emoji: '⚙️'
         },
         { 
           label: 'Invest', 
           href: '/invest',
           description: 'Investment opportunities and allocation',
+          emoji: '💰',
           isGlowing: true
         }
       ]
@@ -150,6 +158,7 @@ const Header = () => {
                           href={subItem.href}
                           className="block px-4 py-2 text-sm text-gray-300 hover:text-gold hover:bg-white/5"
                         >
+                          {subItem.emoji && <span className="mr-2">{subItem.emoji}</span>}
                           {subItem.label}
                         </Link>
                       ))}
@@ -215,6 +224,7 @@ const Header = () => {
                             className="text-gray-400 hover:text-gold py-1 transition-colors duration-200"
                             onClick={() => setIsMobileMenuOpen(false)}
                           >
+                            {subItem.emoji && <span className="mr-2">{subItem.emoji}</span>}
                             {subItem.label}
                           </Link>
                         ))}
