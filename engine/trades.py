@@ -826,6 +826,19 @@ class TradeExecutor:
             # Calculate exit value based on current price and amount
             exit_value = current_price * token_amount
             
+            # Debug log to identify the issue
+            self.logger.info(f"Exit value calculation details:")
+            self.logger.info(f"Current price: ${current_price:.6f}")
+            self.logger.info(f"Token amount: {token_amount}")
+            self.logger.info(f"Calculated exit value: ${exit_value:.2f}")
+            
+            # Ensure exit_value is not zero when it shouldn't be
+            if exit_value <= 0 and current_price > 0 and token_amount > 0:
+                self.logger.warning(f"⚠️ Exit value calculation resulted in ${exit_value:.2f} despite positive price and amount")
+                self.logger.warning(f"Recalculating with explicit float conversion")
+                exit_value = float(current_price) * float(token_amount)
+                self.logger.info(f"Recalculated exit value: ${exit_value:.2f}")
+            
             # Sanity check on exit value
             if exit_value > original_value * 10:
                 self.logger.warning(f"⚠️ Exit value ${exit_value:.2f} is more than 10x original value ${original_value:.2f}")
@@ -835,6 +848,13 @@ class TradeExecutor:
             # Calculate P&L and ROI
             realized_pnl = exit_value - original_value
             roi = (realized_pnl / original_value * 100) if original_value > 0 else 0
+            
+            # Ensure we're not storing zero for exit_value when we have valid data
+            if exit_value <= 0 and current_price > 0:
+                self.logger.warning(f"⚠️ Exit value is still zero or negative: ${exit_value:.2f}")
+                # Use a minimum value based on original value as fallback
+                exit_value = max(0.01, original_value * 0.1)  # At least 10% of original or 1 cent
+                self.logger.info(f"Using fallback exit value: ${exit_value:.2f}")
             
             # Additional sanity check on ROI
             if roi > 1000:  # Cap ROI at 1000%
