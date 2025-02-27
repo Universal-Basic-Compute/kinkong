@@ -40,27 +40,18 @@ export default function TokensPage() {
       <div className="grid grid-cols-1 gap-8">
         {/* Token Stats */}
         <section>
-          <h2 className="text-2xl font-bold mb-4">Token Statistics</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <h2 className="text-2xl font-bold mb-4">Tracked Tokens</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="stat-card">
               <h3>Total Tokens</h3>
               <p className="text-2xl">{isLoading ? 'Loading...' : totalTokens}</p>
             </div>
             <div className="stat-card">
-              <h3>Total Volume (7d)</h3>
+              <h3>Active Tokens</h3>
               <p className="text-2xl">
                 {isLoading 
                   ? 'Loading...' 
-                  : `$${(totalVolume / 1000000).toFixed(1)}M`
-                }
-              </p>
-            </div>
-            <div className="stat-card">
-              <h3>Average Liquidity</h3>
-              <p className="text-2xl">
-                {isLoading 
-                  ? 'Loading...' 
-                  : `$${(avgLiquidity / 1000000).toFixed(1)}M`
+                  : trackedTokens.filter(token => token.isActive).length
                 }
               </p>
             </div>
