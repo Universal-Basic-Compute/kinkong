@@ -352,14 +352,17 @@ class JupiterTradeExecutor:
     ) -> tuple[bool, Optional[bytes]]:
         """Execute swap with validation"""
         try:
-            # Get current price to calculate USD value
-            current_price = await self.get_token_price(input_token)
-            if not current_price:
-                self.logger.error(f"Could not get price for {input_token}")
-                return False, None
-
-            # Calculate USD value of trade
-            usd_value = amount * current_price
+            # Calculer la valeur USD correctement
+            usd_value = amount
+            
+            # Si le token d'entrée n'est pas un stablecoin, obtenir son prix
+            if input_token != "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" and input_token != "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB":  # Si ce n'est ni USDC ni USDT
+                current_price = await self.get_token_price(input_token)
+                if not current_price:
+                    self.logger.error(f"Could not get price for {input_token}")
+                    return False, None
+                usd_value = amount * current_price
+            
             self.logger.info(f"Trade value: ${usd_value:.2f} USD")
 
             # Validate trade first
