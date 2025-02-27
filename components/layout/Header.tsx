@@ -45,6 +45,11 @@ const Header = () => {
           description: 'Tracked tokens and metrics'
         },
         { 
+          label: 'Portfolio', 
+          href: '/portfolio',
+          description: 'Portfolio dashboard and analytics'
+        },
+        { 
           label: 'Signals', 
           href: '/signals',
           description: 'Trading signals and setups'
