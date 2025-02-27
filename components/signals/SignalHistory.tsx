@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { fetchAirtableData } from '@/utils/airtable';
+import { getTokenClass, formatTokenSymbol } from '@/components/utils/tokenUtils';
 
 type SignalUpdateListener = () => void;
 const signalUpdateListeners: SignalUpdateListener[] = [];
@@ -18,23 +19,6 @@ export const signalEvents = {
   }
 };
 
-function formatTokentoken(token: string): string {
-  return token.startsWith('$') ? token : `$${token}`;
-}
-
-function getTokenClass(token: string): string {
-  const upperToken = token.toUpperCase();
-  switch (upperToken) {
-    case 'UBC':
-      return 'metallic-text-ubc';
-    case 'COMPUTE':
-      return 'metallic-text-compute';
-    case 'SOL':
-      return 'metallic-text-sol';
-    default:
-      return 'metallic-text-argent';
-  }
-}
 
 function getTimeframeEmoji(timeframe: Signal['timeframe']): string {
   switch (timeframe) {
@@ -385,7 +369,7 @@ export function SignalHistory() {
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">
                 <span className={getTokenClass(signal.token)}>
-                  {formatTokentoken(signal.token)}
+                  {formatTokenSymbol(signal.token)}
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">

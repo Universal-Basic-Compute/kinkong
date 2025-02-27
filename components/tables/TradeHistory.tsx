@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { getTokenClass, formatTokenSymbol } from '@/components/utils/tokenUtils';
 
 interface Trade {
   id: string;
@@ -48,23 +49,6 @@ export function TradeHistory({ userOnly = false, limit = 10, showChartButton = f
   if (isLoading) return <div>Loading trades...</div>;
   if (error) return <div>Error: {error}</div>;
 
-  function getTokenClass(token: string): string {
-    const upperToken = token.toUpperCase();
-    switch (upperToken) {
-      case 'UBC':
-        return 'metallic-text-ubc';
-      case 'COMPUTE':
-        return 'metallic-text-compute';
-      case 'SOL':
-        return 'metallic-text-sol';
-      default:
-        return 'metallic-text-argent';
-    }
-  }
-
-  function formatTokenSymbol(token: string): string {
-    return token.startsWith('$') ? token : `$${token}`;
-  }
 
   function getPnlColor(pnl: number): string {
     return pnl >= 0 ? 'text-green-400' : 'text-red-400';
