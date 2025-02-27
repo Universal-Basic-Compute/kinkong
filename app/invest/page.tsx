@@ -4,6 +4,7 @@ import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import { WalletConnect } from '@/components/wallet/WalletConnect';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
+import { TokenDisplay } from '@/utils/tokenDisplay';
 
 const USDC_MINT = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'); // Mainnet USDC
 const UBC_MINT = new PublicKey('9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump'); // UBC token
