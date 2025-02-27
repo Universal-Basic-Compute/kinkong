@@ -920,8 +920,11 @@ class TradeExecutor:
                 })
                 
                 # Ajouter les informations d'analyse du swap si disponibles
-                if 'signature' in locals() and signature and 'result' in locals() and result and 'swap_analysis' in result:
-                    swap_analysis = result['swap_analysis']
+                # Note: signature est déjà vérifié dans la condition parent
+                # Nous devons récupérer l'analyse du swap depuis la réponse de Jupiter
+                swap_result = await self.jupiter.get_last_swap_analysis()
+                if swap_result and 'swap_analysis' in swap_result:
+                    swap_analysis = swap_result['swap_analysis']
                     update_data['exitSwapInfo'] = json.dumps({
                         'totalLossPercent': swap_analysis.get('total_loss_percent', 0),
                         'slippagePercent': swap_analysis.get('slippage_percent', 0),

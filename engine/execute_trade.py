@@ -53,6 +53,7 @@ class JupiterTradeExecutor:
     def __init__(self):
         load_dotenv()
         self.logger = setup_logging()
+        self._last_swap_result = None
         
         # Initialize wallet during class initialization
         try:
@@ -445,6 +446,8 @@ class JupiterTradeExecutor:
             return False
 
     async def execute_trade_with_retries(self, transaction: Transaction, token_mint: str, quote_data: Optional[dict] = None, max_retries: int = 3) -> Optional[Dict]:
+        # Store the last swap result for later analysis
+        self._last_swap_result = None
         """Execute trade with balance confirmation via Birdeye API"""
         client = AsyncClient(
             "https://api.mainnet-beta.solana.com",
@@ -570,6 +573,9 @@ class JupiterTradeExecutor:
                                             
                                             # Ajouter les informations de perte au résultat
                                             result['swap_analysis'] = loss_analysis
+                                    
+                                            # Store the result for later use
+                                            self._last_swap_result = result
                                             
                                             # Journaliser un résumé
                                             self.logger.info(f"\n💰 Résumé du swap:")
@@ -854,6 +860,10 @@ class JupiterTradeExecutor:
                 self.logger.error("Traceback:")
                 traceback.print_tb(e.__traceback__)
             return None
+
+    async def get_last_swap_analysis(self) -> Optional[Dict]:
+        """Return the last swap result with analysis"""
+        return self._last_swap_result
 
 if __name__ == "__main__":
     print("This module is not meant to be run directly")
