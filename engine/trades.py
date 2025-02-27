@@ -459,7 +459,9 @@ class TradeExecutor:
             if trade_result and trade_result.get('signature'):
                 # Update trade record
                 transaction_url = f"https://solscan.io/tx/{trade_result['signature']}"
-                self.trades_table.update(trade['id'], {
+                
+                # Créer un dictionnaire pour les données de mise à jour
+                update_data = {
                     'status': 'EXECUTED',
                     'txSignature': trade_result['signature'],
                     'amount': trade_result['amount'],
@@ -467,7 +469,25 @@ class TradeExecutor:
                     'price': float(signal['fields']['entryPrice']),
                     'transactionUrl': transaction_url,
                     'executedAt': datetime.now(timezone.utc).isoformat()
-                })
+                }
+                
+                # Ajouter les informations d'analyse du swap si disponibles
+                if 'swap_analysis' in trade_result:
+                    swap_analysis = trade_result['swap_analysis']
+                    update_data['swapInfo'] = json.dumps({
+                        'totalLossPercent': swap_analysis.get('total_loss_percent', 0),
+                        'slippagePercent': swap_analysis.get('slippage_percent', 0),
+                        'feesPercent': swap_analysis.get('fees_percent', 0),
+                        'inputAmount': swap_analysis.get('input_amount', 0),
+                        'expectedOutput': swap_analysis.get('expected_output', 0),
+                        'actualOutput': swap_analysis.get('actual_output', 0),
+                        'inputValueUsd': swap_analysis.get('input_value_usd', 0),
+                        'expectedOutputValueUsd': swap_analysis.get('expected_output_value_usd', 0),
+                        'actualOutputValueUsd': swap_analysis.get('actual_output_value_usd', 0)
+                    })
+                
+                # Mettre à jour le trade
+                self.trades_table.update(trade['id'], update_data)
                 
                 # Send notification
                 message = f"🦍 KinKong Trade Alert\n\n"
@@ -898,6 +918,21 @@ class TradeExecutor:
                     'closeTxUrl': transaction_url,
                     'notes': f"Trade closed via {exit_reason} at ${current_price:.4f}"
                 })
+                
+                # Ajouter les informations d'analyse du swap si disponibles
+                if 'signature' in locals() and signature and 'result' in locals() and result and 'swap_analysis' in result:
+                    swap_analysis = result['swap_analysis']
+                    update_data['exitSwapInfo'] = json.dumps({
+                        'totalLossPercent': swap_analysis.get('total_loss_percent', 0),
+                        'slippagePercent': swap_analysis.get('slippage_percent', 0),
+                        'feesPercent': swap_analysis.get('fees_percent', 0),
+                        'inputAmount': swap_analysis.get('input_amount', 0),
+                        'expectedOutput': swap_analysis.get('expected_output', 0),
+                        'actualOutput': swap_analysis.get('actual_output', 0),
+                        'inputValueUsd': swap_analysis.get('input_value_usd', 0),
+                        'expectedOutputValueUsd': swap_analysis.get('expected_output_value_usd', 0),
+                        'actualOutputValueUsd': swap_analysis.get('actual_output_value_usd', 0)
+                    })
             else:
                 update_data['notes'] = f"Closed with dust balance (${trade_value:.2f})"
 
