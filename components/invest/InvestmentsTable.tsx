@@ -61,9 +61,19 @@ export function InvestmentsTable({ investments, latestSnapshot, isLoading }: Inv
                   .map((investment) => (
                   <tr key={investment.investmentId} className="border-b border-gold/10 hover:bg-gold/5">
                     <td className="px-4 py-4 text-white">
-                      {investment.wallet ? 
-                        `${investment.wallet.substring(0, 4)}...${investment.wallet.substring(investment.wallet.length - 4)}` : 
-                        'Anonymous'}
+                      {investment.wallet ? (
+                        <a 
+                          href={`https://solscan.io/account/${investment.wallet}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:text-gold transition-colors"
+                          title="View wallet on Solscan"
+                        >
+                          {`${investment.wallet.substring(0, 4)}...${investment.wallet.substring(investment.wallet.length - 4)}`}
+                        </a>
+                      ) : (
+                        'Anonymous'
+                      )}
                     </td>
                     <td className="px-4 py-4 text-right">
                       {typeof investment.amount === 'number' ? (
