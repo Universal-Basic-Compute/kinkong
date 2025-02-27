@@ -46,31 +46,83 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
       );
     });
 
-    // Calculate scales using valid tokens
-    const maxVolumeGrowth = Math.max(...validTokens.map(t => t.volumeGrowth || 0));
-    const minVolumeGrowth = Math.min(...validTokens.map(t => t.volumeGrowth || 0));
-    const maxPriceTrend = Math.max(...validTokens.map(t => t.priceTrend || 0));
-    const minPriceTrend = Math.min(...validTokens.map(t => t.priceTrend || 0));
-    const maxLiquidity = Math.max(...validTokens.map(t => t.liquidity || 0));
-    const minLiquidity = Math.min(...validTokens.map(t => t.liquidity || 0));
+    // Add outlier detection before calculating scales
+    const detectAndHandleOutliers = (data: number[], factor: number = 1.5) => {
+      if (data.length < 4) return { min: Math.min(...data), max: Math.max(...data) };
+      
+      // Sort the data
+      const sorted = [...data].sort((a, b) => a - b);
+      
+      // Calculate quartiles
+      const q1Index = Math.floor(sorted.length / 4);
+      const q3Index = Math.floor(sorted.length * 3 / 4);
+      const q1 = sorted[q1Index];
+      const q3 = sorted[q3Index];
+      
+      // Calculate IQR (Interquartile Range)
+      const iqr = q3 - q1;
+      
+      // Define bounds for outliers
+      const lowerBound = q1 - factor * iqr;
+      const upperBound = q3 + factor * iqr;
+      
+      // Filter out outliers for min/max calculation
+      const filteredData = sorted.filter(value => value >= lowerBound && value <= upperBound);
+      
+      return {
+        min: filteredData.length > 0 ? Math.min(...filteredData) : Math.min(...data),
+        max: filteredData.length > 0 ? Math.max(...filteredData) : Math.max(...data)
+      };
+    };
+
+    // Use outlier detection for scale calculations
+    const volumeGrowthBounds = detectAndHandleOutliers(validTokens.map(t => t.volumeGrowth || 0));
+    const priceTrendBounds = detectAndHandleOutliers(validTokens.map(t => t.priceTrend || 0));
+    const liquidityBounds = detectAndHandleOutliers(validTokens.map(t => t.liquidity || 0), 2); // Use higher factor for liquidity
+
+    const minVolumeGrowth = volumeGrowthBounds.min;
+    const maxVolumeGrowth = volumeGrowthBounds.max;
+    const minPriceTrend = priceTrendBounds.min;
+    const maxPriceTrend = priceTrendBounds.max;
+    const minLiquidity = liquidityBounds.min;
+    const maxLiquidity = liquidityBounds.max;
 
     // Scale functions with validation
     const scaleX = (volumeGrowth: number) => {
       if (isNaN(volumeGrowth) || maxVolumeGrowth === minVolumeGrowth) return padding;
-      return padding + ((volumeGrowth - minVolumeGrowth) / (maxVolumeGrowth - minVolumeGrowth)) * (width - 2 * padding);
+      
+      // Cap extreme values to prevent squishing
+      const cappedValue = Math.min(Math.max(volumeGrowth, minVolumeGrowth * 1.5), maxVolumeGrowth * 0.8);
+      
+      return padding + ((cappedValue - minVolumeGrowth) / (maxVolumeGrowth - minVolumeGrowth)) * (width - 2 * padding);
     };
 
     const scaleY = (priceTrend: number) => {
       if (isNaN(priceTrend) || maxPriceTrend === minPriceTrend) return height - padding;
-      return height - (padding + ((priceTrend - minPriceTrend) / (maxPriceTrend - minPriceTrend)) * (height - 2 * padding));
+      
+      // Cap extreme values to prevent squishing
+      const cappedValue = Math.min(Math.max(priceTrend, minPriceTrend * 1.5), maxPriceTrend * 0.8);
+      
+      return height - (padding + ((cappedValue - minPriceTrend) / (maxPriceTrend - minPriceTrend)) * (height - 2 * padding));
     };
 
     const scaleRadius = (liquidity: number) => {
       if (isNaN(liquidity) || maxLiquidity === minLiquidity) return 10;
+      
       const minRadius = 10;
       const maxRadius = 25;
-      const scale = (liquidity - minLiquidity) / (maxLiquidity - minLiquidity);
-      return minRadius + scale * (maxRadius - minRadius);
+      
+      // Use logarithmic scale for radius calculation
+      // Add 1 to avoid log(0) and to ensure small values get a reasonable size
+      const logMin = Math.log(minLiquidity + 1);
+      const logMax = Math.log(maxLiquidity + 1);
+      const logValue = Math.log(liquidity + 1);
+      
+      // Calculate normalized position in log scale
+      const logScale = (logValue - logMin) / (logMax - logMin);
+      
+      // Apply the scale to the radius range
+      return minRadius + logScale * (maxRadius - minRadius);
     };
 
     // Color gradient based on volume/liquidity ratio
