@@ -10,4 +10,6 @@ export interface TokenInfo {
   holderCount: number;
   priceTrend: number;
   volumeGrowth: number;
+  website?: string;
+  explanation?: string;
 }
