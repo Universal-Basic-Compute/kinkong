@@ -40,9 +40,9 @@ const Header = () => {
       isGroup: true,
       subItems: [
         { 
-          label: 'Dashboard', 
-          href: '/dashboard',
-          description: 'Market overview and key metrics'
+          label: 'Tokens', 
+          href: '/tokens',
+          description: 'Tracked tokens and metrics'
         },
         { 
           label: 'Portfolio', 
@@ -68,11 +68,6 @@ const Header = () => {
           label: 'Strategy', 
           href: '/strategy',
           description: 'Portfolio strategy and settings'
-        },
-        { 
-          label: 'Tokens', 
-          href: '/tokens',
-          description: 'Tracked tokens and metrics'
         },
         { 
           label: 'Invest', 
