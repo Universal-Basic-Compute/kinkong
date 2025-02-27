@@ -185,7 +185,7 @@ export default function TokensPage() {
                         
                         {/* Tooltip that appears on row hover */}
                         {token.explanation && (
-                          <div className="fixed hidden group-hover:block w-80 p-3 bg-black/90 border border-gold/20 rounded-lg text-xs text-gray-300 z-50 whitespace-pre-wrap left-1/4 top-0 -translate-y-full">
+                          <div className="absolute hidden group-hover:block w-80 p-3 bg-black/90 border border-gold/20 rounded-lg text-xs text-gray-300 z-50 whitespace-pre-wrap left-1/2 -translate-x-1/2 bottom-full mb-2">
                             {token.explanation.split('\n').map((line, i) => (
                               <div key={i} className="mb-1">
                                 {line.startsWith('- ') ? (
