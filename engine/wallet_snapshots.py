@@ -126,6 +126,36 @@ class WalletSnapshotTaker:
                     print(f"✓ Got COMPUTE price from Jupiter API: ${compute_price:.6f}")
             except Exception as e:
                 print(f"❌ Error fetching COMPUTE price from Jupiter API: {str(e)}")
+                
+        # If both Meteora and Jupiter fail, try getting price from DexScreener
+        if compute_price is None:
+            try:
+                # DexScreener API for COMPUTE token
+                dexscreener_url = "https://api.dexscreener.com/latest/dex/tokens/B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo"
+                
+                dexscreener_response = requests.get(dexscreener_url)
+                dexscreener_response.raise_for_status()
+                dexscreener_data = dexscreener_response.json()
+                
+                # DexScreener returns pairs that include this token
+                if dexscreener_data.get('pairs') and len(dexscreener_data['pairs']) > 0:
+                    # Get the first pair with USDC or USDT (stablecoin pair)
+                    compute_pair = None
+                    for pair in dexscreener_data['pairs']:
+                        # Look for USDC or USDT pair
+                        if 'USDC' in pair.get('quoteToken', {}).get('symbol', '') or 'USDT' in pair.get('quoteToken', {}).get('symbol', ''):
+                            compute_pair = pair
+                            break
+                    
+                    # If no USDC/USDT pair, just use the first pair
+                    if not compute_pair and len(dexscreener_data['pairs']) > 0:
+                        compute_pair = dexscreener_data['pairs'][0]
+                    
+                    if compute_pair and compute_pair.get('priceUsd'):
+                        compute_price = float(compute_pair['priceUsd'])
+                        print(f"✓ Got COMPUTE price from DexScreener: ${compute_price:.6f}")
+            except Exception as e:
+                print(f"❌ Error fetching COMPUTE price from DexScreener: {str(e)}")
 
         for balance_data in token_balances:
             try:
