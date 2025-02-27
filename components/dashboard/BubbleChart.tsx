@@ -46,6 +46,18 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
       );
     });
 
+    console.log('Valid tokens for bubble chart:', validTokens.length);
+  
+    // Debug: Log the first few tokens to check their values
+    if (validTokens.length > 0) {
+      console.log('Sample token data:', validTokens.slice(0, 3).map(t => ({
+        token: t.token,
+        volumeGrowth: t.volumeGrowth,
+        priceTrend: t.priceTrend,
+        liquidity: t.liquidity
+      })));
+    }
+
     // Add outlier detection before calculating scales
     const detectAndHandleOutliers = (data: number[], factor: number = 1.5) => {
       if (data.length < 4) return { min: Math.min(...data), max: Math.max(...data) };
@@ -76,9 +88,25 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
     };
 
     // Use outlier detection for scale calculations
-    const volumeGrowthBounds = detectAndHandleOutliers(validTokens.map(t => t.volumeGrowth || 0));
-    const priceTrendBounds = detectAndHandleOutliers(validTokens.map(t => t.priceTrend || 0));
-    const liquidityBounds = detectAndHandleOutliers(validTokens.map(t => t.liquidity || 0), 2); // Use higher factor for liquidity
+    const volumeGrowthValues = validTokens.map(t => t.volumeGrowth || 0);
+    const priceTrendValues = validTokens.map(t => t.priceTrend || 0);
+    const liquidityValues = validTokens.map(t => t.liquidity || 0);
+  
+    console.log('Value ranges before outlier detection:', {
+      volumeGrowth: [Math.min(...volumeGrowthValues), Math.max(...volumeGrowthValues)],
+      priceTrend: [Math.min(...priceTrendValues), Math.max(...priceTrendValues)],
+      liquidity: [Math.min(...liquidityValues), Math.max(...liquidityValues)]
+    });
+
+    const volumeGrowthBounds = detectAndHandleOutliers(volumeGrowthValues);
+    const priceTrendBounds = detectAndHandleOutliers(priceTrendValues);
+    const liquidityBounds = detectAndHandleOutliers(liquidityValues, 2); // Use higher factor for liquidity
+
+    console.log('Value ranges after outlier detection:', {
+      volumeGrowth: [volumeGrowthBounds.min, volumeGrowthBounds.max],
+      priceTrend: [priceTrendBounds.min, priceTrendBounds.max],
+      liquidity: [liquidityBounds.min, liquidityBounds.max]
+    });
 
     const minVolumeGrowth = volumeGrowthBounds.min;
     const maxVolumeGrowth = volumeGrowthBounds.max;
@@ -87,23 +115,35 @@ export function BubbleChart({ tokens }: BubbleChartProps) {
     const minLiquidity = liquidityBounds.min;
     const maxLiquidity = liquidityBounds.max;
 
-    // Scale functions with validation
+    // Ensure we have valid ranges to prevent division by zero
+    const volumeGrowthRange = maxVolumeGrowth - minVolumeGrowth;
+    const priceTrendRange = maxPriceTrend - minPriceTrend;
+  
+    // Scale functions with validation and fallbacks
     const scaleX = (volumeGrowth: number) => {
-      if (isNaN(volumeGrowth) || maxVolumeGrowth === minVolumeGrowth) return padding;
-      
+      // If the range is too small or invalid, position in the middle
+      if (isNaN(volumeGrowth) || volumeGrowthRange <= 0.001) {
+        return width / 2;
+      }
+    
       // Cap extreme values to prevent squishing
-      const cappedValue = Math.min(Math.max(volumeGrowth, minVolumeGrowth * 1.5), maxVolumeGrowth * 0.8);
-      
-      return padding + ((cappedValue - minVolumeGrowth) / (maxVolumeGrowth - minVolumeGrowth)) * (width - 2 * padding);
+      const cappedValue = Math.min(Math.max(volumeGrowth, minVolumeGrowth), maxVolumeGrowth);
+    
+      // Calculate position with padding
+      return padding + ((cappedValue - minVolumeGrowth) / volumeGrowthRange) * (width - 2 * padding);
     };
 
     const scaleY = (priceTrend: number) => {
-      if (isNaN(priceTrend) || maxPriceTrend === minPriceTrend) return height - padding;
-      
+      // If the range is too small or invalid, position in the middle
+      if (isNaN(priceTrend) || priceTrendRange <= 0.001) {
+        return height / 2;
+      }
+    
       // Cap extreme values to prevent squishing
-      const cappedValue = Math.min(Math.max(priceTrend, minPriceTrend * 1.5), maxPriceTrend * 0.8);
-      
-      return height - (padding + ((cappedValue - minPriceTrend) / (maxPriceTrend - minPriceTrend)) * (height - 2 * padding));
+      const cappedValue = Math.min(Math.max(priceTrend, minPriceTrend), maxPriceTrend);
+    
+      // Calculate position with padding (inverted Y axis)
+      return height - (padding + ((cappedValue - minPriceTrend) / priceTrendRange) * (height - 2 * padding));
     };
 
     const scaleRadius = (liquidity: number) => {
