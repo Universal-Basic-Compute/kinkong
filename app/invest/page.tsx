@@ -578,21 +578,27 @@ export default function Invest() {
     <main className="min-h-screen p-4 max-w-6xl mx-auto">
       <h1 className="text-4xl font-bold mb-8 text-center">Invest in KinKong</h1>
 
-      <section className="mb-8">
-        <h2 className="text-2xl font-bold mb-4">Your Investments</h2>
-        <YourInvestments />
-      </section>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* First row - takes up full width (or 70% on larger screens) */}
+        <div className="md:col-span-2">
+          <section className="mb-8">
+            <h2 className="text-2xl font-bold mb-4">Your Investments</h2>
+            <YourInvestments />
+          </section>
 
-      <section className="mb-8">
-        <h2 className="text-2xl font-bold mb-4">Current Redistributions</h2>
-        <RedistributionsTable />
-      </section>
-
-      <div className="max-w-md mx-auto">
-          <section>
-            <h2 className="text-2xl font-bold mb-4">Invest Now</h2>
-            <div className="investment-form bg-black/30 p-6 rounded-lg border border-gold/20">
-              <div className="space-y-5">
+          <section className="mb-8">
+            <h2 className="text-2xl font-bold mb-4">Current Redistributions</h2>
+            <RedistributionsTable />
+          </section>
+        </div>
+        
+        {/* Second row - takes up 30% width and is fixed */}
+        <div className="md:col-span-1">
+          <div className="sticky top-24">
+            <section>
+              <h2 className="text-2xl font-bold mb-4">Invest Now</h2>
+              <div className="investment-form bg-black/30 p-6 rounded-lg border border-gold/20">
+                <div className="space-y-5">
                 {/* Token Selection */}
                 <div>
                   <label className="block text-sm mb-2 text-gray-300">
@@ -655,9 +661,11 @@ export default function Invest() {
                   Minimum investment: {MIN_AMOUNTS[selectedToken].toLocaleString()}{' '}
                   <TokenDisplay token={selectedToken} options={{ className: 'text-gray-400' }} />
                 </p>
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          </div>
+        </div>
       </div>
     </main>
   )
