@@ -158,15 +158,14 @@ const CompleteStep: React.FC = () => {
         {isSaving ? 'Saving your preferences...' : 'Redirecting you to KinKong Copilot...'}
       </p>
       
-      {!publicKey ? (
-        <div className="mb-6 p-4 bg-black/40 rounded-lg border border-gold/20">
-          <p className="text-red-400 mb-4 font-medium">Wallet connection required to continue</p>
+      <p className="text-gray-400">
+        {isSaving ? 'Saving your preferences...' : 'Ready to start using KinKong Copilot!'}
+      </p>
+      
+      {!publicKey && (
+        <div className="mb-6">
           <WalletConnect />
         </div>
-      ) : (
-        <p className="text-gray-400">
-          {isSaving ? 'Saving your preferences...' : 'Ready to start using KinKong Copilot!'}
-        </p>
       )}
       
       <div className="flex justify-center">
@@ -175,6 +174,7 @@ const CompleteStep: React.FC = () => {
           disabled={isSaving || !publicKey}
           className={`px-8 py-3 bg-gradient-to-r from-gold to-amber-500 text-black font-bold rounded-lg 
             ${(isSaving || !publicKey) ? 'opacity-70 cursor-not-allowed' : 'hover:scale-105 transition-all duration-300 shadow-lg shadow-gold/20'}`}
+          title={!publicKey ? "Connect your wallet to continue" : ""}
         >
           {isSaving ? 'Saving...' : 'Start Using Copilot Now'}
         </button>
