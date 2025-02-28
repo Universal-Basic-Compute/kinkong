@@ -35,6 +35,7 @@ export default function CopilotChatPage() {
   const [isTyping, setIsTyping] = useState(false);
   const [subscription, setSubscription] = useState<{active: boolean; expiresAt?: string} | null>(null);
   const [currentMission, setCurrentMission] = useState<string | null>(null);
+  const [selectedMissionId, setSelectedMissionId] = useState<string | null>(null);
   const [userData, setUserData] = useState<{
     experience: string;
     interests: string[];
@@ -205,8 +206,9 @@ export default function CopilotChatPage() {
   }, []);
   
   const handleSelectMission = (missionTitle: string, context: string, missionId: string) => {
-    // Store the mission ID
+    // Store the mission ID for both context and UI highlighting
     setCurrentMission(missionId);
+    setSelectedMissionId(missionId);
     
     // Add a system message to indicate the mission selection
     const systemMessage: Message = {
@@ -375,9 +377,13 @@ export default function CopilotChatPage() {
                 e.preventDefault(); // Prevent default behavior
                 handleSelectMission(mission.title, mission.context, mission.id);
               }}
-              className="p-3 bg-black/50 border border-gold/20 rounded-lg cursor-pointer hover:bg-gold/10 hover:border-gold/40 transition-all"
+              className={`p-3 rounded-lg cursor-pointer transition-all ${
+                selectedMissionId === mission.id
+                  ? 'bg-gold/20 border-2 border-gold text-gold font-medium'
+                  : 'bg-black/50 border border-gold/20 hover:bg-gold/10 hover:border-gold/40 text-gold'
+              }`}
             >
-              <h3 className="font-medium text-gold">{mission.title}</h3>
+              <h3 className="font-medium">{mission.title}</h3>
             </div>
           ))}
         </div>
