@@ -70,7 +70,14 @@ export async function POST(request: NextRequest) {
         // Use HTML parse mode instead of Markdown
         const message = `🔔 <b>Manual Claim Request</b>\n\nA user has requested to claim ${ubcAmount} UBC to wallet <code>${wallet}</code>.\n\nPlease process this claim manually.\n\nRedistribution ID: <code>${investmentId}</code>`;
         
-        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        // Log the notification attempt
+        console.log('Sending Telegram notification for claim:', {
+          chatId,
+          message: message.substring(0, 50) + '...',
+          parseMode: 'HTML'
+        });
+        
+        const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -81,6 +88,16 @@ export async function POST(request: NextRequest) {
             parse_mode: 'HTML'
           }),
         });
+        
+        // Log the response from Telegram
+        const responseData = await response.json();
+        console.log('Telegram API response:', responseData);
+        
+        if (!response.ok) {
+          throw new Error(`Telegram API error: ${response.status} - ${JSON.stringify(responseData)}`);
+        }
+        
+        console.log('Telegram notification sent successfully for claim');
       } catch (notifyError) {
         console.error('Failed to send notification:', notifyError);
         // Continue even if notification fails
