@@ -154,6 +154,11 @@ class SignalGenerator:
             if not analyses:
                 logger.warning(f"No analysis generated for {token['token']}")
                 return None
+                
+            # Log the full analyses result for debugging
+            logger.info(f"Full analyses result for {token['token']}:")
+            for tf, analysis in analyses.items():
+                logger.info(f"  {tf}: {analysis}")
             
             # Create signals for strong setups
             signals_created = 0
@@ -163,6 +168,10 @@ class SignalGenerator:
                     
                 signal_type = analysis.get('signal')
                 confidence = analysis.get('confidence', 0)
+                
+                # Log the analysis details for debugging
+                logger.info(f"Analysis for {token['token']} - {timeframe}: signal={signal_type}, confidence={confidence}, expectedReturn={analysis.get('expectedReturn', 0)}")
+                logger.info(f"Full analysis data for {token['token']} - {timeframe}: {analysis}")
                 
                 # Only create signals for BUY/SELL (not HOLD) with confidence >= 60
                 # Also check that the expected return meets minimum targets based on timeframe
@@ -181,6 +190,7 @@ class SignalGenerator:
                     # Skip if expected return is below minimum target
                     if expected_return < min_target:
                         logger.info(f"Skipping {timeframe} signal for {token['token']} - expected return {expected_return:.2f}% below minimum target {min_target}%")
+                        logger.info(f"Analysis keys available: {list(analysis.keys())}")
                         continue
                     try:
                         result = create_airtable_signal(
