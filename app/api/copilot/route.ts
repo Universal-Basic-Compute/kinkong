@@ -3,6 +3,38 @@ import { rateLimit } from '@/utils/rate-limit';
 import { getTable } from '@/backend/src/airtable/tables';
 import { COPILOT_PROMPT } from '@/prompts/copilot';
 
+// Function to fetch wallet portfolio from Birdeye API
+async function getBirdeyeWalletPortfolio(wallet: string) {
+  try {
+    console.log(`🔍 Fetching Birdeye wallet portfolio for: ${wallet}`);
+    const apiKey = process.env.BIRDEYE_API_KEY;
+    
+    if (!apiKey) {
+      console.warn('BIRDEYE_API_KEY not found in environment variables');
+      return null;
+    }
+    
+    const response = await fetch(`https://public-api.birdeye.so/v1/wallet/token_list?wallet=${wallet}`, {
+      headers: {
+        'x-api-key': apiKey,
+        'x-chain': 'solana'
+      }
+    });
+    
+    if (!response.ok) {
+      console.error(`Birdeye API error: ${response.status}`);
+      return null;
+    }
+    
+    const data = await response.json();
+    console.log(`✅ Successfully fetched wallet portfolio with ${data.data?.items?.length || 0} tokens`);
+    return data.data;
+  } catch (error) {
+    console.error('❌ Error fetching Birdeye wallet portfolio:', error);
+    return null;
+  }
+}
+
 // Interface for the copilot request
 interface CopilotRequest {
   message: string;
@@ -251,12 +283,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Prepare full context with user data
+    // Fetch wallet portfolio from Birdeye if wallet is provided
+    let walletPortfolio = null;
+    if (requestBody.wallet) {
+      walletPortfolio = await getBirdeyeWalletPortfolio(requestBody.wallet);
+      console.log(`🔍 Wallet portfolio fetch result: ${walletPortfolio ? 'Success' : 'Failed'}`);
+    }
+
+    // Prepare full context with user data and wallet portfolio
     const fullContext = {
       request: requestBody,
       signals: contextData.signals,
       marketSentiment: contextData.marketSentiment,
-      userData: userData // Add user data to context
+      userData: userData, // Add user data to context
+      walletPortfolio: walletPortfolio // Add wallet portfolio to context
     };
 
     const bodyContent = JSON.stringify(fullContext);
@@ -277,6 +317,19 @@ export async function POST(request: NextRequest) {
 - Risk Tolerance: ${userData.riskTolerance || 'Not specified'}
 
 Tailor your responses to match this user's experience level, interests, and risk tolerance. For ${userData.experience || 'unspecified'} traders, ${getExperienceLevelGuidance(userData.experience)}`;
+    }
+
+    // Add wallet portfolio information to system prompt if available
+    if (walletPortfolio && walletPortfolio.items && walletPortfolio.items.length > 0) {
+      systemPrompt += `\n\nUser's Wallet Portfolio:
+The user's wallet contains ${walletPortfolio.items.length} tokens. Here are the top holdings:
+${walletPortfolio.items.slice(0, 10).map((item: any, index: number) => 
+  `${index + 1}. ${item.symbol || 'Unknown'}: $${parseFloat(item.value || 0).toFixed(2)} (${item.percentage ? (item.percentage * 100).toFixed(2) : '0'}%)`
+).join('\n')}
+
+Total Portfolio Value: $${parseFloat(walletPortfolio.totalValue || 0).toFixed(2)}
+
+Use this information to provide personalized advice relevant to their current holdings.`;
     }
 
     // Helper function to get guidance based on experience level
