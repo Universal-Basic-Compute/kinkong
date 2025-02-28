@@ -10,6 +10,82 @@ import { createSubscription } from '@/utils/subscription';
 import AnimatedAdvice from '@/components/copilot/AnimatedAdvice';
 import AnimatedChatBubble from '@/components/copilot/AnimatedChatBubble';
 
+// Function to send Telegram notifications
+async function sendSubscriptionNotification(subscriptionData: any) {
+  try {
+    const botToken = process.env.NEXT_PUBLIC_TELEGRAM_BOT_TOKEN;
+    const chatId = "-1001699255893"; // The specified chat ID
+    
+    if (!botToken) {
+      console.warn("Telegram bot token not found in environment variables");
+      return false;
+    }
+    
+    // Format wallet address for display
+    const wallet = subscriptionData.wallet;
+    const walletDisplay = wallet.substring(0, 10) + '...' + wallet.substring(wallet.length - 10);
+    
+    // Create message text
+    const message = `🎉 *New KinKong Copilot Subscription*
+    
+💰 *Amount*: ${subscriptionData.amount.toLocaleString()} ${subscriptionData.token}
+👤 *Subscriber*: \`${walletDisplay}\`
+⏱ *Duration*: ${subscriptionData.duration} days
+🔄 *Type*: ${subscriptionData.token === 'UBC' ? 'UBC Premium' : 'COMPUTE Premium'}
+
+🔗 [View Transaction](${subscriptionData.solscanUrl})
+`;
+    
+    // Send the image with caption
+    try {
+      // First try to send with image
+      const formData = new FormData();
+      formData.append('chat_id', chatId);
+      formData.append('caption', message);
+      formData.append('parse_mode', 'Markdown');
+      
+      // Fetch the image and append it to the form
+      const imageResponse = await fetch('/copilot.png');
+      const imageBlob = await imageResponse.blob();
+      formData.append('photo', imageBlob, 'copilot.png');
+      
+      const response = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Telegram API error: ${response.status}`);
+      }
+    } catch (imageError) {
+      console.warn('Failed to send image, falling back to text-only message', imageError);
+      
+      // Fallback to text-only message if image fails
+      const textResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: message,
+          parse_mode: 'Markdown'
+        }),
+      });
+      
+      if (!textResponse.ok) {
+        throw new Error(`Telegram API error: ${textResponse.status}`);
+      }
+    }
+    
+    console.log('Telegram subscription notification sent successfully');
+    return true;
+  } catch (error) {
+    console.error('Error sending Telegram notification:', error);
+    return false;
+  }
+}
+
 // Define proper types for the tiers
 type TierButton = {
   text: string | JSX.Element;
@@ -270,6 +346,19 @@ export default function CopilotPage() {
         paymentMethod, 
         SUBSCRIPTION_DURATIONS[paymentMethod]
       );
+
+      // Send Telegram notification
+      try {
+        await sendSubscriptionNotification({
+          token: paymentMethod,
+          amount: tokenAmount,
+          wallet: publicKey.toString(),
+          solscanUrl: `https://solscan.io/tx/${signature}`,
+          duration: SUBSCRIPTION_DURATIONS[paymentMethod]
+        });
+      } catch (notifyError) {
+        console.error('Failed to send notification, but subscription was successful:', notifyError);
+      }
 
       // Redirect to start page instead of chat
       router.push(`/copilot/start`);
