@@ -88,15 +88,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Map investments and add redistribution data
     const investments = investmentsRecords.map(record => {
       const investmentId = record.id;
+      const amount = parseFloat(record.get('amount') || '0');
+      const token = record.get('token') || 'USDC';
+      
+      // Get usdAmount directly from the record if available
+      let usdAmount = parseFloat(record.get('usdAmount') || '0');
+      
+      // If usdAmount is not available or is zero, calculate it based on token type
+      if (!usdAmount) {
+        if (token === 'USDC' || token === 'USDT') {
+          // For stablecoins, usdAmount equals amount
+          usdAmount = amount;
+        } else if (token === 'UBC' && ubcPrice) {
+          // For UBC, convert using price
+          usdAmount = amount * ubcPrice;
+        } else if (token === 'COMPUTE' && compute_price) {
+          // For COMPUTE, convert using price
+          usdAmount = amount * compute_price;
+        }
+        
+        console.log(`Calculated usdAmount for ${token}: ${amount} * ${token === 'UBC' ? ubcPrice : token === 'COMPUTE' ? compute_price : 1} = ${usdAmount}`);
+      }
       
       // First try to find a redistribution specifically for this investment
       const specificRedistribution = investmentToRedistribution.get(investmentId);
       
       return {
         investmentId: record.id,
-        amount: parseFloat(record.get('amount') || '0'),
-        token: record.get('token') || 'USDC',
-        usdAmount: parseFloat(record.get('usdAmount') || '0'),
+        amount: amount,
+        token: token,
+        usdAmount: usdAmount, // Make sure usdAmount is included
         solscanUrl: record.get('solscanUrl') || '',
         date: record.get('createdAt') || '',
         username: record.get('username') || '',  // Add username field
@@ -160,10 +181,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         
         if (ubc_pair && ubc_pair.priceUsd) {
           ubcPrice = parseFloat(ubc_pair.priceUsd);
+          console.log(`UBC price: $${ubcPrice}`);
         }
       }
     } catch (error) {
       console.error('Error fetching UBC price:', error);
+    }
+    
+    // Get COMPUTE price
+    let compute_price = 0.0001268; // Default COMPUTE price
+    try {
+      // Try to get COMPUTE price from DexScreener
+      const compute_mint = "B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo";
+      const meteora_pool_id = "HN7ibjiyX399d1EfYXcWaSHZRSMfUmonYvXGFXG41Rr3";
+      
+      // First try to get price from Meteora pool
+      const meteora_response = await fetch(`https://api.dexscreener.com/latest/dex/pools/solana/${meteora_pool_id}`);
+      const meteora_data = await meteora_response.json();
+      
+      if (meteora_data.pairs && meteora_data.pairs.length > 0) {
+        const compute_pair = meteora_data.pairs[0];
+        if (compute_pair && compute_pair.priceUsd) {
+          compute_price = parseFloat(compute_pair.priceUsd);
+          console.log(`COMPUTE price from Meteora pool: ${compute_price}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching COMPUTE price:', error);
     }
     
     // Update investments with calculated returns if no redistribution data
