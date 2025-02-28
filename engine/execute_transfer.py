@@ -259,6 +259,17 @@ class UBCTransferExecutor:
             )
             transfer_tx.add(transfer_ix)
             
+            # Get recent blockhash
+            blockhash_response = self.client.get_latest_blockhash()
+            if not hasattr(blockhash_response, "value"):
+                raise ValueError("Failed to get recent blockhash")
+            
+            recent_blockhash = blockhash_response.value.blockhash
+            self.logger.info(f"Got recent blockhash: {recent_blockhash}")
+            
+            # Set recent blockhash in transaction
+            transfer_tx.recent_blockhash = recent_blockhash
+            
             # Sign and send transaction
             self.logger.info(f"Sending {ubc_amount} UBC to {destination_wallet}")
             result = self.client.send_transaction(
@@ -269,21 +280,58 @@ class UBCTransferExecutor:
             
             if hasattr(result, "value"):
                 tx_signature = result.value
-                self.logger.info(f"Transfer successful: {tx_signature}")
+                self.logger.info(f"Transaction sent successfully: {tx_signature}")
                 
                 # Wait for confirmation
                 self.logger.info("Waiting for transaction confirmation...")
-                time.sleep(5)
                 
-                return {
-                    "success": True,
-                    "signature": tx_signature
-                }
+                # Poll for transaction status
+                confirmed = False
+                retry_count = 0
+                max_retries = 10
+                
+                while not confirmed and retry_count < max_retries:
+                    try:
+                        # Wait a bit before checking
+                        time.sleep(2)
+                        
+                        # Check transaction status
+                        status_response = self.client.get_signature_statuses([tx_signature])
+                        
+                        if hasattr(status_response, "value") and status_response.value[0]:
+                            if status_response.value[0].confirmations is None:
+                                # None confirmations means the transaction is finalized
+                                confirmed = True
+                                self.logger.info(f"Transaction confirmed and finalized: {tx_signature}")
+                            elif status_response.value[0].confirmations > 0:
+                                confirmed = True
+                                self.logger.info(f"Transaction confirmed with {status_response.value[0].confirmations} confirmations")
+                            else:
+                                self.logger.info(f"Waiting for confirmation... (attempt {retry_count + 1}/{max_retries})")
+                        else:
+                            self.logger.info(f"Transaction not yet processed... (attempt {retry_count + 1}/{max_retries})")
+                            
+                        retry_count += 1
+                    except Exception as e:
+                        self.logger.warning(f"Error checking transaction status: {e}")
+                        retry_count += 1
+                
+                if confirmed:
+                    return {
+                        "success": True,
+                        "signature": tx_signature
+                    }
+                else:
+                    self.logger.warning(f"Transaction not confirmed after {max_retries} attempts")
+                    return {
+                        "success": False,
+                        "error": "Transaction not confirmed after maximum retries"
+                    }
             else:
-                self.logger.error(f"Transfer failed: {result}")
+                self.logger.error(f"Failed to send transaction: {result}")
                 return {
                     "success": False,
-                    "error": f"Transfer failed: {result}"
+                    "error": f"Failed to send transaction: {result}"
                 }
         except Exception as e:
             self.logger.error(f"Error executing transfer to {destination_wallet}: {e}")
