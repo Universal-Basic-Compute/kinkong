@@ -471,7 +471,13 @@ export async function POST(request: NextRequest) {
     const contextData = await getContextData(code);
     
     // Fetch user data if wallet is provided
-    let userData = null;
+    let userData: {
+      id: string;
+      experience: any;
+      interests: any;
+      incomeSource: any;
+      riskTolerance: any;
+    } | null = null;
     if (requestBody.wallet) {
       try {
         console.log(`🔍 Fetching user data for wallet: ${requestBody.wallet}`);
