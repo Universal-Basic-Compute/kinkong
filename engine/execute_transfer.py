@@ -250,7 +250,7 @@ class TokenTransferExecutor:
                     await asyncio.sleep(5)
                 
                 # Create the transfer instruction using a more direct approach
-                from solana.transaction import TransactionInstruction, AccountMeta
+                from solana.instruction import AccountMeta, Instruction as TransactionInstruction
                 
                 # Define the token program ID
                 token_program_id = Pubkey.from_string("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
