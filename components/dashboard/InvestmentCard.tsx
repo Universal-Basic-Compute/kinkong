@@ -15,6 +15,7 @@ interface Investment {
   ubcReturn?: number;
   return?: number;
   redistributionDate?: string;
+  isCalculated?: boolean; // Make sure this is included
 }
 
 export function InvestmentCard() {

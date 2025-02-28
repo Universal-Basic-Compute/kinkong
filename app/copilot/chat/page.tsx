@@ -24,7 +24,7 @@ export default function CopilotChatPage() {
   const { publicKey, connected } = useWallet();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const code = searchParams.get('code');
+  const code = searchParams?.get('code') || null;
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);

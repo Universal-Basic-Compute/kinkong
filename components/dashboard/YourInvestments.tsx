@@ -48,7 +48,7 @@ export const YourInvestments: React.FC<YourInvestmentsProps> = ({ className }) =
         const data = await response.json();
         
         // Filter investments for the current wallet
-        const walletAddress = publicKey.toString();
+        const walletAddress = publicKey?.toString() || '';
         const userInvestments = data.filter((investment: Investment) => 
           investment.wallet.toLowerCase() === walletAddress.toLowerCase()
         );
@@ -108,7 +108,7 @@ export const YourInvestments: React.FC<YourInvestmentsProps> = ({ className }) =
       }
     } catch (error) {
       console.error('Error claiming rewards:', error);
-      alert(`Error: ${error.message}`);
+      alert(`Error: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 
