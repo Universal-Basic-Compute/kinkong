@@ -302,9 +302,9 @@ export default function CopilotChatPage() {
   }
 
   return (
-    <div className="h-screen flex overflow-hidden">
+    <div className="fixed inset-0 flex overflow-hidden">
       {/* Left Sidebar - Missions */}
-      <div className="w-72 bg-black/40 border-r border-gold/20 p-4 h-screen overflow-y-auto">
+      <div className="w-72 bg-black/40 border-r border-gold/20 p-4 overflow-y-auto">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold text-gold">Select a Mission</h2>
           <Tooltip 
@@ -332,8 +332,8 @@ export default function CopilotChatPage() {
       </div>
 
       {/* Center - Chat Interface */}
-      <div className="flex-1 flex flex-col h-screen">
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 flex flex-col">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-0">
             {messages.map((message, index) => (
               <div
                 key={index}
@@ -423,7 +423,7 @@ export default function CopilotChatPage() {
         </div>
 
         {/* Input Area - Fixed at bottom */}
-        <div className="border-t border-gold/20 p-4 bg-black/30">
+        <div className="border-t border-gold/20 p-4 bg-black/30 mt-auto">
           {error && (
             <div className="text-red-400 text-sm mb-2">
               {error}
@@ -506,7 +506,7 @@ export default function CopilotChatPage() {
       </div>
 
       {/* Right Sidebar - User Preferences */}
-      <div className="w-72 bg-black/40 border-l border-gold/20 p-4 h-screen overflow-y-auto">
+      <div className="w-72 bg-black/40 border-l border-gold/20 p-4 overflow-y-auto">
         <h2 className="text-lg font-semibold text-gold mb-3">Your Personalized Settings</h2>
         <ul className="space-y-4">
           <li>
