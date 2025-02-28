@@ -70,53 +70,6 @@ export const YourInvestments: React.FC<YourInvestmentsProps> = ({ className }) =
     alert('Withdrawal functionality coming soon!');
   };
 
-  const handleClaim = async (investmentId: string) => {
-    if (!confirm('Are you sure you want to claim your rewards?')) {
-      return;
-    }
-    
-    try {
-      // Show loading state
-      setIsLoading(true);
-      
-      const response = await fetch('/api/investments/claim', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ investmentId })
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to claim rewards');
-      }
-      
-      const data = await response.json();
-      
-      alert(`Successfully claimed ${data.amount} ${data.token}! Transaction signature: ${data.signature}`);
-      
-      // Refresh investments
-      const updatedResponse = await fetch('/api/investments');
-      if (updatedResponse.ok) {
-        const updatedData = await updatedResponse.json();
-        
-        // Filter investments for the current wallet
-        const walletAddress = publicKey?.toString() || '';
-        const userInvestments = updatedData.filter((investment: Investment) => 
-          investment.wallet.toLowerCase() === walletAddress.toLowerCase()
-        );
-        
-        setInvestments(userInvestments || []);
-      }
-    } catch (error) {
-      console.error('Error claiming rewards:', error);
-      alert(`Error: ${error instanceof Error ? error.message : String(error)}`);
-    } finally {
-      // Reset loading state
-      setIsLoading(false);
-    }
-  };
 
   // Function to get token-specific gradient colors
   const getTokenGradient = (token: string) => {
@@ -229,16 +182,6 @@ export const YourInvestments: React.FC<YourInvestmentsProps> = ({ className }) =
                   </Tooltip>
                 </td>
                 <td className="text-right py-3 px-4">
-                  {investment.claimed ? (
-                    <span className="text-green-500 font-medium">Claimed</span>
-                  ) : investment.ubcReturn > 0 ? (
-                    <button 
-                      onClick={() => handleClaim(investment.investmentId)}
-                      className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-indigo-600 hover:to-purple-500 text-white font-medium py-1.5 px-4 rounded-md text-sm transition-all duration-300 shadow-md hover:shadow-purple-500/20 mr-2"
-                    >
-                      Claim {investment.ubcReturn.toFixed(2)} UBC
-                    </button>
-                  ) : null}
                   <button 
                     onClick={() => handleWithdraw(investment.investmentId)}
                     className="bg-gradient-to-r from-gold to-amber-500 hover:from-amber-500 hover:to-gold text-black font-medium py-1.5 px-4 rounded-md text-sm transition-all duration-300 shadow-md hover:shadow-gold/20"
