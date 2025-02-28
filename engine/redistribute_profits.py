@@ -408,6 +408,99 @@ class ProfitRedistributor:
             "pool_1": pool_1,
             "pool_2": pool_2
         }
+        
+    def calculate_investor_distributions(self):
+        """Calculate distribution amounts for each investor based on their current investment value"""
+        self.logger.info("Calculating investor distributions from the 75% pool")
+        
+        try:
+            # First calculate the total profit and pools
+            profit_distribution = self.calculate_profit_distribution()
+            
+            if not profit_distribution or profit_distribution['total_profit'] <= 0:
+                self.logger.warning("No profit to distribute to investors")
+                return []
+            
+            # Get the 75% pool amount
+            pool_75_amount = profit_distribution['pool_2']
+            self.logger.info(f"75% Pool amount to distribute: ${pool_75_amount:.2f}")
+            
+            # Get all investors from the INVESTMENTS table
+            investments = self.investments_table.get_all()
+            
+            # Group investments by wallet
+            wallet_investments = {}
+            for investment in investments:
+                wallet = investment['fields'].get('wallet')
+                if not wallet:
+                    continue
+                    
+                amount = float(investment['fields'].get('amount', 0))
+                token_symbol = investment['fields'].get('token', 'USDC').upper()
+                
+                if wallet not in wallet_investments:
+                    wallet_investments[wallet] = []
+                    
+                wallet_investments[wallet].append({
+                    'token': token_symbol,
+                    'amount': amount,
+                    'id': investment['id']
+                })
+            
+            self.logger.info(f"Found {len(wallet_investments)} unique investors")
+            
+            # Get token prices for conversion to USD
+            token_prices = self.get_token_prices()
+            
+            # Calculate total investment value across all wallets
+            total_investment_value_usd = 0
+            wallet_investment_values = {}
+            
+            for wallet, investments in wallet_investments.items():
+                wallet_value = 0
+                
+                for investment in investments:
+                    token = investment['token']
+                    amount = investment['amount']
+                    
+                    # Convert token amount to USD
+                    if token in token_prices:
+                        value_usd = amount * token_prices[token]
+                        wallet_value += value_usd
+                        self.logger.info(f"Wallet {wallet}: {amount} {token} = ${value_usd:.2f}")
+                    else:
+                        self.logger.warning(f"No price available for {token}, skipping in calculation")
+                
+                wallet_investment_values[wallet] = wallet_value
+                total_investment_value_usd += wallet_value
+                
+            self.logger.info(f"Total investment value across all wallets: ${total_investment_value_usd:.2f}")
+            
+            # Calculate distribution for each wallet based on their percentage of total investment
+            distributions = []
+            
+            for wallet, investment_value in wallet_investment_values.items():
+                if total_investment_value_usd > 0:
+                    percentage = (investment_value / total_investment_value_usd) * 100
+                    distribution_amount = (investment_value / total_investment_value_usd) * pool_75_amount
+                    
+                    distributions.append({
+                        'wallet': wallet,
+                        'investment_value': investment_value,
+                        'percentage': percentage,
+                        'distribution_amount': distribution_amount
+                    })
+                    
+                    self.logger.info(f"Wallet {wallet}: Investment ${investment_value:.2f} ({percentage:.2f}%) → Distribution ${distribution_amount:.2f}")
+                
+            # Sort distributions by amount (descending)
+            distributions.sort(key=lambda x: x['distribution_amount'], reverse=True)
+            
+            return distributions
+        
+        except Exception as e:
+            self.logger.error(f"Error calculating investor distributions: {e}")
+            return []
 
 def main():
     try:
@@ -427,11 +520,42 @@ def main():
         redistributor = ProfitRedistributor()
         result = redistributor.calculate_profit_distribution()
         
-        if result:
+        if result and result['total_profit'] > 0:
             print("\n=== KinKong Profit Redistribution ===")
             print(f"Total Profit (7 days): ${result['total_profit']:.2f}")
             print(f"Pool 1 (25%): ${result['pool_1']:.2f}")
             print(f"Pool 2 (75%): ${result['pool_2']:.2f}")
+            
+            # Calculate and display investor distributions
+            print("\n=== Investor Distributions ===")
+            distributions = redistributor.calculate_investor_distributions()
+            
+            if distributions:
+                print(f"{'Wallet':<42} {'Investment':<12} {'Share':<8} {'Distribution':<12}")
+                print("-" * 80)
+                
+                for dist in distributions:
+                    wallet = dist['wallet']
+                    # Truncate wallet address for display
+                    if len(wallet) > 38:
+                        wallet_display = wallet[:18] + "..." + wallet[-17:]
+                    else:
+                        wallet_display = wallet
+                        
+                    print(f"{wallet_display:<42} ${dist['investment_value']:<11.2f} {dist['percentage']:<7.2f}% ${dist['distribution_amount']:<11.2f}")
+                
+                # Verify total distribution matches pool amount
+                total_distributed = sum(d['distribution_amount'] for d in distributions)
+                print("-" * 80)
+                print(f"Total Distributed: ${total_distributed:.2f} (should match Pool 2: ${result['pool_2']:.2f})")
+                
+                # Check for rounding errors
+                if abs(total_distributed - result['pool_2']) > 0.01:
+                    print(f"Warning: Distribution total differs from Pool 2 amount by ${abs(total_distributed - result['pool_2']):.2f}")
+            else:
+                print("No investor distributions calculated")
+        else:
+            print("No profit to distribute")
         
     except Exception as e:
         print(f"\n❌ Script failed: {str(e)}")
