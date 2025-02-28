@@ -15,17 +15,11 @@ const OnboardingContainer: React.FC = () => {
   const { currentStep, isCompleted } = useOnboarding();
   const router = useRouter();
 
-  // Redirect to copilot chat if onboarding is completed
+  // Log onboarding state but don't automatically redirect
   useEffect(() => {
-    if (isCompleted && currentStep === OnboardingStep.COMPLETE) {
-      // Add a small delay before redirecting to ensure data is saved
-      const redirectTimer = setTimeout(() => {
-        router.push('/copilot/chat');
-      }, 3000);
-      
-      return () => clearTimeout(redirectTimer);
-    }
-  }, [isCompleted, currentStep, router]);
+    // Don't automatically redirect - let the user click the button in CompleteStep
+    console.log('Current step:', currentStep, 'isCompleted:', isCompleted);
+  }, [isCompleted, currentStep]);
 
   // Render the current step
   const renderStep = () => {

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useOnboarding } from '@/app/context/OnboardingContext';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { WalletConnect } from '@/components/wallet/WalletConnect';
 
 const CompleteStep: React.FC = () => {
   const { onboardingData, saveUserData } = useOnboarding();
@@ -43,18 +44,7 @@ const CompleteStep: React.FC = () => {
     saveOnboardingData();
   }, [onboardingData, publicKey, saveUserData]);
 
-  // Add automatic redirection after saving is complete
-  useEffect(() => {
-    // Check if saving is complete and there are no errors
-    if (!isSaving && saveError === null) {
-      // Add a short delay before redirecting to ensure data is saved
-      const redirectTimer = setTimeout(() => {
-        router.push('/copilot/chat');
-      }, 1500);
-      
-      return () => clearTimeout(redirectTimer);
-    }
-  }, [isSaving, saveError, router]);
+  // No automatic redirection - let the user click the button
 
   // Add a direct call to saveUserData when the button is clicked
   const handleSaveData = async () => {
@@ -158,6 +148,13 @@ const CompleteStep: React.FC = () => {
       <p className="text-gray-400">
         {isSaving ? 'Saving your preferences...' : 'Redirecting you to KinKong Copilot...'}
       </p>
+      
+      {!publicKey && (
+        <div className="mb-6 p-4 bg-black/40 rounded-lg border border-gold/20">
+          <p className="text-gray-300 mb-4">Connect your wallet to save your preferences (optional)</p>
+          <WalletConnect />
+        </div>
+      )}
       
       <div className="flex justify-center">
         <button
