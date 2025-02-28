@@ -5,6 +5,24 @@ import json
 import time
 import base58
 import asyncio
+
+# Debug information about Python environment
+print("Python version:", sys.version)
+print("Python executable:", sys.executable)
+print("Current working directory:", os.getcwd())
+
+# Debug imports
+try:
+    import solana
+    print("Solana package found:", solana.__file__)
+except ImportError:
+    print("Solana package not found")
+
+try:
+    import solders
+    print("Solders package found:", solders.__file__)
+except ImportError:
+    print("Solders package not found")
 from datetime import datetime, timezone
 import requests
 from dotenv import load_dotenv
@@ -13,7 +31,20 @@ from solders.pubkey import Pubkey
 from solana.rpc.async_api import AsyncClient
 from solana.rpc.types import TxOpts
 from solana.transaction import Transaction
-from solana.publickey import PublicKey
+# Try to import PublicKey from different possible locations
+try:
+    from solana.publickey import PublicKey
+except ImportError:
+    try:
+        from solders.pubkey import Pubkey as PublicKey
+    except ImportError:
+        # As a last resort, create a simple wrapper class
+        class PublicKey:
+            def __init__(self, address):
+                self.address = address
+                
+            def __str__(self):
+                return self.address
 from spl.token.instructions import get_associated_token_address, transfer, create_associated_token_account
 
 def setup_logging():
@@ -135,6 +166,10 @@ class TokenTransferExecutor:
                 # Check if the destination token account exists
                 # Convert Pubkey to PublicKey for the RPC client
                 dest_token_account_pubkey = PublicKey(str(destination_token_account))
+                
+                # Add debug logging
+                self.logger.info(f"Destination token account type: {type(destination_token_account)}")
+                self.logger.info(f"Converted to PublicKey: {dest_token_account_pubkey}")
                 response = await client.get_account_info(dest_token_account_pubkey)
                 
                 # If the account doesn't exist, we need to create it
