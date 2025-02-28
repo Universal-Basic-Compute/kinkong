@@ -38,8 +38,8 @@ export async function POST(request: NextRequest) {
           id: existingUser.id,
           fields: {
             experience: userData.experience,
-            interests: userData.interests,
-            goals: userData.goals,
+            interests: Array.isArray(userData.interests) ? userData.interests.join(',') : userData.interests,
+            goals: Array.isArray(userData.goals) ? userData.goals.join(',') : userData.goals,
             timeframe: userData.timeframe,
             onboardingCompleted: true,
             onboardingCompletedAt: userData.onboardingCompletedAt || new Date().toISOString()
@@ -59,8 +59,8 @@ export async function POST(request: NextRequest) {
           fields: {
             wallet: userData.wallet || null,
             experience: userData.experience,
-            interests: userData.interests,
-            goals: userData.goals,
+            interests: Array.isArray(userData.interests) ? userData.interests.join(',') : userData.interests,
+            goals: Array.isArray(userData.goals) ? userData.goals.join(',') : userData.goals,
             timeframe: userData.timeframe,
             onboardingCompleted: true,
             onboardingCompletedAt: userData.onboardingCompletedAt || new Date().toISOString(),
