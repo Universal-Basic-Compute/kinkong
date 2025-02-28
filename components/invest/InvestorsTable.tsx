@@ -143,15 +143,15 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
                   </th>
                   <th 
                     className="px-4 py-3 text-right font-bold cursor-pointer hover:text-gold"
-                    onClick={() => handleSort('investment')}
+                    onClick={() => handleSort('return')}
                   >
-                    Investment Value{renderSortIndicator('investment')}
+                    Weekly Return{renderSortIndicator('return')}
                   </th>
                   <th 
                     className="px-4 py-3 text-right font-bold cursor-pointer hover:text-gold"
-                    onClick={() => handleSort('return')}
+                    onClick={() => handleSort('investment')}
                   >
-                    Return{renderSortIndicator('return')}
+                    Investment Value{renderSortIndicator('investment')}
                   </th>
                   <th 
                     className="px-4 py-3 text-left font-bold cursor-pointer hover:text-gold"
@@ -185,25 +185,7 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
                       )}
                     </td>
                     
-                    {/* Investment Cell */}
-                    <td className="px-4 py-4 text-right">
-                      {typeof investor.amount === 'number' ? (
-                        <>
-                          <div>
-                            <span className="text-white font-medium">${Math.floor(investor.amount).toLocaleString('en-US')}</span>
-                            {investor.percentage && (
-                              <span className="text-gray-400 text-sm ml-2">
-                                ({investor.percentage.toFixed(2)}%)
-                              </span>
-                            )}
-                          </div>
-                        </>
-                      ) : (
-                        'N/A'
-                      )}
-                    </td>
-                    
-                    {/* Return Cell */}
+                    {/* Weekly Return Cell (moved before Investment Value) */}
                     <td className="px-4 py-4 text-right">
                       {investor.ubcReturn !== undefined || investor.isCalculated ? (
                         <>
@@ -226,6 +208,24 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
                             ($0)
                           </span>
                         </>
+                      )}
+                    </td>
+                    
+                    {/* Investment Value Cell (moved after Weekly Return) */}
+                    <td className="px-4 py-4 text-right">
+                      {typeof investor.amount === 'number' ? (
+                        <>
+                          <div>
+                            <span className="text-white font-medium">${Math.floor(investor.amount).toLocaleString('en-US')}</span>
+                            {investor.percentage && (
+                              <span className="text-gray-400 text-sm ml-2">
+                                ({investor.percentage.toFixed(2)}%)
+                              </span>
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        'N/A'
                       )}
                     </td>
                     
