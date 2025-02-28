@@ -44,6 +44,41 @@ export default function CopilotChatPage() {
     riskTolerance: string;
   } | null>(null);
   
+  // Define animateMessageTyping here, before any useEffect that references it
+  const animateMessageTyping = useCallback((message: string) => {
+    // Split message into paragraphs (by double newlines or markdown headers)
+    const paragraphs = message.split(/\n\n|\n#{1,6} /);
+    const cleanParagraphs = paragraphs.map(p => p.trim()).filter(p => p.length > 0);
+    
+    setTypingMessage(message);
+    setDisplayedParagraphs([]);
+    setIsTyping(true);
+    
+    // Display paragraphs one by one
+    let displayedSoFar: string[] = [];
+    
+    const showNextParagraph = (index: number) => {
+      if (index >= cleanParagraphs.length) {
+        // All paragraphs displayed, finish typing
+        setIsTyping(false);
+        setTypingMessage(null);
+        return;
+      }
+      
+      // Add the next paragraph
+      displayedSoFar = [...displayedSoFar, cleanParagraphs[index]];
+      setDisplayedParagraphs([...displayedSoFar]);
+      
+      // Calculate read time based on paragraph length - moderate speed
+      const readTime = Math.max(500, cleanParagraphs[index].length * 20); // Changed from 15 to 20ms per character
+      
+      // Schedule next paragraph
+      setTimeout(() => showNextParagraph(index + 1), readTime);
+    };
+    
+    // Start displaying paragraphs
+    showNextParagraph(0);
+  }, []);
 
   // Add useEffect to disable body scrolling
   useEffect(() => {
@@ -243,41 +278,6 @@ export default function CopilotChatPage() {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
-  
-  const animateMessageTyping = useCallback((message: string) => {
-    // Split message into paragraphs (by double newlines or markdown headers)
-    const paragraphs = message.split(/\n\n|\n#{1,6} /);
-    const cleanParagraphs = paragraphs.map(p => p.trim()).filter(p => p.length > 0);
-    
-    setTypingMessage(message);
-    setDisplayedParagraphs([]);
-    setIsTyping(true);
-    
-    // Display paragraphs one by one
-    let displayedSoFar: string[] = [];
-    
-    const showNextParagraph = (index: number) => {
-      if (index >= cleanParagraphs.length) {
-        // All paragraphs displayed, finish typing
-        setIsTyping(false);
-        setTypingMessage(null);
-        return;
-      }
-      
-      // Add the next paragraph
-      displayedSoFar = [...displayedSoFar, cleanParagraphs[index]];
-      setDisplayedParagraphs([...displayedSoFar]);
-      
-      // Calculate read time based on paragraph length - moderate speed
-      const readTime = Math.max(500, cleanParagraphs[index].length * 20); // Changed from 15 to 20ms per character
-      
-      // Schedule next paragraph
-      setTimeout(() => showNextParagraph(index + 1), readTime);
-    };
-    
-    // Start displaying paragraphs
-    showNextParagraph(0);
-  }, []);
   
   const handleSelectMission = (missionTitle: string, context: string, missionId: string) => {
     // Store the mission ID for both context and UI highlighting
