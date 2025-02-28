@@ -17,7 +17,7 @@ interface Investment {
   percentage: number;
   claimed: boolean; // Add claimed status
   isCalculated?: boolean; // Add optional calculated status
-  toWithdraw?: boolean; // Add withdrawal status
+  out?: number; // Add withdrawal status as number
 }
 
 interface YourInvestmentsProps {
@@ -247,7 +247,7 @@ export const YourInvestments: React.FC<YourInvestmentsProps> = ({ className }) =
                   </Tooltip>
                 </td>
                 <td className="text-right py-3 px-4">
-                  {investment.toWithdraw ? (
+                  {investment.out === 1 ? (
                     <span className="text-yellow-500 font-medium">Processing</span>
                   ) : (
                     <button 

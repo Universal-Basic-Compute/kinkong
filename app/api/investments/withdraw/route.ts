@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     // Mark the investment for withdrawal
     try {
       await investmentsTable.update(investmentId, {
-        toWithdraw: true,
+        out: 1,
         withdrawRequestedAt: new Date().toISOString()
       });
       
