@@ -41,7 +41,7 @@ export default function AnimatedChatBubble() {
 
   return (
     <div className={`
-      absolute -top-20 left-1/2 -translate-x-1/2
+      absolute -top-5 left-1/2 -translate-x-1/2
       bg-gold text-black 
       px-4 py-2 
       rounded-lg 
