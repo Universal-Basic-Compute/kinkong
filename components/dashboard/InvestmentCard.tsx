@@ -11,6 +11,10 @@ interface Investment {
   date: string;
   solscanUrl: string;
   usdAmount?: number;
+  // Add redistribution fields
+  ubcReturn?: number;
+  return?: number;
+  redistributionDate?: string;
 }
 
 export function InvestmentCard() {
@@ -115,6 +119,26 @@ export function InvestmentCard() {
                 View on Solscan
               </a>
             </div>
+            
+            {/* Add redistribution information if available */}
+            {investment.ubcReturn !== undefined && (
+              <div className="mt-2 text-sm">
+                <p className="flex justify-between">
+                  <span className="text-gray-400">Latest Return:</span>
+                  <span className="metallic-text-ubc">
+                    {investment.ubcReturn.toLocaleString(undefined, {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 0
+                    })} $UBC
+                  </span>
+                </p>
+                {investment.redistributionDate && (
+                  <p className="text-xs text-gray-400 text-right">
+                    {new Date(investment.redistributionDate).toLocaleDateString()}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         ))}
       </div>

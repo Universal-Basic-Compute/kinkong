@@ -12,7 +12,10 @@ interface Investment {
   username?: string;
   wallet: string;
   return?: number; // USDC return
-  ubcReturn?: number; // UBC return
+  ubcReturn?: number; // UBC return - this will now come directly from the API
+  // Add new fields for redistribution data
+  redistributionId?: string;
+  redistributionDate?: string;
 }
 
 interface WalletSnapshot {
@@ -106,7 +109,7 @@ export function InvestmentsTable({ investments, latestSnapshot, isLoading }: Inv
                           </span>
                         </>
                       ) : (
-                        <span className="text-gray-400">Calculating...</span>
+                        <span className="text-gray-400">No redistribution yet</span>
                       )}
                     </td>
                     <td className="px-4 py-4">
