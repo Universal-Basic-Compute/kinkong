@@ -239,7 +239,7 @@ export function InvestmentsTable({ investments: propInvestments, latestSnapshot,
                       )}
                     </td>
                     <td className="px-4 py-4 text-right">
-                      {investment.ubcReturn !== undefined || investment.isCalculated ? (
+                      {investment.ubcReturn !== undefined ? (
                         <>
                           <span className="metallic-text-ubc font-medium">
                             {Math.floor(investment.ubcReturn || 0).toLocaleString('en-US')} $UBC
@@ -252,7 +252,7 @@ export function InvestmentsTable({ investments: propInvestments, latestSnapshot,
                           )}
                         </>
                       ) : (
-                        <span className="text-gray-400">No redistribution yet</span>
+                        <span className="text-gray-400">Calculating...</span>
                       )}
                     </td>
                     <td className="px-4 py-4">

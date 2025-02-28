@@ -165,7 +165,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     
     // Get UBC price
-    let ubcPrice = 0.00137; // Default UBC price
+    let ubcPrice = 0.001374; // Default UBC price to match frontend
     try {
       // Try to get UBC price from DexScreener
       const ubc_mint = "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump";
@@ -220,10 +220,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.error('Error fetching COMPUTE price:', error);
     }
     
-    // Update investments with calculated returns if no redistribution data
+    // Update investments with calculated returns
     const investmentsWithReturns = investments.map(investment => {
-      // If no redistribution data, calculate returns
-      if (investment.ubcReturn === undefined && profitShare > 0) {
+      // Always calculate returns for all investments
+      if (profitShare > 0) {
         const calculatedReturns = calculateReturns(
           investment, 
           totalInvestmentValue, 
@@ -233,12 +233,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         
         console.log(`Calculated UBC return for investment ${investment.investmentId}: ${calculatedReturns.ubcReturn} UBC (${calculatedReturns.return} USDC / ${ubcPrice} UBC price)`);
         
-        return {
-          ...investment,
-          return: calculatedReturns.return,
-          ubcReturn: calculatedReturns.ubcReturn,
-          isCalculated: true // Flag to indicate this is a calculated value
-        };
+        // If no redistribution data, use calculated values
+        if (investment.ubcReturn === undefined) {
+          return {
+            ...investment,
+            return: calculatedReturns.return,
+            ubcReturn: calculatedReturns.ubcReturn,
+            isCalculated: true // Flag to indicate this is a calculated value
+          };
+        } else {
+          // If redistribution data exists, keep it but add the isCalculated flag as false
+          return {
+            ...investment,
+            isCalculated: false
+          };
+        }
       }
       
       return investment;

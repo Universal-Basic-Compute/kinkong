@@ -124,7 +124,7 @@ export function InvestmentCard() {
             </div>
             
             {/* Add redistribution information if available */}
-            {investment.ubcReturn !== undefined || investment.isCalculated ? (
+            {investment.ubcReturn !== undefined ? (
               <div className="mt-2 text-sm">
                 <p className="flex justify-between">
                   <span className="text-gray-400">Latest Return:</span>
