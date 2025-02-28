@@ -41,22 +41,23 @@ export default function AnimatedChatBubble() {
 
   return (
     <div className={`
-      absolute -top-2 -right-16 
+      absolute -top-12 left-1/2 -translate-x-1/2
       bg-gold text-black 
       px-4 py-2 
       rounded-lg 
       shadow-lg
       transform transition-all duration-300
       ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}
-      before:content-[''] 
-      before:absolute 
-      before:left-0 
-      before:top-1/2 
-      before:-translate-x-1/2
-      before:-translate-y-1/2
-      before:border-8 
-      before:border-transparent 
-      before:border-r-gold
+      after:content-[''] 
+      after:absolute 
+      after:left-1/2 
+      after:-translate-x-1/2
+      after:top-full
+      after:border-8 
+      after:border-transparent 
+      after:border-t-gold
+      min-w-[200px]
+      text-center
     `}>
       <span className="font-medium">{message}</span>
     </div>
