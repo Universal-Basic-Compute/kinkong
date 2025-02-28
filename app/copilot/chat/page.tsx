@@ -71,13 +71,15 @@ export default function CopilotChatPage() {
       id: 'technical-analysis',
       title: '📊 Technical Analysis',
       description: 'Learn to identify key chart patterns',
-      context: 'I want to learn how to identify key chart patterns on specific tokens. Let\'s practice support/resistance identification and develop a personalized trading strategy based on technical indicators.'
+      context: 'I want to learn how to identify key chart patterns on specific tokens. Let\'s practice support/resistance identification and develop a personalized trading strategy based on technical indicators.',
+      disabled: true
     },
     {
       id: 'risk-management',
       title: '🛡️ Risk Management',
       description: 'Improve your position sizing and stop-loss strategies',
-      context: 'Help me evaluate my current position sizing and stop-loss strategies. I want to calculate optimal risk-reward ratios based on volatility and create a risk management framework aligned with my risk tolerance.'
+      context: 'Help me evaluate my current position sizing and stop-loss strategies. I want to calculate optimal risk-reward ratios based on volatility and create a risk management framework aligned with my risk tolerance.',
+      disabled: true
     },
     {
       id: 'defi-yield',
@@ -89,7 +91,8 @@ export default function CopilotChatPage() {
       id: 'sentiment-analysis',
       title: '🔮 Market Sentiment',
       description: 'Track social media trends and community sentiment',
-      context: 'I want to track social media trends and community sentiment for key tokens. Let\'s correlate sentiment indicators with price action and create alerts for significant sentiment shifts that could impact prices.'
+      context: 'I want to track social media trends and community sentiment for key tokens. Let\'s correlate sentiment indicators with price action and create alerts for significant sentiment shifts that could impact prices.',
+      disabled: true
     },
     {
       id: 'swing-trading',
@@ -101,7 +104,8 @@ export default function CopilotChatPage() {
       id: 'on-chain-data',
       title: '🐋 On-Chain Data',
       description: 'Explore whale wallet movements and smart money flows',
-      context: 'Let\'s explore whale wallet movements and smart money flows. I want to analyze token distribution and concentration metrics to identify potential accumulation or distribution patterns before they affect price.'
+      context: 'Let\'s explore whale wallet movements and smart money flows. I want to analyze token distribution and concentration metrics to identify potential accumulation or distribution patterns before they affect price.',
+      disabled: true
     }
   ];
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -396,15 +400,24 @@ export default function CopilotChatPage() {
               key={mission.id}
               onClick={(e) => {
                 e.preventDefault(); // Prevent default behavior
-                handleSelectMission(mission.title, mission.context, mission.id);
+                if (!mission.disabled) {
+                  handleSelectMission(mission.title, mission.context, mission.id);
+                }
               }}
-              className={`p-3 rounded-lg cursor-pointer transition-all ${
-                selectedMissionId === mission.id
-                  ? 'bg-gold/20 border-2 border-gold text-gold font-medium'
-                  : 'bg-black/50 border border-gold/20 hover:bg-gold/10 hover:border-gold/40 text-gold'
-              }`}
+              className={`p-3 rounded-lg ${
+                mission.disabled 
+                  ? 'bg-black/20 border border-gray-700/30 text-gray-500 cursor-not-allowed opacity-60'
+                  : selectedMissionId === mission.id
+                    ? 'bg-gold/20 border-2 border-gold text-gold font-medium cursor-pointer'
+                    : 'bg-black/50 border border-gold/20 hover:bg-gold/10 hover:border-gold/40 text-gold cursor-pointer'
+              } transition-all`}
             >
-              <h3 className="font-medium">{mission.title}</h3>
+              <div className="flex justify-between items-center">
+                <h3 className="font-medium">{mission.title}</h3>
+                {mission.disabled && (
+                  <span className="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded">Coming Soon</span>
+                )}
+              </div>
             </div>
           ))}
         </div>
