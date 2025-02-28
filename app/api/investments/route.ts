@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
         redistributionId: record.get('redistributionId'),
         redistributionDate: record.get('createdAt'),
         percentage: parseFloat(record.get('percentage') || '0'),
-        claimed: record.get('claimed') || false // Add claimed status
+        claimed: record.get('claimed') || false
       };
     });
     
