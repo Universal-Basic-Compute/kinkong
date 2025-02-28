@@ -152,7 +152,7 @@ class UBCTransferExecutor:
                 raise ValueError("HELIUS_API_KEY not found in environment variables")
             
             # Construct the transfer transaction using Helius API
-            helius_url = f"https://api.helius.xyz/v0/transactions/send?api-key={helius_api_key}"
+            helius_url = f"https://api.helius.xyz/v0/transactions?api-key={helius_api_key}"
             
             # Prepare the transaction payload
             payload = {
