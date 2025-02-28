@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTable } from '@/backend/src/airtable/tables';
-import { verifyWalletOwnership } from '@/utils/wallet';
 
 export async function POST(request: NextRequest) {
   try {
