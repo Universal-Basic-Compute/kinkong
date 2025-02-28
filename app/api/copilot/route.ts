@@ -295,8 +295,12 @@ const rateLimiter = rateLimit({
 });
 
 // Helper function to check wallet message limit
-async function checkMessageLimit(code: string): Promise<boolean> {
+async function checkMessageLimit(wallet: string | undefined, code: string): Promise<boolean> {
   try {
+    // If no wallet is provided, fall back to checking by code
+    const checkIdentifier = wallet || code;
+    const filterField = wallet ? 'wallet' : 'code';
+    
     // First check if code has active subscription
     const subscriptionsTable = getTable('SUBSCRIPTIONS');
     const subscriptions = await subscriptionsTable.select({
@@ -335,16 +339,16 @@ async function checkMessageLimit(code: string): Promise<boolean> {
 
     const messagesTable = getTable('MESSAGES');
     
-    // Query messages from this code in current period
+    // Query messages from this wallet (or code if wallet not provided) in current period
     const records = await messagesTable.select({
       filterByFormula: `AND(
-        {code}='${code}',
+        {${filterField}}='${checkIdentifier}',
         IS_AFTER({createdAt}, '${periodStart.toISOString()}'),
         IS_BEFORE({createdAt}, '${periodEnd.toISOString()}')
       )`
     }).all();
 
-    console.log(`Found ${records.length} messages for code ${code} in current period`);
+    console.log(`Found ${records.length} messages for ${filterField} ${checkIdentifier} in current period`);
     console.log(`Period: ${periodStart.toISOString()} - ${periodEnd.toISOString()}`);
     console.log(`Code has active subscription: ${isPremium}`);
     console.log(`Message limit: ${messageLimit}`);
@@ -358,7 +362,7 @@ async function checkMessageLimit(code: string): Promise<boolean> {
 
     return records.length < messageLimit; // Return true if under limit
   } catch (error) {
-    console.error('Error checking wallet message limit:', error);
+    console.error('Error checking message limit:', error);
     throw error;
   }
 }
@@ -454,8 +458,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check code-specific rate limit
-    const isUnderLimit = await checkMessageLimit(code);
+    // Check wallet-specific rate limit (falls back to code if no wallet)
+    const isUnderLimit = await checkMessageLimit(requestBody.wallet, code);
     if (!isUnderLimit) {
       const stream = new ReadableStream({
         start(controller) {
