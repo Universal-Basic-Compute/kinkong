@@ -34,15 +34,12 @@ export default function CopilotChatPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if onboarding is completed
-    if (!isCompleted) {
-      router.push('/copilot/start');
-      return;
-    }
+    // We'll assume if they got to the chat page, they should be allowed to use it
+    // This prevents a redirect loop between start and chat pages
     
     checkSubscription();
     setLoading(false);
-  }, [isCompleted, publicKey, router]);
+  }, [publicKey, router]);
 
   useEffect(() => {
     scrollToBottom();
