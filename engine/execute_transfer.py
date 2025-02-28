@@ -52,7 +52,7 @@ class UBCTransferExecutor:
         )
         
         # Initialize Solana client
-        self.rpc_url = os.getenv('SOLANA_RPC_URL', 'https://api.mainnet-beta.solana.com')
+        self.rpc_url = os.getenv('NEXT_PUBLIC_HELIUS_RPC_URL', 'https://api.mainnet-beta.solana.com')
         self.client = Client(self.rpc_url)
         
         # UBC token mint address
@@ -450,7 +450,7 @@ def main():
             'KINKONG_AIRTABLE_BASE_ID',
             'KINKONG_AIRTABLE_API_KEY',
             'KINKONG_WALLET_PRIVATE_KEY',
-            'SOLANA_RPC_URL',
+            'NEXT_PUBLIC_HELIUS_RPC_URL',
             'TELEGRAM_BOT_TOKEN'
         ]
         
