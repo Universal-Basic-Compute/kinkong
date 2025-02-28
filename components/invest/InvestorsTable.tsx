@@ -8,10 +8,10 @@ type SortDirection = 'asc' | 'desc';
 
 interface Investor {
   investmentId: string;
-  amount: number;
+  amount: number; // This will now be investmentValue
   token?: string;
   usdAmount?: number;
-  solscanUrl: string;
+  solscanUrl?: string;
   date: string;
   username?: string;
   wallet: string;
@@ -20,6 +20,7 @@ interface Investor {
   isCalculated?: boolean;
   redistributionId?: string;
   redistributionDate?: string;
+  percentage?: number; // Add percentage field
 }
 
 interface InvestorsTableProps {
@@ -144,7 +145,7 @@ export function InvestorsTable({ initialData = [] }: InvestorsTableProps) {
                     className="px-4 py-3 text-right font-bold cursor-pointer hover:text-gold"
                     onClick={() => handleSort('investment')}
                   >
-                    Investment{renderSortIndicator('investment')}
+                    Investment Value{renderSortIndicator('investment')}
                   </th>
                   <th 
                     className="px-4 py-3 text-right font-bold cursor-pointer hover:text-gold"
@@ -189,17 +190,13 @@ export function InvestorsTable({ initialData = [] }: InvestorsTableProps) {
                       {typeof investor.amount === 'number' ? (
                         <>
                           <div>
-                            <span className="text-white font-medium">{Math.floor(investor.amount).toLocaleString('en-US')}</span>{' '}
-                            <TokenDisplay 
-                              token={investor.token || 'USDC'} 
-                              options={{ className: 'text-gray-400' }}
-                            />
+                            <span className="text-white font-medium">${Math.floor(investor.amount).toLocaleString('en-US')}</span>
+                            {investor.percentage && (
+                              <span className="text-gray-400 text-sm ml-2">
+                                ({investor.percentage.toFixed(2)}%)
+                              </span>
+                            )}
                           </div>
-                          {investor.usdAmount && (
-                            <div className="text-gray-400 text-sm">
-                              (${Math.floor(investor.usdAmount).toLocaleString('en-US')})
-                            </div>
-                          )}
                         </>
                       ) : (
                         'N/A'
