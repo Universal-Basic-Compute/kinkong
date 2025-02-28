@@ -164,13 +164,26 @@ class TokenTransferExecutor:
                 self.logger.info(f"Destination token account: {destination_token_account}")
                 
                 # Check if the destination token account exists
-                # Convert Pubkey to PublicKey for the RPC client
-                dest_token_account_pubkey = PublicKey(str(destination_token_account))
-                
-                # Add debug logging
-                self.logger.info(f"Destination token account type: {type(destination_token_account)}")
-                self.logger.info(f"Converted to PublicKey: {dest_token_account_pubkey}")
-                response = await client.get_account_info(dest_token_account_pubkey)
+                # Use the string representation directly with the RPC client
+                dest_token_account_str = str(destination_token_account)
+                self.logger.info(f"Destination token account string: {dest_token_account_str}")
+
+                # Try to get account info using the string directly
+                try:
+                    response = await client.get_account_info(dest_token_account_str)
+                except Exception as e:
+                    self.logger.error(f"Error getting account info with string: {e}")
+                    
+                    # As a fallback, try to extract the base58 encoded string
+                    # The string representation might be something like "PublicKey(base58_string)"
+                    import re
+                    match = re.search(r'([1-9A-HJ-NP-Za-km-z]{32,44})', dest_token_account_str)
+                    if match:
+                        extracted_address = match.group(1)
+                        self.logger.info(f"Extracted address: {extracted_address}")
+                        response = await client.get_account_info(extracted_address)
+                    else:
+                        raise ValueError(f"Could not extract valid address from {dest_token_account_str}")
                 
                 # If the account doesn't exist, we need to create it
                 if not response.value:
