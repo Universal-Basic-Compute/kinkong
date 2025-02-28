@@ -410,7 +410,65 @@ print(json.dumps(result))
                             raise ValueError(f"Failed to parse script output: {result.stdout}")
                     except Exception as script_error:
                         self.logger.error(f"Error with command line approach: {script_error}")
-                        raise ValueError(f"All transfer approaches failed: {e}, {script_error}")
+                        
+                        # If the script approach fails, try using the Solana CLI directly
+                        self.logger.info("Falling back to Solana CLI approach...")
+                        try:
+                            import subprocess
+                            import tempfile
+                            import re
+                            
+                            # Write the private key to a temporary file
+                            with tempfile.NamedTemporaryFile(suffix='.json', delete=False, mode='w') as f:
+                                private_key_bytes = base58.b58decode(self.private_key)
+                                private_key_list = list(private_key_bytes)
+                                json.dump(private_key_list, f)
+                                keypair_path = f.name
+                            
+                            try:
+                                # Use the Solana CLI to transfer tokens
+                                cmd = [
+                                    "solana", "transfer",
+                                    "--from", keypair_path,
+                                    "--fee-payer", keypair_path,
+                                    destination_wallet,
+                                    str(amount),
+                                    token,
+                                    "--url", self.rpc_url,
+                                    "--commitment", "confirmed"
+                                ]
+                                
+                                self.logger.info(f"Executing Solana CLI command: {' '.join(cmd)}")
+                                result = subprocess.run(cmd, capture_output=True, text=True)
+                                
+                                # Check the result
+                                if result.returncode != 0:
+                                    self.logger.error(f"Solana CLI execution failed: {result.stderr}")
+                                    raise ValueError(f"Solana CLI execution failed: {result.stderr}")
+                                
+                                # Extract transaction signature from stdout
+                                output = result.stdout
+                                signature_match = re.search(r'Signature: ([a-zA-Z0-9]+)', output)
+                                if signature_match:
+                                    tx_signature = signature_match.group(1)
+                                    self.logger.info(f"Transaction sent successfully via CLI: {tx_signature}")
+                                    
+                                    return {
+                                        "success": True,
+                                        "signature": tx_signature,
+                                        "token": token,
+                                        "amount": amount,
+                                        "destination": destination_wallet
+                                    }
+                                else:
+                                    self.logger.error(f"Could not extract signature from CLI output: {output}")
+                                    raise ValueError(f"Could not extract signature from CLI output: {output}")
+                            finally:
+                                # Clean up the temporary keypair file
+                                os.unlink(keypair_path)
+                        except Exception as cli_error:
+                            self.logger.error(f"Error with Solana CLI approach: {cli_error}")
+                            raise ValueError(f"All transfer approaches failed: {e}, {script_error}, {cli_error}")
                 
                 return {
                     "success": True,
