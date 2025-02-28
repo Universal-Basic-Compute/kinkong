@@ -35,7 +35,8 @@ export async function POST(request: NextRequest) {
     // For now, we'll assume the request is coming from the authorized user
     
     // Check if already marked for withdrawal
-    if (record.get('toWithdraw')) {
+    const isWithdrawRequested = record.get('toWithdraw') === true;
+    if (isWithdrawRequested) {
       return NextResponse.json(
         { error: 'Withdrawal already in progress' },
         { status: 400 }
