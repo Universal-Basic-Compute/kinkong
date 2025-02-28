@@ -326,13 +326,6 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
           
           {/* Summary Section */}
           <div className="mt-6 text-sm space-y-1">
-            <p>
-              <span className="text-gray-400">Total Investment:</span> 
-              <span className="text-white ml-2 font-medium">
-                {Math.floor(totalInvestment).toLocaleString('en-US')}
-              </span> 
-              <span className="text-gray-400">$USDC</span>
-            </p>
             <p className="text-gray-400">
               Last Updated: {new Date().toLocaleString('en-GB', {
                 day: '2-digit',
