@@ -45,7 +45,7 @@ except ImportError:
                 
             def __str__(self):
                 return self.address
-from spl.token.instructions import get_associated_token_address, transfer, create_associated_token_account
+from spl.token.instructions import get_associated_token_address, transfer, create_associated_token_account, TransferParams
 
 def setup_logging():
     """Set up basic logging configuration"""
@@ -251,10 +251,14 @@ class TokenTransferExecutor:
                 
                 # Create the transfer instruction
                 transfer_ix = transfer(
-                    source=source_token_account,
-                    dest=destination_token_account,
-                    owner=Pubkey.from_string(self.wallet),
-                    amount=amount_lamports
+                    TransferParams(
+                        program_id=Pubkey.from_string("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),  # Token program ID
+                        source=source_token_account,
+                        dest=destination_token_account,
+                        owner=Pubkey.from_string(self.wallet),
+                        amount=amount_lamports,
+                        signers=[]
+                    )
                 )
                 
                 # Create a transaction
