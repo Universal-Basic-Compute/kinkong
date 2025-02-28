@@ -21,7 +21,8 @@ def setup_logging():
 
 class UBCTransferExecutor:
     def __init__(self):
-        load_dotenv()
+        # Load environment variables from .env file
+        load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env'))
         self.logger = setup_logging()
         
         # Initialize Airtable
