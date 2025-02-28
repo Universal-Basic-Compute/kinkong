@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
       const amount = record.get('amount') as number;
       
       return {
-        investmentId: record.get('investmentId') as string,
+        investmentId: record.id,
         amount: amount,
         token: token,
         date: record.get('createdAt') as string,

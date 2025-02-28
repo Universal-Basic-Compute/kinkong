@@ -7,7 +7,7 @@ import { WalletConnect } from '@/components/wallet/WalletConnect';
 interface Investment {
   investmentId: string;
   amount: number;
-  token: string;
+  token: string;  // Make sure this is included
   date: string;
   solscanUrl: string;
   usdAmount?: number;
@@ -36,6 +36,13 @@ export function InvestmentCard() {
         if (!response.ok) throw new Error('Failed to fetch investments');
         const data = await response.json();
         console.log('Fetched investments:', data);
+        
+        // Log the first investment's token and amount if available
+        if (data.length > 0) {
+          console.log('First investment token:', data[0].token);
+          console.log('First investment amount:', data[0].amount);
+        }
+        
         setInvestments(data);
       } catch (error) {
         console.error('Error fetching investments:', error);
