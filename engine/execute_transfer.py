@@ -249,14 +249,19 @@ class TokenTransferExecutor:
                     self.logger.info("Waiting for token account creation to confirm...")
                     await asyncio.sleep(5)
                 
-                # Create the transfer instruction
-                transfer_ix = transfer(
-                    TransferParams(
+                # Import transfer_checked
+                from spl.token.instructions import transfer_checked, TransferCheckedParams
+                
+                # Create the transfer instruction using transfer_checked
+                transfer_ix = transfer_checked(
+                    TransferCheckedParams(
                         program_id=Pubkey.from_string("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),  # Token program ID
                         source=source_token_account,
+                        mint=Pubkey.from_string(token_mint),
                         dest=destination_token_account,
                         owner=Pubkey.from_string(self.wallet),
                         amount=amount_lamports,
+                        decimals=decimals,
                         signers=[]
                     )
                 )
