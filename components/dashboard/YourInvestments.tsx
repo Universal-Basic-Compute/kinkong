@@ -247,16 +247,12 @@ export const YourInvestments: React.FC<YourInvestmentsProps> = ({ className }) =
                   </Tooltip>
                 </td>
                 <td className="text-right py-3 px-4">
-                  {investment.out === 1 ? (
-                    <span className="text-yellow-500 font-medium">Processing</span>
-                  ) : (
-                    <button 
-                      onClick={() => handleWithdraw(investment.investmentId)}
-                      className="bg-gradient-to-r from-gold to-amber-500 hover:from-amber-500 hover:to-gold text-black font-medium py-1.5 px-4 rounded-md text-sm transition-all duration-300 shadow-md hover:shadow-gold/20"
-                    >
-                      Withdraw
-                    </button>
-                  )}
+                  <button 
+                    onClick={() => handleWithdraw(investment.investmentId)}
+                    className="bg-gradient-to-r from-gold to-amber-500 hover:from-amber-500 hover:to-gold text-black font-medium py-1.5 px-4 rounded-md text-sm transition-all duration-300 shadow-md hover:shadow-gold/20"
+                  >
+                    Withdraw
+                  </button>
                 </td>
               </tr>
             ))}

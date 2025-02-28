@@ -34,13 +34,8 @@ export async function POST(request: NextRequest) {
     // This would require the user to sign a message with their wallet
     // For now, we'll assume the request is coming from the authorized user
     
-    // Mark the investment for withdrawal
+    // Only send a notification to the admin team without updating the record
     try {
-      await investmentsTable.update(investmentId, {
-        out: 1,
-        withdrawRequestedAt: new Date().toISOString()
-      });
-      
       // Send a notification to the admin team
       try {
         // Get Telegram bot token
