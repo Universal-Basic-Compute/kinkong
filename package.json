@@ -35,7 +35,7 @@
     "date-fns": "^4.1.0",
     "dotenv": "^16.4.7",
     "force-graph": "^1.43.4",
-    "framer-motion": "^11.0.3",
+    "framer-motion": "^11.18.2",
     "lightweight-charts": "^5.0.2",
     "next": "14.0.0",
     "node-fetch": "^2.7.0",
