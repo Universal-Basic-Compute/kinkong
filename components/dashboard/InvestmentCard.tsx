@@ -124,12 +124,12 @@ export function InvestmentCard() {
             </div>
             
             {/* Add redistribution information if available */}
-            {investment.ubcReturn !== undefined ? (
+            {investment.ubcReturn !== undefined || investment.isCalculated ? (
               <div className="mt-2 text-sm">
                 <p className="flex justify-between">
                   <span className="text-gray-400">Latest Return:</span>
                   <span className="metallic-text-ubc">
-                    {investment.ubcReturn.toLocaleString(undefined, {
+                    {(investment.ubcReturn || 0).toLocaleString(undefined, {
                       minimumFractionDigits: 0,
                       maximumFractionDigits: 0
                     })} $UBC
