@@ -44,6 +44,7 @@ export default function CopilotChatPage() {
     riskTolerance: string;
   } | null>(null);
   
+  // Define animateMessageTyping here, before any useEffect that references it
   // Add useEffect to disable body scrolling
   useEffect(() => {
     // Disable scrolling on the body when chat page is mounted
