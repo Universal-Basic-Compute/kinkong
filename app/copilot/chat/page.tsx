@@ -2,6 +2,7 @@
 export const dynamic = 'force-dynamic';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { askKinKongCopilot } from '@/utils/copilot';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -456,82 +457,101 @@ export default function CopilotChatPage() {
       {/* Center - Chat Interface */}
       <div className="flex-1 flex flex-col">
         <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-0">
-            {messages.map((message, index) => (
-              <div
-                key={index}
-                className={`flex ${
-                  message.role === 'user' ? 'justify-end' : 'justify-start'
-                }`}
-              >
-                {/* For user messages */}
-                {message.role === 'user' && (
-                  <div
-                    className="max-w-[80%] rounded-lg p-3 bg-gold/10 text-gold"
-                  >
-                    {message.screenshot && (
-                      <div className="mb-3 border border-gold/20 rounded-lg overflow-hidden">
-                        <img 
-                          src={message.screenshot} 
-                          alt="Screenshot" 
-                          className="max-w-full h-auto"
-                        />
-                        <div className="bg-black/50 p-2 text-xs text-gray-400">
-                          Screenshot attached
+            <AnimatePresence>
+              {messages.map((message, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className={`flex ${
+                    message.role === 'user' ? 'justify-end' : 'justify-start'
+                  }`}
+                >
+                  {/* For user messages */}
+                  {message.role === 'user' && (
+                    <motion.div
+                      className="max-w-[80%] rounded-lg p-3 bg-gradient-to-r from-gold/20 to-amber-500/10 text-gold border border-gold/30"
+                      whileHover={{ scale: 1.01 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {message.screenshot && (
+                        <div className="mb-3 border border-gold/20 rounded-lg overflow-hidden">
+                          <img 
+                            src={message.screenshot} 
+                            alt="Screenshot" 
+                            className="max-w-full h-auto"
+                          />
+                          <div className="bg-black/50 p-2 text-xs text-gray-400">
+                            Screenshot attached
+                          </div>
                         </div>
-                      </div>
-                    )}
-                    <ReactMarkdown className="prose prose-invert break-words whitespace-pre-wrap">
-                      {message.content}
-                    </ReactMarkdown>
-                  </div>
-                )}
-                
-                {/* For assistant messages */}
-                {message.role === 'assistant' && (
-                  <>
-                    {/* If this is the message currently being typed */}
-                    {typingMessage && index === messages.length - 1 ? (
-                      <div className="space-y-3 w-full">
-                        {/* Display paragraphs that have been revealed so far */}
-                        {displayedParagraphs.map((paragraph, pIndex) => (
-                          <div key={pIndex} className="flex justify-start">
-                            <div className="max-w-[80%] rounded-lg p-3 bg-gray-800/50 text-gray-200">
-                              <ReactMarkdown className="prose prose-invert break-words whitespace-pre-wrap">
-                                {paragraph}
-                              </ReactMarkdown>
-                            </div>
-                          </div>
-                        ))}
-                        
-                        {/* Show typing indicator outside of bubble if still typing */}
-                        {isTyping && (
-                          <div className="flex items-center space-x-1 ml-3 mt-1">
-                            <div className="w-2 h-2 bg-gold/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                            <div className="w-2 h-2 bg-gold/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                            <div className="w-2 h-2 bg-gold/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      /* For completed messages, split into separate bubbles */
-                      <div className="space-y-3 w-full">
-                        {message.content.split(/\n\n|\n#{1,6} /).map((paragraph, pIndex) => (
-                          paragraph.trim() && (
-                            <div key={pIndex} className="flex justify-start">
-                              <div className="max-w-[80%] rounded-lg p-3 bg-gray-800/50 text-gray-200">
+                      )}
+                      <ReactMarkdown className="prose prose-invert break-words whitespace-pre-wrap">
+                        {message.content}
+                      </ReactMarkdown>
+                    </motion.div>
+                  )}
+                  
+                  {/* For assistant messages */}
+                  {message.role === 'assistant' && (
+                    <>
+                      {/* If this is the message currently being typed */}
+                      {typingMessage && index === messages.length - 1 ? (
+                        <div className="space-y-3 w-full">
+                          {/* Display paragraphs that have been revealed so far */}
+                          {displayedParagraphs.map((paragraph, pIndex) => (
+                            <motion.div 
+                              key={pIndex} 
+                              className="flex justify-start"
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.3 }}
+                            >
+                              <div className="max-w-[80%] rounded-lg p-3 bg-gradient-to-r from-gray-800/70 to-gray-700/40 text-gray-200 border border-gray-700/50">
                                 <ReactMarkdown className="prose prose-invert break-words whitespace-pre-wrap">
-                                  {paragraph.trim()}
+                                  {paragraph}
                                 </ReactMarkdown>
                               </div>
+                            </motion.div>
+                          ))}
+                          
+                          {/* Show typing indicator outside of bubble if still typing */}
+                          {isTyping && (
+                            <div className="flex items-center space-x-1 ml-3 mt-1">
+                              <div className="w-2 h-2 bg-gold/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                              <div className="w-2 h-2 bg-gold/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                              <div className="w-2 h-2 bg-gold/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                             </div>
-                          )
-                        ))}
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            ))}
+                          )}
+                        </div>
+                      ) : (
+                        /* For completed messages, split into separate bubbles */
+                        <div className="space-y-3 w-full">
+                          {message.content.split(/\n\n|\n#{1,6} /).map((paragraph, pIndex) => (
+                            paragraph.trim() && (
+                              <motion.div 
+                                key={pIndex} 
+                                className="flex justify-start"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3, delay: pIndex * 0.1 }}
+                              >
+                                <div className="max-w-[80%] rounded-lg p-3 bg-gradient-to-r from-gray-800/70 to-gray-700/40 text-gray-200 border border-gray-700/50">
+                                  <ReactMarkdown className="prose prose-invert break-words whitespace-pre-wrap">
+                                    {paragraph.trim()}
+                                  </ReactMarkdown>
+                                </div>
+                              </motion.div>
+                            )
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </motion.div>
+              ))}
+            </AnimatePresence>
             
             {/* Add typing indicator before first message if no messages yet */}
             {messages.length === 0 && (
