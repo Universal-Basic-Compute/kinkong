@@ -282,7 +282,7 @@ export default function CopilotPage() {
         {/* Hero Section */}
         <div className="text-center space-y-10 py-12 mb-8">
           <div className="flex flex-col md:flex-row items-center justify-center gap-8">
-            <div className="relative">
+            <div className="relative mt-20">
               <img 
                 src="/copilot.png" 
                 alt="KinKong Copilot" 
