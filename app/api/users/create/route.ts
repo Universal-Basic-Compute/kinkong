@@ -50,19 +50,17 @@ export async function POST(request: NextRequest) {
     if (existingUser) {
       // Update existing user
       console.log('Updating existing user:', existingUser.id);
-      const updatedUser = await usersTable.update([
+      const updatedUser = await usersTable.update(
+        existingUser.id,
         {
-          id: existingUser.id,
-          fields: {
-            experience: userData.experience,
-            interests: Array.isArray(userData.interests) ? userData.interests.join(',') : userData.interests,
-            incomeSource: userData.incomeSource,
-            riskTolerance: userData.riskTolerance,
-            onboardingCompleted: true,
-            onboardingCompletedAt: userData.onboardingCompletedAt || new Date().toISOString()
-          }
+          experience: userData.experience,
+          interests: Array.isArray(userData.interests) ? userData.interests.join(',') : userData.interests,
+          incomeSource: userData.incomeSource,
+          riskTolerance: userData.riskTolerance,
+          onboardingCompleted: true,
+          onboardingCompletedAt: userData.onboardingCompletedAt || new Date().toISOString()
         }
-      ]);
+      );
       
       console.log('User updated successfully:', updatedUser[0].id);
       return NextResponse.json({
