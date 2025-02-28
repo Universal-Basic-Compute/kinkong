@@ -26,12 +26,12 @@ async function sendSubscriptionNotification(subscriptionData: any) {
     const walletDisplay = wallet.substring(0, 10) + '...' + wallet.substring(wallet.length - 10);
     
     // Create message text
-    const message = `🎉 *New KinKong Copilot Subscription*
+    const message = `🎉 *New Kong Copilot Subscription*
     
 💰 *Amount*: ${subscriptionData.amount.toLocaleString()} ${subscriptionData.token}
 👤 *Subscriber*: \`${walletDisplay}\`
 ⏱ *Duration*: ${subscriptionData.duration} days
-🔄 *Type*: ${subscriptionData.token === 'UBC' ? 'UBC Premium' : 'COMPUTE Premium'}
+🔄 *Type*: ${subscriptionData.token === 'UBC' ? 'Kong Pro - UBC' : 'Kong Pro - COMPUTE'}
 
 🔗 [View Transaction](${subscriptionData.solscanUrl})
 `;
