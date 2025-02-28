@@ -133,6 +133,9 @@ export function InvestmentCard() {
                       minimumFractionDigits: 0,
                       maximumFractionDigits: 0
                     })} $UBC
+                    {investment.isCalculated && (
+                      <span className="text-xs text-yellow-500 ml-1">(Est.)</span>
+                    )}
                   </span>
                 </p>
                 {investment.redistributionDate && (

@@ -1,6 +1,28 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import Airtable from 'airtable';
 
+// Helper function to calculate returns based on investment percentage
+function calculateReturns(investment: any, totalInvestmentValue: number, profitShare: number, ubcPrice: number) {
+  try {
+    // Calculate percentage of total investment
+    const percentage = investment.usdAmount / totalInvestmentValue;
+    
+    // Calculate USDC return based on percentage of profit share
+    const usdcReturn = percentage * profitShare;
+    
+    // Calculate UBC return based on USDC return and UBC price
+    const ubcReturn = ubcPrice > 0 ? usdcReturn / ubcPrice : 0;
+    
+    return {
+      return: usdcReturn,
+      ubcReturn: ubcReturn
+    };
+  } catch (error) {
+    console.error('Error calculating returns:', error);
+    return { return: 0, ubcReturn: 0 };
+  }
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { wallet } = req.query;
   
@@ -88,7 +110,85 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       };
     });
     
-    res.status(200).json(investments);
+    // Get all investments to calculate total value
+    const allInvestmentsRecords = await investmentsTable.select().all();
+    const totalInvestmentValue = allInvestmentsRecords.reduce((sum, record) => 
+      sum + parseFloat(record.get('usdAmount') || '0'), 0);
+    
+    // Get the latest wallet snapshot for portfolio value
+    const snapshotsTable = base.table('WALLET_SNAPSHOTS');
+    const snapshots = await snapshotsTable.select({
+      maxRecords: 1,
+      sort: [{ field: 'createdAt', direction: 'desc' }]
+    }).all();
+    
+    // Calculate profit share
+    let portfolioValue = totalInvestmentValue;
+    let profitShare = 0;
+    
+    if (snapshots.length > 0) {
+      portfolioValue = parseFloat(snapshots[0].get('totalValue') || totalInvestmentValue.toString());
+      const profit = portfolioValue - totalInvestmentValue;
+      // 75% of profit goes to investors
+      profitShare = profit > 0 ? profit * 0.75 : 0;
+    }
+    
+    // Get UBC price
+    let ubcPrice = 0.00137; // Default UBC price
+    try {
+      // Try to get UBC price from DexScreener
+      const ubc_mint = "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump";
+      const response = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${ubc_mint}`);
+      const data = await response.json();
+      
+      if (data.pairs && data.pairs.length > 0) {
+        // Get the first pair with USDC or USDT (stablecoin pair)
+        let ubc_pair = null;
+        for (const pair of data.pairs) {
+          // Look for USDC or USDT pair
+          if (pair.quoteToken && 
+              (pair.quoteToken.symbol.includes('USDC') || pair.quoteToken.symbol.includes('USDT'))) {
+            ubc_pair = pair;
+            break;
+          }
+        }
+        
+        // If no USDC/USDT pair, just use the first pair
+        if (!ubc_pair && data.pairs.length > 0) {
+          ubc_pair = data.pairs[0];
+        }
+        
+        if (ubc_pair && ubc_pair.priceUsd) {
+          ubcPrice = parseFloat(ubc_pair.priceUsd);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching UBC price:', error);
+    }
+    
+    // Update investments with calculated returns if no redistribution data
+    const investmentsWithReturns = investments.map(investment => {
+      // If no redistribution data, calculate returns
+      if (investment.ubcReturn === undefined && profitShare > 0) {
+        const calculatedReturns = calculateReturns(
+          investment, 
+          totalInvestmentValue, 
+          profitShare,
+          ubcPrice
+        );
+        
+        return {
+          ...investment,
+          return: calculatedReturns.return,
+          ubcReturn: calculatedReturns.ubcReturn,
+          isCalculated: true // Flag to indicate this is a calculated value
+        };
+      }
+      
+      return investment;
+    });
+    
+    res.status(200).json(investmentsWithReturns);
   } catch (error) {
     console.error('Error fetching user investments:', error);
     res.status(500).json({ error: 'Failed to fetch user investments' });

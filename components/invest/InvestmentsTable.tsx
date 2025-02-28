@@ -217,6 +217,9 @@ export function InvestmentsTable({ investments: propInvestments, latestSnapshot,
                           <span className="text-gray-400 text-sm ml-1">
                             (${investment.return ? Math.floor(investment.return).toLocaleString('en-US') : '0'})
                           </span>
+                          {investment.isCalculated && (
+                            <span className="text-xs text-yellow-500 ml-1">(Estimated)</span>
+                          )}
                         </>
                       ) : (
                         <span className="text-gray-400">No redistribution yet</span>
