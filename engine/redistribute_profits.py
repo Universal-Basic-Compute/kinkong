@@ -578,10 +578,9 @@ class ProfitRedistributor:
                 batch_size = 10
                 for i in range(0, len(investor_records), batch_size):
                     batch = investor_records[i:i+batch_size]
-                    # Extract just the fields from each record
-                    batch_fields = [record['fields'] for record in batch]
-                    # Use create method with the fields
-                    investor_redistributions_table.create(batch_fields)
+                    # Process each record individually with insert method
+                    for record in batch:
+                        investor_redistributions_table.insert(record['fields'])
                 
                 self.logger.info(f"Created {len(investor_records)} investor redistribution records")
             
