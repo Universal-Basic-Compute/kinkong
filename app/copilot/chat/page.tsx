@@ -173,8 +173,16 @@ export default function CopilotChatPage() {
           // Get wallet address
           const walletAddress = publicKey.toString();
           
-          // Send the greeting message to the API but don't display it in the UI
-          await askKinKongCopilot(
+          // First add a user message that says "Hello!"
+          const userMessage: Message = {
+            role: 'user',
+            content: "Hello!",
+            timestamp: new Date().toISOString()
+          };
+          setMessages(prev => [...prev, userMessage]);
+          
+          // Send the greeting message to the API
+          const response = await askKinKongCopilot(
             "Hello!", 
             code || 'default', 
             walletAddress,
@@ -182,7 +190,18 @@ export default function CopilotChatPage() {
             currentMission
           );
           
-          console.log('Automatic greeting sent');
+          // Add the assistant's response to the messages
+          const assistantMessage: Message = {
+            role: 'assistant',
+            content: response,
+            timestamp: new Date().toISOString()
+          };
+          setMessages(prev => [...prev, assistantMessage]);
+          
+          // Start typing animation for the response
+          animateMessageTyping(response);
+          
+          console.log('Automatic greeting sent and displayed');
         } catch (error) {
           console.error('Error sending automatic greeting:', error);
         }
@@ -193,7 +212,7 @@ export default function CopilotChatPage() {
     if (publicKey && !loading) {
       sendAutomaticGreeting();
     }
-  }, [publicKey, loading, code, currentMission, messages.length]);
+  }, [publicKey, loading, code, currentMission, messages.length, animateMessageTyping]);
 
   useEffect(() => {
     scrollToBottom();
