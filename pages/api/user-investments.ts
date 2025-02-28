@@ -121,7 +121,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         solscanUrl: record.get('solscanUrl') || '',
         date: record.get('createdAt') || '',
         username: record.get('username') || '',  // Add username field
-        // Use specific redistribution if available, otherwise fall back to latest
+        // Map Airtable field names (ubcAmount, amount) to frontend expected names (ubcReturn, return)
         ubcReturn: specificRedistribution ? specificRedistribution.ubcAmount : 
                   latestRedistribution ? parseFloat(latestRedistribution.get('ubcAmount') || '0') : undefined,
         return: specificRedistribution ? specificRedistribution.amount : 

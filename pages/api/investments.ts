@@ -65,7 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (!walletToRedistributions.has(wallet)) {
           walletToRedistributions.set(wallet, []);
         }
-        
+            
         walletToRedistributions.get(wallet).push({
           redistributionId: record.id,
           ubcAmount: parseFloat(record.get('ubcAmount') || '0'),
@@ -130,7 +130,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         date: record.get('createdAt') || '',
         wallet: wallet || '',
         username: record.get('username') || '',  // Add username field
-        // Add redistribution data if available
+        // Add redistribution data if available - map Airtable field names to frontend expected names
         ubcReturn: redistribution ? redistribution.ubcAmount : undefined,
         return: redistribution ? redistribution.amount : undefined,
         redistributionId: redistribution ? redistribution.redistributionId : undefined,
