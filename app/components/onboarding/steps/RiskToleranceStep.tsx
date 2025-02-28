@@ -32,7 +32,7 @@ const RiskToleranceStep: React.FC = () => {
     { 
       value: 'aggressive', 
       label: 'Aggressive',
-      description: 'I'm comfortable with high volatility for potentially higher returns'
+      description: 'I\'m comfortable with high volatility for potentially higher returns'
     },
     { 
       value: 'very-aggressive', 
