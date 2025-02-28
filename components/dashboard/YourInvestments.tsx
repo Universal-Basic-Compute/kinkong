@@ -99,7 +99,7 @@ export const YourInvestments: React.FC<YourInvestmentsProps> = ({ className }) =
         const updatedData = await updatedResponse.json();
         
         // Filter investments for the current wallet
-        const walletAddress = publicKey.toString();
+        const walletAddress = publicKey?.toString() || '';
         const userInvestments = updatedData.filter((investment: Investment) => 
           investment.wallet.toLowerCase() === walletAddress.toLowerCase()
         );
