@@ -8,7 +8,6 @@ import asyncio
 from datetime import datetime, timezone
 import requests
 from dotenv import load_dotenv
-from airtable import Airtable
 from solders.keypair import Keypair
 from solders.pubkey import Pubkey
 from solana.rpc.async_api import AsyncClient
@@ -26,37 +25,28 @@ def setup_logging():
     )
     return logging.getLogger('execute_transfer')
 
-class UBCTransferExecutor:
+class TokenTransferExecutor:
     def __init__(self):
         # Load environment variables from .env file
         load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env'))
         self.logger = setup_logging()
         
-        # Initialize Airtable
-        self.base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
-        self.api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
-        
-        if not self.base_id or not self.api_key:
-            raise ValueError("Missing Airtable credentials in environment variables")
-        
-        # Initialize Airtable tables
-        self.redistributions_table = Airtable(
-            self.base_id,
-            'REDISTRIBUTIONS',
-            self.api_key
-        )
-        
-        self.investor_redistributions_table = Airtable(
-            self.base_id,
-            'INVESTOR_REDISTRIBUTIONS',
-            self.api_key
-        )
-        
         # Initialize Helius RPC URL
         self.rpc_url = os.getenv('NEXT_PUBLIC_HELIUS_RPC_URL', 'https://api.mainnet-beta.solana.com')
         
-        # UBC token mint address
-        self.ubc_mint = "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump"
+        # Token mint addresses
+        self.token_mints = {
+            "UBC": "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump",
+            "COMPUTE": "B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo",
+            "USDC": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+        }
+        
+        # Token decimals
+        self.token_decimals = {
+            "UBC": 6,
+            "COMPUTE": 6,
+            "USDC": 6
+        }
         
         # Load wallet from private key
         private_key_str = os.getenv('KINKONG_WALLET_PRIVATE_KEY')
@@ -78,83 +68,35 @@ class UBCTransferExecutor:
             self.logger.error(f"Error loading wallet: {e}")
             raise ValueError(f"Invalid wallet configuration: {e}")
     
-    
-    def get_pending_redistributions(self):
-        """Get pending redistributions from Airtable"""
+    async def execute_transfer(self, destination_wallet, token, amount):
+        """Execute a token transfer to the destination wallet using Solana RPC
+        
+        Args:
+            destination_wallet (str): The destination wallet address
+            token (str): The token symbol (UBC, COMPUTE, USDC)
+            amount (float): The amount to transfer
+            
+        Returns:
+            dict: Result of the transfer operation
+        """
         try:
-            # Get pending main redistributions
-            pending_redistributions = self.redistributions_table.get_all(
-                formula="AND({status}='PENDING', {totalUbcAmount}>0)"
-            )
+            # Validate token
+            if token not in self.token_mints:
+                raise ValueError(f"Unsupported token: {token}. Supported tokens: {', '.join(self.token_mints.keys())}")
             
-            self.logger.info(f"Found {len(pending_redistributions)} pending redistributions")
+            # Get token mint and decimals
+            token_mint = self.token_mints[token]
+            decimals = self.token_decimals[token]
             
-            if not pending_redistributions:
-                return []
-            
-            # Process each redistribution
-            processed_redistributions = []
-            
-            for redistribution in pending_redistributions:
-                redistribution_id = redistribution['id']
-                
-                # Get investor redistributions for this main redistribution
-                investor_redistributions = self.investor_redistributions_table.get_all(
-                    formula=f"AND({{redistributionId}}='{redistribution_id}', {{status}}='PENDING')"
-                )
-                
-                # Log if any redistributions have investmentId field
-                has_investment_ids = any(inv['fields'].get('investmentId') for inv in investor_redistributions)
-                self.logger.info(f"Redistributions with investment IDs: {has_investment_ids}")
-                
-                self.logger.info(f"Found {len(investor_redistributions)} pending investor redistributions for {redistribution_id}")
-                
-                # Process investor redistributions
-                processed_investors = []
-                
-                for investor in investor_redistributions:
-                    try:
-                        wallet = investor['fields'].get('wallet')
-                        ubc_amount = float(investor['fields'].get('ubcAmount', 0))
-                        
-                        if not wallet or ubc_amount <= 0:
-                            self.logger.warning(f"Invalid investor redistribution: {investor['id']} - Missing wallet or zero amount")
-                            continue
-                        
-                        processed_investors.append({
-                            'id': investor['id'],
-                            'wallet': wallet,
-                            'ubcAmount': ubc_amount
-                        })
-                    except Exception as e:
-                        self.logger.error(f"Error processing investor redistribution {investor['id']}: {e}")
-                
-                # Add to processed redistributions
-                processed_redistributions.append({
-                    'id': redistribution_id,
-                    'totalUbcAmount': float(redistribution['fields'].get('totalUbcAmount', 0)),
-                    'investors': processed_investors
-                })
-            
-            return processed_redistributions
-        except Exception as e:
-            self.logger.error(f"Error getting pending redistributions: {e}")
-            return []
-    
-    
-    async def execute_transfer(self, destination_wallet, ubc_amount):
-        """Execute a UBC transfer to the destination wallet using Solana RPC"""
-        try:
-            # For UBC, we'll use 6 decimals (standard for most SPL tokens)
-            decimals = 6
-            amount_lamports = int(ubc_amount * (10 ** decimals))
+            # Convert amount to lamports
+            amount_lamports = int(amount * (10 ** decimals))
             
             # Verify the conversion is correct by doing the reverse calculation
             reverse_check = amount_lamports / (10 ** decimals)
-            if abs(reverse_check - ubc_amount) > 0.000001:  # Allow for small floating point differences
-                self.logger.warning(f"UBC amount conversion verification failed: {ubc_amount} vs {reverse_check}")
+            if abs(reverse_check - amount) > 0.000001:  # Allow for small floating point differences
+                self.logger.warning(f"Amount conversion verification failed: {amount} vs {reverse_check}")
                 
-            self.logger.info(f"Preparing to transfer {ubc_amount} UBC ({amount_lamports} lamports) to {destination_wallet}")
+            self.logger.info(f"Preparing to transfer {amount} {token} ({amount_lamports} lamports) to {destination_wallet}")
             self.logger.info(f"Token decimals: {decimals}")
             
             # Get RPC URL
@@ -170,13 +112,13 @@ class UBCTransferExecutor:
                 private_key_bytes = base58.b58decode(self.private_key)
                 keypair = Keypair.from_bytes(private_key_bytes)
                 
-                # Get the source token account (the UBC token account for our wallet)
-                self.logger.info(f"Finding source UBC token account for wallet: {self.wallet}")
+                # Get the source token account (the token account for our wallet)
+                self.logger.info(f"Finding source {token} token account for wallet: {self.wallet}")
                 
                 # Get the associated token account for the source wallet
                 source_token_account = get_associated_token_address(
                     Pubkey.from_string(self.wallet),
-                    Pubkey.from_string(self.ubc_mint)
+                    Pubkey.from_string(token_mint)
                 )
                 
                 self.logger.info(f"Source token account: {source_token_account}")
@@ -184,7 +126,7 @@ class UBCTransferExecutor:
                 # Get or create the destination token account
                 destination_token_account = get_associated_token_address(
                     Pubkey.from_string(destination_wallet),
-                    Pubkey.from_string(self.ubc_mint)
+                    Pubkey.from_string(token_mint)
                 )
                 
                 self.logger.info(f"Destination token account: {destination_token_account}")
@@ -200,7 +142,7 @@ class UBCTransferExecutor:
                     create_ata_ix = create_associated_token_account(
                         payer=Pubkey.from_string(self.wallet),
                         owner=Pubkey.from_string(destination_wallet),
-                        mint=Pubkey.from_string(self.ubc_mint)
+                        mint=Pubkey.from_string(token_mint)
                     )
                     
                     # Create a transaction to create the associated token account
@@ -265,7 +207,10 @@ class UBCTransferExecutor:
                 
                 return {
                     "success": True,
-                    "signature": tx_signature
+                    "signature": tx_signature,
+                    "token": token,
+                    "amount": amount,
+                    "destination": destination_wallet
                 }
                 
             finally:
@@ -280,49 +225,16 @@ class UBCTransferExecutor:
                 traceback.print_tb(e.__traceback__)
             return {
                 "success": False,
-                "error": str(e)
+                "error": str(e),
+                "token": token,
+                "amount": amount,
+                "destination": destination_wallet
             }
     
-    def update_redistribution_status(self, redistribution_id, status, notes=None):
-        """Update the status of a redistribution in Airtable"""
-        try:
-            fields = {
-                "status": status,
-                "processedAt": datetime.now(timezone.utc).isoformat()
-            }
-            
-            if notes:
-                fields["notes"] = notes
-            
-            self.redistributions_table.update(redistribution_id, fields)
-            self.logger.info(f"Updated redistribution {redistribution_id} status to {status}")
-            return True
-        except Exception as e:
-            self.logger.error(f"Error updating redistribution status: {e}")
-            return False
-    
-    def update_investor_redistribution_status(self, investor_id, status, tx_signature=None):
-        """Update the status of an investor redistribution in Airtable"""
-        try:
-            fields = {
-                "status": status,
-                "processedAt": datetime.now(timezone.utc).isoformat()
-            }
-            
-            if tx_signature:
-                fields["txSignature"] = tx_signature
-            
-            self.investor_redistributions_table.update(investor_id, fields)
-            self.logger.info(f"Updated investor redistribution {investor_id} status to {status}")
-            return True
-        except Exception as e:
-            self.logger.error(f"Error updating investor redistribution status: {e}")
-            return False
-    
-    def send_telegram_notification(self, investor_data, tx_signature):
+    def send_telegram_notification(self, transfer_data, tx_signature):
         """Send a Telegram notification for a completed transfer"""
         try:
-            self.logger.info(f"Sending Telegram notification for investor: {investor_data['wallet']}")
+            self.logger.info(f"Sending Telegram notification for transfer to: {transfer_data['destination']}")
             
             # Get Telegram bot token and use the specified channel ID
             bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
@@ -333,17 +245,17 @@ class UBCTransferExecutor:
                 return False
             
             # Format wallet address for display
-            wallet = investor_data['wallet']
+            wallet = transfer_data['destination']
             if len(wallet) > 20:
                 wallet_display = wallet[:10] + '...' + wallet[-10:]
             else:
                 wallet_display = wallet
             
             # Create message text
-            message = f"""🎉 *KinKong Profit Redistribution Completed*
+            message = f"""🎉 *KinKong Token Transfer Completed*
             
-📊 *Investor*: `{wallet_display}`
-🪙 *UBC Amount*: {investor_data['ubcAmount']:.2f} UBC
+📊 *Recipient*: `{wallet_display}`
+🪙 *Amount*: {transfer_data['amount']:.2f} {transfer_data['token']}
 ✅ *Status*: Completed
 
 🔗 [View Transaction](https://solscan.io/tx/{tx_signature})
@@ -387,97 +299,6 @@ class UBCTransferExecutor:
             self.logger.error(f"Error sending Telegram notification: {e}")
             return False
     
-    async def process_redistributions_async(self):
-        """Process all pending redistributions asynchronously"""
-        try:
-            # Get pending redistributions
-            redistributions = self.get_pending_redistributions()
-            
-            if not redistributions:
-                self.logger.info("No pending redistributions to process")
-                return
-            
-            self.logger.info(f"Processing {len(redistributions)} redistributions")
-            
-            # Process each redistribution
-            for redistribution in redistributions:
-                redistribution_id = redistribution['id']
-                total_ubc_amount = redistribution['totalUbcAmount']
-                investors = redistribution['investors']
-                
-                self.logger.info(f"Processing redistribution {redistribution_id} with {len(investors)} investors")
-                self.logger.info(f"Total UBC amount: {total_ubc_amount}")
-                
-                # Update main redistribution status to PROCESSING
-                self.update_redistribution_status(redistribution_id, "PROCESSING")
-                
-                # Track success and failures
-                successful_transfers = 0
-                failed_transfers = 0
-                
-                # Sort investors by UBC amount (ascending - smallest first)
-                sorted_investors = sorted(investors, key=lambda x: x['ubcAmount'])
-                
-                # Process each investor
-                for investor in sorted_investors:
-                    investor_id = investor['id']
-                    wallet = investor['wallet']
-                    ubc_amount = investor['ubcAmount']
-                    
-                    self.logger.info(f"Processing transfer of {ubc_amount} UBC to {wallet}")
-                    
-                    # Execute transfer
-                    result = self.execute_transfer(wallet, ubc_amount)
-                    
-                    if result["success"]:
-                        # Update investor redistribution status to COMPLETED
-                        self.update_investor_redistribution_status(investor_id, "COMPLETED", result["signature"])
-                        
-                        # Send Telegram notification
-                        try:
-                            self.send_telegram_notification(investor, result["signature"])
-                        except Exception as e:
-                            self.logger.warning(f"Failed to send Telegram notification: {e}")
-                        
-                        successful_transfers += 1
-                    else:
-                        # Update investor redistribution status to FAILED
-                        self.update_investor_redistribution_status(investor_id, "FAILED")
-                        failed_transfers += 1
-                    
-                    # Wait 5 seconds between transfers
-                    if investor != sorted_investors[-1]:  # Don't wait after the last transfer
-                        self.logger.info("Waiting 5 seconds before next transfer...")
-                        await asyncio.sleep(5)
-                
-                # Update main redistribution status based on results
-                if failed_transfers == 0:
-                    self.update_redistribution_status(redistribution_id, "COMPLETED", 
-                                                     f"All {successful_transfers} transfers completed successfully")
-                elif successful_transfers == 0:
-                    self.update_redistribution_status(redistribution_id, "FAILED", 
-                                                     f"All {failed_transfers} transfers failed")
-                else:
-                    self.update_redistribution_status(redistribution_id, "PARTIAL", 
-                                                     f"{successful_transfers} transfers completed, {failed_transfers} failed")
-                
-                self.logger.info(f"Completed redistribution {redistribution_id}: {successful_transfers} successful, {failed_transfers} failed")
-        except Exception as e:
-            self.logger.error(f"Error processing redistributions: {e}")
-            
-    async def process_redistributions(self):
-        """Process all pending redistributions (synchronous wrapper for async method)"""
-        await self.process_redistributions_async()
-        
-    def process_redistributions_sync(self):
-        """Synchronous wrapper for process_redistributions"""
-        # Set up asyncio event loop policy for Windows if needed
-        if os.name == 'nt':  # Windows
-            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-        
-        # Run the async method
-        asyncio.run(self.process_redistributions())
-
 async def async_main():
     try:
         # Load environment variables from .env file
@@ -485,8 +306,6 @@ async def async_main():
         
         # Verify environment variables
         required_vars = [
-            'KINKONG_AIRTABLE_BASE_ID',
-            'KINKONG_AIRTABLE_API_KEY',
             'KINKONG_WALLET_PRIVATE_KEY',
             'KINKONG_WALLET',
             'NEXT_PUBLIC_HELIUS_RPC_URL',
@@ -497,11 +316,33 @@ async def async_main():
         if missing:
             raise Exception(f"Missing environment variables: {', '.join(missing)}")
         
-        # Initialize and run transfer executor
-        executor = UBCTransferExecutor()
-        await executor.process_redistributions()
+        # Check command line arguments
+        if len(sys.argv) < 4:
+            print("Usage: python execute_transfer.py <destination_wallet> <token> <amount>")
+            print("Example: python execute_transfer.py 7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU UBC 1000")
+            sys.exit(1)
         
-        print("\n✅ Redistribution transfers completed")
+        destination_wallet = sys.argv[1]
+        token = sys.argv[2].upper()  # Convert to uppercase
+        try:
+            amount = float(sys.argv[3])
+        except ValueError:
+            print(f"Error: Amount must be a number, got '{sys.argv[3]}'")
+            sys.exit(1)
+        
+        # Initialize and run transfer executor
+        executor = TokenTransferExecutor()
+        result = await executor.execute_transfer(destination_wallet, token, amount)
+        
+        if result["success"]:
+            print(f"\n✅ Transfer of {amount} {token} to {destination_wallet} completed")
+            print(f"Transaction signature: {result['signature']}")
+            
+            # Send Telegram notification
+            executor.send_telegram_notification(result, result["signature"])
+        else:
+            print(f"\n❌ Transfer failed: {result['error']}")
+            sys.exit(1)
         
     except Exception as e:
         print(f"\n❌ Script failed: {str(e)}")
