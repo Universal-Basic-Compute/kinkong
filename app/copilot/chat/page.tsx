@@ -175,6 +175,11 @@ export default function CopilotChatPage() {
     
     // Automatically set the input field with the context
     setInput(context);
+    
+    // Scroll to the input field to keep the user's focus there
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   };
 
   const captureScreenshot = async () => {
@@ -322,7 +327,10 @@ export default function CopilotChatPage() {
           {missions.map((mission) => (
             <div
               key={mission.id}
-              onClick={() => handleSelectMission(mission.title, mission.context, mission.id)}
+              onClick={(e) => {
+                e.preventDefault(); // Prevent default behavior
+                handleSelectMission(mission.title, mission.context, mission.id);
+              }}
               className="p-3 bg-black/50 border border-gold/20 rounded-lg cursor-pointer hover:bg-gold/10 hover:border-gold/40 transition-all"
             >
               <h3 className="font-medium text-gold">{mission.title}</h3>

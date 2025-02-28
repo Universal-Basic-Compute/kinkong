@@ -26,29 +26,29 @@ export const Tooltip: React.FC<TooltipProps> = ({
   }, []);
 
   useEffect(() => {
-    if (isVisible && triggerRef.current && tooltipRef.current) {
+    if (isVisible && triggerRef.current) {
       const triggerRect = triggerRef.current.getBoundingClientRect();
-      const tooltipRect = tooltipRef.current.getBoundingClientRect();
       
       let top = 0;
       let left = 0;
       
+      // Calculate initial position based on the trigger element
       switch (position) {
         case 'top':
-          top = triggerRect.top - tooltipRect.height - 8;
-          left = triggerRect.left + (triggerRect.width / 2) - (tooltipRect.width / 2);
+          top = triggerRect.top - 8;  // Initial estimate
+          left = triggerRect.left + (triggerRect.width / 2);
           break;
         case 'right':
-          top = triggerRect.top + (triggerRect.height / 2) - (tooltipRect.height / 2);
+          top = triggerRect.top + (triggerRect.height / 2);
           left = triggerRect.right + 8;
           break;
         case 'bottom':
           top = triggerRect.bottom + 8;
-          left = triggerRect.left + (triggerRect.width / 2) - (tooltipRect.width / 2);
+          left = triggerRect.left + (triggerRect.width / 2);
           break;
         case 'left':
-          top = triggerRect.top + (triggerRect.height / 2) - (tooltipRect.height / 2);
-          left = triggerRect.left - tooltipRect.width - 8;
+          top = triggerRect.top + (triggerRect.height / 2);
+          left = triggerRect.left - 8;
           break;
       }
       
@@ -56,7 +56,41 @@ export const Tooltip: React.FC<TooltipProps> = ({
       top += window.scrollY;
       left += window.scrollX;
       
+      // Set position and let the tooltip render
       setTooltipPosition({ top, left });
+      
+      // After the tooltip is rendered, adjust its position based on its size
+      setTimeout(() => {
+        if (tooltipRef.current) {
+          const tooltipRect = tooltipRef.current.getBoundingClientRect();
+          
+          // Adjust position based on tooltip size
+          switch (position) {
+            case 'top':
+              top = triggerRect.top - tooltipRect.height - 8;
+              left = triggerRect.left + (triggerRect.width / 2) - (tooltipRect.width / 2);
+              break;
+            case 'right':
+              top = triggerRect.top + (triggerRect.height / 2) - (tooltipRect.height / 2);
+              left = triggerRect.right + 8;
+              break;
+            case 'bottom':
+              top = triggerRect.bottom + 8;
+              left = triggerRect.left + (triggerRect.width / 2) - (tooltipRect.width / 2);
+              break;
+            case 'left':
+              top = triggerRect.top + (triggerRect.height / 2) - (tooltipRect.height / 2);
+              left = triggerRect.left - tooltipRect.width - 8;
+              break;
+          }
+          
+          // Adjust for scroll position
+          top += window.scrollY;
+          left += window.scrollX;
+          
+          setTooltipPosition({ top, left });
+        }
+      }, 0);
     }
   }, [isVisible, position]);
 
