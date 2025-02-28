@@ -35,6 +35,12 @@ export default function CopilotChatPage() {
   const [isTyping, setIsTyping] = useState(false);
   const [subscription, setSubscription] = useState<{active: boolean; expiresAt?: string} | null>(null);
   const [currentMission, setCurrentMission] = useState<string | null>(null);
+  const [userData, setUserData] = useState<{
+    experience: string;
+    interests: string[];
+    incomeSource: string;
+    riskTolerance: string;
+  } | null>(null);
   
   // Add useEffect to disable body scrolling
   useEffect(() => {
@@ -101,11 +107,38 @@ export default function CopilotChatPage() {
   const { onboardingData, isCompleted } = useOnboarding();
   const [loading, setLoading] = useState(true);
 
+  // Function to fetch user data from Airtable
+  const fetchUserData = async (walletAddress: string) => {
+    try {
+      console.log('Fetching user data for wallet:', walletAddress);
+      const response = await fetch(`/api/users/get?wallet=${walletAddress}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch user data');
+      }
+      
+      const data = await response.json();
+      console.log('User data fetched:', data);
+      
+      if (data.user) {
+        setUserData(data.user);
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    }
+  };
+
   useEffect(() => {
     // We'll assume if they got to the chat page, they should be allowed to use it
     // This prevents a redirect loop between start and chat pages
     
     checkSubscription();
+    
+    // If wallet is connected, fetch user data
+    if (publicKey) {
+      fetchUserData(publicKey.toString());
+    }
+    
     setLoading(false);
   }, [publicKey, router]);
 
@@ -531,14 +564,14 @@ export default function CopilotChatPage() {
           <li>
             <h3 className="font-medium text-sm uppercase text-gray-400">Experience</h3>
             <p className="text-gray-300 capitalize">
-              {onboardingData.experience || 'Not specified'}
+              {userData?.experience || onboardingData.experience || 'Not specified'}
             </p>
           </li>
           <li>
             <h3 className="font-medium text-sm uppercase text-gray-400">Interests</h3>
             <p className="text-gray-300">
-              {onboardingData.interests && onboardingData.interests.length > 0 
-                ? onboardingData.interests.map(interest => {
+              {(userData?.interests && userData.interests.length > 0) || (onboardingData.interests && onboardingData.interests.length > 0)
+                ? (userData?.interests || onboardingData.interests).map(interest => {
                     return interest.split('-')
                       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
                       .join(' ');
@@ -549,13 +582,15 @@ export default function CopilotChatPage() {
           <li>
             <h3 className="font-medium text-sm uppercase text-gray-400">Income Source</h3>
             <p className="text-gray-300 capitalize">
-              {onboardingData.incomeSource ? onboardingData.incomeSource.split('-').join(' ') : 'Not specified'}
+              {userData?.incomeSource ? userData.incomeSource.split('-').join(' ') : 
+               onboardingData.incomeSource ? onboardingData.incomeSource.split('-').join(' ') : 'Not specified'}
             </p>
           </li>
           <li>
             <h3 className="font-medium text-sm uppercase text-gray-400">Risk Tolerance</h3>
             <p className="text-gray-300 capitalize">
-              {onboardingData.riskTolerance ? onboardingData.riskTolerance.split('-').join(' ') : 'Not specified'}
+              {userData?.riskTolerance ? userData.riskTolerance.split('-').join(' ') : 
+               onboardingData.riskTolerance ? onboardingData.riskTolerance.split('-').join(' ') : 'Not specified'}
             </p>
           </li>
         </ul>
