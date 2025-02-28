@@ -13,7 +13,7 @@ from solders.pubkey import Pubkey
 from solana.rpc.async_api import AsyncClient
 from solana.rpc.types import TxOpts
 from solana.transaction import Transaction
-from solana.publickey import PublicKey
+# PublicKey is already imported from solders.pubkey
 from spl.token.instructions import get_associated_token_address, transfer, create_associated_token_account
 
 def setup_logging():
@@ -133,8 +133,8 @@ class TokenTransferExecutor:
                 self.logger.info(f"Destination token account: {destination_token_account}")
                 
                 # Check if the destination token account exists
-                # Convert Pubkey to SolanaPublicKey for the RPC client
-                response = await client.get_account_info(PublicKey(str(destination_token_account)))
+                # Use string representation of the Pubkey for the RPC client
+                response = await client.get_account_info(str(destination_token_account))
                 
                 # If the account doesn't exist, we need to create it
                 if not response.value:
