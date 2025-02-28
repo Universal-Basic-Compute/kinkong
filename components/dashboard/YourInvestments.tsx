@@ -159,16 +159,16 @@ export const YourInvestments: React.FC<YourInvestmentsProps> = ({ className }) =
                 className="border-b border-gray-800/50 hover:bg-black/30 transition-all duration-200"
               >
                 <td className="py-3 px-4">
-                  <span className={`font-medium text-transparent bg-clip-text bg-gradient-to-r ${getTokenGradient(investment.token)}`}>
-                    {investment.token}
+                  <span className={`font-medium text-transparent bg-clip-text bg-gradient-to-r ${getTokenGradient(investment.token || 'USDC')}`}>
+                    {investment.token || 'USDC'}
                   </span>
                 </td>
                 <td className="text-right py-3 px-4">
                   <span className="font-medium">
                     {investment.amount.toLocaleString()}
                   </span>{' '}
-                  <span className={`text-transparent bg-clip-text bg-gradient-to-r ${getTokenGradient(investment.token)}`}>
-                    {investment.token}
+                  <span className={`text-transparent bg-clip-text bg-gradient-to-r ${getTokenGradient(investment.token || 'USDC')}`}>
+                    {investment.token || 'USDC'}
                   </span>
                 </td>
                 <td className="text-right py-3 px-4 text-gray-300">

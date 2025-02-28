@@ -43,13 +43,13 @@ export function InvestmentCard() {
           console.log('First investment token:', data[0].token);
           console.log('First investment amount:', data[0].amount);
           
-          // Ensure all investments have a token property
-          const processedData = data.map((inv: Investment) => ({
-            ...inv,
-            token: inv.token || 'USDC' // Default to USDC if token is missing
-          }));
-          
-          setInvestments(processedData);
+          // Log any investments with missing token property
+          const missingTokens = data.filter((inv: Investment) => !inv.token);
+          if (missingTokens.length > 0) {
+            console.warn(`${missingTokens.length} investments missing token property`);
+          }
+        
+          setInvestments(data);
         } else {
           setInvestments(data);
         }
@@ -119,8 +119,8 @@ export function InvestmentCard() {
                   minimumFractionDigits: 0,
                   maximumFractionDigits: 0
                 })} 
-                <span className={getTokenClass(investment.token)}>
-                  ${investment.token}
+                <span className={getTokenClass(investment.token || 'USDC')}>
+                  ${investment.token || 'USDC'}
                 </span>
               </span>
               {investment.usdAmount && (
