@@ -19,12 +19,12 @@ const IncomeSourceStep: React.FC = () => {
   };
 
   const options = [
-    { value: 'employment', label: 'Full-time Employment' },
-    { value: 'self-employed', label: 'Self-employed / Business Owner' },
-    { value: 'investments', label: 'Investment Income' },
-    { value: 'crypto-trading', label: 'Crypto Trading' },
-    { value: 'multiple-sources', label: 'Multiple Income Sources' },
-    { value: 'prefer-not-to-say', label: 'Prefer not to say' }
+    { value: 'employment', label: '💼 Full-time Employment' },
+    { value: 'self-employed', label: '🚀 Self-employed / Business Owner' },
+    { value: 'investments', label: '📈 Investment Income' },
+    { value: 'crypto-trading', label: '🪙 Crypto Trading' },
+    { value: 'multiple-sources', label: '🔄 Multiple Income Sources' },
+    { value: 'prefer-not-to-say', label: '🔒 Prefer not to say' }
   ];
 
   return (

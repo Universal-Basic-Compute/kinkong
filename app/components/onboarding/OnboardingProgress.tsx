@@ -10,8 +10,8 @@ const OnboardingProgress: React.FC = () => {
   const steps = [
     { id: OnboardingStep.EXPERIENCE, label: 'Experience' },
     { id: OnboardingStep.INTERESTS, label: 'Interests' },
-    { id: OnboardingStep.GOALS, label: 'Goals' },
-    { id: OnboardingStep.TIMEFRAME, label: 'Timeframe' }
+    { id: OnboardingStep.INCOME_SOURCE, label: 'Income' },
+    { id: OnboardingStep.RISK_TOLERANCE, label: 'Risk' }
   ];
   
   // Find the current step index
