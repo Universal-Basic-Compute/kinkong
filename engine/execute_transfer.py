@@ -171,25 +171,57 @@ class UBCTransferExecutor:
             response = requests.post(helius_url, json=payload)
             
             if response.status_code == 200:
+                # Parse the response as JSON
                 result = response.json()
-                tx_signature = result.get('signature')
                 
-                if tx_signature:
-                    self.logger.info(f"Transaction sent successfully: {tx_signature}")
+                # Check if result is a dictionary (not a list)
+                if isinstance(result, dict):
+                    tx_signature = result.get('signature')
                     
-                    # Wait for confirmation
-                    self.logger.info("Waiting for transaction confirmation...")
-                    time.sleep(5)  # Simple wait for confirmation
+                    if tx_signature:
+                        self.logger.info(f"Transaction sent successfully: {tx_signature}")
+                        
+                        # Wait for confirmation
+                        self.logger.info("Waiting for transaction confirmation...")
+                        time.sleep(5)  # Simple wait for confirmation
+                        
+                        return {
+                            "success": True,
+                            "signature": tx_signature
+                        }
+                    else:
+                        self.logger.error(f"No transaction signature in response: {result}")
+                        return {
+                            "success": False,
+                            "error": "No transaction signature in response"
+                        }
+                elif isinstance(result, list) and len(result) > 0:
+                    # If result is a list, try to get the signature from the first item
+                    if isinstance(result[0], dict):
+                        tx_signature = result[0].get('signature')
+                        
+                        if tx_signature:
+                            self.logger.info(f"Transaction sent successfully: {tx_signature}")
+                            
+                            # Wait for confirmation
+                            self.logger.info("Waiting for transaction confirmation...")
+                            time.sleep(5)  # Simple wait for confirmation
+                            
+                            return {
+                                "success": True,
+                                "signature": tx_signature
+                            }
                     
-                    return {
-                        "success": True,
-                        "signature": tx_signature
-                    }
-                else:
-                    self.logger.error(f"No transaction signature in response: {result}")
+                    self.logger.error(f"Unexpected response format (list): {result}")
                     return {
                         "success": False,
-                        "error": "No transaction signature in response"
+                        "error": "Unexpected response format from Helius API"
+                    }
+                else:
+                    self.logger.error(f"Unexpected response format: {result}")
+                    return {
+                        "success": False,
+                        "error": "Unexpected response format from Helius API"
                     }
             else:
                 self.logger.error(f"Failed to send transaction: {response.status_code} - {response.text}")
