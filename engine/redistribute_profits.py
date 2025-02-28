@@ -68,79 +68,110 @@ class ProfitRedistributor:
                 "accept": "application/json"
             }
             
-            response = requests.get(birdeye_url, params=params, headers=headers)
-            
-            if response.status_code == 200 and response.content:
-                pool_data = response.json()
+            try:
+                response = requests.get(birdeye_url, params=params, headers=headers)
                 
-                if pool_data.get('success'):
-                    compute_price = float(pool_data.get('data', {}).get('price', 0))
-                    self.logger.info(f"COMPUTE price from Birdeye: ${compute_price:.6f}")
+                # Check if we have a valid response with content
+                if response.status_code == 200 and response.content and len(response.content.strip()) > 0:
+                    try:
+                        pool_data = response.json()
+                        
+                        if pool_data.get('success'):
+                            compute_price = float(pool_data.get('data', {}).get('price', 0))
+                            self.logger.info(f"COMPUTE price from Birdeye: ${compute_price:.6f}")
+                        else:
+                            self.logger.warning(f"Failed to get COMPUTE price from Birdeye: {pool_data.get('message')}")
+                    except json.JSONDecodeError as e:
+                        self.logger.warning(f"Invalid JSON response from Birdeye: {e}")
+                        self.logger.debug(f"Response content: {response.content[:100]}...")
                 else:
-                    self.logger.warning(f"Failed to get COMPUTE price from Birdeye: {pool_data.get('message')}")
-            else:
-                self.logger.warning(f"Failed to get COMPUTE price from Birdeye: {response.status_code}")
+                    self.logger.warning(f"Failed to get COMPUTE price from Birdeye: Status {response.status_code}, Content length: {len(response.content) if response.content else 0}")
+            except requests.exceptions.RequestException as e:
+                self.logger.warning(f"Request error from Birdeye: {e}")
                 
             # If Birdeye fails, try DexScreener
             if not compute_price:
-                dexscreener_url = f"https://api.dexscreener.com/latest/dex/pools/solana/{meteora_pool_id}"
-                
-                response = requests.get(dexscreener_url)
-                response.raise_for_status()
-                data = response.json()
-                
-                if data.get('pairs') and len(data['pairs']) > 0:
-                    compute_pair = data['pairs'][0]
+                try:
+                    dexscreener_url = f"https://api.dexscreener.com/latest/dex/pools/solana/{meteora_pool_id}"
                     
-                    if compute_pair and compute_pair.get('priceUsd'):
-                        compute_price = float(compute_pair['priceUsd'])
-                        self.logger.info(f"COMPUTE price from DexScreener: ${compute_price:.6f}")
-                else:
-                    self.logger.warning("No pairs found for COMPUTE token on DexScreener")
+                    response = requests.get(dexscreener_url, timeout=10)
+                    
+                    if response.status_code == 200 and response.content and len(response.content.strip()) > 0:
+                        try:
+                            data = response.json()
+                            
+                            if data.get('pairs') and len(data['pairs']) > 0:
+                                compute_pair = data['pairs'][0]
+                                
+                                if compute_pair and compute_pair.get('priceUsd'):
+                                    compute_price = float(compute_pair['priceUsd'])
+                                    self.logger.info(f"COMPUTE price from DexScreener: ${compute_price:.6f}")
+                            else:
+                                self.logger.warning("No pairs found for COMPUTE token on DexScreener")
+                        except json.JSONDecodeError as e:
+                            self.logger.warning(f"Invalid JSON response from DexScreener: {e}")
+                    else:
+                        self.logger.warning(f"Failed to get COMPUTE price from DexScreener: Status {response.status_code}")
+                except Exception as e:
+                    self.logger.warning(f"Error fetching from DexScreener: {e}")
             
             # If both Birdeye and DexScreener fail, try Jupiter API
             if not compute_price:
-                compute_mint = "B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo"
-                jupiter_url = "https://price.jup.ag/v4/price"
-                jupiter_params = {
-                    "ids": compute_mint
-                }
-                
-                jupiter_response = requests.get(jupiter_url, params=jupiter_params)
-                jupiter_response.raise_for_status()
-                jupiter_data = jupiter_response.json()
-                
-                if jupiter_data.get('data') and jupiter_data['data'].get(compute_mint):
-                    compute_price = float(jupiter_data['data'][compute_mint].get('price', 0))
-                    self.logger.info(f"COMPUTE price from Jupiter: ${compute_price:.6f}")
+                try:
+                    compute_mint = "B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo"
+                    jupiter_url = "https://price.jup.ag/v4/price"
+                    jupiter_params = {
+                        "ids": compute_mint
+                    }
+                    
+                    jupiter_response = requests.get(jupiter_url, params=jupiter_params, timeout=10)
+                    
+                    if jupiter_response.status_code == 200 and jupiter_response.content and len(jupiter_response.content.strip()) > 0:
+                        try:
+                            jupiter_data = jupiter_response.json()
+                            
+                            if jupiter_data.get('data') and jupiter_data['data'].get(compute_mint):
+                                compute_price = float(jupiter_data['data'][compute_mint].get('price', 0))
+                                self.logger.info(f"COMPUTE price from Jupiter: ${compute_price:.6f}")
+                        except json.JSONDecodeError as e:
+                            self.logger.warning(f"Invalid JSON response from Jupiter: {e}")
+                    else:
+                        self.logger.warning(f"Failed to get COMPUTE price from Jupiter: Status {jupiter_response.status_code}")
+                except Exception as e:
+                    self.logger.warning(f"Error fetching from Jupiter: {e}")
             
             # If all methods fail, try to get price from wallet snapshot
             if not compute_price:
-                self.logger.info("Trying to get COMPUTE price from latest wallet snapshot")
-                latest_snapshot = self.get_snapshot_by_date(datetime.now(timezone.utc))
-                
-                if latest_snapshot and 'holdings' in latest_snapshot['fields']:
-                    try:
-                        holdings = json.loads(latest_snapshot['fields']['holdings'])
-                        for holding in holdings:
-                            if holding.get('token') == 'COMPUTE':
-                                compute_price = float(holding.get('price', 0))
-                                self.logger.info(f"COMPUTE price from wallet snapshot: ${compute_price:.6f}")
-                                break
-                    except (json.JSONDecodeError, ValueError) as e:
-                        self.logger.warning(f"Error parsing holdings from snapshot: {e}")
+                try:
+                    self.logger.info("Trying to get COMPUTE price from latest wallet snapshot")
+                    latest_snapshot = self.get_snapshot_by_date(datetime.now(timezone.utc))
+                    
+                    if latest_snapshot and 'holdings' in latest_snapshot['fields']:
+                        try:
+                            holdings = json.loads(latest_snapshot['fields']['holdings'])
+                            for holding in holdings:
+                                if holding.get('token') == 'COMPUTE':
+                                    compute_price = float(holding.get('price', 0))
+                                    self.logger.info(f"COMPUTE price from wallet snapshot: ${compute_price:.6f}")
+                                    break
+                        except (json.JSONDecodeError, ValueError) as e:
+                            self.logger.warning(f"Error parsing holdings from snapshot: {e}")
+                except Exception as e:
+                    self.logger.warning(f"Error getting price from wallet snapshot: {e}")
             
-            # If still no price, use a fallback from the snapshot taker
+            # If still no price, try getting from the snapshot taker's token balances
             if not compute_price:
-                self.logger.info("Using snapshot taker to get COMPUTE price")
-                # Create a temporary instance of WalletSnapshotTaker to get the price
-                token_balances = self.snapshot_taker.get_token_balances()
-                
-                for balance in token_balances:
-                    if balance.get('symbol') == 'COMPUTE':
-                        compute_price = float(balance.get('priceUsd', 0))
-                        self.logger.info(f"COMPUTE price from wallet balances: ${compute_price:.6f}")
-                        break
+                try:
+                    self.logger.info("Using snapshot taker to get COMPUTE price")
+                    token_balances = self.snapshot_taker.get_token_balances()
+                    
+                    for balance in token_balances:
+                        if balance.get('symbol') == 'COMPUTE':
+                            compute_price = float(balance.get('priceUsd', 0))
+                            self.logger.info(f"COMPUTE price from wallet balances: ${compute_price:.6f}")
+                            break
+                except Exception as e:
+                    self.logger.warning(f"Error getting price from snapshot taker: {e}")
             
             return compute_price
         except Exception as e:
