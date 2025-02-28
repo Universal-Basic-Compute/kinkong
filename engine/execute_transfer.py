@@ -3,6 +3,7 @@ import os
 import sys
 import json
 import time
+import base58
 from datetime import datetime, timezone
 import requests
 from dotenv import load_dotenv
@@ -71,8 +72,7 @@ class UBCTransferExecutor:
                 self.keypair = Keypair.from_secret_key(bytes(private_key_bytes))
             else:
                 # Try to load as base58 string
-                from base58 import b58decode
-                private_key_bytes = b58decode(private_key_str)
+                private_key_bytes = base58.b58decode(private_key_str)
                 self.keypair = Keypair.from_secret_key(private_key_bytes)
                 
             self.wallet = self.keypair.public_key
