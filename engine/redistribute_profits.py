@@ -560,23 +560,28 @@ class ProfitRedistributor:
             
             for dist in investor_distributions:
                 investor_record = {
-                    'redistributionId': main_record_id,  # Link to the main redistribution record
-                    'wallet': dist['wallet'],
-                    'investmentValue': dist['investment_value'],
-                    'percentage': dist['percentage'],
-                    'amount': dist['distribution_amount'],
-                    'status': 'PENDING',  # Initial status
-                    'createdAt': now
+                    'fields': {
+                        'redistributionId': main_record_id,  # Link to the main redistribution record
+                        'wallet': dist['wallet'],
+                        'investmentValue': dist['investment_value'],
+                        'percentage': dist['percentage'],
+                        'amount': dist['distribution_amount'],
+                        'status': 'PENDING',  # Initial status
+                        'createdAt': now
+                    }
                 }
-                investor_records.append({'fields': investor_record})
+                investor_records.append(investor_record)
             
-            # Batch create investor redistribution records
+            # Create investor redistribution records in batches
             if investor_records:
                 # Airtable has a limit of 10 records per create operation
                 batch_size = 10
                 for i in range(0, len(investor_records), batch_size):
                     batch = investor_records[i:i+batch_size]
-                    investor_redistributions_table.batch_insert(batch)  # Use the investor redistributions table
+                    # Extract just the fields from each record
+                    batch_fields = [record['fields'] for record in batch]
+                    # Use create method with the fields
+                    investor_redistributions_table.create(batch_fields)
                 
                 self.logger.info(f"Created {len(investor_records)} investor redistribution records")
             
