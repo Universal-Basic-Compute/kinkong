@@ -534,11 +534,11 @@ class ProfitRedistributor:
             else:
                 wallet_display = wallet
             
-            # Create message text with reordered fields: share -> investor -> UBC amount -> amount
+            # Create message text with reordered fields: investor -> share -> UBC amount -> amount
             message = f"""🎉 *KinKong Profit Redistribution*
             
-📈 *Share*: {investor_data['percentage']:.2f}%
 📊 *Investor*: `{wallet_display}`
+📈 *Share*: {investor_data['percentage']:.2f}%
 🪙 *UBC Amount*: {investor_data['ubcAmount']:.2f} UBC
 💰 *Amount*: ${investor_data['distribution_amount']:.2f}
 
