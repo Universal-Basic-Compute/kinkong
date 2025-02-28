@@ -4,10 +4,17 @@ import sys
 import json
 import time
 import base58
+import asyncio
 from datetime import datetime, timezone
 import requests
 from dotenv import load_dotenv
 from airtable import Airtable
+from solders.keypair import Keypair
+from solders.pubkey import Pubkey
+from solana.rpc.async_api import AsyncClient
+from solana.rpc.types import TxOpts
+from solana.transaction import Transaction
+from spl.token.instructions import get_associated_token_address, transfer, create_associated_token_account
 
 def setup_logging():
     """Set up basic logging configuration"""
@@ -132,7 +139,7 @@ class UBCTransferExecutor:
     
     
     def execute_transfer(self, destination_wallet, ubc_amount):
-        """Execute a UBC transfer to the destination wallet using Helius API"""
+        """Execute a UBC transfer to the destination wallet using Solana RPC"""
         try:
             # For UBC, we'll use 6 decimals (standard for most SPL tokens)
             decimals = 6
@@ -146,91 +153,127 @@ class UBCTransferExecutor:
             self.logger.info(f"Preparing to transfer {ubc_amount} UBC ({amount_lamports} lamports) to {destination_wallet}")
             self.logger.info(f"Token decimals: {decimals}")
             
-            # Use Helius API to execute the transfer
-            helius_api_key = os.getenv('HELIUS_API_KEY')
-            if not helius_api_key:
-                raise ValueError("HELIUS_API_KEY not found in environment variables")
+            # Get RPC URL
+            rpc_url = self.rpc_url
+            if not rpc_url:
+                raise ValueError("RPC URL not found in environment variables")
             
-            # Construct the transfer transaction using Helius API
-            helius_url = f"https://api.helius.xyz/v0/transactions?api-key={helius_api_key}"
+            # Create a Solana client
+            client = AsyncClient(rpc_url)
             
-            # Prepare the transaction payload
-            payload = {
-                "token": self.ubc_mint,
-                "amount": amount_lamports,
-                "to": destination_wallet,
-                "from": self.wallet,
-                "type": "token-transfer",
-                "options": {
-                    "commitment": "confirmed"
-                }
-            }
-            
-            # Send the transaction
-            self.logger.info(f"Sending transaction to Helius API")
-            response = requests.post(helius_url, json=payload)
-            
-            if response.status_code == 200:
-                # Parse the response as JSON
-                result = response.json()
+            try:
+                # Convert private key to keypair
+                private_key_bytes = base58.b58decode(self.private_key)
+                keypair = Keypair.from_bytes(private_key_bytes)
                 
-                # Check if result is a dictionary (not a list)
-                if isinstance(result, dict):
-                    tx_signature = result.get('signature')
+                # Get the source token account (the UBC token account for our wallet)
+                self.logger.info(f"Finding source UBC token account for wallet: {self.wallet}")
+                
+                # Get the associated token account for the source wallet
+                source_token_account = get_associated_token_address(
+                    Pubkey.from_string(self.wallet),
+                    Pubkey.from_string(self.ubc_mint)
+                )
+                
+                self.logger.info(f"Source token account: {source_token_account}")
+                
+                # Get or create the destination token account
+                destination_token_account = get_associated_token_address(
+                    Pubkey.from_string(destination_wallet),
+                    Pubkey.from_string(self.ubc_mint)
+                )
+                
+                self.logger.info(f"Destination token account: {destination_token_account}")
+                
+                # Check if the destination token account exists
+                response = await client.get_account_info(destination_token_account)
+                
+                # If the account doesn't exist, we need to create it
+                if not response.value:
+                    self.logger.info(f"Destination token account doesn't exist, creating it...")
                     
-                    if tx_signature:
-                        self.logger.info(f"Transaction sent successfully: {tx_signature}")
-                        
-                        # Wait for confirmation
-                        self.logger.info("Waiting for transaction confirmation...")
-                        time.sleep(5)  # Simple wait for confirmation
-                        
-                        return {
-                            "success": True,
-                            "signature": tx_signature
-                        }
-                    else:
-                        self.logger.error(f"No transaction signature in response: {result}")
-                        return {
-                            "success": False,
-                            "error": "No transaction signature in response"
-                        }
-                elif isinstance(result, list) and len(result) > 0:
-                    # If result is a list, try to get the signature from the first item
-                    if isinstance(result[0], dict):
-                        tx_signature = result[0].get('signature')
-                        
-                        if tx_signature:
-                            self.logger.info(f"Transaction sent successfully: {tx_signature}")
-                            
-                            # Wait for confirmation
-                            self.logger.info("Waiting for transaction confirmation...")
-                            time.sleep(5)  # Simple wait for confirmation
-                            
-                            return {
-                                "success": True,
-                                "signature": tx_signature
-                            }
+                    # Create the associated token account instruction
+                    create_ata_ix = create_associated_token_account(
+                        payer=Pubkey.from_string(self.wallet),
+                        owner=Pubkey.from_string(destination_wallet),
+                        mint=Pubkey.from_string(self.ubc_mint)
+                    )
                     
-                    self.logger.error(f"Unexpected response format (list): {result}")
-                    return {
-                        "success": False,
-                        "error": "Unexpected response format from Helius API"
-                    }
-                else:
-                    self.logger.error(f"Unexpected response format: {result}")
-                    return {
-                        "success": False,
-                        "error": "Unexpected response format from Helius API"
-                    }
-            else:
-                self.logger.error(f"Failed to send transaction: {response.status_code} - {response.text}")
+                    # Create a transaction to create the associated token account
+                    create_ata_tx = Transaction().add(create_ata_ix)
+                    
+                    # Get recent blockhash
+                    blockhash_resp = await client.get_latest_blockhash()
+                    create_ata_tx.recent_blockhash = blockhash_resp.value.blockhash
+                    
+                    # Sign and send the transaction
+                    create_ata_tx.sign(keypair)
+                    
+                    self.logger.info("Sending transaction to create destination token account...")
+                    create_resp = await client.send_transaction(create_ata_tx)
+                    
+                    if not create_resp.value:
+                        raise ValueError("Failed to create destination token account")
+                    
+                    self.logger.info(f"Created destination token account: {create_resp.value}")
+                    
+                    # Wait for the transaction to confirm
+                    self.logger.info("Waiting for token account creation to confirm...")
+                    await asyncio.sleep(5)
+                
+                # Create the transfer instruction
+                transfer_ix = transfer(
+                    source=source_token_account,
+                    dest=destination_token_account,
+                    owner=Pubkey.from_string(self.wallet),
+                    amount=amount_lamports
+                )
+                
+                # Create a transaction
+                transfer_tx = Transaction().add(transfer_ix)
+                
+                # Get recent blockhash
+                blockhash_resp = await client.get_latest_blockhash()
+                transfer_tx.recent_blockhash = blockhash_resp.value.blockhash
+                
+                # Sign the transaction
+                transfer_tx.sign(keypair)
+                
+                # Send the transaction
+                self.logger.info("Sending transfer transaction...")
+                response = await client.send_transaction(transfer_tx)
+                
+                if not response.value:
+                    raise ValueError("Failed to send transfer transaction")
+                
+                tx_signature = str(response.value)
+                self.logger.info(f"Transaction sent successfully: {tx_signature}")
+                
+                # Wait for confirmation
+                self.logger.info("Waiting for transaction confirmation...")
+                await asyncio.sleep(5)
+                
+                # Verify the transaction was successful
+                confirm_resp = await client.confirm_transaction(tx_signature)
+                
+                if not confirm_resp.value:
+                    self.logger.warning(f"Transaction may not be confirmed: {tx_signature}")
+                
                 return {
-                    "success": False,
-                    "error": f"Failed to send transaction: {response.text}"
+                    "success": True,
+                    "signature": tx_signature
                 }
+                
+            finally:
+                # Close the client connection
+                await client.close()
+                
         except Exception as e:
             self.logger.error(f"Error executing transfer to {destination_wallet}: {e}")
+            if hasattr(e, '__traceback__'):
+                import traceback
+                self.logger.error("Traceback:")
+                traceback.print_tb(e.__traceback__)
             return {
                 "success": False,
                 "error": str(e)
@@ -319,8 +362,8 @@ class UBCTransferExecutor:
             self.logger.error(f"Error sending Telegram notification: {e}")
             return False
     
-    def process_redistributions(self):
-        """Process all pending redistributions"""
+    async def process_redistributions_async(self):
+        """Process all pending redistributions asynchronously"""
         try:
             # Get pending redistributions
             redistributions = self.get_pending_redistributions()
@@ -377,7 +420,7 @@ class UBCTransferExecutor:
                     # Wait 5 seconds between transfers
                     if investor != sorted_investors[-1]:  # Don't wait after the last transfer
                         self.logger.info("Waiting 5 seconds before next transfer...")
-                        time.sleep(5)
+                        await asyncio.sleep(5)
                 
                 # Update main redistribution status based on results
                 if failed_transfers == 0:
@@ -393,8 +436,17 @@ class UBCTransferExecutor:
                 self.logger.info(f"Completed redistribution {redistribution_id}: {successful_transfers} successful, {failed_transfers} failed")
         except Exception as e:
             self.logger.error(f"Error processing redistributions: {e}")
+            
+    def process_redistributions(self):
+        """Process all pending redistributions (synchronous wrapper for async method)"""
+        # Set up asyncio event loop policy for Windows if needed
+        if os.name == 'nt':  # Windows
+            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+        
+        # Run the async method
+        asyncio.run(self.process_redistributions_async())
 
-def main():
+async def async_main():
     try:
         # Load environment variables from .env file
         load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env'))
@@ -406,7 +458,6 @@ def main():
             'KINKONG_WALLET_PRIVATE_KEY',
             'KINKONG_WALLET',
             'NEXT_PUBLIC_HELIUS_RPC_URL',
-            'HELIUS_API_KEY',
             'TELEGRAM_BOT_TOKEN'
         ]
         
@@ -416,7 +467,7 @@ def main():
         
         # Initialize and run transfer executor
         executor = UBCTransferExecutor()
-        executor.process_redistributions()
+        await executor.process_redistributions_async()
         
         print("\n✅ Redistribution transfers completed")
         
@@ -425,6 +476,14 @@ def main():
         import traceback
         traceback.print_exc()
         sys.exit(1)
+
+def main():
+    # Set up asyncio event loop policy for Windows if needed
+    if os.name == 'nt':  # Windows
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    
+    # Run the async main function
+    asyncio.run(async_main())
 
 if __name__ == "__main__":
     main()
