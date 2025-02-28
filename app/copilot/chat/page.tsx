@@ -8,11 +8,13 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { verifySubscription } from '@/utils/subscription';
 import { useOnboarding } from '@/app/context/OnboardingContext';
 import ReactMarkdown from 'react-markdown';
+import Image from 'next/image';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: string;
+  screenshot?: string; // Base64 encoded screenshot
 }
 
 export default function CopilotChatPage() {
@@ -24,6 +26,8 @@ export default function CopilotChatPage() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [screenshot, setScreenshot] = useState<string | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
   const [subscription, setSubscription] = useState<{active: boolean; expiresAt?: string} | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { onboardingData, isCompleted } = useOnboarding();
@@ -63,6 +67,49 @@ export default function CopilotChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const captureScreenshot = async () => {
+    try {
+      setIsCapturing(true);
+      setError(null);
+      
+      // Use browser's screenshot API if available (Chrome extension only)
+      if (window.navigator && 'mediaDevices' in navigator) {
+        const stream = await navigator.mediaDevices.getDisplayMedia({ 
+          video: { mediaSource: 'screen' } 
+        });
+        
+        const track = stream.getVideoTracks()[0];
+        const imageCapture = new ImageCapture(track);
+        const bitmap = await imageCapture.grabFrame();
+        
+        // Convert to canvas then to base64
+        const canvas = document.createElement('canvas');
+        canvas.width = bitmap.width;
+        canvas.height = bitmap.height;
+        const context = canvas.getContext('2d');
+        context?.drawImage(bitmap, 0, 0);
+        
+        // Get base64 data
+        const base64Image = canvas.toDataURL('image/jpeg', 0.8);
+        setScreenshot(base64Image);
+        
+        // Stop all tracks
+        stream.getTracks().forEach(track => track.stop());
+      } else {
+        throw new Error('Screen capture not supported in this browser');
+      }
+    } catch (err) {
+      console.error('Screenshot error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to capture screenshot');
+    } finally {
+      setIsCapturing(false);
+    }
+  };
+
+  const clearScreenshot = () => {
+    setScreenshot(null);
+  };
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!input.trim() || !publicKey) return;
@@ -75,13 +122,14 @@ export default function CopilotChatPage() {
       const userMessage: Message = {
         role: 'user',
         content: input,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        screenshot: screenshot || undefined
       };
       setMessages(prev => [...prev, userMessage]);
       setInput('');
 
-      // Get streaming response with wallet address
-      const response = await askKinKongCopilot(input, code || '');
+      // Get streaming response with wallet address and screenshot if available
+      const response = await askKinKongCopilot(input, code || '', publicKey.toString(), screenshot || undefined);
     
       // Add assistant message
       const assistantMessage: Message = {
@@ -90,6 +138,9 @@ export default function CopilotChatPage() {
         timestamp: new Date().toISOString()
       };
       setMessages(prev => [...prev, assistantMessage]);
+      
+      // Clear screenshot after sending
+      setScreenshot(null);
 
     } catch (err) {
       console.error('Chat error:', err);
@@ -194,6 +245,18 @@ export default function CopilotChatPage() {
                       : 'bg-gray-800/50 text-gray-200'
                   }`}
                 >
+                  {message.screenshot && (
+                    <div className="mb-3 border border-gold/20 rounded-lg overflow-hidden">
+                      <img 
+                        src={message.screenshot} 
+                        alt="Screenshot" 
+                        className="max-w-full h-auto"
+                      />
+                      <div className="bg-black/50 p-2 text-xs text-gray-400">
+                        Screenshot attached
+                      </div>
+                    </div>
+                  )}
                   <ReactMarkdown className="prose prose-invert">
                     {message.content}
                   </ReactMarkdown>
@@ -210,6 +273,30 @@ export default function CopilotChatPage() {
                 {error}
               </div>
             )}
+            
+            {/* Screenshot preview */}
+            {screenshot && (
+              <div className="mb-3 relative">
+                <div className="border border-gold/30 rounded-lg overflow-hidden p-2 bg-black/30">
+                  <img 
+                    src={screenshot} 
+                    alt="Screenshot preview" 
+                    className="max-h-40 w-auto mx-auto rounded"
+                  />
+                  <button
+                    type="button"
+                    onClick={clearScreenshot}
+                    className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1 hover:bg-red-700 transition-colors"
+                    title="Remove screenshot"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
+            
             <div className="flex gap-2">
               <input
                 type="text"
@@ -219,6 +306,34 @@ export default function CopilotChatPage() {
                 placeholder="Ask KinKong Copilot..."
                 className="flex-1 bg-black/30 border border-gold/20 rounded-lg px-4 py-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-gold"
               />
+              
+              {/* Screenshot button */}
+              <button
+                type="button"
+                onClick={captureScreenshot}
+                disabled={isLoading || isCapturing}
+                className={`px-3 py-2 rounded-lg ${
+                  isLoading || isCapturing
+                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                    : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+                } transition-colors duration-200`}
+                title="Capture screenshot"
+              >
+                {isCapturing ? (
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  </span>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                )}
+              </button>
+              
               <button
                 type="submit"
                 disabled={isLoading || !input.trim()}

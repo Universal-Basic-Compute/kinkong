@@ -1,10 +1,11 @@
-export async function askKinKongCopilot(message: string, code: string, wallet?: string) {
+export async function askKinKongCopilot(message: string, code: string, wallet?: string, screenshot?: string) {
   try {
     const requestBody = {
       message,
       code,
       wallet, // Add wallet to track conversation history properly
-      body: document.body.innerText
+      body: document.body.innerText,
+      screenshot // Base64 encoded screenshot
     };
 
     const response = await fetch('/api/copilot', {
