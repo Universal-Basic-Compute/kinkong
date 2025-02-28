@@ -98,9 +98,11 @@ export default function CopilotChatPage() {
     
     checkSubscription();
     
-    // If wallet is connected, fetch user data
+    // If wallet is connected, fetch user data and previous messages
     if (publicKey) {
-      fetchUserData(publicKey.toString());
+      const walletAddress = publicKey.toString();
+      fetchUserData(walletAddress);
+      fetchPreviousMessages(walletAddress); // Fetch previous messages
       setLoading(false);
     } else {
       // Keep loading state true if wallet is not connected
@@ -189,6 +191,36 @@ export default function CopilotChatPage() {
     }
   };
 
+  // Function to fetch previous messages for a wallet
+  const fetchPreviousMessages = async (walletAddress: string) => {
+    try {
+      console.log('Fetching previous messages for wallet:', walletAddress);
+      const response = await fetch(`/api/messages/get?wallet=${walletAddress}&limit=20`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch previous messages');
+      }
+      
+      const data = await response.json();
+      console.log('Previous messages fetched:', data.messages?.length || 0);
+      
+      if (data.messages && Array.isArray(data.messages) && data.messages.length > 0) {
+        // Convert the messages to our Message format
+        const formattedMessages = data.messages.map((msg: any) => ({
+          role: msg.role,
+          content: msg.content,
+          timestamp: msg.createdAt || new Date().toISOString(),
+          screenshot: msg.screenshot || undefined
+        }));
+        
+        // Set the messages directly without animation
+        setMessages(formattedMessages);
+      }
+    } catch (error) {
+      console.error('Error fetching previous messages:', error);
+    }
+  };
+
   useEffect(() => {
     // We'll assume if they got to the chat page, they should be allowed to use it
     // This prevents a redirect loop between start and chat pages
@@ -247,7 +279,8 @@ export default function CopilotChatPage() {
     };
     
     // Only run this once when the component mounts and publicKey is available
-    if (publicKey && !loading) {
+    // and no messages have been loaded yet
+    if (publicKey && !loading && messages.length === 0) {
       sendAutomaticGreeting();
     }
   }, [publicKey, loading, code, currentMission, messages.length, animateMessageTyping]);
@@ -483,20 +516,16 @@ export default function CopilotChatPage() {
               {messages.map((message, index) => (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 1, y: 0 }} // No animation for initial render
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  transition={{ duration: 0 }}
                   className={`flex ${
                     message.role === 'user' ? 'justify-end' : 'justify-start'
                   }`}
                 >
                   {/* For user messages */}
                   {message.role === 'user' && (
-                    <motion.div
-                      className="max-w-[80%] rounded-lg p-3 bg-gradient-to-r from-gold/20 to-amber-500/10 text-gold border border-gold/30"
-                      whileHover={{ scale: 1.01 }}
-                      transition={{ duration: 0.2 }}
-                    >
+                    <div className="max-w-[80%] rounded-lg p-3 bg-gradient-to-r from-gold/20 to-amber-500/10 text-gold border border-gold/30">
                       {message.screenshot && (
                         <div className="mb-3 border border-gold/20 rounded-lg overflow-hidden">
                           <img 
@@ -512,7 +541,7 @@ export default function CopilotChatPage() {
                       <ReactMarkdown className="prose prose-invert break-words whitespace-pre-wrap">
                         {message.content}
                       </ReactMarkdown>
-                    </motion.div>
+                    </div>
                   )}
                   
                   {/* For assistant messages */}
@@ -548,25 +577,11 @@ export default function CopilotChatPage() {
                           )}
                         </div>
                       ) : (
-                        /* For completed messages, split into separate bubbles */
-                        <div className="space-y-3 w-full">
-                          {message.content.split(/\n\n|\n#{1,6} /).map((paragraph, pIndex) => (
-                            paragraph.trim() && (
-                              <motion.div 
-                                key={pIndex} 
-                                className="flex justify-start"
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.3, delay: pIndex * 0.1 }}
-                              >
-                                <div className="max-w-[80%] rounded-lg p-3 bg-gradient-to-r from-gray-800/70 to-gray-700/40 text-gray-200 border border-gray-700/50">
-                                  <ReactMarkdown className="prose prose-invert break-words whitespace-pre-wrap">
-                                    {paragraph.trim()}
-                                  </ReactMarkdown>
-                                </div>
-                              </motion.div>
-                            )
-                          ))}
+                        /* For completed messages, display in a single bubble */
+                        <div className="max-w-[80%] rounded-lg p-3 bg-gradient-to-r from-gray-800/70 to-gray-700/40 text-gray-200 border border-gray-700/50">
+                          <ReactMarkdown className="prose prose-invert break-words whitespace-pre-wrap">
+                            {message.content}
+                          </ReactMarkdown>
                         </div>
                       )}
                     </>
