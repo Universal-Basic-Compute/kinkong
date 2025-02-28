@@ -681,6 +681,10 @@ export default function Invest() {
                       <span className="text-gold mr-2">•</span>
                       <span>Profits redistributed in $UBC</span>
                     </li>
+                    <li className="flex items-start">
+                      <span className="text-gold mr-2">•</span>
+                      <span>Terms may vary if required</span>
+                    </li>
                   </ul>
                 </div>
                 </div>
