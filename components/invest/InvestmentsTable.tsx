@@ -64,7 +64,7 @@ export function InvestmentsTable({ investments, latestSnapshot, isLoading }: Inv
                   .map((investment) => (
                   <tr key={investment.investmentId} className="border-b border-gold/10 hover:bg-gold/5">
                     <td className="px-4 py-4 text-white">
-                      {investment.username ? (
+                      {investment.username && investment.username !== "Anonymous" ? (
                         <span title={investment.wallet}>
                           {investment.username}
                         </span>
