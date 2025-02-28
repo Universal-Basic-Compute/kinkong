@@ -217,11 +217,6 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
                         <>
                           <div>
                             <span className="text-white font-medium">${Math.floor(investor.amount).toLocaleString('en-US')}</span>
-                            {investor.percentage && (
-                              <span className="text-gray-400 text-sm ml-2">
-                                ({investor.percentage.toFixed(2)}%)
-                              </span>
-                            )}
                           </div>
                         </>
                       ) : (
