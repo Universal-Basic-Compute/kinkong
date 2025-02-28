@@ -66,6 +66,38 @@ export const YourInvestments: React.FC<YourInvestmentsProps> = ({ className }) =
     fetchInvestments();
   }, [publicKey]);
 
+  const fetchInvestments = async () => {
+    if (!publicKey) {
+      setInvestments([]);
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/investments');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch investments');
+      }
+      
+      const data = await response.json();
+      
+      // Filter investments for the current wallet
+      const walletAddress = publicKey?.toString() || '';
+      const userInvestments = data.filter((investment: Investment) => 
+        investment.wallet.toLowerCase() === walletAddress.toLowerCase()
+      );
+      
+      setInvestments(userInvestments || []);
+    } catch (err) {
+      console.error('Error fetching investments:', err);
+      setError('Failed to load your investments');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleWithdraw = async (investmentId: string) => {
     if (!confirm('Are you sure you want to withdraw this investment? Please allow up to 24 hours for processing.')) {
       return;
