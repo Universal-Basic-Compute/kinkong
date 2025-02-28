@@ -87,10 +87,9 @@ function StartPageContent() {
     }
   ];
 
-  // Always show onboarding first for new users
-  if (!isCompleted) {
-    return <OnboardingContainer />;
-  }
+  // Always show onboarding container for all users
+  // This ensures everyone goes through the onboarding process
+  return <OnboardingContainer />;
 
   // Otherwise, show the extension installation guide
   return (
