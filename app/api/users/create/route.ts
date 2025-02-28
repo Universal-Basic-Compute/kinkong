@@ -78,27 +78,44 @@ export async function POST(request: NextRequest) {
         riskTolerance: userData.riskTolerance
       });
       
-      const newUser = await usersTable.create([
-        {
-          fields: {
-            wallet: userData.wallet || null,
-            experience: userData.experience,
-            interests: Array.isArray(userData.interests) ? userData.interests.join(',') : userData.interests,
-            incomeSource: userData.incomeSource,
-            riskTolerance: userData.riskTolerance,
-            onboardingCompleted: true,
-            onboardingCompletedAt: userData.onboardingCompletedAt || new Date().toISOString(),
-            createdAt: new Date().toISOString()
+      try {
+        const newUser = await usersTable.create([
+          {
+            fields: {
+              wallet: userData.wallet || null,
+              experience: userData.experience,
+              interests: Array.isArray(userData.interests) ? userData.interests.join(',') : userData.interests,
+              incomeSource: userData.incomeSource,
+              riskTolerance: userData.riskTolerance,
+              onboardingCompleted: true,
+              onboardingCompletedAt: userData.onboardingCompletedAt || new Date().toISOString(),
+              createdAt: new Date().toISOString()
+            }
           }
+        ]);
+        
+        // Check if newUser exists and has at least one record
+        if (!newUser || newUser.length === 0) {
+          console.error('Failed to create user: No user record returned');
+          return NextResponse.json({
+            error: 'Failed to create user record',
+            details: 'No user record returned from Airtable'
+          }, { status: 500 });
         }
-      ]);
-      
-      console.log('New user created successfully:', newUser[0].id);
-      return NextResponse.json({
-        success: true,
-        user: newUser[0].id,
-        created: true
-      });
+        
+        console.log('New user created successfully:', newUser[0].id);
+        return NextResponse.json({
+          success: true,
+          user: newUser[0].id,
+          created: true
+        });
+      } catch (createError) {
+        console.error('Error creating new user:', createError);
+        return NextResponse.json({ 
+          error: 'Failed to create user',
+          details: createError instanceof Error ? createError.message : 'Unknown error'
+        }, { status: 500 });
+      }
     }
     
   } catch (error) {
