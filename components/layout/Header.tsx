@@ -87,9 +87,21 @@ const Header = () => {
     },
     {
       label: 'Kong Copilot',
-      isGroup: false,
-      href: '/copilot',
-      subItems: [],
+      isGroup: true,
+      subItems: [
+        { 
+          label: 'Presentation', 
+          href: '/copilot',
+          description: 'Learn about KinKong Copilot',
+          emoji: '🤖'
+        },
+        { 
+          label: 'Chat', 
+          href: '/copilot/chat',
+          description: 'Talk with KinKong Copilot',
+          emoji: '💬'
+        }
+      ],
       isGlowing: false,
       customClass: ''
     },
