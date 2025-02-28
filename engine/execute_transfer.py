@@ -237,7 +237,13 @@ class UBCTransferExecutor:
             decimals = self.token_client.get_mint_info().decimals
             amount_lamports = int(ubc_amount * (10 ** decimals))
             
+            # Verify the conversion is correct by doing the reverse calculation
+            reverse_check = amount_lamports / (10 ** decimals)
+            if abs(reverse_check - ubc_amount) > 0.000001:  # Allow for small floating point differences
+                self.logger.warning(f"UBC amount conversion verification failed: {ubc_amount} vs {reverse_check}")
+                
             self.logger.info(f"Preparing to transfer {ubc_amount} UBC ({amount_lamports} lamports) to {destination_wallet}")
+            self.logger.info(f"Token decimals: {decimals}")
             
             # Get destination token account
             destination_token_account = self.get_destination_token_account(destination_wallet)
