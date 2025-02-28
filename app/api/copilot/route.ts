@@ -478,12 +478,6 @@ Use this information to provide personalized advice relevant to their current ho
     // Add user investments to system prompt if available and mission is portfolio-rebalancing
     if (mission === 'portfolio-rebalancing' && userInvestments && userInvestments.length > 0) {
       systemPrompt += `\n\nUser's KinKong Investments:
-The user has ${userInvestments.length} managed investments in KinKong Invest:
-${userInvestments.map((investment: any, index: number) => {
-  const amount = parseFloat(investment.amount || 0);
-  return `${index + 1}. ${investment.token}: ${amount} tokens`;
-}).join('\n')}
-
 Total Investment Value: $${investmentValues.totalInvestmentValue.toFixed(2)}
 Percentage of Portfolio Managed: ${investmentValues.managedPercentage.toFixed(2)}%
 
