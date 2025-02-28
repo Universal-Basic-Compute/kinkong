@@ -210,15 +210,6 @@ export default function CopilotChatPage() {
     setCurrentMission(missionId);
     setSelectedMissionId(missionId);
     
-    // Add a system message to indicate the mission selection
-    const systemMessage: Message = {
-      role: 'assistant',
-      content: `🚀 **Mission Selected: ${missionTitle}**\n\nI'm ready to help you with this mission! Let's get started.`,
-      timestamp: new Date().toISOString()
-    };
-    
-    setMessages(prev => [...prev, systemMessage]);
-    
     // Automatically set the input field with the context
     setInput(context);
     
