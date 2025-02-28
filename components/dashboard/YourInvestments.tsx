@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { Tooltip } from '@/components/ui/tooltip';
 
@@ -140,12 +139,12 @@ export const YourInvestments: React.FC<YourInvestmentsProps> = ({ className }) =
                   </Tooltip>
                 </td>
                 <td className="text-right py-3 px-4">
-                  <Button 
+                  <button 
                     onClick={() => handleWithdraw(investment.investmentId)}
                     className="bg-gold hover:bg-gold/80 text-black font-medium py-1 px-3 rounded text-sm"
                   >
                     Withdraw
-                  </Button>
+                  </button>
                 </td>
               </tr>
             ))}
