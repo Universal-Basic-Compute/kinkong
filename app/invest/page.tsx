@@ -8,6 +8,56 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { TokenDisplay } from '@/utils/tokenDisplay';
 
+// Function to send Telegram notifications
+async function sendTelegramNotification(investmentData: any) {
+  try {
+    const botToken = process.env.NEXT_PUBLIC_TELEGRAM_BOT_TOKEN;
+    const chatId = "-1001699255893"; // The specified chat ID
+    
+    if (!botToken) {
+      console.warn("Telegram bot token not found in environment variables");
+      return false;
+    }
+    
+    // Format wallet address for display
+    const wallet = investmentData.wallet;
+    const walletDisplay = wallet.substring(0, 10) + '...' + wallet.substring(wallet.length - 10);
+    
+    // Create message text
+    const message = `🚀 *New KinKong Investment*
+    
+💰 *Amount*: ${investmentData.amount.toLocaleString()} ${investmentData.token}
+👤 *Investor*: \`${walletDisplay}\`
+⏱ *Date*: ${new Date().toLocaleString()}
+
+🔗 [View Transaction](${investmentData.solscanUrl})
+`;
+    
+    // Send the message
+    const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: message,
+        parse_mode: 'Markdown'
+      }),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Telegram API error: ${response.status}`);
+    }
+    
+    console.log('Telegram notification sent successfully');
+    return true;
+  } catch (error) {
+    console.error('Error sending Telegram notification:', error);
+    return false;
+  }
+}
+
 const USDC_MINT = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'); // Mainnet USDC
 const UBC_MINT = new PublicKey('9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump'); // UBC token
 const COMPUTE_MINT = new PublicKey('B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo'); // COMPUTE token
@@ -465,6 +515,18 @@ export default function Invest() {
           console.error('Failed to create investment record:', await response.text());
         } else {
           console.log('Investment record created successfully');
+          
+          // Send Telegram notification
+          try {
+            await sendTelegramNotification({
+              token: selectedToken,
+              amount: amount,
+              wallet: publicKey.toString(),
+              solscanUrl: `https://solscan.io/tx/${signature}`
+            });
+          } catch (notifyError) {
+            console.error('Failed to send notification, but investment was successful:', notifyError);
+          }
         }
       } catch (error) {
         console.error('Error creating investment record:', error);
