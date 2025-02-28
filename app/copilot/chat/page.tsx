@@ -1,7 +1,7 @@
 'use client';
 export const dynamic = 'force-dynamic';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { askKinKongCopilot } from '@/utils/copilot';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -29,6 +29,9 @@ export default function CopilotChatPage() {
   const [error, setError] = useState<string | null>(null);
   const [screenshot, setScreenshot] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
+  const [typingMessage, setTypingMessage] = useState<string | null>(null);
+  const [displayedParagraphs, setDisplayedParagraphs] = useState<string[]>([]);
+  const [isTyping, setIsTyping] = useState(false);
   const [subscription, setSubscription] = useState<{active: boolean; expiresAt?: string} | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { onboardingData, isCompleted } = useOnboarding();
@@ -68,6 +71,41 @@ export default function CopilotChatPage() {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+  
+  const animateMessageTyping = useCallback((message: string) => {
+    // Split message into paragraphs (by double newlines or markdown headers)
+    const paragraphs = message.split(/\n\n|\n#{1,6} /);
+    const cleanParagraphs = paragraphs.map(p => p.trim()).filter(p => p.length > 0);
+    
+    setTypingMessage(message);
+    setDisplayedParagraphs([]);
+    setIsTyping(true);
+    
+    // Display paragraphs one by one
+    let displayedSoFar: string[] = [];
+    
+    const showNextParagraph = (index: number) => {
+      if (index >= cleanParagraphs.length) {
+        // All paragraphs displayed, finish typing
+        setIsTyping(false);
+        setTypingMessage(null);
+        return;
+      }
+      
+      // Add the next paragraph
+      displayedSoFar = [...displayedSoFar, cleanParagraphs[index]];
+      setDisplayedParagraphs([...displayedSoFar]);
+      
+      // Calculate read time based on paragraph length
+      const readTime = Math.max(800, cleanParagraphs[index].length * 30);
+      
+      // Schedule next paragraph
+      setTimeout(() => showNextParagraph(index + 1), readTime);
+    };
+    
+    // Start displaying paragraphs
+    showNextParagraph(0);
+  }, []);
   
   const handleSelectMission = (missionTitle: string, context: string) => {
     // Add a system message to indicate the mission selection
@@ -162,6 +200,9 @@ export default function CopilotChatPage() {
         timestamp: new Date().toISOString()
       };
       setMessages(prev => [...prev, assistantMessage]);
+      
+      // Start typing animation
+      animateMessageTyping(response);
       
       // Clear screenshot after sending
       setScreenshot(null);
