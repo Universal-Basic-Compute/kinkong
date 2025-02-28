@@ -56,10 +56,12 @@ interface InvestmentsTableProps {
   isLoading: boolean;
 }
 
-export function InvestmentsTable({ investments, latestSnapshot, isLoading }: InvestmentsTableProps) {
-  // Add state for sorting
+export function InvestmentsTable({ investments: propInvestments, latestSnapshot, isLoading }: InvestmentsTableProps) {
+  // Add state for sorting and local data management
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [localInvestments, setLocalInvestments] = useState<Investment[]>(propInvestments || []);
+  const [isLoadingData, setIsLoadingData] = useState(true);
 
   useEffect(() => {
     async function fetchInvestments() {
@@ -70,11 +72,11 @@ export function InvestmentsTable({ investments, latestSnapshot, isLoading }: Inv
         if (!response.ok) throw new Error('Failed to fetch investments');
         const data = await response.json();
         console.log('Fetched investments data:', data.length, 'records');
-        setInvestments(data);
+        setLocalInvestments(data);
       } catch (error) {
         console.error('Error fetching investments:', error);
       } finally {
-        setIsLoading(false);
+        setIsLoadingData(false);
       }
     }
 
@@ -132,7 +134,7 @@ export function InvestmentsTable({ investments, latestSnapshot, isLoading }: Inv
 
   return (
     <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
-      {isLoading ? (
+      {isLoading || isLoadingData ? (
         <div className="text-center">Loading investors...</div>
       ) : (
         <>
@@ -162,7 +164,7 @@ export function InvestmentsTable({ investments, latestSnapshot, isLoading }: Inv
                 </tr>
               </thead>
               <tbody>
-                {investments
+                {localInvestments
                   .filter(validateInvestment)
                   .sort(sortInvestments) // Use the new sort function
                   .map((investment) => (
