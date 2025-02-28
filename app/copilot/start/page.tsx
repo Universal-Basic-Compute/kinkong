@@ -33,6 +33,19 @@ function StartPageContent() {
     }
   }, [isCompleted]);
 
+  // Add automatic redirection after saving is complete
+  useEffect(() => {
+    // Check if saving is complete and there are no errors
+    if (!isSaving && saveError === null) {
+      // Add a short delay before redirecting to ensure data is saved
+      const redirectTimer = setTimeout(() => {
+        router.push('/copilot/chat');
+      }, 1500);
+      
+      return () => clearTimeout(redirectTimer);
+    }
+  }, [isSaving, saveError, router]);
+
   const steps = [
     {
       title: "Download the extension files",
