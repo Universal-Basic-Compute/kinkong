@@ -254,7 +254,7 @@ def generate_reply_with_claude(mention_text: str, username: str) -> Optional[str
         
         system_prompt = """You are KinKong, a cryptocurrency trading bot on X (formerly Twitter).
         Generate friendly, professional replies to mentions.
-        Keep responses concise (under 280 characters) and relevant to trading/crypto.
+        Keep responses concise but informative and relevant to trading/crypto.
         Use emojis appropriately.
         Never give financial advice or specific trading recommendations.
         If users ask about specific trades or signals, direct them to follow @kinkong_ubc for updates."""
@@ -278,10 +278,6 @@ def generate_reply_with_claude(mention_text: str, username: str) -> Optional[str
         # Extract and clean the reply text
         reply_text = message.content[0].text.strip()
         
-        # Ensure reply is within X's character limit
-        if len(reply_text) > 280:
-            reply_text = reply_text[:277] + "..."
-            
         return reply_text
         
     except Exception as e:
@@ -422,9 +418,8 @@ async def generate_signal_response(token: str, signals: List[Dict], mention_text
         1. Is conversational and engaging
         2. Provides specific insights about ${token}
         3. Mentions your signal(s) and reasoning
-        4. Keeps your response under 240 characters for X/Twitter
-        5. Uses appropriate emojis
-        6. References the current market sentiment when relevant
+        4. Uses appropriate emojis
+        5. References the current market sentiment when relevant
         
         Signal Status: {signal_status}
         
@@ -457,10 +452,6 @@ async def generate_signal_response(token: str, signals: List[Dict], mention_text
         # Extract and clean the reply text
         reply_text = message.content[0].text.strip()
         
-        # Ensure reply is within X's character limit
-        if len(reply_text) > 240:
-            reply_text = reply_text[:237] + "..."
-            
         return reply_text
         
     except Exception as e:
@@ -571,7 +562,6 @@ async def handle_special_token(token: str, mention_id: str, mention_text: str, u
         2. Reference relevant information from UBC's recent tweets if applicable
         3. Answer any questions they might have about ${token} or UBC
         4. Include a call to action to follow @ubc4ai for updates
-        5. Keep your response under 240 characters for X/Twitter
         
         The user's tweet: "{mention_text}"
         """
@@ -593,10 +583,6 @@ async def handle_special_token(token: str, mention_id: str, mention_text: str, u
         # Extract and clean the reply text
         reply_text = message.content[0].text.strip()
         
-        # Ensure reply is within X's character limit
-        if len(reply_text) > 240:
-            reply_text = reply_text[:237] + "..."
-            
         # Send reply tweet
         if await send_tweet_reply(mention_id, reply_text):
             logger.info(f"Sent special token reply for ${token}")
@@ -634,7 +620,7 @@ async def generate_not_bullish_explanation(token: str) -> str:
         
         Generate a polite, professional response explaining why you're not bullish on ${token} right now.
         
-        Keep your response under 240 characters (for X/Twitter) and maintain a helpful, informative tone.
+        Maintain a helpful, informative tone.
         Include 1-2 specific reasons why you're cautious about this token.
         
         Do not give financial advice or specific trading recommendations.
@@ -658,10 +644,6 @@ async def generate_not_bullish_explanation(token: str) -> str:
         # Extract and clean the reply text
         reply_text = message.content[0].text.strip()
         
-        # Ensure reply is within X's character limit
-        if len(reply_text) > 240:
-            reply_text = reply_text[:237] + "..."
-            
         return reply_text
         
     except Exception as e:
