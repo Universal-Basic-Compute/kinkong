@@ -87,8 +87,8 @@ function StartPageContent() {
     }
   ];
 
-  // If onboarding is not completed, show the onboarding flow
-  if (!isCompleted && !showExtensionGuide) {
+  // Always show onboarding first for new users
+  if (!isCompleted) {
     return <OnboardingContainer />;
   }
 
