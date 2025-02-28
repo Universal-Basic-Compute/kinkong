@@ -7,6 +7,7 @@ import { RedistributionsTable } from '@/components/invest/InvestorsTable';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { TokenDisplay } from '@/utils/tokenDisplay';
+import { YourInvestments } from '@/components/dashboard/YourInvestments';
 
 // Function to send Telegram notifications
 async function sendTelegramNotification(investmentData: any) {
@@ -576,6 +577,11 @@ export default function Invest() {
   return (
     <main className="min-h-screen p-4 max-w-6xl mx-auto">
       <h1 className="text-4xl font-bold mb-8 text-center">Invest in KinKong</h1>
+
+      <section className="mb-8">
+        <h2 className="text-2xl font-bold mb-4">Your Investments</h2>
+        <YourInvestments />
+      </section>
 
       <section className="mb-8">
         <h2 className="text-2xl font-bold mb-4">Current Redistributions</h2>
