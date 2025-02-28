@@ -8,8 +8,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       apiKey: process.env.KINKONG_AIRTABLE_API_KEY,
     }).base(process.env.KINKONG_AIRTABLE_BASE_ID!);
     
-    // Get redistributions instead of investments
+    // ONLY use the INVESTOR_REDISTRIBUTIONS table
     const redistributionsTable = base.table('INVESTOR_REDISTRIBUTIONS');
+    
+    // Get the latest 100 redistributions, sorted by createdAt in descending order
     const redistributionsRecords = await redistributionsTable.select({
       maxRecords: 100,
       sort: [{ field: 'createdAt', direction: 'desc' }]
@@ -37,24 +39,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       };
     });
     
-    // Get the latest wallet snapshot for portfolio value
-    const snapshotsTable = base.table('WALLET_SNAPSHOTS');
-    const snapshots = await snapshotsTable.select({
-      maxRecords: 1,
-      sort: [{ field: 'createdAt', direction: 'desc' }]
-    }).all();
-    
-    // Add portfolio value to the response if available
-    let portfolioValue = 0;
-    if (snapshots.length > 0) {
-      portfolioValue = parseFloat(snapshots[0].get('totalValue') || '0');
-      console.log(`Portfolio value: $${portfolioValue}`);
-    }
-    
     console.log(`Returning ${redistributions.length} redistributions`);
     res.status(200).json(redistributions);
   } catch (error) {
-    console.error('Error fetching investments:', error);
-    res.status(500).json({ error: 'Failed to fetch investments' });
+    console.error('Error fetching redistributions:', error);
+    res.status(500).json({ error: 'Failed to fetch redistributions' });
   }
 }
