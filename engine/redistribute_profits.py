@@ -515,14 +515,21 @@ class ProfitRedistributor:
             return []
             
     def save_redistribution_to_airtable(self, profit_distribution, investor_distributions):
-        """Save redistribution data to Airtable REDISTRIBUTIONS table"""
+        """Save redistribution data to Airtable REDISTRIBUTIONS and INVESTOR_REDISTRIBUTIONS tables"""
         self.logger.info("Saving redistribution data to Airtable")
         
         try:
             # Initialize Airtable table for redistributions
             redistributions_table = Airtable(
                 self.base_id,
-                'REDISTRIBUTIONS',
+                'REDISTRIBUTIONS',  # Main redistributions table
+                self.api_key
+            )
+            
+            # Initialize Airtable table for investor redistributions
+            investor_redistributions_table = Airtable(
+                self.base_id,
+                'INVESTOR_REDISTRIBUTIONS',  # Table for investor-specific redistributions
                 self.api_key
             )
             
@@ -548,12 +555,12 @@ class ProfitRedistributor:
             
             self.logger.info(f"Created main redistribution record with ID: {main_record_id}")
             
-            # Now create investor distribution records
+            # Now create investor redistribution records
             investor_records = []
             
             for dist in investor_distributions:
                 investor_record = {
-                    'redistributionId': main_record_id,
+                    'redistributionId': main_record_id,  # Link to the main redistribution record
                     'wallet': dist['wallet'],
                     'investmentValue': dist['investment_value'],
                     'percentage': dist['percentage'],
@@ -563,15 +570,15 @@ class ProfitRedistributor:
                 }
                 investor_records.append({'fields': investor_record})
             
-            # Batch create investor distribution records
+            # Batch create investor redistribution records
             if investor_records:
                 # Airtable has a limit of 10 records per create operation
                 batch_size = 10
                 for i in range(0, len(investor_records), batch_size):
                     batch = investor_records[i:i+batch_size]
-                    redistributions_table.batch_insert(batch)
+                    investor_redistributions_table.batch_insert(batch)  # Use the investor redistributions table
                 
-                self.logger.info(f"Created {len(investor_records)} investor distribution records")
+                self.logger.info(f"Created {len(investor_records)} investor redistribution records")
             
             return main_record_id
         except Exception as e:
