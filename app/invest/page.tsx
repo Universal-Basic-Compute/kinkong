@@ -588,14 +588,7 @@ export default function Invest() {
         <RedistributionsTable />
       </section>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <section>
-            <h2 className="text-2xl font-bold mb-4">Connect Wallet</h2>
-            <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
-              <WalletConnect />
-            </div>
-          </section>
-
+      <div className="max-w-md mx-auto">
           <section>
             <h2 className="text-2xl font-bold mb-4">Invest Now</h2>
             <div className="investment-form bg-black/30 p-6 rounded-lg border border-gold/20">
