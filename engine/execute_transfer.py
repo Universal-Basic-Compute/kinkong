@@ -539,7 +539,7 @@ print(json.dumps(result))
             
             # Get Telegram bot token and use the specified channel ID
             bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
-            chat_id = "-1001699255893"  # Use the specified channel ID
+            chat_id = "-4680349356"  # Updated chat ID for claims
             
             if not bot_token:
                 self.logger.warning("Telegram bot token not found in environment variables")
