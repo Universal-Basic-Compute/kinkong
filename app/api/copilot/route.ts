@@ -37,6 +37,61 @@ async function getUserInvestments(wallet: string | undefined) {
   }
 }
 
+// Function to calculate the total value of user's investments and managed percentage
+async function calculateInvestmentValue(userInvestments: any[], walletPortfolio: any) {
+  if (!userInvestments || !walletPortfolio) {
+    return { totalInvestmentValue: 0, managedPercentage: 0 };
+  }
+  
+  try {
+    console.log(`🔍 Calculating investment values for ${userInvestments.length} investments`);
+    
+    // Get token prices from wallet portfolio for calculation
+    const tokenPrices: Record<string, number> = {};
+    
+    if (walletPortfolio.items && walletPortfolio.items.length > 0) {
+      walletPortfolio.items.forEach((item: any) => {
+        if (item.symbol && item.price) {
+          tokenPrices[item.symbol.toUpperCase()] = parseFloat(item.price);
+        }
+      });
+    }
+    
+    console.log(`Found prices for ${Object.keys(tokenPrices).length} tokens in wallet`);
+    
+    // Calculate total investment value
+    let totalInvestmentValue = 0;
+    
+    for (const investment of userInvestments) {
+      const token = investment.token?.toUpperCase();
+      const amount = parseFloat(investment.amount || 0);
+      
+      if (token && amount > 0 && tokenPrices[token]) {
+        const tokenValue = amount * tokenPrices[token];
+        totalInvestmentValue += tokenValue;
+      }
+    }
+    
+    // Calculate managed percentage
+    const totalWalletValue = parseFloat(walletPortfolio.totalValue || 0);
+    const managedPercentage = totalWalletValue > 0 
+      ? (totalInvestmentValue / totalWalletValue) * 100 
+      : 0;
+    
+    console.log(`Total investment value: $${totalInvestmentValue.toFixed(2)}`);
+    console.log(`Total wallet value: $${totalWalletValue.toFixed(2)}`);
+    console.log(`Managed percentage: ${managedPercentage.toFixed(2)}%`);
+    
+    return { 
+      totalInvestmentValue, 
+      managedPercentage 
+    };
+  } catch (error) {
+    console.error('❌ Error calculating investment values:', error);
+    return { totalInvestmentValue: 0, managedPercentage: 0 };
+  }
+}
+
 // Function to fetch wallet portfolio from Birdeye API
 async function getBirdeyeWalletPortfolio(wallet: string) {
   try {
@@ -332,6 +387,13 @@ export async function POST(request: NextRequest) {
       console.log(`🔍 User investments fetch result: ${userInvestments ? `Success (${userInvestments.length} investments)` : 'No investments found'}`);
     }
 
+    // Calculate investment values and managed percentage if we have both investments and wallet portfolio
+    let investmentValues = { totalInvestmentValue: 0, managedPercentage: 0 };
+    if (userInvestments && walletPortfolio) {
+      investmentValues = await calculateInvestmentValue(userInvestments, walletPortfolio);
+      console.log(`🔍 Investment calculation result: $${investmentValues.totalInvestmentValue.toFixed(2)} (${investmentValues.managedPercentage.toFixed(2)}% of wallet)`);
+    }
+
     // Prepare full context with user data, wallet portfolio, investments, and mission
     const fullContext = {
       request: requestBody,
@@ -340,6 +402,7 @@ export async function POST(request: NextRequest) {
       userData: userData, // Add user data to context
       walletPortfolio: walletPortfolio, // Add wallet portfolio to context
       userInvestments: userInvestments, // Add user investments to context
+      investmentValues: investmentValues, // Add investment values to context
       mission: mission // Add mission to context
     };
 
