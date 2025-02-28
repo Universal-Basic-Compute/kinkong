@@ -686,6 +686,27 @@ export default function Invest() {
                 </div>
               </div>
             </section>
+            
+            {/* Add disclaimer card below the investment card */}
+            <div className="mt-4">
+              <div className="bg-black/20 p-4 rounded-lg border border-gray-800">
+                <h3 className="text-xs font-medium text-gray-400 mb-2">Important Risk Disclosure</h3>
+                <div className="text-xs text-gray-500 space-y-2">
+                  <p>
+                    Investing in cryptocurrency assets involves significant risk and may result in partial or total loss of your investment. Past performance is not indicative of future results.
+                  </p>
+                  <p>
+                    No returns or profits are guaranteed. The value of your investment can fluctuate significantly due to market volatility, liquidity risks, regulatory changes, and other factors beyond our control.
+                  </p>
+                  <p>
+                    The redistribution mechanism described is subject to change and depends on the performance of the underlying portfolio. Withdrawals may be subject to network conditions and liquidity constraints.
+                  </p>
+                  <p>
+                    This is not financial advice. Please conduct your own research and consider consulting with a financial professional before investing. Only invest what you can afford to lose.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
