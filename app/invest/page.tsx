@@ -587,7 +587,7 @@ export default function Invest() {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-bold mb-4">Current Redistributions</h2>
+            <h2 className="text-2xl font-bold mb-4">Latest Redistributions</h2>
             <RedistributionsTable />
           </section>
         </div>
