@@ -18,6 +18,8 @@ export interface OnboardingData {
   interests: string[];
   incomeSource: string;
   riskTolerance: string;
+  timeframe: string;
+  goals: string[];
   completed: boolean;
 }
 
@@ -27,6 +29,8 @@ const defaultOnboardingData: OnboardingData = {
   interests: [],
   incomeSource: '',
   riskTolerance: '',
+  timeframe: '',
+  goals: [],
   completed: false
 };
 
