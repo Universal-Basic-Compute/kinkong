@@ -38,7 +38,7 @@ function StartPageContent() {
     {
       title: "Download the extension files",
       content: (
-        <div>
+        <>
           Download the KinKong Copilot extension files{' '}
           <a 
             href="https://github.com/Universal-Basic-Compute/kinkong-copilot/raw/refs/heads/main/kinkong-copilot.zip"
@@ -48,7 +48,7 @@ function StartPageContent() {
           >
             here
           </a>.
-        </div>
+        </>
       ),
       code: null
     },
@@ -60,7 +60,7 @@ function StartPageContent() {
     {
       title: "Open Chrome Extensions",
       content: (
-        <div>
+        <>
           Open Chrome and navigate to{' '}
           <a 
             href="chrome://extensions"
@@ -71,7 +71,7 @@ function StartPageContent() {
             chrome://extensions
           </a>
           {' '}or click on the puzzle piece icon and select 'Manage Extensions'.
-        </div>
+        </>
       ),
       code: null
     },
