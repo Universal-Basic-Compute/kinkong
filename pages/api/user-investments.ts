@@ -177,6 +177,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           ubcPrice
         );
         
+        console.log(`Calculated UBC return for user investment ${investment.investmentId}: ${calculatedReturns.ubcReturn} UBC (${calculatedReturns.return} USDC / ${ubcPrice} UBC price)`);
+        
         return {
           ...investment,
           return: calculatedReturns.return,
@@ -187,6 +189,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       
       return investment;
     });
+    
+    // Add debugging information
+    console.log(`User investments with returns: ${investmentsWithReturns.length}`);
+    console.log(`User investments with calculated returns: ${investmentsWithReturns.filter(inv => inv.isCalculated).length}`);
+    console.log(`User investments with undefined ubcReturn: ${investmentsWithReturns.filter(inv => inv.ubcReturn === undefined).length}`);
     
     res.status(200).json(investmentsWithReturns);
   } catch (error) {

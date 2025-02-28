@@ -72,6 +72,21 @@ export function InvestmentsTable({ investments: propInvestments, latestSnapshot,
         if (!response.ok) throw new Error('Failed to fetch investments');
         const data = await response.json();
         console.log('Fetched investments data:', data.length, 'records');
+        
+        // Log how many investments have ubcReturn defined
+        const withReturn = data.filter(inv => inv.ubcReturn !== undefined).length;
+        console.log(`Investments with defined ubcReturn: ${withReturn}/${data.length}`);
+        
+        // Log a sample investment
+        if (data.length > 0) {
+          console.log('Sample investment:', {
+            id: data[0].investmentId,
+            ubcReturn: data[0].ubcReturn,
+            return: data[0].return,
+            isCalculated: data[0].isCalculated
+          });
+        }
+        
         setLocalInvestments(data);
       } catch (error) {
         console.error('Error fetching investments:', error);

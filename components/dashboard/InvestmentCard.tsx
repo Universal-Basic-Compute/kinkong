@@ -124,7 +124,7 @@ export function InvestmentCard() {
             </div>
             
             {/* Add redistribution information if available */}
-            {investment.ubcReturn !== undefined && (
+            {investment.ubcReturn !== undefined ? (
               <div className="mt-2 text-sm">
                 <p className="flex justify-between">
                   <span className="text-gray-400">Latest Return:</span>
@@ -143,6 +143,13 @@ export function InvestmentCard() {
                     {new Date(investment.redistributionDate).toLocaleDateString()}
                   </p>
                 )}
+              </div>
+            ) : (
+              <div className="mt-2 text-sm">
+                <p className="flex justify-between">
+                  <span className="text-gray-400">Latest Return:</span>
+                  <span className="text-gray-400">Calculating...</span>
+                </p>
               </div>
             )}
           </div>

@@ -201,6 +201,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return investment;
     });
     
+    // Add debugging information
+    console.log(`Investments with returns: ${investmentsWithReturns.length}`);
+    console.log(`Investments with calculated returns: ${investmentsWithReturns.filter(inv => inv.isCalculated).length}`);
+    console.log(`Investments with undefined ubcReturn: ${investmentsWithReturns.filter(inv => inv.ubcReturn === undefined).length}`);
+
+    // Log a sample investment with calculated returns
+    const sampleCalculated = investmentsWithReturns.find(inv => inv.isCalculated);
+    if (sampleCalculated) {
+      console.log('Sample calculated investment:', {
+        id: sampleCalculated.investmentId,
+        ubcReturn: sampleCalculated.ubcReturn,
+        return: sampleCalculated.return,
+        isCalculated: sampleCalculated.isCalculated
+      });
+    }
+    
     console.log(`Returning ${investmentsWithReturns.length} investments`);
     res.status(200).json(investmentsWithReturns);
   } catch (error) {
