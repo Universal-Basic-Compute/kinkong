@@ -46,6 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         solscanUrl: record.get('solscanUrl') || '',
         date: record.get('createdAt') || '',
         wallet: wallet || '',
+        username: record.get('username') || '',  // Add username field
         // Add redistribution data if available
         ubcReturn: redistribution ? redistribution.ubcAmount : undefined,
         return: redistribution ? redistribution.amount : undefined,

@@ -40,6 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         usdAmount: parseFloat(record.get('usdAmount') || '0'),
         solscanUrl: record.get('solscanUrl') || '',
         date: record.get('createdAt') || '',
+        username: record.get('username') || '',  // Add username field
         // Add redistribution data if available
         ubcReturn: latestRedistribution ? parseFloat(latestRedistribution.get('ubcAmount') || '0') : undefined,
         return: latestRedistribution ? parseFloat(latestRedistribution.get('amount') || '0') : undefined,
