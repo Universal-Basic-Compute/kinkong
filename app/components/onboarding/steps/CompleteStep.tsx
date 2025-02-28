@@ -13,41 +13,48 @@ const CompleteStep: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  // Save onboarding data to backend
+  // Save onboarding data to backend - only when wallet is connected
   useEffect(() => {
-    const saveOnboardingData = async () => {
-      try {
-        console.log('Auto-save triggered in useEffect');
-        setIsSaving(true);
-        setSaveError(null);
-        
-        // Save data to Airtable USERS table
-        console.log('Saving onboarding data:', onboardingData);
-        
-        const walletAddress = publicKey ? publicKey.toString() : undefined;
-        console.log('Using wallet address for auto-save:', walletAddress || 'none');
-        
-        const success = await saveUserData(walletAddress);
-        console.log('Auto-save result:', success);
-        
-        if (!success) {
-          setSaveError('Failed to save your preferences. You can still continue, but your settings might not be saved.');
+    if (publicKey) {
+      const saveOnboardingData = async () => {
+        try {
+          console.log('Auto-save triggered in useEffect');
+          setIsSaving(true);
+          setSaveError(null);
+          
+          // Save data to Airtable USERS table
+          console.log('Saving onboarding data:', onboardingData);
+          
+          const walletAddress = publicKey.toString();
+          console.log('Using wallet address for auto-save:', walletAddress);
+          
+          const success = await saveUserData(walletAddress);
+          console.log('Auto-save result:', success);
+          
+          if (!success) {
+            setSaveError('Failed to save your preferences. Please try again.');
+          }
+        } catch (error) {
+          console.error('Error in auto-save:', error);
+          setSaveError('An error occurred while saving your preferences.');
+        } finally {
+          setIsSaving(false);
         }
-      } catch (error) {
-        console.error('Error in auto-save:', error);
-        setSaveError('An error occurred while saving your preferences.');
-      } finally {
-        setIsSaving(false);
-      }
-    };
+      };
 
-    saveOnboardingData();
+      saveOnboardingData();
+    }
   }, [onboardingData, publicKey, saveUserData]);
 
   // No automatic redirection - let the user click the button
 
   // Add a direct call to saveUserData when the button is clicked
   const handleSaveData = async () => {
+    if (!publicKey) {
+      setSaveError('Please connect your wallet to continue.');
+      return;
+    }
+    
     console.log('Manual save triggered - button clicked');
     setIsSaving(true);
     setSaveError(null); // Reset any previous errors
@@ -59,8 +66,8 @@ const CompleteStep: React.FC = () => {
       return;
     }
     
-    const walletAddress = publicKey ? publicKey.toString() : undefined;
-    console.log('Using wallet address:', walletAddress || 'none');
+    const walletAddress = publicKey.toString();
+    console.log('Using wallet address:', walletAddress);
     
     try {
       const success = await saveUserData(walletAddress);
@@ -151,19 +158,23 @@ const CompleteStep: React.FC = () => {
         {isSaving ? 'Saving your preferences...' : 'Redirecting you to KinKong Copilot...'}
       </p>
       
-      {!publicKey && (
+      {!publicKey ? (
         <div className="mb-6 p-4 bg-black/40 rounded-lg border border-gold/20">
-          <p className="text-gray-300 mb-4">Connect your wallet to save your preferences (optional)</p>
+          <p className="text-red-400 mb-4 font-medium">Wallet connection required to continue</p>
           <WalletConnect />
         </div>
+      ) : (
+        <p className="text-gray-400">
+          {isSaving ? 'Saving your preferences...' : 'Ready to start using KinKong Copilot!'}
+        </p>
       )}
       
       <div className="flex justify-center">
         <button
           onClick={handleSaveData}
-          disabled={isSaving}
+          disabled={isSaving || !publicKey}
           className={`px-8 py-3 bg-gradient-to-r from-gold to-amber-500 text-black font-bold rounded-lg 
-            ${isSaving ? 'opacity-70 cursor-not-allowed' : 'hover:scale-105 transition-all duration-300 shadow-lg shadow-gold/20'}`}
+            ${(isSaving || !publicKey) ? 'opacity-70 cursor-not-allowed' : 'hover:scale-105 transition-all duration-300 shadow-lg shadow-gold/20'}`}
         >
           {isSaving ? 'Saving...' : 'Start Using Copilot Now'}
         </button>

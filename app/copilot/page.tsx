@@ -93,7 +93,13 @@ export default function CopilotPage() {
         "Standard response time",
         "Public signals access"
       ],
-      action: () => router.push('/copilot/start'),
+      action: () => {
+        if (!connected) {
+          setError('Please connect your wallet to continue');
+          return;
+        }
+        router.push('/copilot/start');
+      },
       buttonText: "Start Free",
       buttonStyle: "bg-gray-800 hover:bg-gray-700"
     },
@@ -302,6 +308,17 @@ export default function CopilotPage() {
           <div className="max-w-2xl mx-auto">
           </div>
         </div>
+
+        {/* Wallet Connection - Add this section */}
+        {!connected && (
+          <div className="p-6 bg-black/40 border-2 border-gold/40 rounded-lg text-center mb-8">
+            <h2 className="text-xl font-bold mb-4 text-gold">Connect Your Wallet to Continue</h2>
+            <p className="text-gray-300 mb-6">
+              KinKong Copilot requires a connected wallet for personalized trading insights and portfolio analysis.
+            </p>
+            <WalletConnect />
+          </div>
+        )}
 
         {/* Features Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

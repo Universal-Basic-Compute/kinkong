@@ -53,6 +53,23 @@ export default function CopilotChatPage() {
       document.body.classList.remove('no-scroll');
     };
   }, []);
+
+  // Add useEffect to check wallet connection
+  useEffect(() => {
+    // We'll assume if they got to the chat page, they should be allowed to use it
+    // This prevents a redirect loop between start and chat pages
+    
+    checkSubscription();
+    
+    // If wallet is connected, fetch user data
+    if (publicKey) {
+      fetchUserData(publicKey.toString());
+      setLoading(false);
+    } else {
+      // Keep loading state true if wallet is not connected
+      setLoading(true);
+    }
+  }, [publicKey, router]);
   
   const missions = [
     {
@@ -353,8 +370,18 @@ export default function CopilotChatPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen pt-20 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gold"></div>
+      <div className="min-h-screen pt-20 flex flex-col items-center justify-center">
+        {!connected ? (
+          <div className="max-w-md w-full p-6 bg-black/40 border border-gold/20 rounded-lg text-center space-y-6">
+            <h2 className="text-2xl font-bold text-gold">Connect Your Wallet</h2>
+            <p className="text-gray-300 mb-4">
+              Please connect your wallet to use KinKong Copilot. Your wallet is required for personalized trading insights.
+            </p>
+            <WalletConnect />
+          </div>
+        ) : (
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gold"></div>
+        )}
       </div>
     );
   }
