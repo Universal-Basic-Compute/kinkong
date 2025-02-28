@@ -363,6 +363,9 @@ class UBCTransferExecutor:
 
 def main():
     try:
+        # Load environment variables from .env file
+        load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env'))
+        
         # Verify environment variables
         required_vars = [
             'KINKONG_AIRTABLE_BASE_ID',
