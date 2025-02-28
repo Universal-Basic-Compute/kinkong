@@ -536,6 +536,11 @@ class ProfitRedistributor:
             # Create a record for the overall redistribution
             now = datetime.now(timezone.utc).isoformat()
             
+            # Get token prices to convert USD to UBC
+            token_prices = self.get_token_prices()
+            ubc_price = token_prices.get('UBC', 0.001)  # Default to 0.001 if UBC price not available
+            self.logger.info(f"Using UBC price for conversion: ${ubc_price:.6f}")
+            
             # Create the main redistribution record
             main_record = {
                 'createdAt': now,
@@ -559,6 +564,11 @@ class ProfitRedistributor:
             investor_records = []
             
             for dist in investor_distributions:
+                # Convert USD amount to UBC tokens
+                ubc_amount = 0
+                if ubc_price > 0:
+                    ubc_amount = dist['distribution_amount'] / ubc_price
+                
                 investor_record = {
                     'fields': {
                         'redistributionId': main_record_id,  # Link to the main redistribution record
@@ -566,11 +576,14 @@ class ProfitRedistributor:
                         'investmentValue': dist['investment_value'],
                         'percentage': dist['percentage'],
                         'amount': dist['distribution_amount'],
+                        'ubcAmount': ubc_amount,  # Add UBC amount field
                         'status': 'PENDING',  # Initial status
                         'createdAt': now
                     }
                 }
                 investor_records.append(investor_record)
+                
+                self.logger.info(f"Wallet {dist['wallet']}: ${dist['distribution_amount']:.2f} = {ubc_amount:.2f} UBC")
             
             # Create investor redistribution records in batches
             if investor_records:
