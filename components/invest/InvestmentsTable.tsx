@@ -54,7 +54,6 @@ export function InvestmentsTable({ investments, latestSnapshot, isLoading }: Inv
                   <th className="px-4 py-3 text-right font-bold">Initial Investment</th>
                   <th className="px-4 py-3 text-right font-bold">Return</th>
                   <th className="px-4 py-3 text-left font-bold">Date</th>
-                  <th className="px-4 py-3 text-left font-bold">Transaction</th>
                 </tr>
               </thead>
               <tbody>
@@ -124,16 +123,6 @@ export function InvestmentsTable({ investments, latestSnapshot, isLoading }: Inv
                             year: 'numeric'
                           }).replace(/\//g, '/')
                         : 'N/A'}
-                    </td>
-                    <td className="px-4 py-4">
-                      <a 
-                        href={investment.solscanUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-gold hover:text-gold/80 font-medium"
-                      >
-                        View on Solscan
-                      </a>
                     </td>
                   </tr>
                 ))}
