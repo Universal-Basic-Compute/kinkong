@@ -247,7 +247,7 @@ export function InvestmentsTable({ investments: propInvestments, latestSnapshot,
               <p>
                 <span className="text-gray-400">Total Investment:</span> 
                 <span className="text-white ml-2 font-medium">
-                  {Math.floor(investments.reduce((sum, inv) => sum + (inv.usdAmount || 0), 0)).toLocaleString('en-US')}
+                  {Math.floor(localInvestments.reduce((sum, inv) => sum + (inv.usdAmount || 0), 0)).toLocaleString('en-US')}
                 </span> 
                 <span className="text-gray-400">$USDC</span>
               </p>
