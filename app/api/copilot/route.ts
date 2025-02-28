@@ -248,7 +248,7 @@ async function getContextData(code: string) {
     const messages = await messagesTable
       .select({
         filterByFormula: `{code}='${code}'`,
-        maxRecords: 10, // Last 10 messages
+        maxRecords: 20, // Last 20 messages
         sort: [{ field: 'createdAt', direction: 'desc' }]
       })
       .all();
