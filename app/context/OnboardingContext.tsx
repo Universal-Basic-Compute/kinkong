@@ -7,8 +7,8 @@ export enum OnboardingStep {
   WELCOME = 'welcome',
   EXPERIENCE = 'experience',
   INTERESTS = 'interests',
-  GOALS = 'goals',
-  TIMEFRAME = 'timeframe',
+  INCOME_SOURCE = 'income_source',
+  RISK_TOLERANCE = 'risk_tolerance',
   COMPLETE = 'complete'
 }
 
@@ -16,8 +16,8 @@ export enum OnboardingStep {
 export interface OnboardingData {
   experience: string;
   interests: string[];
-  goals: string[];
-  timeframe: string;
+  incomeSource: string;
+  riskTolerance: string;
   completed: boolean;
 }
 
@@ -25,8 +25,8 @@ export interface OnboardingData {
 const defaultOnboardingData: OnboardingData = {
   experience: '',
   interests: [],
-  goals: [],
-  timeframe: '',
+  incomeSource: '',
+  riskTolerance: '',
   completed: false
 };
 
@@ -50,8 +50,8 @@ const stepOrder: OnboardingStep[] = [
   OnboardingStep.WELCOME,
   OnboardingStep.EXPERIENCE,
   OnboardingStep.INTERESTS,
-  OnboardingStep.GOALS,
-  OnboardingStep.TIMEFRAME,
+  OnboardingStep.INCOME_SOURCE,
+  OnboardingStep.RISK_TOLERANCE,
   OnboardingStep.COMPLETE
 ];
 
@@ -124,8 +124,8 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         wallet: walletAddress || null,
         experience: onboardingData.experience,
         interests: onboardingData.interests,
-        goals: onboardingData.goals,
-        timeframe: onboardingData.timeframe,
+        incomeSource: onboardingData.incomeSource,
+        riskTolerance: onboardingData.riskTolerance,
         onboardingCompleted: true,
         onboardingCompletedAt: new Date().toISOString()
       };

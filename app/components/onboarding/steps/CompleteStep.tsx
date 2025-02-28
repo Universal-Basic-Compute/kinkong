@@ -116,23 +116,18 @@ const CompleteStep: React.FC = () => {
           <li className="flex items-start">
             <span className="text-gold mr-2 font-bold">•</span> 
             <div>
-              <span className="font-medium">Goals:</span>{' '}
-              <span className="text-gray-300">
-                {onboardingData.goals.map(goal => {
-                  // Convert kebab-case to Title Case
-                  return goal.split('-')
-                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                    .join(' ');
-                }).join(', ')}
+              <span className="font-medium">Income Source:</span>{' '}
+              <span className="text-gray-300 capitalize">
+                {onboardingData.incomeSource.split('-').join(' ')}
               </span>
             </div>
           </li>
           <li className="flex items-start">
             <span className="text-gold mr-2 font-bold">•</span> 
             <div>
-              <span className="font-medium">Timeframe:</span>{' '}
+              <span className="font-medium">Risk Tolerance:</span>{' '}
               <span className="text-gray-300 capitalize">
-                {onboardingData.timeframe.split('-').join(' ')}
+                {onboardingData.riskTolerance.split('-').join(' ')}
               </span>
             </div>
           </li>

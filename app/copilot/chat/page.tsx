@@ -199,19 +199,15 @@ export default function CopilotChatPage() {
               </span>
             </li>
             <li>
-              <span className="font-medium">Goals:</span>{' '}
-              <span className="text-gray-300">
-                {onboardingData.goals.map(goal => {
-                  return goal.split('-')
-                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                    .join(' ');
-                }).join(', ')}
+              <span className="font-medium">Income Source:</span>{' '}
+              <span className="text-gray-300 capitalize">
+                {onboardingData.incomeSource ? onboardingData.incomeSource.split('-').join(' ') : 'Not specified'}
               </span>
             </li>
             <li>
-              <span className="font-medium">Timeframe:</span>{' '}
+              <span className="font-medium">Risk Tolerance:</span>{' '}
               <span className="text-gray-300 capitalize">
-                {onboardingData.timeframe.split('-').join(' ')}
+                {onboardingData.riskTolerance ? onboardingData.riskTolerance.split('-').join(' ') : 'Not specified'}
               </span>
             </li>
           </ul>

@@ -6,8 +6,8 @@ import { useOnboarding, OnboardingStep } from '@/app/context/OnboardingContext';
 import WelcomeStep from './steps/WelcomeStep';
 import ExperienceStep from './steps/ExperienceStep';
 import InterestsStep from './steps/InterestsStep';
-import GoalsStep from './steps/GoalsStep';
-import TimeframeStep from './steps/TimeframeStep';
+import IncomeSourceStep from './steps/IncomeSourceStep';
+import RiskToleranceStep from './steps/RiskToleranceStep';
 import CompleteStep from './steps/CompleteStep';
 import OnboardingProgress from './OnboardingProgress';
 
@@ -30,10 +30,10 @@ const OnboardingContainer: React.FC = () => {
         return <ExperienceStep />;
       case OnboardingStep.INTERESTS:
         return <InterestsStep />;
-      case OnboardingStep.GOALS:
-        return <GoalsStep />;
-      case OnboardingStep.TIMEFRAME:
-        return <TimeframeStep />;
+      case OnboardingStep.INCOME_SOURCE:
+        return <IncomeSourceStep />;
+      case OnboardingStep.RISK_TOLERANCE:
+        return <RiskToleranceStep />;
       case OnboardingStep.COMPLETE:
         return <CompleteStep />;
       default:

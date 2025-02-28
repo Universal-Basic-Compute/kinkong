@@ -51,8 +51,8 @@ export async function POST(request: NextRequest) {
           fields: {
             experience: userData.experience,
             interests: Array.isArray(userData.interests) ? userData.interests.join(',') : userData.interests,
-            goals: Array.isArray(userData.goals) ? userData.goals.join(',') : userData.goals,
-            timeframe: userData.timeframe,
+            incomeSource: userData.incomeSource,
+            riskTolerance: userData.riskTolerance,
             onboardingCompleted: true,
             onboardingCompletedAt: userData.onboardingCompletedAt || new Date().toISOString()
           }
@@ -71,8 +71,8 @@ export async function POST(request: NextRequest) {
         wallet: userData.wallet || null,
         experience: userData.experience,
         interests: Array.isArray(userData.interests) ? userData.interests.join(',') : userData.interests,
-        goals: Array.isArray(userData.goals) ? userData.goals.join(',') : userData.goals,
-        timeframe: userData.timeframe
+        incomeSource: userData.incomeSource,
+        riskTolerance: userData.riskTolerance
       });
       
       const newUser = await usersTable.create([
@@ -81,8 +81,8 @@ export async function POST(request: NextRequest) {
             wallet: userData.wallet || null,
             experience: userData.experience,
             interests: Array.isArray(userData.interests) ? userData.interests.join(',') : userData.interests,
-            goals: Array.isArray(userData.goals) ? userData.goals.join(',') : userData.goals,
-            timeframe: userData.timeframe,
+            incomeSource: userData.incomeSource,
+            riskTolerance: userData.riskTolerance,
             onboardingCompleted: true,
             onboardingCompletedAt: userData.onboardingCompletedAt || new Date().toISOString(),
             createdAt: new Date().toISOString()
