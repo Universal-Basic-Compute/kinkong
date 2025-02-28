@@ -291,8 +291,8 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
                     <td className="px-4 py-4 text-center">
                       <button
                         className={`px-4 py-2 rounded-md ${
-                          investor.claimed 
-                            ? 'bg-gray-600 text-gray-300 cursor-not-allowed' 
+                          investor.claimed || !publicKey || publicKey.toString() !== investor.wallet || claimingId === investor.investmentId
+                            ? 'bg-gray-600 text-gray-300 cursor-not-allowed opacity-50' 
                             : 'bg-gold hover:bg-gold/80 text-black'
                         }`}
                         disabled={
