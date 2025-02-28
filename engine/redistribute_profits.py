@@ -514,6 +514,55 @@ class ProfitRedistributor:
             self.logger.error(f"Error calculating investor distributions: {e}")
             return []
             
+    def send_telegram_notification(self, redistribution_id, investor_data):
+        """Send a Telegram notification for an investor redistribution"""
+        try:
+            self.logger.info(f"Sending Telegram notification for investor: {investor_data['wallet']}")
+            
+            # Get Telegram bot token and chat ID from environment variables
+            bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
+            chat_id = os.getenv('TELEGRAM_CHAT_ID')
+            
+            if not bot_token or not chat_id:
+                self.logger.warning("Telegram credentials not found in environment variables")
+                return False
+            
+            # Format wallet address for display
+            wallet = investor_data['wallet']
+            if len(wallet) > 20:
+                wallet_display = wallet[:10] + '...' + wallet[-10:]
+            else:
+                wallet_display = wallet
+            
+            # Create message text
+            message = f"""🎉 *KinKong Profit Redistribution*
+            
+📊 *Investor*: `{wallet_display}`
+💰 *Amount*: ${investor_data['distribution_amount']:.2f}
+🪙 *UBC Amount*: {investor_data['ubcAmount']:.2f} UBC
+📈 *Share*: {investor_data['percentage']:.2f}%
+🆔 *Redistribution ID*: `{redistribution_id}`
+
+Status: Pending ⏳
+"""
+            
+            # Send message via Telegram API
+            telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+            payload = {
+                "chat_id": chat_id,
+                "text": message,
+                "parse_mode": "Markdown"
+            }
+            
+            response = requests.post(telegram_url, json=payload)
+            response.raise_for_status()
+            
+            self.logger.info(f"Telegram notification sent successfully for {wallet_display}")
+            return True
+        except Exception as e:
+            self.logger.error(f"Error sending Telegram notification: {e}")
+            return False
+            
     def save_redistribution_to_airtable(self, profit_distribution, investor_distributions):
         """Save redistribution data to Airtable REDISTRIBUTIONS and INVESTOR_REDISTRIBUTIONS tables"""
         self.logger.info("Saving redistribution data to Airtable")
@@ -581,21 +630,26 @@ class ProfitRedistributor:
                         'createdAt': now
                     }
                 }
-                investor_records.append(investor_record)
+                
+                # Insert the record into Airtable
+                investor_record_result = investor_redistributions_table.insert(investor_record['fields'])
+                
+                # Store the record with the UBC amount for Telegram notification
+                investor_data = {
+                    'wallet': dist['wallet'],
+                    'investment_value': dist['investment_value'],
+                    'percentage': dist['percentage'],
+                    'distribution_amount': dist['distribution_amount'],
+                    'ubcAmount': ubc_amount
+                }
+                
+                # Send Telegram notification for this investor
+                self.send_telegram_notification(main_record_id, investor_data)
                 
                 self.logger.info(f"Wallet {dist['wallet']}: ${dist['distribution_amount']:.2f} = {ubc_amount:.2f} UBC")
+                investor_records.append(investor_record_result)
             
-            # Create investor redistribution records in batches
-            if investor_records:
-                # Airtable has a limit of 10 records per create operation
-                batch_size = 10
-                for i in range(0, len(investor_records), batch_size):
-                    batch = investor_records[i:i+batch_size]
-                    # Process each record individually with insert method
-                    for record in batch:
-                        investor_redistributions_table.insert(record['fields'])
-                
-                self.logger.info(f"Created {len(investor_records)} investor redistribution records")
+            self.logger.info(f"Created {len(investor_records)} investor redistribution records")
             
             return main_record_id
         except Exception as e:
@@ -609,12 +663,15 @@ def main():
             'KINKONG_AIRTABLE_BASE_ID',
             'KINKONG_AIRTABLE_API_KEY',
             'BIRDEYE_API_KEY',
-            'KINKONG_WALLET'
+            'KINKONG_WALLET',
+            'TELEGRAM_BOT_TOKEN',
+            'TELEGRAM_CHAT_ID'
         ]
         
         missing = [var for var in required_vars if not os.getenv(var)]
         if missing:
-            raise Exception(f"Missing environment variables: {', '.join(missing)}")
+            print(f"⚠️ Warning: Missing environment variables: {', '.join(missing)}")
+            print("Telegram notifications may not work without TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID")
         
         # Initialize and run profit redistribution
         redistributor = ProfitRedistributor()
