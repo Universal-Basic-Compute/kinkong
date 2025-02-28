@@ -9,7 +9,7 @@ import { verifySubscription } from '@/utils/subscription';
 import { useOnboarding } from '@/app/context/OnboardingContext';
 import ReactMarkdown from 'react-markdown';
 import Image from 'next/image';
-import MissionSelector from '@/components/copilot/MissionSelector';
+import { WalletConnect } from '@/components/wallet/WalletConnect';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -34,6 +34,57 @@ export default function CopilotChatPage() {
   const [isTyping, setIsTyping] = useState(false);
   const [subscription, setSubscription] = useState<{active: boolean; expiresAt?: string} | null>(null);
   const [currentMission, setCurrentMission] = useState<string | null>(null);
+  
+  const missions = [
+    {
+      id: 'token-discovery',
+      title: '🔍 Token Discovery Mission',
+      description: 'Find promising new tokens with strong fundamentals',
+      context: 'Help me analyze emerging tokens on Solana with strong fundamentals. Let\'s evaluate liquidity, volume trends, and holder distribution to create a watchlist of promising tokens for potential investment.'
+    },
+    {
+      id: 'portfolio-rebalancing',
+      title: '⚖️ Portfolio Rebalancing Strategy',
+      description: 'Optimize your current portfolio allocation',
+      context: 'I need help assessing my current portfolio allocation and performance. Let\'s identify underperforming assets and potential replacements to create a step-by-step rebalancing plan based on current market conditions.'
+    },
+    {
+      id: 'technical-analysis',
+      title: '📊 Technical Analysis Workshop',
+      description: 'Learn to identify key chart patterns',
+      context: 'I want to learn how to identify key chart patterns on specific tokens. Let\'s practice support/resistance identification and develop a personalized trading strategy based on technical indicators.'
+    },
+    {
+      id: 'risk-management',
+      title: '🛡️ Risk Management Optimization',
+      description: 'Improve your position sizing and stop-loss strategies',
+      context: 'Help me evaluate my current position sizing and stop-loss strategies. I want to calculate optimal risk-reward ratios based on volatility and create a risk management framework aligned with my risk tolerance.'
+    },
+    {
+      id: 'defi-yield',
+      title: '💰 DeFi Yield Optimization',
+      description: 'Find the best yield opportunities on Solana',
+      context: 'Let\'s discover the highest-yielding DeFi protocols on Solana. I want to compare risks and rewards across lending platforms and liquidity pools to develop a yield farming strategy based on my risk profile.'
+    },
+    {
+      id: 'sentiment-analysis',
+      title: '🔮 Market Sentiment Analysis',
+      description: 'Track social media trends and community sentiment',
+      context: 'I want to track social media trends and community sentiment for key tokens. Let\'s correlate sentiment indicators with price action and create alerts for significant sentiment shifts that could impact prices.'
+    },
+    {
+      id: 'swing-trading',
+      title: '🔄 Swing Trading Setup',
+      description: 'Identify potential swing trading opportunities',
+      context: 'Help me identify potential swing trading opportunities in the current market. Let\'s analyze optimal entry and exit points with specific price targets and develop a tracking system for managing multiple swing positions.'
+    },
+    {
+      id: 'on-chain-data',
+      title: '🐋 On-Chain Data Investigation',
+      description: 'Explore whale wallet movements and smart money flows',
+      context: 'Let\'s explore whale wallet movements and smart money flows. I want to analyze token distribution and concentration metrics to identify potential accumulation or distribution patterns before they affect price.'
+    }
+  ];
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { onboardingData, isCompleted } = useOnboarding();
   const [loading, setLoading] = useState(true);
@@ -250,52 +301,27 @@ export default function CopilotChatPage() {
   }
 
   return (
-    <div className="min-h-screen pt-20 px-4">
-      <div className="max-w-4xl mx-auto">
-        {/* User Preferences Summary */}
-        <div className="mb-6 p-4 bg-black/40 rounded-lg border border-gold/10">
-          <h2 className="text-lg font-semibold text-gold mb-2">Your Personalized Settings</h2>
-          <ul className="space-y-2">
-            <li>
-              <span className="font-medium">Experience:</span>{' '}
-              <span className="text-gray-300 capitalize">
-                {onboardingData.experience || 'Not specified'}
-              </span>
-            </li>
-            <li>
-              <span className="font-medium">Interests:</span>{' '}
-              <span className="text-gray-300">
-                {onboardingData.interests && onboardingData.interests.length > 0 
-                  ? onboardingData.interests.map(interest => {
-                      return interest.split('-')
-                        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                        .join(' ');
-                    }).join(', ')
-                  : 'Not specified'}
-              </span>
-            </li>
-            <li>
-              <span className="font-medium">Income Source:</span>{' '}
-              <span className="text-gray-300 capitalize">
-                {onboardingData.incomeSource ? onboardingData.incomeSource.split('-').join(' ') : 'Not specified'}
-              </span>
-            </li>
-            <li>
-              <span className="font-medium">Risk Tolerance:</span>{' '}
-              <span className="text-gray-300 capitalize">
-                {onboardingData.riskTolerance ? onboardingData.riskTolerance.split('-').join(' ') : 'Not specified'}
-              </span>
-            </li>
-          </ul>
+    <div className="h-screen pt-16 flex overflow-hidden">
+      {/* Left Sidebar - Missions */}
+      <div className="w-64 bg-black/40 border-r border-gold/20 p-4 overflow-y-auto">
+        <h2 className="text-lg font-semibold text-gold mb-3">Select a Mission</h2>
+        <div className="space-y-3">
+          {missions.map((mission) => (
+            <div
+              key={mission.id}
+              onClick={() => handleSelectMission(mission.title, mission.context, mission.id)}
+              className="p-3 bg-black/50 border border-gold/20 rounded-lg cursor-pointer hover:bg-gold/10 hover:border-gold/40 transition-all"
+            >
+              <h3 className="font-medium text-gold">{mission.title}</h3>
+              <p className="text-sm text-gray-400 mt-1">{mission.description}</p>
+            </div>
+          ))}
         </div>
+      </div>
 
-        {/* Mission Selector */}
-        <MissionSelector onSelectMission={handleSelectMission} />
-
-        {/* Chat Interface */}
-        <div className="bg-black/50 border border-gold/20 rounded-lg h-[600px] flex flex-col">
-          {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* Center - Chat Interface */}
+      <div className="flex-1 flex flex-col h-full">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((message, index) => (
               <div
                 key={index}
@@ -382,40 +408,40 @@ export default function CopilotChatPage() {
               </div>
             )}
             <div ref={messagesEndRef} />
-          </div>
+        </div>
 
-          {/* Input Area */}
-          <form onSubmit={handleSubmit} className="border-t border-gold/20 p-4">
-            {error && (
-              <div className="text-red-400 text-sm mb-2">
-                {error}
+        {/* Input Area */}
+        <div className="border-t border-gold/20 p-4">
+          {error && (
+            <div className="text-red-400 text-sm mb-2">
+              {error}
+            </div>
+          )}
+          
+          {/* Screenshot preview */}
+          {screenshot && (
+            <div className="mb-3 relative">
+              <div className="border border-gold/30 rounded-lg overflow-hidden p-2 bg-black/30">
+                <img 
+                  src={screenshot} 
+                  alt="Screenshot preview" 
+                  className="max-h-40 w-auto mx-auto rounded"
+                />
+                <button
+                  type="button"
+                  onClick={clearScreenshot}
+                  className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1 hover:bg-red-700 transition-colors"
+                  title="Remove screenshot"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
               </div>
-            )}
-            
-            {/* Screenshot preview */}
-            {screenshot && (
-              <div className="mb-3 relative">
-                <div className="border border-gold/30 rounded-lg overflow-hidden p-2 bg-black/30">
-                  <img 
-                    src={screenshot} 
-                    alt="Screenshot preview" 
-                    className="max-h-40 w-auto mx-auto rounded"
-                  />
-                  <button
-                    type="button"
-                    onClick={clearScreenshot}
-                    className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1 hover:bg-red-700 transition-colors"
-                    title="Remove screenshot"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            )}
-            
-            <div className="flex gap-2">
+            </div>
+          )}
+          
+          <form onSubmit={handleSubmit} className="flex gap-2">
               <input
                 type="text"
                 value={input}
@@ -463,8 +489,77 @@ export default function CopilotChatPage() {
               >
                 {isLoading ? 'Thinking...' : 'Send'}
               </button>
-            </div>
           </form>
+        </div>
+      </div>
+
+      {/* Right Sidebar - User Preferences */}
+      <div className="w-72 bg-black/40 border-l border-gold/20 p-4 overflow-y-auto">
+        <h2 className="text-lg font-semibold text-gold mb-3">Your Personalized Settings</h2>
+        <ul className="space-y-4">
+          <li>
+            <h3 className="font-medium text-sm uppercase text-gray-400">Experience</h3>
+            <p className="text-gray-300 capitalize">
+              {onboardingData.experience || 'Not specified'}
+            </p>
+          </li>
+          <li>
+            <h3 className="font-medium text-sm uppercase text-gray-400">Interests</h3>
+            <p className="text-gray-300">
+              {onboardingData.interests && onboardingData.interests.length > 0 
+                ? onboardingData.interests.map(interest => {
+                    return interest.split('-')
+                      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                      .join(' ');
+                  }).join(', ')
+                : 'Not specified'}
+            </p>
+          </li>
+          <li>
+            <h3 className="font-medium text-sm uppercase text-gray-400">Income Source</h3>
+            <p className="text-gray-300 capitalize">
+              {onboardingData.incomeSource ? onboardingData.incomeSource.split('-').join(' ') : 'Not specified'}
+            </p>
+          </li>
+          <li>
+            <h3 className="font-medium text-sm uppercase text-gray-400">Risk Tolerance</h3>
+            <p className="text-gray-300 capitalize">
+              {onboardingData.riskTolerance ? onboardingData.riskTolerance.split('-').join(' ') : 'Not specified'}
+            </p>
+          </li>
+        </ul>
+
+        {/* Wallet Connection Status */}
+        <div className="mt-6 p-3 bg-black/30 rounded-lg border border-gold/10">
+          <h3 className="font-medium text-sm uppercase text-gray-400 mb-2">Wallet Status</h3>
+          {publicKey ? (
+            <div className="flex items-center text-green-400">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-sm">Connected: {publicKey.toString().substring(0, 4)}...{publicKey.toString().substring(publicKey.toString().length - 4)}</span>
+            </div>
+          ) : (
+            <div className="text-center">
+              <p className="text-sm text-gray-400 mb-2">Connect to access portfolio features</p>
+              <WalletConnect />
+            </div>
+          )}
+        </div>
+
+        {/* Subscription Status */}
+        <div className="mt-4 p-3 bg-black/30 rounded-lg border border-gold/10">
+          <h3 className="font-medium text-sm uppercase text-gray-400 mb-2">Subscription</h3>
+          <div className="flex items-center text-gold">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span className="text-sm">
+              {subscription?.expiresAt 
+                ? `Active until ${new Date(subscription.expiresAt).toLocaleDateString()}` 
+                : 'Free Tier'}
+            </span>
+          </div>
         </div>
       </div>
     </div>
