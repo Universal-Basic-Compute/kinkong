@@ -31,13 +31,13 @@ export async function GET(request: NextRequest) {
     
     // Map records to investments
     const investments = records.map(record => {
-      const token = record.get('token') as string || 'USDC';
+      const token = record.get('token') as string;
       const amount = record.get('amount') as number;
       
       return {
         investmentId: record.id,
         amount: amount,
-        token: token,
+        token: token || 'USDC', // Default to USDC only if token is null/undefined
         date: record.get('createdAt') as string,
         solscanUrl: record.get('solscanUrl') as string,
         usdAmount: record.get('usdAmount') as number || null

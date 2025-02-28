@@ -107,7 +107,7 @@ export function InvestmentCard() {
                   maximumFractionDigits: 0
                 })} 
                 <span className={getTokenClass(investment.token)}>
-                  ${investment.token || 'USDC'}
+                  ${investment.token}
                 </span>
               </span>
               {investment.usdAmount && (
@@ -188,6 +188,10 @@ function getTokenClass(token: string): string {
       return 'metallic-text-compute';
     case 'SOL':
       return 'metallic-text-sol';
+    case 'USDC':
+      return 'metallic-text-usdc';
+    case 'USDT':
+      return 'metallic-text-usdt';
     default:
       return 'metallic-text-argent';
   }
