@@ -675,7 +675,7 @@ export default function Invest() {
                     </li>
                     <li className="flex items-start">
                       <span className="text-gold mr-2">•</span>
-                      <span>2% fee on transactions</span>
+                      <span>2% fee on in-out transactions</span>
                     </li>
                     <li className="flex items-start">
                       <span className="text-gold mr-2">•</span>
