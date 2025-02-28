@@ -67,8 +67,22 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const savedStep = localStorage.getItem('onboardingStep');
     const completionStatus = localStorage.getItem('onboardingCompleted');
     
+    console.log('Loading saved onboarding data:', savedData);
+    
     if (savedData) {
-      setOnboardingData(JSON.parse(savedData));
+      try {
+        const parsedData = JSON.parse(savedData);
+        console.log('Parsed onboarding data:', parsedData);
+        
+        // Ensure required fields exist
+        if (parsedData.experience && parsedData.interests && parsedData.interests.length > 0) {
+          setOnboardingData(parsedData);
+        } else {
+          console.warn('Saved onboarding data is missing required fields');
+        }
+      } catch (e) {
+        console.error('Error parsing saved onboarding data:', e);
+      }
     }
     
     if (savedStep && Object.values(OnboardingStep).includes(savedStep as OnboardingStep)) {

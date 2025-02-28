@@ -52,6 +52,13 @@ const CompleteStep: React.FC = () => {
     setIsSaving(true);
     setSaveError(null); // Reset any previous errors
     
+    // Check if required fields are present
+    if (!onboardingData.experience || !onboardingData.interests || onboardingData.interests.length === 0) {
+      setSaveError('Please complete all required fields before continuing.');
+      setIsSaving(false);
+      return;
+    }
+    
     const walletAddress = publicKey ? publicKey.toString() : undefined;
     console.log('Using wallet address:', walletAddress || 'none');
     
@@ -63,7 +70,7 @@ const CompleteStep: React.FC = () => {
         setSaveError('Failed to save your preferences. Please try again.');
       } else {
         // If successful, redirect to chat
-        router.push('/copilot/chat');
+        router.push('/copilot/chat?code=default');
       }
     } catch (error) {
       console.error('Error in manual save:', error);

@@ -187,15 +187,22 @@ export default function CopilotChatPage() {
         <div className="mb-6 p-4 bg-black/40 rounded-lg border border-gold/10">
           <h2 className="text-lg font-semibold text-gold mb-2">Your Personalized Settings</h2>
           <ul className="space-y-2">
-            <li><span className="font-medium">Experience:</span> <span className="text-gray-300 capitalize">{onboardingData.experience}</span></li>
+            <li>
+              <span className="font-medium">Experience:</span>{' '}
+              <span className="text-gray-300 capitalize">
+                {onboardingData.experience || 'Not specified'}
+              </span>
+            </li>
             <li>
               <span className="font-medium">Interests:</span>{' '}
               <span className="text-gray-300">
-                {onboardingData.interests.map(interest => {
-                  return interest.split('-')
-                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                    .join(' ');
-                }).join(', ')}
+                {onboardingData.interests && onboardingData.interests.length > 0 
+                  ? onboardingData.interests.map(interest => {
+                      return interest.split('-')
+                        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                        .join(' ');
+                    }).join(', ')
+                  : 'Not specified'}
               </span>
             </li>
             <li>
