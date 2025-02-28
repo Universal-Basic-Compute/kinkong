@@ -416,7 +416,7 @@ export default function CopilotChatPage() {
                         </div>
                       </div>
                     )}
-                    <ReactMarkdown className="prose prose-invert">
+                    <ReactMarkdown className="prose prose-invert break-words whitespace-pre-wrap">
                       {message.content}
                     </ReactMarkdown>
                   </div>
@@ -432,7 +432,7 @@ export default function CopilotChatPage() {
                         {displayedParagraphs.map((paragraph, pIndex) => (
                           <div key={pIndex} className="flex justify-start">
                             <div className="max-w-[80%] rounded-lg p-3 bg-gray-800/50 text-gray-200">
-                              <ReactMarkdown className="prose prose-invert">
+                              <ReactMarkdown className="prose prose-invert break-words whitespace-pre-wrap">
                                 {paragraph}
                               </ReactMarkdown>
                             </div>
@@ -455,7 +455,7 @@ export default function CopilotChatPage() {
                           paragraph.trim() && (
                             <div key={pIndex} className="flex justify-start">
                               <div className="max-w-[80%] rounded-lg p-3 bg-gray-800/50 text-gray-200">
-                                <ReactMarkdown className="prose prose-invert">
+                                <ReactMarkdown className="prose prose-invert break-words whitespace-pre-wrap">
                                   {paragraph.trim()}
                                 </ReactMarkdown>
                               </div>
@@ -512,13 +512,22 @@ export default function CopilotChatPage() {
           )}
           
           <form onSubmit={handleSubmit} className="flex gap-2">
-              <input
-                type="text"
+              <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  // Allow new line with Shift+Enter, but submit with just Enter
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (input.trim() && !isLoading) {
+                      handleSubmit(e as unknown as React.FormEvent);
+                    }
+                  }
+                }}
                 disabled={isLoading}
-                placeholder="Ask KinKong Copilot..."
-                className="flex-1 bg-black/30 border border-gold/20 rounded-lg px-4 py-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-gold"
+                placeholder="Ask KinKong Copilot... (Shift+Enter for new line)"
+                className="flex-1 bg-black/30 border border-gold/20 rounded-lg px-4 py-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-gold resize-none min-h-[52px] max-h-32 overflow-y-auto"
+                rows={input.split('\n').length > 3 ? 3 : input.split('\n').length || 1}
               />
               
               {/* Screenshot button */}

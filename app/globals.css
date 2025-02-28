@@ -240,6 +240,33 @@ body.no-scroll {
   overflow: hidden;
 }
 
+/* Text wrapping for chat messages */
+.whitespace-pre-wrap {
+  white-space: pre-wrap;
+}
+
+.break-words {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Improve the prose styling for the chat */
+.prose {
+  max-width: none;
+}
+
+.prose pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.prose code {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
 /* Refined Text Effect */
 .electric-text {
   background: linear-gradient(
