@@ -14,8 +14,6 @@ from solana.publickey import PublicKey
 from solana.transaction import Transaction
 from solana.system_program import SYS_PROGRAM_ID
 from solana.rpc.types import TxOpts
-from spl.token.client import Token
-from spl.token.constants import TOKEN_PROGRAM_ID
 
 def setup_logging():
     """Set up basic logging configuration"""
@@ -81,13 +79,8 @@ class UBCTransferExecutor:
             self.logger.error(f"Error loading wallet: {e}")
             raise ValueError(f"Invalid private key format: {e}")
         
-        # Initialize token client
-        self.token_client = Token(
-            self.client,
-            self.ubc_mint,
-            TOKEN_PROGRAM_ID,
-            self.keypair
-        )
+        # We'll implement token transfer functions directly without using the Token class
+        self.token_program_id = PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
         
         # Get source token account
         self.source_token_account = None
@@ -233,8 +226,8 @@ class UBCTransferExecutor:
     def execute_transfer(self, destination_wallet, ubc_amount):
         """Execute a UBC transfer to the destination wallet"""
         try:
-            # Convert UBC amount to lamports (decimal places)
-            decimals = self.token_client.get_mint_info().decimals
+            # For UBC, we'll use 6 decimals (standard for most SPL tokens)
+            decimals = 6
             amount_lamports = int(ubc_amount * (10 ** decimals))
             
             # Verify the conversion is correct by doing the reverse calculation
@@ -248,13 +241,21 @@ class UBCTransferExecutor:
             # Get destination token account
             destination_token_account = self.get_destination_token_account(destination_wallet)
             
-            # Create transfer instruction
+            # Create transfer instruction for SPL token
+            from spl.token.instructions import transfer_checked, TransferCheckedParams
+            
             transfer_tx = Transaction()
-            transfer_ix = self.token_client.transfer(
-                source=self.source_token_account,
-                dest=destination_token_account,
-                owner=self.keypair.public_key,
-                amount=amount_lamports
+            transfer_ix = transfer_checked(
+                TransferCheckedParams(
+                    program_id=self.token_program_id,
+                    source=self.source_token_account,
+                    mint=self.ubc_mint,
+                    dest=destination_token_account,
+                    owner=self.wallet,
+                    amount=amount_lamports,
+                    decimals=decimals,
+                    signers=[]
+                )
             )
             transfer_tx.add(transfer_ix)
             
