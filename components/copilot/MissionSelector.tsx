@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 interface MissionSelectorProps {
-  onSelectMission: (mission: string, context: string) => void;
+  onSelectMission: (mission: string, context: string, missionId: string) => void;
 }
 
 export default function MissionSelector({ onSelectMission }: MissionSelectorProps) {
@@ -84,7 +84,7 @@ export default function MissionSelector({ onSelectMission }: MissionSelectorProp
             <div
               key={mission.id}
               onClick={() => {
-                onSelectMission(mission.title, mission.context);
+                onSelectMission(mission.title, mission.context, mission.id);
                 setIsOpen(false);
               }}
               className="p-3 bg-black/50 border border-gold/20 rounded-lg cursor-pointer hover:bg-gold/10 hover:border-gold/40 transition-all"

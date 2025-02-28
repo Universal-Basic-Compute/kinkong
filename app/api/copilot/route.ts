@@ -41,6 +41,7 @@ interface CopilotRequest {
   code: string;
   wallet?: string;
   screenshot?: string; // Base64 encoded image
+  mission?: string | null; // Add mission field
 }
 
 const RATE_LIMIT_MESSAGES = [
@@ -208,7 +209,7 @@ export async function POST(request: NextRequest) {
     await rateLimiter.check(5, 'copilot_api');
 
     const requestBody: CopilotRequest = await request.json();
-    const { message, code, screenshot } = requestBody;
+    const { message, code, screenshot, mission } = requestBody;
 
     // Validate code
     if (!code) {
@@ -290,13 +291,14 @@ export async function POST(request: NextRequest) {
       console.log(`🔍 Wallet portfolio fetch result: ${walletPortfolio ? 'Success' : 'Failed'}`);
     }
 
-    // Prepare full context with user data and wallet portfolio
+    // Prepare full context with user data, wallet portfolio, and mission
     const fullContext = {
       request: requestBody,
       signals: contextData.signals,
       marketSentiment: contextData.marketSentiment,
       userData: userData, // Add user data to context
-      walletPortfolio: walletPortfolio // Add wallet portfolio to context
+      walletPortfolio: walletPortfolio, // Add wallet portfolio to context
+      mission: mission // Add mission to context
     };
 
     const bodyContent = JSON.stringify(fullContext);
@@ -306,6 +308,42 @@ export async function POST(request: NextRequest) {
     // Add explanation about the screenshot to the system prompt if one is provided
     if (screenshot) {
       systemPrompt += `\n\nYou have access to a screenshot of the webpage the user is currently viewing. This screenshot is included in the user's message to help you understand the context of their question or request. Reference visual elements from the screenshot when relevant to your response.`;
+    }
+    
+    // Add mission context to the system prompt if available
+    if (mission) {
+      // Add mission-specific guidance to the existing system prompt
+      systemPrompt += `\n\nCurrent Mission: ${mission}\n`;
+      
+      // Add specific guidance based on the mission type
+      switch (mission) {
+        case 'token-discovery':
+          systemPrompt += `For this token discovery mission, focus on analyzing emerging tokens on Solana with strong fundamentals. Evaluate liquidity, volume trends, and holder distribution to help the user create a watchlist of promising tokens for potential investment. Provide detailed analysis of tokenomics and market positioning when relevant.`;
+          break;
+        case 'portfolio-rebalancing':
+          systemPrompt += `For this portfolio rebalancing mission, help the user assess their current portfolio allocation and performance. Identify underperforming assets and potential replacements to create a step-by-step rebalancing plan based on current market conditions. Consider diversification, risk management, and market trends in your recommendations.`;
+          break;
+        case 'technical-analysis':
+          systemPrompt += `For this technical analysis workshop, help the user identify key chart patterns on specific tokens. Guide them in practicing support/resistance identification and developing a personalized trading strategy based on technical indicators. Explain concepts clearly and relate them to current market conditions.`;
+          break;
+        case 'risk-management':
+          systemPrompt += `For this risk management optimization mission, help the user evaluate their position sizing and stop-loss strategies. Calculate optimal risk-reward ratios based on volatility and create a risk management framework aligned with the user's risk tolerance. Emphasize capital preservation while maximizing returns.`;
+          break;
+        case 'defi-yield':
+          systemPrompt += `For this DeFi yield optimization mission, help the user discover the highest-yielding DeFi protocols on Solana. Compare risks and rewards across lending platforms and liquidity pools to develop a yield farming strategy based on the user's risk profile. Consider impermanent loss, protocol risks, and sustainable APY.`;
+          break;
+        case 'sentiment-analysis':
+          systemPrompt += `For this market sentiment analysis mission, help the user track social media trends and community sentiment for key tokens. Focus on correlating sentiment indicators with price action and creating alerts for significant sentiment shifts that could impact prices. Consider Twitter, Discord, and Telegram as primary sources.`;
+          break;
+        case 'swing-trading':
+          systemPrompt += `For this swing trading setup mission, help the user identify potential swing trading opportunities in the current market. Analyze optimal entry and exit points with specific price targets and develop a tracking system for managing multiple swing positions. Focus on medium-term price movements and key levels.`;
+          break;
+        case 'on-chain-data':
+          systemPrompt += `For this on-chain data investigation mission, help the user explore whale wallet movements and smart money flows. Analyze token distribution and concentration metrics to identify potential accumulation or distribution patterns before they affect price. Focus on on-chain indicators of future price movements.`;
+          break;
+        default:
+          systemPrompt += `For this mission, provide personalized trading and investment advice based on the user's preferences and the current market conditions.`;
+      }
     }
 
     // Update system prompt to include user preferences if available

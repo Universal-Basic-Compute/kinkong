@@ -33,6 +33,7 @@ export default function CopilotChatPage() {
   const [displayedParagraphs, setDisplayedParagraphs] = useState<string[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [subscription, setSubscription] = useState<{active: boolean; expiresAt?: string} | null>(null);
+  const [currentMission, setCurrentMission] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { onboardingData, isCompleted } = useOnboarding();
   const [loading, setLoading] = useState(true);
@@ -107,7 +108,10 @@ export default function CopilotChatPage() {
     showNextParagraph(0);
   }, []);
   
-  const handleSelectMission = (missionTitle: string, context: string) => {
+  const handleSelectMission = (missionTitle: string, context: string, missionId: string) => {
+    // Store the mission ID
+    setCurrentMission(missionId);
+    
     // Add a system message to indicate the mission selection
     const systemMessage: Message = {
       role: 'assistant',
@@ -185,12 +189,13 @@ export default function CopilotChatPage() {
       // Get wallet address if connected
       const walletAddress = publicKey ? publicKey.toString() : undefined;
 
-      // Get streaming response with wallet address and screenshot if available
+      // Get streaming response with wallet address, mission, and screenshot if available
       const response = await askKinKongCopilot(
         input, 
         code || 'default', 
         walletAddress, // Always pass wallet address if available
-        screenshot || undefined
+        screenshot || undefined,
+        currentMission // Pass the current mission ID
       );
     
       // Add assistant message
