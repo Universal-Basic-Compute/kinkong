@@ -316,9 +316,35 @@ async def async_main():
         if missing:
             raise Exception(f"Missing environment variables: {', '.join(missing)}")
         
-        # Check command line arguments
+        # Check for test parameter
+        if len(sys.argv) == 2 and sys.argv[1].lower() == "test":
+            # Test mode - send 0.1 USDC to the specified wallet
+            test_wallet = "8qFuqCdFsvFYwpP7FDiDhqucTXsDdRmkhvzJ8JvBUXmZ"
+            test_token = "USDC"
+            test_amount = 0.1
+            
+            print(f"\n🧪 TEST MODE: Sending {test_amount} {test_token} to {test_wallet}")
+            
+            # Initialize and run transfer executor
+            executor = TokenTransferExecutor()
+            result = await executor.execute_transfer(test_wallet, test_token, test_amount)
+            
+            if result["success"]:
+                print(f"\n✅ Test transfer of {test_amount} {test_token} to {test_wallet} completed")
+                print(f"Transaction signature: {result['signature']}")
+                
+                # Send Telegram notification
+                executor.send_telegram_notification(result, result["signature"])
+            else:
+                print(f"\n❌ Test transfer failed: {result['error']}")
+                sys.exit(1)
+                
+            return  # Exit after test
+        
+        # Regular mode - check command line arguments
         if len(sys.argv) < 4:
             print("Usage: python execute_transfer.py <destination_wallet> <token> <amount>")
+            print("       python execute_transfer.py test  # Run test mode")
             print("Example: python execute_transfer.py 7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU UBC 1000")
             sys.exit(1)
         
