@@ -303,7 +303,7 @@ export default function CopilotChatPage() {
   return (
     <div className="h-screen pt-16 flex overflow-hidden">
       {/* Left Sidebar - Missions */}
-      <div className="w-64 bg-black/40 border-r border-gold/20 p-4 overflow-y-auto">
+      <div className="w-72 bg-black/40 border-r border-gold/20 p-4 overflow-y-auto">
         <h2 className="text-lg font-semibold text-gold mb-3">Select a Mission</h2>
         <div className="space-y-3">
           {missions.map((mission) => (
@@ -313,7 +313,6 @@ export default function CopilotChatPage() {
               className="p-3 bg-black/50 border border-gold/20 rounded-lg cursor-pointer hover:bg-gold/10 hover:border-gold/40 transition-all"
             >
               <h3 className="font-medium text-gold">{mission.title}</h3>
-              <p className="text-sm text-gray-400 mt-1">{mission.description}</p>
             </div>
           ))}
         </div>
