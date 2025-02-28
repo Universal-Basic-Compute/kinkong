@@ -8,6 +8,8 @@ export async function askKinKongCopilot(message: string, code: string, wallet?: 
       screenshot // Base64 encoded screenshot
     };
 
+    console.log('Sending request to copilot API with wallet:', wallet ? `${wallet.substring(0, 6)}...${wallet.substring(wallet.length - 4)}` : 'none');
+
     const response = await fetch('/api/copilot', {
       method: 'POST',
       headers: {

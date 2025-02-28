@@ -129,8 +129,16 @@ export default function CopilotChatPage() {
       setMessages(prev => [...prev, userMessage]);
       setInput('');
 
+      // Get wallet address if connected
+      const walletAddress = publicKey ? publicKey.toString() : undefined;
+
       // Get streaming response with wallet address and screenshot if available
-      const response = await askKinKongCopilot(input, code || '', publicKey.toString(), screenshot || undefined);
+      const response = await askKinKongCopilot(
+        input, 
+        code || 'default', 
+        walletAddress, // Always pass wallet address if available
+        screenshot || undefined
+      );
     
       // Add assistant message
       const assistantMessage: Message = {

@@ -224,11 +224,39 @@ export async function POST(request: NextRequest) {
     // Get context data
     const contextData = await getContextData(code);
     
-    // Prepare full context
+    // Fetch user data if wallet is provided
+    let userData = null;
+    if (requestBody.wallet) {
+      try {
+        console.log(`🔍 Fetching user data for wallet: ${requestBody.wallet}`);
+        const usersTable = getTable('USERS');
+        const users = await usersTable.select({
+          filterByFormula: `{wallet}='${requestBody.wallet}'`
+        }).firstPage();
+    
+        if (users.length > 0) {
+          userData = {
+            id: users[0].id,
+            experience: users[0].get('experience'),
+            interests: users[0].get('interests'),
+            incomeSource: users[0].get('incomeSource'),
+            riskTolerance: users[0].get('riskTolerance')
+          };
+          console.log('👤 Found user data:', userData);
+        } else {
+          console.log('⚠️ No user found for wallet:', requestBody.wallet);
+        }
+      } catch (error) {
+        console.error('❌ Error fetching user data:', error);
+      }
+    }
+
+    // Prepare full context with user data
     const fullContext = {
       request: requestBody,
       signals: contextData.signals,
-      marketSentiment: contextData.marketSentiment
+      marketSentiment: contextData.marketSentiment,
+      userData: userData // Add user data to context
     };
 
     const bodyContent = JSON.stringify(fullContext);
@@ -238,6 +266,33 @@ export async function POST(request: NextRequest) {
     // Add explanation about the screenshot to the system prompt if one is provided
     if (screenshot) {
       systemPrompt += `\n\nYou have access to a screenshot of the webpage the user is currently viewing. This screenshot is included in the user's message to help you understand the context of their question or request. Reference visual elements from the screenshot when relevant to your response.`;
+    }
+
+    // Update system prompt to include user preferences if available
+    if (userData) {
+      systemPrompt += `\n\nUser Preferences:
+- Experience Level: ${userData.experience || 'Not specified'}
+- Trading Interests: ${userData.interests || 'Not specified'}
+- Income Source: ${userData.incomeSource || 'Not specified'}
+- Risk Tolerance: ${userData.riskTolerance || 'Not specified'}
+
+Tailor your responses to match this user's experience level, interests, and risk tolerance. For ${userData.experience || 'unspecified'} traders, ${getExperienceLevelGuidance(userData.experience)}`;
+    }
+
+    // Helper function to get guidance based on experience level
+    function getExperienceLevelGuidance(experience: string | null | undefined): string {
+      switch (experience) {
+        case 'beginner':
+          return 'explain concepts thoroughly, avoid jargon, and focus on educational content with lower-risk strategies.';
+        case 'intermediate':
+          return 'provide more detailed analysis, introduce moderate strategies, and include some technical concepts with explanations.';
+        case 'advanced':
+          return 'offer sophisticated analysis, discuss complex strategies, and use technical terminology freely.';
+        case 'professional':
+          return 'provide high-level insights, discuss advanced trading concepts, and focus on professional-grade analysis.';
+        default:
+          return 'balance explanations with insights, and adjust technical depth based on the conversation context.';
+      }
     }
 
     const controller = new AbortController();
