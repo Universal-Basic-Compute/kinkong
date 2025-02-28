@@ -93,6 +93,10 @@ export function InvestmentCard() {
   
   // Calculate total UBC returns
   const totalUbcReturns = investments.reduce((sum, inv) => sum + (inv.ubcReturn || 0), 0);
+  
+  // Add isCalculated property to Investment interface
+  type InvestmentWithCalculation = Investment & { isCalculated?: boolean };
+  const typedInvestments = investments as InvestmentWithCalculation[];
 
   return (
     <div className="stat-card">

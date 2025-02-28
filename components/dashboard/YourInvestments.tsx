@@ -16,6 +16,7 @@ interface Investment {
   redistributionDate: string;
   percentage: number;
   claimed: boolean; // Add claimed status
+  isCalculated?: boolean; // Add optional calculated status
 }
 
 interface YourInvestmentsProps {

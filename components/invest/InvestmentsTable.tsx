@@ -43,6 +43,7 @@ interface Investment {
   // Add new fields for redistribution data
   redistributionId?: string;
   redistributionDate?: string;
+  isCalculated?: boolean; // Add optional calculated status
 }
 
 interface WalletSnapshot {

@@ -96,14 +96,14 @@ export async function POST(request: NextRequest) {
     } catch (error) {
       console.error('Error executing transfer:', error);
       return NextResponse.json(
-        { error: 'Failed to execute transfer', details: error.message },
+        { error: 'Failed to execute transfer', details: (error as Error).message },
         { status: 500 }
       );
     }
   } catch (error) {
     console.error('Error claiming rewards:', error);
     return NextResponse.json(
-      { error: 'Failed to claim rewards' },
+      { error: 'Failed to claim rewards', details: (error as Error).message },
       { status: 500 }
     );
   }
