@@ -513,6 +513,70 @@ class ProfitRedistributor:
         except Exception as e:
             self.logger.error(f"Error calculating investor distributions: {e}")
             return []
+            
+    def save_redistribution_to_airtable(self, profit_distribution, investor_distributions):
+        """Save redistribution data to Airtable REDISTRIBUTIONS table"""
+        self.logger.info("Saving redistribution data to Airtable")
+        
+        try:
+            # Initialize Airtable table for redistributions
+            redistributions_table = Airtable(
+                self.base_id,
+                'REDISTRIBUTIONS',
+                self.api_key
+            )
+            
+            # Create a record for the overall redistribution
+            now = datetime.now(timezone.utc).isoformat()
+            
+            # Create the main redistribution record
+            main_record = {
+                'createdAt': now,
+                'totalProfit': profit_distribution['total_profit'],
+                'fees': profit_distribution['fees'],
+                'profitAfterFees': profit_distribution['profit_after_fees'],
+                'pool1Amount': profit_distribution['pool_1'],
+                'pool2Amount': profit_distribution['pool_2'],
+                'status': 'PENDING',  # Initial status
+                'periodStart': (datetime.now(timezone.utc) - timedelta(days=7)).isoformat(),
+                'periodEnd': now
+            }
+            
+            # Create the main redistribution record
+            main_record_result = redistributions_table.insert(main_record)
+            main_record_id = main_record_result['id']
+            
+            self.logger.info(f"Created main redistribution record with ID: {main_record_id}")
+            
+            # Now create investor distribution records
+            investor_records = []
+            
+            for dist in investor_distributions:
+                investor_record = {
+                    'redistributionId': main_record_id,
+                    'wallet': dist['wallet'],
+                    'investmentValue': dist['investment_value'],
+                    'percentage': dist['percentage'],
+                    'amount': dist['distribution_amount'],
+                    'status': 'PENDING',  # Initial status
+                    'createdAt': now
+                }
+                investor_records.append({'fields': investor_record})
+            
+            # Batch create investor distribution records
+            if investor_records:
+                # Airtable has a limit of 10 records per create operation
+                batch_size = 10
+                for i in range(0, len(investor_records), batch_size):
+                    batch = investor_records[i:i+batch_size]
+                    redistributions_table.batch_insert(batch)
+                
+                self.logger.info(f"Created {len(investor_records)} investor distribution records")
+            
+            return main_record_id
+        except Exception as e:
+            self.logger.error(f"Error saving redistribution to Airtable: {e}")
+            return None
 
 def main():
     try:
@@ -566,6 +630,13 @@ def main():
                 # Check for rounding errors
                 if abs(total_distributed - result['pool_2']) > 0.01:
                     print(f"Warning: Distribution total differs from Pool 2 amount by ${abs(total_distributed - result['pool_2']):.2f}")
+                
+                # Save redistribution data to Airtable
+                redistribution_id = redistributor.save_redistribution_to_airtable(result, distributions)
+                if redistribution_id:
+                    print(f"\n✅ Redistribution saved to Airtable with ID: {redistribution_id}")
+                else:
+                    print("\n❌ Failed to save redistribution to Airtable")
             else:
                 print("No investor distributions calculated")
         else:
