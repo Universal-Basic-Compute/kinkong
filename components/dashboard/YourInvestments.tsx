@@ -17,6 +17,7 @@ interface Investment {
   percentage: number;
   claimed: boolean; // Add claimed status
   isCalculated?: boolean; // Add optional calculated status
+  toWithdraw?: boolean; // Add withdrawal status
 }
 
 interface YourInvestmentsProps {
@@ -66,8 +67,40 @@ export const YourInvestments: React.FC<YourInvestmentsProps> = ({ className }) =
   }, [publicKey]);
 
   const handleWithdraw = async (investmentId: string) => {
-    // This will be implemented later
-    alert('Withdrawal functionality coming soon!');
+    if (!confirm('Are you sure you want to withdraw this investment? Please allow up to 24 hours for processing.')) {
+      return;
+    }
+    
+    try {
+      // Show loading state
+      setIsLoading(true);
+      
+      const response = await fetch('/api/investments/withdraw', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ investmentId })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to process withdrawal');
+      }
+      
+      const data = await response.json();
+      
+      alert(data.message || 'Withdrawal request submitted successfully!');
+      
+      // Refresh investments
+      fetchInvestments();
+    } catch (error) {
+      console.error('Error processing withdrawal:', error);
+      alert(`Error: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      // Reset loading state
+      setIsLoading(false);
+    }
   };
 
 
@@ -182,12 +215,16 @@ export const YourInvestments: React.FC<YourInvestmentsProps> = ({ className }) =
                   </Tooltip>
                 </td>
                 <td className="text-right py-3 px-4">
-                  <button 
-                    onClick={() => handleWithdraw(investment.investmentId)}
-                    className="bg-gradient-to-r from-gold to-amber-500 hover:from-amber-500 hover:to-gold text-black font-medium py-1.5 px-4 rounded-md text-sm transition-all duration-300 shadow-md hover:shadow-gold/20"
-                  >
-                    Withdraw
-                  </button>
+                  {investment.toWithdraw ? (
+                    <span className="text-yellow-500 font-medium">Processing</span>
+                  ) : (
+                    <button 
+                      onClick={() => handleWithdraw(investment.investmentId)}
+                      className="bg-gradient-to-r from-gold to-amber-500 hover:from-amber-500 hover:to-gold text-black font-medium py-1.5 px-4 rounded-md text-sm transition-all duration-300 shadow-md hover:shadow-gold/20"
+                    >
+                      Withdraw
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
