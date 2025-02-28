@@ -8,12 +8,6 @@ from datetime import datetime, timezone
 import requests
 from dotenv import load_dotenv
 from airtable import Airtable
-from solana.rpc.api import Client
-from solana.keypair import Keypair
-from solana.publickey import PublicKey
-from solana.transaction import Transaction
-from solana.system_program import SYS_PROGRAM_ID
-from solana.rpc.types import TxOpts
 
 def setup_logging():
     """Set up basic logging configuration"""
@@ -50,60 +44,32 @@ class UBCTransferExecutor:
             self.api_key
         )
         
-        # Initialize Solana client
+        # Initialize Helius RPC URL
         self.rpc_url = os.getenv('NEXT_PUBLIC_HELIUS_RPC_URL', 'https://api.mainnet-beta.solana.com')
-        self.client = Client(self.rpc_url)
         
         # UBC token mint address
-        self.ubc_mint = PublicKey("9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump")
+        self.ubc_mint = "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump"
         
         # Load wallet from private key
         private_key_str = os.getenv('KINKONG_WALLET_PRIVATE_KEY')
         if not private_key_str:
             raise ValueError("KINKONG_WALLET_PRIVATE_KEY not found in environment variables")
         
-        # Convert private key from base58 or bytes to Keypair
+        # Store private key for later use
+        self.private_key = private_key_str
+        
+        # Get wallet address
         try:
-            # Try to load as bytes array
-            if private_key_str.startswith('['):
-                private_key_bytes = json.loads(private_key_str)
-                self.keypair = Keypair.from_secret_key(bytes(private_key_bytes))
-            else:
-                # Try to load as base58 string
-                private_key_bytes = base58.b58decode(private_key_str)
-                self.keypair = Keypair.from_secret_key(private_key_bytes)
-                
-            self.wallet = self.keypair.public_key
+            # Use KINKONG_WALLET environment variable
+            self.wallet = os.getenv('KINKONG_WALLET')
+            if not self.wallet:
+                raise ValueError("KINKONG_WALLET not found in environment variables")
+            
             self.logger.info(f"Wallet loaded: {self.wallet}")
         except Exception as e:
             self.logger.error(f"Error loading wallet: {e}")
-            raise ValueError(f"Invalid private key format: {e}")
-        
-        # We'll implement token transfer functions directly without using the Token class
-        self.token_program_id = PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
-        
-        # Get source token account
-        self.source_token_account = None
-        self.initialize_source_token_account()
+            raise ValueError(f"Invalid wallet configuration: {e}")
     
-    def initialize_source_token_account(self):
-        """Initialize the source token account for UBC transfers"""
-        try:
-            # Get token accounts for the wallet
-            response = self.client.get_token_accounts_by_owner(
-                self.wallet,
-                {"mint": str(self.ubc_mint)}
-            )
-            
-            if hasattr(response, "value") and len(response.value) > 0:
-                self.source_token_account = PublicKey(response.value[0].pubkey)
-                self.logger.info(f"Source token account found: {self.source_token_account}")
-            else:
-                self.logger.error("No UBC token account found for wallet")
-                raise ValueError("No UBC token account found for wallet")
-        except Exception as e:
-            self.logger.error(f"Error initializing source token account: {e}")
-            raise
     
     def get_pending_redistributions(self):
         """Get pending redistributions from Airtable"""
@@ -163,68 +129,9 @@ class UBCTransferExecutor:
             self.logger.error(f"Error getting pending redistributions: {e}")
             return []
     
-    def get_destination_token_account(self, wallet_address):
-        """Get or create a token account for the destination wallet"""
-        try:
-            destination_pubkey = PublicKey(wallet_address)
-            
-            # Check if destination wallet already has a token account for UBC
-            response = self.client.get_token_accounts_by_owner(
-                destination_pubkey,
-                {"mint": str(self.ubc_mint)}
-            )
-            
-            if hasattr(response, "value") and len(response.value) > 0:
-                # Use existing token account
-                destination_token_account = PublicKey(response.value[0].pubkey)
-                self.logger.info(f"Existing token account found for {wallet_address}: {destination_token_account}")
-                return destination_token_account
-            else:
-                # Create a new associated token account
-                self.logger.info(f"Creating new token account for {wallet_address}")
-                
-                # Get associated token account address
-                from spl.token.instructions import get_associated_token_address
-                associated_token_address = get_associated_token_address(
-                    destination_pubkey,
-                    self.ubc_mint
-                )
-                
-                # Create the associated token account
-                from spl.token.instructions import create_associated_token_account
-                transaction = Transaction()
-                create_ata_ix = create_associated_token_account(
-                    self.wallet,
-                    destination_pubkey,
-                    self.ubc_mint
-                )
-                transaction.add(create_ata_ix)
-                
-                # Sign and send transaction
-                self.logger.info(f"Creating associated token account for {wallet_address}")
-                result = self.client.send_transaction(
-                    transaction,
-                    [self.keypair],
-                    opts=TxOpts(skip_preflight=False, preflight_commitment="confirmed")
-                )
-                
-                if hasattr(result, "value"):
-                    self.logger.info(f"Created token account: {associated_token_address}, tx: {result.value}")
-                    
-                    # Wait for confirmation
-                    self.logger.info("Waiting for transaction confirmation...")
-                    time.sleep(5)
-                    
-                    return associated_token_address
-                else:
-                    self.logger.error(f"Failed to create token account: {result}")
-                    raise ValueError(f"Failed to create token account: {result}")
-        except Exception as e:
-            self.logger.error(f"Error getting destination token account for {wallet_address}: {e}")
-            raise
     
     def execute_transfer(self, destination_wallet, ubc_amount):
-        """Execute a UBC transfer to the destination wallet"""
+        """Execute a UBC transfer to the destination wallet using Helius API"""
         try:
             # For UBC, we'll use 6 decimals (standard for most SPL tokens)
             decimals = 6
@@ -238,100 +145,56 @@ class UBCTransferExecutor:
             self.logger.info(f"Preparing to transfer {ubc_amount} UBC ({amount_lamports} lamports) to {destination_wallet}")
             self.logger.info(f"Token decimals: {decimals}")
             
-            # Get destination token account
-            destination_token_account = self.get_destination_token_account(destination_wallet)
+            # Use Helius API to execute the transfer
+            helius_api_key = os.getenv('HELIUS_API_KEY')
+            if not helius_api_key:
+                raise ValueError("HELIUS_API_KEY not found in environment variables")
             
-            # Create transfer instruction for SPL token
-            from spl.token.instructions import transfer_checked, TransferCheckedParams
+            # Construct the transfer transaction using Helius API
+            helius_url = f"https://api.helius.xyz/v0/transactions/send?api-key={helius_api_key}"
             
-            transfer_tx = Transaction()
-            transfer_ix = transfer_checked(
-                TransferCheckedParams(
-                    program_id=self.token_program_id,
-                    source=self.source_token_account,
-                    mint=self.ubc_mint,
-                    dest=destination_token_account,
-                    owner=self.wallet,
-                    amount=amount_lamports,
-                    decimals=decimals,
-                    signers=[]
-                )
-            )
-            transfer_tx.add(transfer_ix)
+            # Prepare the transaction payload
+            payload = {
+                "token": self.ubc_mint,
+                "amount": amount_lamports,
+                "to": destination_wallet,
+                "from": self.wallet,
+                "type": "token-transfer",
+                "options": {
+                    "commitment": "confirmed"
+                }
+            }
             
-            # Get recent blockhash
-            blockhash_response = self.client.get_latest_blockhash()
-            if not hasattr(blockhash_response, "value"):
-                raise ValueError("Failed to get recent blockhash")
+            # Send the transaction
+            self.logger.info(f"Sending transaction to Helius API")
+            response = requests.post(helius_url, json=payload)
             
-            recent_blockhash = blockhash_response.value.blockhash
-            self.logger.info(f"Got recent blockhash: {recent_blockhash}")
-            
-            # Set recent blockhash in transaction
-            transfer_tx.recent_blockhash = recent_blockhash
-            
-            # Sign and send transaction
-            self.logger.info(f"Sending {ubc_amount} UBC to {destination_wallet}")
-            result = self.client.send_transaction(
-                transfer_tx,
-                [self.keypair],
-                opts=TxOpts(skip_preflight=False, preflight_commitment="confirmed")
-            )
-            
-            if hasattr(result, "value"):
-                tx_signature = result.value
-                self.logger.info(f"Transaction sent successfully: {tx_signature}")
+            if response.status_code == 200:
+                result = response.json()
+                tx_signature = result.get('signature')
                 
-                # Wait for confirmation
-                self.logger.info("Waiting for transaction confirmation...")
-                
-                # Poll for transaction status
-                confirmed = False
-                retry_count = 0
-                max_retries = 10
-                
-                while not confirmed and retry_count < max_retries:
-                    try:
-                        # Wait a bit before checking
-                        time.sleep(2)
-                        
-                        # Check transaction status
-                        status_response = self.client.get_signature_statuses([tx_signature])
-                        
-                        if hasattr(status_response, "value") and status_response.value[0]:
-                            if status_response.value[0].confirmations is None:
-                                # None confirmations means the transaction is finalized
-                                confirmed = True
-                                self.logger.info(f"Transaction confirmed and finalized: {tx_signature}")
-                            elif status_response.value[0].confirmations > 0:
-                                confirmed = True
-                                self.logger.info(f"Transaction confirmed with {status_response.value[0].confirmations} confirmations")
-                            else:
-                                self.logger.info(f"Waiting for confirmation... (attempt {retry_count + 1}/{max_retries})")
-                        else:
-                            self.logger.info(f"Transaction not yet processed... (attempt {retry_count + 1}/{max_retries})")
-                            
-                        retry_count += 1
-                    except Exception as e:
-                        self.logger.warning(f"Error checking transaction status: {e}")
-                        retry_count += 1
-                
-                if confirmed:
+                if tx_signature:
+                    self.logger.info(f"Transaction sent successfully: {tx_signature}")
+                    
+                    # Wait for confirmation
+                    self.logger.info("Waiting for transaction confirmation...")
+                    time.sleep(5)  # Simple wait for confirmation
+                    
                     return {
                         "success": True,
                         "signature": tx_signature
                     }
                 else:
-                    self.logger.warning(f"Transaction not confirmed after {max_retries} attempts")
+                    self.logger.error(f"No transaction signature in response: {result}")
                     return {
                         "success": False,
-                        "error": "Transaction not confirmed after maximum retries"
+                        "error": "No transaction signature in response"
                     }
             else:
-                self.logger.error(f"Failed to send transaction: {result}")
+                self.logger.error(f"Failed to send transaction: {response.status_code} - {response.text}")
                 return {
                     "success": False,
-                    "error": f"Failed to send transaction: {result}"
+                    "error": f"Failed to send transaction: {response.text}"
                 }
         except Exception as e:
             self.logger.error(f"Error executing transfer to {destination_wallet}: {e}")
@@ -505,7 +368,9 @@ def main():
             'KINKONG_AIRTABLE_BASE_ID',
             'KINKONG_AIRTABLE_API_KEY',
             'KINKONG_WALLET_PRIVATE_KEY',
+            'KINKONG_WALLET',
             'NEXT_PUBLIC_HELIUS_RPC_URL',
+            'HELIUS_API_KEY',
             'TELEGRAM_BOT_TOKEN'
         ]
         
