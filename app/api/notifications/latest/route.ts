@@ -40,10 +40,8 @@ export async function GET(request: NextRequest) {
     }).firstPage();
     
     if (records.length === 0) {
-      return NextResponse.json(
-        { message: 'No recent signals found' },
-        { status: 404 }
-      );
+      // Return empty JSON with 200 status
+      return NextResponse.json({}, { status: 200 });
     }
     
     // Get the latest signal
