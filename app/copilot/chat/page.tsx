@@ -321,7 +321,7 @@ export default function CopilotChatPage() {
     <div className="fixed inset-0 top-16 bottom-0 flex overflow-hidden">
       {/* Left Sidebar - Missions */}
       <div className="w-72 bg-black/40 border-r border-gold/20 p-4 overflow-y-auto">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-3 mt-4">
           <h2 className="text-lg font-semibold text-gold">Select a Mission</h2>
           <Tooltip 
             content="Selecting a mission provides KinKong with specialized data and context, focusing the conversation on specific goals and strategies for better results."
@@ -526,7 +526,7 @@ export default function CopilotChatPage() {
 
       {/* Right Sidebar - User Preferences */}
       <div className="w-72 bg-black/40 border-l border-gold/20 p-4 overflow-y-auto">
-        <h2 className="text-lg font-semibold text-gold mb-3">Your Personalized Settings</h2>
+        <h2 className="text-lg font-semibold text-gold mb-3 mt-4">Your Personalized Settings</h2>
         <ul className="space-y-4">
           <li>
             <h3 className="font-medium text-sm uppercase text-gray-400">Experience</h3>
