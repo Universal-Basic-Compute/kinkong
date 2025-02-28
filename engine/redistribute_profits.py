@@ -519,12 +519,12 @@ class ProfitRedistributor:
         try:
             self.logger.info(f"Sending Telegram notification for investor: {investor_data['wallet']}")
             
-            # Get Telegram bot token and chat ID from environment variables
+            # Get Telegram bot token and use the specified channel ID
             bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
-            chat_id = os.getenv('TELEGRAM_CHAT_ID')
+            chat_id = "-1001699255893"  # Use the specified channel ID
             
-            if not bot_token or not chat_id:
-                self.logger.warning("Telegram credentials not found in environment variables")
+            if not bot_token:
+                self.logger.warning("Telegram bot token not found in environment variables")
                 return False
             
             # Format wallet address for display
@@ -534,28 +534,48 @@ class ProfitRedistributor:
             else:
                 wallet_display = wallet
             
-            # Create message text
+            # Create message text with reordered fields: share -> investor -> UBC amount -> amount
             message = f"""🎉 *KinKong Profit Redistribution*
             
-📊 *Investor*: `{wallet_display}`
-💰 *Amount*: ${investor_data['distribution_amount']:.2f}
-🪙 *UBC Amount*: {investor_data['ubcAmount']:.2f} UBC
 📈 *Share*: {investor_data['percentage']:.2f}%
-🆔 *Redistribution ID*: `{redistribution_id}`
+📊 *Investor*: `{wallet_display}`
+🪙 *UBC Amount*: {investor_data['ubcAmount']:.2f} UBC
+💰 *Amount*: ${investor_data['distribution_amount']:.2f}
 
 Status: Pending ⏳
 """
             
-            # Send message via Telegram API
-            telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-            payload = {
-                "chat_id": chat_id,
-                "text": message,
-                "parse_mode": "Markdown"
-            }
+            # First send the image
+            image_path = "public/copilot.png"
             
-            response = requests.post(telegram_url, json=payload)
-            response.raise_for_status()
+            # Check if image exists
+            if os.path.exists(image_path):
+                # Send photo with caption
+                telegram_url = f"https://api.telegram.org/bot{bot_token}/sendPhoto"
+                
+                # Open and read the image file
+                with open(image_path, 'rb') as photo:
+                    files = {'photo': photo}
+                    payload = {
+                        "chat_id": chat_id,
+                        "caption": message,
+                        "parse_mode": "Markdown"
+                    }
+                    
+                    response = requests.post(telegram_url, data=payload, files=files)
+                    response.raise_for_status()
+            else:
+                # If image doesn't exist, just send the text message
+                self.logger.warning(f"Image file not found at {image_path}, sending text-only message")
+                telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+                payload = {
+                    "chat_id": chat_id,
+                    "text": message,
+                    "parse_mode": "Markdown"
+                }
+                
+                response = requests.post(telegram_url, json=payload)
+                response.raise_for_status()
             
             self.logger.info(f"Telegram notification sent successfully for {wallet_display}")
             return True
