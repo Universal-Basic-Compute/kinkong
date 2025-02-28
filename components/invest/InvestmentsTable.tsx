@@ -141,6 +141,21 @@ export function InvestmentsTable({ investments: propInvestments, latestSnapshot,
     }
   };
 
+  // Debug the investments data
+  useEffect(() => {
+    console.log(`Total investments: ${localInvestments.length}`);
+    console.log(`Valid investments: ${localInvestments.filter(validateInvestment).length}`);
+    
+    const totalValue = localInvestments
+      .filter(validateInvestment)
+      .reduce((sum, inv) => {
+        console.log(`Investment: ${inv.investmentId}, Amount: ${inv.amount}, USD: ${inv.usdAmount || 0}`);
+        return sum + (inv.usdAmount || 0);
+      }, 0);
+    
+    console.log(`Calculated total investment value: ${totalValue}`);
+  }, [localInvestments]);
+
   // Add a helper function to render sort indicators
   const renderSortIndicator = (field: SortField) => {
     if (sortField !== field) return null;
@@ -265,7 +280,7 @@ export function InvestmentsTable({ investments: propInvestments, latestSnapshot,
               <p>
                 <span className="text-gray-400">Total Investment:</span> 
                 <span className="text-white ml-2 font-medium">
-                  {Math.floor(localInvestments.reduce((sum, inv) => sum + (inv.usdAmount || 0), 0)).toLocaleString('en-US')}
+                  {Math.floor(localInvestments.filter(validateInvestment).reduce((sum, inv) => sum + (inv.usdAmount || 0), 0)).toLocaleString('en-US')}
                 </span> 
                 <span className="text-gray-400">$USDC</span>
               </p>
