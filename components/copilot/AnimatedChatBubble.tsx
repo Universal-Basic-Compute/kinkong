@@ -3,13 +3,21 @@
 import { useState, useEffect } from 'react';
 
 const messages = [
-  "Need trading insights?",
-  "Ask me anything!",
-  "I analyze markets 24/7",
-  "Let's find alpha together",
-  "What's your trading strategy?",
-  "Looking for signals?",
-  "How can I help today?"
+  "SOL showing bullish divergence on 4H chart",
+  "JUP volume spiking, potential breakout soon",
+  "Social sentiment for BONK turning positive",
+  "Portfolio rebalance needed: Increase AI tokens",
+  "PYTH forming cup and handle, watch $0.42 level",
+  "Whale accumulation detected in JTO",
+  "Liquidity building at $25 for SOL, strong support",
+  "Twitter alpha: New Solana NFT marketplace launching",
+  "Consider taking profits on RNDR, RSI overbought",
+  "On-chain data shows BOME accumulation by insiders",
+  "Momentum shifting to DeFi tokens this week",
+  "Set stop loss for BONK at recent swing low",
+  "Telegram sentiment analysis: Bullish on JUP",
+  "Consider hedging SOL position with PUT options",
+  "Resistance cluster at $30 for SOL, prepare for volatility"
 ];
 
 export default function AnimatedChatBubble() {
