@@ -245,8 +245,8 @@ export default function CopilotChatPage() {
       displayedSoFar = [...displayedSoFar, cleanParagraphs[index]];
       setDisplayedParagraphs([...displayedSoFar]);
       
-      // Calculate read time based on paragraph length - faster speed
-      const readTime = Math.max(500, cleanParagraphs[index].length * 15); // Reduced from 30 to 15ms per character
+      // Calculate read time based on paragraph length - moderate speed
+      const readTime = Math.max(500, cleanParagraphs[index].length * 20); // Changed from 15 to 20ms per character
       
       // Schedule next paragraph
       setTimeout(() => showNextParagraph(index + 1), readTime);
