@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTable } from '@/backend/src/airtable/tables';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import path from 'path';
-
-const execPromise = promisify(exec);
 
 export async function POST(request: NextRequest) {
   try {
@@ -57,48 +52,50 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Execute the transfer script
-    const scriptPath = path.join(process.cwd(), 'engine', 'execute_transfer.py');
-    
+    // Instead of trying to execute the transfer directly, mark it for manual processing
     try {
-      console.log(`Executing transfer: ${scriptPath} ${wallet} UBC ${ubcAmount}`);
-      const { stdout, stderr } = await execPromise(`python "${scriptPath}" "${wallet}" UBC ${ubcAmount}`);
-      
-      console.log('Transfer script output:', stdout);
-      
-      // Check for errors in stderr but also look for success message in stdout
-      if (stderr && !stdout.includes('Transaction signature:')) {
-        console.error('Transfer script error:', stderr);
-        throw new Error(stderr || 'Transfer failed with no error message');
-      }
-      
-      // Extract transaction signature from stdout
-      const signatureMatch = stdout.match(/Transaction signature: ([a-zA-Z0-9]+)/);
-      const signature = signatureMatch ? signatureMatch[1] : 'unknown';
-      
-      if (!signature || signature === 'unknown') {
-        console.warn('Could not extract transaction signature from output');
-        // Continue anyway since the transfer might have succeeded
-      }
-      
-      // Update the record to mark as claimed
+      // Update the record to mark as pending manual processing
       await redistributionsTable.update(investmentId, {
-        claimed: true,
-        claimedAt: new Date().toISOString(),
-        claimTxSignature: signature
+        processingStatus: 'MANUAL_REVIEW_NEEDED',
+        processingRequestedAt: new Date().toISOString(),
+        processingNote: `User requested claim of ${ubcAmount} UBC to wallet ${wallet}`
       });
+      
+      // Send a notification to the admin team
+      try {
+        // Get Telegram bot token
+        const botToken = process.env.TELEGRAM_BOT_TOKEN;
+        const chatId = "-4680349356"; // Updated chat ID for claims
+        
+        if (botToken) {
+          const message = `🔔 *Manual Claim Request*\n\nA user has requested to claim ${ubcAmount} UBC to wallet \`${wallet}\`.\n\nPlease process this claim manually.\n\nRedistribution ID: \`${investmentId}\``;
+          
+          await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              chat_id: chatId,
+              text: message,
+              parse_mode: 'Markdown'
+            }),
+          });
+        }
+      } catch (notifyError) {
+        console.error('Failed to send notification:', notifyError);
+        // Continue even if notification fails
+      }
       
       return NextResponse.json({
         success: true,
-        message: 'Rewards claimed successfully',
-        signature,
-        amount: ubcAmount,
-        token: 'UBC'
+        message: 'Your claim has been received. Please allow up to 24 hours for processing.',
+        status: 'PENDING_MANUAL_REVIEW'
       });
     } catch (error) {
-      console.error('Error executing transfer:', error);
+      console.error('Error marking for manual processing:', error);
       return NextResponse.json(
-        { error: 'Failed to execute transfer', details: (error as Error).message },
+        { error: 'Failed to process claim request', details: (error as Error).message },
         { status: 500 }
       );
     }
