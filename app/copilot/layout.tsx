@@ -11,7 +11,7 @@ export default function CopilotLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-gradient-to-b from-black to-gray-900 h-screen overflow-hidden">
+    <div className="bg-gradient-to-b from-black to-gray-900 min-h-screen">
       {children}
     </div>
   );
