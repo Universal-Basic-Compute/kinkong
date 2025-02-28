@@ -124,34 +124,25 @@ export function InvestmentCard() {
             </div>
             
             {/* Add redistribution information if available */}
-            {investment.ubcReturn !== undefined ? (
-              <div className="mt-2 text-sm">
-                <p className="flex justify-between">
-                  <span className="text-gray-400">Latest Return:</span>
-                  <span className="metallic-text-ubc">
-                    {(investment.ubcReturn || 0).toLocaleString(undefined, {
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0
-                    })} $UBC
-                    {investment.isCalculated && (
-                      <span className="text-xs text-yellow-500 ml-1">(Est.)</span>
-                    )}
-                  </span>
+            <div className="mt-2 text-sm">
+              <p className="flex justify-between">
+                <span className="text-gray-400">Latest Return:</span>
+                <span className="metallic-text-ubc">
+                  {(investment.ubcReturn || 0).toLocaleString(undefined, {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                  })} $UBC
+                  {investment.isCalculated && (
+                    <span className="text-xs text-yellow-500 ml-1">(Est.)</span>
+                  )}
+                </span>
+              </p>
+              {investment.redistributionDate && (
+                <p className="text-xs text-gray-400 text-right">
+                  {new Date(investment.redistributionDate).toLocaleDateString()}
                 </p>
-                {investment.redistributionDate && (
-                  <p className="text-xs text-gray-400 text-right">
-                    {new Date(investment.redistributionDate).toLocaleDateString()}
-                  </p>
-                )}
-              </div>
-            ) : (
-              <div className="mt-2 text-sm">
-                <p className="flex justify-between">
-                  <span className="text-gray-400">Latest Return:</span>
-                  <span className="text-gray-400">Calculating...</span>
-                </p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         ))}
       </div>
