@@ -168,22 +168,53 @@ class TokenTransferExecutor:
                 dest_token_account_str = str(destination_token_account)
                 self.logger.info(f"Destination token account string: {dest_token_account_str}")
 
-                # Try to get account info using the string directly
+                # Try to get account info using a proper PublicKey object
                 try:
-                    response = await client.get_account_info(dest_token_account_str)
-                except Exception as e:
-                    self.logger.error(f"Error getting account info with string: {e}")
+                    # Import the correct PublicKey class
+                    try:
+                        from solana.publickey import PublicKey as SolanaPublicKey
+                    except ImportError:
+                        # If that fails, use the Pubkey class we already have
+                        SolanaPublicKey = Pubkey
                     
-                    # As a fallback, try to extract the base58 encoded string
-                    # The string representation might be something like "PublicKey(base58_string)"
-                    import re
-                    match = re.search(r'([1-9A-HJ-NP-Za-km-z]{32,44})', dest_token_account_str)
-                    if match:
-                        extracted_address = match.group(1)
-                        self.logger.info(f"Extracted address: {extracted_address}")
-                        response = await client.get_account_info(extracted_address)
-                    else:
-                        raise ValueError(f"Could not extract valid address from {dest_token_account_str}")
+                    # Create a proper PublicKey object from the string
+                    pubkey_obj = SolanaPublicKey(dest_token_account_str)
+                    self.logger.info(f"Created PublicKey object: {pubkey_obj}")
+                    response = await client.get_account_info(pubkey_obj)
+                except Exception as e:
+                    self.logger.error(f"Error getting account info with PublicKey: {e}")
+                    
+                    # Try a different approach - use the RPC directly with a JSON-RPC call
+                    try:
+                        self.logger.info("Trying direct JSON-RPC call...")
+                        import json
+                        import aiohttp
+                        
+                        async with aiohttp.ClientSession() as session:
+                            payload = {
+                                "jsonrpc": "2.0",
+                                "id": 1,
+                                "method": "getAccountInfo",
+                                "params": [
+                                    dest_token_account_str,
+                                    {"encoding": "jsonParsed"}
+                                ]
+                            }
+                            
+                            async with session.post(self.rpc_url, json=payload) as resp:
+                                result = await resp.json()
+                                self.logger.info(f"Direct RPC response: {json.dumps(result, indent=2)}")
+                                
+                                # Check if the account exists
+                                if "result" in result and result["result"] and result["result"]["value"]:
+                                    self.logger.info("Account exists according to direct RPC call")
+                                    response = type('obj', (object,), {'value': True})  # Create a simple object with value=True
+                                else:
+                                    self.logger.info("Account does not exist according to direct RPC call")
+                                    response = type('obj', (object,), {'value': None})  # Create a simple object with value=None
+                    except Exception as direct_error:
+                        self.logger.error(f"Error with direct RPC call: {direct_error}")
+                        raise ValueError(f"Failed to check if account exists: {e}, {direct_error}")
                 
                 # If the account doesn't exist, we need to create it
                 if not response.value:
