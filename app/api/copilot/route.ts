@@ -484,6 +484,9 @@ ${userInvestments.map((investment: any, index: number) => {
   return `${index + 1}. ${investment.token}: ${amount} tokens`;
 }).join('\n')}
 
+Total Investment Value: $${investmentValues.totalInvestmentValue.toFixed(2)}
+Percentage of Portfolio Managed: ${investmentValues.managedPercentage.toFixed(2)}%
+
 Use this investment data to provide specific rebalancing recommendations based on the user's current KinKong Invest allocations, market conditions, and risk tolerance.`;
     }
 
