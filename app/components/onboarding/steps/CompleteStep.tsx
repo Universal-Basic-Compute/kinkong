@@ -50,6 +50,19 @@ const CompleteStep: React.FC = () => {
     }
   }, [isSaving, saveError, router]);
 
+  // Add a direct call to saveUserData when the button is clicked
+  const handleSaveData = async () => {
+    console.log('Manual save triggered');
+    setIsSaving(true);
+    const walletAddress = publicKey ? publicKey.toString() : undefined;
+    const success = await saveUserData(walletAddress);
+    console.log('Manual save result:', success);
+    setIsSaving(false);
+    if (success) {
+      router.push('/copilot/chat');
+    }
+  };
+
   return (
     <div className="text-center space-y-6 py-8">
       <div className="w-20 h-20 bg-gradient-to-r from-gold to-amber-500 rounded-full flex items-center justify-center mx-auto">
@@ -128,7 +141,7 @@ const CompleteStep: React.FC = () => {
       
       <div className="flex justify-center">
         <button
-          onClick={() => router.push('/copilot/chat')}
+          onClick={handleSaveData}
           disabled={isSaving}
           className={`px-8 py-3 bg-gradient-to-r from-gold to-amber-500 text-black font-bold rounded-lg 
             ${isSaving ? 'opacity-70 cursor-not-allowed' : 'hover:scale-105 transition-all duration-300'}`}

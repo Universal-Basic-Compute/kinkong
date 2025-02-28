@@ -117,41 +117,47 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   // Save user data to backend
   const saveUserData = async (walletAddress?: string): Promise<boolean> => {
     try {
-      console.log('Saving onboarding data to Airtable:', {
+      console.log('Starting saveUserData function with wallet:', walletAddress);
+      console.log('Onboarding data to save:', onboardingData);
+      
+      const payload = {
         wallet: walletAddress || null,
         experience: onboardingData.experience,
         interests: onboardingData.interests,
         goals: onboardingData.goals,
-        timeframe: onboardingData.timeframe
-      });
+        timeframe: onboardingData.timeframe,
+        onboardingCompleted: true,
+        onboardingCompletedAt: new Date().toISOString()
+      };
+      
+      console.log('Sending payload to API:', payload);
+      console.log('API endpoint: /api/users/create');
       
       const response = await fetch('/api/users/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          wallet: walletAddress || null,
-          experience: onboardingData.experience,
-          interests: onboardingData.interests,
-          goals: onboardingData.goals,
-          timeframe: onboardingData.timeframe,
-          onboardingCompleted: true,
-          onboardingCompletedAt: new Date().toISOString()
-        }),
+        body: JSON.stringify(payload),
       });
 
+      console.log('API response status:', response.status);
       const responseData = await response.json();
-      console.log('API response:', responseData);
+      console.log('API response data:', responseData);
 
       if (!response.ok) {
         console.error('API error:', responseData);
         throw new Error('Failed to save user data');
       }
 
+      // Save to local storage as backup
+      localStorage.setItem('onboardingData', JSON.stringify(onboardingData));
+      localStorage.setItem('onboardingCompleted', 'true');
+      
+      console.log('User data saved successfully');
       return true;
     } catch (error) {
-      console.error('Error saving user data:', error);
+      console.error('Error in saveUserData function:', error);
       return false;
     }
   };
