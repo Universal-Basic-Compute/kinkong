@@ -2,6 +2,29 @@
 import { useState, useEffect } from 'react';
 import { TokenDisplay } from '@/utils/tokenDisplay';
 
+function formatTimeAgo(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  
+  if (diffHours < 1) {
+    return 'Just now';
+  } else if (diffHours === 1) {
+    return '1 hour ago';
+  } else if (diffHours < 24) {
+    return `${diffHours} hours ago`;
+  } else if (diffHours < 48) {
+    return 'Yesterday';
+  } else {
+    // For older dates, show the date in standard format
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }).replace(/\//g, '/');
+  }
+}
+
 interface Investment {
   investmentId: string;
   amount: number;
@@ -117,12 +140,12 @@ export function InvestmentsTable({ investments, latestSnapshot, isLoading }: Inv
                     </td>
                     <td className="px-4 py-4">
                       {investment.date 
-                        ? new Date(investment.date).toLocaleDateString('en-GB', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric'
-                          }).replace(/\//g, '/')
-                        : 'N/A'}
+                        ? (
+                          <span className="text-gray-400">
+                            {formatTimeAgo(new Date(investment.date))}
+                          </span>
+                        )
+                        : <span className="text-gray-400">N/A</span>}
                     </td>
                   </tr>
                 ))}
