@@ -249,21 +249,25 @@ class TokenTransferExecutor:
                     self.logger.info("Waiting for token account creation to confirm...")
                     await asyncio.sleep(5)
                 
-                # Import transfer_checked
-                from spl.token.instructions import transfer_checked, TransferCheckedParams
+                # Create the transfer instruction using a more direct approach
+                from solana.transaction import TransactionInstruction, AccountMeta
                 
-                # Create the transfer instruction using transfer_checked
-                transfer_ix = transfer_checked(
-                    TransferCheckedParams(
-                        program_id=Pubkey.from_string("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),  # Token program ID
-                        source=source_token_account,
-                        mint=Pubkey.from_string(token_mint),
-                        dest=destination_token_account,
-                        owner=Pubkey.from_string(self.wallet),
-                        amount=amount_lamports,
-                        decimals=decimals,
-                        signers=[]
-                    )
+                # Define the token program ID
+                token_program_id = Pubkey.from_string("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
+                
+                # Create the instruction data for a token transfer
+                # The first byte (3) is the instruction index for Transfer in the Token program
+                instruction_data = bytes([3]) + amount_lamports.to_bytes(8, byteorder='little')
+                
+                # Create the instruction with the correct accounts
+                transfer_ix = TransactionInstruction(
+                    keys=[
+                        AccountMeta(pubkey=source_token_account, is_signer=False, is_writable=True),
+                        AccountMeta(pubkey=destination_token_account, is_signer=False, is_writable=True),
+                        AccountMeta(pubkey=Pubkey.from_string(self.wallet), is_signer=True, is_writable=False),
+                    ],
+                    program_id=token_program_id,
+                    data=instruction_data
                 )
                 
                 # Create a transaction
