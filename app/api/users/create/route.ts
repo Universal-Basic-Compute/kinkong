@@ -63,8 +63,8 @@ export async function POST(request: NextRequest) {
           }
         );
         
-        // Check if updatedUser exists and has at least one record
-        if (!updatedUser || updatedUser.length === 0) {
+        // Check if updatedUser exists (it's a single record, not an array)
+        if (!updatedUser) {
           console.error('Failed to update user: No user record returned');
           return NextResponse.json({
             error: 'Failed to update user record',
@@ -72,8 +72,8 @@ export async function POST(request: NextRequest) {
           }, { status: 500 });
         }
         
-        // Safely access the ID with proper checks
-        const userId = updatedUser[0]?.id || updatedUser[0]?.fields?.id;
+        // Safely access the ID directly from the record
+        const userId = updatedUser.id;
         console.log('User updated successfully:', userId);
         
         return NextResponse.json({
