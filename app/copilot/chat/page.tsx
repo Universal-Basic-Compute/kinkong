@@ -130,6 +130,8 @@ export default function CopilotChatPage() {
   const { onboardingData, isCompleted } = useOnboarding();
   const [loading, setLoading] = useState(true);
 
+  // Define animateMessageTyping before it's used in useEffect dependencies
+
   // Function to fetch user data from Airtable
   const fetchUserData = async (walletAddress: string) => {
     try {
