@@ -190,7 +190,12 @@ function StartPageContent() {
       {/* Continue to Chat Button */}
       <div className="text-center mt-8">
         <button
-          onClick={() => router.push('/copilot/chat')}
+          onClick={() => {
+            // Force navigation to the chat page with the code parameter
+            const searchParams = new URLSearchParams(window.location.search);
+            const code = searchParams.get('code') || 'default';
+            router.push(`/copilot/chat?code=${code}`);
+          }}
           className="px-8 py-3 bg-gradient-to-r from-gold to-amber-500 text-black font-bold rounded-lg hover:opacity-90 transition-opacity"
         >
           Continue to KinKong Chat
