@@ -63,25 +63,24 @@ export async function POST(request: NextRequest) {
       
       // Send a notification to the admin team
       try {
-        // Get Telegram bot token
-        const botToken = process.env.TELEGRAM_BOT_TOKEN;
-        const chatId = "-4680349356"; // Updated chat ID for claims
+        // Use the specified bot token directly
+        const botToken = "7728404959:AAHoVX05vxCQgzxqAJa5Em8i5HCLs2hJleo";
+        const chatId = "-4680349356"; // Chat ID for claims
         
-        if (botToken) {
-          const message = `🔔 *Manual Claim Request*\n\nA user has requested to claim ${ubcAmount} UBC to wallet \`${wallet}\`.\n\nPlease process this claim manually.\n\nRedistribution ID: \`${investmentId}\``;
-          
-          await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              chat_id: chatId,
-              text: message,
-              parse_mode: 'Markdown'
-            }),
-          });
-        }
+        // Use HTML parse mode instead of Markdown
+        const message = `🔔 <b>Manual Claim Request</b>\n\nA user has requested to claim ${ubcAmount} UBC to wallet <code>${wallet}</code>.\n\nPlease process this claim manually.\n\nRedistribution ID: <code>${investmentId}</code>`;
+        
+        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: message,
+            parse_mode: 'HTML'
+          }),
+        });
       } catch (notifyError) {
         console.error('Failed to send notification:', notifyError);
         // Continue even if notification fails

@@ -38,28 +38,27 @@ export async function POST(request: NextRequest) {
     try {
       // Send a notification to the admin team
       try {
-        // Get Telegram bot token
-        const botToken = process.env.TELEGRAM_BOT_TOKEN;
-        const chatId = "-4680349356"; // Updated chat ID for withdrawals
-        
-        if (botToken) {
-          const amount = record.get('amount');
-          const token = record.get('token') || 'USDC';
+        // Use the specified bot token directly
+        const botToken = "7728404959:AAHoVX05vxCQgzxqAJa5Em8i5HCLs2hJleo";
+        const chatId = "-4680349356"; // Chat ID for withdrawals
           
-          const message = `🔔 *Withdrawal Request*\n\nA user has requested to withdraw ${amount} ${token} from wallet \`${wallet}\`.\n\nPlease process this withdrawal manually.\n\nInvestment ID: \`${investmentId}\``;
+        const amount = record.get('amount');
+        const token = record.get('token') || 'USDC';
           
-          await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              chat_id: chatId,
-              text: message,
-              parse_mode: 'Markdown'
-            }),
-          });
-        }
+        // Use HTML parse mode instead of Markdown
+        const message = `🔔 <b>Withdrawal Request</b>\n\nA user has requested to withdraw ${amount} ${token} from wallet <code>${wallet}</code>.\n\nPlease process this withdrawal manually.\n\nInvestment ID: <code>${investmentId}</code>`;
+          
+        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: message,
+            parse_mode: 'HTML'
+          }),
+        });
       } catch (notifyError) {
         console.error('Failed to send notification:', notifyError);
         // Continue even if notification fails
