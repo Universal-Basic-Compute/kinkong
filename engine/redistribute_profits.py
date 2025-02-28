@@ -49,6 +49,104 @@ class ProfitRedistributor:
         # Initialize WalletSnapshotTaker for taking a new snapshot if needed
         self.snapshot_taker = WalletSnapshotTaker()
         
+    def get_compute_price_from_meteora(self):
+        """Helper function to get COMPUTE price from Meteora pool"""
+        self.logger.info("Fetching COMPUTE price from Meteora pool")
+        compute_price = None
+        
+        try:
+            meteora_pool_id = "HN7ibjiyX399d1EfYXcWaSHZRSMfUmonYvXGFXG41Rr3"
+            
+            # First try Birdeye API for Meteora pool
+            birdeye_url = "https://public-api.birdeye.so/v1/pool/price"
+            params = {
+                "pool_address": meteora_pool_id
+            }
+            headers = {
+                "x-api-key": os.getenv('BIRDEYE_API_KEY'),
+                "x-chain": "solana",
+                "accept": "application/json"
+            }
+            
+            response = requests.get(birdeye_url, params=params, headers=headers)
+            
+            if response.status_code == 200 and response.content:
+                pool_data = response.json()
+                
+                if pool_data.get('success'):
+                    compute_price = float(pool_data.get('data', {}).get('price', 0))
+                    self.logger.info(f"COMPUTE price from Birdeye: ${compute_price:.6f}")
+                else:
+                    self.logger.warning(f"Failed to get COMPUTE price from Birdeye: {pool_data.get('message')}")
+            else:
+                self.logger.warning(f"Failed to get COMPUTE price from Birdeye: {response.status_code}")
+                
+            # If Birdeye fails, try DexScreener
+            if not compute_price:
+                dexscreener_url = f"https://api.dexscreener.com/latest/dex/pools/solana/{meteora_pool_id}"
+                
+                response = requests.get(dexscreener_url)
+                response.raise_for_status()
+                data = response.json()
+                
+                if data.get('pairs') and len(data['pairs']) > 0:
+                    compute_pair = data['pairs'][0]
+                    
+                    if compute_pair and compute_pair.get('priceUsd'):
+                        compute_price = float(compute_pair['priceUsd'])
+                        self.logger.info(f"COMPUTE price from DexScreener: ${compute_price:.6f}")
+                else:
+                    self.logger.warning("No pairs found for COMPUTE token on DexScreener")
+            
+            # If both Birdeye and DexScreener fail, try Jupiter API
+            if not compute_price:
+                compute_mint = "B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo"
+                jupiter_url = "https://price.jup.ag/v4/price"
+                jupiter_params = {
+                    "ids": compute_mint
+                }
+                
+                jupiter_response = requests.get(jupiter_url, params=jupiter_params)
+                jupiter_response.raise_for_status()
+                jupiter_data = jupiter_response.json()
+                
+                if jupiter_data.get('data') and jupiter_data['data'].get(compute_mint):
+                    compute_price = float(jupiter_data['data'][compute_mint].get('price', 0))
+                    self.logger.info(f"COMPUTE price from Jupiter: ${compute_price:.6f}")
+            
+            # If all methods fail, try to get price from wallet snapshot
+            if not compute_price:
+                self.logger.info("Trying to get COMPUTE price from latest wallet snapshot")
+                latest_snapshot = self.get_snapshot_by_date(datetime.now(timezone.utc))
+                
+                if latest_snapshot and 'holdings' in latest_snapshot['fields']:
+                    try:
+                        holdings = json.loads(latest_snapshot['fields']['holdings'])
+                        for holding in holdings:
+                            if holding.get('token') == 'COMPUTE':
+                                compute_price = float(holding.get('price', 0))
+                                self.logger.info(f"COMPUTE price from wallet snapshot: ${compute_price:.6f}")
+                                break
+                    except (json.JSONDecodeError, ValueError) as e:
+                        self.logger.warning(f"Error parsing holdings from snapshot: {e}")
+            
+            # If still no price, use a fallback from the snapshot taker
+            if not compute_price:
+                self.logger.info("Using snapshot taker to get COMPUTE price")
+                # Create a temporary instance of WalletSnapshotTaker to get the price
+                token_balances = self.snapshot_taker.get_token_balances()
+                
+                for balance in token_balances:
+                    if balance.get('symbol') == 'COMPUTE':
+                        compute_price = float(balance.get('priceUsd', 0))
+                        self.logger.info(f"COMPUTE price from wallet balances: ${compute_price:.6f}")
+                        break
+            
+            return compute_price
+        except Exception as e:
+            self.logger.error(f"Error in get_compute_price_from_meteora: {e}")
+            return None
+        
     def get_snapshot_by_date(self, target_date):
         """Get the closest wallet snapshot to the target date"""
         self.logger.info(f"Finding snapshot closest to {target_date.isoformat()}")
@@ -110,6 +208,10 @@ class ProfitRedistributor:
             # Get current token prices
             token_prices = self.get_token_prices()
             
+            # Log token prices for debugging
+            for token, price in token_prices.items():
+                self.logger.info(f"Using price for {token}: ${price:.6f}")
+            
             for investment in investments:
                 try:
                     amount = float(investment['fields'].get('amount', 0))
@@ -122,6 +224,7 @@ class ProfitRedistributor:
                     elif token_symbol in token_prices:
                         # Use fetched price for other tokens
                         amount_usd = amount * token_prices[token_symbol]
+                        self.logger.info(f"Converting {amount} {token_symbol} at price ${token_prices[token_symbol]:.6f}")
                     else:
                         # Default to 0 if price not available
                         self.logger.warning(f"No price available for token {token_symbol}, using 0 USD value")
@@ -179,73 +282,17 @@ class ProfitRedistributor:
         except Exception as e:
             self.logger.error(f"Error fetching UBC price: {e}")
         
-        # Fetch COMPUTE price from Meteora dynamic pool
-        try:
-            meteora_pool_id = "HN7ibjiyX399d1EfYXcWaSHZRSMfUmonYvXGFXG41Rr3"
-            
-            # First try Birdeye API for Meteora pool
-            birdeye_url = "https://public-api.birdeye.so/v1/pool/price"
-            params = {
-                "pool_address": meteora_pool_id
-            }
-            headers = {
-                "x-api-key": os.getenv('BIRDEYE_API_KEY'),
-                "x-chain": "solana",
-                "accept": "application/json"
-            }
-            
-            response = requests.get(birdeye_url, params=params, headers=headers)
-            
-            if response.status_code == 200 and response.content:
-                pool_data = response.json()
-                
-                if pool_data.get('success'):
-                    compute_price = float(pool_data.get('data', {}).get('price', 0))
-                    token_prices['COMPUTE'] = compute_price
-                    self.logger.info(f"COMPUTE price from Birdeye: ${token_prices['COMPUTE']:.6f}")
-                else:
-                    self.logger.warning(f"Failed to get COMPUTE price from Birdeye: {pool_data.get('message')}")
-            else:
-                self.logger.warning(f"Failed to get COMPUTE price from Birdeye: {response.status_code}")
-                
-            # If Birdeye fails, try DexScreener
-            if 'COMPUTE' not in token_prices:
-                dexscreener_url = f"https://api.dexscreener.com/latest/dex/pools/solana/{meteora_pool_id}"
-                
-                response = requests.get(dexscreener_url)
-                response.raise_for_status()
-                data = response.json()
-                
-                if data.get('pairs') and len(data['pairs']) > 0:
-                    compute_pair = data['pairs'][0]
-                    
-                    if compute_pair and compute_pair.get('priceUsd'):
-                        token_prices['COMPUTE'] = float(compute_pair['priceUsd'])
-                        self.logger.info(f"COMPUTE price from DexScreener: ${token_prices['COMPUTE']:.6f}")
-                else:
-                    self.logger.warning("No pairs found for COMPUTE token on DexScreener")
-        except Exception as e:
-            self.logger.error(f"Error fetching COMPUTE price: {e}")
-        
-        # If we still don't have COMPUTE price, try Jupiter API
-        if 'COMPUTE' not in token_prices:
-            try:
-                compute_mint = "B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo"
-                jupiter_url = "https://price.jup.ag/v4/price"
-                jupiter_params = {
-                    "ids": compute_mint
-                }
-                
-                jupiter_response = requests.get(jupiter_url, params=jupiter_params)
-                jupiter_response.raise_for_status()
-                jupiter_data = jupiter_response.json()
-                
-                if jupiter_data.get('data') and jupiter_data['data'].get(compute_mint):
-                    compute_price = float(jupiter_data['data'][compute_mint].get('price', 0))
-                    token_prices['COMPUTE'] = compute_price
-                    self.logger.info(f"COMPUTE price from Jupiter: ${token_prices['COMPUTE']:.6f}")
-            except Exception as e:
-                self.logger.error(f"Error fetching COMPUTE price from Jupiter: {e}")
+        # Fetch COMPUTE price using the helper function
+        compute_price = self.get_compute_price_from_meteora()
+        if compute_price:
+            token_prices['COMPUTE'] = compute_price
+            self.logger.info(f"COMPUTE price set: ${token_prices['COMPUTE']:.6f}")
+        else:
+            # If all methods fail, use a fallback price to avoid zero values
+            # This is a last resort to prevent investments from being valued at $0
+            fallback_price = 0.0001  # Very small fallback price
+            token_prices['COMPUTE'] = fallback_price
+            self.logger.warning(f"Using fallback price for COMPUTE: ${fallback_price}")
         
         # Log all token prices
         self.logger.info(f"Token prices: {token_prices}")
