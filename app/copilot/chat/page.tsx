@@ -470,8 +470,8 @@ export default function CopilotChatPage() {
             ))}
             
             {/* Add typing indicator before first message if no messages yet */}
-            {messages.length === 0 && isTyping && (
-              <div className="flex items-center space-x-1 ml-3 mt-1">
+            {messages.length === 0 && (
+              <div className="flex items-center space-x-1 ml-3 mt-6">
                 <div className="w-2 h-2 bg-gold/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
                 <div className="w-2 h-2 bg-gold/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
                 <div className="w-2 h-2 bg-gold/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
