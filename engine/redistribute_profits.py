@@ -392,19 +392,31 @@ class ProfitRedistributor:
             return {
                 "total_profit": total_profit,
                 "pool_1": 0,  # 25% pool
-                "pool_2": 0   # 75% pool
+                "pool_2": 0,   # 75% pool
+                "fees": 0      # 3% fees
             }
-        
-        pool_1 = total_profit * 0.25  # 25% pool
-        pool_2 = total_profit * 0.75  # 75% pool
-        
+    
+        # Calculate 3% fee from total profit
+        fees = total_profit * 0.03
+    
+        # Calculate remaining profit after fees
+        profit_after_fees = total_profit - fees
+    
+        # Calculate distribution pools from remaining profit
+        pool_1 = profit_after_fees * 0.25  # 25% pool
+        pool_2 = profit_after_fees * 0.75  # 75% pool
+    
         self.logger.info("\n=== Profit Distribution ===")
-        self.logger.info(f"Total Profit to Distribute: ${total_profit:.2f}")
+        self.logger.info(f"Total Profit (7 days): ${total_profit:.2f}")
+        self.logger.info(f"Fees (3%): ${fees:.2f}")
+        self.logger.info(f"Profit After Fees: ${profit_after_fees:.2f}")
         self.logger.info(f"Pool 1 (25%): ${pool_1:.2f}")
         self.logger.info(f"Pool 2 (75%): ${pool_2:.2f}")
-        
+    
         return {
             "total_profit": total_profit,
+            "profit_after_fees": profit_after_fees,
+            "fees": fees,
             "pool_1": pool_1,
             "pool_2": pool_2
         }
@@ -523,6 +535,8 @@ def main():
         if result and result['total_profit'] > 0:
             print("\n=== KinKong Profit Redistribution ===")
             print(f"Total Profit (7 days): ${result['total_profit']:.2f}")
+            print(f"Fees (3%): ${result['fees']:.2f}")
+            print(f"Profit After Fees: ${result['profit_after_fees']:.2f}")
             print(f"Pool 1 (25%): ${result['pool_1']:.2f}")
             print(f"Pool 2 (75%): ${result['pool_2']:.2f}")
             
