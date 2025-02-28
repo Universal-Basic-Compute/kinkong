@@ -49,7 +49,7 @@ function formatTimeAgo(date: Date): string {
   }
 }
 
-export function InvestorsTable({ initialData = [] }: InvestorsTableProps) {
+export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) {
   // State for sorting and data
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
@@ -125,12 +125,12 @@ export function InvestorsTable({ initialData = [] }: InvestorsTableProps) {
 
   return (
     <div className="bg-black/30 p-6 rounded-lg border border-gold/20">
-      <h2 className="text-xl font-bold mb-4">Investors</h2>
+      <h2 className="text-xl font-bold mb-4">Latest Redistributions</h2>
       
       {isLoading ? (
         <div className="text-center py-8">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gold"></div>
-          <p className="mt-2">Loading investors data...</p>
+          <p className="mt-2">Loading redistributions data...</p>
         </div>
       ) : (
         <>
