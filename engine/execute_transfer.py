@@ -142,7 +142,7 @@ class UBCTransferExecutor:
             return []
     
     
-    def execute_transfer(self, destination_wallet, ubc_amount):
+    async def execute_transfer(self, destination_wallet, ubc_amount):
         """Execute a UBC transfer to the destination wallet using Solana RPC"""
         try:
             # For UBC, we'll use 6 decimals (standard for most SPL tokens)
@@ -441,14 +441,18 @@ class UBCTransferExecutor:
         except Exception as e:
             self.logger.error(f"Error processing redistributions: {e}")
             
-    def process_redistributions(self):
+    async def process_redistributions(self):
         """Process all pending redistributions (synchronous wrapper for async method)"""
+        await self.process_redistributions_async()
+        
+    def process_redistributions_sync(self):
+        """Synchronous wrapper for process_redistributions"""
         # Set up asyncio event loop policy for Windows if needed
         if os.name == 'nt':  # Windows
             asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
         
         # Run the async method
-        asyncio.run(self.process_redistributions_async())
+        asyncio.run(self.process_redistributions())
 
 async def async_main():
     try:
@@ -471,7 +475,7 @@ async def async_main():
         
         # Initialize and run transfer executor
         executor = UBCTransferExecutor()
-        await executor.process_redistributions_async()
+        await executor.process_redistributions()
         
         print("\n✅ Redistribution transfers completed")
         
