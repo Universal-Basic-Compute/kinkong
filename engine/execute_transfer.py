@@ -349,16 +349,37 @@ class UBCTransferExecutor:
 🔗 [View Transaction](https://solscan.io/tx/{tx_signature})
 """
             
-            # Send the text message
-            telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-            payload = {
-                "chat_id": chat_id,
-                "text": message,
-                "parse_mode": "Markdown"
-            }
+            # First try to send with image
+            image_path = "public/copilot.png"
             
-            response = requests.post(telegram_url, json=payload)
-            response.raise_for_status()
+            # Check if image exists
+            if os.path.exists(image_path):
+                # Send photo with caption
+                telegram_url = f"https://api.telegram.org/bot{bot_token}/sendPhoto"
+                
+                # Open and read the image file
+                with open(image_path, 'rb') as photo:
+                    files = {'photo': photo}
+                    payload = {
+                        "chat_id": chat_id,
+                        "caption": message,
+                        "parse_mode": "Markdown"
+                    }
+                    
+                    response = requests.post(telegram_url, data=payload, files=files)
+                    response.raise_for_status()
+            else:
+                # If image doesn't exist, just send the text message
+                self.logger.warning(f"Image file not found at {image_path}, sending text-only message")
+                telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+                payload = {
+                    "chat_id": chat_id,
+                    "text": message,
+                    "parse_mode": "Markdown"
+                }
+                
+                response = requests.post(telegram_url, json=payload)
+                response.raise_for_status()
             
             self.logger.info(f"Telegram notification sent successfully for {wallet_display}")
             return True

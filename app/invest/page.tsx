@@ -23,7 +23,7 @@ async function sendTelegramNotification(investmentData: any) {
     const wallet = investmentData.wallet;
     const walletDisplay = wallet.substring(0, 10) + '...' + wallet.substring(wallet.length - 10);
     
-    // Create message text
+    // Create message text (removed percentage)
     const message = `🚀 *New KinKong Investment*
     
 💰 *Amount*: ${investmentData.amount.toLocaleString()} ${investmentData.token}
@@ -33,21 +33,46 @@ async function sendTelegramNotification(investmentData: any) {
 🔗 [View Transaction](${investmentData.solscanUrl})
 `;
     
-    // Send the message
-    const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: message,
-        parse_mode: 'Markdown'
-      }),
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Telegram API error: ${response.status}`);
+    // Send the image with caption
+    try {
+      // First try to send with image
+      const formData = new FormData();
+      formData.append('chat_id', chatId);
+      formData.append('caption', message);
+      formData.append('parse_mode', 'Markdown');
+      
+      // Fetch the image and append it to the form
+      const imageResponse = await fetch('/copilot.png');
+      const imageBlob = await imageResponse.blob();
+      formData.append('photo', imageBlob, 'copilot.png');
+      
+      const response = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Telegram API error: ${response.status}`);
+      }
+    } catch (imageError) {
+      console.warn('Failed to send image, falling back to text-only message', imageError);
+      
+      // Fallback to text-only message if image fails
+      const textResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: message,
+          parse_mode: 'Markdown'
+        }),
+      });
+      
+      if (!textResponse.ok) {
+        throw new Error(`Telegram API error: ${textResponse.status}`);
+      }
     }
     
     console.log('Telegram notification sent successfully');
