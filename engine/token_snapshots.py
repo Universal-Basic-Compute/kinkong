@@ -167,9 +167,24 @@ class TokenSnapshotTaker:
             # Get 7-day historical data for token
             seven_days_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
             try:
-                historical_snapshots = self.snapshots_table.get_all(
-                    formula=f"AND({{token}}='{token_name}', IS_AFTER({{createdAt}}, '{seven_days_ago}'))"
-                )
+                # Debug the Airtable object
+                self.logger.info(f"Fetching historical snapshots for {token_name}")
+                
+                if hasattr(self.snapshots_table, 'get_all'):
+                    historical_snapshots = self.snapshots_table.get_all(
+                        formula=f"AND({{token}}='{token_name}', IS_AFTER({{createdAt}}, '{seven_days_ago}'))"
+                    )
+                    self.logger.info(f"Found {len(historical_snapshots)} historical snapshots")
+                else:
+                    # Fallback if get_all doesn't exist
+                    self.logger.warning("Airtable object does not have get_all method, trying alternative approach")
+                    historical_snapshots = []
+                    records = self.snapshots_table.get_all()
+                    for record in records:
+                        if (record['fields'].get('token') == token_name and 
+                            record['fields'].get('createdAt', '') > seven_days_ago):
+                            historical_snapshots.append(record)
+                    self.logger.info(f"Found {len(historical_snapshots)} historical snapshots using alternative method")
             except Exception as e:
                 self.logger.error(f"Error fetching historical snapshots: {e}")
                 self.logger.error(traceback.format_exc())
@@ -177,9 +192,23 @@ class TokenSnapshotTaker:
             
             # Get SOL historical data
             try:
-                sol_snapshots = self.snapshots_table.get_all(
-                    formula=f"AND({{token}}='SOL', IS_AFTER({{createdAt}}, '{seven_days_ago}'))"
-                )
+                self.logger.info("Fetching SOL historical data")
+                
+                if hasattr(self.snapshots_table, 'get_all'):
+                    sol_snapshots = self.snapshots_table.get_all(
+                        formula=f"AND({{token}}='SOL', IS_AFTER({{createdAt}}, '{seven_days_ago}'))"
+                    )
+                    self.logger.info(f"Found {len(sol_snapshots)} SOL historical snapshots")
+                else:
+                    # Fallback if get_all doesn't exist
+                    self.logger.warning("Airtable object does not have get_all method, trying alternative approach for SOL")
+                    sol_snapshots = []
+                    records = self.snapshots_table.get_all()
+                    for record in records:
+                        if (record['fields'].get('token') == 'SOL' and 
+                            record['fields'].get('createdAt', '') > seven_days_ago):
+                            sol_snapshots.append(record)
+                    self.logger.info(f"Found {len(sol_snapshots)} SOL historical snapshots using alternative method")
             except Exception as e:
                 self.logger.error(f"Error fetching SOL snapshots: {e}")
                 self.logger.error(traceback.format_exc())
@@ -303,15 +332,25 @@ class TokenSnapshotTaker:
                 'isActive': True
             }
             
+            # Log snapshot details
+            self.logger.info(f"Created snapshot for {token_name}:")
+            self.logger.info(f"Price: ${metrics['price']:.6f}")
+            self.logger.info(f"24h Volume: ${metrics['volume24h']:,.2f}")
+            
             # Calculate additional metrics using snapshot data
             calculated_metrics = await self.calculate_metrics(token, snapshot)
             
             # Update snapshot with calculated metrics
             snapshot.update(calculated_metrics)
             
-            # Save snapshot
-            record = self.snapshots_table.insert(snapshot)
-            logger.info(f"✅ Snapshot saved for {token_name}")
+            # Save snapshot with error handling
+            try:
+                record = self.snapshots_table.insert(snapshot)
+                logger.info(f"✅ Snapshot saved for {token_name}")
+            except Exception as e:
+                logger.error(f"❌ Error saving snapshot for {token_name}: {e}")
+                logger.error(traceback.format_exc())
+                return None
             
             # Return the created snapshot with record ID
             snapshot['id'] = record['id']
