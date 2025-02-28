@@ -28,7 +28,8 @@ export async function GET(request: NextRequest) {
         return: parseFloat(record.get('amount') || '0'),
         redistributionId: record.get('redistributionId'),
         redistributionDate: record.get('createdAt'),
-        percentage: parseFloat(record.get('percentage') || '0')
+        percentage: parseFloat(record.get('percentage') || '0'),
+        claimed: record.get('claimed') || false // Add claimed status
       };
     });
     
