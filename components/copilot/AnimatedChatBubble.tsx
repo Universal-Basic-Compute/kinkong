@@ -41,7 +41,7 @@ export default function AnimatedChatBubble() {
 
   return (
     <div className={`
-      absolute -top-12 left-1/2 -translate-x-1/2
+      absolute -top-20 left-1/2 -translate-x-1/2
       bg-gold text-black 
       px-4 py-2 
       rounded-lg 
@@ -52,12 +52,13 @@ export default function AnimatedChatBubble() {
       after:absolute 
       after:left-1/2 
       after:-translate-x-1/2
-      after:top-full
+      after:top-[95%]
       after:border-8 
       after:border-transparent 
       after:border-t-gold
       min-w-[200px]
       text-center
+      z-10
     `}>
       <span className="font-medium">{message}</span>
     </div>
