@@ -155,11 +155,7 @@ const CompleteStep: React.FC = () => {
       )}
       
       <p className="text-gray-400">
-        {isSaving ? 'Saving your preferences...' : 'Redirecting you to KinKong Copilot...'}
-      </p>
-      
-      <p className="text-gray-400">
-        {isSaving ? 'Saving your preferences...' : 'Ready to start using KinKong Copilot!'}
+        {isSaving ? 'Saving your preferences...' : 'Ready to start using Kong Copilot!'}
       </p>
       
       {!publicKey && (
