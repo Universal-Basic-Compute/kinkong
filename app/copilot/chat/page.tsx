@@ -306,8 +306,19 @@ export default function CopilotChatPage() {
     console.log('User has an inactive subscription');
   }
 
+  // Add useEffect to disable body scrolling
+  useEffect(() => {
+    // Disable scrolling on the body when chat page is mounted
+    document.body.classList.add('no-scroll');
+    
+    // Re-enable scrolling when component unmounts
+    return () => {
+      document.body.classList.remove('no-scroll');
+    };
+  }, []);
+
   return (
-    <div className="fixed inset-0 top-16 flex overflow-hidden">
+    <div className="fixed inset-0 top-16 bottom-0 flex overflow-hidden">
       {/* Left Sidebar - Missions */}
       <div className="w-72 bg-black/40 border-r border-gold/20 p-4 overflow-y-auto">
         <div className="flex items-center justify-between mb-3">

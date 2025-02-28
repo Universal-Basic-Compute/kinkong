@@ -235,6 +235,11 @@ body {
     inset 0 0 20px rgba(255, 215, 0, 0.05);
 }
 
+/* Disable scrolling on body */
+body.no-scroll {
+  overflow: hidden;
+}
+
 /* Refined Text Effect */
 .electric-text {
   background: linear-gradient(
