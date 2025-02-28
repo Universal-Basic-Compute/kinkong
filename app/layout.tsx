@@ -3,7 +3,6 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Providers } from "./providers";
-import NotificationListener from "@/components/NotificationListener";
 import "./globals.css";
 
 const inter = Inter({
@@ -43,7 +42,6 @@ export default function RootLayout({
             {children}
           </div>
           <Footer />
-          <NotificationListener />
         </Providers>
       </body>
     </html>
