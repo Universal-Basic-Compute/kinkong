@@ -62,10 +62,10 @@ export async function POST(request: NextRequest) {
         }
       );
       
-      console.log('User updated successfully:', updatedUser[0].id);
+      console.log('User updated successfully:', updatedUser[0].id || updatedUser[0].userId);
       return NextResponse.json({
         success: true,
-        user: updatedUser[0].id,
+        user: updatedUser[0].id || updatedUser[0].userId,
         updated: true
       });
     } else {
