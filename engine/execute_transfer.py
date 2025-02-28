@@ -103,6 +103,10 @@ class UBCTransferExecutor:
                     formula=f"AND({{redistributionId}}='{redistribution_id}', {{status}}='PENDING')"
                 )
                 
+                # Log if any redistributions have investmentId field
+                has_investment_ids = any(inv['fields'].get('investmentId') for inv in investor_redistributions)
+                self.logger.info(f"Redistributions with investment IDs: {has_investment_ids}")
+                
                 self.logger.info(f"Found {len(investor_redistributions)} pending investor redistributions for {redistribution_id}")
                 
                 # Process investor redistributions

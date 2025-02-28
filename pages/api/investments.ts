@@ -35,29 +35,48 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
     
-    // Create a map of wallet addresses to their latest redistribution
-    const walletToRedistribution = new Map();
+    // Create a map of wallet addresses to their redistributions (allowing multiple per wallet)
+    const walletToRedistributions = new Map();
     redistributionsRecords.forEach(record => {
       const wallet = record.get('wallet');
       if (wallet) {
-        // Only add if this wallet doesn't exist in the map yet (since records are sorted by date desc)
-        if (!walletToRedistribution.has(wallet)) {
-          walletToRedistribution.set(wallet, {
-            redistributionId: record.id,
-            ubcAmount: parseFloat(record.get('ubcAmount') || '0'),
-            amount: parseFloat(record.get('amount') || '0'),
-            createdAt: record.get('createdAt')
-          });
+        if (!walletToRedistributions.has(wallet)) {
+          walletToRedistributions.set(wallet, []);
         }
+        
+        walletToRedistributions.get(wallet).push({
+          redistributionId: record.id,
+          ubcAmount: parseFloat(record.get('ubcAmount') || '0'),
+          amount: parseFloat(record.get('amount') || '0'),
+          createdAt: record.get('createdAt'),
+          investmentId: record.get('investmentId') // Add this field to match specific investments
+        });
       }
     });
     
-    console.log(`Mapped ${walletToRedistribution.size} unique wallets with redistributions`);
+    console.log(`Mapped ${walletToRedistributions.size} unique wallets with redistributions`);
     
     // Map investments and add redistribution data
     const investments = investmentsRecords.map(record => {
       const wallet = record.get('wallet');
-      const redistribution = wallet ? walletToRedistribution.get(wallet) : null;
+      const investmentId = record.id;
+      
+      // Find the redistribution for this specific investment ID if possible
+      let redistribution = null;
+      if (wallet && walletToRedistributions.has(wallet)) {
+        const redistributions = walletToRedistributions.get(wallet);
+        
+        // First try to find a redistribution that specifically matches this investment ID
+        redistribution = redistributions.find(r => r.investmentId === investmentId);
+        
+        // If no specific match, use the latest redistribution for this wallet
+        if (!redistribution && redistributions.length > 0) {
+          // Sort by date descending and take the first one
+          redistribution = [...redistributions].sort((a, b) => 
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          )[0];
+        }
+      }
       
       return {
         investmentId: record.id,

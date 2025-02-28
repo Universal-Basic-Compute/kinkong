@@ -730,19 +730,51 @@ Status: Pending ⏳
             # Now create investor redistribution records
             investor_records = []
             
+            # Get all investments for reference
+            investments_table = Airtable(
+                self.base_id,
+                'INVESTMENTS',
+                self.api_key
+            )
+            investments = investments_table.get_all()
+            
             for investor_data in investor_data_with_ubc:
-                investor_record = {
-                    'fields': {
-                        'redistributionId': main_record_id,  # Link to the main redistribution record
-                        'wallet': investor_data['wallet'],
-                        'investmentValue': investor_data['investment_value'],
-                        'percentage': investor_data['percentage'],
-                        'amount': investor_data['distribution_amount'],
-                        'ubcAmount': investor_data['ubcAmount'],  # Add UBC amount field
-                        'status': 'PENDING',  # Initial status
-                        'createdAt': now
+                # Get all investments for this wallet
+                wallet_investments = [inv for inv in investments if inv['fields'].get('wallet') == investor_data['wallet']]
+                
+                # If there are investments for this wallet, link the redistribution to them
+                if wallet_investments:
+                    # Sort investments by amount (descending) to match the largest investment first
+                    wallet_investments.sort(key=lambda x: float(x['fields'].get('amount', 0)), reverse=True)
+                    investment_id = wallet_investments[0]['id']  # Use the largest investment
+                    
+                    investor_record = {
+                        'fields': {
+                            'redistributionId': main_record_id,  # Link to the main redistribution record
+                            'wallet': investor_data['wallet'],
+                            'investmentId': investment_id,  # Add this field to link to specific investment
+                            'investmentValue': investor_data['investment_value'],
+                            'percentage': investor_data['percentage'],
+                            'amount': investor_data['distribution_amount'],
+                            'ubcAmount': investor_data['ubcAmount'],  # Add UBC amount field
+                            'status': 'PENDING',  # Initial status
+                            'createdAt': now
+                        }
                     }
-                }
+                else:
+                    # If no investments found for this wallet, create record without investment ID
+                    investor_record = {
+                        'fields': {
+                            'redistributionId': main_record_id,  # Link to the main redistribution record
+                            'wallet': investor_data['wallet'],
+                            'investmentValue': investor_data['investment_value'],
+                            'percentage': investor_data['percentage'],
+                            'amount': investor_data['distribution_amount'],
+                            'ubcAmount': investor_data['ubcAmount'],  # Add UBC amount field
+                            'status': 'PENDING',  # Initial status
+                            'createdAt': now
+                        }
+                    }
                 
                 # Insert the record into Airtable
                 investor_record_result = investor_redistributions_table.insert(investor_record['fields'])
