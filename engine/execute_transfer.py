@@ -263,115 +263,70 @@ class TokenTransferExecutor:
                     {"pubkey": self.wallet, "is_signer": True, "is_writable": False}
                 ]
 
-                # Create a transaction using the JSON RPC API directly
-                self.logger.info("Creating transaction with JSON RPC API...")
+                # Create a transaction directly with Solana SDK
+                self.logger.info("Creating transaction directly with Solana SDK...")
                 try:
-                    import aiohttp
-                    import json
-                    import base64
+                    # Create a transaction
+                    transaction = Transaction()
+                    
+                    # Define the token program ID
+                    token_program_id = Pubkey.from_string("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
+                    
+                    # Create the transfer instruction
+                    transfer_ix = transfer(
+                        TransferParams(
+                            program_id=token_program_id,
+                            source=source_token_account,
+                            dest=destination_token_account,
+                            owner=Pubkey.from_string(self.wallet),
+                            amount=amount_lamports
+                        )
+                    )
+                    
+                    # Add the instruction to the transaction
+                    transaction.add(transfer_ix)
                     
                     # Get recent blockhash
-                    async with aiohttp.ClientSession() as session:
-                        # Get recent blockhash
-                        blockhash_payload = {
-                            "jsonrpc": "2.0",
-                            "id": 1,
-                            "method": "getLatestBlockhash",
-                            "params": [{"commitment": "confirmed"}]
-                        }
-                        
-                        async with session.post(self.rpc_url, json=blockhash_payload) as resp:
-                            blockhash_result = await resp.json()
-                            blockhash = blockhash_result["result"]["value"]["blockhash"]
-                            self.logger.info(f"Got blockhash: {blockhash}")
-                        
-                        # Create transaction
-                        transaction_payload = {
-                            "jsonrpc": "2.0",
-                            "id": 1,
-                            "method": "createTransaction",
-                            "params": [
-                                {
-                                    "feePayer": self.wallet,
-                                    "recentBlockhash": blockhash,
-                                    "instructions": [
-                                        {
-                                            "programId": str(token_program_id),
-                                            "accounts": account_metas,
-                                            "data": base64.b64encode(instruction_data).decode('ascii')
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                        
-                        # Create the transaction
-                        async with session.post(self.rpc_url, json=transaction_payload) as resp:
-                            transaction_result = await resp.json()
-                            if "error" in transaction_result:
-                                raise ValueError(f"Error creating transaction: {transaction_result['error']}")
-                            
-                            transaction_base64 = transaction_result["result"]["transaction"]
-                            self.logger.info(f"Created transaction: {transaction_base64[:30]}...")
-                        
-                        # Sign the transaction
-                        private_key_bytes = base58.b58decode(self.private_key)
-                        keypair = Keypair.from_bytes(private_key_bytes)
-                        
-                        # Decode the transaction
-                        transaction_bytes = base64.b64decode(transaction_base64)
-                        transaction = Transaction.deserialize(transaction_bytes)
-                        
-                        # Sign the transaction
-                        transaction.sign(keypair)
-                        
-                        # Serialize the signed transaction
-                        signed_transaction = base64.b64encode(transaction.serialize()).decode('ascii')
-                        
-                        # Send the transaction
-                        send_payload = {
-                            "jsonrpc": "2.0",
-                            "id": 1,
-                            "method": "sendTransaction",
-                            "params": [
-                                signed_transaction,
-                                {"encoding": "base64", "skipPreflight": False, "preflightCommitment": "confirmed", "maxRetries": 5}
-                            ]
-                        }
-                        
-                        self.logger.info("Sending transaction...")
-                        async with session.post(self.rpc_url, json=send_payload) as resp:
-                            send_result = await resp.json()
-                            if "error" in send_result:
-                                raise ValueError(f"Error sending transaction: {send_result['error']}")
-                            
-                            tx_signature = send_result["result"]
-                            self.logger.info(f"Transaction sent successfully: {tx_signature}")
-                        
-                        # Wait for confirmation
-                        self.logger.info("Waiting for transaction confirmation...")
-                        await asyncio.sleep(5)
-                        
-                        # Check transaction status
-                        status_payload = {
-                            "jsonrpc": "2.0",
-                            "id": 1,
-                            "method": "getSignatureStatuses",
-                            "params": [[tx_signature]]
-                        }
-                        
-                        async with session.post(self.rpc_url, json=status_payload) as resp:
-                            status_result = await resp.json()
-                            if "error" in status_result:
-                                self.logger.warning(f"Error checking transaction status: {status_result['error']}")
-                            else:
-                                status = status_result["result"]["value"][0]
-                                if status is None:
-                                    self.logger.warning(f"Transaction not found: {tx_signature}")
-                                elif "confirmationStatus" in status:
-                                    self.logger.info(f"Transaction status: {status['confirmationStatus']}")
-                                else:
-                                    self.logger.info(f"Transaction confirmed: {tx_signature}")
+                    blockhash_resp = await client.get_latest_blockhash()
+                    transaction.recent_blockhash = blockhash_resp.value.blockhash
+                    
+                    # Sign the transaction
+                    transaction.sign(keypair)
+                    
+                    # Send the transaction
+                    self.logger.info("Sending transaction...")
+                    send_resp = await client.send_transaction(
+                        transaction,
+                        opts=TxOpts(
+                            skip_preflight=False,
+                            preflight_commitment="confirmed",
+                            max_retries=5
+                        )
+                    )
+                    
+                    if not send_resp.value:
+                        raise ValueError("Failed to send transaction")
+                    
+                    tx_signature = str(send_resp.value)
+                    self.logger.info(f"Transaction sent successfully: {tx_signature}")
+                    
+                    # Wait for confirmation
+                    self.logger.info("Waiting for transaction confirmation...")
+                    await asyncio.sleep(5)
+                    
+                    # Verify the transaction was successful
+                    confirm_resp = await client.confirm_transaction(tx_signature)
+                    
+                    if not confirm_resp.value:
+                        self.logger.warning(f"Transaction may not be confirmed: {tx_signature}")
+                    
+                    return {
+                        "success": True,
+                        "signature": tx_signature,
+                        "token": token,
+                        "amount": amount,
+                        "destination": destination_wallet
+                    }
                 except Exception as e:
                     self.logger.error(f"Error with JSON RPC approach: {e}")
                     # Fall back to a simpler approach
@@ -383,49 +338,49 @@ class TokenTransferExecutor:
                         
                         # Create a temporary script to execute the transfer
                         script_content = f"""
-                        import os
-                        import json
-                        import base58
-                        from solana.rpc.api import Client
-                        from solana.transaction import Transaction
-                        from solana.keypair import Keypair
-                        from spl.token.instructions import transfer, TransferParams
-                        from solana.publickey import PublicKey
-                        
-                        # Set up client
-                        client = Client("{self.rpc_url}")
-                        
-                        # Load keypair
-                        private_key = base58.b58decode("{self.private_key}")
-                        keypair = Keypair.from_secret_key(private_key)
-                        
-                        # Define accounts
-                        source = PublicKey("{source_token_account}")
-                        destination = PublicKey("{destination_token_account}")
-                        owner = PublicKey("{self.wallet}")
-                        token_program = PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
-                        
-                        # Create transfer instruction
-                        transfer_ix = transfer(
-                            TransferParams(
-                                source=source,
-                                dest=destination,
-                                owner=owner,
-                                amount={amount_lamports},
-                                program_id=token_program
-                            )
-                        )
-                        
-                        # Create and sign transaction
-                        recent_blockhash = client.get_recent_blockhash()["result"]["value"]["blockhash"]
-                        txn = Transaction().add(transfer_ix)
-                        txn.recent_blockhash = recent_blockhash
-                        txn.sign(keypair)
-                        
-                        # Send transaction
-                        result = client.send_transaction(txn)
-                        print(json.dumps(result))
-                        """
+import os
+import json
+import base58
+from solana.rpc.api import Client
+from solana.transaction import Transaction
+from solana.keypair import Keypair
+from spl.token.instructions import transfer, TransferParams
+from solana.publickey import PublicKey
+
+# Set up client
+client = Client("{self.rpc_url}")
+
+# Load keypair
+private_key = base58.b58decode("{self.private_key}")
+keypair = Keypair.from_secret_key(private_key)
+
+# Define accounts
+source = PublicKey("{source_token_account}")
+destination = PublicKey("{destination_token_account}")
+owner = PublicKey("{self.wallet}")
+token_program = PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
+
+# Create transfer instruction
+transfer_ix = transfer(
+    TransferParams(
+        source=source,
+        dest=destination,
+        owner=owner,
+        amount={amount_lamports},
+        program_id=token_program
+    )
+)
+
+# Create and sign transaction
+recent_blockhash = client.get_recent_blockhash()["result"]["value"]["blockhash"]
+txn = Transaction().add(transfer_ix)
+txn.recent_blockhash = recent_blockhash
+txn.sign(keypair)
+
+# Send transaction
+result = client.send_transaction(txn)
+print(json.dumps(result))
+"""
                         
                         # Write the script to a temporary file
                         import tempfile
