@@ -50,24 +50,44 @@ export async function POST(request: NextRequest) {
     if (existingUser) {
       // Update existing user
       console.log('Updating existing user:', existingUser.id);
-      const updatedUser = await usersTable.update(
-        existingUser.id,
-        {
-          experience: userData.experience,
-          interests: Array.isArray(userData.interests) ? userData.interests.join(',') : userData.interests,
-          incomeSource: userData.incomeSource,
-          riskTolerance: userData.riskTolerance,
-          onboardingCompleted: true,
-          onboardingCompletedAt: userData.onboardingCompletedAt || new Date().toISOString()
+      try {
+        const updatedUser = await usersTable.update(
+          existingUser.id,
+          {
+            experience: userData.experience,
+            interests: Array.isArray(userData.interests) ? userData.interests.join(',') : userData.interests,
+            incomeSource: userData.incomeSource,
+            riskTolerance: userData.riskTolerance,
+            onboardingCompleted: true,
+            onboardingCompletedAt: userData.onboardingCompletedAt || new Date().toISOString()
+          }
+        );
+        
+        // Check if updatedUser exists and has at least one record
+        if (!updatedUser || updatedUser.length === 0) {
+          console.error('Failed to update user: No user record returned');
+          return NextResponse.json({
+            error: 'Failed to update user record',
+            details: 'No user record returned from Airtable'
+          }, { status: 500 });
         }
-      );
-      
-      console.log('User updated successfully:', updatedUser[0].id || updatedUser[0].userId);
-      return NextResponse.json({
-        success: true,
-        user: updatedUser[0].id || updatedUser[0].userId,
-        updated: true
-      });
+        
+        // Safely access the ID with proper checks
+        const userId = updatedUser[0]?.id || updatedUser[0]?.fields?.id;
+        console.log('User updated successfully:', userId);
+        
+        return NextResponse.json({
+          success: true,
+          user: userId,
+          updated: true
+        });
+      } catch (updateError) {
+        console.error('Error updating existing user:', updateError);
+        return NextResponse.json({ 
+          error: 'Failed to update user',
+          details: updateError instanceof Error ? updateError.message : 'Unknown error'
+        }, { status: 500 });
+      }
     } else {
       // Create new user
       console.log('Creating new user with data:', {
