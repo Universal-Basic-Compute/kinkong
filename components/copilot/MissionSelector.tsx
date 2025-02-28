@@ -7,8 +7,6 @@ interface MissionSelectorProps {
 }
 
 export default function MissionSelector({ onSelectMission }: MissionSelectorProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  
   const missions = [
     {
       id: 'token-discovery',
@@ -62,39 +60,20 @@ export default function MissionSelector({ onSelectMission }: MissionSelectorProp
 
   return (
     <div className="mb-6">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between w-full p-3 bg-black/40 border border-gold/20 rounded-lg text-gold hover:bg-black/60 transition-colors"
-      >
-        <span className="font-medium">Select a Mission</span>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className={`h-5 w-5 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
+      <h2 className="text-lg font-semibold text-gold mb-3">Select a Mission</h2>
       
-      {isOpen && (
-        <div className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 p-3 bg-black/30 border border-gold/10 rounded-lg animate-fadeIn">
-          {missions.map((mission) => (
-            <div
-              key={mission.id}
-              onClick={() => {
-                onSelectMission(mission.title, mission.context, mission.id);
-                setIsOpen(false);
-              }}
-              className="p-3 bg-black/50 border border-gold/20 rounded-lg cursor-pointer hover:bg-gold/10 hover:border-gold/40 transition-all"
-            >
-              <h3 className="font-medium text-gold">{mission.title}</h3>
-              <p className="text-sm text-gray-400 mt-1">{mission.description}</p>
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 p-3 bg-black/30 border border-gold/10 rounded-lg">
+        {missions.map((mission) => (
+          <div
+            key={mission.id}
+            onClick={() => onSelectMission(mission.title, mission.context, mission.id)}
+            className="p-3 bg-black/50 border border-gold/20 rounded-lg cursor-pointer hover:bg-gold/10 hover:border-gold/40 transition-all"
+          >
+            <h3 className="font-medium text-gold">{mission.title}</h3>
+            <p className="text-sm text-gray-400 mt-1">{mission.description}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
