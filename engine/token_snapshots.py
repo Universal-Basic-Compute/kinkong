@@ -178,21 +178,11 @@ class TokenSnapshotTaker:
                 # Debug the Airtable object
                 self.logger.info(f"Fetching historical snapshots for {token_name}")
                 
-                if hasattr(self.snapshots_table, 'get_all'):
-                    historical_snapshots = self.snapshots_table.get_all(
-                        formula=f"AND({{token}}='{token_name}', IS_AFTER({{createdAt}}, '{seven_days_ago}'))"
-                    )
-                    self.logger.info(f"Found {len(historical_snapshots)} historical snapshots")
-                else:
-                    # Fallback if get_all doesn't exist
-                    self.logger.warning("Airtable object does not have get_all method, trying alternative approach")
-                    historical_snapshots = []
-                    records = self.snapshots_table.get_all()
-                    for record in records:
-                        if (record['fields'].get('token') == token_name and 
-                            record['fields'].get('createdAt', '') > seven_days_ago):
-                            historical_snapshots.append(record)
-                    self.logger.info(f"Found {len(historical_snapshots)} historical snapshots using alternative method")
+                # Use get_all with formula
+                historical_snapshots = self.snapshots_table.get_all(
+                    formula=f"AND({{token}}='{token_name}', IS_AFTER({{createdAt}}, '{seven_days_ago}'))"
+                )
+                self.logger.info(f"Found {len(historical_snapshots)} historical snapshots")
             except Exception as e:
                 self.logger.error(f"Error fetching historical snapshots: {e}")
                 self.logger.error(traceback.format_exc())
@@ -202,21 +192,11 @@ class TokenSnapshotTaker:
             try:
                 self.logger.info("Fetching SOL historical data")
                 
-                if hasattr(self.snapshots_table, 'get_all'):
-                    sol_snapshots = self.snapshots_table.get_all(
-                        formula=f"AND({{token}}='SOL', IS_AFTER({{createdAt}}, '{seven_days_ago}'))"
-                    )
-                    self.logger.info(f"Found {len(sol_snapshots)} SOL historical snapshots")
-                else:
-                    # Fallback if get_all doesn't exist
-                    self.logger.warning("Airtable object does not have get_all method, trying alternative approach for SOL")
-                    sol_snapshots = []
-                    records = self.snapshots_table.get_all()
-                    for record in records:
-                        if (record['fields'].get('token') == 'SOL' and 
-                            record['fields'].get('createdAt', '') > seven_days_ago):
-                            sol_snapshots.append(record)
-                    self.logger.info(f"Found {len(sol_snapshots)} SOL historical snapshots using alternative method")
+                # Use get_all with formula
+                sol_snapshots = self.snapshots_table.get_all(
+                    formula=f"AND({{token}}='SOL', IS_AFTER({{createdAt}}, '{seven_days_ago}'))"
+                )
+                self.logger.info(f"Found {len(sol_snapshots)} SOL historical snapshots")
             except Exception as e:
                 self.logger.error(f"Error fetching SOL snapshots: {e}")
                 self.logger.error(traceback.format_exc())
