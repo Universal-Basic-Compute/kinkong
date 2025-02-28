@@ -249,25 +249,15 @@ class TokenTransferExecutor:
                     self.logger.info("Waiting for token account creation to confirm...")
                     await asyncio.sleep(5)
                 
-                # Create the transfer instruction using a more direct approach
-                from solana.instruction import AccountMeta, Instruction as TransactionInstruction
-                
-                # Define the token program ID
-                token_program_id = Pubkey.from_string("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
-                
-                # Create the instruction data for a token transfer
-                # The first byte (3) is the instruction index for Transfer in the Token program
-                instruction_data = bytes([3]) + amount_lamports.to_bytes(8, byteorder='little')
-                
-                # Create the instruction with the correct accounts
-                transfer_ix = TransactionInstruction(
-                    keys=[
-                        AccountMeta(pubkey=source_token_account, is_signer=False, is_writable=True),
-                        AccountMeta(pubkey=destination_token_account, is_signer=False, is_writable=True),
-                        AccountMeta(pubkey=Pubkey.from_string(self.wallet), is_signer=True, is_writable=False),
-                    ],
-                    program_id=token_program_id,
-                    data=instruction_data
+                # Create the transfer instruction using the transfer function from spl.token.instructions
+                # that we've already imported at the top of the file
+                transfer_ix = transfer(
+                    TransferParams(
+                        source=source_token_account,
+                        dest=destination_token_account,
+                        owner=Pubkey.from_string(self.wallet),
+                        amount=amount_lamports
+                    )
                 )
                 
                 # Create a transaction
