@@ -413,7 +413,10 @@ class UBCTransferExecutor:
                         self.update_investor_redistribution_status(investor_id, "COMPLETED", result["signature"])
                         
                         # Send Telegram notification
-                        self.send_telegram_notification(investor, result["signature"])
+                        try:
+                            self.send_telegram_notification(investor, result["signature"])
+                        except Exception as e:
+                            self.logger.warning(f"Failed to send Telegram notification: {e}")
                         
                         successful_transfers += 1
                     else:

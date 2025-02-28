@@ -780,7 +780,10 @@ Status: Pending ⏳
                 investor_record_result = investor_redistributions_table.insert(investor_record['fields'])
                 
                 # Send Telegram notification for this investor
-                self.send_telegram_notification(main_record_id, investor_data)
+                try:
+                    self.send_telegram_notification(main_record_id, investor_data)
+                except Exception as e:
+                    self.logger.warning(f"Failed to send Telegram notification: {e}")
                 
                 self.logger.info(f"Wallet {investor_data['wallet']}: ${investor_data['distribution_amount']:.2f} = {investor_data['ubcAmount']:.2f} UBC")
                 investor_records.append(investor_record_result)

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import { WalletConnect } from '@/components/wallet/WalletConnect';
 import { InvestmentsTable } from '@/components/invest/InvestmentsTable';
+import { InvestorsTable } from '@/components/invest/InvestorsTable';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { TokenDisplay } from '@/utils/tokenDisplay';
@@ -491,11 +492,7 @@ export default function Invest() {
 
       <section className="mb-8">
         <h2 className="text-2xl font-bold mb-4">Current Investors</h2>
-        <InvestmentsTable 
-          investments={investments} 
-          latestSnapshot={latestSnapshot} 
-          isLoading={isLoading} 
-        />
+        <InvestorsTable />
       </section>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

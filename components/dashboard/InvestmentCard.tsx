@@ -83,6 +83,9 @@ export function InvestmentCard() {
 
   // Calculate total USD value of all investments
   const totalUsdValue = investments.reduce((sum, inv) => sum + (inv.usdAmount || 0), 0);
+  
+  // Calculate total UBC returns
+  const totalUbcReturns = investments.reduce((sum, inv) => sum + (inv.ubcReturn || 0), 0);
 
   return (
     <div className="stat-card">
@@ -155,6 +158,11 @@ export function InvestmentCard() {
               maximumFractionDigits: 2
             })}</span>
           </p>
+          {totalUbcReturns > 0 && (
+            <p className="text-sm text-right mt-1">
+              Total Returns: <span className="font-medium metallic-text-ubc">{Math.floor(totalUbcReturns).toLocaleString()} $UBC</span>
+            </p>
+          )}
         </div>
       )}
     </div>
