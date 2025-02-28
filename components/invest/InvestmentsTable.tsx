@@ -61,6 +61,26 @@ export function InvestmentsTable({ investments, latestSnapshot, isLoading }: Inv
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
+  useEffect(() => {
+    async function fetchInvestments() {
+      try {
+        // Add a timestamp to prevent caching
+        const timestamp = new Date().getTime();
+        const response = await fetch(`/api/investments?t=${timestamp}`);
+        if (!response.ok) throw new Error('Failed to fetch investments');
+        const data = await response.json();
+        console.log('Fetched investments data:', data.length, 'records');
+        setInvestments(data);
+      } catch (error) {
+        console.error('Error fetching investments:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchInvestments();
+  }, []);
+
   const validateInvestment = (inv: any): inv is Investment => {
     return (
       typeof inv.investmentId === 'string' &&
