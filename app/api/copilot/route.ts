@@ -3,6 +3,130 @@ import { rateLimit } from '@/utils/rate-limit';
 import { getTable } from '@/backend/src/airtable/tables';
 import { COPILOT_PROMPT } from '@/prompts/copilot';
 
+// Function to fetch token snapshots and merge with token data
+async function getTokenSnapshotsForDiscovery() {
+  try {
+    console.log('🔍 Fetching token snapshots for discovery mission');
+    
+    // Get tokens table
+    const tokensTable = getTable('TOKENS');
+    const tokens = await tokensTable.select({
+      sort: [{ field: 'createdAt', direction: 'desc' }]
+    }).all();
+    
+    console.log(`✅ Found ${tokens.length} tokens`);
+    
+    // Get token snapshots table
+    const snapshotsTable = getTable('TOKEN_SNAPSHOTS');
+    
+    // Get latest 20 active token snapshots
+    const activeSnapshots = await snapshotsTable.select({
+      filterByFormula: '{isActive}=TRUE()',
+      sort: [{ field: 'createdAt', direction: 'desc' }],
+      maxRecords: 20
+    }).all();
+    
+    console.log(`✅ Found ${activeSnapshots.length} active token snapshots`);
+    
+    // Get latest inactive token snapshots
+    const inactiveSnapshots = await snapshotsTable.select({
+      filterByFormula: '{isActive}=FALSE()',
+      sort: [{ field: 'createdAt', direction: 'desc' }],
+      maxRecords: 20
+    }).all();
+    
+    console.log(`✅ Found ${inactiveSnapshots.length} inactive token snapshots`);
+    
+    // Create a map of tokens by symbol for quick lookup
+    const tokenMap = new Map();
+    tokens.forEach(token => {
+      const symbol = token.get('token');
+      if (symbol) {
+        tokenMap.set(symbol, {
+          token: symbol,
+          name: token.get('name'),
+          mint: token.get('mint'),
+          isActive: token.get('isActive'),
+          description: token.get('description'),
+          website: token.get('website'),
+          twitter: token.get('twitter'),
+          telegram: token.get('telegram'),
+          discord: token.get('discord'),
+          createdAt: token.get('createdAt')
+        });
+      }
+    });
+    
+    // Process and merge active snapshots with token data
+    const processedActiveSnapshots = activeSnapshots.map(snapshot => {
+      const symbol = snapshot.get('token');
+      const tokenData = tokenMap.get(symbol) || {};
+      
+      return {
+        ...tokenData,
+        snapshotId: snapshot.id,
+        price: snapshot.get('price'),
+        marketCap: snapshot.get('marketCap'),
+        volume24h: snapshot.get('volume24h'),
+        volume7d: snapshot.get('volume7d'),
+        liquidity: snapshot.get('liquidity'),
+        holders: snapshot.get('holders'),
+        volumeGrowth: snapshot.get('volumeGrowth'),
+        pricePerformance: snapshot.get('pricePerformance'),
+        snapshotCreatedAt: snapshot.get('createdAt'),
+        isActive: true
+      };
+    });
+    
+    // Process and merge inactive snapshots with token data
+    const processedInactiveSnapshots = inactiveSnapshots.map(snapshot => {
+      const symbol = snapshot.get('token');
+      const tokenData = tokenMap.get(symbol) || {};
+      
+      return {
+        ...tokenData,
+        snapshotId: snapshot.id,
+        price: snapshot.get('price'),
+        marketCap: snapshot.get('marketCap'),
+        volume24h: snapshot.get('volume24h'),
+        volume7d: snapshot.get('volume7d'),
+        liquidity: snapshot.get('liquidity'),
+        holders: snapshot.get('holders'),
+        volumeGrowth: snapshot.get('volumeGrowth'),
+        pricePerformance: snapshot.get('pricePerformance'),
+        snapshotCreatedAt: snapshot.get('createdAt'),
+        isActive: false
+      };
+    });
+    
+    return {
+      activeTokens: processedActiveSnapshots,
+      inactiveTokens: processedInactiveSnapshots
+    };
+  } catch (error) {
+    console.error('❌ Error fetching token snapshots for discovery:', error);
+    return { activeTokens: [], inactiveTokens: [] };
+  }
+}
+
+// Helper function to format numbers with commas and abbreviate large values
+function formatNumber(value: number | null | undefined): string {
+  if (value === null || value === undefined) return '0';
+  
+  const num = parseFloat(value.toString());
+  if (isNaN(num)) return '0';
+  
+  if (num >= 1_000_000_000) {
+    return `${(num / 1_000_000_000).toFixed(2)}B`;
+  } else if (num >= 1_000_000) {
+    return `${(num / 1_000_000).toFixed(2)}M`;
+  } else if (num >= 1_000) {
+    return `${(num / 1_000).toFixed(2)}K`;
+  } else {
+    return num.toFixed(2);
+  }
+}
+
 // Function to fetch user investments from INVESTMENTS table
 async function getUserInvestments(wallet: string | undefined) {
   if (!wallet) {
@@ -394,6 +518,13 @@ export async function POST(request: NextRequest) {
       console.log(`🔍 Investment calculation result: $${investmentValues.totalInvestmentValue.toFixed(2)} (${investmentValues.managedPercentage.toFixed(2)}% of wallet)`);
     }
 
+    // Fetch token snapshots if mission is token-discovery
+    let tokenDiscoveryData = null;
+    if (mission === 'token-discovery') {
+      tokenDiscoveryData = await getTokenSnapshotsForDiscovery();
+      console.log(`🔍 Token discovery data fetch result: Active tokens: ${tokenDiscoveryData.activeTokens.length}, Inactive tokens: ${tokenDiscoveryData.inactiveTokens.length}`);
+    }
+
     // Prepare full context with user data, wallet portfolio, investments, and mission
     const fullContext = {
       request: requestBody,
@@ -403,6 +534,7 @@ export async function POST(request: NextRequest) {
       walletPortfolio: walletPortfolio, // Add wallet portfolio to context
       userInvestments: userInvestments, // Add user investments to context
       investmentValues: investmentValues, // Add investment values to context
+      tokenDiscoveryData: tokenDiscoveryData, // Add token discovery data to context
       mission: mission // Add mission to context
     };
 
@@ -482,6 +614,37 @@ Total Investment Value: $${investmentValues.totalInvestmentValue.toFixed(2)}
 Percentage of Portfolio Managed: ${investmentValues.managedPercentage.toFixed(2)}%
 
 Use this investment data to provide specific rebalancing recommendations based on the user's current KinKong Invest allocations, market conditions, and risk tolerance.`;
+    }
+    
+    // Add token discovery data to system prompt if available and mission is token-discovery
+    if (mission === 'token-discovery' && tokenDiscoveryData) {
+      systemPrompt += `\n\nToken Discovery Data:
+You have access to data on ${tokenDiscoveryData.activeTokens.length} active tokens and ${tokenDiscoveryData.inactiveTokens.length} inactive tokens.
+
+Active Tokens (Top 5 by Market Cap):
+${tokenDiscoveryData.activeTokens
+  .sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0))
+  .slice(0, 5)
+  .map((token, index) => 
+    `${index + 1}. ${token.token} (${token.name || 'Unknown'}): $${parseFloat(token.price || 0).toFixed(6)}, Market Cap: $${formatNumber(token.marketCap)}, Volume 24h: $${formatNumber(token.volume24h)}, Liquidity: $${formatNumber(token.liquidity)}`
+  ).join('\n')}
+
+Active Tokens (Top 5 by Volume Growth):
+${tokenDiscoveryData.activeTokens
+  .sort((a, b) => (b.volumeGrowth || 0) - (a.volumeGrowth || 0))
+  .slice(0, 5)
+  .map((token, index) => 
+    `${index + 1}. ${token.token} (${token.name || 'Unknown'}): Volume Growth: ${(token.volumeGrowth || 0).toFixed(2)}%, Price Performance: ${(token.pricePerformance || 0).toFixed(2)}%, Holders: ${formatNumber(token.holders)}`
+  ).join('\n')}
+
+Recently Inactive Tokens:
+${tokenDiscoveryData.inactiveTokens
+  .slice(0, 3)
+  .map((token, index) => 
+    `${index + 1}. ${token.token} (${token.name || 'Unknown'}): Last Price: $${parseFloat(token.price || 0).toFixed(6)}, Last Volume: $${formatNumber(token.volume24h)}`
+  ).join('\n')}
+
+Use this token data to help the user discover promising tokens, analyze market trends, and make informed investment decisions.`;
     }
 
     // Helper function to get guidance based on experience level
