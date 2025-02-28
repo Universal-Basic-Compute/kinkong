@@ -34,15 +34,6 @@ export async function POST(request: NextRequest) {
     // This would require the user to sign a message with their wallet
     // For now, we'll assume the request is coming from the authorized user
     
-    // Check if already marked for withdrawal
-    const isWithdrawRequested = record.get('toWithdraw') === true;
-    if (isWithdrawRequested) {
-      return NextResponse.json(
-        { error: 'Withdrawal already in progress' },
-        { status: 400 }
-      );
-    }
-    
     // Mark the investment for withdrawal
     try {
       await investmentsTable.update(investmentId, {
