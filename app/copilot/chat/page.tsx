@@ -159,15 +159,18 @@ export default function CopilotChatPage() {
     );
   }
 
+  // If no code is provided, use a default code
   if (!code) {
+    // Set a default code for users without one
+    const defaultCode = 'default-access';
+    
+    // Redirect to the same page but with the default code
+    router.replace(`/copilot/chat?code=${defaultCode}`);
+    
+    // Show loading while redirecting
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Access Code Required</h1>
-          <p className="text-gray-400">
-            Please provide a valid access code to use KinKong Copilot
-          </p>
-        </div>
+      <div className="min-h-screen pt-20 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gold"></div>
       </div>
     );
   }
