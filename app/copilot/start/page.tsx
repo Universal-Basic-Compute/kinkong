@@ -177,3 +177,18 @@ export default function CopilotStartPage() {
     </div>
   );
 }
+'use client';
+
+import React from 'react';
+import { OnboardingProvider } from '@/app/context/OnboardingContext';
+import OnboardingContainer from '@/app/components/onboarding/OnboardingContainer';
+
+export default function OnboardingPage() {
+  return (
+    <div className="min-h-screen pt-20 px-4">
+      <OnboardingProvider>
+        <OnboardingContainer />
+      </OnboardingProvider>
+    </div>
+  );
+}

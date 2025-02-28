@@ -184,3 +184,90 @@ export default function CopilotChatPage() {
     </div>
   );
 }
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useOnboarding } from '@/app/context/OnboardingContext';
+
+export default function CopilotChatPage() {
+  const router = useRouter();
+  const { onboardingData, isCompleted } = useOnboarding();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Check if onboarding is completed
+    if (!isCompleted) {
+      router.push('/copilot/start');
+      return;
+    }
+    
+    setLoading(false);
+  }, [isCompleted, router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-20 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gold"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen pt-20 px-4">
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-black/30 border border-gold/20 rounded-lg p-6">
+          <h1 className="text-2xl font-bold mb-4">KinKong Copilot Chat</h1>
+          
+          <div className="mb-6 p-4 bg-black/40 rounded-lg border border-gold/10">
+            <h2 className="text-lg font-semibold text-gold mb-2">Your Personalized Settings</h2>
+            <ul className="space-y-2">
+              <li><span className="font-medium">Experience:</span> <span className="text-gray-300 capitalize">{onboardingData.experience}</span></li>
+              <li>
+                <span className="font-medium">Interests:</span>{' '}
+                <span className="text-gray-300">
+                  {onboardingData.interests.map(interest => {
+                    return interest.split('-')
+                      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                      .join(' ');
+                  }).join(', ')}
+                </span>
+              </li>
+              <li>
+                <span className="font-medium">Goals:</span>{' '}
+                <span className="text-gray-300">
+                  {onboardingData.goals.map(goal => {
+                    return goal.split('-')
+                      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                      .join(' ');
+                  }).join(', ')}
+                </span>
+              </li>
+              <li>
+                <span className="font-medium">Timeframe:</span>{' '}
+                <span className="text-gray-300 capitalize">
+                  {onboardingData.timeframe.split('-').join(' ')}
+                </span>
+              </li>
+            </ul>
+          </div>
+          
+          <p className="text-center text-gray-400">
+            This is a placeholder for the actual chat interface.
+            <br />
+            Your preferences have been saved and will be used to personalize KinKong's responses.
+          </p>
+          
+          <div className="mt-6 text-center">
+            <button
+              onClick={() => router.push('/copilot')}
+              className="px-6 py-2 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              Back to Copilot Home
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
