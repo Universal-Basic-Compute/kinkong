@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 interface TooltipProps {
   children: React.ReactNode;
@@ -14,44 +15,86 @@ export const Tooltip: React.FC<TooltipProps> = ({
   position = 'top'
 }) => {
   const [isVisible, setIsVisible] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+  const triggerRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
   
-  // Position classes based on the position prop
-  const positionClasses = {
-    top: 'bottom-full left-1/2 -translate-x-1/2 mb-2',
-    right: 'left-full top-1/2 -translate-y-1/2 ml-2',
-    bottom: 'top-full left-1/2 -translate-x-1/2 mt-2',
-    left: 'right-full top-1/2 -translate-y-1/2 mr-2'
-  };
-  
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  useEffect(() => {
+    if (isVisible && triggerRef.current && tooltipRef.current) {
+      const triggerRect = triggerRef.current.getBoundingClientRect();
+      const tooltipRect = tooltipRef.current.getBoundingClientRect();
+      
+      let top = 0;
+      let left = 0;
+      
+      switch (position) {
+        case 'top':
+          top = triggerRect.top - tooltipRect.height - 8;
+          left = triggerRect.left + (triggerRect.width / 2) - (tooltipRect.width / 2);
+          break;
+        case 'right':
+          top = triggerRect.top + (triggerRect.height / 2) - (tooltipRect.height / 2);
+          left = triggerRect.right + 8;
+          break;
+        case 'bottom':
+          top = triggerRect.bottom + 8;
+          left = triggerRect.left + (triggerRect.width / 2) - (tooltipRect.width / 2);
+          break;
+        case 'left':
+          top = triggerRect.top + (triggerRect.height / 2) - (tooltipRect.height / 2);
+          left = triggerRect.left - tooltipRect.width - 8;
+          break;
+      }
+      
+      // Adjust for scroll position
+      top += window.scrollY;
+      left += window.scrollX;
+      
+      setTooltipPosition({ top, left });
+    }
+  }, [isVisible, position]);
+
   // Arrow classes based on the position prop
   const arrowClasses = {
-    top: 'top-full left-1/2 -translate-x-1/2 border-t-gold/90',
-    right: 'right-full top-1/2 -translate-y-1/2 border-r-gold/90',
-    bottom: 'bottom-full left-1/2 -translate-x-1/2 border-b-gold/90',
-    left: 'left-full top-1/2 -translate-y-1/2 border-l-gold/90'
+    top: 'bottom-[-8px] left-1/2 -translate-x-1/2 border-t-gold/90 border-r-transparent border-b-transparent border-l-transparent',
+    right: 'left-[-8px] top-1/2 -translate-y-1/2 border-t-transparent border-r-gold/90 border-b-transparent border-l-transparent',
+    bottom: 'top-[-8px] left-1/2 -translate-x-1/2 border-t-transparent border-r-transparent border-b-gold/90 border-l-transparent',
+    left: 'right-[-8px] top-1/2 -translate-y-1/2 border-t-transparent border-r-transparent border-b-transparent border-l-gold/90'
   };
 
   return (
-    <div className="relative inline-block">
+    <>
       <div 
+        ref={triggerRef}
         onMouseEnter={() => setIsVisible(true)}
         onMouseLeave={() => setIsVisible(false)}
+        className="inline-block"
       >
         {children}
       </div>
       
-      {isVisible && (
+      {mounted && isVisible && createPortal(
         <div 
           ref={tooltipRef}
-          className={`absolute z-50 ${positionClasses[position]} max-w-xs bg-black/90 border border-gold/30 text-white text-sm rounded-lg p-3 shadow-lg transition-opacity duration-200`}
+          className="fixed z-[9999] max-w-xs bg-black/90 border border-gold/30 text-white text-sm rounded-lg p-3 shadow-lg transition-opacity duration-200"
+          style={{
+            top: `${tooltipPosition.top}px`,
+            left: `${tooltipPosition.left}px`
+          }}
         >
           {content}
           <div 
-            className={`absolute w-0 h-0 border-8 border-transparent ${arrowClasses[position]}`}
+            className={`absolute w-0 h-0 border-8 ${arrowClasses[position]}`}
           ></div>
-        </div>
+        </div>,
+        document.body
       )}
-    </div>
+    </>
   );
 };
