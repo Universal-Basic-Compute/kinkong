@@ -2,6 +2,7 @@
 import os
 import json
 import sys
+import requests
 from datetime import datetime, timezone, timedelta
 from airtable import Airtable
 from dotenv import load_dotenv
@@ -95,7 +96,7 @@ class ProfitRedistributor:
         return None
     
     def get_investment_change(self, start_date, end_date):
-        """Get net investment change between two dates"""
+        """Get net investment change between two dates with proper token price conversion"""
         self.logger.info(f"Fetching investment changes between {start_date.isoformat()} and {end_date.isoformat()}")
         
         try:
@@ -104,23 +105,152 @@ class ProfitRedistributor:
                 formula=f"AND(IS_AFTER({{createdAt}}, '{start_date.isoformat()}'), IS_BEFORE({{createdAt}}, '{end_date.isoformat()}'))"
             )
             
-            net_change = 0.0
+            net_change_usd = 0.0
+            
+            # Get current token prices
+            token_prices = self.get_token_prices()
             
             for investment in investments:
                 try:
                     amount = float(investment['fields'].get('amount', 0))
-                    net_change += amount
-                    self.logger.info(f"Found investment change: ${amount:.2f}")
+                    token_symbol = investment['fields'].get('token', 'USDC').upper()
+                    
+                    # Convert token amount to USD based on token type
+                    if token_symbol == 'USDC' or token_symbol == 'USDT':
+                        # Stablecoins are 1:1 with USD
+                        amount_usd = amount
+                    elif token_symbol in token_prices:
+                        # Use fetched price for other tokens
+                        amount_usd = amount * token_prices[token_symbol]
+                    else:
+                        # Default to 0 if price not available
+                        self.logger.warning(f"No price available for token {token_symbol}, using 0 USD value")
+                        amount_usd = 0
+                    
+                    net_change_usd += amount_usd
+                    self.logger.info(f"Found investment change: {amount} {token_symbol} = ${amount_usd:.2f}")
                 except (ValueError, TypeError) as e:
                     self.logger.warning(f"Error processing investment {investment.get('id')}: {e}")
             
-            self.logger.info(f"Total net investment change: ${net_change:.2f}")
+            self.logger.info(f"Total net investment change in USD: ${net_change_usd:.2f}")
             
-            return net_change
+            return net_change_usd
         except Exception as e:
             self.logger.error(f"Error fetching investment changes: {e}")
             # Return zero if we can't get the data
             return 0.0
+    
+    def get_token_prices(self):
+        """Get current prices for relevant tokens"""
+        self.logger.info("Fetching current token prices")
+        
+        token_prices = {
+            'USDC': 1.0,  # Stablecoins are 1:1 with USD
+            'USDT': 1.0
+        }
+        
+        # Fetch UBC price from DexScreener
+        try:
+            ubc_mint = "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump"
+            dexscreener_url = f"https://api.dexscreener.com/latest/dex/tokens/{ubc_mint}"
+            
+            response = requests.get(dexscreener_url)
+            response.raise_for_status()
+            data = response.json()
+            
+            if data.get('pairs') and len(data['pairs']) > 0:
+                # Get the first pair with USDC or USDT (stablecoin pair)
+                ubc_pair = None
+                for pair in data['pairs']:
+                    # Look for USDC or USDT pair
+                    if 'USDC' in pair.get('quoteToken', {}).get('symbol', '') or 'USDT' in pair.get('quoteToken', {}).get('symbol', ''):
+                        ubc_pair = pair
+                        break
+                
+                # If no USDC/USDT pair, just use the first pair
+                if not ubc_pair and len(data['pairs']) > 0:
+                    ubc_pair = data['pairs'][0]
+                
+                if ubc_pair and ubc_pair.get('priceUsd'):
+                    token_prices['UBC'] = float(ubc_pair['priceUsd'])
+                    self.logger.info(f"UBC price: ${token_prices['UBC']:.6f}")
+            else:
+                self.logger.warning("No pairs found for UBC token")
+        except Exception as e:
+            self.logger.error(f"Error fetching UBC price: {e}")
+        
+        # Fetch COMPUTE price from Meteora dynamic pool
+        try:
+            meteora_pool_id = "HN7ibjiyX399d1EfYXcWaSHZRSMfUmonYvXGFXG41Rr3"
+            
+            # First try Birdeye API for Meteora pool
+            birdeye_url = "https://public-api.birdeye.so/v1/pool/price"
+            params = {
+                "pool_address": meteora_pool_id
+            }
+            headers = {
+                "x-api-key": os.getenv('BIRDEYE_API_KEY'),
+                "x-chain": "solana",
+                "accept": "application/json"
+            }
+            
+            response = requests.get(birdeye_url, params=params, headers=headers)
+            
+            if response.status_code == 200 and response.content:
+                pool_data = response.json()
+                
+                if pool_data.get('success'):
+                    compute_price = float(pool_data.get('data', {}).get('price', 0))
+                    token_prices['COMPUTE'] = compute_price
+                    self.logger.info(f"COMPUTE price from Birdeye: ${token_prices['COMPUTE']:.6f}")
+                else:
+                    self.logger.warning(f"Failed to get COMPUTE price from Birdeye: {pool_data.get('message')}")
+            else:
+                self.logger.warning(f"Failed to get COMPUTE price from Birdeye: {response.status_code}")
+                
+            # If Birdeye fails, try DexScreener
+            if 'COMPUTE' not in token_prices:
+                dexscreener_url = f"https://api.dexscreener.com/latest/dex/pools/solana/{meteora_pool_id}"
+                
+                response = requests.get(dexscreener_url)
+                response.raise_for_status()
+                data = response.json()
+                
+                if data.get('pairs') and len(data['pairs']) > 0:
+                    compute_pair = data['pairs'][0]
+                    
+                    if compute_pair and compute_pair.get('priceUsd'):
+                        token_prices['COMPUTE'] = float(compute_pair['priceUsd'])
+                        self.logger.info(f"COMPUTE price from DexScreener: ${token_prices['COMPUTE']:.6f}")
+                else:
+                    self.logger.warning("No pairs found for COMPUTE token on DexScreener")
+        except Exception as e:
+            self.logger.error(f"Error fetching COMPUTE price: {e}")
+        
+        # If we still don't have COMPUTE price, try Jupiter API
+        if 'COMPUTE' not in token_prices:
+            try:
+                compute_mint = "B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo"
+                jupiter_url = "https://price.jup.ag/v4/price"
+                jupiter_params = {
+                    "ids": compute_mint
+                }
+                
+                jupiter_response = requests.get(jupiter_url, params=jupiter_params)
+                jupiter_response.raise_for_status()
+                jupiter_data = jupiter_response.json()
+                
+                if jupiter_data.get('data') and jupiter_data['data'].get(compute_mint):
+                    compute_price = float(jupiter_data['data'][compute_mint].get('price', 0))
+                    token_prices['COMPUTE'] = compute_price
+                    self.logger.info(f"COMPUTE price from Jupiter: ${token_prices['COMPUTE']:.6f}")
+            except Exception as e:
+                self.logger.error(f"Error fetching COMPUTE price from Jupiter: {e}")
+        
+        # Log all token prices
+        self.logger.info(f"Token prices: {token_prices}")
+        
+        return token_prices
             
     def get_total_investments_value(self, date=None):
         """Get the total value of all investments at a given date"""
