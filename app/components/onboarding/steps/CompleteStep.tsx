@@ -1,38 +1,41 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useOnboarding } from '@/app/context/OnboardingContext';
+import { useWallet } from '@solana/wallet-adapter-react';
 
 const CompleteStep: React.FC = () => {
-  const { onboardingData } = useOnboarding();
+  const { onboardingData, saveUserData } = useOnboarding();
   const router = useRouter();
+  const { publicKey } = useWallet();
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Save onboarding data to backend
   useEffect(() => {
     const saveOnboardingData = async () => {
       try {
-        // Here you would typically send the data to your backend
-        // For now, we'll just log it
+        setIsSaving(true);
+        // Save data to Airtable USERS table
         console.log('Saving onboarding data:', onboardingData);
         
-        // In a real implementation, you would do something like:
-        /*
-        await fetch('/api/onboarding', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(onboardingData)
-        });
-        */
+        const walletAddress = publicKey ? publicKey.toString() : undefined;
+        const success = await saveUserData(walletAddress);
+        
+        if (!success) {
+          setSaveError('Failed to save your preferences. You can still continue, but your settings might not be saved.');
+        }
       } catch (error) {
         console.error('Error saving onboarding data:', error);
+        setSaveError('An error occurred while saving your preferences.');
+      } finally {
+        setIsSaving(false);
       }
     };
 
     saveOnboardingData();
-  }, [onboardingData]);
+  }, [onboardingData, publicKey, saveUserData]);
 
   return (
     <div className="text-center space-y-6 py-8">
@@ -99,17 +102,25 @@ const CompleteStep: React.FC = () => {
           </li>
         </ul>
       </div>
+        
+      {saveError && (
+        <div className="mt-4 p-3 bg-red-900/30 border border-red-500/50 rounded-lg text-red-200 text-sm">
+          {saveError}
+        </div>
+      )}
       
       <p className="text-gray-400">
-        Redirecting you to KinKong Copilot...
+        {isSaving ? 'Saving your preferences...' : 'Redirecting you to KinKong Copilot...'}
       </p>
       
       <div className="flex justify-center">
         <button
           onClick={() => router.push('/copilot/chat')}
-          className="px-8 py-3 bg-gradient-to-r from-gold to-amber-500 text-black font-bold rounded-lg hover:scale-105 transition-all duration-300"
+          disabled={isSaving}
+          className={`px-8 py-3 bg-gradient-to-r from-gold to-amber-500 text-black font-bold rounded-lg 
+            ${isSaving ? 'opacity-70 cursor-not-allowed' : 'hover:scale-105 transition-all duration-300'}`}
         >
-          Start Using Copilot Now
+          {isSaving ? 'Saving...' : 'Start Using Copilot Now'}
         </button>
       </div>
     </div>

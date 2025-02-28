@@ -39,6 +39,7 @@ interface OnboardingContextType {
   nextStep: () => void;
   prevStep: () => void;
   isCompleted: boolean;
+  saveUserData: (walletAddress?: string) => Promise<boolean>; // Add this line
 }
 
 // Create the context
@@ -113,6 +114,36 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
+  // Save user data to backend
+  const saveUserData = async (walletAddress?: string): Promise<boolean> => {
+    try {
+      const response = await fetch('/api/users/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          wallet: walletAddress || null,
+          experience: onboardingData.experience,
+          interests: onboardingData.interests,
+          goals: onboardingData.goals,
+          timeframe: onboardingData.timeframe,
+          onboardingCompleted: true,
+          onboardingCompletedAt: new Date().toISOString()
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save user data');
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error saving user data:', error);
+      return false;
+    }
+  };
+
   return (
     <OnboardingContext.Provider
       value={{
@@ -122,7 +153,8 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         updateOnboardingData,
         nextStep,
         prevStep,
-        isCompleted
+        isCompleted,
+        saveUserData
       }}
     >
       {children}
