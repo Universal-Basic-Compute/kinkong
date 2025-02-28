@@ -396,8 +396,11 @@ class UBCTransferExecutor:
                 successful_transfers = 0
                 failed_transfers = 0
                 
+                # Sort investors by UBC amount (ascending - smallest first)
+                sorted_investors = sorted(investors, key=lambda x: x['ubcAmount'])
+                
                 # Process each investor
-                for investor in investors:
+                for investor in sorted_investors:
                     investor_id = investor['id']
                     wallet = investor['wallet']
                     ubc_amount = investor['ubcAmount']
@@ -419,6 +422,11 @@ class UBCTransferExecutor:
                         # Update investor redistribution status to FAILED
                         self.update_investor_redistribution_status(investor_id, "FAILED")
                         failed_transfers += 1
+                    
+                    # Wait 5 seconds between transfers
+                    if investor != sorted_investors[-1]:  # Don't wait after the last transfer
+                        self.logger.info("Waiting 5 seconds before next transfer...")
+                        time.sleep(5)
                 
                 # Update main redistribution status based on results
                 if failed_transfers == 0:

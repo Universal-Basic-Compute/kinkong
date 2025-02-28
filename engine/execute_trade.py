@@ -653,62 +653,6 @@ class JupiterTradeExecutor:
                                 
                                 # Si on arrive ici, c'est qu'on n'a pas confirmé la balance après 3 tentatives
                                 self.logger.warning("Balance check timeout, moving to next attempt")
-                                
-                                # Try to send a notification about the pending Take Profit trade
-                                try:
-                                    # Only send for Take Profit trades (SELL trades)
-                                    if not is_buy:
-                                        from utils.send_sse import send_trade_notification
-                                        
-                                        # Get current price for the token
-                                        token_price = 0
-                                        try:
-                                            # Try to get price from DexScreener
-                                            dexscreener_url = f"https://api.dexscreener.com/latest/dex/tokens/{token_mint}"
-                                            async with aiohttp.ClientSession() as price_session:
-                                                async with price_session.get(dexscreener_url) as price_response:
-                                                    if price_response.status == 200:
-                                                        price_data = await price_response.json()
-                                                        pairs = price_data.get('pairs', [])
-                                                        if pairs:
-                                                            sol_pairs = [p for p in pairs if p.get('chainId') == 'solana']
-                                                            if sol_pairs:
-                                                                best_pair = max(sol_pairs, key=lambda x: float(x.get('liquidity', {}).get('usd', 0) or 0))
-                                                                token_price = float(best_pair.get('priceUsd', 0))
-                                        except Exception as price_err:
-                                            self.logger.error(f"Error getting token price: {price_err}")
-                                            
-                                        # Use estimated amount based on transaction data
-                                        estimated_amount = 0
-                                        if 'initial_balance' in locals():
-                                            # Rough estimate based on initial balance
-                                            estimated_amount = initial_balance * 0.1  # Assume using 10% of balance
-                                            
-                                        trade_notification = {
-                                            'token': token_mint,
-                                            'type': 'SELL',
-                                            'price': token_price,
-                                            'amount': estimated_amount,
-                                            'status': 'PENDING',
-                                            'id': signature_str,
-                                            'reason': 'TAKE_PROFIT'
-                                        }
-                                        
-                                        # Try to send notification but handle failure gracefully
-                                        try:
-                                            notification_sent = send_trade_notification(trade_notification)
-                                            if notification_sent:
-                                                self.logger.info("✅ Pending Take Profit notification sent successfully")
-                                            else:
-                                                self.logger.warning("⚠️ Failed to send pending Take Profit notification, but continuing")
-                                        except Exception as notify_err:
-                                            self.logger.warning(f"⚠️ Error sending notification, but continuing: {notify_err}")
-                                    else:
-                                        self.logger.info("Not a Take Profit trade, skipping pending notification")
-                                except ImportError:
-                                    self.logger.warning("⚠️ send_trade_notification not available, skipping notification")
-                                except Exception as e:
-                                    self.logger.warning(f"⚠️ Failed to process pending trade notification, but continuing: {e}")
 
                 except Exception as e:
                     self.logger.error(f"Attempt {attempt + 1} failed: {e}")
