@@ -563,11 +563,111 @@ Status: Pending ⏳
             self.logger.error(f"Error sending Telegram notification: {e}")
             return False
             
+    def verify_ubc_balance(self, total_ubc_needed):
+        """Verify that there's enough UBC in the wallet to cover the redistribution"""
+        self.logger.info(f"Verifying UBC balance for redistribution (need {total_ubc_needed:.2f} UBC)")
+        
+        try:
+            # Get the wallet address from environment variables
+            wallet = os.getenv('KINKONG_WALLET')
+            if not wallet:
+                self.logger.error("KINKONG_WALLET not found in environment variables")
+                return False
+            
+            # Get Birdeye API key
+            birdeye_api_key = os.getenv('BIRDEYE_API_KEY')
+            if not birdeye_api_key:
+                self.logger.error("BIRDEYE_API_KEY not found in environment variables")
+                return False
+            
+            # UBC token mint address
+            ubc_mint = "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump"
+            
+            # Call Birdeye API to get wallet token list
+            url = "https://public-api.birdeye.so/v1/wallet/token_list"
+            params = {
+                "wallet": wallet
+            }
+            headers = {
+                "x-api-key": birdeye_api_key,
+                "x-chain": "solana",
+                "accept": "application/json"
+            }
+            
+            response = requests.get(url, params=params, headers=headers)
+            response.raise_for_status()
+            data = response.json()
+            
+            if not data.get('success'):
+                self.logger.error(f"Birdeye API returned error: {data.get('message', 'Unknown error')}")
+                return False
+            
+            # Find UBC token in the wallet
+            ubc_balance = 0
+            for token in data.get('data', {}).get('items', []):
+                if token.get('address') == ubc_mint:
+                    ubc_balance = float(token.get('uiAmount', 0))
+                    self.logger.info(f"Found UBC in wallet: {ubc_balance:.2f} UBC")
+                    break
+            
+            # If UBC not found in wallet
+            if ubc_balance == 0:
+                self.logger.warning("No UBC found in wallet")
+                return False
+            
+            # Check if there's enough UBC
+            if ubc_balance >= total_ubc_needed:
+                self.logger.info(f"✅ Sufficient UBC balance: {ubc_balance:.2f} UBC (need {total_ubc_needed:.2f} UBC)")
+                return True
+            else:
+                self.logger.warning(f"❌ Insufficient UBC balance: {ubc_balance:.2f} UBC (need {total_ubc_needed:.2f} UBC)")
+                return False
+            
+        except Exception as e:
+            self.logger.error(f"Error verifying UBC balance: {e}")
+            return False
+            
     def save_redistribution_to_airtable(self, profit_distribution, investor_distributions):
         """Save redistribution data to Airtable REDISTRIBUTIONS and INVESTOR_REDISTRIBUTIONS tables"""
         self.logger.info("Saving redistribution data to Airtable")
         
         try:
+            # Get token prices to convert USD to UBC
+            token_prices = self.get_token_prices()
+            ubc_price = token_prices.get('UBC', 0.001)  # Default to 0.001 if UBC price not available
+            self.logger.info(f"Using UBC price for conversion: ${ubc_price:.6f}")
+            
+            # Calculate total UBC needed for all redistributions
+            total_ubc_needed = 0
+            investor_data_with_ubc = []
+            
+            for dist in investor_distributions:
+                # Convert USD amount to UBC tokens
+                ubc_amount = 0
+                if ubc_price > 0:
+                    ubc_amount = dist['distribution_amount'] / ubc_price
+                
+                # Add to total UBC needed
+                total_ubc_needed += ubc_amount
+                
+                # Store investor data with UBC amount for later use
+                investor_data_with_ubc.append({
+                    'wallet': dist['wallet'],
+                    'investment_value': dist['investment_value'],
+                    'percentage': dist['percentage'],
+                    'distribution_amount': dist['distribution_amount'],
+                    'ubcAmount': ubc_amount
+                })
+            
+            self.logger.info(f"Total UBC needed for redistribution: {total_ubc_needed:.2f} UBC")
+            
+            # Verify that there's enough UBC in the wallet
+            has_sufficient_ubc = self.verify_ubc_balance(total_ubc_needed)
+            
+            if not has_sufficient_ubc:
+                self.logger.error("Cannot proceed with redistribution due to insufficient UBC balance")
+                return None
+            
             # Initialize Airtable table for redistributions
             redistributions_table = Airtable(
                 self.base_id,
@@ -585,11 +685,6 @@ Status: Pending ⏳
             # Create a record for the overall redistribution
             now = datetime.now(timezone.utc).isoformat()
             
-            # Get token prices to convert USD to UBC
-            token_prices = self.get_token_prices()
-            ubc_price = token_prices.get('UBC', 0.001)  # Default to 0.001 if UBC price not available
-            self.logger.info(f"Using UBC price for conversion: ${ubc_price:.6f}")
-            
             # Create the main redistribution record
             main_record = {
                 'createdAt': now,
@@ -598,6 +693,8 @@ Status: Pending ⏳
                 'profitAfterFees': profit_distribution['profit_after_fees'],
                 'pool1Amount': profit_distribution['pool_1'],
                 'pool2Amount': profit_distribution['pool_2'],
+                'totalUbcAmount': total_ubc_needed,  # Add total UBC amount
+                'ubcPrice': ubc_price,  # Add UBC price used for conversion
                 'status': 'PENDING',  # Initial status
                 'periodStart': (datetime.now(timezone.utc) - timedelta(days=7)).isoformat(),
                 'periodEnd': now
@@ -612,20 +709,15 @@ Status: Pending ⏳
             # Now create investor redistribution records
             investor_records = []
             
-            for dist in investor_distributions:
-                # Convert USD amount to UBC tokens
-                ubc_amount = 0
-                if ubc_price > 0:
-                    ubc_amount = dist['distribution_amount'] / ubc_price
-                
+            for investor_data in investor_data_with_ubc:
                 investor_record = {
                     'fields': {
                         'redistributionId': main_record_id,  # Link to the main redistribution record
-                        'wallet': dist['wallet'],
-                        'investmentValue': dist['investment_value'],
-                        'percentage': dist['percentage'],
-                        'amount': dist['distribution_amount'],
-                        'ubcAmount': ubc_amount,  # Add UBC amount field
+                        'wallet': investor_data['wallet'],
+                        'investmentValue': investor_data['investment_value'],
+                        'percentage': investor_data['percentage'],
+                        'amount': investor_data['distribution_amount'],
+                        'ubcAmount': investor_data['ubcAmount'],  # Add UBC amount field
                         'status': 'PENDING',  # Initial status
                         'createdAt': now
                     }
@@ -634,19 +726,10 @@ Status: Pending ⏳
                 # Insert the record into Airtable
                 investor_record_result = investor_redistributions_table.insert(investor_record['fields'])
                 
-                # Store the record with the UBC amount for Telegram notification
-                investor_data = {
-                    'wallet': dist['wallet'],
-                    'investment_value': dist['investment_value'],
-                    'percentage': dist['percentage'],
-                    'distribution_amount': dist['distribution_amount'],
-                    'ubcAmount': ubc_amount
-                }
-                
                 # Send Telegram notification for this investor
                 self.send_telegram_notification(main_record_id, investor_data)
                 
-                self.logger.info(f"Wallet {dist['wallet']}: ${dist['distribution_amount']:.2f} = {ubc_amount:.2f} UBC")
+                self.logger.info(f"Wallet {investor_data['wallet']}: ${investor_data['distribution_amount']:.2f} = {investor_data['ubcAmount']:.2f} UBC")
                 investor_records.append(investor_record_result)
             
             self.logger.info(f"Created {len(investor_records)} investor redistribution records")
@@ -693,6 +776,13 @@ def main():
                 print(f"{'Wallet':<42} {'Investment':<12} {'Share':<8} {'Distribution':<12}")
                 print("-" * 80)
                 
+                # Get UBC price for display
+                token_prices = redistributor.get_token_prices()
+                ubc_price = token_prices.get('UBC', 0.001)
+                
+                # Calculate total UBC needed
+                total_ubc_needed = 0
+                
                 for dist in distributions:
                     wallet = dist['wallet']
                     # Truncate wallet address for display
@@ -700,24 +790,37 @@ def main():
                         wallet_display = wallet[:18] + "..." + wallet[-17:]
                     else:
                         wallet_display = wallet
-                        
+                    
+                    # Calculate UBC amount
+                    ubc_amount = dist['distribution_amount'] / ubc_price if ubc_price > 0 else 0
+                    total_ubc_needed += ubc_amount
+                    
                     print(f"{wallet_display:<42} ${dist['investment_value']:<11.2f} {dist['percentage']:<7.2f}% ${dist['distribution_amount']:<11.2f}")
                 
                 # Verify total distribution matches pool amount
                 total_distributed = sum(d['distribution_amount'] for d in distributions)
                 print("-" * 80)
                 print(f"Total Distributed: ${total_distributed:.2f} (should match Pool 2: ${result['pool_2']:.2f})")
+                print(f"Total UBC Required: {total_ubc_needed:.2f} UBC (at price ${ubc_price:.6f})")
                 
                 # Check for rounding errors
                 if abs(total_distributed - result['pool_2']) > 0.01:
                     print(f"Warning: Distribution total differs from Pool 2 amount by ${abs(total_distributed - result['pool_2']):.2f}")
                 
-                # Save redistribution data to Airtable
-                redistribution_id = redistributor.save_redistribution_to_airtable(result, distributions)
-                if redistribution_id:
-                    print(f"\n✅ Redistribution saved to Airtable with ID: {redistribution_id}")
+                # Verify UBC balance
+                has_sufficient_ubc = redistributor.verify_ubc_balance(total_ubc_needed)
+                if has_sufficient_ubc:
+                    print(f"\n✅ UBC Balance Verification: PASSED")
+                    
+                    # Save redistribution data to Airtable
+                    redistribution_id = redistributor.save_redistribution_to_airtable(result, distributions)
+                    if redistribution_id:
+                        print(f"\n✅ Redistribution saved to Airtable with ID: {redistribution_id}")
+                    else:
+                        print("\n❌ Failed to save redistribution to Airtable")
                 else:
-                    print("\n❌ Failed to save redistribution to Airtable")
+                    print(f"\n❌ UBC Balance Verification: FAILED - Insufficient UBC in wallet")
+                    print("Redistribution not saved to Airtable due to insufficient UBC balance")
             else:
                 print("No investor distributions calculated")
         else:
