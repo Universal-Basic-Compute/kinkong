@@ -661,6 +661,28 @@ export default function Invest() {
                   Minimum investment: {MIN_AMOUNTS[selectedToken].toLocaleString()}{' '}
                   <TokenDisplay token={selectedToken} options={{ className: 'text-gray-400' }} />
                 </p>
+                
+                <div className="mt-6 pt-4 border-t border-gray-700">
+                  <h3 className="text-sm font-medium text-gold mb-2">Investment Conditions</h3>
+                  <ul className="space-y-2 text-sm text-gray-300">
+                    <li className="flex items-start">
+                      <span className="text-gold mr-2">•</span>
+                      <span>75% of profits redistributed weekly</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-gold mr-2">•</span>
+                      <span>Funds withdrawable at any time</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-gold mr-2">•</span>
+                      <span>2% fee on transactions</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-gold mr-2">•</span>
+                      <span>Profits redistributed in $UBC</span>
+                    </li>
+                  </ul>
+                </div>
                 </div>
               </div>
             </section>
