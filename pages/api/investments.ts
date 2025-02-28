@@ -19,19 +19,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       sort: [{ field: 'createdAt', direction: 'desc' }]
     }).all();
     
+    console.log(`Found ${redistributionsRecords.length} redistributions`);
+    
+    // Log sample redistribution data for debugging
+    if (redistributionsRecords.length > 0) {
+      const sample = redistributionsRecords[0];
+      console.log('Sample redistribution data:');
+      console.log({
+        id: sample.id,
+        wallet: sample.get('wallet'),
+        ubcAmount: sample.get('ubcAmount'),
+        amount: sample.get('amount'),
+        createdAt: sample.get('createdAt'),
+        status: sample.get('status')
+      });
+    }
+    
     // Create a map of wallet addresses to their latest redistribution
     const walletToRedistribution = new Map();
     redistributionsRecords.forEach(record => {
       const wallet = record.get('wallet');
-      if (wallet && !walletToRedistribution.has(wallet)) {
-        walletToRedistribution.set(wallet, {
-          redistributionId: record.id,
-          ubcAmount: parseFloat(record.get('ubcAmount') || '0'),
-          amount: parseFloat(record.get('amount') || '0'),
-          createdAt: record.get('createdAt')
-        });
+      if (wallet) {
+        // Only add if this wallet doesn't exist in the map yet (since records are sorted by date desc)
+        if (!walletToRedistribution.has(wallet)) {
+          walletToRedistribution.set(wallet, {
+            redistributionId: record.id,
+            ubcAmount: parseFloat(record.get('ubcAmount') || '0'),
+            amount: parseFloat(record.get('amount') || '0'),
+            createdAt: record.get('createdAt')
+          });
+        }
       }
     });
+    
+    console.log(`Mapped ${walletToRedistribution.size} unique wallets with redistributions`);
     
     // Map investments and add redistribution data
     const investments = investmentsRecords.map(record => {
@@ -55,6 +76,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       };
     });
     
+    console.log(`Returning ${investments.length} investments`);
     res.status(200).json(investments);
   } catch (error) {
     console.error('Error fetching investments:', error);

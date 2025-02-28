@@ -30,9 +30,12 @@ export function InvestmentCard() {
       }
 
       try {
-        const response = await fetch(`/api/user-investments?wallet=${publicKey.toString()}`);
+        // Add timestamp to prevent caching
+        const timestamp = new Date().getTime();
+        const response = await fetch(`/api/user-investments?wallet=${publicKey.toString()}&t=${timestamp}`);
         if (!response.ok) throw new Error('Failed to fetch investments');
         const data = await response.json();
+        console.log('Fetched investments:', data);
         setInvestments(data);
       } catch (error) {
         console.error('Error fetching investments:', error);

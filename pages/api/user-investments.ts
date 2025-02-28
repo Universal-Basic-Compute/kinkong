@@ -28,8 +28,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       sort: [{ field: 'createdAt', direction: 'desc' }]
     }).all();
     
+    console.log(`Found ${redistributionsRecords.length} redistributions for wallet ${wallet}`);
+    
     // Get the latest redistribution if available
     const latestRedistribution = redistributionsRecords.length > 0 ? redistributionsRecords[0] : null;
+    
+    // Log the latest redistribution for debugging
+    if (latestRedistribution) {
+      console.log('Latest redistribution data:');
+      console.log({
+        id: latestRedistribution.id,
+        wallet: latestRedistribution.get('wallet'),
+        ubcAmount: latestRedistribution.get('ubcAmount'),
+        amount: latestRedistribution.get('amount'),
+        createdAt: latestRedistribution.get('createdAt'),
+        status: latestRedistribution.get('status')
+      });
+    } else {
+      console.log('No redistributions found for this wallet');
+    }
     
     // Map investments and add redistribution data
     const investments = investmentsRecords.map(record => {
