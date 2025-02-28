@@ -62,18 +62,22 @@ export async function POST(request: NextRequest) {
     
     try {
       console.log(`Executing transfer: ${scriptPath} ${wallet} UBC ${ubcAmount}`);
-      const { stdout, stderr } = await execPromise(`python ${scriptPath} ${wallet} UBC ${ubcAmount}`);
+      const { stdout, stderr } = await execPromise(`python "${scriptPath}" "${wallet}" UBC ${ubcAmount}`);
       
       console.log('Transfer script output:', stdout);
       
-      if (stderr) {
+      if (stderr && !stdout.includes('Transaction signature:')) {
         console.error('Transfer script error:', stderr);
         throw new Error(stderr);
       }
       
       // Extract transaction signature from stdout
       const signatureMatch = stdout.match(/Transaction signature: ([a-zA-Z0-9]+)/);
-      const signature = signatureMatch ? signatureMatch[1] : null;
+      const signature = signatureMatch ? signatureMatch[1] : 'unknown';
+      
+      if (!signature || signature === 'unknown') {
+        console.warn('Could not extract transaction signature from output');
+      }
       
       // Update the record to mark as claimed
       await redistributionsTable.update(investmentId, {

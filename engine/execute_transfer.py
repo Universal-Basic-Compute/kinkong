@@ -14,7 +14,6 @@ from solana.rpc.async_api import AsyncClient
 from solana.rpc.types import TxOpts
 from solana.transaction import Transaction
 from solana.publickey import PublicKey
-# PublicKey is already imported from solders.pubkey
 from spl.token.instructions import get_associated_token_address, transfer, create_associated_token_account
 
 def setup_logging():
@@ -135,7 +134,8 @@ class TokenTransferExecutor:
                 
                 # Check if the destination token account exists
                 # Convert Pubkey to PublicKey for the RPC client
-                response = await client.get_account_info(PublicKey(str(destination_token_account)))
+                dest_token_account_pubkey = PublicKey(str(destination_token_account))
+                response = await client.get_account_info(dest_token_account_pubkey)
                 
                 # If the account doesn't exist, we need to create it
                 if not response.value:
@@ -181,32 +181,67 @@ class TokenTransferExecutor:
                 # Create a transaction
                 transfer_tx = Transaction().add(transfer_ix)
                 
-                # Get recent blockhash
-                blockhash_resp = await client.get_latest_blockhash()
-                transfer_tx.recent_blockhash = blockhash_resp.value.blockhash
+                # Get recent blockhash with retry logic
+                max_retries = 3
+                for retry in range(max_retries):
+                    try:
+                        blockhash_resp = await client.get_latest_blockhash()
+                        transfer_tx.recent_blockhash = blockhash_resp.value.blockhash
+                        break
+                    except Exception as e:
+                        if retry < max_retries - 1:
+                            self.logger.warning(f"Error getting blockhash (attempt {retry+1}/{max_retries}): {e}")
+                            await asyncio.sleep(1)
+                        else:
+                            raise ValueError(f"Failed to get blockhash after {max_retries} attempts: {e}")
                 
                 # Sign the transaction
                 transfer_tx.sign(keypair)
                 
-                # Send the transaction
+                # Send the transaction with retry logic
                 self.logger.info("Sending transfer transaction...")
-                response = await client.send_transaction(transfer_tx)
-                
-                if not response.value:
-                    raise ValueError("Failed to send transfer transaction")
+                max_retries = 3
+                for retry in range(max_retries):
+                    try:
+                        response = await client.send_transaction(transfer_tx)
+                        
+                        if not response.value:
+                            if retry < max_retries - 1:
+                                self.logger.warning(f"Failed to send transaction (attempt {retry+1}/{max_retries})")
+                                await asyncio.sleep(1)
+                            else:
+                                raise ValueError("Failed to send transfer transaction after multiple attempts")
+                        else:
+                            break
+                    except Exception as e:
+                        if retry < max_retries - 1:
+                            self.logger.warning(f"Error sending transaction (attempt {retry+1}/{max_retries}): {e}")
+                            await asyncio.sleep(1)
+                        else:
+                            raise ValueError(f"Failed to send transaction after {max_retries} attempts: {e}")
                 
                 tx_signature = str(response.value)
                 self.logger.info(f"Transaction sent successfully: {tx_signature}")
                 
                 # Wait for confirmation
                 self.logger.info("Waiting for transaction confirmation...")
-                await asyncio.sleep(5)
                 
-                # Verify the transaction was successful
-                confirm_resp = await client.confirm_transaction(tx_signature)
-                
-                if not confirm_resp.value:
-                    self.logger.warning(f"Transaction may not be confirmed: {tx_signature}")
+                # Improved confirmation logic with retries
+                max_retries = 5
+                for retry in range(max_retries):
+                    try:
+                        confirm_resp = await client.confirm_transaction(tx_signature)
+                        if confirm_resp.value:
+                            self.logger.info(f"Transaction confirmed: {tx_signature}")
+                            break
+                        else:
+                            self.logger.warning(f"Transaction not yet confirmed (attempt {retry+1}/{max_retries})")
+                            if retry < max_retries - 1:
+                                await asyncio.sleep(2 * (retry + 1))  # Exponential backoff
+                    except Exception as e:
+                        self.logger.warning(f"Error confirming transaction (attempt {retry+1}/{max_retries}): {e}")
+                        if retry < max_retries - 1:
+                            await asyncio.sleep(2 * (retry + 1))
                 
                 return {
                     "success": True,
