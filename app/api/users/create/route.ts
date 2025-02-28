@@ -10,12 +10,10 @@ export async function POST(request: NextRequest) {
     console.log('Received user data in API:', userData);
     
     // Validate required fields
-    if (!userData.experience || !userData.interests || !userData.goals || !userData.timeframe) {
+    if (!userData.experience || !userData.interests) {
       console.error('Missing required fields:', {
         experience: !!userData.experience,
-        interests: !!userData.interests,
-        goals: !!userData.goals,
-        timeframe: !!userData.timeframe
+        interests: !!userData.interests
       });
       return NextResponse.json(
         { error: 'Missing required fields' },
