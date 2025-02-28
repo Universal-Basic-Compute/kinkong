@@ -29,17 +29,25 @@ logger = logging.getLogger(__name__)
 
 class TokenSnapshotTaker:
     def __init__(self):
+        load_dotenv()
         self.base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
         self.api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
+        
+        # Make sure these are properly initialized
+        if not self.base_id or not self.api_key:
+            raise ValueError("Missing Airtable credentials in environment variables")
+        
+        # Initialize Airtable tables
         self.tokens_table = Airtable(self.base_id, 'TOKENS', self.api_key)
-        self.snapshots_table = Airtable(
-            os.getenv('KINKONG_AIRTABLE_BASE_ID'),
-            'TOKEN_SNAPSHOTS',
-            os.getenv('KINKONG_AIRTABLE_API_KEY')
-        )
+        self.snapshots_table = Airtable(self.base_id, 'TOKEN_SNAPSHOTS', self.api_key)
         self.birdeye_api_key = os.getenv('BIRDEYE_API_KEY')
+        
         # Initialize logger
         self.logger = logging.getLogger(__name__)
+        
+        # Log initialization info
+        self.logger.info(f"TokenSnapshotTaker initialized with base_id: {self.base_id[:5]}...")
+        self.logger.info(f"Snapshots table type: {type(self.snapshots_table)}")
 
     def get_active_tokens(self) -> List[Dict]:
         """Get all active tokens from Airtable"""
