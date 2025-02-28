@@ -82,7 +82,7 @@ export function InvestmentsTable({ investments, latestSnapshot, isLoading }: Inv
               <tbody>
                 {investments
                   .filter(validateInvestment)
-                  .sort((a, b) => (b.usdAmount || 0) - (a.usdAmount || 0)) // Sort by usdAmount in descending order
+                  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) // Sort by date in descending order
                   .map((investment) => (
                   <tr key={investment.investmentId} className="border-b border-gold/10 hover:bg-gold/5">
                     <td className="px-4 py-4 text-white">
