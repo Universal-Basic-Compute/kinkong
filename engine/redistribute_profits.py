@@ -94,6 +94,34 @@ class ProfitRedistributor:
         
         return None
     
+    def get_investment_change(self, start_date, end_date):
+        """Get net investment change between two dates"""
+        self.logger.info(f"Fetching investment changes between {start_date.isoformat()} and {end_date.isoformat()}")
+        
+        try:
+            # Query for investments in the date range
+            investments = self.investments_table.get_all(
+                formula=f"AND(IS_AFTER({{createdAt}}, '{start_date.isoformat()}'), IS_BEFORE({{createdAt}}, '{end_date.isoformat()}'))"
+            )
+            
+            net_change = 0.0
+            
+            for investment in investments:
+                try:
+                    amount = float(investment['fields'].get('amount', 0))
+                    net_change += amount
+                    self.logger.info(f"Found investment change: ${amount:.2f}")
+                except (ValueError, TypeError) as e:
+                    self.logger.warning(f"Error processing investment {investment.get('id')}: {e}")
+            
+            self.logger.info(f"Total net investment change: ${net_change:.2f}")
+            
+            return net_change
+        except Exception as e:
+            self.logger.error(f"Error fetching investment changes: {e}")
+            # Return zero if we can't get the data
+            return 0.0
+            
     def get_total_investments_value(self, date=None):
         """Get the total value of all investments at a given date"""
         self.logger.info(f"Calculating total investments value {date and 'as of ' + date.isoformat() or 'current'}")
@@ -135,23 +163,19 @@ class ProfitRedistributor:
         current_wallet_value = float(current_snapshot['fields'].get('totalValue', 0))
         past_wallet_value = float(past_snapshot['fields'].get('totalValue', 0))
         
-        # Get investment values
-        current_investment_value = self.get_total_investments_value()
-        past_investment_value = self.get_total_investments_value(seven_days_ago)
+        # Get net investment change during this period
+        net_investment_change = self.get_investment_change(seven_days_ago, now)
         
-        # Calculate profit
-        current_profit = current_wallet_value - current_investment_value
-        past_profit = past_wallet_value - past_investment_value
-        total_profit = current_profit - past_profit
+        # Calculate profit: (Current Value - Past Value - Net Investment Change)
+        # If net_investment_change is positive (more money added), we subtract it to get true profit
+        # If net_investment_change is negative (money withdrawn), adding it (subtracting a negative) accounts for value taken out
+        total_profit = current_wallet_value - past_wallet_value - net_investment_change
         
         # Display the calculation details
         self.logger.info("\n=== Profit Calculation ===")
         self.logger.info(f"Current Wallet Value: ${current_wallet_value:.2f}")
-        self.logger.info(f"Current Investment Value: ${current_investment_value:.2f}")
-        self.logger.info(f"Current Profit: ${current_profit:.2f}")
         self.logger.info(f"Past Wallet Value (7 days ago): ${past_wallet_value:.2f}")
-        self.logger.info(f"Past Investment Value (7 days ago): ${past_investment_value:.2f}")
-        self.logger.info(f"Past Profit (7 days ago): ${past_profit:.2f}")
+        self.logger.info(f"Net Investment Change: ${net_investment_change:.2f}")
         self.logger.info(f"Total Profit (7 days): ${total_profit:.2f}")
         
         # Calculate distribution pools
