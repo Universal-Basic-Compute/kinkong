@@ -290,50 +290,44 @@ class TokenTransferExecutor:
                 # Sign the transaction
                 transfer_tx.sign(keypair)
                 
-                # Send the transaction with retry logic
+                # Send the transaction with improved options
                 self.logger.info("Sending transfer transaction...")
-                max_retries = 3
-                for retry in range(max_retries):
-                    try:
-                        response = await client.send_transaction(transfer_tx)
-                        
-                        if not response.value:
-                            if retry < max_retries - 1:
-                                self.logger.warning(f"Failed to send transaction (attempt {retry+1}/{max_retries})")
-                                await asyncio.sleep(1)
-                            else:
-                                raise ValueError("Failed to send transfer transaction after multiple attempts")
-                        else:
-                            break
-                    except Exception as e:
-                        if retry < max_retries - 1:
-                            self.logger.warning(f"Error sending transaction (attempt {retry+1}/{max_retries}): {e}")
-                            await asyncio.sleep(1)
-                        else:
-                            raise ValueError(f"Failed to send transaction after {max_retries} attempts: {e}")
+                try:
+                    response = await client.send_transaction(
+                        transfer_tx,
+                        opts=TxOpts(
+                            skip_preflight=False,  # Enable preflight checks
+                            preflight_commitment="confirmed",  # Use "confirmed" commitment for preflight
+                            max_retries=5  # Set maximum retries
+                        )
+                    )
+                    
+                    if not response.value:
+                        raise ValueError("Failed to send transfer transaction")
+                except Exception as e:
+                    self.logger.error(f"Error sending transaction: {e}")
+                    raise ValueError(f"Failed to send transaction: {e}")
                 
                 tx_signature = str(response.value)
                 self.logger.info(f"Transaction sent successfully: {tx_signature}")
                 
-                # Wait for confirmation
+                # Wait for confirmation with improved options
                 self.logger.info("Waiting for transaction confirmation...")
-                
-                # Improved confirmation logic with retries
-                max_retries = 5
-                for retry in range(max_retries):
-                    try:
-                        confirm_resp = await client.confirm_transaction(tx_signature)
-                        if confirm_resp.value:
-                            self.logger.info(f"Transaction confirmed: {tx_signature}")
-                            break
-                        else:
-                            self.logger.warning(f"Transaction not yet confirmed (attempt {retry+1}/{max_retries})")
-                            if retry < max_retries - 1:
-                                await asyncio.sleep(2 * (retry + 1))  # Exponential backoff
-                    except Exception as e:
-                        self.logger.warning(f"Error confirming transaction (attempt {retry+1}/{max_retries}): {e}")
-                        if retry < max_retries - 1:
-                            await asyncio.sleep(2 * (retry + 1))
+                try:
+                    # Use the confirm_transaction method with commitment level
+                    confirm_resp = await client.confirm_transaction(
+                        tx_signature,
+                        commitment="confirmed"  # Use "confirmed" commitment level for faster confirmation
+                    )
+                    
+                    if confirm_resp.value:
+                        self.logger.info(f"Transaction confirmed: {tx_signature}")
+                    else:
+                        self.logger.warning(f"Transaction not confirmed: {tx_signature}")
+                        # Still proceed as the transaction might confirm later
+                except Exception as e:
+                    self.logger.warning(f"Error confirming transaction: {e}")
+                    # Continue as the transaction might still be valid
                 
                 return {
                     "success": True,
