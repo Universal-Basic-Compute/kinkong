@@ -36,6 +36,17 @@ export default function CopilotChatPage() {
   const [subscription, setSubscription] = useState<{active: boolean; expiresAt?: string} | null>(null);
   const [currentMission, setCurrentMission] = useState<string | null>(null);
   
+  // Add useEffect to disable body scrolling
+  useEffect(() => {
+    // Disable scrolling on the body when chat page is mounted
+    document.body.classList.add('no-scroll');
+    
+    // Re-enable scrolling when component unmounts
+    return () => {
+      document.body.classList.remove('no-scroll');
+    };
+  }, []);
+  
   const missions = [
     {
       id: 'token-discovery',
@@ -305,17 +316,6 @@ export default function CopilotChatPage() {
     // Just log this information but don't block access
     console.log('User has an inactive subscription');
   }
-
-  // Add useEffect to disable body scrolling
-  useEffect(() => {
-    // Disable scrolling on the body when chat page is mounted
-    document.body.classList.add('no-scroll');
-    
-    // Re-enable scrolling when component unmounts
-    return () => {
-      document.body.classList.remove('no-scroll');
-    };
-  }, []);
 
   return (
     <div className="fixed inset-0 top-16 bottom-0 flex overflow-hidden">
