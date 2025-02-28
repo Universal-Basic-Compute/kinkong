@@ -145,7 +145,7 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
                     className="px-4 py-3 text-right font-bold cursor-pointer hover:text-gold"
                     onClick={() => handleSort('return')}
                   >
-                    Weekly Return{renderSortIndicator('return')}
+                    Weekly Redistribution{renderSortIndicator('return')}
                   </th>
                   <th 
                     className="px-4 py-3 text-right font-bold cursor-pointer hover:text-gold"
