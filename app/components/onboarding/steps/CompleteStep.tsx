@@ -37,6 +37,19 @@ const CompleteStep: React.FC = () => {
     saveOnboardingData();
   }, [onboardingData, publicKey, saveUserData]);
 
+  // Add automatic redirection after saving is complete
+  useEffect(() => {
+    // Check if saving is complete and there are no errors
+    if (!isSaving && saveError === null) {
+      // Add a short delay before redirecting to ensure data is saved
+      const redirectTimer = setTimeout(() => {
+        router.push('/copilot/chat');
+      }, 1500);
+      
+      return () => clearTimeout(redirectTimer);
+    }
+  }, [isSaving, saveError, router]);
+
   return (
     <div className="text-center space-y-6 py-8">
       <div className="w-20 h-20 bg-gradient-to-r from-gold to-amber-500 rounded-full flex items-center justify-center mx-auto">
