@@ -96,8 +96,8 @@ export default function CopilotChatPage() {
       displayedSoFar = [...displayedSoFar, cleanParagraphs[index]];
       setDisplayedParagraphs([...displayedSoFar]);
       
-      // Calculate read time based on paragraph length
-      const readTime = Math.max(800, cleanParagraphs[index].length * 30);
+      // Calculate read time based on paragraph length - faster speed
+      const readTime = Math.max(500, cleanParagraphs[index].length * 15); // Reduced from 30 to 15ms per character
       
       // Schedule next paragraph
       setTimeout(() => showNextParagraph(index + 1), readTime);
@@ -298,68 +298,84 @@ export default function CopilotChatPage() {
                   message.role === 'user' ? 'justify-end' : 'justify-start'
                 }`}
               >
-                <div
-                  className={`max-w-[80%] rounded-lg p-3 ${
-                    message.role === 'user'
-                      ? 'bg-gold/10 text-gold'
-                      : 'bg-gray-800/50 text-gray-200'
-                  }`}
-                >
-                  {message.screenshot && (
-                    <div className="mb-3 border border-gold/20 rounded-lg overflow-hidden">
-                      <img 
-                        src={message.screenshot} 
-                        alt="Screenshot" 
-                        className="max-w-full h-auto"
-                      />
-                      <div className="bg-black/50 p-2 text-xs text-gray-400">
-                        Screenshot attached
+                {/* For user messages */}
+                {message.role === 'user' && (
+                  <div
+                    className="max-w-[80%] rounded-lg p-3 bg-gold/10 text-gold"
+                  >
+                    {message.screenshot && (
+                      <div className="mb-3 border border-gold/20 rounded-lg overflow-hidden">
+                        <img 
+                          src={message.screenshot} 
+                          alt="Screenshot" 
+                          className="max-w-full h-auto"
+                        />
+                        <div className="bg-black/50 p-2 text-xs text-gray-400">
+                          Screenshot attached
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  
-                  {/* For user messages, render normally */}
-                  {message.role === 'user' && (
+                    )}
                     <ReactMarkdown className="prose prose-invert">
                       {message.content}
                     </ReactMarkdown>
-                  )}
-                  
-                  {/* For assistant messages, handle typing animation */}
-                  {message.role === 'assistant' && (
-                    <>
-                      {/* If this is the message currently being typed */}
-                      {typingMessage && index === messages.length - 1 ? (
-                        <div>
-                          {/* Display paragraphs that have been revealed so far */}
-                          {displayedParagraphs.map((paragraph, pIndex) => (
-                            <div key={pIndex} className="mb-4 last:mb-0">
+                  </div>
+                )}
+                
+                {/* For assistant messages */}
+                {message.role === 'assistant' && (
+                  <>
+                    {/* If this is the message currently being typed */}
+                    {typingMessage && index === messages.length - 1 ? (
+                      <div className="space-y-3 w-full">
+                        {/* Display paragraphs that have been revealed so far */}
+                        {displayedParagraphs.map((paragraph, pIndex) => (
+                          <div key={pIndex} className="flex justify-start">
+                            <div className="max-w-[80%] rounded-lg p-3 bg-gray-800/50 text-gray-200">
                               <ReactMarkdown className="prose prose-invert">
                                 {paragraph}
                               </ReactMarkdown>
                             </div>
-                          ))}
-                          
-                          {/* Show typing indicator if still typing */}
-                          {isTyping && (
-                            <div className="flex items-center space-x-1 mt-2">
-                              <div className="w-2 h-2 bg-gold/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                              <div className="w-2 h-2 bg-gold/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                              <div className="w-2 h-2 bg-gold/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                          </div>
+                        ))}
+                        
+                        {/* Show typing indicator outside of bubble if still typing */}
+                        {isTyping && (
+                          <div className="flex items-center space-x-1 ml-3 mt-1">
+                            <div className="w-2 h-2 bg-gold/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                            <div className="w-2 h-2 bg-gold/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                            <div className="w-2 h-2 bg-gold/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      /* For completed messages, split into separate bubbles */
+                      <div className="space-y-3 w-full">
+                        {message.content.split(/\n\n|\n#{1,6} /).map((paragraph, pIndex) => (
+                          paragraph.trim() && (
+                            <div key={pIndex} className="flex justify-start">
+                              <div className="max-w-[80%] rounded-lg p-3 bg-gray-800/50 text-gray-200">
+                                <ReactMarkdown className="prose prose-invert">
+                                  {paragraph.trim()}
+                                </ReactMarkdown>
+                              </div>
                             </div>
-                          )}
-                        </div>
-                      ) : (
-                        /* For completed messages, render normally */
-                        <ReactMarkdown className="prose prose-invert">
-                          {message.content}
-                        </ReactMarkdown>
-                      )}
-                    </>
-                  )}
-                </div>
+                          )
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             ))}
+            
+            {/* Add typing indicator before first message if no messages yet */}
+            {messages.length === 0 && isTyping && (
+              <div className="flex items-center space-x-1 ml-3 mt-1">
+                <div className="w-2 h-2 bg-gold/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                <div className="w-2 h-2 bg-gold/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                <div className="w-2 h-2 bg-gold/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+              </div>
+            )}
             <div ref={messagesEndRef} />
           </div>
 
