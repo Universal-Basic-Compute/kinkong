@@ -292,7 +292,7 @@ export default function CopilotPage() {
             </div>
             <div className="space-y-4">
               <h1 className="text-5xl md:text-6xl font-bold">
-                KinKong <span className="white-glow-text">Copilot</span>
+                Kong <span className="white-glow-text">Copilot</span>
               </h1>
               <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
                 Your AI-powered trading assistant with KinKong's market intelligence, directly in your browser
