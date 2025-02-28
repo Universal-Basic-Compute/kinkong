@@ -3,6 +3,40 @@ import { rateLimit } from '@/utils/rate-limit';
 import { getTable } from '@/backend/src/airtable/tables';
 import { COPILOT_PROMPT } from '@/prompts/copilot';
 
+// Function to fetch user investments from INVESTMENTS table
+async function getUserInvestments(wallet: string | undefined) {
+  if (!wallet) {
+    console.log('No wallet provided, skipping investments fetch');
+    return null;
+  }
+  
+  try {
+    console.log(`🔍 Fetching investments for wallet: ${wallet}`);
+    const investmentsTable = getTable('INVESTMENTS');
+    
+    const records = await investmentsTable.select({
+      filterByFormula: `{wallet}='${wallet}'`,
+      sort: [{ field: 'createdAt', direction: 'desc' }]
+    }).all();
+    
+    console.log(`✅ Found ${records.length} investment records for wallet ${wallet}`);
+    
+    if (records.length === 0) {
+      return null;
+    }
+    
+    // Only return token and amount fields
+    return records.map(record => ({
+      id: record.id,
+      token: record.get('token'),
+      amount: record.get('amount')
+    }));
+  } catch (error) {
+    console.error('❌ Error fetching user investments:', error);
+    return null;
+  }
+}
+
 // Function to fetch wallet portfolio from Birdeye API
 async function getBirdeyeWalletPortfolio(wallet: string) {
   try {
@@ -290,14 +324,22 @@ export async function POST(request: NextRequest) {
       walletPortfolio = await getBirdeyeWalletPortfolio(requestBody.wallet);
       console.log(`🔍 Wallet portfolio fetch result: ${walletPortfolio ? 'Success' : 'Failed'}`);
     }
+    
+    // Fetch user investments if wallet is provided
+    let userInvestments = null;
+    if (requestBody.wallet) {
+      userInvestments = await getUserInvestments(requestBody.wallet);
+      console.log(`🔍 User investments fetch result: ${userInvestments ? `Success (${userInvestments.length} investments)` : 'No investments found'}`);
+    }
 
-    // Prepare full context with user data, wallet portfolio, and mission
+    // Prepare full context with user data, wallet portfolio, investments, and mission
     const fullContext = {
       request: requestBody,
       signals: contextData.signals,
       marketSentiment: contextData.marketSentiment,
       userData: userData, // Add user data to context
       walletPortfolio: walletPortfolio, // Add wallet portfolio to context
+      userInvestments: userInvestments, // Add user investments to context
       mission: mission // Add mission to context
     };
 
@@ -368,6 +410,18 @@ ${walletPortfolio.items.slice(0, 10).map((item: any, index: number) =>
 Total Portfolio Value: $${parseFloat(walletPortfolio.totalValue || 0).toFixed(2)}
 
 Use this information to provide personalized advice relevant to their current holdings.`;
+    }
+    
+    // Add user investments to system prompt if available and mission is portfolio-rebalancing
+    if (mission === 'portfolio-rebalancing' && userInvestments && userInvestments.length > 0) {
+      systemPrompt += `\n\nUser's KinKong Investments:
+The user has ${userInvestments.length} managed investments in KinKong Invest:
+${userInvestments.map((investment: any, index: number) => {
+  const amount = parseFloat(investment.amount || 0);
+  return `${index + 1}. ${investment.token}: ${amount} tokens`;
+}).join('\n')}
+
+Use this investment data to provide specific rebalancing recommendations based on the user's current KinKong Invest allocations, market conditions, and risk tolerance.`;
     }
 
     // Helper function to get guidance based on experience level
