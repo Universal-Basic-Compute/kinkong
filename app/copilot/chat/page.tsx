@@ -9,6 +9,7 @@ import { verifySubscription } from '@/utils/subscription';
 import { useOnboarding } from '@/app/context/OnboardingContext';
 import ReactMarkdown from 'react-markdown';
 import Image from 'next/image';
+import MissionSelector from '@/components/copilot/MissionSelector';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -66,6 +67,20 @@ export default function CopilotChatPage() {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+  
+  const handleSelectMission = (missionTitle: string, context: string) => {
+    // Add a system message to indicate the mission selection
+    const systemMessage: Message = {
+      role: 'assistant',
+      content: `🚀 **Mission Selected: ${missionTitle}**\n\nI'm ready to help you with this mission! Let's get started.`,
+      timestamp: new Date().toISOString()
+    };
+    
+    setMessages(prev => [...prev, systemMessage]);
+    
+    // Automatically set the input field with the context
+    setInput(context);
   };
 
   const captureScreenshot = async () => {
@@ -227,6 +242,9 @@ export default function CopilotChatPage() {
             </li>
           </ul>
         </div>
+
+        {/* Mission Selector */}
+        <MissionSelector onSelectMission={handleSelectMission} />
 
         {/* Chat Interface */}
         <div className="bg-black/50 border border-gold/20 rounded-lg h-[600px] flex flex-col">
