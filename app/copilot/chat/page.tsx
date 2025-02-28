@@ -143,6 +143,36 @@ export default function CopilotChatPage() {
     setLoading(false);
   }, [publicKey, router]);
 
+  // Send an automatic "Hello!" message when the page loads
+  useEffect(() => {
+    const sendAutomaticGreeting = async () => {
+      if (messages.length === 0 && publicKey) {
+        try {
+          // Get wallet address
+          const walletAddress = publicKey.toString();
+          
+          // Send the greeting message to the API but don't display it in the UI
+          await askKinKongCopilot(
+            "Hello!", 
+            code || 'default', 
+            walletAddress,
+            undefined,
+            currentMission
+          );
+          
+          console.log('Automatic greeting sent');
+        } catch (error) {
+          console.error('Error sending automatic greeting:', error);
+        }
+      }
+    };
+    
+    // Only run this once when the component mounts and publicKey is available
+    if (publicKey && !loading) {
+      sendAutomaticGreeting();
+    }
+  }, [publicKey, loading, code, currentMission, messages.length]);
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
