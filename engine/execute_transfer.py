@@ -7,12 +7,12 @@ from datetime import datetime, timezone
 import requests
 from dotenv import load_dotenv
 from airtable import Airtable
-from solders.rpc.api import Client
-from solders.keypair import Keypair
-from solders.pubkey import Pubkey as PublicKey
-from solders.transaction import Transaction
-from solders.system_program import SYS_PROGRAM_ID
-from solders.rpc.config import RpcSendTransactionConfig as TxOpts
+from solana.rpc.api import Client
+from solana.keypair import Keypair
+from solana.publickey import PublicKey
+from solana.transaction import Transaction
+from solana.system_program import SYS_PROGRAM_ID
+from solana.rpc.types import TxOpts
 from spl.token.client import Token
 from spl.token.constants import TOKEN_PROGRAM_ID
 
@@ -68,12 +68,12 @@ class UBCTransferExecutor:
             # Try to load as bytes array
             if private_key_str.startswith('['):
                 private_key_bytes = json.loads(private_key_str)
-                self.keypair = Keypair.from_bytes(bytes(private_key_bytes))
+                self.keypair = Keypair.from_secret_key(bytes(private_key_bytes))
             else:
                 # Try to load as base58 string
                 from base58 import b58decode
                 private_key_bytes = b58decode(private_key_str)
-                self.keypair = Keypair.from_bytes(private_key_bytes)
+                self.keypair = Keypair.from_secret_key(private_key_bytes)
                 
             self.wallet = self.keypair.public_key
             self.logger.info(f"Wallet loaded: {self.wallet}")
@@ -102,8 +102,8 @@ class UBCTransferExecutor:
                 {"mint": str(self.ubc_mint)}
             )
             
-            if "result" in response and "value" in response["result"] and len(response["result"]["value"]) > 0:
-                self.source_token_account = PublicKey(response["result"]["value"][0]["pubkey"])
+            if hasattr(response, "value") and len(response.value) > 0:
+                self.source_token_account = PublicKey(response.value[0].pubkey)
                 self.logger.info(f"Source token account found: {self.source_token_account}")
             else:
                 self.logger.error("No UBC token account found for wallet")
@@ -181,9 +181,9 @@ class UBCTransferExecutor:
                 {"mint": str(self.ubc_mint)}
             )
             
-            if "result" in response and "value" in response["result"] and len(response["result"]["value"]) > 0:
+            if hasattr(response, "value") and len(response.value) > 0:
                 # Use existing token account
-                destination_token_account = PublicKey(response["result"]["value"][0]["pubkey"])
+                destination_token_account = PublicKey(response.value[0].pubkey)
                 self.logger.info(f"Existing token account found for {wallet_address}: {destination_token_account}")
                 return destination_token_account
             else:
@@ -215,8 +215,8 @@ class UBCTransferExecutor:
                     opts=TxOpts(skip_preflight=False, preflight_commitment="confirmed")
                 )
                 
-                if "result" in result:
-                    self.logger.info(f"Created token account: {associated_token_address}, tx: {result['result']}")
+                if hasattr(result, "value"):
+                    self.logger.info(f"Created token account: {associated_token_address}, tx: {result.value}")
                     
                     # Wait for confirmation
                     self.logger.info("Waiting for transaction confirmation...")
@@ -266,8 +266,8 @@ class UBCTransferExecutor:
                 opts=TxOpts(skip_preflight=False, preflight_commitment="confirmed")
             )
             
-            if "result" in result:
-                tx_signature = result["result"]
+            if hasattr(result, "value"):
+                tx_signature = result.value
                 self.logger.info(f"Transfer successful: {tx_signature}")
                 
                 # Wait for confirmation
