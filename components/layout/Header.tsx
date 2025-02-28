@@ -90,8 +90,16 @@ const Header = () => {
       isGroup: false,
       href: '/copilot',
       subItems: [],
+      isGlowing: false,
+      customClass: ''
+    },
+    {
+      label: 'Get Started',
+      isGroup: false,
+      href: '/copilot/start',
+      subItems: [],
       isGlowing: true,
-      customClass: 'text-orange-500 animate-pulse'
+      customClass: 'text-gold animate-pulse'
     }
   ];
 
