@@ -21,22 +21,22 @@ const RiskToleranceStep: React.FC = () => {
   const options = [
     { 
       value: 'conservative', 
-      label: 'Conservative',
+      label: '🛡️ Conservative',
       description: 'I prefer stability and minimal risk, even if returns are lower'
     },
     { 
       value: 'moderate', 
-      label: 'Moderate',
+      label: '⚖️ Moderate',
       description: 'I can accept some volatility for better returns'
     },
     { 
       value: 'aggressive', 
-      label: 'Aggressive',
+      label: '🔥 Aggressive',
       description: 'I\'m comfortable with high volatility for potentially higher returns'
     },
     { 
       value: 'very-aggressive', 
-      label: 'Very Aggressive',
+      label: '🚀 Very Aggressive',
       description: 'I seek maximum returns and can handle extreme volatility'
     }
   ];
