@@ -8,6 +8,7 @@ import { WalletConnect } from '@/components/wallet/WalletConnect';
 import { Connection, PublicKey, LAMPORTS_PER_SOL, Transaction, SystemProgram, PublicKey as SolanaPublicKey } from '@solana/web3.js';
 import { createSubscription } from '@/utils/subscription';
 import AnimatedAdvice from '@/components/copilot/AnimatedAdvice';
+import AnimatedChatBubble from '@/components/copilot/AnimatedChatBubble';
 
 // Define proper types for the tiers
 type TierButton = {
@@ -281,11 +282,14 @@ export default function CopilotPage() {
         {/* Hero Section */}
         <div className="text-center space-y-10 py-12 mb-8">
           <div className="flex flex-col md:flex-row items-center justify-center gap-8">
-            <img 
-              src="/copilot.png" 
-              alt="KinKong Copilot" 
-              className="w-40 h-40 md:w-48 md:h-48 object-contain"
-            />
+            <div className="relative">
+              <img 
+                src="/copilot.png" 
+                alt="KinKong Copilot" 
+                className="w-40 h-40 md:w-48 md:h-48 object-contain"
+              />
+              <AnimatedChatBubble />
+            </div>
             <div className="space-y-4">
               <h1 className="text-5xl md:text-6xl font-bold">
                 KinKong <span className="white-glow-text">Copilot</span>
