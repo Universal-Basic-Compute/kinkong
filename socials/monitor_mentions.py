@@ -96,20 +96,43 @@ async def update_token(token: str):
             logger.info(f"Added {project_root} to Python path")
         
         # Import TokenManager from engine.tokens
-        from engine.tokens import TokenManager
-        
-        # Initialize token manager
-        token_manager = TokenManager()
-        
-        # Process token
-        success = token_manager.process_token(token)
-        
-        if success:
-            logger.info(f"Successfully updated token {token}")
-            return True
-        else:
-            logger.error(f"Failed to update token {token}")
-            return False
+        try:
+            from engine.tokens import TokenManager
+            
+            # Initialize token manager
+            token_manager = TokenManager()
+            
+            # Process token
+            success = token_manager.process_token(token)
+            
+            if success:
+                logger.info(f"Successfully updated token {token}")
+                return True
+            else:
+                logger.error(f"Failed to update token {token}")
+                return False
+        except ImportError as ie:
+            logger.error(f"Failed to import TokenManager: {ie}")
+            
+            # Try to run the token processor script directly as a fallback
+            try:
+                import subprocess
+                result = subprocess.run(
+                    [sys.executable, str(project_root / "engine" / "tokens.py"), token],
+                    capture_output=True,
+                    text=True,
+                    check=False
+                )
+                
+                if result.returncode == 0:
+                    logger.info(f"Successfully updated token {token} via subprocess")
+                    return True
+                else:
+                    logger.error(f"Failed to update token {token} via subprocess: {result.stderr}")
+                    return False
+            except Exception as sub_e:
+                logger.error(f"Error running token processor subprocess: {sub_e}")
+                return False
             
     except Exception as e:
         logger.error(f"Error updating token {token}: {e}")

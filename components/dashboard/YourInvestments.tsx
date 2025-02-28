@@ -76,6 +76,9 @@ export const YourInvestments: React.FC<YourInvestmentsProps> = ({ className }) =
     }
     
     try {
+      // Show loading state
+      setIsLoading(true);
+      
       const response = await fetch('/api/investments/claim', {
         method: 'POST',
         headers: {
@@ -109,6 +112,9 @@ export const YourInvestments: React.FC<YourInvestmentsProps> = ({ className }) =
     } catch (error) {
       console.error('Error claiming rewards:', error);
       alert(`Error: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      // Reset loading state
+      setIsLoading(false);
     }
   };
 

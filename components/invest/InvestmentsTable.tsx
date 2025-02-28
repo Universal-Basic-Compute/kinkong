@@ -229,11 +229,15 @@ export function InvestmentsTable({ investments: propInvestments, latestSnapshot,
                               options={{ className: 'text-gray-400' }}
                             />
                           </div>
-                          {investment.usdAmount && (
+                          {investment.usdAmount !== undefined ? (
                             <div className="text-gray-400 text-sm">
                               (${Math.floor(investment.usdAmount).toLocaleString('en-US')})
                             </div>
-                          )}
+                          ) : investment.token && investment.token.toUpperCase() === 'USDC' ? (
+                            <div className="text-gray-400 text-sm">
+                              (${Math.floor(investment.amount).toLocaleString('en-US')})
+                            </div>
+                          ) : null}
                         </>
                       ) : (
                         'N/A'

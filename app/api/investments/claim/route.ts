@@ -66,9 +66,10 @@ export async function POST(request: NextRequest) {
       
       console.log('Transfer script output:', stdout);
       
+      // Check for errors in stderr but also look for success message in stdout
       if (stderr && !stdout.includes('Transaction signature:')) {
         console.error('Transfer script error:', stderr);
-        throw new Error(stderr);
+        throw new Error(stderr || 'Transfer failed with no error message');
       }
       
       // Extract transaction signature from stdout
@@ -77,6 +78,7 @@ export async function POST(request: NextRequest) {
       
       if (!signature || signature === 'unknown') {
         console.warn('Could not extract transaction signature from output');
+        // Continue anyway since the transfer might have succeeded
       }
       
       // Update the record to mark as claimed

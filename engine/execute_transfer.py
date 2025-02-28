@@ -262,6 +262,9 @@ class TokenTransferExecutor:
                     {"pubkey": str(destination_token_account), "is_signer": False, "is_writable": True},
                     {"pubkey": self.wallet, "is_signer": True, "is_writable": False}
                 ]
+                
+                # Log the account metas for debugging
+                self.logger.info(f"Account metas: {account_metas}")
 
                 # Create a transaction directly with Solana SDK
                 self.logger.info("Creating transaction directly with Solana SDK...")
@@ -271,6 +274,9 @@ class TokenTransferExecutor:
                     
                     # Define the token program ID
                     token_program_id = Pubkey.from_string("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
+                    
+                    # Log the parameters for debugging
+                    self.logger.info(f"Transfer parameters: source={source_token_account}, dest={destination_token_account}, owner={self.wallet}, amount={amount_lamports}")
                     
                     # Create the transfer instruction
                     transfer_ix = transfer(

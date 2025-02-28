@@ -42,9 +42,17 @@ export function InvestmentCard() {
         if (data.length > 0) {
           console.log('First investment token:', data[0].token);
           console.log('First investment amount:', data[0].amount);
+          
+          // Ensure all investments have a token property
+          const processedData = data.map((inv: Investment) => ({
+            ...inv,
+            token: inv.token || 'USDC' // Default to USDC if token is missing
+          }));
+          
+          setInvestments(processedData);
+        } else {
+          setInvestments(data);
         }
-        
-        setInvestments(data);
       } catch (error) {
         console.error('Error fetching investments:', error);
       } finally {

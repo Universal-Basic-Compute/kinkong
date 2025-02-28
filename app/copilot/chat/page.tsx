@@ -107,6 +107,14 @@ export default function CopilotChatPage() {
     } else {
       // Keep loading state true if wallet is not connected
       setLoading(true);
+      
+      // Check if we should auto-connect
+      const shouldAutoConnect = localStorage.getItem('autoConnectWallet') === 'true';
+      if (shouldAutoConnect) {
+        // This is just a placeholder - actual auto-connect would depend on your wallet adapter implementation
+        console.log('Auto-connect wallet feature is enabled');
+        // You would trigger wallet connect here if you have that functionality
+      }
     }
   }, [publicKey, router]);
   
