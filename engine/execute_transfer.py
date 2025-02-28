@@ -132,7 +132,8 @@ class TokenTransferExecutor:
                 self.logger.info(f"Destination token account: {destination_token_account}")
                 
                 # Check if the destination token account exists
-                response = await client.get_account_info(destination_token_account)
+                # Convert PublicKey to string and then use it
+                response = await client.get_account_info(str(destination_token_account))
                 
                 # If the account doesn't exist, we need to create it
                 if not response.value:
