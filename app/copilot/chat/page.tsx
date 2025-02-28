@@ -302,7 +302,7 @@ export default function CopilotChatPage() {
   }
 
   return (
-    <div className="fixed inset-0 flex overflow-hidden">
+    <div className="fixed inset-0 top-16 flex overflow-hidden">
       {/* Left Sidebar - Missions */}
       <div className="w-72 bg-black/40 border-r border-gold/20 p-4 overflow-y-auto">
         <div className="flex items-center justify-between mb-3">
