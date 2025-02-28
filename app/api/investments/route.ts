@@ -1,38 +1,43 @@
-import { getInvestments } from '@/backend/src/airtable/investments';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { getTable } from '@/backend/src/airtable/tables';
 
-if (!process.env.KINKONG_AIRTABLE_API_KEY || !process.env.KINKONG_AIRTABLE_BASE_ID) {
-  console.error('Missing required environment variables:', {
-    hasApiKey: !!process.env.KINKONG_AIRTABLE_API_KEY,
-    hasBaseId: !!process.env.KINKONG_AIRTABLE_BASE_ID
-  });
-}
-
-export async function GET() {
-  // Add debug logging at the start of the function
-  console.log('API Route Handler: Environment check', {
-    hasApiKey: !!process.env.KINKONG_AIRTABLE_API_KEY,
-    hasBaseId: !!process.env.KINKONG_AIRTABLE_BASE_ID,
-    nodeEnv: process.env.NODE_ENV
-  });
-
+export async function GET(request: NextRequest) {
   try {
-    console.log('Fetching investments...');
-    const investments = await getInvestments();
-    console.log('Investments fetched successfully:', investments);
-    return NextResponse.json(investments);
+    // Initialize Airtable
+    const redistributionsTable = getTable('INVESTOR_REDISTRIBUTIONS');
+    
+    // Get the latest 100 redistributions, sorted by createdAt in descending order
+    const redistributionsRecords = await redistributionsTable.select({
+      maxRecords: 100,
+      sort: [{ field: 'createdAt', direction: 'desc' }]
+    }).all();
+    
+    console.log(`Found ${redistributionsRecords.length} redistributions`);
+    
+    // Map redistributions to the format expected by the frontend
+    const redistributions = redistributionsRecords.map(record => {
+      return {
+        investmentId: record.id, // Use redistribution ID as the investment ID
+        amount: parseFloat(record.get('investmentValue') || '0'), // Use investmentValue as amount
+        token: 'USDC', // Default to USDC
+        date: record.get('createdAt') || '',
+        wallet: record.get('wallet') || '',
+        username: record.get('username') || '',
+        // Return data is already in the redistribution record
+        ubcReturn: parseFloat(record.get('ubcAmount') || '0'),
+        return: parseFloat(record.get('amount') || '0'),
+        redistributionId: record.get('redistributionId'),
+        redistributionDate: record.get('createdAt'),
+        percentage: parseFloat(record.get('percentage') || '0')
+      };
+    });
+    
+    console.log(`Returning ${redistributions.length} redistributions`);
+    return NextResponse.json(redistributions);
   } catch (error) {
-    // Enhanced error logging
-    const errorDetails = {
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-      type: error instanceof Error ? error.constructor.name : typeof error
-    };
-    
-    console.error('Failed to fetch investments:', errorDetails);
-    
+    console.error('Error fetching redistributions:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch investments', details: errorDetails },
+      { error: 'Failed to fetch redistributions' },
       { status: 500 }
     );
   }
