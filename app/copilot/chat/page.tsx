@@ -47,16 +47,20 @@ export default function CopilotChatPage() {
 
   async function checkSubscription() {
     if (!code) {
-      setSubscription(null);
+      // Even without a code, set a default active subscription
+      setSubscription({ active: true });
       return;
     }
 
     try {
+      // Get the actual subscription status but don't use it to block access
       const result = await verifySubscription(code);
-      setSubscription(result);
+      // Override the active status to always be true
+      setSubscription({ ...result, active: true });
     } catch (err) {
       console.error('Error checking subscription:', err);
-      setSubscription(null);
+      // Even on error, set a default active subscription
+      setSubscription({ active: true });
     }
   }
 
@@ -169,22 +173,8 @@ export default function CopilotChatPage() {
   }
 
   if (subscription && !subscription.active) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Subscription Required</h1>
-          <p className="text-gray-400 mb-4">
-            You need an active subscription to use KinKong Copilot
-          </p>
-          <a
-            href="/copilot"
-            className="inline-block bg-gold hover:bg-gold/80 text-black font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
-          >
-            Subscribe Now
-          </a>
-        </div>
-      </div>
-    );
+    // Just log this information but don't block access
+    console.log('User has an inactive subscription');
   }
 
   return (
