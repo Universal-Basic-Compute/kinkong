@@ -558,41 +558,6 @@ export default function Invest() {
                     </span>
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm mb-2 text-gray-300">
-                    Estimated Weekly Returns
-                  </label>
-                  <div className="text-xl font-bold p-3 bg-black/20 rounded-lg border border-gold/10">
-                    {latestSnapshot && totalInvestment > 0 ? (
-                      (() => {
-                        // Convert investment amount to USDC equivalent for calculation
-                        let usdcEquivalent = 0;
-                        if (selectedToken === 'UBC') {
-                          // Use the state variable for UBC price
-                          usdcEquivalent = amount * ubcPrice;
-                        } else if (selectedToken === 'COMPUTE') {
-                          // Use the state variable for COMPUTE price
-                          usdcEquivalent = amount * computePrice;
-                          console.log(`Using COMPUTE price for calculation: ${computePrice}`);
-                        }
-                        
-                        const usdcReturn = Math.max(0, ((latestSnapshot.totalValue - totalInvestment) * 0.75 * (usdcEquivalent / (totalInvestment + usdcEquivalent))));
-                        const ubcReturn = investments.length > 0 && investments[0].ubcReturn !== undefined && investments[0].return !== undefined
-                          ? usdcReturn * (investments[0].ubcReturn / investments[0].return)
-                          : 0;
-                        return (
-                          <>
-                            <TokenDisplay token="UBC" options={{ showSymbolPrefix: false }} />{' '}
-                            <span className="metallic-text-ubc">{Math.floor(ubcReturn).toLocaleString()}</span>{' '}
-                            <span className="text-gray-400 text-sm ml-1">(${Math.floor(usdcReturn).toLocaleString()})</span>
-                          </>
-                        );
-                      })()
-                    ) : (
-                      'Calculate based on amount'
-                    )}
-                  </div>
-                </div>
                 <button 
                   className="btn-primary w-full py-3 mt-2"
                   onClick={handleInvest}
