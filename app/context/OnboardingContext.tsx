@@ -117,6 +117,14 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   // Save user data to backend
   const saveUserData = async (walletAddress?: string): Promise<boolean> => {
     try {
+      console.log('Saving onboarding data to Airtable:', {
+        wallet: walletAddress || null,
+        experience: onboardingData.experience,
+        interests: onboardingData.interests,
+        goals: onboardingData.goals,
+        timeframe: onboardingData.timeframe
+      });
+      
       const response = await fetch('/api/users/create', {
         method: 'POST',
         headers: {
@@ -133,7 +141,11 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         }),
       });
 
+      const responseData = await response.json();
+      console.log('API response:', responseData);
+
       if (!response.ok) {
+        console.error('API error:', responseData);
         throw new Error('Failed to save user data');
       }
 

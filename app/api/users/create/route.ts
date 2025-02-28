@@ -7,9 +7,16 @@ import { getTable } from '@/backend/src/airtable/tables';
 export async function POST(request: NextRequest) {
   try {
     const userData = await request.json();
+    console.log('Received user data in API:', userData);
     
     // Validate required fields
     if (!userData.experience || !userData.interests || !userData.goals || !userData.timeframe) {
+      console.error('Missing required fields:', {
+        experience: !!userData.experience,
+        interests: !!userData.interests,
+        goals: !!userData.goals,
+        timeframe: !!userData.timeframe
+      });
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -17,22 +24,27 @@ export async function POST(request: NextRequest) {
     }
     
     // Get users table
+    console.log('Getting USERS table from Airtable');
     const usersTable = getTable('USERS');
+    console.log('Successfully got USERS table');
     
     // Check if user with this wallet already exists
     let existingUser = null;
     if (userData.wallet) {
+      console.log('Checking for existing user with wallet:', userData.wallet);
       const existingUsers = await usersTable.select({
         filterByFormula: `{wallet}='${userData.wallet}'`
       }).firstPage();
       
       if (existingUsers.length > 0) {
         existingUser = existingUsers[0];
+        console.log('Found existing user:', existingUser.id);
       }
     }
     
     if (existingUser) {
       // Update existing user
+      console.log('Updating existing user:', existingUser.id);
       const updatedUser = await usersTable.update([
         {
           id: existingUser.id,
@@ -47,6 +59,7 @@ export async function POST(request: NextRequest) {
         }
       ]);
       
+      console.log('User updated successfully:', updatedUser[0].id);
       return NextResponse.json({
         success: true,
         user: updatedUser[0].id,
@@ -54,6 +67,14 @@ export async function POST(request: NextRequest) {
       });
     } else {
       // Create new user
+      console.log('Creating new user with data:', {
+        wallet: userData.wallet || null,
+        experience: userData.experience,
+        interests: Array.isArray(userData.interests) ? userData.interests.join(',') : userData.interests,
+        goals: Array.isArray(userData.goals) ? userData.goals.join(',') : userData.goals,
+        timeframe: userData.timeframe
+      });
+      
       const newUser = await usersTable.create([
         {
           fields: {
@@ -69,6 +90,7 @@ export async function POST(request: NextRequest) {
         }
       ]);
       
+      console.log('New user created successfully:', newUser[0].id);
       return NextResponse.json({
         success: true,
         user: newUser[0].id,
@@ -79,7 +101,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error creating/updating user:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }
