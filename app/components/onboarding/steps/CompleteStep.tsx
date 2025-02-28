@@ -16,18 +16,24 @@ const CompleteStep: React.FC = () => {
   useEffect(() => {
     const saveOnboardingData = async () => {
       try {
+        console.log('Auto-save triggered in useEffect');
         setIsSaving(true);
+        setSaveError(null);
+        
         // Save data to Airtable USERS table
         console.log('Saving onboarding data:', onboardingData);
         
         const walletAddress = publicKey ? publicKey.toString() : undefined;
+        console.log('Using wallet address for auto-save:', walletAddress || 'none');
+        
         const success = await saveUserData(walletAddress);
+        console.log('Auto-save result:', success);
         
         if (!success) {
           setSaveError('Failed to save your preferences. You can still continue, but your settings might not be saved.');
         }
       } catch (error) {
-        console.error('Error saving onboarding data:', error);
+        console.error('Error in auto-save:', error);
         setSaveError('An error occurred while saving your preferences.');
       } finally {
         setIsSaving(false);
@@ -52,14 +58,28 @@ const CompleteStep: React.FC = () => {
 
   // Add a direct call to saveUserData when the button is clicked
   const handleSaveData = async () => {
-    console.log('Manual save triggered');
+    console.log('Manual save triggered - button clicked');
     setIsSaving(true);
+    setSaveError(null); // Reset any previous errors
+    
     const walletAddress = publicKey ? publicKey.toString() : undefined;
-    const success = await saveUserData(walletAddress);
-    console.log('Manual save result:', success);
-    setIsSaving(false);
-    if (success) {
-      router.push('/copilot/chat');
+    console.log('Using wallet address:', walletAddress || 'none');
+    
+    try {
+      const success = await saveUserData(walletAddress);
+      console.log('Manual save result:', success);
+      
+      if (!success) {
+        setSaveError('Failed to save your preferences. Please try again.');
+      } else {
+        // If successful, redirect to chat
+        router.push('/copilot/chat');
+      }
+    } catch (error) {
+      console.error('Error in manual save:', error);
+      setSaveError('An error occurred while saving your preferences.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -144,7 +164,7 @@ const CompleteStep: React.FC = () => {
           onClick={handleSaveData}
           disabled={isSaving}
           className={`px-8 py-3 bg-gradient-to-r from-gold to-amber-500 text-black font-bold rounded-lg 
-            ${isSaving ? 'opacity-70 cursor-not-allowed' : 'hover:scale-105 transition-all duration-300'}`}
+            ${isSaving ? 'opacity-70 cursor-not-allowed' : 'hover:scale-105 transition-all duration-300 shadow-lg shadow-gold/20'}`}
         >
           {isSaving ? 'Saving...' : 'Start Using Copilot Now'}
         </button>
