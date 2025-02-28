@@ -261,19 +261,22 @@ export default function CopilotChatPage() {
       // Use browser's screenshot API if available (Chrome extension only)
       if (window.navigator && 'mediaDevices' in navigator) {
         const stream = await navigator.mediaDevices.getDisplayMedia({ 
-          video: { mediaSource: 'screen' } 
+          video: true // Remove mediaSource property which is not standard
         });
         
         const track = stream.getVideoTracks()[0];
-        const imageCapture = new ImageCapture(track);
-        const bitmap = await imageCapture.grabFrame();
         
-        // Convert to canvas then to base64
+        // Create a video element and capture from that instead of using ImageCapture
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        await video.play();
+        
+        // Create a canvas with the video dimensions
         const canvas = document.createElement('canvas');
-        canvas.width = bitmap.width;
-        canvas.height = bitmap.height;
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
         const context = canvas.getContext('2d');
-        context?.drawImage(bitmap, 0, 0);
+        context?.drawImage(video, 0, 0, canvas.width, canvas.height);
         
         // Get base64 data
         const base64Image = canvas.toDataURL('image/jpeg', 0.8);

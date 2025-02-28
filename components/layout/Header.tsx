@@ -21,6 +21,8 @@ type GroupNavItem = BaseNavItem & {
   isGroup: true;
   byLine?: string;
   isDisabled?: boolean;
+  isGlowing?: boolean;
+  customClass?: string;
 };
 
 type LinkNavItem = BaseNavItem & {

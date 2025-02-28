@@ -26,8 +26,15 @@ export async function POST(request: NextRequest) {
     const usersTable = getTable('USERS');
     console.log('Successfully got USERS table');
     
+    // Define a type for the user record
+    interface UserRecord {
+      id: string;
+      fields: any;
+      get: (field: string) => any;
+    }
+    
     // Check if user with this wallet already exists
-    let existingUser = null;
+    let existingUser: UserRecord | null = null;
     if (userData.wallet) {
       console.log('Checking for existing user with wallet:', userData.wallet);
       const existingUsers = await usersTable.select({

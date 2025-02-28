@@ -3,8 +3,14 @@ import { rateLimit } from '@/utils/rate-limit';
 import { getTable } from '@/backend/src/airtable/tables';
 import { COPILOT_PROMPT } from '@/prompts/copilot';
 
+// Define interface for token discovery data
+interface TokenDiscoveryData {
+  activeTokens: any[];
+  inactiveTokens: any[];
+}
+
 // Function to fetch token snapshots and merge with token data
-async function getTokenSnapshotsForDiscovery() {
+async function getTokenSnapshotsForDiscovery(): Promise<TokenDiscoveryData> {
   try {
     console.log('🔍 Fetching token snapshots for discovery mission');
     
@@ -127,8 +133,15 @@ function formatNumber(value: number | null | undefined): string {
   }
 }
 
+// Define interface for user investments
+interface UserInvestment {
+  id: string;
+  token: any;
+  amount: any;
+}
+
 // Function to fetch user investments from INVESTMENTS table
-async function getUserInvestments(wallet: string | undefined) {
+async function getUserInvestments(wallet: string | undefined): Promise<UserInvestment[] | null> {
   if (!wallet) {
     console.log('No wallet provided, skipping investments fetch');
     return null;
@@ -216,8 +229,14 @@ async function calculateInvestmentValue(userInvestments: any[], walletPortfolio:
   }
 }
 
+// Define interface for wallet portfolio
+interface WalletPortfolio {
+  items: any[];
+  totalValue: string | number;
+}
+
 // Function to fetch wallet portfolio from Birdeye API
-async function getBirdeyeWalletPortfolio(wallet: string) {
+async function getBirdeyeWalletPortfolio(wallet: string): Promise<WalletPortfolio | null> {
   try {
     console.log(`🔍 Fetching Birdeye wallet portfolio for: ${wallet}`);
     const apiKey = process.env.BIRDEYE_API_KEY;
@@ -504,14 +523,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch wallet portfolio from Birdeye if wallet is provided
-    let walletPortfolio = null;
+    let walletPortfolio: WalletPortfolio | null = null;
     if (requestBody.wallet) {
       walletPortfolio = await getBirdeyeWalletPortfolio(requestBody.wallet);
       console.log(`🔍 Wallet portfolio fetch result: ${walletPortfolio ? 'Success' : 'Failed'}`);
     }
     
     // Fetch user investments if wallet is provided
-    let userInvestments = null;
+    let userInvestments: UserInvestment[] | null = null;
     if (requestBody.wallet) {
       userInvestments = await getUserInvestments(requestBody.wallet);
       console.log(`🔍 User investments fetch result: ${userInvestments ? `Success (${userInvestments.length} investments)` : 'No investments found'}`);
@@ -525,7 +544,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch token snapshots if mission is token-discovery
-    let tokenDiscoveryData = null;
+    let tokenDiscoveryData: TokenDiscoveryData | null = null;
     if (mission === 'token-discovery') {
       tokenDiscoveryData = await getTokenSnapshotsForDiscovery();
       console.log(`🔍 Token discovery data fetch result: Active tokens: ${tokenDiscoveryData.activeTokens.length}, Inactive tokens: ${tokenDiscoveryData.inactiveTokens.length}`);
@@ -608,7 +627,7 @@ ${walletPortfolio.items.slice(0, 10).map((item: any, index: number) =>
   `${index + 1}. ${item.symbol || 'Unknown'}: $${parseFloat(item.value || 0).toFixed(2)} (${item.percentage ? (item.percentage * 100).toFixed(2) : '0'}%)`
 ).join('\n')}
 
-Total Portfolio Value: $${parseFloat(walletPortfolio.totalValue || 0).toFixed(2)}
+Total Portfolio Value: $${parseFloat(walletPortfolio.totalValue?.toString() || '0').toFixed(2)}
 
 Use this information to provide personalized advice relevant to their current holdings.`;
     }
