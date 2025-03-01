@@ -117,8 +117,8 @@ export default function CopilotPage() {
   };
 
   const SUBSCRIPTION_COSTS = {
-    UBC: 50000,
-    COMPUTE: 500000
+    UBC: 14999,     // Changed from 50000 to 14999
+    COMPUTE: 149999 // Changed from 500000 to 149999
   };
 
   const SUBSCRIPTION_DURATIONS = {
@@ -188,7 +188,7 @@ export default function CopilotPage() {
         "Priority response time",
         "Exclusive alpha signals"
       ],
-      price: <span>50,000 <span className="metallic-text-ubc">$UBC</span> / 1 month</span>,
+      price: <span>14,999 <span className="metallic-text-ubc">$UBC</span> / 1 month</span>,
       action: () => handlePremiumSubscription('UBC'),
       buttonText: <span>Upgrade with $UBC</span>, 
       buttonStyle: "bg-gradient-to-r from-purple-700 to-blue-700 text-white"
@@ -202,7 +202,7 @@ export default function CopilotPage() {
         "Priority response time",
         "Exclusive alpha signals"
       ],
-      price: <span>500,000 <span className="metallic-text-compute">$COMPUTE</span> / 1 month</span>,
+      price: <span>149,999 <span className="metallic-text-compute">$COMPUTE</span> / 1 month</span>,
       action: () => handlePremiumSubscription('COMPUTE'),
       buttonText: <span>Upgrade with $COMPUTE</span>, 
       buttonStyle: "bg-gradient-to-r from-blue-700 to-cyan-700 text-white"
