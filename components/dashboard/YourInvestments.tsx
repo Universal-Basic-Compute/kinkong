@@ -221,7 +221,7 @@ export const YourInvestments: React.FC<YourInvestmentsProps> = ({ className }) =
                 </td>
                 <td className="text-right py-3 px-4">
                   <span className="font-medium">
-                    {investment.amount.toLocaleString()}
+                    {(investment.amount || 0).toLocaleString()}
                   </span>{' '}
                   <span className={`text-transparent bg-clip-text bg-gradient-to-r ${getTokenGradient(investment.token)}`}>
                     {investment.token}

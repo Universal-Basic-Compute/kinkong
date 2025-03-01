@@ -34,10 +34,19 @@ export async function GET(request: NextRequest) {
       const token = record.get('token') as string;
       const amount = record.get('amount') as number;
       
+      console.log('Investment record:', {
+        id: record.id,
+        token,
+        amount,
+        rawAmount: record.get('amount'),
+        rawToken: record.get('token'),
+        allFields: record.fields
+      });
+      
       return {
         investmentId: record.id,
         amount: amount,
-        token: token || 'USDC', // Default to USDC only if token is null/undefined
+        token: token || 'UBC', // Default to UBC only if token is null/undefined
         date: record.get('createdAt') as string,
         solscanUrl: record.get('solscanUrl') as string,
         usdAmount: record.get('usdAmount') as number || null,

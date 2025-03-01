@@ -22,9 +22,16 @@ export async function GET(request: Request) {
       return NextResponse.json({ amount: 0 });
     }
 
+    console.log('Investment record:', {
+      id: records[0].id,
+      amount: records[0].get('amount'),
+      token: records[0].get('token'),
+      allFields: records[0].fields
+    });
+    
     const investment = {
       amount: records[0].get('amount') as number,
-      token: records[0].get('token') as string || 'USDC',
+      token: records[0].get('token') as string || 'UBC',
       date: records[0].get('date') as string,
       solscanUrl: records[0].get('solscanUrl') as string,
       rawToken: records[0].get('token') // Add raw token for debugging
