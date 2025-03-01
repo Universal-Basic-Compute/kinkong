@@ -26,7 +26,8 @@ export async function GET(request: Request) {
       amount: records[0].get('amount') as number,
       token: records[0].get('token') as string || 'USDC',
       date: records[0].get('date') as string,
-      solscanUrl: records[0].get('solscanUrl') as string
+      solscanUrl: records[0].get('solscanUrl') as string,
+      rawToken: records[0].get('token') // Add raw token for debugging
     };
 
     return NextResponse.json(investment);

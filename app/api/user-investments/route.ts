@@ -40,7 +40,9 @@ export async function GET(request: NextRequest) {
         token: token || 'USDC', // Default to USDC only if token is null/undefined
         date: record.get('createdAt') as string,
         solscanUrl: record.get('solscanUrl') as string,
-        usdAmount: record.get('usdAmount') as number || null
+        usdAmount: record.get('usdAmount') as number || null,
+        // Add debug info
+        rawToken: record.get('token')
       };
     });
     
