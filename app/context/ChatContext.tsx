@@ -94,35 +94,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode; code: string | 
     }
   };
 
-  // Function to fetch previous messages for a wallet
-  const fetchPreviousMessages = async (walletAddress: string) => {
-    try {
-      console.log('Fetching previous messages for wallet:', walletAddress);
-      const response = await fetch(`/api/messages/get?wallet=${walletAddress}&limit=20`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch previous messages');
-      }
-      
-      const data = await response.json();
-      console.log('Previous messages fetched:', data.messages?.length || 0);
-      
-      if (data.messages && Array.isArray(data.messages) && data.messages.length > 0) {
-        // Convert the messages to our Message format
-        const formattedMessages = data.messages.map((msg: any) => ({
-          role: msg.role,
-          content: msg.content,
-          timestamp: msg.createdAt || new Date().toISOString(),
-          screenshot: msg.screenshot || undefined
-        }));
-        
-        // Set the messages directly without animation
-        setMessages(formattedMessages);
-      }
-    } catch (error) {
-      console.error('Error fetching previous messages:', error);
-    }
-  };
 
   // Define animateMessageTyping here, before any useEffect that references it
   const animateMessageTyping = useCallback((message: string, messageIndex: number) => {
@@ -213,6 +184,44 @@ export const ChatProvider: React.FC<{ children: React.ReactNode; code: string | 
       setLoading(true);
     }
   }, [publicKey]);
+
+  // Function to fetch previous messages for a wallet
+  const fetchPreviousMessages = async (walletAddress: string) => {
+    try {
+      console.log('Fetching previous messages for wallet:', walletAddress);
+      const response = await fetch(`/api/messages/get?wallet=${walletAddress}&limit=20`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch previous messages');
+      }
+      
+      const data = await response.json();
+      console.log('Previous messages fetched:', data.messages?.length || 0);
+      
+      if (data.messages && Array.isArray(data.messages) && data.messages.length > 0) {
+        // Convert the messages to our Message format
+        const formattedMessages = data.messages.map((msg: any) => {
+          // Process paragraphs for each message
+          const content = msg.content || '';
+          const paragraphs = content.split(/\n\n|\n#{1,6} /);
+          const cleanParagraphs = paragraphs.map((p: string) => p.trim()).filter((p: string) => p.length > 0);
+          
+          return {
+            role: msg.role,
+            content: msg.content,
+            timestamp: msg.createdAt || new Date().toISOString(),
+            screenshot: msg.screenshot || undefined,
+            paragraphs: cleanParagraphs.length > 0 ? cleanParagraphs : undefined
+          };
+        });
+        
+        // Set the messages directly without animation
+        setMessages(formattedMessages);
+      }
+    } catch (error) {
+      console.error('Error fetching previous messages:', error);
+    }
+  };
 
   async function checkSubscription() {
     if (!code) {
