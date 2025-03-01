@@ -98,6 +98,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode; code: string | 
   // Define animateMessageTyping here, before any useEffect that references it
   const animateMessageTyping = useCallback((message: string, messageIndex: number) => {
     // Split message into paragraphs (by double newlines or markdown headers)
+    // Also handle cases where a paragraph ends with a colon followed by a list
     const paragraphs = message.split(/\n\n|\n#{1,6} /);
     const cleanParagraphs = paragraphs.map(p => p.trim()).filter(p => p.length > 0);
     

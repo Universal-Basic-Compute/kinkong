@@ -5,6 +5,17 @@ import { motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import { Message } from '@/app/context/ChatContext';
 
+// Function to preprocess markdown content to fix spacing issues between paragraphs and lists
+function preprocessMarkdown(content: string): string {
+  // Replace any paragraph that ends with a colon followed by a list with a special marker
+  let processed = content.replace(/(\w+:)\s*\n+(\s*[-*+]\s|\s*[0-9]+\.\s)/g, '$1 $2');
+  
+  // Replace any paragraph that ends with a colon followed by a newline with no newline
+  processed = processed.replace(/(\w+:)\s*\n+/g, '$1 ');
+  
+  return processed;
+}
+
 interface MessageBubbleProps {
   message: Message;
   index: number;
@@ -129,7 +140,7 @@ export default function MessageBubble({
                           li: ({node, children, ...props}) => <li className="my-0 py-0" {...props}>{children}</li>
                         }}
                       >
-                        {paragraph}
+                        {preprocessMarkdown(paragraph)}
                       </ReactMarkdown>
                     </div>
                   </div>
@@ -154,7 +165,7 @@ export default function MessageBubble({
                     li: ({node, children, ...props}) => <li className="my-0 py-0" {...props}>{children}</li>
                   }}
                 >
-                  {message.content}
+                  {preprocessMarkdown(message.content)}
                 </ReactMarkdown>
               </div>
             )

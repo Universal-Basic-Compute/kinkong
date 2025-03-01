@@ -458,6 +458,28 @@ body.no-scroll {
   padding-top: 0 !important;
 }
 
+/* Target the specific space between paragraphs and lists */
+.prose p + ol,
+.prose p + ul {
+  margin-top: -1rem !important; /* Negative margin to pull the list up */
+}
+
+/* Make sure the paragraph before a list has no bottom margin */
+.prose p:has(+ ol),
+.prose p:has(+ ul) {
+  margin-bottom: 0 !important;
+}
+
+/* If :has() is not supported in all browsers, use this alternative approach */
+.prose p.mb-0 {
+  margin-bottom: 0 !important;
+}
+
+.prose p.mb-0 + ol,
+.prose p.mb-0 + ul {
+  margin-top: -0.5rem !important;
+}
+
 /* Ensure no extra space after list items */
 .prose li:last-child {
   margin-bottom: 0 !important;
