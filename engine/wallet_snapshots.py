@@ -169,9 +169,52 @@ class WalletSnapshotTaker:
             for record in records:
                 fields = record.get('fields', {})
                 is_withdrawal = fields.get('isWithdrawal', False)
+                has_original_amount = 'originalAmount' in fields and fields['originalAmount'] is not None and float(fields.get('originalAmount', 0)) > 0
                 
-                if not is_withdrawal:
-                    # For regular investments
+                # Consider it a withdrawal if either isWithdrawal is true OR originalAmount exists and is > 0
+                if is_withdrawal or has_original_amount:
+                    # This is a withdrawal
+                    print(f"Processing withdrawal flow record: {fields.get('token')} {fields.get('amount')} (originalAmount: {fields.get('originalAmount')})")
+                    
+                    # For withdrawals, use originalAmountUsd (in USD) if available
+                    if 'originalAmountUsd' in fields and fields['originalAmountUsd'] is not None:
+                        usd_amount = float(fields['originalAmountUsd'])
+                        total_withdrawals += usd_amount
+                        print(f"Withdrawal flow: ${usd_amount:.2f} USD (from originalAmountUsd field)")
+                    # Next try usdAmount
+                    elif 'usdAmount' in fields and fields['usdAmount'] is not None:
+                        usd_amount = float(fields['usdAmount'])
+                        total_withdrawals += usd_amount
+                        print(f"Withdrawal flow: ${usd_amount:.2f} USD (from usdAmount field)")
+                    # If no USD amount, try to calculate from originalAmount and token price in record
+                    elif 'tokenPrice' in fields and fields['tokenPrice'] is not None and fields.get('originalAmount') is not None:
+                        amount = float(fields.get('originalAmount', 0))
+                        token = fields.get('token', 'UBC')
+                        token_price = float(fields.get('tokenPrice', 0))
+                        
+                        if token_price > 0:
+                            usd_amount = amount * token_price
+                            total_withdrawals += usd_amount
+                            print(f"Withdrawal flow: {amount} {token} at ${token_price} = ${usd_amount:.2f} USD (calculated from record)")
+                        else:
+                            print(f"⚠️ Zero token price in record: {amount} {token}")
+                    # If no price in record, use current token price with originalAmount
+                    elif fields.get('originalAmount') is not None and fields.get('token') is not None:
+                        amount = float(fields.get('originalAmount', 0))
+                        token = fields.get('token', 'UBC')
+                        
+                        # Use current token price if available
+                        if token in token_prices and token_prices[token] > 0:
+                            current_price = token_prices[token]
+                            usd_amount = amount * current_price
+                            total_withdrawals += usd_amount
+                            print(f"Withdrawal flow: {amount} {token} at current price ${current_price} = ${usd_amount:.2f} USD")
+                        else:
+                            print(f"⚠️ No price available for token: {amount} {token}")
+                    else:
+                        print(f"⚠️ Skipping withdrawal flow without amount or token: {fields}")
+                else:
+                    # This is a regular investment
                     if 'usdAmount' in fields and fields['usdAmount'] is not None:
                         usd_amount = float(fields['usdAmount'])
                         total_investments += usd_amount
@@ -200,38 +243,7 @@ class WalletSnapshotTaker:
                         else:
                             print(f"⚠️ No price available for token: {amount} {token}")
                     else:
-                        print(f"⚠️ Skipping investment without amount or token: {fields}")
-                else:
-                    # For withdrawals
-                    if 'usdAmount' in fields and fields['usdAmount'] is not None:
-                        usd_amount = float(fields['usdAmount'])
-                        total_withdrawals += usd_amount
-                        print(f"Withdrawal flow: ${usd_amount:.2f} USD (from usdAmount field)")
-                    elif 'tokenPrice' in fields and fields['tokenPrice'] is not None and fields.get('amount') is not None:
-                        amount = float(fields.get('amount', 0))
-                        token = fields.get('token', 'UBC')
-                        token_price = float(fields.get('tokenPrice', 0))
-                        
-                        if token_price > 0:
-                            usd_amount = amount * token_price
-                            total_withdrawals += usd_amount
-                            print(f"Withdrawal flow: {amount} {token} at ${token_price} = ${usd_amount:.2f} USD")
-                        else:
-                            print(f"⚠️ Zero token price in record: {amount} {token}")
-                    elif fields.get('amount') is not None and fields.get('token') is not None:
-                        amount = float(fields.get('amount', 0))
-                        token = fields.get('token', 'UBC')
-                        
-                        # Use current token price if available
-                        if token in token_prices and token_prices[token] > 0:
-                            current_price = token_prices[token]
-                            usd_amount = amount * current_price
-                            total_withdrawals += usd_amount
-                            print(f"Withdrawal flow: {amount} {token} at current price ${current_price} = ${usd_amount:.2f} USD")
-                        else:
-                            print(f"⚠️ No price available for token: {amount} {token}")
-                    else:
-                        print(f"⚠️ Skipping withdrawal without amount or token: {fields}")
+                        print(f"⚠️ Skipping investment flow without amount or token: {fields}")
             
             # Net flow = investments - withdrawals
             net_flow = total_investments - total_withdrawals
@@ -268,11 +280,57 @@ class WalletSnapshotTaker:
             
             # Calculate total investments (positive flow) in USD
             total_investments = 0
+            total_withdrawals = 0
+            
             for record in records:
                 fields = record.get('fields', {})
                 is_withdrawal = fields.get('isWithdrawal', False)
+                has_original_amount = 'originalAmount' in fields and fields['originalAmount'] is not None and float(fields.get('originalAmount', 0)) > 0
                 
-                if not is_withdrawal:
+                # Consider it a withdrawal if either isWithdrawal is true OR originalAmount exists and is > 0
+                if is_withdrawal or has_original_amount:
+                    # This is a withdrawal
+                    print(f"Processing withdrawal record: {fields.get('token')} {fields.get('amount')} (originalAmount: {fields.get('originalAmount')})")
+                    
+                    # For withdrawals, use originalAmountUsd (in USD) if available
+                    if 'originalAmountUsd' in fields and fields['originalAmountUsd'] is not None:
+                        usd_amount = float(fields['originalAmountUsd'])
+                        total_withdrawals += usd_amount
+                        print(f"Withdrawal: ${usd_amount:.2f} USD (from originalAmountUsd field)")
+                    # Next try usdAmount
+                    elif 'usdAmount' in fields and fields['usdAmount'] is not None:
+                        usd_amount = float(fields['usdAmount'])
+                        total_withdrawals += usd_amount
+                        print(f"Withdrawal: ${usd_amount:.2f} USD (from usdAmount field)")
+                    # If no USD amount, try to calculate from originalAmount and token price in record
+                    elif 'tokenPrice' in fields and fields['tokenPrice'] is not None and fields.get('originalAmount') is not None:
+                        amount = float(fields.get('originalAmount', 0))
+                        token = fields.get('token', 'UBC')
+                        token_price = float(fields.get('tokenPrice', 0))
+                        
+                        if token_price > 0:
+                            usd_amount = amount * token_price
+                            total_withdrawals += usd_amount
+                            print(f"Withdrawal: {amount} {token} at ${token_price} = ${usd_amount:.2f} USD (calculated from record)")
+                        else:
+                            print(f"⚠️ Zero token price in record: {amount} {token}")
+                    # If no price in record, use current token price with originalAmount
+                    elif fields.get('originalAmount') is not None and fields.get('token') is not None:
+                        amount = float(fields.get('originalAmount', 0))
+                        token = fields.get('token', 'UBC')
+                        
+                        # Use current token price if available
+                        if token in token_prices and token_prices[token] > 0:
+                            current_price = token_prices[token]
+                            usd_amount = amount * current_price
+                            total_withdrawals += usd_amount
+                            print(f"Withdrawal: {amount} {token} at current price ${current_price} = ${usd_amount:.2f} USD")
+                        else:
+                            print(f"⚠️ No price available for token: {amount} {token}")
+                    else:
+                        print(f"⚠️ Skipping withdrawal without amount or token: {fields}")
+                else:
+                    # This is a regular investment
                     # Check if we have a usdAmount field (preferred)
                     if 'usdAmount' in fields and fields['usdAmount'] is not None:
                         usd_amount = float(fields['usdAmount'])
@@ -305,51 +363,6 @@ class WalletSnapshotTaker:
                             print(f"⚠️ No price available for token: {amount} {token}")
                     else:
                         print(f"⚠️ Skipping investment without amount or token: {fields}")
-            
-            # Calculate total withdrawals (negative flow) in USD
-            total_withdrawals = 0
-            for record in records:
-                fields = record.get('fields', {})
-                is_withdrawal = fields.get('isWithdrawal', False)
-                
-                if is_withdrawal:
-                    # For withdrawals, use originalAmountUsd (in USD) if available
-                    if 'originalAmountUsd' in fields and fields['originalAmountUsd'] is not None:
-                        usd_amount = float(fields['originalAmountUsd'])
-                        total_withdrawals += usd_amount
-                        print(f"Withdrawal: ${usd_amount:.2f} USD (from originalAmountUsd field)")
-                    # Next try usdAmount
-                    elif 'usdAmount' in fields and fields['usdAmount'] is not None:
-                        usd_amount = float(fields['usdAmount'])
-                        total_withdrawals += usd_amount
-                        print(f"Withdrawal: ${usd_amount:.2f} USD (from usdAmount field)")
-                    # If no USD amount, try to calculate from amount and token price in record
-                    elif 'tokenPrice' in fields and fields['tokenPrice'] is not None and fields.get('originalAmount') is not None:
-                        amount = float(fields.get('originalAmount', 0))
-                        token = fields.get('token', 'UBC')
-                        token_price = float(fields.get('tokenPrice', 0))
-                        
-                        if token_price > 0:
-                            usd_amount = amount * token_price
-                            total_withdrawals += usd_amount
-                            print(f"Withdrawal: {amount} {token} at ${token_price} = ${usd_amount:.2f} USD (calculated from record)")
-                        else:
-                            print(f"⚠️ Zero token price in record: {amount} {token}")
-                    # If no price in record, use current token price
-                    elif fields.get('originalAmount') is not None and fields.get('token') is not None:
-                        amount = float(fields.get('originalAmount', 0))
-                        token = fields.get('token', 'UBC')
-                        
-                        # Use current token price if available
-                        if token in token_prices and token_prices[token] > 0:
-                            current_price = token_prices[token]
-                            usd_amount = amount * current_price
-                            total_withdrawals += usd_amount
-                            print(f"Withdrawal: {amount} {token} at current price ${current_price} = ${usd_amount:.2f} USD")
-                        else:
-                            print(f"⚠️ No price available for token: {amount} {token}")
-                    else:
-                        print(f"⚠️ Skipping withdrawal without amount or token: {fields}")
             
             # Net invested amount = investments - withdrawals (in USD)
             net_invested = total_investments - total_withdrawals
