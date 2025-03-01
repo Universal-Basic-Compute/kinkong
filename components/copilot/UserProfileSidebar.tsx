@@ -1,10 +1,125 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletConnect } from '@/components/wallet/WalletConnect';
 import { useChat } from '@/app/context/ChatContext';
 import { useOnboarding } from '@/app/context/OnboardingContext';
+import { WalletAnalysisResult } from '@/utils/wallet-analysis';
+
+// Wallet Analysis Section Component
+function WalletAnalysisSection({ wallet }: { wallet: string }) {
+  const [analysis, setAnalysis] = useState<WalletAnalysisResult | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  useEffect(() => {
+    async function fetchAnalysis() {
+      if (!wallet) return;
+      
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const response = await fetch(`/api/wallet/analysis?wallet=${wallet}`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch wallet analysis');
+        }
+        
+        const data = await response.json();
+        setAnalysis(data.data);
+      } catch (error) {
+        console.error('Error fetching wallet analysis:', error);
+        setError('Failed to analyze wallet');
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchAnalysis();
+  }, [wallet]);
+  
+  if (loading) {
+    return (
+      <div className="mt-4 p-3 bg-black/30 rounded-lg border border-gold/10">
+        <h3 className="font-medium text-sm uppercase text-gray-400 mb-2">Wallet Analysis</h3>
+        <div className="flex justify-center py-2">
+          <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-gold"></div>
+        </div>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="mt-4 p-3 bg-black/30 rounded-lg border border-gold/10">
+        <h3 className="font-medium text-sm uppercase text-gray-400 mb-2">Wallet Analysis</h3>
+        <p className="text-red-400 text-sm">{error}</p>
+      </div>
+    );
+  }
+  
+  if (!analysis) return null;
+  
+  return (
+    <div className="mt-4 p-3 bg-black/30 rounded-lg border border-gold/10">
+      <h3 className="font-medium text-sm uppercase text-gray-400 mb-2">Wallet Analysis</h3>
+      
+      <div className="space-y-2">
+        <div className="flex justify-between">
+          <span className="text-gray-400 text-xs">Invested:</span>
+          <span className="text-gray-200 text-xs">${analysis.investedAmount.toFixed(2)}</span>
+        </div>
+        
+        <div className="flex justify-between">
+          <span className="text-gray-400 text-xs">Withdrawn:</span>
+          <span className="text-gray-200 text-xs">${analysis.withdrawnAmount.toFixed(2)}</span>
+        </div>
+        
+        <div className="flex justify-between">
+          <span className="text-gray-400 text-xs">7d Flow:</span>
+          <span className={`text-xs ${analysis.investor7dFlow >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+            ${Math.abs(analysis.investor7dFlow).toFixed(2)} {analysis.investor7dFlow >= 0 ? 'in' : 'out'}
+          </span>
+        </div>
+        
+        <div className="flex justify-between">
+          <span className="text-gray-400 text-xs">Net Result:</span>
+          <span className={`text-xs ${analysis.netSwapResult >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+            ${Math.abs(analysis.netSwapResult).toFixed(2)} {analysis.netSwapResult >= 0 ? 'profit' : 'loss'}
+          </span>
+        </div>
+        
+        <div className="flex justify-between">
+          <span className="text-gray-400 text-xs">PnL:</span>
+          <span className={`text-xs ${analysis.pnlPercentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+            {analysis.pnlPercentage.toFixed(2)}%
+          </span>
+        </div>
+      </div>
+      
+      {analysis.recentTransactions.length > 0 && (
+        <div className="mt-3">
+          <h4 className="text-xs text-gray-400 mb-1">Recent Activity</h4>
+          <div className="space-y-1 max-h-32 overflow-y-auto pr-1">
+            {analysis.recentTransactions.slice(0, 3).map((tx, index) => (
+              <div key={index} className="text-xs border-t border-gray-800 pt-1">
+                <div className="flex justify-between">
+                  <span className="text-gray-300">{tx.type}</span>
+                  <span className="text-gray-400">{tx.timeAgo}</span>
+                </div>
+                <div className="text-gray-400">
+                  {tx.token} • ${tx.amountUsd.toFixed(2)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function UserProfileSidebar() {
   const { publicKey } = useWallet();
@@ -81,6 +196,11 @@ export default function UserProfileSidebar() {
           </span>
         </div>
       </div>
+      
+      {/* Add the wallet analysis section if wallet is connected */}
+      {publicKey && (
+        <WalletAnalysisSection wallet={publicKey.toString()} />
+      )}
     </div>
   );
 }
