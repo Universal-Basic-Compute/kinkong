@@ -393,20 +393,25 @@ body.no-scroll {
 /* Fix for list spacing in chat bubbles */
 .prose ul,
 .prose ol {
-  margin-top: 0.25rem !important;
-  margin-bottom: 0.25rem !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
   padding-left: 1.25rem !important;
+  line-height: 1.2 !important;
 }
 
 .prose li {
-  margin-top: 0.125rem !important;
-  margin-bottom: 0.125rem !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
   padding-left: 0 !important;
+  line-height: 1.2 !important;
 }
 
 .prose li > p {
   margin-top: 0 !important;
   margin-bottom: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  line-height: 1.2 !important;
 }
 
 .prose li::marker {
@@ -415,8 +420,9 @@ body.no-scroll {
 
 /* Ensure paragraphs in message bubbles have proper spacing */
 .prose p {
-  margin-top: 0.5rem !important;
-  margin-bottom: 0.5rem !important;
+  margin-top: 0.25rem !important;
+  margin-bottom: 0.25rem !important;
+  line-height: 1.4 !important;
 }
 
 .prose p:first-child {
@@ -425,6 +431,16 @@ body.no-scroll {
 
 .prose p:last-child {
   margin-bottom: 0 !important;
+}
+
+/* Target any extra breaks or spacing elements */
+.prose br {
+  display: none !important;
+}
+
+/* Reduce spacing between all elements in prose */
+.prose * + * {
+  margin-top: 0.25rem !important;
 }
 
 @keyframes metallic-shine {
