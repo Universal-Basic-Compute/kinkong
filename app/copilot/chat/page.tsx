@@ -346,10 +346,6 @@ export default function CopilotChatPage() {
     scrollToBottom();
   }, [messages]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   async function checkSubscription() {
     if (!code) {
       // Even without a code, set a default active subscription
