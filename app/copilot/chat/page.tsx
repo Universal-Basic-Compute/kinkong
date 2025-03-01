@@ -45,6 +45,10 @@ export default function CopilotChatPage() {
     riskTolerance: string;
   } | null>(null);
   
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   // Define animateMessageTyping here, before any useEffect that references it
   const animateMessageTyping = useCallback((message: string, messageIndex: number) => {
     // Split message into paragraphs (by double newlines or markdown headers)
@@ -79,6 +83,11 @@ export default function CopilotChatPage() {
       // Add the next paragraph
       displayedSoFar = [...displayedSoFar, cleanParagraphs[index]];
       setDisplayedParagraphs([...displayedSoFar]);
+      
+      // Scroll to bottom after adding each new paragraph
+      setTimeout(() => {
+        scrollToBottom();
+      }, 50); // Small delay to ensure DOM has updated
       
       // Calculate read time based on paragraph length - moderate speed
       const readTime = Math.max(500, cleanParagraphs[index].length * 20); // Changed from 15 to 20ms per character
@@ -308,6 +317,10 @@ export default function CopilotChatPage() {
     scrollToBottom();
   }, [messages]);
 
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   async function checkSubscription() {
     if (!code) {
       // Even without a code, set a default active subscription
@@ -327,10 +340,6 @@ export default function CopilotChatPage() {
     }
   }
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-  
   const handleSelectMission = (missionTitle: string, context: string, missionId: string) => {
     // Store the mission ID for both context and UI highlighting
     setCurrentMission(missionId);
