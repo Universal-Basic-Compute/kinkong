@@ -13,6 +13,35 @@ import Image from 'next/image';
 import { WalletConnect } from '@/components/wallet/WalletConnect';
 import { Tooltip } from '@/components/ui/tooltip';
 
+// Custom scrollbar styles
+const scrollbarStyles = `
+  /* Custom scrollbar styles */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 3px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.8);
+  }
+  
+  /* Firefox scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.6) rgba(0, 0, 0, 0.2);
+  }
+`;
+
 interface Message {
   role: 'user' | 'assistant';
   content: string;
@@ -493,6 +522,8 @@ export default function CopilotChatPage() {
 
   return (
     <div className="fixed inset-0 top-16 bottom-0 flex overflow-hidden">
+      {/* Add the style tag for custom scrollbars */}
+      <style jsx global>{scrollbarStyles}</style>
       {/* Left Sidebar - Missions */}
       <div className="w-72 bg-black/40 border-r border-gold/20 p-4 overflow-y-auto">
         <div className="flex items-center justify-between mb-3 mt-4">
