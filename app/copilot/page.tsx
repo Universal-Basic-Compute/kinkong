@@ -183,10 +183,11 @@ export default function CopilotPage() {
       name: "Kong Pro - $UBC",
       description: "Full access to KinKong intelligence",
       features: [
-        "Extended message capacity",
-        "Advanced technical analysis",
-        "Priority response time",
-        "Exclusive alpha signals"
+        "Extended Kong Copilot message capacity",
+        "Exclusive Kong Copilot missions",
+        "Exclusive Kong Copliot alpha signals",
+        "+25% returns on Kong Invest",
+        "Stronger guarantees on Kong Invest"
       ],
       price: (
         <span>
@@ -203,10 +204,11 @@ export default function CopilotPage() {
       name: "Kong Pro - $COMPUTE",
       description: "Full access to KinKong intelligence",
       features: [
-        "Extended message capacity",
-        "Advanced technical analysis",
-        "Priority response time",
-        "Exclusive alpha signals"
+        "Extended Kong Copilot message capacity",
+        "Exclusive Kong Copilot missions",
+        "Exclusive Kong Copliot alpha signals",
+        "+25% returns on Kong Invest",
+        "Stronger guarantees on Kong Invest"
       ],
       price: (
         <span>

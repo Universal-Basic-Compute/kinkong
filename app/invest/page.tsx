@@ -667,19 +667,23 @@ export default function Invest() {
                   <ul className="space-y-2 text-sm text-gray-300">
                     <li className="flex items-start">
                       <span className="text-gold mr-2">•</span>
-                      <span>75% of profits redistributed weekly</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-gold mr-2">•</span>
-                      <span>Funds withdrawable at any time</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-gold mr-2">•</span>
-                      <span>2% fee on in-out transactions</span>
+                      <span>75% of profits redistributed weekly for Pro accounts, 50% for standard</span>
                     </li>
                     <li className="flex items-start">
                       <span className="text-gold mr-2">•</span>
                       <span>Profits redistributed in $UBC</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-gold mr-2">•</span>
+                      <span>Funds withdrawable on Fridays, with a 24h notice</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-gold mr-2">•</span>
+                      <span>90% of principal guaranteed for Pro accounts, 75% for standard</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-gold mr-2">•</span>
+                      <span>2% fee on in-out transactions</span>
                     </li>
                     <li className="flex items-start">
                       <span className="text-gold mr-2">•</span>
