@@ -46,7 +46,14 @@ export default function MessageBubble({
               </div>
             </div>
           )}
-          <ReactMarkdown className="prose prose-invert break-words whitespace-pre-wrap">
+          <ReactMarkdown 
+            className="prose prose-invert break-words whitespace-pre-wrap"
+            components={{
+              ul: ({node, ...props}) => <ul className="my-1 pl-5" {...props} />,
+              ol: ({node, ...props}) => <ol className="my-1 pl-5" {...props} />,
+              li: ({node, ...props}) => <li className="my-0.5" {...props} />
+            }}
+          >
             {message.content}
           </ReactMarkdown>
         </div>
@@ -68,7 +75,14 @@ export default function MessageBubble({
                   transition={{ duration: 0.3 }}
                 >
                   <div className="max-w-[80%] rounded-lg p-3 bg-gradient-to-r from-gray-800/70 to-gray-700/40 text-gray-200 border border-gray-700/50">
-                    <ReactMarkdown className="prose prose-invert break-words whitespace-pre-wrap">
+                    <ReactMarkdown 
+                      className="prose prose-invert break-words whitespace-pre-wrap"
+                      components={{
+                        ul: ({node, ...props}) => <ul className="my-1 pl-5" {...props} />,
+                        ol: ({node, ...props}) => <ol className="my-1 pl-5" {...props} />,
+                        li: ({node, ...props}) => <li className="my-0.5" {...props} />
+                      }}
+                    >
                       {paragraph}
                     </ReactMarkdown>
                   </div>
@@ -101,7 +115,14 @@ export default function MessageBubble({
             ) : (
               /* Fallback for messages without paragraphs */
               <div className="max-w-[80%] rounded-lg p-3 bg-gradient-to-r from-gray-800/70 to-gray-700/40 text-gray-200 border border-gray-700/50">
-                <ReactMarkdown className="prose prose-invert break-words whitespace-pre-wrap">
+                <ReactMarkdown 
+                  className="prose prose-invert break-words whitespace-pre-wrap"
+                  components={{
+                    ul: ({node, ...props}) => <ul className="my-1 pl-5" {...props} />,
+                    ol: ({node, ...props}) => <ol className="my-1 pl-5" {...props} />,
+                    li: ({node, ...props}) => <li className="my-0.5" {...props} />
+                  }}
+                >
                   {message.content}
                 </ReactMarkdown>
               </div>
