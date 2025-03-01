@@ -49,9 +49,17 @@ export default function MessageBubble({
           <ReactMarkdown 
             className="prose prose-invert break-words whitespace-pre-wrap"
             components={{
-              ul: ({node, ...props}) => <ul className="my-1 pl-5" {...props} />,
-              ol: ({node, ...props}) => <ol className="my-1 pl-5" {...props} />,
-              li: ({node, ...props}) => <li className="my-0.5" {...props} />
+              p: ({node, children, ...props}) => {
+                // @ts-ignore - node.next is available in practice
+                const nextSibling = node.next;
+                const isBeforeList = nextSibling && (nextSibling.type === 'element' && 
+                  (nextSibling.tagName === 'ul' || nextSibling.tagName === 'ol'));
+                
+                return <p className={isBeforeList ? 'mb-0 pb-0' : ''} {...props}>{children}</p>;
+              },
+              ul: ({node, ...props}) => <ul className="mt-0 pt-0 mb-0 pb-0 pl-5" {...props} />,
+              ol: ({node, ...props}) => <ol className="mt-0 pt-0 mb-0 pb-0 pl-5" {...props} />,
+              li: ({node, children, ...props}) => <li className="my-0 py-0" {...props}>{children}</li>
             }}
           >
             {message.content}
@@ -108,9 +116,17 @@ export default function MessageBubble({
                       <ReactMarkdown 
                         className="prose prose-invert break-words whitespace-pre-wrap"
                         components={{
-                          ul: ({node, ...props}) => <ul className="my-1 pl-5" {...props} />,
-                          ol: ({node, ...props}) => <ol className="my-1 pl-5" {...props} />,
-                          li: ({node, ...props}) => <li className="my-0.5" {...props} />
+                          p: ({node, children, ...props}) => {
+                            // @ts-ignore - node.next is available in practice
+                            const nextSibling = node.next;
+                            const isBeforeList = nextSibling && (nextSibling.type === 'element' && 
+                              (nextSibling.tagName === 'ul' || nextSibling.tagName === 'ol'));
+                            
+                            return <p className={isBeforeList ? 'mb-0 pb-0' : ''} {...props}>{children}</p>;
+                          },
+                          ul: ({node, ...props}) => <ul className="mt-0 pt-0 mb-0 pb-0 pl-5" {...props} />,
+                          ol: ({node, ...props}) => <ol className="mt-0 pt-0 mb-0 pb-0 pl-5" {...props} />,
+                          li: ({node, children, ...props}) => <li className="my-0 py-0" {...props}>{children}</li>
                         }}
                       >
                         {paragraph}
@@ -125,9 +141,17 @@ export default function MessageBubble({
                 <ReactMarkdown 
                   className="prose prose-invert break-words whitespace-pre-wrap"
                   components={{
-                    ul: ({node, ...props}) => <ul className="my-1 pl-5" {...props} />,
-                    ol: ({node, ...props}) => <ol className="my-1 pl-5" {...props} />,
-                    li: ({node, ...props}) => <li className="my-0.5" {...props} />
+                    p: ({node, children, ...props}) => {
+                      // @ts-ignore - node.next is available in practice
+                      const nextSibling = node.next;
+                      const isBeforeList = nextSibling && (nextSibling.type === 'element' && 
+                        (nextSibling.tagName === 'ul' || nextSibling.tagName === 'ol'));
+                    
+                      return <p className={isBeforeList ? 'mb-0 pb-0' : ''} {...props}>{children}</p>;
+                    },
+                    ul: ({node, ...props}) => <ul className="mt-0 pt-0 mb-0 pb-0 pl-5" {...props} />,
+                    ol: ({node, ...props}) => <ol className="mt-0 pt-0 mb-0 pb-0 pl-5" {...props} />,
+                    li: ({node, children, ...props}) => <li className="my-0 py-0" {...props}>{children}</li>
                   }}
                 >
                   {message.content}

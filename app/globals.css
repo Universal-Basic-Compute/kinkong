@@ -397,25 +397,31 @@ body.no-scroll {
   margin-bottom: 0 !important;
   padding-left: 1.25rem !important;
   line-height: 1.2 !important;
+  padding-top: 0 !important;
 }
 
 .prose li {
-  margin-top: 0 !important;
-  margin-bottom: 0 !important;
-  padding-left: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
   line-height: 1.2 !important;
 }
 
 .prose li > p {
-  margin-top: 0 !important;
-  margin-bottom: 0 !important;
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
   line-height: 1.2 !important;
+  display: inline !important;
 }
 
 .prose li::marker {
   color: rgba(255, 215, 0, 0.6) !important;
+}
+
+/* Target the specific space between paragraphs and lists */
+.prose p:has(+ ul),
+.prose p:has(+ ol) {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
 }
 
 /* Remove space between paragraph and list */
@@ -436,6 +442,7 @@ body.no-scroll {
 .prose li p {
   margin: 0 !important;
   padding: 0 !important;
+  display: inline !important;
 }
 
 /* Target any potential hidden elements causing space */
@@ -443,6 +450,11 @@ body.no-scroll {
 .prose br + ol {
   margin-top: 0 !important;
   padding-top: 0 !important;
+}
+
+/* Ensure no extra space after list items */
+.prose li:last-child {
+  margin-bottom: 0 !important;
 }
 
 /* Ensure paragraphs in message bubbles have proper spacing */
@@ -463,6 +475,13 @@ body.no-scroll {
 /* Target any extra breaks or spacing elements */
 .prose br {
   display: none !important;
+}
+
+/* Force compact rendering of paragraphs inside list items */
+.prose li p {
+  margin: 0 !important;
+  padding: 0 !important;
+  display: inline !important;
 }
 
 /* Reduce spacing between all elements in prose */
