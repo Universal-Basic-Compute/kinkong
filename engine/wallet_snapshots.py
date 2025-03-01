@@ -314,30 +314,35 @@ class WalletSnapshotTaker:
         # Calculate total invested amount (all time)
         total_invested = self.get_total_invested_amount()
         
-        # Calculate net result (performance)
-        net_result = total_value - total_invested
-        
-        # Calculate investment flow and weekly PnL
-        weekly_pnl = None
+        # Initialize metrics
+        net_result = 0
+        pnl_percentage = 0
         investor_7d_flow = 0
+        
         if previous_date:
             # Get net investment flow between previous snapshot and now
             investor_7d_flow = self.get_investment_flow(previous_date, created_at)
             
-            # Calculate weekly PnL
-            weekly_pnl = total_value - previous_value - investor_7d_flow
+            # Calculate net result (wallet variation with investor flow removed)
+            net_result = total_value - previous_value - investor_7d_flow
+            
+            # Calculate PnL as a percentage
+            if previous_value > 0:
+                pnl_percentage = (net_result / previous_value) * 100
             
             print(f"\n📊 Weekly PnL Calculation:")
             print(f"  Current value: ${total_value:.2f}")
             print(f"  Previous value (7 days ago): ${previous_value:.2f}")
             print(f"  Net investment flow: ${investor_7d_flow:.2f}")
-            print(f"  Weekly PnL: ${weekly_pnl:.2f}")
+            print(f"  Net result (7d variation - flow): ${net_result:.2f}")
+            print(f"  PnL percentage: {pnl_percentage:.2f}%")
         
         # Print summary of calculations
         print(f"\n📊 Performance Metrics:")
         print(f"  Current value: ${total_value:.2f}")
         print(f"  Total invested: ${total_invested:.2f}")
-        print(f"  Net result: ${net_result:.2f}")
+        print(f"  Net result (7d variation - flow): ${net_result:.2f}")
+        print(f"  PnL percentage: {pnl_percentage:.2f}%")
         print(f"  7-day investment flow: ${investor_7d_flow:.2f}")
         
         # Record snapshot with metrics
@@ -347,6 +352,7 @@ class WalletSnapshotTaker:
             'investedAmount': total_invested,
             'investor7dFlow': investor_7d_flow,
             'netResult': net_result,
+            'pnlPercentage': pnl_percentage,
             'holdings': json.dumps([{
                 'token': b['token'],
                 'amount': b['amount'],
@@ -355,19 +361,14 @@ class WalletSnapshotTaker:
             } for b in balances])
         }
         
-        # Add weekly PnL if calculated
-        if weekly_pnl is not None:
-            snapshot_data['weeklyPnL'] = weekly_pnl
-        
         self.snapshots_table.insert(snapshot_data)
 
         print(f"\n✅ Wallet snapshot recorded")
         print(f"Total Value: ${total_value:.2f}")
         print(f"Total Invested: ${total_invested:.2f}")
-        print(f"Net Result: ${net_result:.2f}")
+        print(f"Net Result (7d variation - flow): ${net_result:.2f}")
+        print(f"PnL Percentage: {pnl_percentage:.2f}%")
         print(f"7-day Investment Flow: ${investor_7d_flow:.2f}")
-        if weekly_pnl is not None:
-            print(f"Weekly PnL: ${weekly_pnl:.2f}")
         print("\nHoldings:")
         for balance in balances:
             print(f"• {balance['token']}: {balance['amount']:.2f} (${balance['value']:.2f})")
