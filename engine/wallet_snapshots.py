@@ -100,6 +100,50 @@ class WalletSnapshotTaker:
         except Exception as e:
             print(f"❌ Error calculating investment flow: {str(e)}")
             return 0
+            
+    def get_total_invested_amount(self):
+        """
+        Calculate the total amount invested to date (all time)
+        Returns the net of all investments and withdrawals
+        """
+        try:
+            # Initialize Airtable connection to INVESTMENTS table
+            investments_table = Airtable(
+                os.getenv('KINKONG_AIRTABLE_BASE_ID'),
+                'INVESTMENTS',
+                os.getenv('KINKONG_AIRTABLE_API_KEY')
+            )
+            
+            # Get all investments
+            records = investments_table.get_all()
+            
+            # Calculate total investments (positive flow)
+            total_investments = sum(
+                float(record.get('fields', {}).get('amount', 0)) 
+                for record in records 
+                if not record.get('fields', {}).get('isWithdrawal', False)
+            )
+            
+            # Calculate total withdrawals (negative flow)
+            total_withdrawals = sum(
+                float(record.get('fields', {}).get('originalAmount', 0)) 
+                for record in records 
+                if record.get('fields', {}).get('isWithdrawal', False)
+            )
+            
+            # Net invested amount = investments - withdrawals
+            net_invested = total_investments - total_withdrawals
+            
+            print(f"Total investment summary:")
+            print(f"  Total investments: ${total_investments:.2f}")
+            print(f"  Total withdrawals: ${total_withdrawals:.2f}")
+            print(f"  Net invested amount: ${net_invested:.2f}")
+            
+            return net_invested
+            
+        except Exception as e:
+            print(f"❌ Error calculating total invested amount: {str(e)}")
+            return 0
 
     def get_previous_snapshot(self, days=7):
         """
@@ -267,25 +311,42 @@ class WalletSnapshotTaker:
         # Get previous snapshot value (7 days ago)
         previous_value, previous_date = self.get_previous_snapshot(days=7)
         
-        # Calculate investment flow if we have a previous snapshot
+        # Calculate total invested amount (all time)
+        total_invested = self.get_total_invested_amount()
+        
+        # Calculate net result (performance)
+        net_result = total_value - total_invested
+        
+        # Calculate investment flow and weekly PnL
         weekly_pnl = None
+        investor_7d_flow = 0
         if previous_date:
             # Get net investment flow between previous snapshot and now
-            investment_flow = self.get_investment_flow(previous_date, created_at)
+            investor_7d_flow = self.get_investment_flow(previous_date, created_at)
             
             # Calculate weekly PnL
-            weekly_pnl = total_value - previous_value - investment_flow
+            weekly_pnl = total_value - previous_value - investor_7d_flow
             
             print(f"\n📊 Weekly PnL Calculation:")
             print(f"  Current value: ${total_value:.2f}")
             print(f"  Previous value (7 days ago): ${previous_value:.2f}")
-            print(f"  Net investment flow: ${investment_flow:.2f}")
+            print(f"  Net investment flow: ${investor_7d_flow:.2f}")
             print(f"  Weekly PnL: ${weekly_pnl:.2f}")
         
-        # Record snapshot with weekly PnL
+        # Print summary of calculations
+        print(f"\n📊 Performance Metrics:")
+        print(f"  Current value: ${total_value:.2f}")
+        print(f"  Total invested: ${total_invested:.2f}")
+        print(f"  Net result: ${net_result:.2f}")
+        print(f"  7-day investment flow: ${investor_7d_flow:.2f}")
+        
+        # Record snapshot with metrics
         snapshot_data = {
             'createdAt': created_at,
             'totalValue': total_value,
+            'investedAmount': total_invested,
+            'investor7dFlow': investor_7d_flow,
+            'netResult': net_result,
             'holdings': json.dumps([{
                 'token': b['token'],
                 'amount': b['amount'],
@@ -302,6 +363,9 @@ class WalletSnapshotTaker:
 
         print(f"\n✅ Wallet snapshot recorded")
         print(f"Total Value: ${total_value:.2f}")
+        print(f"Total Invested: ${total_invested:.2f}")
+        print(f"Net Result: ${net_result:.2f}")
+        print(f"7-day Investment Flow: ${investor_7d_flow:.2f}")
         if weekly_pnl is not None:
             print(f"Weekly PnL: ${weekly_pnl:.2f}")
         print("\nHoldings:")
