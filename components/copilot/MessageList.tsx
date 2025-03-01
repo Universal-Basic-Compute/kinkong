@@ -30,12 +30,14 @@ export default function MessageList() {
         ))}
       </AnimatePresence>
       
-      {/* Add typing indicator before first message if no messages yet */}
+      {/* Add welcome message if no messages yet */}
       {messages.length === 0 && (
-        <div className="flex items-center space-x-1 ml-3 mt-6">
-          <div className="w-2 h-2 bg-gold/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-          <div className="w-2 h-2 bg-gold/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-          <div className="w-2 h-2 bg-gold/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+        <div className="text-center py-8">
+          <h3 className="text-xl font-semibold text-gold mb-2">Welcome to KinKong Copilot</h3>
+          <p className="text-gray-300 max-w-md mx-auto">
+            Ask me anything about trading, token analysis, or portfolio management. 
+            Select a mission from the sidebar to get specialized assistance.
+          </p>
         </div>
       )}
       <div ref={messagesEndRef} />

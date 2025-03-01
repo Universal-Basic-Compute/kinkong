@@ -196,55 +196,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode; code: string | 
     setLoading(false);
   }, [publicKey, code]);
 
-  // Send an automatic "Hello!" message when the page loads
-  useEffect(() => {
-    const sendAutomaticGreeting = async () => {
-      if (messages.length === 0 && publicKey) {
-        try {
-          // Get wallet address
-          const walletAddress = publicKey.toString();
-          
-          // First add a user message that says "Hello!"
-          const userMessage: Message = {
-            role: 'user',
-            content: "Hello!",
-            timestamp: new Date().toISOString()
-          };
-          setMessages(prev => [...prev, userMessage]);
-          
-          // Send the greeting message to the API
-          const response = await askKinKongCopilot(
-            "Hello!", 
-            code || 'default', 
-            walletAddress,
-            undefined,
-            currentMission
-          );
-          
-          // Add the assistant's response to the messages
-          const assistantMessage: Message = {
-            role: 'assistant',
-            content: response,
-            timestamp: new Date().toISOString()
-          };
-          setMessages(prev => [...prev, assistantMessage]);
-          
-          // Start typing animation for the response with the index
-          animateMessageTyping(response, messages.length);
-          
-          console.log('Automatic greeting sent and displayed');
-        } catch (error) {
-          console.error('Error sending automatic greeting:', error);
-        }
-      }
-    };
-    
-    // Only run this once when the component mounts and publicKey is available
-    // and no messages have been loaded yet
-    if (publicKey && !loading && messages.length === 0) {
-      sendAutomaticGreeting();
-    }
-  }, [publicKey, loading, code, currentMission, messages.length, animateMessageTyping]);
+  // Removed automatic greeting to let users initiate the conversation themselves
 
   useEffect(() => {
     scrollToBottom();
