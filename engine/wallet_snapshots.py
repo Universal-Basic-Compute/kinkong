@@ -161,6 +161,8 @@ class WalletSnapshotTaker:
             else:
                 end_timestamp = int(datetime.now().timestamp())
             
+            print(f"Date range: {datetime.fromtimestamp(start_timestamp)} to {datetime.fromtimestamp(end_timestamp)}")
+            
             # Get current token prices for conversion
             token_prices = self.get_current_token_prices()
             
@@ -185,27 +187,44 @@ class WalletSnapshotTaker:
             
             if not response.ok:
                 print(f"❌ Error fetching transaction history: {response.status_code} {response.reason}")
+                print(f"Response content: {response.text[:500]}...")  # Print first 500 chars of response
                 return 0
                 
             data = response.json()
             
             if not data.get('success'):
                 print(f"❌ API returned success=false: {data.get('message', 'No error message')}")
+                print(f"Response data: {json.dumps(data, indent=2)}")
                 return 0
                 
             transactions = data.get('data', {}).get('items', [])
             print(f"Found {len(transactions)} transactions in history")
             
+            # Debug: Print a sample transaction to understand the structure
+            if transactions:
+                print(f"Sample transaction structure: {json.dumps(transactions[0], indent=2)}")
+            
+            # Track processed transactions for debugging
+            processed_count = 0
+            skipped_count = 0
+            date_filtered_count = 0
+            investment_filtered_count = 0
+            
             # Process each transaction
             for tx in transactions:
                 # Check if transaction is within our date range
                 tx_timestamp = int(tx.get('blockTime', 0))
+                tx_date = datetime.fromtimestamp(tx_timestamp).isoformat() if tx_timestamp else 'unknown'
+                
                 if not (start_timestamp <= tx_timestamp <= end_timestamp):
+                    date_filtered_count += 1
                     continue
                     
                 # Get transaction details
                 tx_hash = tx.get('signature')
                 tx_type = tx.get('txType', '').lower()
+                
+                print(f"Processing transaction {tx_hash} of type {tx_type} from {tx_date}")
                 
                 # Skip transactions that are already counted as investments
                 # We'll check this by querying the INVESTMENTS table
@@ -222,19 +241,28 @@ class WalletSnapshotTaker:
                 
                 if investment_records:
                     print(f"Skipping transaction {tx_hash} - already recorded as investment")
+                    investment_filtered_count += 1
                     continue
-                    
+                
                 # Process transaction based on type
-                if tx_type in ['swap', 'transfer']:
+                if tx_type in ['swap', 'transfer', 'unknown']:  # Added 'unknown' to catch more transactions
                     # Get token transfers in this transaction
                     token_transfers = tx.get('tokenTransfers', [])
                     
-                    for transfer in token_transfers:
+                    if not token_transfers:
+                        print(f"No token transfers found in transaction {tx_hash}")
+                        skipped_count += 1
+                        continue
+                    
+                    print(f"Found {len(token_transfers)} token transfers in transaction {tx_hash}")
+                    
+                    for i, transfer in enumerate(token_transfers):
                         # Check if our wallet is sender or receiver
                         is_sender = transfer.get('sender') == self.wallet
                         is_receiver = transfer.get('receiver') == self.wallet
                         
                         if not (is_sender or is_receiver):
+                            print(f"  Transfer #{i}: Neither sender nor receiver matches our wallet")
                             continue
                             
                         # Get token details
@@ -242,37 +270,54 @@ class WalletSnapshotTaker:
                         token_amount = float(transfer.get('amount', 0))
                         token_price_usd = float(transfer.get('priceUsd', 0))
                         
+                        print(f"  Transfer #{i}: {token_amount} {token_symbol} at ${token_price_usd} USD/token")
+                        print(f"    Sender: {transfer.get('sender')}")
+                        print(f"    Receiver: {transfer.get('receiver')}")
+                        
                         # If no price in transaction, try to use current price
                         if token_price_usd <= 0 and token_symbol in token_prices:
                             token_price_usd = token_prices[token_symbol]
+                            print(f"    Using current price for {token_symbol}: ${token_price_usd}")
                             
                         # Calculate USD value
                         usd_value = token_amount * token_price_usd
                         
                         # Skip very small transactions (less than $1)
                         if usd_value < 1:
+                            print(f"    Skipping small transfer: ${usd_value:.2f} USD")
                             continue
                             
                         # Record inflow or outflow
                         if is_receiver:
                             total_inflows += usd_value
-                            print(f"Inflow: {token_amount} {token_symbol} at ${token_price_usd} = ${usd_value:.2f} USD")
+                            print(f"    ➕ Inflow: {token_amount} {token_symbol} = ${usd_value:.2f} USD")
                         elif is_sender:
                             total_outflows += usd_value
-                            print(f"Outflow: {token_amount} {token_symbol} at ${token_price_usd} = ${usd_value:.2f} USD")
+                            print(f"    ➖ Outflow: {token_amount} {token_symbol} = ${usd_value:.2f} USD")
+                    
+                    processed_count += 1
+                else:
+                    print(f"Skipping transaction {tx_hash} with unsupported type: {tx_type}")
+                    skipped_count += 1
             
             # Calculate net flow
             net_flow = total_inflows - total_outflows
             
-            print(f"Small transactions flow between {start_date} and {end_date}:")
+            print(f"\nSmall transactions flow between {start_date} and {end_date}:")
             print(f"  Total inflows: ${total_inflows:.2f}")
             print(f"  Total outflows: ${total_outflows:.2f}")
             print(f"  Net flow: ${net_flow:.2f}")
+            print(f"  Transactions processed: {processed_count}")
+            print(f"  Transactions skipped: {skipped_count}")
+            print(f"  Transactions filtered by date: {date_filtered_count}")
+            print(f"  Transactions filtered as investments: {investment_filtered_count}")
             
             return net_flow
             
         except Exception as e:
             print(f"❌ Error calculating small transactions flow: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return 0
             
     def get_investment_flow(self, start_date, end_date):
