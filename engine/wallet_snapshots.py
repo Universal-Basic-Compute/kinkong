@@ -1,6 +1,6 @@
 import os
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import requests
 from airtable import Airtable
 from dotenv import load_dotenv
@@ -55,8 +55,83 @@ class WalletSnapshotTaker:
             print(f"Unexpected error: {str(e)}")
             return []
 
+    def get_investment_flow(self, start_date, end_date):
+        """
+        Calculate the net investment flow between two dates
+        Returns the difference between investments and withdrawals
+        """
+        try:
+            # Initialize Airtable connection to INVESTMENTS table
+            investments_table = Airtable(
+                os.getenv('KINKONG_AIRTABLE_BASE_ID'),
+                'INVESTMENTS',
+                os.getenv('KINKONG_AIRTABLE_API_KEY')
+            )
+            
+            # Get all investments between the two dates
+            records = investments_table.get_all(
+                formula=f"AND(IS_AFTER({{createdAt}}, '{start_date}'), IS_BEFORE({{createdAt}}, '{end_date}'))"
+            )
+            
+            # Calculate total investments (positive flow)
+            total_investments = sum(
+                float(record.get('fields', {}).get('amount', 0)) 
+                for record in records 
+                if not record.get('fields', {}).get('isWithdrawal', False)
+            )
+            
+            # Calculate total withdrawals (negative flow)
+            total_withdrawals = sum(
+                float(record.get('fields', {}).get('originalAmount', 0)) 
+                for record in records 
+                if record.get('fields', {}).get('isWithdrawal', False)
+            )
+            
+            # Net flow = investments - withdrawals
+            net_flow = total_investments - total_withdrawals
+            
+            print(f"Investment flow between {start_date} and {end_date}:")
+            print(f"  Total investments: ${total_investments:.2f}")
+            print(f"  Total withdrawals: ${total_withdrawals:.2f}")
+            print(f"  Net flow: ${net_flow:.2f}")
+            
+            return net_flow
+            
+        except Exception as e:
+            print(f"❌ Error calculating investment flow: {str(e)}")
+            return 0
+
+    def get_previous_snapshot(self, days=7):
+        """
+        Get the wallet snapshot from X days ago
+        Returns the total value or 0 if no snapshot exists
+        """
+        try:
+            # Calculate the date 7 days ago
+            previous_date = (datetime.now() - timedelta(days=days)).strftime('%Y-%m-%d')
+            
+            # Query for snapshots on or before that date, sorted by date descending
+            records = self.snapshots_table.get_all(
+                formula=f"IS_BEFORE({{createdAt}}, '{previous_date}')",
+                sort=[('createdAt', 'desc')]
+            )
+            
+            # Get the most recent one before our target date
+            if records:
+                previous_value = float(records[0].get('fields', {}).get('totalValue', 0))
+                previous_date = records[0].get('fields', {}).get('createdAt', 'unknown date')
+                print(f"Found previous snapshot from {previous_date} with value: ${previous_value:.2f}")
+                return previous_value, previous_date
+            else:
+                print(f"No previous snapshot found before {previous_date}")
+                return 0, None
+                
+        except Exception as e:
+            print(f"❌ Error fetching previous snapshot: {str(e)}")
+            return 0, None
+
     def take_snapshot(self):
-        """Take a snapshot of wallet holdings"""
+        """Take a snapshot of wallet holdings and calculate weekly PnL"""
         print("📸 Taking snapshot of KinKong wallet...")
 
         # Get all token balances at once
@@ -188,9 +263,27 @@ class WalletSnapshotTaker:
 
         # Calculate total value
         total_value = sum(b['value'] for b in balances)
-
-        # Record snapshot
-        self.snapshots_table.insert({
+        
+        # Get previous snapshot value (7 days ago)
+        previous_value, previous_date = self.get_previous_snapshot(days=7)
+        
+        # Calculate investment flow if we have a previous snapshot
+        weekly_pnl = None
+        if previous_date:
+            # Get net investment flow between previous snapshot and now
+            investment_flow = self.get_investment_flow(previous_date, created_at)
+            
+            # Calculate weekly PnL
+            weekly_pnl = total_value - previous_value - investment_flow
+            
+            print(f"\n📊 Weekly PnL Calculation:")
+            print(f"  Current value: ${total_value:.2f}")
+            print(f"  Previous value (7 days ago): ${previous_value:.2f}")
+            print(f"  Net investment flow: ${investment_flow:.2f}")
+            print(f"  Weekly PnL: ${weekly_pnl:.2f}")
+        
+        # Record snapshot with weekly PnL
+        snapshot_data = {
             'createdAt': created_at,
             'totalValue': total_value,
             'holdings': json.dumps([{
@@ -199,10 +292,18 @@ class WalletSnapshotTaker:
                 'price': b['price'],
                 'value': b['value']
             } for b in balances])
-        })
+        }
+        
+        # Add weekly PnL if calculated
+        if weekly_pnl is not None:
+            snapshot_data['weeklyPnL'] = weekly_pnl
+        
+        self.snapshots_table.insert(snapshot_data)
 
         print(f"\n✅ Wallet snapshot recorded")
         print(f"Total Value: ${total_value:.2f}")
+        if weekly_pnl is not None:
+            print(f"Weekly PnL: ${weekly_pnl:.2f}")
         print("\nHoldings:")
         for balance in balances:
             print(f"• {balance['token']}: {balance['amount']:.2f} (${balance['value']:.2f})")
