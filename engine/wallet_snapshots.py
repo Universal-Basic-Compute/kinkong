@@ -103,8 +103,8 @@ class WalletSnapshotTaker:
             
     def get_total_invested_amount(self):
         """
-        Calculate the total amount invested to date (all time)
-        Returns the net of all investments and withdrawals
+        Calculate the total amount invested to date (all time) in USD
+        Returns the net of all investments and withdrawals in USD
         """
         try:
             # Initialize Airtable connection to INVESTMENTS table
@@ -117,24 +117,68 @@ class WalletSnapshotTaker:
             # Get all investments
             records = investments_table.get_all()
             
-            # Calculate total investments (positive flow)
-            total_investments = sum(
-                float(record.get('fields', {}).get('amount', 0)) 
-                for record in records 
-                if not record.get('fields', {}).get('isWithdrawal', False)
-            )
+            # Calculate total investments (positive flow) in USD
+            total_investments = 0
+            for record in records:
+                fields = record.get('fields', {})
+                is_withdrawal = fields.get('isWithdrawal', False)
+                
+                if not is_withdrawal:
+                    # Check if we have a usdAmount field (preferred)
+                    if 'usdAmount' in fields and fields['usdAmount'] is not None:
+                        usd_amount = float(fields['usdAmount'])
+                        total_investments += usd_amount
+                        print(f"Investment: ${usd_amount:.2f} USD (from usdAmount field)")
+                    else:
+                        # If no usdAmount, try to calculate from amount and token price
+                        amount = float(fields.get('amount', 0))
+                        token = fields.get('token', 'UBC')
+                        token_price = float(fields.get('tokenPrice', 0))
+                        
+                        if token_price > 0:
+                            usd_amount = amount * token_price
+                            total_investments += usd_amount
+                            print(f"Investment: {amount} {token} at ${token_price} = ${usd_amount:.2f} USD (calculated)")
+                        else:
+                            # If no token price, just use amount as a fallback (not ideal)
+                            total_investments += amount
+                            print(f"Investment: {amount} {token} (no USD conversion available)")
             
-            # Calculate total withdrawals (negative flow)
-            total_withdrawals = sum(
-                float(record.get('fields', {}).get('originalAmount', 0)) 
-                for record in records 
-                if record.get('fields', {}).get('isWithdrawal', False)
-            )
+            # Calculate total withdrawals (negative flow) in USD
+            total_withdrawals = 0
+            for record in records:
+                fields = record.get('fields', {})
+                is_withdrawal = fields.get('isWithdrawal', False)
+                
+                if is_withdrawal:
+                    # For withdrawals, use originalAmount (in USD) if available
+                    if 'originalAmountUsd' in fields and fields['originalAmountUsd'] is not None:
+                        usd_amount = float(fields['originalAmountUsd'])
+                        total_withdrawals += usd_amount
+                        print(f"Withdrawal: ${usd_amount:.2f} USD (from originalAmountUsd field)")
+                    elif 'usdAmount' in fields and fields['usdAmount'] is not None:
+                        usd_amount = float(fields['usdAmount'])
+                        total_withdrawals += usd_amount
+                        print(f"Withdrawal: ${usd_amount:.2f} USD (from usdAmount field)")
+                    else:
+                        # If no USD amount, try to calculate from amount and token price
+                        amount = float(fields.get('originalAmount', 0))
+                        token = fields.get('token', 'UBC')
+                        token_price = float(fields.get('tokenPrice', 0))
+                        
+                        if token_price > 0:
+                            usd_amount = amount * token_price
+                            total_withdrawals += usd_amount
+                            print(f"Withdrawal: {amount} {token} at ${token_price} = ${usd_amount:.2f} USD (calculated)")
+                        else:
+                            # If no token price, just use amount as a fallback (not ideal)
+                            total_withdrawals += amount
+                            print(f"Withdrawal: {amount} {token} (no USD conversion available)")
             
-            # Net invested amount = investments - withdrawals
+            # Net invested amount = investments - withdrawals (in USD)
             net_invested = total_investments - total_withdrawals
             
-            print(f"Total investment summary:")
+            print(f"Total investment summary (USD):")
             print(f"  Total investments: ${total_investments:.2f}")
             print(f"  Total withdrawals: ${total_withdrawals:.2f}")
             print(f"  Net invested amount: ${net_invested:.2f}")
