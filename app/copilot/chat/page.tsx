@@ -18,6 +18,7 @@ interface Message {
   content: string;
   timestamp: string;
   screenshot?: string; // Base64 encoded screenshot
+  paragraphs?: string[]; // Add this property to store paragraphs
 }
 
 export default function CopilotChatPage() {
@@ -45,7 +46,7 @@ export default function CopilotChatPage() {
   } | null>(null);
   
   // Define animateMessageTyping here, before any useEffect that references it
-  const animateMessageTyping = useCallback((message: string) => {
+  const animateMessageTyping = useCallback((message: string, messageIndex: number) => {
     // Split message into paragraphs (by double newlines or markdown headers)
     const paragraphs = message.split(/\n\n|\n#{1,6} /);
     const cleanParagraphs = paragraphs.map(p => p.trim()).filter(p => p.length > 0);
@@ -53,6 +54,16 @@ export default function CopilotChatPage() {
     setTypingMessage(message);
     setDisplayedParagraphs([]);
     setIsTyping(true);
+    
+    // Store the paragraphs in the message object for later use
+    setMessages(prevMessages => {
+      const updatedMessages = [...prevMessages];
+      updatedMessages[messageIndex] = {
+        ...updatedMessages[messageIndex],
+        paragraphs: cleanParagraphs
+      };
+      return updatedMessages;
+    });
     
     // Display paragraphs one by one
     let displayedSoFar: string[] = [];
@@ -276,8 +287,8 @@ export default function CopilotChatPage() {
           };
           setMessages(prev => [...prev, assistantMessage]);
           
-          // Start typing animation for the response
-          animateMessageTyping(response);
+          // Start typing animation for the response with the index
+          animateMessageTyping(response, messages.length);
           
           console.log('Automatic greeting sent and displayed');
         } catch (error) {
@@ -418,8 +429,8 @@ export default function CopilotChatPage() {
       };
       setMessages(prev => [...prev, assistantMessage]);
       
-      // Start typing animation
-      animateMessageTyping(response);
+      // Start typing animation with the index of the new message
+      animateMessageTyping(response, messages.length + 1);
       
       // Clear screenshot after sending
       setScreenshot(null);
@@ -585,12 +596,27 @@ export default function CopilotChatPage() {
                           )}
                         </div>
                       ) : (
-                        /* For completed messages, display in a single bubble */
-                        <div className="max-w-[80%] rounded-lg p-3 bg-gradient-to-r from-gray-800/70 to-gray-700/40 text-gray-200 border border-gray-700/50">
-                          <ReactMarkdown className="prose prose-invert break-words whitespace-pre-wrap">
-                            {message.content}
-                          </ReactMarkdown>
-                        </div>
+                        /* For completed messages, display in multiple bubbles if paragraphs exist */
+                        message.paragraphs ? (
+                          <div className="space-y-3 w-full">
+                            {message.paragraphs.map((paragraph, pIndex) => (
+                              <div key={pIndex} className="flex justify-start">
+                                <div className="max-w-[80%] rounded-lg p-3 bg-gradient-to-r from-gray-800/70 to-gray-700/40 text-gray-200 border border-gray-700/50">
+                                  <ReactMarkdown className="prose prose-invert break-words whitespace-pre-wrap">
+                                    {paragraph}
+                                  </ReactMarkdown>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          /* Fallback for messages without paragraphs */
+                          <div className="max-w-[80%] rounded-lg p-3 bg-gradient-to-r from-gray-800/70 to-gray-700/40 text-gray-200 border border-gray-700/50">
+                            <ReactMarkdown className="prose prose-invert break-words whitespace-pre-wrap">
+                              {message.content}
+                            </ReactMarkdown>
+                          </div>
+                        )
                       )}
                     </>
                   )}
