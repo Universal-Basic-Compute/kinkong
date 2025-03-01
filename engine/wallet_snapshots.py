@@ -54,6 +54,92 @@ class WalletSnapshotTaker:
         except Exception as e:
             print(f"Unexpected error: {str(e)}")
             return []
+            
+    def get_current_token_prices(self):
+        """
+        Get current prices for tokens we're tracking
+        Returns a dictionary of token symbol -> price in USD
+        """
+        token_prices = {}
+        
+        try:
+            # Get token balances which include current prices
+            token_balances = self.get_token_balances()
+            
+            # Extract prices for each token
+            for balance in token_balances:
+                if 'symbol' in balance and 'priceUsd' in balance:
+                    symbol = balance['symbol']
+                    price = float(balance['priceUsd'])
+                    token_prices[symbol] = price
+                    print(f"Current price for {symbol}: ${price}")
+            
+            # Special case for COMPUTE token if we got it from Meteora
+            compute_mint = "B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo"
+            compute_price = None
+            
+            # Try to get COMPUTE price from Meteora dynamic pool
+            try:
+                meteora_pool_id = "HN7ibjiyX399d1EfYXcWaSHZRSMfUmonYvXGFXG41Rr3"
+                url = "https://public-api.birdeye.so/v1/pool/price"
+                params = {"pool_address": meteora_pool_id}
+                headers = {
+                    "x-api-key": self.birdeye_api_key,
+                    "x-chain": "solana",
+                    "accept": "application/json"
+                }
+                
+                response = requests.get(url, params=params, headers=headers)
+                if response.content:
+                    pool_data = response.json()
+                    if pool_data.get('success'):
+                        compute_price = float(pool_data.get('data', {}).get('price', 0))
+                        token_prices['COMPUTE'] = compute_price
+                        print(f"Got COMPUTE price from Meteora pool: ${compute_price:.6f}")
+            except Exception as e:
+                print(f"Error getting COMPUTE price from Meteora: {str(e)}")
+            
+            # If we don't have COMPUTE price yet, try Jupiter
+            if 'COMPUTE' not in token_prices or token_prices['COMPUTE'] <= 0:
+                try:
+                    jupiter_url = "https://price.jup.ag/v4/price"
+                    jupiter_params = {"ids": compute_mint}
+                    
+                    jupiter_response = requests.get(jupiter_url, params=jupiter_params)
+                    jupiter_data = jupiter_response.json()
+                    
+                    if jupiter_data.get('data') and jupiter_data['data'].get(compute_mint):
+                        compute_price = float(jupiter_data['data'][compute_mint].get('price', 0))
+                        token_prices['COMPUTE'] = compute_price
+                        print(f"Got COMPUTE price from Jupiter API: ${compute_price:.6f}")
+                except Exception as e:
+                    print(f"Error getting COMPUTE price from Jupiter: {str(e)}")
+            
+            # Add hardcoded fallback prices for common tokens if not found
+            if 'USDC' not in token_prices or token_prices['USDC'] <= 0:
+                token_prices['USDC'] = 1.0  # USDC is a stablecoin
+                print("Using fallback price for USDC: $1.00")
+            
+            if 'UBC' not in token_prices or token_prices['UBC'] <= 0:
+                # Use a reasonable fallback price for UBC if needed
+                token_prices['UBC'] = 0.01  # Example fallback price
+                print(f"Using fallback price for UBC: ${token_prices['UBC']}")
+            
+            if 'COMPUTE' not in token_prices or token_prices['COMPUTE'] <= 0:
+                # Use a reasonable fallback price for COMPUTE if needed
+                token_prices['COMPUTE'] = 0.0001  # Example fallback price
+                print(f"Using fallback price for COMPUTE: ${token_prices['COMPUTE']}")
+            
+            return token_prices
+            
+        except Exception as e:
+            print(f"❌ Error getting token prices: {str(e)}")
+            # Return fallback prices
+            return {
+                'USDC': 1.0,
+                'UBC': 0.01,
+                'COMPUTE': 0.0001
+            }
 
     def get_investment_flow(self, start_date, end_date):
         """
@@ -117,6 +203,9 @@ class WalletSnapshotTaker:
             # Get all investments
             records = investments_table.get_all()
             
+            # Get current token prices for conversion
+            token_prices = self.get_current_token_prices()
+            
             # Calculate total investments (positive flow) in USD
             total_investments = 0
             for record in records:
@@ -129,7 +218,7 @@ class WalletSnapshotTaker:
                         usd_amount = float(fields['usdAmount'])
                         total_investments += usd_amount
                         print(f"Investment: ${usd_amount:.2f} USD (from usdAmount field)")
-                    # If no usdAmount, try to calculate from amount and token price
+                    # If no usdAmount, try to calculate from amount and token price in record
                     elif 'tokenPrice' in fields and fields['tokenPrice'] is not None and fields.get('amount') is not None:
                         amount = float(fields.get('amount', 0))
                         token = fields.get('token', 'UBC')
@@ -138,11 +227,24 @@ class WalletSnapshotTaker:
                         if token_price > 0:
                             usd_amount = amount * token_price
                             total_investments += usd_amount
-                            print(f"Investment: {amount} {token} at ${token_price} = ${usd_amount:.2f} USD (calculated)")
+                            print(f"Investment: {amount} {token} at ${token_price} = ${usd_amount:.2f} USD (calculated from record)")
                         else:
-                            print(f"⚠️ Skipping investment with zero token price: {amount} {token}")
+                            print(f"⚠️ Zero token price in record: {amount} {token}")
+                    # If no price in record, use current token price
+                    elif fields.get('amount') is not None and fields.get('token') is not None:
+                        amount = float(fields.get('amount', 0))
+                        token = fields.get('token', 'UBC')
+                        
+                        # Use current token price if available
+                        if token in token_prices and token_prices[token] > 0:
+                            current_price = token_prices[token]
+                            usd_amount = amount * current_price
+                            total_investments += usd_amount
+                            print(f"Investment: {amount} {token} at current price ${current_price} = ${usd_amount:.2f} USD")
+                        else:
+                            print(f"⚠️ No price available for token: {amount} {token}")
                     else:
-                        print(f"⚠️ Skipping investment without USD amount or token price: {fields.get('amount')} {fields.get('token')}")
+                        print(f"⚠️ Skipping investment without amount or token: {fields}")
             
             # Calculate total withdrawals (negative flow) in USD
             total_withdrawals = 0
@@ -161,7 +263,7 @@ class WalletSnapshotTaker:
                         usd_amount = float(fields['usdAmount'])
                         total_withdrawals += usd_amount
                         print(f"Withdrawal: ${usd_amount:.2f} USD (from usdAmount field)")
-                    # If no USD amount, try to calculate from amount and token price
+                    # If no USD amount, try to calculate from amount and token price in record
                     elif 'tokenPrice' in fields and fields['tokenPrice'] is not None and fields.get('originalAmount') is not None:
                         amount = float(fields.get('originalAmount', 0))
                         token = fields.get('token', 'UBC')
@@ -170,11 +272,24 @@ class WalletSnapshotTaker:
                         if token_price > 0:
                             usd_amount = amount * token_price
                             total_withdrawals += usd_amount
-                            print(f"Withdrawal: {amount} {token} at ${token_price} = ${usd_amount:.2f} USD (calculated)")
+                            print(f"Withdrawal: {amount} {token} at ${token_price} = ${usd_amount:.2f} USD (calculated from record)")
                         else:
-                            print(f"⚠️ Skipping withdrawal with zero token price: {amount} {token}")
+                            print(f"⚠️ Zero token price in record: {amount} {token}")
+                    # If no price in record, use current token price
+                    elif fields.get('originalAmount') is not None and fields.get('token') is not None:
+                        amount = float(fields.get('originalAmount', 0))
+                        token = fields.get('token', 'UBC')
+                        
+                        # Use current token price if available
+                        if token in token_prices and token_prices[token] > 0:
+                            current_price = token_prices[token]
+                            usd_amount = amount * current_price
+                            total_withdrawals += usd_amount
+                            print(f"Withdrawal: {amount} {token} at current price ${current_price} = ${usd_amount:.2f} USD")
+                        else:
+                            print(f"⚠️ No price available for token: {amount} {token}")
                     else:
-                        print(f"⚠️ Skipping withdrawal without USD amount or token price: {fields.get('originalAmount')} {fields.get('token')}")
+                        print(f"⚠️ Skipping withdrawal without amount or token: {fields}")
             
             # Net invested amount = investments - withdrawals (in USD)
             net_invested = total_investments - total_withdrawals
