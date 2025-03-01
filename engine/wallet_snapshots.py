@@ -129,8 +129,8 @@ class WalletSnapshotTaker:
                         usd_amount = float(fields['usdAmount'])
                         total_investments += usd_amount
                         print(f"Investment: ${usd_amount:.2f} USD (from usdAmount field)")
-                    else:
-                        # If no usdAmount, try to calculate from amount and token price
+                    # If no usdAmount, try to calculate from amount and token price
+                    elif 'tokenPrice' in fields and fields['tokenPrice'] is not None and fields.get('amount') is not None:
                         amount = float(fields.get('amount', 0))
                         token = fields.get('token', 'UBC')
                         token_price = float(fields.get('tokenPrice', 0))
@@ -140,9 +140,9 @@ class WalletSnapshotTaker:
                             total_investments += usd_amount
                             print(f"Investment: {amount} {token} at ${token_price} = ${usd_amount:.2f} USD (calculated)")
                         else:
-                            # If no token price, just use amount as a fallback (not ideal)
-                            total_investments += amount
-                            print(f"Investment: {amount} {token} (no USD conversion available)")
+                            print(f"⚠️ Skipping investment with zero token price: {amount} {token}")
+                    else:
+                        print(f"⚠️ Skipping investment without USD amount or token price: {fields.get('amount')} {fields.get('token')}")
             
             # Calculate total withdrawals (negative flow) in USD
             total_withdrawals = 0
@@ -151,17 +151,18 @@ class WalletSnapshotTaker:
                 is_withdrawal = fields.get('isWithdrawal', False)
                 
                 if is_withdrawal:
-                    # For withdrawals, use originalAmount (in USD) if available
+                    # For withdrawals, use originalAmountUsd (in USD) if available
                     if 'originalAmountUsd' in fields and fields['originalAmountUsd'] is not None:
                         usd_amount = float(fields['originalAmountUsd'])
                         total_withdrawals += usd_amount
                         print(f"Withdrawal: ${usd_amount:.2f} USD (from originalAmountUsd field)")
+                    # Next try usdAmount
                     elif 'usdAmount' in fields and fields['usdAmount'] is not None:
                         usd_amount = float(fields['usdAmount'])
                         total_withdrawals += usd_amount
                         print(f"Withdrawal: ${usd_amount:.2f} USD (from usdAmount field)")
-                    else:
-                        # If no USD amount, try to calculate from amount and token price
+                    # If no USD amount, try to calculate from amount and token price
+                    elif 'tokenPrice' in fields and fields['tokenPrice'] is not None and fields.get('originalAmount') is not None:
                         amount = float(fields.get('originalAmount', 0))
                         token = fields.get('token', 'UBC')
                         token_price = float(fields.get('tokenPrice', 0))
@@ -171,9 +172,9 @@ class WalletSnapshotTaker:
                             total_withdrawals += usd_amount
                             print(f"Withdrawal: {amount} {token} at ${token_price} = ${usd_amount:.2f} USD (calculated)")
                         else:
-                            # If no token price, just use amount as a fallback (not ideal)
-                            total_withdrawals += amount
-                            print(f"Withdrawal: {amount} {token} (no USD conversion available)")
+                            print(f"⚠️ Skipping withdrawal with zero token price: {amount} {token}")
+                    else:
+                        print(f"⚠️ Skipping withdrawal without USD amount or token price: {fields.get('originalAmount')} {fields.get('token')}")
             
             # Net invested amount = investments - withdrawals (in USD)
             net_invested = total_investments - total_withdrawals
