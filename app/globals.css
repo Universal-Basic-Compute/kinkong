@@ -390,6 +390,43 @@ body.no-scroll {
   transform: translateY(-1px);
 }
 
+/* Fix for list spacing in chat bubbles */
+.prose ul,
+.prose ol {
+  margin-top: 0.25rem !important;
+  margin-bottom: 0.25rem !important;
+  padding-left: 1.25rem !important;
+}
+
+.prose li {
+  margin-top: 0.125rem !important;
+  margin-bottom: 0.125rem !important;
+  padding-left: 0 !important;
+}
+
+.prose li > p {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.prose li::marker {
+  color: rgba(255, 215, 0, 0.6) !important;
+}
+
+/* Ensure paragraphs in message bubbles have proper spacing */
+.prose p {
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.prose p:first-child {
+  margin-top: 0 !important;
+}
+
+.prose p:last-child {
+  margin-bottom: 0 !important;
+}
+
 @keyframes metallic-shine {
   0% {
     background-position: -200%;
