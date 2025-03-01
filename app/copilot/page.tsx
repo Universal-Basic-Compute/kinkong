@@ -191,8 +191,8 @@ export default function CopilotPage() {
       price: (
         <span>
           <span className="line-through text-gray-400 mr-2">59,999</span>
-          <span className="text-green-400">14,999</span> <span className="metallic-text-ubc">$UBC</span> / 1 month
-          <span className="ml-2 bg-green-900/50 text-green-400 text-xs px-2 py-0.5 rounded-full">75% OFF</span>
+          <span>14,999</span> <span className="metallic-text-ubc">$UBC</span> / 1 month
+          <span className="ml-2 bg-gold/20 text-gold text-xs px-2 py-0.5 rounded-full">75% OFF</span>
         </span>
       ),
       action: () => handlePremiumSubscription('UBC'),
@@ -211,8 +211,8 @@ export default function CopilotPage() {
       price: (
         <span>
           <span className="line-through text-gray-400 mr-2">599,999</span>
-          <span className="text-green-400">149,999</span> <span className="metallic-text-compute">$COMPUTE</span> / 1 month
-          <span className="ml-2 bg-green-900/50 text-green-400 text-xs px-2 py-0.5 rounded-full">75% OFF</span>
+          <span>149,999</span> <span className="metallic-text-compute">$COMPUTE</span> / 1 month
+          <span className="ml-2 bg-gold/20 text-gold text-xs px-2 py-0.5 rounded-full">75% OFF</span>
         </span>
       ),
       action: () => handlePremiumSubscription('COMPUTE'),
