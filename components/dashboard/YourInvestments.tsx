@@ -8,16 +8,18 @@ interface Investment {
   amount: number;
   token: string;
   date: string;
-  wallet: string;
-  username: string;
-  ubcReturn: number;
-  return: number;
-  redistributionId: string;
-  redistributionDate: string;
-  percentage: number;
-  claimed: boolean; // Add claimed status
-  isCalculated?: boolean; // Add optional calculated status
-  out?: number; // Add withdrawal status as number
+  solscanUrl?: string;
+  usdAmount?: number;
+  wallet?: string;
+  username?: string;
+  ubcReturn?: number;
+  return?: number;
+  redistributionId?: string;
+  redistributionDate?: string;
+  percentage?: number;
+  claimed?: boolean;
+  isCalculated?: boolean;
+  out?: number;
 }
 
 interface YourInvestmentsProps {
@@ -40,21 +42,15 @@ export const YourInvestments: React.FC<YourInvestmentsProps> = ({ className }) =
 
       try {
         setIsLoading(true);
-        const response = await fetch('/api/investments');
+        const walletAddress = publicKey?.toString() || '';
+        const response = await fetch(`/api/user-investments?wallet=${walletAddress}`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch investments');
         }
         
         const data = await response.json();
-        
-        // Filter investments for the current wallet
-        const walletAddress = publicKey?.toString() || '';
-        const userInvestments = data.filter((investment: Investment) => 
-          investment.wallet.toLowerCase() === walletAddress.toLowerCase()
-        );
-        
-        setInvestments(userInvestments || []);
+        setInvestments(data || []);
       } catch (err) {
         console.error('Error fetching investments:', err);
         setError('Failed to load your investments');
@@ -75,21 +71,15 @@ export const YourInvestments: React.FC<YourInvestmentsProps> = ({ className }) =
 
     try {
       setIsLoading(true);
-      const response = await fetch('/api/investments');
+      const walletAddress = publicKey?.toString() || '';
+      const response = await fetch(`/api/user-investments?wallet=${walletAddress}`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch investments');
       }
       
       const data = await response.json();
-      
-      // Filter investments for the current wallet
-      const walletAddress = publicKey?.toString() || '';
-      const userInvestments = data.filter((investment: Investment) => 
-        investment.wallet.toLowerCase() === walletAddress.toLowerCase()
-      );
-      
-      setInvestments(userInvestments || []);
+      setInvestments(data || []);
     } catch (err) {
       console.error('Error fetching investments:', err);
       setError('Failed to load your investments');
