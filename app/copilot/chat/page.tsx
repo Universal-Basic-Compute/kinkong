@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletConnect } from '@/components/wallet/WalletConnect';
 import { ChatProvider } from '@/app/context/ChatContext';
-import MissionSidebar from '@/components/copilot/MissionSidebar';
+import MissionSidebar from '@/components/copilot/MissionSelector';
 import UserProfileSidebar from '@/components/copilot/UserProfileSidebar';
 import ChatInterface from '@/components/copilot/ChatInterface';
 import { useState, useEffect } from 'react';
