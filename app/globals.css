@@ -418,8 +418,14 @@ body.no-scroll {
 }
 
 /* Target the specific space between paragraphs and lists */
-.prose p:has(+ ul),
-.prose p:has(+ ol) {
+/* Using direct adjacent sibling selector instead of :has() for better compatibility */
+.prose p + ul,
+.prose p + ol {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.prose p:last-child {
   margin-bottom: 0 !important;
   padding-bottom: 0 !important;
 }
