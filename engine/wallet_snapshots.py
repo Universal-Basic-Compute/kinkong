@@ -141,6 +141,140 @@ class WalletSnapshotTaker:
                 'COMPUTE': 0.0001
             }
 
+    def get_small_transactions_flow(self, start_date, end_date):
+        """
+        Calculate the flow of small transactions between two dates
+        These are transactions too small to be considered formal investments
+        Uses Birdeye API to get transaction history
+        """
+        try:
+            print(f"Calculating small transactions flow between {start_date} and {end_date}")
+            
+            # Convert start_date and end_date to Unix timestamps if they're not already
+            if isinstance(start_date, str):
+                start_timestamp = int(datetime.fromisoformat(start_date.replace('Z', '+00:00')).timestamp())
+            else:
+                start_timestamp = int(start_date.timestamp())
+                
+            if isinstance(end_date, str):
+                end_timestamp = int(datetime.fromisoformat(end_date.replace('Z', '+00:00')).timestamp())
+            else:
+                end_timestamp = int(datetime.now().timestamp())
+            
+            # Get current token prices for conversion
+            token_prices = self.get_current_token_prices()
+            
+            # Initialize counters for inflows and outflows
+            total_inflows = 0
+            total_outflows = 0
+            
+            # Fetch transaction history from Birdeye API
+            url = "https://public-api.birdeye.so/v1/wallet/tx_list"
+            params = {
+                "wallet": self.wallet,
+                "limit": 1000  # Maximum allowed by API
+            }
+            headers = {
+                "x-api-key": self.birdeye_api_key,
+                "x-chain": "solana",
+                "accept": "application/json"
+            }
+            
+            print(f"Fetching transaction history from Birdeye API for wallet: {self.wallet}")
+            response = requests.get(url, params=params, headers=headers)
+            
+            if not response.ok:
+                print(f"❌ Error fetching transaction history: {response.status_code} {response.reason}")
+                return 0
+                
+            data = response.json()
+            
+            if not data.get('success'):
+                print(f"❌ API returned success=false: {data.get('message', 'No error message')}")
+                return 0
+                
+            transactions = data.get('data', {}).get('items', [])
+            print(f"Found {len(transactions)} transactions in history")
+            
+            # Process each transaction
+            for tx in transactions:
+                # Check if transaction is within our date range
+                tx_timestamp = int(tx.get('blockTime', 0))
+                if not (start_timestamp <= tx_timestamp <= end_timestamp):
+                    continue
+                    
+                # Get transaction details
+                tx_hash = tx.get('signature')
+                tx_type = tx.get('txType', '').lower()
+                
+                # Skip transactions that are already counted as investments
+                # We'll check this by querying the INVESTMENTS table
+                investments_table = Airtable(
+                    os.getenv('KINKONG_AIRTABLE_BASE_ID'),
+                    'INVESTMENTS',
+                    os.getenv('KINKONG_AIRTABLE_API_KEY')
+                )
+                
+                # Check if this transaction is already recorded as an investment
+                investment_records = investments_table.get_all(
+                    formula=f"{{transactionHash}}='{tx_hash}'"
+                )
+                
+                if investment_records:
+                    print(f"Skipping transaction {tx_hash} - already recorded as investment")
+                    continue
+                    
+                # Process transaction based on type
+                if tx_type in ['swap', 'transfer']:
+                    # Get token transfers in this transaction
+                    token_transfers = tx.get('tokenTransfers', [])
+                    
+                    for transfer in token_transfers:
+                        # Check if our wallet is sender or receiver
+                        is_sender = transfer.get('sender') == self.wallet
+                        is_receiver = transfer.get('receiver') == self.wallet
+                        
+                        if not (is_sender or is_receiver):
+                            continue
+                            
+                        # Get token details
+                        token_symbol = transfer.get('symbol', 'Unknown')
+                        token_amount = float(transfer.get('amount', 0))
+                        token_price_usd = float(transfer.get('priceUsd', 0))
+                        
+                        # If no price in transaction, try to use current price
+                        if token_price_usd <= 0 and token_symbol in token_prices:
+                            token_price_usd = token_prices[token_symbol]
+                            
+                        # Calculate USD value
+                        usd_value = token_amount * token_price_usd
+                        
+                        # Skip very small transactions (less than $1)
+                        if usd_value < 1:
+                            continue
+                            
+                        # Record inflow or outflow
+                        if is_receiver:
+                            total_inflows += usd_value
+                            print(f"Inflow: {token_amount} {token_symbol} at ${token_price_usd} = ${usd_value:.2f} USD")
+                        elif is_sender:
+                            total_outflows += usd_value
+                            print(f"Outflow: {token_amount} {token_symbol} at ${token_price_usd} = ${usd_value:.2f} USD")
+            
+            # Calculate net flow
+            net_flow = total_inflows - total_outflows
+            
+            print(f"Small transactions flow between {start_date} and {end_date}:")
+            print(f"  Total inflows: ${total_inflows:.2f}")
+            print(f"  Total outflows: ${total_outflows:.2f}")
+            print(f"  Net flow: ${net_flow:.2f}")
+            
+            return net_flow
+            
+        except Exception as e:
+            print(f"❌ Error calculating small transactions flow: {str(e)}")
+            return 0
+            
     def get_investment_flow(self, start_date, end_date):
         """
         Calculate the net investment flow between two dates
@@ -549,25 +683,35 @@ class WalletSnapshotTaker:
         
         # Initialize metrics
         net_result = 0
+        gross_result = 0
         pnl_percentage = 0
         investor_7d_flow = 0
-        
+        small_transactions_flow = 0
+    
         if previous_date:
             # Get net investment flow between previous snapshot and now
             investor_7d_flow = self.get_investment_flow(previous_date, created_at)
-            
+        
+            # Get small transactions flow between previous snapshot and now
+            small_transactions_flow = self.get_small_transactions_flow(previous_date, created_at)
+        
             # Calculate net result (wallet variation with investor flow removed)
             net_result = total_value - previous_value - investor_7d_flow
-            
+        
+            # Calculate gross result (wallet variation with investor flow removed but including small transactions)
+            gross_result = net_result + small_transactions_flow
+        
             # Calculate PnL as a percentage
             if previous_value > 0:
                 pnl_percentage = (net_result / previous_value) * 100
-            
-            print(f"\n📊 Weekly PnL Calculation:")
+        
+            print(f"\n📊 Weekly Performance Calculation:")
             print(f"  Current value: ${total_value:.2f}")
             print(f"  Previous value (7 days ago): ${previous_value:.2f}")
             print(f"  Net investment flow: ${investor_7d_flow:.2f}")
-            print(f"  Net result (7d variation - flow): ${net_result:.2f}")
+            print(f"  Small transactions flow: ${small_transactions_flow:.2f}")
+            print(f"  Net result (7d variation - investment flow): ${net_result:.2f}")
+            print(f"  Gross result (net result + small transactions): ${gross_result:.2f}")
             print(f"  PnL percentage: {pnl_percentage:.2f}%")
         
         # Print summary of calculations
@@ -584,7 +728,9 @@ class WalletSnapshotTaker:
             'totalValue': total_value,
             'investedAmount': total_invested,
             'investor7dFlow': investor_7d_flow,
+            'smallTransactionsFlow': small_transactions_flow,
             'netResult': net_result,
+            'grossResult': gross_result,
             'pnlPercentage': pnl_percentage,
             'holdings': json.dumps([{
                 'token': b['token'],
@@ -599,9 +745,11 @@ class WalletSnapshotTaker:
         print(f"\n✅ Wallet snapshot recorded")
         print(f"Total Value: ${total_value:.2f}")
         print(f"Total Invested: ${total_invested:.2f}")
-        print(f"Net Result (7d variation - flow): ${net_result:.2f}")
+        print(f"Net Result (7d variation - investment flow): ${net_result:.2f}")
+        print(f"Gross Result (net result + small transactions): ${gross_result:.2f}")
         print(f"PnL Percentage: {pnl_percentage:.2f}%")
         print(f"7-day Investment Flow: ${investor_7d_flow:.2f}")
+        print(f"7-day Small Transactions Flow: ${small_transactions_flow:.2f}")
         print("\nHoldings:")
         for balance in balances:
             print(f"• {balance['token']}: {balance['amount']:.2f} (${balance['value']:.2f})")
