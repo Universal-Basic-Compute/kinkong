@@ -465,8 +465,8 @@ body.no-scroll {
 }
 
 /* Make sure the paragraph before a list has no bottom margin */
-.prose p:has(+ ol),
-.prose p:has(+ ul) {
+/* Using class-based approach instead of :has() for better browser compatibility */
+.prose p.mb-0 {
   margin-bottom: 0 !important;
 }
 
