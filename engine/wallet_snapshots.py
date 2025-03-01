@@ -726,46 +726,34 @@ class WalletSnapshotTaker:
         # Calculate total invested amount (all time)
         total_invested = self.get_total_invested_amount()
         
-        # Initialize metrics
-        net_result = 0
-        gross_result = 0
+        # Simplified calculation: netResult = totalValue - investedAmount
+        net_result = total_value - total_invested
+        
+        # Calculate PnL percentage based on invested amount
         pnl_percentage = 0
+        if total_invested > 0:
+            pnl_percentage = (net_result / total_invested) * 100
+        
+        # For backward compatibility, still calculate these values
         investor_7d_flow = 0
         small_transactions_flow = 0
-    
+        gross_result = net_result  # Same as net_result in simplified model
+        
         if previous_date:
             # Get net investment flow between previous snapshot and now
             investor_7d_flow = self.get_investment_flow(previous_date, created_at)
-        
-            # Get small transactions flow between previous snapshot and now
-            small_transactions_flow = self.get_small_transactions_flow(previous_date, created_at)
-        
-            # Calculate net result (wallet variation with investor flow removed)
-            net_result = total_value - previous_value - investor_7d_flow
-        
-            # Calculate gross result (wallet variation with investor flow removed but including small transactions)
-            gross_result = net_result + small_transactions_flow
-        
-            # Calculate PnL as a percentage
-            if previous_value > 0:
-                pnl_percentage = (net_result / previous_value) * 100
-        
+            
             print(f"\n📊 Weekly Performance Calculation:")
             print(f"  Current value: ${total_value:.2f}")
             print(f"  Previous value (7 days ago): ${previous_value:.2f}")
             print(f"  Net investment flow: ${investor_7d_flow:.2f}")
-            print(f"  Small transactions flow: ${small_transactions_flow:.2f}")
-            print(f"  Net result (7d variation - investment flow): ${net_result:.2f}")
-            print(f"  Gross result (net result + small transactions): ${gross_result:.2f}")
-            print(f"  PnL percentage: {pnl_percentage:.2f}%")
         
         # Print summary of calculations
         print(f"\n📊 Performance Metrics:")
         print(f"  Current value: ${total_value:.2f}")
         print(f"  Total invested: ${total_invested:.2f}")
-        print(f"  Net result (7d variation - flow): ${net_result:.2f}")
+        print(f"  Net result (totalValue - investedAmount): ${net_result:.2f}")
         print(f"  PnL percentage: {pnl_percentage:.2f}%")
-        print(f"  7-day investment flow: ${investor_7d_flow:.2f}")
         
         # Record snapshot with metrics
         snapshot_data = {
@@ -790,11 +778,8 @@ class WalletSnapshotTaker:
         print(f"\n✅ Wallet snapshot recorded")
         print(f"Total Value: ${total_value:.2f}")
         print(f"Total Invested: ${total_invested:.2f}")
-        print(f"Net Result (7d variation - investment flow): ${net_result:.2f}")
-        print(f"Gross Result (net result + small transactions): ${gross_result:.2f}")
+        print(f"Net Result (totalValue - investedAmount): ${net_result:.2f}")
         print(f"PnL Percentage: {pnl_percentage:.2f}%")
-        print(f"7-day Investment Flow: ${investor_7d_flow:.2f}")
-        print(f"7-day Small Transactions Flow: ${small_transactions_flow:.2f}")
         print("\nHoldings:")
         for balance in balances:
             print(f"• {balance['token']}: {balance['amount']:.2f} (${balance['value']:.2f})")
