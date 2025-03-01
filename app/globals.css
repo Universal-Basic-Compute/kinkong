@@ -418,6 +418,33 @@ body.no-scroll {
   color: rgba(255, 215, 0, 0.6) !important;
 }
 
+/* Remove space between paragraph and list */
+.prose p + ul,
+.prose p + ol {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* Remove space between list and paragraph */
+.prose ul + p,
+.prose ol + p {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* Ensure consistent spacing within lists */
+.prose li p {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Target any potential hidden elements causing space */
+.prose br + ul,
+.prose br + ol {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
 /* Ensure paragraphs in message bubbles have proper spacing */
 .prose p {
   margin-top: 0.25rem !important;
