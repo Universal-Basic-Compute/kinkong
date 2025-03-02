@@ -453,8 +453,18 @@ async def main():
         if result["status"] == "success":
             logger.info(f"LP position analysis completed successfully")
             logger.info(result["message"])  # Use the message from the result
-            logger.info(f"Recommendation preview: {result['recommendation']}")
-            logger.info(f"Thought ID: {result['thought_id']}")
+            
+            # Check if recommendation_summary exists before logging it
+            if "recommendation_summary" in result:
+                logger.info(f"Recommendation preview: {result['recommendation_summary']}")
+            else:
+                logger.info("No recommendation summary available")
+                
+            # Check if thought_id exists before logging it
+            if "thought_id" in result:
+                logger.info(f"Thought ID: {result['thought_id']}")
+            else:
+                logger.info("No thought ID available")
         else:
             logger.error(f"LP position analysis failed: {result['message']}")
         
