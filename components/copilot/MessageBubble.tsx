@@ -16,6 +16,12 @@ function preprocessMarkdown(content: string): string {
   // Fix ordered lists being split by newlines
   processed = processed.replace(/(\d+\..*)\n+(\d+\.)/g, '$1\n$2');
   
+  // Additional fix for numbered lists with descriptions
+  processed = processed.replace(/(\d+\.\s+[^\n]+)\n+([^\d])/g, '$1\n$2');
+  
+  // Keep entire numbered lists together by reducing multiple newlines between list items
+  processed = processed.replace(/(\d+\.[^\n]+)\n\n+(\d+\.)/g, '$1\n$2');
+  
   return processed;
 }
 
