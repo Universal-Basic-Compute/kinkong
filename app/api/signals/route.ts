@@ -36,12 +36,12 @@ export async function GET() {
     try {
       const records = await table
         .select({
-          filterByFormula: "AND({type}='BUY', {confidence}='HIGH')", // Filter for BUY signals with HIGH confidence
+          filterByFormula: "AND({type}='BUY', OR({confidence}='HIGH', {confidence}='MEDIUM'))", // Include both HIGH and MEDIUM confidence
           sort: [{ field: 'createdAt', direction: 'desc' }],
           maxRecords: 100
         })
         .all();
-      console.log(`Retrieved ${records.length} HIGH confidence BUY signals`);
+      console.log(`Retrieved ${records.length} HIGH and MEDIUM confidence BUY signals`);
 
       const signals = records.map((record: Record<SignalRecord>) => ({
         id: record.id,
