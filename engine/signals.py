@@ -7,7 +7,7 @@ import traceback
 if sys.stdout.encoding != 'utf-8':
     sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
     sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import asyncio
 from airtable import Airtable
 from dotenv import load_dotenv
@@ -239,6 +239,14 @@ class SignalGenerator:
                         else:
                             logger.info(f"Analysis object doesn't support keys() method")
                         continue
+                        
+                    # Check for existing signal before creating a new one
+                    existing_signal = self.check_existing_signal(token['token'], timeframe)
+                    if existing_signal:
+                        logger.info(f"Using existing {timeframe} signal for {token['token']} (ID: {existing_signal['id']})")
+                        signals_created += 1
+                        continue  # Skip to next timeframe
+                        
                     try:
                         result = create_airtable_signal(
                             analysis,
@@ -311,6 +319,36 @@ class SignalGenerator:
         except Exception as e:
             logger.error(f"Error fetching token snapshot: {e}")
             return []
+    
+    def check_existing_signal(self, token: str, timeframe: str) -> Optional[Dict]:
+        """
+        Check if a signal for the same token and timeframe exists in the last 6 hours
+        
+        Args:
+            token: Token symbol
+            timeframe: Signal timeframe (SCALP, INTRADAY, SWING, POSITION)
+            
+        Returns:
+            Existing signal record if found, None otherwise
+        """
+        try:
+            # Calculate timestamp for 6 hours ago
+            six_hours_ago = (datetime.now(timezone.utc) - timedelta(hours=6)).isoformat()
+            
+            # Query Airtable for existing signals
+            signals_table = Airtable(self.base_id, 'SIGNALS', self.api_key)
+            existing_signals = signals_table.get_all(
+                formula=f"AND({{token}}='{token}', {{timeframe}}='{timeframe}', {{createdAt}} > '{six_hours_ago}')"
+            )
+            
+            if existing_signals:
+                logger.info(f"Found existing {timeframe} signal for {token} created within the last 6 hours")
+                return existing_signals[0]
+            
+            return None
+        except Exception as e:
+            logger.error(f"Error checking for existing signals: {e}")
+            return None
             
     async def analyze_specific_token(self, token_symbol: str) -> Optional[Dict]:
         """
