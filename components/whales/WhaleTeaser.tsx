@@ -36,9 +36,9 @@ export function WhaleTeaser() {
           </div>
           
           <div className="bg-black/40 p-6 rounded-lg border border-gold/10">
-            <h4 className="font-bold mb-2 text-gold">Actionable Insights</h4>
+            <h4 className="font-bold mb-2 text-gold">AI Meta-Analysis</h4>
             <p className="text-gray-400 text-sm">
-              Get detailed explanations and key insights for each whale, with recommended actions.
+              Get comprehensive AI-generated insights that aggregate all whale data into actionable trading strategies.
             </p>
           </div>
         </div>

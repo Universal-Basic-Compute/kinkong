@@ -5,6 +5,7 @@ import { WhaleAnalysisTable } from '@/components/whales/WhaleAnalysisTable';
 import { WhaleMetricsCards } from '@/components/whales/WhaleMetricsCards';
 import { WhaleDistributionChart } from '@/components/whales/WhaleDistributionChart';
 import { WhaleOutlookChart } from '@/components/whales/WhaleOutlookChart';
+import { WhaleMetaAnalysis } from '@/components/whales/WhaleMetaAnalysis'; // Add this import
 import { TokenSelector } from '@/components/whales/TokenSelector';
 import { ProCheck } from '@/components/subscription/ProCheck';
 import { WhaleTeaser } from '@/components/whales/WhaleTeaser';
@@ -85,6 +86,13 @@ export default function WhalesPage() {
           </button>
         </div>
       </div>
+
+      {/* Add the WhaleMetaAnalysis component here */}
+      <WhaleMetaAnalysis 
+        token={selectedToken} 
+        timeframe={timeframe} 
+        isLoading={isLoading} 
+      />
 
       <WhaleMetricsCards data={whaleData} isLoading={isLoading} />
       
