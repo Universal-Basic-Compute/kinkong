@@ -178,7 +178,15 @@ class SignalGenerator:
                 # Also check that the expected return meets minimum targets based on timeframe
                 if signal_type and signal_type != 'HOLD' and confidence >= 60:
                     # Get expected return from analysis
-                    expected_return = analysis.get('expectedReturn', 0)
+                    if hasattr(analysis, 'get'):
+                        expected_return = analysis.get('expectedReturn', 0)
+                    elif hasattr(analysis, 'to_dict'):
+                        expected_return = analysis.to_dict().get('expectedReturn', 0)
+                    elif hasattr(analysis, 'risk_reward_ratio'):
+                        # Use risk_reward_ratio as a fallback for expectedReturn
+                        expected_return = getattr(analysis, 'risk_reward_ratio', 0) * 100 if getattr(analysis, 'risk_reward_ratio', 0) else 0
+                    else:
+                        expected_return = 0
                     
                     # Set minimum target based on timeframe
                     min_target = {
@@ -191,7 +199,12 @@ class SignalGenerator:
                     # Skip if expected return is below minimum target
                     if expected_return < min_target:
                         logger.info(f"Skipping {timeframe} signal for {token['token']} - expected return {expected_return:.2f}% below minimum target {min_target}%")
-                        logger.info(f"Analysis keys available: {list(analysis.keys())}")
+                        if hasattr(analysis, 'to_dict'):
+                            logger.info(f"Analysis keys available: {list(analysis.to_dict().keys())}")
+                        elif hasattr(analysis, '__dict__'):
+                            logger.info(f"Analysis keys available: {list(analysis.__dict__.keys())}")
+                        else:
+                            logger.info(f"Analysis object doesn't support keys() method")
                         continue
                     try:
                         result = create_airtable_signal(
