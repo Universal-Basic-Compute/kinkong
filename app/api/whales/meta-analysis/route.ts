@@ -154,6 +154,7 @@ export async function GET(request: NextRequest) {
     `;
     
     // Call Claude API for analysis
+    let responseText;
     try {
       const message = await anthropic.messages.create({
         model: "claude-3-opus-20240229",
@@ -166,7 +167,7 @@ export async function GET(request: NextRequest) {
       });
       
       // Extract JSON from Claude's response
-      const responseText = message.content[0].text;
+      responseText = message.content[0].text;
     } catch (error) {
       console.error('Error calling Claude API:', error);
       return NextResponse.json(
