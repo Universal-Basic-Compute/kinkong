@@ -13,9 +13,14 @@ if (!anthropicApiKey) {
   console.error('ANTHROPIC_API_KEY is not defined in environment variables');
 }
 
-const anthropic = new Anthropic({
-  apiKey: anthropicApiKey as string,
-});
+let anthropic;
+if (anthropicApiKey) {
+  anthropic = new Anthropic({
+    apiKey: anthropicApiKey,
+  });
+} else {
+  console.error('ANTHROPIC_API_KEY is not defined, Claude analysis will not be available');
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -156,6 +161,10 @@ export async function GET(request: NextRequest) {
     // Call Claude API for analysis
     let responseText;
     try {
+      if (!anthropic) {
+        throw new Error('Anthropic client is not initialized');
+      }
+      
       const message = await anthropic.messages.create({
         model: "claude-3-opus-20240229",
         max_tokens: 4000,
