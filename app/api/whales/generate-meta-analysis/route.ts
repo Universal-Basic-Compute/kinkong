@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Airtable from 'airtable';
-import { Configuration, OpenAIApi } from 'openai';
+import OpenAI from 'openai';
 
 // Initialize Airtable with proper type assertion
 const base = new Airtable({ 
   apiKey: process.env.KINKONG_AIRTABLE_API_KEY as string 
 }).base(process.env.KINKONG_AIRTABLE_BASE_ID as string);
 
-// Initialize OpenAI
-const configuration = new Configuration({
+// Initialize OpenAI with the new client
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY as string,
 });
-const openai = new OpenAIApi(configuration);
 
 export async function POST(request: NextRequest) {
   try {
@@ -152,7 +151,8 @@ Format your response as a JSON object with the following structure:
 Ensure your analysis is data-driven, balanced, and provides valuable insights for traders.
 `;
 
-    const completion = await openai.createChatCompletion({
+    // Use the new OpenAI client
+    const completion = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [
         { role: "system", content: "You are a cryptocurrency whale analysis expert." },
@@ -162,7 +162,7 @@ Ensure your analysis is data-driven, balanced, and provides valuable insights fo
       max_tokens: 1500
     });
 
-    const aiResponse = completion.data.choices[0].message?.content;
+    const aiResponse = completion.choices[0].message.content;
     
     if (!aiResponse) {
       throw new Error('Failed to generate AI analysis');
