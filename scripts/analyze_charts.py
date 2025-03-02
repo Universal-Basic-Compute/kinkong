@@ -325,11 +325,11 @@ def get_latest_token_snapshot(token):
     """Get latest token snapshot from Airtable"""
     try:
         snapshots_table = getTable('TOKEN_SNAPSHOTS')
-        records = snapshots_table.select(
-            filterByFormula=f"{{token}} = '{token}'",
-            sort=[{'field': 'createdAt', 'direction': 'desc'}],
+        records = snapshots_table.get_all(
+            formula=f"{{token}} = '{token}'",
+            sort=[("createdAt", "desc")],
             maxRecords=1
-        ).all()
+        )
         
         if records:
             return records[0]['fields']
