@@ -324,14 +324,22 @@ export const ChatProvider: React.FC<{ children: React.ReactNode; code: string | 
       // Get wallet address if connected
       const walletAddress = publicKey ? publicKey.toString() : undefined;
 
-      // Get streaming response with wallet address, mission, and screenshot if available
-      const response = await askKinKongCopilot(
-        input, 
-        code || 'default', 
-        walletAddress,
-        screenshot || undefined,
-        currentMission
-      );
+      // Create a timeout promise
+      const timeoutPromise = new Promise<string>((_, reject) => {
+        setTimeout(() => reject(new Error('Request timed out')), 60000); // 60 second timeout
+      });
+
+      // Race between the actual API call and the timeout
+      const response = await Promise.race([
+        askKinKongCopilot(
+          input, 
+          code || 'default', 
+          walletAddress,
+          screenshot || undefined,
+          currentMission
+        ),
+        timeoutPromise
+      ]);
     
       // Add assistant message
       const assistantMessage: Message = {
