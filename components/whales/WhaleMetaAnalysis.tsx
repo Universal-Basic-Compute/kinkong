@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { ArrowUpIcon, ArrowDownIcon, MinusIcon, ArrowPathIcon } from '@heroicons/react/24/solid';
-import { useWallet } from '@solana/wallet-adapter-react';
 
 interface WhaleMetaAnalysisProps {
   token: string;
@@ -12,10 +11,8 @@ interface WhaleMetaAnalysisProps {
 
 export function WhaleMetaAnalysis({ token, timeframe, isLoading }: WhaleMetaAnalysisProps) {
   const [metaAnalysis, setMetaAnalysis] = useState<any>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [isLoadingAnalysis, setIsLoadingAnalysis] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { publicKey } = useWallet();
 
   useEffect(() => {
     async function fetchMetaAnalysis() {
@@ -56,42 +53,6 @@ export function WhaleMetaAnalysis({ token, timeframe, isLoading }: WhaleMetaAnal
     }
   }, [token, timeframe, isLoading]);
 
-  const generateAnalysis = async () => {
-    if (!publicKey) {
-      alert('Please connect your wallet to generate analysis');
-      return;
-    }
-    
-    try {
-      setIsGenerating(true);
-      setError(null);
-      
-      const response = await fetch('/api/whales/generate-meta-analysis', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          token,
-          timeframe,
-          wallet: publicKey.toString()
-        })
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate analysis');
-      }
-      
-      const data = await response.json();
-      setMetaAnalysis(data);
-    } catch (error) {
-      console.error('Error generating analysis:', error);
-      setError(error instanceof Error ? error.message : 'Failed to generate analysis');
-    } finally {
-      setIsGenerating(false);
-    }
-  };
 
   if (isLoading || isLoadingAnalysis) {
     return (
@@ -117,21 +78,8 @@ export function WhaleMetaAnalysis({ token, timeframe, isLoading }: WhaleMetaAnal
           <h3 className="text-xl font-bold mb-4">No Whale Meta-Analysis Available</h3>
           <p className="text-gray-400 mb-6">
             There is no meta-analysis available for {token !== 'ALL' ? `$${token}` : 'all tokens'} in the {timeframe} timeframe.
+            Analysis is generated periodically by the system.
           </p>
-          <button
-            onClick={generateAnalysis}
-            disabled={isGenerating}
-            className="px-4 py-2 bg-gold/20 hover:bg-gold/30 border border-gold rounded-lg text-white font-medium transition-colors duration-200 flex items-center justify-center mx-auto"
-          >
-            {isGenerating ? (
-              <>
-                <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
-                Generating Analysis...
-              </>
-            ) : (
-              'Generate Analysis'
-            )}
-          </button>
           {error && (
             <p className="mt-4 text-red-400 text-sm">{error}</p>
           )}
@@ -190,14 +138,6 @@ export function WhaleMetaAnalysis({ token, timeframe, isLoading }: WhaleMetaAnal
             {new Date(metaAnalysis.lastUpdated || metaAnalysis.createdAt).toLocaleDateString()} 
             {new Date(metaAnalysis.lastUpdated || metaAnalysis.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
-          <button
-            onClick={generateAnalysis}
-            disabled={isGenerating}
-            className="p-1 text-gray-400 hover:text-gold"
-            title="Refresh Analysis"
-          >
-            <ArrowPathIcon className={`h-4 w-4 ${isGenerating ? 'animate-spin' : ''}`} />
-          </button>
         </div>
       </div>
       
