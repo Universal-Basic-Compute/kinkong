@@ -143,18 +143,8 @@ export const TokenTable = ({ showAllTokens = false }: TokenTableProps) => {
         }
         const data = await response.json();
         
-        // Filter out COMPUTE and UBC tokens if needed
-        const filteredTokens = showAllTokens ? data : data.filter((token: TokenBalance) => {
-          const metadata = tokenMetadata[token.mint];
-          return !(
-            metadata?.token === 'COMPUTE' || 
-            metadata?.token === 'UBC' ||
-            token.token === 'COMPUTE' ||
-            token.token === 'UBC'
-          );
-        });
-        
-        setTokens(filteredTokens);
+        // No longer filtering out COMPUTE and UBC tokens
+        setTokens(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load tokens');
       } finally {
@@ -163,7 +153,7 @@ export const TokenTable = ({ showAllTokens = false }: TokenTableProps) => {
     };
 
     fetchTokens();
-  }, [showAllTokens]);
+  }, [showAllTokens, tokenMetadata]);
 
   if (isLoading) {
     return <div className="text-center py-4">Loading portfolio...</div>;
