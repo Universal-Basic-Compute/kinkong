@@ -275,8 +275,13 @@ Format your response as a structured analysis with clear sections and actionable
             # Get LP positions
             lp_positions = self.get_lp_positions()
             if not lp_positions:
-                logger.warning("No active LP positions found")
-                return {"status": "error", "message": "No active LP positions found"}
+                logger.info("No active LP positions found - continuing with analysis anyway")
+                # Create an empty positions list instead of returning early
+                lp_positions = []
+                # Return a more informative status
+                status_message = "No active LP positions found, but analysis completed"
+            else:
+                status_message = f"Analyzed {len(lp_positions)} positions"
             
             # Take wallet snapshot
             wallet_snapshot = await self.take_wallet_snapshot()
@@ -298,8 +303,9 @@ Format your response as a structured analysis with clear sections and actionable
             # Save recommendation as THOUGHT
             thought = self.save_thought(recommendation)
             
-            # Update LP positions with pending status
-            self.update_lp_positions(lp_positions, recommendation)
+            # Update LP positions with pending status (only if we have positions)
+            if lp_positions:
+                self.update_lp_positions(lp_positions, recommendation)
             
             logger.info("LP position analysis and recommendation completed successfully")
             
@@ -307,7 +313,8 @@ Format your response as a structured analysis with clear sections and actionable
                 "status": "success",
                 "positions_analyzed": len(lp_positions),
                 "recommendation": recommendation[:500] + "...",  # Truncated for logging
-                "thought_id": thought['id'] if thought else None
+                "thought_id": thought['id'] if thought else None,
+                "message": status_message
             }
         except Exception as e:
             logger.error(f"Error in LP position analysis: {e}")
@@ -325,7 +332,7 @@ async def main():
         # Log result
         if result["status"] == "success":
             logger.info(f"LP position analysis completed successfully")
-            logger.info(f"Analyzed {result['positions_analyzed']} positions")
+            logger.info(result["message"])  # Use the message from the result
             logger.info(f"Recommendation preview: {result['recommendation']}")
             logger.info(f"Thought ID: {result['thought_id']}")
         else:
