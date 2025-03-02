@@ -6,13 +6,13 @@ import { AllocationChart } from '@/components/dashboard/AllocationChart';
 import { TokenTable } from '@/components/tables/TokenTable';
 
 const STRATEGY_INFO = {
-  performance: `Historical portfolio performance tracking:
-• Daily value snapshots
-• Realized & unrealized gains
-• Risk-adjusted returns
-• Drawdown analysis
-• Position-level P&L tracking
-• Volume-weighted performance metrics`,
+  performance: `KinKong's Assets Under Management:
+• Total value of all managed assets
+• Includes token holdings and LP positions
+• Historical value tracking
+• Automated daily snapshots
+• Transparent value reporting
+• Real-time portfolio valuation`,
   allocation: `KinKong's allocation strategy:
 • Dynamic position sizing based on market conditions
 • Risk-weighted exposure across AI tokens
