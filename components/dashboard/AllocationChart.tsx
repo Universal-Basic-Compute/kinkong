@@ -1,14 +1,17 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { formatCurrency } from '@/utils/formatters';
 
 interface TokenBalance {
   mint: string;
   amount: number;
-  decimals: number;
+  decimals?: number;
   uiAmount: number;
   token?: string;
   usdValue?: number;
+  isLpPosition?: boolean;
+  lpDetails?: any;
 }
 
 const TOKEN_METADATA: Record<string, { name: string; token: string }> = {
@@ -73,6 +76,18 @@ export function AllocationChart() {
   const chartData = tokens
     .filter(token => token.usdValue && token.usdValue > 0)
     .map(token => {
+      // For LP positions, use the token name directly
+      if (token.isLpPosition) {
+        return {
+          name: token.token.replace('LP: ', 'LP '),
+          fullName: token.token,
+          value: token.usdValue || 0,
+          percentage: ((token.usdValue || 0) / totalValue * 100).toFixed(1),
+          isLpPosition: true
+        };
+      }
+      
+      // For regular tokens
       const metadata = TOKEN_METADATA[token.mint] || {
         name: token.token || token.mint.slice(0, 4),
         token: token.token || token.mint.slice(0, 4)
@@ -82,7 +97,8 @@ export function AllocationChart() {
         name: metadata.token,
         fullName: metadata.name,
         value: token.usdValue || 0,
-        percentage: ((token.usdValue || 0) / totalValue * 100).toFixed(1)
+        percentage: ((token.usdValue || 0) / totalValue * 100).toFixed(1),
+        isLpPosition: false
       };
     })
     .sort((a, b) => b.value - a.value);
@@ -111,9 +127,7 @@ export function AllocationChart() {
           </Pie>
           <Tooltip 
             formatter={(value: number, name: string, props: any) => [
-              `$${value.toLocaleString(undefined, {
-                maximumFractionDigits: 2
-              })}`,
+              formatCurrency(value),
               props.payload.fullName
             ]}
           />

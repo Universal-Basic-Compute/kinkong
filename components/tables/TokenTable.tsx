@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { formatCurrency, formatPercentage } from '@/utils/formatters';
 
 const TokenLetterCircle = ({ token }: { token: string }) => {
   const letter = (token || '?').charAt(0).toUpperCase();
@@ -20,10 +21,12 @@ interface TokenMetadata {
 interface TokenBalance {
   mint: string;
   amount: number;
-  decimals: number;
+  decimals?: number;
   uiAmount: number;
   token?: string;
   usdValue?: number;
+  isLpPosition?: boolean;
+  lpDetails?: any;
 }
 
 const TOKEN_METADATA: Record<string, TokenMetadata> = {
@@ -163,6 +166,36 @@ export const TokenTable = ({ showAllTokens = false }: TokenTableProps) => {
               token: token.token || token.mint.slice(0, 4),
             };
 
+            // Special handling for LP positions
+            if (token.isLpPosition) {
+              return (
+                <tr key={token.mint} className="border-t border-gold/10 bg-gold/5">
+                  <td className="px-4 py-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-purple-500/30 flex items-center justify-center text-purple-300 font-semibold">
+                        LP
+                      </div>
+                      <div>
+                        <div className="text-purple-300 font-medium">
+                          {token.token}
+                        </div>
+                        <div className="text-xs text-gray-400">Liquidity Position</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="text-right px-4 py-2 text-gray-300">
+                    1 Position
+                  </td>
+                  <td className="text-right px-4 py-2 text-gray-300">
+                    {formatCurrency(token.usdValue || 0)}
+                  </td>
+                  <td className="text-right px-4 py-2 text-gray-300">
+                    {((token.usdValue || 0) / totalValue * 100).toFixed(1)}%
+                  </td>
+                </tr>
+              );
+            }
+            
             return (
               <tr key={token.mint} className="border-t border-gold/10">
                 <td className="px-4 py-2">
@@ -205,10 +238,7 @@ export const TokenTable = ({ showAllTokens = false }: TokenTableProps) => {
                 </td>
                 <td className="text-right px-4 py-2 text-gray-300">
                   {usdValue > 0 ? (
-                    `$${usdValue.toLocaleString('en-US', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2
-                    })}`
+                    formatCurrency(usdValue)
                   ) : (
                     <span className="text-yellow-500">$0.00 (no price data)</span>
                   )}
