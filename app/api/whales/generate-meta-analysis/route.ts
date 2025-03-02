@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Airtable from 'airtable';
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 
 // Initialize Airtable with proper type assertion
 const base = new Airtable({ 
   apiKey: process.env.KINKONG_AIRTABLE_API_KEY as string 
 }).base(process.env.KINKONG_AIRTABLE_BASE_ID as string);
 
-// Initialize OpenAI with the new client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY as string,
+// Initialize Anthropic client
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY as string,
 });
 
 export async function POST(request: NextRequest) {
@@ -151,18 +151,18 @@ Format your response as a JSON object with the following structure:
 Ensure your analysis is data-driven, balanced, and provides valuable insights for traders.
 `;
 
-    // Use the new OpenAI client
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        { role: "system", content: "You are a cryptocurrency whale analysis expert." },
-        { role: "user", content: prompt }
-      ],
+    // Use Claude API for analysis
+    const message = await anthropic.messages.create({
+      model: "claude-3-7-sonnet-20250219",
+      max_tokens: 4000,
       temperature: 0.7,
-      max_tokens: 1500
+      system: "You are a cryptocurrency whale analysis expert.",
+      messages: [
+        { role: "user", content: prompt }
+      ]
     });
 
-    const aiResponse = completion.choices[0].message.content;
+    const aiResponse = message.content[0].text;
     
     if (!aiResponse) {
       throw new Error('Failed to generate AI analysis');
