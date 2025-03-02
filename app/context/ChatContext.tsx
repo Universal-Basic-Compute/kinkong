@@ -226,20 +226,23 @@ export const ChatProvider: React.FC<{ children: React.ReactNode; code: string | 
 
   async function checkSubscription() {
     if (!code) {
-      // Even without a code, set a default active subscription
-      setSubscription({ active: true });
+      // Without a code, set subscription to inactive
+      setSubscription({ active: false });
       return;
     }
 
     try {
-      // Get the actual subscription status but don't use it to block access
+      // Get the actual subscription status
       const result = await verifySubscription(code);
-      // Override the active status to always be true
-      setSubscription({ ...result, active: true });
+      // Use the actual result without overriding
+      setSubscription(result);
+      
+      // Log the subscription status for debugging
+      console.log('Subscription status:', result);
     } catch (err) {
       console.error('Error checking subscription:', err);
-      // Even on error, set a default active subscription
-      setSubscription({ active: true });
+      // On error, set subscription to inactive
+      setSubscription({ active: false });
     }
   }
 
