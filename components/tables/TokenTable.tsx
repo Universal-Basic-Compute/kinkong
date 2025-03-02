@@ -114,8 +114,8 @@ export const TokenTable = ({ showAllTokens = false }: TokenTableProps) => {
         }
         const data = await response.json();
         
-        // Filter out COMPUTE and UBC tokens
-        const filteredTokens = data.filter(token => {
+        // Filter out COMPUTE and UBC tokens if needed
+        const filteredTokens = showAllTokens ? data : data.filter((token: TokenBalance) => {
           const metadata = TOKEN_METADATA[token.mint];
           return !(
             metadata?.token === 'COMPUTE' || 
@@ -158,18 +158,14 @@ export const TokenTable = ({ showAllTokens = false }: TokenTableProps) => {
           </tr>
         </thead>
         <tbody>
-          {tokens.map(token => {
+          {tokens.map((token, index) => {
             const usdValue = token.usdValue || 0;
             const percentage = totalValue > 0 ? (usdValue / totalValue * 100) : 0;
-            const metadata = TOKEN_METADATA[token.mint] || {
-              name: token.token || token.mint.slice(0, 4),
-              token: token.token || token.mint.slice(0, 4),
-            };
-
+            
             // Special handling for LP positions
             if (token.isLpPosition) {
               return (
-                <tr key={token.mint} className="border-t border-gold/10 bg-gold/5">
+                <tr key={`lp-${index}`} className="border-t border-gold/10 bg-gold/5">
                   <td className="px-4 py-2">
                     <div className="flex items-center gap-2">
                       <div className="w-6 h-6 rounded-full bg-purple-500/30 flex items-center justify-center text-purple-300 font-semibold">
@@ -179,7 +175,11 @@ export const TokenTable = ({ showAllTokens = false }: TokenTableProps) => {
                         <div className="text-purple-300 font-medium">
                           {token.token}
                         </div>
-                        <div className="text-xs text-gray-400">Liquidity Position</div>
+                        {token.lpDetails && (
+                          <div className="text-xs text-gray-400">
+                            {token.lpDetails.amount0.toFixed(2)} {token.lpDetails.token0} + {token.lpDetails.amount1.toFixed(2)} {token.lpDetails.token1}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </td>
@@ -187,14 +187,22 @@ export const TokenTable = ({ showAllTokens = false }: TokenTableProps) => {
                     1 Position
                   </td>
                   <td className="text-right px-4 py-2 text-gray-300">
-                    {formatCurrency(token.usdValue || 0)}
+                    {formatCurrency(usdValue)}
                   </td>
                   <td className="text-right px-4 py-2 text-gray-300">
-                    {((token.usdValue || 0) / totalValue * 100).toFixed(1)}%
+                    {percentage.toFixed(1)}%
                   </td>
                 </tr>
               );
             }
+            
+            // Regular token handling
+            const metadata = TOKEN_METADATA[token.mint] || {
+              name: token.token || token.mint.slice(0, 4),
+              token: token.token || token.mint.slice(0, 4),
+            };
+            
+            const displayAmount = token.uiAmount !== undefined ? token.uiAmount : token.amount;
             
             return (
               <tr key={token.mint} className="border-t border-gold/10">
@@ -231,9 +239,9 @@ export const TokenTable = ({ showAllTokens = false }: TokenTableProps) => {
                   </a>
                 </td>
                 <td className="text-right px-4 py-2 text-gray-300">
-                  {Number(token.uiAmount).toLocaleString('en-US', {
-                    minimumFractionDigits: token.uiAmount > 0 && token.uiAmount < 1 ? 4 : 0,
-                    maximumFractionDigits: token.uiAmount > 0 && token.uiAmount < 1 ? 4 : 0
+                  {Number(displayAmount).toLocaleString('en-US', {
+                    minimumFractionDigits: displayAmount > 0 && displayAmount < 1 ? 4 : 0,
+                    maximumFractionDigits: displayAmount > 0 && displayAmount < 1 ? 4 : 0
                   })}
                 </td>
                 <td className="text-right px-4 py-2 text-gray-300">

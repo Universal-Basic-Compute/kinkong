@@ -29,11 +29,13 @@ const TOKEN_METADATA: Record<string, { name: string; token: string }> = {
   },
   'B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo': {
     name: 'Compute',
-    token: 'COMPUTE'
+    token: 'COMPUTE',
+    image: 'https://dd.dexscreener.com/ds-data/tokens/solana/compute.png'
   },
   '9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump': {
     name: 'UBC',
-    token: 'UBC'
+    token: 'UBC',
+    image: 'https://dd.dexscreener.com/ds-data/tokens/solana/ubc.png'
   }
 };
 

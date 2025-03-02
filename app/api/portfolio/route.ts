@@ -1,174 +1,25 @@
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-import { Connection, PublicKey } from '@solana/web3.js';
-import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { NextResponse } from 'next/server';
 import { getTable } from '@/backend/src/airtable/tables';
-import type { Record, FieldSet } from 'airtable';
-
-// Global price cache to avoid duplicate API calls
-let priceMap: { [key: string]: number } = {};
-
-// Define interfaces for our record types
-interface TokenMetadata {
-  name: string;
-  token: string;
-  image: string;
-  mint: string;
-}
 
 interface TokenBalance {
-  mint: string;
-  amount: number;
-  decimals: number;
-  uiAmount: number;
-  token?: string;
-  usdValue?: number;
-  price?: number;
-  name?: string;
-  imageUrl?: string;
-  percentage?: number;
-}
-
-const KNOWN_TOKENS = {
-  USDC: {
-    mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-    price: 1.00
-  },
-  USDT: {
-    mint: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", 
-    price: 1.00
-  }
-};
-
-async function getTokenSymbol(mint: string, tokensMetadata: any): Promise<string> {
-  // Check known tokens first
-  const knownToken = Object.entries(KNOWN_TOKENS).find(([_, data]) => data.mint === mint);
-  if (knownToken) {
-    return knownToken[0]; // Return the symbol (key) of the known token
-  }
-
-  // Check our metadata
-  if (tokensMetadata[mint]) {
-    return tokensMetadata[mint].token || 'Unknown';
-  }
-
-  // If we still don't have a symbol, try to get it from our TOKENS table
-  try {
-    const tokensTable = getTable('TOKENS');
-    const records = await tokensTable.select({
-      filterByFormula: `{mint}='${mint}'`
-    }).firstPage();
-
-    if (records && records.length > 0) {
-      const token = records[0].get('token');
-      if (token) {
-        console.log(`Found token symbol for ${mint} in TOKENS table: ${token}`);
-        return token;
-      }
-    }
-  } catch (e) {
-    console.error(`Error fetching token symbol for mint ${mint}:`, e);
-  }
-
-  console.log(`Could not find token symbol for mint ${mint}, using 'Unknown'`);
-  return 'Unknown';
-}
-
-interface TokenFields extends FieldSet {
-  name: string;
   token: string;
-  image: string;
-  mint: string;
-}
-
-async function getTokensMetadata() {
-  try {
-    const tokensTable = getTable('TOKENS');
-    const records = await tokensTable.select().all();
-    
-    return records.reduce((acc, record: Record<TokenFields>) => {
-      const fields = record.fields;
-      acc[fields.mint] = {
-        name: fields.name || fields.token,
-        token: fields.token,
-        image: fields.image,
-        mint: fields.mint
-      };
-      return acc;
-    }, {} as { [key: string]: TokenMetadata });
-  } catch (error) {
-    console.error('Failed to fetch tokens metadata:', error);
-    return {};
-  }
-}
-
-async function getTokenPrice(mint: string): Promise<number> {
-  console.log(`Getting price for token ${mint}`);
-  
-  // Check cache first
-  if (priceMap[mint] && priceMap[mint] > 0) {
-    console.log(`Using cached price for ${mint}: ${priceMap[mint]}`);
-    return priceMap[mint];
-  }
-  
-  // Try known tokens first (fastest)
-  const knownToken = Object.values(KNOWN_TOKENS).find(t => t.mint === mint);
-  if (knownToken) {
-    console.log(`Using known token price for ${mint}: ${knownToken.price}`);
-    priceMap[mint] = knownToken.price;
-    return knownToken.price;
-  }
-  
-  // Use DexScreener API
-  try {
-    console.log(`Fetching DexScreener price for ${mint}`);
-    const response = await fetch(`${DEXSCREENER_API}/${mint}`);
-    if (response.ok) {
-      const data = await response.json();
-      console.log(`DexScreener response for ${mint}:`, data);
-      
-      if (data.pairs && data.pairs.length > 0) {
-        // Use the first pair with USDC or USDT as quote token
-        const usdPair = data.pairs.find(p => 
-          p.quoteToken?.symbol === 'USDC' || 
-          p.quoteToken?.symbol === 'USDT'
-        );
-        
-        if (usdPair && usdPair.priceUsd) {
-          const price = parseFloat(usdPair.priceUsd);
-          console.log(`Using DexScreener price for ${mint}: ${price}`);
-          priceMap[mint] = price;
-          return price;
-        } else {
-          console.log(`No USD pair found in DexScreener data for ${mint}`);
-        }
-      } else {
-        console.log(`No pairs found in DexScreener data for ${mint}`);
-      }
-    } else {
-      console.log(`DexScreener API returned status ${response.status} for ${mint}`);
-    }
-  } catch (error) {
-    console.error(`DexScreener price fetch failed for ${mint}:`, error);
-  }
-  
-  console.log(`No price found for ${mint} from any source`);
-  return 0;
-}
-
-
-const TREASURY_WALLET = new PublicKey('FnWyN4t1aoZWFjEEBxopMaAgk5hjL5P3K65oc2T9FBJY');
-const DEXSCREENER_API = 'https://api.dexscreener.com/latest/dex/tokens';
-
-interface TokenBalance {
   mint: string;
   amount: number;
-  decimals: number;
-  uiAmount: number;
-  token?: string;
-  usdValue?: number;
+  price: number;
+  value: number;
+  isLpPosition?: boolean;
+  lpDetails?: {
+    name: string;
+    token0: string;
+    token1: string;
+    amount0: number;
+    amount1: number;
+    valueUSD: number;
+    notes?: string;
+  };
 }
 
 export async function GET() {
@@ -181,164 +32,110 @@ export async function GET() {
   };
   
   try {
-    if (!process.env.NEXT_PUBLIC_HELIUS_RPC_URL) {
-      throw new Error('RPC URL not configured');
+    // Get the most recent wallet snapshot
+    const snapshotsTable = getTable('WALLET_SNAPSHOTS');
+    
+    console.log('Fetching latest wallet snapshot...');
+    const snapshots = await snapshotsTable
+      .select({
+        sort: [{ field: 'createdAt', direction: 'desc' }],
+        maxRecords: 1
+      })
+      .firstPage();
+    
+    if (snapshots.length === 0) {
+      return NextResponse.json(
+        { error: 'No wallet snapshots found' },
+        { status: 404, headers }
+      );
     }
-
-    console.log('Creating RPC connection...');
-    const connection = new Connection(process.env.NEXT_PUBLIC_HELIUS_RPC_URL, {
-      commitment: 'confirmed',
-      confirmTransactionInitialTimeout: 60000
-    });
-
-    console.log('Fetching token accounts...');
-    const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
-      TREASURY_WALLET,
-      { programId: TOKEN_PROGRAM_ID }
-    );
-
-    console.log(`Found ${tokenAccounts.value.length} token accounts`);
-
-    // Format balances
-    const balances: TokenBalance[] = tokenAccounts.value.map((account: any) => {
-      const parsedInfo = account.account.data.parsed.info;
-      return {
-        mint: parsedInfo.mint,
-        amount: parsedInfo.tokenAmount.amount,
-        decimals: parsedInfo.tokenAmount.decimals,
-        uiAmount: parsedInfo.tokenAmount.uiAmount,
-        token: parsedInfo.token || undefined
-      };
-    });
-
-    // Filter non-zero balances
-    const nonZeroBalances = balances.filter(b => b.uiAmount > 0);
-    const mints = nonZeroBalances.map(b => b.mint);
-
-    // Get latest snapshots from TOKEN_SNAPSHOTS
-    const snapshotsTable = getTable('TOKEN_SNAPSHOTS');
-    console.log('Fetching token snapshots...');
-
-    // First, get all active tokens from the TOKENS table
+    
+    const snapshot = snapshots[0];
+    const holdingsJson = snapshot.get('holdings');
+    
+    // Parse holdings JSON
+    let holdings: TokenBalance[] = [];
+    try {
+      holdings = JSON.parse(holdingsJson || '[]');
+      console.log(`Parsed ${holdings.length} holdings from snapshot`);
+    } catch (e) {
+      console.error('Failed to parse holdings JSON:', e);
+      return NextResponse.json(
+        { error: 'Failed to parse holdings data' },
+        { status: 500, headers }
+      );
+    }
+    
+    // Get token metadata from TOKENS table to fill in missing symbols
     const tokensTable = getTable('TOKENS');
-    const tokenRecords = await tokensTable.select({
-      filterByFormula: '{isActive}=1'
-    }).all();
-
-    const activeTokens = tokenRecords.map(record => ({
-      mint: record.get('mint') as string,
-      token: record.get('token') as string
-    }));
-
-    console.log(`Found ${activeTokens.length} active tokens`);
-
-    // Create a map of mint addresses to token symbols
-    const mintToTokenMap = activeTokens.reduce((acc, token) => {
-      acc[token.mint] = token.token;
-      return acc;
-    }, {} as { [key: string]: string });
-
-    // For each active token, get the latest snapshot
-    const priceMap: { [key: string]: number } = {};
-    for (const token of activeTokens) {
-      try {
-        console.log(`Fetching latest snapshot for ${token.token} (${token.mint})`);
-        const snapshots = await snapshotsTable.select({
-          filterByFormula: `{token}='${token.token}'`,
-          sort: [{ field: 'createdAt', direction: 'desc' }],
-          maxRecords: 1
-        }).all();
-        
-        if (snapshots.length > 0) {
-          // Log the available fields to help debug
-          console.log(`Snapshot fields for ${token.token}:`, Object.keys(snapshots[0].fields));
-          
-          const price = snapshots[0].get('price');
-          if (price) {
-            priceMap[token.mint] = price;
-            console.log(`Found price for ${token.token} (${token.mint}): $${price}`);
-          } else {
-            // Try alternative field names if 'price' doesn't work
-            const priceField = snapshots[0].get('tokenPrice') || snapshots[0].get('value');
-            if (priceField) {
-              priceMap[token.mint] = priceField;
-              console.log(`Found price in alternative field for ${token.token}: $${priceField}`);
-            } else {
-              console.log(`No price found in snapshot for ${token.token} (${token.mint})`);
-            }
-          }
-        } else {
-          console.log(`No snapshots found for ${token.token} (${token.mint})`);
-        }
-      } catch (error) {
-        console.error(`Error fetching price for ${token.token}:`, error);
+    const tokenRecords = await tokensTable.select().all();
+    
+    // Create a map of mint address to token symbol
+    const mintToSymbol: {[key: string]: string} = {};
+    tokenRecords.forEach(record => {
+      const mint = record.get('mint');
+      const symbol = record.get('token');
+      if (mint && symbol) {
+        mintToSymbol[mint] = symbol;
       }
-    }
-
-    console.log(`Loaded prices for ${Object.keys(priceMap).length} tokens`);
-
-    // Fetch tokens metadata
-    const tokensMetadata = await getTokensMetadata();
-    console.log('Tokens metadata loaded:', Object.keys(tokensMetadata).length, 'tokens');
-
-    // Add USD values and metadata
-    const balancesWithUSD = await Promise.all(nonZeroBalances.map(async (balance: TokenBalance) => {
-      // Add debug logging
-      console.log('Processing token:', {
-        mint: balance.mint,
-        token: balance.token || mintToTokenMap[balance.mint] || 'Unknown',
-        uiAmount: balance.uiAmount
-      });
-
-      // Get price from our comprehensive price function
-      const price = await getTokenPrice(balance.mint);
+    });
+    
+    // Process holdings to create portfolio data
+    const balances = holdings.map(holding => {
+      // For LP positions, use the token name as is (it's already formatted as "LP: token0/token1")
+      if (holding.isLpPosition) {
+        return {
+          token: holding.token,
+          mint: holding.mint || 'LP_POSITION',
+          amount: holding.amount,
+          price: holding.price,
+          usdValue: holding.value,
+          isLpPosition: true,
+          lpDetails: holding.lpDetails
+        };
+      }
       
-      // Calculate USD value using uiAmount (which is already adjusted for decimals)
-      const usdValue = balance.uiAmount * price;
-      console.log(`Calculated USD value for ${balance.mint}: ${usdValue} (${balance.uiAmount} * ${price})`);
+      // For regular tokens, look up the symbol if it's "Unknown"
+      let tokenSymbol = holding.token;
+      if (tokenSymbol === 'Unknown' && mintToSymbol[holding.mint]) {
+        tokenSymbol = mintToSymbol[holding.mint];
+        console.log(`Found symbol for mint ${holding.mint}: ${tokenSymbol}`);
+      }
       
-      // Get token symbol and metadata
-      const tokenSymbol = await getTokenSymbol(balance.mint, tokensMetadata);
-      const metadata = tokensMetadata[balance.mint] || {
-        name: tokenSymbol,
-        token: tokenSymbol,
-        image: '',
-        mint: balance.mint
-      };
-
       return {
-        ...balance,
-        usdValue,
-        price,
-        name: metadata.name,
         token: tokenSymbol,
-        imageUrl: metadata.image,
-        mint: balance.mint
+        mint: holding.mint,
+        amount: holding.amount,
+        price: holding.price,
+        usdValue: holding.value,
+        decimals: 0, // Default value
+        uiAmount: holding.amount // For compatibility with existing components
       };
-    }));
-
-    // Calculate total portfolio value
-    const totalValue = balancesWithUSD.reduce((sum, b) => sum + (b.usdValue || 0), 0);
-
+    });
+    
+    // Calculate total value
+    const totalValue = balances.reduce((sum, balance) => sum + (balance.usdValue || 0), 0);
+    
     // Add portfolio percentages
-    const balancesWithPercentages = balancesWithUSD.map(balance => ({
+    const balancesWithPercentages = balances.map(balance => ({
       ...balance,
       percentage: totalValue > 0 ? ((balance.usdValue || 0) / totalValue) * 100 : 0
     }));
-
+    
     console.log('Portfolio Summary:', {
       totalValue,
       balances: balancesWithPercentages.map(b => ({
         token: b.token,
-        amount: b.uiAmount,
+        amount: b.amount,
         price: b.price,
         usdValue: b.usdValue,
-        percentage: b.percentage
+        percentage: b.percentage,
+        isLpPosition: b.isLpPosition || false
       }))
     });
-
+    
     return NextResponse.json(balancesWithPercentages, { headers });
-
+    
   } catch (error) {
     console.error('Failed to fetch portfolio:', error);
     return NextResponse.json(
