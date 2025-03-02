@@ -145,7 +145,7 @@ export const TokenTable = ({ showAllTokens = false }: TokenTableProps) => {
         
         // Filter out COMPUTE and UBC tokens if needed
         const filteredTokens = showAllTokens ? data : data.filter((token: TokenBalance) => {
-          const metadata = TOKEN_METADATA[token.mint];
+          const metadata = tokenMetadata[token.mint];
           return !(
             metadata?.token === 'COMPUTE' || 
             metadata?.token === 'UBC' ||
