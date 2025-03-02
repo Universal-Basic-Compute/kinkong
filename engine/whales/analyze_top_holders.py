@@ -171,7 +171,7 @@ async def analyze_with_claude(wallet_address, transactions, token_name):
 
 async def analyze_top_holders():
     """Main function to analyze top holders for UBC and COMPUTE tokens"""
-    load_dotenv()
+    load_dotenv(dotenv_path=os.path.join(project_root, '.env'))
     
     # Initialize Airtable
     base_id = os.getenv("KINKONG_AIRTABLE_BASE_ID")
@@ -245,6 +245,9 @@ async def analyze_top_holders():
 
 def main():
     try:
+        # Load environment variables from project root
+        load_dotenv(dotenv_path=os.path.join(project_root, '.env'))
+        
         # Verify environment variables
         required_vars = [
             "KINKONG_AIRTABLE_BASE_ID",
