@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Airtable from 'airtable';
 
-// Initialize Airtable
-const base = new Airtable({ apiKey: process.env.KINKONG_AIRTABLE_API_KEY }).base(
-  process.env.KINKONG_AIRTABLE_BASE_ID as string
-);
+// Initialize Airtable with proper type assertion
+const base = new Airtable({ 
+  apiKey: process.env.KINKONG_AIRTABLE_API_KEY as string 
+}).base(process.env.KINKONG_AIRTABLE_BASE_ID as string);
 
 export async function GET(request: NextRequest) {
   try {
@@ -39,7 +39,9 @@ export async function GET(request: NextRequest) {
     }
     
     // Fetch data from WHALE_ANALYSIS table
-    const records = await base('WHALE_ANALYSIS')
+    // Fix the base usage to use table() method
+    const whaleAnalysisTable = base.table('WHALE_ANALYSIS');
+    const records = await whaleAnalysisTable
       .select({
         filterByFormula: filterFormula,
         sort: [{ field: 'createdAt', direction: 'desc' }]
