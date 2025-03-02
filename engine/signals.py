@@ -79,10 +79,7 @@ class SignalGenerator:
             records = self.tokens_table.get_all(
                 formula="AND(" +
                     "{isActive}=1, " +
-                    "NOT({mint}=''), " +
-                    "NOT({token}='UBC'), " +
-                    "NOT({token}='COMPUTE'), " +
-                    "NOT({token}='USDT')" +
+                    "NOT({mint}='')" +  # Only exclude empty mint addresses
                 ")"
             )
             
