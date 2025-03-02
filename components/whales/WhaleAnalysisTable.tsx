@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 
 interface WhaleAnalysisTableProps {
@@ -185,8 +185,8 @@ export function WhaleAnalysisTable({ data, isLoading }: WhaleAnalysisTableProps)
           <tbody className="divide-y divide-gray-700">
             {paginatedData.length > 0 ? (
               paginatedData.map((item) => (
-                <>
-                  <tr key={item.id} className="hover:bg-black/40">
+                <React.Fragment key={item.id}>
+                  <tr className="hover:bg-black/40">
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-300">
                       {new Date(item.createdAt).toLocaleDateString()}
                     </td>
@@ -278,7 +278,7 @@ export function WhaleAnalysisTable({ data, isLoading }: WhaleAnalysisTableProps)
                       </td>
                     </tr>
                   )}
-                </>
+                </React.Fragment>
               ))
             ) : (
               <tr>

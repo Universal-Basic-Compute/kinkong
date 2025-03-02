@@ -7,8 +7,14 @@ const base = new Airtable({
   apiKey: process.env.KINKONG_AIRTABLE_API_KEY as string 
 }).base(process.env.KINKONG_AIRTABLE_BASE_ID as string);
 
+// Check if Anthropic API key exists
+const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
+if (!anthropicApiKey) {
+  console.error('ANTHROPIC_API_KEY is not defined in environment variables');
+}
+
 const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY as string,
+  apiKey: anthropicApiKey as string,
 });
 
 export async function GET(request: NextRequest) {
@@ -148,17 +154,28 @@ export async function GET(request: NextRequest) {
     `;
     
     // Call Claude API for analysis
-    const message = await anthropic.messages.create({
-      model: "claude-3-opus-20240229",
-      max_tokens: 4000,
-      temperature: 0.2,
-      system: "You are a cryptocurrency analyst specializing in whale behavior analysis. Provide concise, data-driven insights.",
-      messages: [
-        { role: "user", content: prompt }
-      ]
-    });
+    try {
+      const message = await anthropic.messages.create({
+        model: "claude-3-opus-20240229",
+        max_tokens: 4000,
+        temperature: 0.2,
+        system: "You are a cryptocurrency analyst specializing in whale behavior analysis. Provide concise, data-driven insights.",
+        messages: [
+          { role: "user", content: prompt }
+        ]
+      });
+      
+      // Extract JSON from Claude's response
+      const responseText = message.content[0].text;
+    } catch (error) {
+      console.error('Error calling Claude API:', error);
+      return NextResponse.json(
+        { error: 'Failed to generate analysis with Claude' },
+        { status: 500 }
+      );
+    }
     
-    // Extract JSON from Claude's response
+    // If we get here, we have a valid response
     const responseText = message.content[0].text;
     
     // Find JSON in the response
