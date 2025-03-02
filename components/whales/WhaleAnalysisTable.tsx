@@ -9,7 +9,7 @@ interface WhaleAnalysisTableProps {
 }
 
 export function WhaleAnalysisTable({ data, isLoading }: WhaleAnalysisTableProps) {
-  const [sortField, setSortField] = useState('createdAt');
+  const [sortField, setSortField] = useState('holdingAmount');
   const [sortDirection, setSortDirection] = useState('desc');
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const [page, setPage] = useState(1);
