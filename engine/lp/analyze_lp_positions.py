@@ -257,7 +257,7 @@ Format your response as a structured analysis with clear sections and actionable
                 update_data = {
                     'status': 'PENDING',
                     'lastRecommendation': recommendation[:100000],  # Truncate if too long
-                    'lastUpdated': datetime.now(timezone.utc).isoformat()
+                    'updatedAt': datetime.now(timezone.utc).isoformat()
                 }
                 
                 self.lp_positions_table.update(position['id'], update_data)
