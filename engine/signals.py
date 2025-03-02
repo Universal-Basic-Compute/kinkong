@@ -75,6 +75,7 @@ class SignalGenerator:
     async def get_active_tokens(self) -> List[Dict]:
         """Get list of active tokens excluding specific ones"""
         try:
+            # Using get_all with formula instead of select
             records = self.tokens_table.get_all(
                 formula="AND(" +
                     "{isActive}=1, " +
@@ -251,6 +252,19 @@ class SignalGenerator:
         except Exception as e:
             logger.error(f"Error in signal generation process: {e}")
             raise
+            
+    def get_token_snapshots(self, token_mint: str) -> List[Dict]:
+        """Get token snapshots for a specific token mint"""
+        try:
+            # Using get_all with formula instead of select
+            records = self.snapshots_table.get_all(
+                formula=f"{{mint}}='{token_mint}'",
+                sort=[("timestamp", "desc")]
+            )
+            return [record['fields'] for record in records]
+        except Exception as e:
+            logger.error(f"Error fetching token snapshot: {e}")
+            return []
             
     async def analyze_specific_token(self, token_symbol: str) -> Optional[Dict]:
         """
