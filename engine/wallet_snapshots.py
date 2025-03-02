@@ -4,6 +4,7 @@ from datetime import datetime, timezone, timedelta
 import requests
 from airtable import Airtable
 from dotenv import load_dotenv
+from typing import List, Dict, Any, Optional
 
 # Load environment variables from .env file
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env'))
@@ -557,6 +558,57 @@ class WalletSnapshotTaker:
             print(f"❌ Error calculating total invested amount: {str(e)}")
             return 0
 
+    def get_lp_positions(self) -> List[Dict[str, Any]]:
+        """
+        Fetch LP positions from the LP_POSITIONS table in Airtable
+        Returns a list of active LP positions with non-zero values
+        """
+        try:
+            print("Fetching LP positions from Airtable...")
+            
+            # Initialize Airtable connection to LP_POSITIONS table
+            lp_positions_table = Airtable(
+                os.getenv('KINKONG_AIRTABLE_BASE_ID'),
+                'LP_POSITIONS',
+                os.getenv('KINKONG_AIRTABLE_API_KEY')
+            )
+            
+            # Get all active LP positions
+            records = lp_positions_table.get_all(
+                formula="AND({status}='active', {valueUSD}>0)"
+            )
+            
+            lp_positions = []
+            
+            for record in records:
+                fields = record.get('fields', {})
+                
+                # Skip positions with no value
+                value_usd = float(fields.get('valueUSD', 0))
+                if value_usd <= 0:
+                    continue
+                    
+                position = {
+                    'name': fields.get('name', 'Unknown LP'),
+                    'token0': fields.get('token0', 'Unknown'),
+                    'token1': fields.get('token1', 'Unknown'),
+                    'amount0': float(fields.get('amount0', 0)),
+                    'amount1': float(fields.get('amount1', 0)),
+                    'valueUSD': value_usd,
+                    'notes': fields.get('notes', '')
+                }
+                
+                lp_positions.append(position)
+                print(f"✓ LP Position: {position['name']} (${position['valueUSD']:.2f})")
+                
+            return lp_positions
+            
+        except Exception as e:
+            print(f"❌ Error fetching LP positions: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return []
+            
     def get_previous_snapshot(self, days=7):
         """
         Get the wallet snapshot from X days ago
@@ -720,6 +772,31 @@ class WalletSnapshotTaker:
         # Calculate total value
         total_value = sum(b['value'] for b in balances)
         
+        # Get LP positions
+        lp_positions = self.get_lp_positions()
+
+        # Add LP positions to balances
+        for position in lp_positions:
+            # Create a balance entry for each LP position
+            # Format: "LP: token0/token1"
+            lp_token_name = f"LP: {position['token0']}/{position['token1']}"
+            
+            # Add to balances list
+            lp_balance = {
+                'token': lp_token_name,
+                'mint': 'LP_POSITION',  # Use a placeholder for mint
+                'amount': 1,  # Use 1 as amount since we're tracking by position
+                'price': position['valueUSD'],  # Price is the full value
+                'value': position['valueUSD'],
+                'isLpPosition': True,  # Flag to identify LP positions
+                'lpDetails': position  # Store full LP details
+            }
+            balances.append(lp_balance)
+            print(f"✓ {lp_balance['token']}: LP Position (${lp_balance['value']:.2f})")
+
+        # Recalculate total value including LP positions
+        total_value = sum(b['value'] for b in balances)
+        
         # Get previous snapshot value (7 days ago)
         previous_value, previous_date = self.get_previous_snapshot(days=7)
         
@@ -769,7 +846,9 @@ class WalletSnapshotTaker:
                 'token': b['token'],
                 'amount': b['amount'],
                 'price': b['price'],
-                'value': b['value']
+                'value': b['value'],
+                'isLpPosition': b.get('isLpPosition', False),
+                'lpDetails': b.get('lpDetails', {}) if b.get('isLpPosition', False) else None
             } for b in balances])
         }
         
@@ -782,7 +861,10 @@ class WalletSnapshotTaker:
         print(f"PnL Percentage: {pnl_percentage:.2f}%")
         print("\nHoldings:")
         for balance in balances:
-            print(f"• {balance['token']}: {balance['amount']:.2f} (${balance['value']:.2f})")
+            if balance.get('isLpPosition', False):
+                print(f"• {balance['token']} (LP Position): ${balance['value']:.2f}")
+            else:
+                print(f"• {balance['token']}: {balance['amount']:.2f} (${balance['value']:.2f})")
 
 def main():
     try:
