@@ -176,9 +176,6 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    // If we get here, we have a valid response
-    const responseText = message.content[0].text;
-    
     // Find JSON in the response
     const jsonStart = responseText.indexOf('{');
     const jsonEnd = responseText.lastIndexOf('}') + 1;
