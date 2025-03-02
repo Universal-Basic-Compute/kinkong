@@ -86,7 +86,7 @@ export async function fetchWalletTransactions(wallet: string, limit: number = 10
 }
 
 // Function to analyze wallet transactions
-export function analyzeWalletTransactions(transactions: WalletTransaction[]): WalletAnalysisResult {
+export function analyzeWalletTransactions(transactions: WalletTransaction[], walletAddress: string): WalletAnalysisResult {
   // Initialize result
   const result: WalletAnalysisResult = {
     investedAmount: 0,
@@ -125,7 +125,7 @@ export function analyzeWalletTransactions(transactions: WalletTransaction[]): Wa
           const usdValue = amountUsd || 0;
           
           // If wallet is recipient, it's an investment
-          if (recipient.toLowerCase() === wallet.toLowerCase()) {
+          if (recipient.toLowerCase() === walletAddress.toLowerCase()) {
             result.investedAmount += usdValue;
             
             // Check if within last 7 days
@@ -145,7 +145,7 @@ export function analyzeWalletTransactions(transactions: WalletTransaction[]): Wa
             });
           }
           // If wallet is sender, it's a withdrawal
-          else if (sender.toLowerCase() === wallet.toLowerCase()) {
+          else if (sender.toLowerCase() === walletAddress.toLowerCase()) {
             result.withdrawnAmount += usdValue;
             
             // Check if within last 7 days
@@ -213,7 +213,7 @@ export async function getWalletAnalysis(wallet: string): Promise<WalletAnalysisR
     const transactions = await fetchWalletTransactions(wallet, 500); // Get up to 500 transactions
     
     // Analyze transactions
-    return analyzeWalletTransactions(transactions);
+    return analyzeWalletTransactions(transactions, wallet);
   } catch (error) {
     console.error('Error analyzing wallet:', error);
     // Return empty result on error
