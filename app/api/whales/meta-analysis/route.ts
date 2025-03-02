@@ -166,7 +166,7 @@ export async function GET(request: NextRequest) {
       }
       
       const message = await anthropic.messages.create({
-        model: "claude-3-opus-20240229",
+        model: "claude-3-7-sonnet-latest",
         max_tokens: 4000,
         temperature: 0.2,
         system: "You are a cryptocurrency analyst specializing in whale behavior analysis. Provide concise, data-driven insights.",
