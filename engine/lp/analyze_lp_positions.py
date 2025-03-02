@@ -157,11 +157,11 @@ class LPPositionAnalyzer:
             return {}
     
     async def get_claude_recommendation(self, 
-                                        lp_positions: List[Dict], 
-                                        wallet_snapshot: Dict, 
-                                        token_snapshots: Dict[str, Dict], 
-                                        signals: Dict[str, Dict]) -> str:
-        """Get recommendation from Claude AI for LP allocations"""
+                                       lp_positions: List[Dict], 
+                                       wallet_snapshot: Dict, 
+                                       token_snapshots: Dict[str, Dict], 
+                                       signals: Dict[str, Dict]) -> Dict:
+        """Get recommendation from Claude AI for LP allocations in JSON format"""
         try:
             logger.info("Requesting Claude recommendation for LP allocations...")
             
@@ -183,7 +183,9 @@ Focus on:
 4. Considering token price trends and trading signals
 5. Providing specific allocation percentages for each pool
 
-Your recommendations should be data-driven, specific, and actionable."""
+Your recommendations should be data-driven, specific, and actionable.
+
+IMPORTANT: You must respond with a valid JSON object containing your recommendations."""
 
             # Create user prompt with all the data
             user_prompt = f"""Please analyze the following data and provide recommendations for LP allocations:
@@ -208,14 +210,37 @@ Your recommendations should be data-driven, specific, and actionable."""
 {signals_str}
 ```
 
-Based on this data, please provide:
-1. A summary of the current LP positions and their performance
-2. Analysis of token price trends and how they might impact LP positions
-3. Specific recommendations for adjusting LP allocations (increase, decrease, or maintain)
-4. Target allocation percentages for each pool
-5. Reasoning behind each recommendation
+Based on this data, create recommendations for two LP positions: UBC/SOL and COMPUTE/SOL.
 
-Format your response as a structured analysis with clear sections and actionable recommendations."""
+Return your response in the following JSON format:
+```json
+{{
+  "summary": "Brief summary of your analysis",
+  "market_analysis": "Analysis of current market conditions",
+  "lp_positions": [
+    {{
+      "name": "UBC-SOL LP",
+      "token0": "UBC",
+      "token1": "SOL",
+      "platform": "Raydium",
+      "targetAllocation": 50,
+      "apr": 15.5,
+      "reasoning": "Detailed reasoning for this allocation"
+    }},
+    {{
+      "name": "COMPUTE-SOL LP",
+      "token0": "COMPUTE",
+      "token1": "SOL",
+      "platform": "Raydium",
+      "targetAllocation": 50,
+      "apr": 12.3,
+      "reasoning": "Detailed reasoning for this allocation"
+    }}
+  ]
+}}
+```
+
+Ensure your response is valid JSON that can be parsed programmatically."""
 
             # Call Claude API
             response = self.claude_client.messages.create(
@@ -227,14 +252,86 @@ Format your response as a structured analysis with clear sections and actionable
                 ]
             )
             
-            recommendation = response.content[0].text
-            logger.info("Claude recommendation received")
+            # Extract JSON from response
+            response_text = response.content[0].text
             
-            return recommendation
+            # Clean up the response to extract just the JSON part
+            json_start = response_text.find('{')
+            json_end = response_text.rfind('}') + 1
+            
+            if json_start == -1 or json_end == 0:
+                logger.error("Could not find JSON in Claude's response")
+                return {"error": "Invalid response format"}
+                
+            json_str = response_text[json_start:json_end]
+            
+            # Parse the JSON
+            recommendation_data = json.loads(json_str)
+            logger.info("Claude recommendation received in JSON format")
+            
+            return recommendation_data
         except Exception as e:
             logger.error(f"Error getting Claude recommendation: {e}")
             return f"Error generating recommendation: {str(e)}"
     
+    def create_lp_positions(self, recommendation_data: Dict) -> List[Dict]:
+        """Create LP positions based on Claude's recommendations"""
+        try:
+            logger.info("Creating LP positions from recommendations...")
+            
+            created_positions = []
+            
+            # Get LP positions from recommendation
+            lp_positions = recommendation_data.get('lp_positions', [])
+            
+            if not lp_positions:
+                logger.warning("No LP positions found in recommendation data")
+                return []
+            
+            # Current timestamp
+            current_time = datetime.now(timezone.utc).isoformat()
+            
+            # Create each LP position
+            for position in lp_positions:
+                try:
+                    # Prepare position data
+                    position_data = {
+                        'name': position.get('name'),
+                        'token0': position.get('token0'),
+                        'token1': position.get('token1'),
+                        'platform': position.get('platform', 'Raydium'),
+                        'targetAllocation': position.get('targetAllocation', 0),
+                        'currentAllocation': 0,  # Start with 0
+                        'apr': position.get('apr', 0),
+                        'status': 'ACTIVE',
+                        'isActive': True,
+                        'createdAt': current_time,
+                        'updatedAt': current_time,
+                        'notes': position.get('reasoning', ''),
+                        'rebalanceNeeded': True
+                    }
+                    
+                    # Create position in Airtable
+                    result = self.lp_positions_table.insert(position_data)
+                    logger.info(f"Created LP position: {position.get('name')} (ID: {result['id']})")
+                    
+                    # Add to created positions
+                    created_positions.append({
+                        'id': result['id'],
+                        **position_data
+                    })
+                    
+                except Exception as e:
+                    logger.error(f"Error creating LP position {position.get('name')}: {e}")
+                    continue
+            
+            logger.info(f"Created {len(created_positions)} LP positions")
+            return created_positions
+            
+        except Exception as e:
+            logger.error(f"Error creating LP positions: {e}")
+            return []
+            
     def save_thought(self, content: str) -> Optional[Dict]:
         """Save the Claude recommendation as a THOUGHT in Airtable"""
         try:
@@ -291,7 +388,7 @@ Format your response as a structured analysis with clear sections and actionable
                 # Create an empty positions list instead of returning early
                 lp_positions = []
                 # Return a more informative status
-                status_message = "No active LP positions found, but analysis completed"
+                status_message = "No active LP positions found, creating new positions"
             else:
                 status_message = f"Analyzed {len(lp_positions)} positions"
             
@@ -304,27 +401,38 @@ Format your response as a structured analysis with clear sections and actionable
             # Generate signals for UBC, COMPUTE, and SOL
             signals = await self.generate_signals(['UBC', 'COMPUTE', 'SOL'])
             
-            # Get recommendation from Claude
-            recommendation = await self.get_claude_recommendation(
+            # Get recommendation from Claude in JSON format
+            recommendation_data = await self.get_claude_recommendation(
                 lp_positions, 
                 wallet_snapshot, 
                 token_snapshots, 
                 signals
             )
             
-            # Save recommendation as THOUGHT
-            thought = self.save_thought(recommendation)
+            if 'error' in recommendation_data:
+                logger.error(f"Error in recommendation: {recommendation_data['error']}")
+                return {"status": "error", "message": recommendation_data['error']}
             
-            # Update LP positions with pending status (only if we have positions)
+            # Create new LP positions based on recommendations
+            created_positions = self.create_lp_positions(recommendation_data)
+            
+            # Update existing LP positions if any
             if lp_positions:
-                self.update_lp_positions(lp_positions, recommendation)
+                # Convert recommendation to string for existing positions
+                recommendation_str = json.dumps(recommendation_data, indent=2)
+                self.update_lp_positions(lp_positions, recommendation_str)
+            
+            # Save recommendation as THOUGHT for reference
+            thought = self.save_thought(json.dumps(recommendation_data, indent=2))
             
             logger.info("LP position analysis and recommendation completed successfully")
             
             return {
                 "status": "success",
                 "positions_analyzed": len(lp_positions),
-                "recommendation": recommendation[:500] + "...",  # Truncated for logging
+                "positions_created": len(created_positions),
+                "recommendation_summary": recommendation_data.get('summary', '')[:500] + "...",  # Truncated for logging
+                "created_positions": [p.get('name') for p in created_positions],
                 "thought_id": thought['id'] if thought else None,
                 "message": status_message
             }
