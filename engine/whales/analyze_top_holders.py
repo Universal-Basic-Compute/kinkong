@@ -11,6 +11,10 @@ from dotenv import load_dotenv
 from airtable import Airtable
 import anthropic
 
+# Set Windows event loop policy
+if os.name == 'nt':  # Windows
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 # Add project root to Python path
 project_root = str(Path(__file__).parent.parent.parent.absolute())
 if project_root not in sys.path:
