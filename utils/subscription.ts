@@ -13,7 +13,25 @@ export async function verifySubscription(code: string): Promise<SubscriptionResp
   try {
     const response = await fetch(`/api/subscription?code=${code}`);
     if (!response.ok) throw new Error('Failed to verify subscription');
-    return await response.json();
+    
+    const data = await response.json();
+    console.log('Raw subscription data:', data); // Log the raw data for debugging
+    
+    // If the API returns a status field directly, handle it
+    if (data.status && data.status === 'ACTIVE') {
+      return { active: true };
+    }
+    
+    // If the API returns a subscription object with a status field, handle it
+    if (data.subscription && data.subscription.status === 'ACTIVE') {
+      return {
+        active: true,
+        subscription: data.subscription
+      };
+    }
+    
+    // Return the original data if none of the above conditions match
+    return data;
   } catch (error) {
     console.error('Subscription verification error:', error);
     throw error;
