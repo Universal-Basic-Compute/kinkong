@@ -143,7 +143,7 @@ async def analyze_with_claude(wallet_address, transactions, token_name):
         """
         
         message = client.messages.create(
-            model="claude-3-opus-20240229",
+            model="claude-3-7-sonnet-20250219",
             max_tokens=4000,
             temperature=0.2,
             system="You are a cryptocurrency analyst specializing in on-chain analysis for Solana tokens.",
