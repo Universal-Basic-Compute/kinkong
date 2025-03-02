@@ -573,9 +573,9 @@ class WalletSnapshotTaker:
                 os.getenv('KINKONG_AIRTABLE_API_KEY')
             )
             
-            # Get all active LP positions
+            # Get all active LP positions using the correct field name 'isActive'
             records = lp_positions_table.get_all(
-                formula="AND({status}='active', {valueUSD}>0)"
+                formula="AND({isActive}=TRUE(), OR({amount0}>0, {amount1}>0))"
             )
             
             lp_positions = []
@@ -583,17 +583,31 @@ class WalletSnapshotTaker:
             for record in records:
                 fields = record.get('fields', {})
                 
+                # Get token amounts
+                amount0 = float(fields.get('amount0', 0) or 0)
+                amount1 = float(fields.get('amount1', 0) or 0)
+                
+                # Try to get valueUSD, or calculate it if missing
+                value_usd = 0
+                if 'valueUSD' in fields and fields['valueUSD']:
+                    value_usd = float(fields['valueUSD'])
+                else:
+                    # If valueUSD is missing but we have token amounts, use a placeholder value
+                    # In a real implementation, you might want to calculate this based on token prices
+                    if amount0 > 0 or amount1 > 0:
+                        value_usd = 1.0  # Placeholder value
+                        print(f"Warning: No valueUSD for LP position {fields.get('name', 'Unknown')} - using placeholder")
+                
                 # Skip positions with no value
-                value_usd = float(fields.get('valueUSD', 0))
-                if value_usd <= 0:
+                if value_usd <= 0 and amount0 <= 0 and amount1 <= 0:
                     continue
                     
                 position = {
                     'name': fields.get('name', 'Unknown LP'),
                     'token0': fields.get('token0', 'Unknown'),
                     'token1': fields.get('token1', 'Unknown'),
-                    'amount0': float(fields.get('amount0', 0)),
-                    'amount1': float(fields.get('amount1', 0)),
+                    'amount0': amount0,
+                    'amount1': amount1,
                     'valueUSD': value_usd,
                     'notes': fields.get('notes', '')
                 }
