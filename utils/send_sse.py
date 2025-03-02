@@ -64,18 +64,57 @@ def send_signal_notification(signal_data: Dict[str, Any]) -> bool:
         }
         
         logger.info(f"Sending signal notification for {notification['data']['token']}")
-        response = requests.post(
-            notification_endpoint,
-            headers=headers,
-            json=notification,
-            timeout=10  # 10 second timeout
-        )
         
-        if response.status_code == 200:
-            logger.info(f"✅ Signal notification sent successfully")
-            return True
-        else:
-            logger.error(f"❌ Failed to send notification: {response.status_code} - {response.text}")
+        # Try different HTTP methods if the default POST fails
+        try:
+            # First try POST (original method)
+            response = requests.post(
+                notification_endpoint,
+                headers=headers,
+                json=notification,
+                timeout=10
+            )
+            
+            # If POST fails with 405 (Method Not Allowed), try PUT
+            if response.status_code == 405:
+                logger.warning("POST method not allowed, trying PUT instead")
+                response = requests.put(
+                    notification_endpoint,
+                    headers=headers,
+                    json=notification,
+                    timeout=10
+                )
+                
+            # If PUT also fails with 405, try GET with query parameters
+            if response.status_code == 405:
+                logger.warning("PUT method not allowed, trying GET with query parameters")
+                # Convert the notification to query parameters
+                params = {
+                    "type": notification["type"],
+                    "token": notification["data"]["token"],
+                    "signalType": notification["data"]["signalType"],
+                    "timeframe": notification["data"]["timeframe"],
+                    "confidence": notification["data"]["confidence"]
+                }
+                response = requests.get(
+                    notification_endpoint,
+                    headers=headers,
+                    params=params,
+                    timeout=10
+                )
+            
+            if response.status_code == 200:
+                logger.info(f"✅ Signal notification sent successfully")
+                return True
+            else:
+                logger.error(f"❌ Failed to send notification: {response.status_code} - {response.text}")
+                return False
+                
+        except requests.exceptions.Timeout:
+            logger.error("Request timed out when sending notification")
+            return False
+        except requests.exceptions.ConnectionError:
+            logger.error("Connection error when sending notification")
             return False
             
     except Exception as e:
@@ -123,18 +162,57 @@ def send_price_alert(token: str, price: float, change_percent: float) -> bool:
         }
         
         logger.info(f"Sending price alert for {token} at ${price:.6f} ({change_percent:+.2f}%)")
-        response = requests.post(
-            notification_endpoint,
-            headers=headers,
-            json=notification,
-            timeout=10  # 10 second timeout
-        )
         
-        if response.status_code == 200:
-            logger.info(f"✅ Price alert sent successfully")
-            return True
-        else:
-            logger.error(f"❌ Failed to send price alert: {response.status_code} - {response.text}")
+        # Try different HTTP methods if the default POST fails
+        try:
+            # First try POST (original method)
+            response = requests.post(
+                notification_endpoint,
+                headers=headers,
+                json=notification,
+                timeout=10
+            )
+            
+            # If POST fails with 405 (Method Not Allowed), try PUT
+            if response.status_code == 405:
+                logger.warning("POST method not allowed, trying PUT instead")
+                response = requests.put(
+                    notification_endpoint,
+                    headers=headers,
+                    json=notification,
+                    timeout=10
+                )
+                
+            # If PUT also fails with 405, try GET with query parameters
+            if response.status_code == 405:
+                logger.warning("PUT method not allowed, trying GET with query parameters")
+                # Convert the notification to query parameters
+                params = {
+                    "type": notification["type"],
+                    "token": notification["data"]["token"],
+                    "price": notification["data"]["price"],
+                    "changePercent": notification["data"]["changePercent"],
+                    "direction": notification["data"]["direction"]
+                }
+                response = requests.get(
+                    notification_endpoint,
+                    headers=headers,
+                    params=params,
+                    timeout=10
+                )
+            
+            if response.status_code == 200:
+                logger.info(f"✅ Price alert sent successfully")
+                return True
+            else:
+                logger.error(f"❌ Failed to send price alert: {response.status_code} - {response.text}")
+                return False
+                
+        except requests.exceptions.Timeout:
+            logger.error("Request timed out when sending price alert")
+            return False
+        except requests.exceptions.ConnectionError:
+            logger.error("Connection error when sending price alert")
             return False
             
     except Exception as e:
@@ -186,12 +264,41 @@ def send_trade_notification(trade_data: Dict[str, Any]) -> bool:
         logger.info(f"Sending trade notification for {notification['data']['token']}")
         
         try:
+            # First try POST (original method)
             response = requests.post(
                 notification_endpoint,
                 headers=headers,
                 json=notification,
-                timeout=10  # 10 second timeout
+                timeout=10
             )
+            
+            # If POST fails with 405 (Method Not Allowed), try PUT
+            if response.status_code == 405:
+                logger.warning("POST method not allowed, trying PUT instead")
+                response = requests.put(
+                    notification_endpoint,
+                    headers=headers,
+                    json=notification,
+                    timeout=10
+                )
+                
+            # If PUT also fails with 405, try GET with query parameters
+            if response.status_code == 405:
+                logger.warning("PUT method not allowed, trying GET with query parameters")
+                # Convert the notification to query parameters
+                params = {
+                    "type": notification["type"],
+                    "token": notification["data"]["token"],
+                    "action": notification["data"]["action"],
+                    "status": notification["data"]["status"],
+                    "tradeId": notification["data"]["tradeId"]
+                }
+                response = requests.get(
+                    notification_endpoint,
+                    headers=headers,
+                    params=params,
+                    timeout=10
+                )
             
             if response.status_code == 200:
                 logger.info(f"✅ Trade notification sent successfully")
