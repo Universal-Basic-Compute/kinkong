@@ -38,8 +38,8 @@ class TokenManager:
     """Manages token data in Airtable with Birdeye and DexScreener integration"""
     
     # Special token lists
-    ALWAYS_ACTIVE_TOKENS = {'USDT', 'WETH', 'WBTC', 'SOL'}
-    ALWAYS_INACTIVE_TOKENS = {'UBC', 'COMPUTE'}
+    ALWAYS_ACTIVE_TOKENS = {'USDT', 'WETH', 'WBTC', 'SOL', 'UBC', 'COMPUTE'}
+    ALWAYS_INACTIVE_TOKENS = set()  # Empty set since we moved UBC and COMPUTE to ALWAYS_ACTIVE_TOKENS
     
     def analyze_social_signals(self, token_symbol: str, token_data: Dict[str, Any] = None) -> tuple[bool, str]:
         """
