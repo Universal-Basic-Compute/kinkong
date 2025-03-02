@@ -103,7 +103,7 @@ export default function Portfolio() {
         {/* Performance Chart */}
         <section>
           <div className="flex items-center gap-2 mb-4">
-            <h2 className="text-2xl font-bold text-gold">Portfolio Performance</h2>
+            <h2 className="text-2xl font-bold text-gold">Assets Under Management</h2>
             <div className="group relative">
               <div className="cursor-help text-gray-400 border border-gray-400 rounded-full w-4 h-4 flex items-center justify-center text-xs">
                 i
