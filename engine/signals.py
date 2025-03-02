@@ -177,16 +177,49 @@ class SignalGenerator:
                 # Only create signals for BUY/SELL (not HOLD) with confidence >= 60
                 # Also check that the expected return meets minimum targets based on timeframe
                 if signal_type and signal_type != 'HOLD' and confidence >= 60:
-                    # Get expected return from analysis
-                    if hasattr(analysis, 'get'):
-                        expected_return = analysis.get('expectedReturn', 0)
-                    elif hasattr(analysis, 'to_dict'):
-                        expected_return = analysis.to_dict().get('expectedReturn', 0)
-                    elif hasattr(analysis, 'risk_reward_ratio'):
-                        # Use risk_reward_ratio as a fallback for expectedReturn
-                        expected_return = getattr(analysis, 'risk_reward_ratio', 0) * 100 if getattr(analysis, 'risk_reward_ratio', 0) else 0
+                    # Calculate expected return based on entry and target prices
+                    if hasattr(analysis, 'key_levels') and analysis.key_levels:
+                        key_levels = analysis.key_levels
+                        
+                        # Extract support and resistance levels
+                        support_levels = key_levels.get('support', [])
+                        resistance_levels = key_levels.get('resistance', [])
+                        
+                        # Calculate entry and target prices based on signal type
+                        if signal_type == 'BUY':
+                            # For BUY signals: entry at support, target at resistance
+                            entry_price = min(support_levels) if support_levels else 0
+                            target_price = min(resistance_levels) if resistance_levels else 0
+                        else:  # SELL
+                            # For SELL signals: entry at resistance, target at support
+                            entry_price = max(resistance_levels) if resistance_levels else 0
+                            target_price = max(support_levels) if support_levels else 0
+                        
+                        # Calculate expected return as percentage
+                        if entry_price and target_price and entry_price > 0:
+                            if signal_type == 'BUY':
+                                expected_return = ((target_price - entry_price) / entry_price) * 100
+                            else:  # SELL
+                                expected_return = ((entry_price - target_price) / entry_price) * 100
+                            
+                            # Ensure expected return is positive
+                            expected_return = abs(expected_return)
+                        else:
+                            expected_return = 0
                     else:
-                        expected_return = 0
+                        # Fallback to existing methods if key_levels not available
+                        if hasattr(analysis, 'get'):
+                            expected_return = analysis.get('expectedReturn', 0)
+                        elif hasattr(analysis, 'to_dict'):
+                            expected_return = analysis.to_dict().get('expectedReturn', 0)
+                        elif hasattr(analysis, 'risk_reward_ratio'):
+                            # Use risk_reward_ratio as a fallback for expectedReturn
+                            expected_return = getattr(analysis, 'risk_reward_ratio', 0) * 100 if getattr(analysis, 'risk_reward_ratio', 0) else 0
+                        else:
+                            expected_return = 0
+                    
+                    # Log the calculated expected return
+                    logger.info(f"Calculated expected return for {token['token']} - {timeframe}: {expected_return:.2f}%")
                     
                     # Set minimum target based on timeframe
                     min_target = {
