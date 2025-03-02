@@ -38,7 +38,8 @@ interface TokenBalance {
   };
 }
 
-const TOKEN_METADATA: Record<string, TokenMetadata> = {
+// Initial token metadata that will be expanded by API data
+const INITIAL_TOKEN_METADATA: Record<string, TokenMetadata> = {
   'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v': {
     name: 'USD Coin',
     token: 'USDC',
@@ -112,6 +113,25 @@ export const TokenTable = ({ showAllTokens = false }: TokenTableProps) => {
   const [tokens, setTokens] = useState<TokenBalance[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [tokenMetadata, setTokenMetadata] = useState<Record<string, TokenMetadata>>(INITIAL_TOKEN_METADATA);
+
+  // Fetch token metadata
+  useEffect(() => {
+    const fetchTokenMetadata = async () => {
+      try {
+        const response = await fetch('/api/token-metadata');
+        if (!response.ok) {
+          throw new Error('Failed to fetch token metadata');
+        }
+        const data = await response.json();
+        setTokenMetadata(data);
+      } catch (err) {
+        console.error('Error fetching token metadata:', err);
+      }
+    };
+
+    fetchTokenMetadata();
+  }, []);
 
   useEffect(() => {
     const fetchTokens = async () => {
@@ -206,7 +226,7 @@ export const TokenTable = ({ showAllTokens = false }: TokenTableProps) => {
             }
             
             // Regular token handling
-            const metadata = TOKEN_METADATA[token.mint] || {
+            const metadata = tokenMetadata[token.mint] || {
               name: token.token || token.mint.slice(0, 4),
               token: token.token || token.mint.slice(0, 4),
             };
