@@ -55,12 +55,6 @@ const Header = () => {
           emoji: '📊'
         },
         { 
-          label: 'Signals', 
-          href: '/signals',
-          description: 'Trading signals and setups',
-          emoji: '📡'
-        },
-        { 
           label: 'Trades', 
           href: '/trades',
           description: 'Trade history and execution',
@@ -96,6 +90,18 @@ const Header = () => {
           href: '/copilot',
           description: 'Learn about KinKong Copilot',
           emoji: '🤖'
+        },
+        { 
+          label: 'Signals', 
+          href: '/signals',
+          description: 'Trading signals and setups',
+          emoji: '📡'
+        },
+        { 
+          label: 'Whales', 
+          href: '/whales',
+          description: 'Whale wallet analysis',
+          emoji: '🐋'
         },
         { 
           label: 'Chat', 
