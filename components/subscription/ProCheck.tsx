@@ -17,16 +17,23 @@ export function ProCheck({ children, fallback }: ProCheckProps) {
   useEffect(() => {
     async function checkSubscription() {
       if (!publicKey) {
+        console.log('No wallet connected');
         setIsProMember(false);
         setIsLoading(false);
         return;
       }
 
       try {
+        console.log('Checking subscription for wallet:', publicKey.toString());
         const response = await fetch(`/api/subscription/check?wallet=${publicKey.toString()}`);
-        if (!response.ok) throw new Error('Failed to check subscription');
+        
+        if (!response.ok) {
+          console.error('Subscription check failed:', await response.text());
+          throw new Error('Failed to check subscription');
+        }
         
         const data = await response.json();
+        console.log('Subscription check result:', data);
         setIsProMember(data.isActive);
       } catch (error) {
         console.error('Error checking subscription:', error);

@@ -24,9 +24,18 @@ export async function GET(request: NextRequest) {
     // Check for active subscription in SUBSCRIPTIONS table
     const records = await base('SUBSCRIPTIONS')
       .select({
-        filterByFormula: `AND({wallet}='${wallet}', {status}='active', {endDate} > '${now}')`
+        filterByFormula: `AND({wallet}='${wallet}', LOWER({status})='active', {endDate} > '${now}')`
       })
       .firstPage();
+    
+    // Add debugging logs
+    console.log('Subscription check for wallet:', wallet);
+    console.log('Current date:', now);
+    console.log('Records found:', records.length);
+    if (records.length > 0) {
+      console.log('Subscription status:', records[0].fields.status);
+      console.log('Subscription end date:', records[0].fields.endDate);
+    }
     
     const isActive = records.length > 0;
     
