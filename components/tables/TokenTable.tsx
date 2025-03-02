@@ -22,11 +22,20 @@ interface TokenBalance {
   mint: string;
   amount: number;
   decimals?: number;
-  uiAmount: number;
+  uiAmount?: number;
   token?: string;
   usdValue?: number;
+  price?: number;
   isLpPosition?: boolean;
-  lpDetails?: any;
+  lpDetails?: {
+    name: string;
+    token0: string;
+    token1: string;
+    amount0: number;
+    amount1: number;
+    valueUSD: number;
+    notes?: string;
+  };
 }
 
 const TOKEN_METADATA: Record<string, TokenMetadata> = {

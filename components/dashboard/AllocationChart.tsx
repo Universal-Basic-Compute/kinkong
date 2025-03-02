@@ -4,14 +4,21 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recha
 import { formatCurrency } from '@/utils/formatters';
 
 interface TokenBalance {
+  token: string;
   mint: string;
   amount: number;
-  decimals?: number;
-  uiAmount: number;
-  token?: string;
-  usdValue?: number;
+  price: number;
+  usdValue: number;
+  percentage: number;
   isLpPosition?: boolean;
-  lpDetails?: any;
+  lpDetails?: {
+    name: string;
+    token0: string;
+    token1: string;
+    amount0: number;
+    amount1: number;
+    valueUSD: number;
+  };
 }
 
 const TOKEN_METADATA: Record<string, { name: string; token: string }> = {
@@ -39,7 +46,7 @@ const TOKEN_METADATA: Record<string, { name: string; token: string }> = {
   }
 };
 
-const COLORS = ['#FFD700', '#8B0000', '#4B0082', '#006400', '#800000', '#483D8B', '#8B4513'];
+const COLORS = ['#FFD700', '#8B0000', '#4B0082', '#006400', '#800000', '#483D8B', '#8B4513', '#2E8B57', '#4682B4', '#9932CC'];
 
 export function AllocationChart() {
   const [tokens, setTokens] = useState<TokenBalance[]>([]);
