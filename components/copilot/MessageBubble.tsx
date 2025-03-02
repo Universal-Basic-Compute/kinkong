@@ -13,6 +13,9 @@ function preprocessMarkdown(content: string): string {
   // Replace any paragraph that ends with a colon followed by a newline with no newline
   processed = processed.replace(/(\w+:)\s*\n+/g, '$1 ');
   
+  // Fix ordered lists being split by newlines
+  processed = processed.replace(/(\d+\..*)\n+(\d+\.)/g, '$1\n$2');
+  
   return processed;
 }
 
