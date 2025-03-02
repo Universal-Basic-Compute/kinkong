@@ -679,11 +679,7 @@ export default function Invest() {
                     </li>
                     <li className="flex items-start">
                       <span className="text-gold mr-2">•</span>
-                      <span>90% of principal guaranteed for Pro accounts, 75% for standard</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-gold mr-2">•</span>
-                      <span>2% fee on in-out transactions</span>
+                      <span>3.9% fee on Withdrawals</span>
                     </li>
                     <li className="flex items-start">
                       <span className="text-gold mr-2">•</span>
