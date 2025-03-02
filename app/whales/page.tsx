@@ -6,6 +6,8 @@ import { WhaleMetricsCards } from '@/components/whales/WhaleMetricsCards';
 import { WhaleDistributionChart } from '@/components/whales/WhaleDistributionChart';
 import { WhaleOutlookChart } from '@/components/whales/WhaleOutlookChart';
 import { TokenSelector } from '@/components/whales/TokenSelector';
+import { ProCheck } from '@/components/subscription/ProCheck';
+import { WhaleTeaser } from '@/components/whales/WhaleTeaser';
 
 export default function WhalesPage() {
   const [whaleData, setWhaleData] = useState([]);
@@ -49,7 +51,8 @@ export default function WhalesPage() {
     setTimeframe(tf);
   };
 
-  return (
+  // Content for Pro members
+  const proContent = (
     <main className="min-h-screen p-4 max-w-7xl mx-auto">
       <h1 className="text-4xl font-bold mb-8 text-center">Whale Analysis</h1>
       
@@ -92,6 +95,12 @@ export default function WhalesPage() {
       
       <WhaleAnalysisTable data={whaleData} isLoading={isLoading} />
     </main>
+  );
+
+  return (
+    <ProCheck fallback={<WhaleTeaser />}>
+      {proContent}
+    </ProCheck>
   );
 }
 
