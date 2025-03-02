@@ -187,8 +187,8 @@ export function WhaleMetaAnalysis({ token, timeframe, isLoading }: WhaleMetaAnal
         </h3>
         <div className="flex items-center space-x-2">
           <span className="text-xs text-gray-400">
-            {new Date(metaAnalysis.createdAt).toLocaleDateString()} 
-            {new Date(metaAnalysis.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {new Date(metaAnalysis.lastUpdated || metaAnalysis.createdAt).toLocaleDateString()} 
+            {new Date(metaAnalysis.lastUpdated || metaAnalysis.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
           <button
             onClick={generateAnalysis}
@@ -201,80 +201,99 @@ export function WhaleMetaAnalysis({ token, timeframe, isLoading }: WhaleMetaAnal
         </div>
       </div>
       
-      {/* Summary and Sentiment */}
-      <div className="mb-6">
-        <div className="flex items-center mb-2">
-          <div className="mr-2">
-            {getSentimentIcon(metaAnalysis.sentiment)}
-          </div>
-          <h4 className={`text-lg font-bold ${getSentimentColor(metaAnalysis.sentiment)}`}>
-            {metaAnalysis.sentiment} Outlook
-          </h4>
-          <div className="ml-auto bg-black/30 px-3 py-1 rounded-full text-sm">
-            Confidence: {metaAnalysis.confidenceScore}/100
-          </div>
-        </div>
-        <p className="text-gray-300">{metaAnalysis.summary}</p>
-      </div>
-      
-      {/* Price Outlook */}
-      <div className="mb-6 bg-black/20 p-4 rounded-lg border border-gray-800">
-        <h4 className="font-bold text-gold mb-2">Price Outlook</h4>
-        <p className="text-gray-300">{metaAnalysis.priceOutlook}</p>
-      </div>
+      {/* Extract analysis data from either direct or nested structure */}
+      {(() => {
+        const analysis = metaAnalysis.analysis || metaAnalysis;
+        
+        return (
+          <>
+            {/* Summary and Sentiment */}
+            <div className="mb-6">
+              <div className="flex items-center mb-2">
+                <div className="mr-2">
+                  {getSentimentIcon(analysis.sentiment)}
+                </div>
+                <h4 className={`text-lg font-bold ${getSentimentColor(analysis.sentiment)}`}>
+                  {analysis.sentiment} Outlook
+                </h4>
+                <div className="ml-auto bg-black/30 px-3 py-1 rounded-full text-sm">
+                  Confidence: {analysis.confidenceScore}/100
+                </div>
+              </div>
+              <p className="text-gray-300">{analysis.summary}</p>
+            </div>
+            
+            {/* Price Outlook */}
+            <div className="mb-6 bg-black/20 p-4 rounded-lg border border-gray-800">
+              <h4 className="font-bold text-gold mb-2">Price Outlook</h4>
+              <p className="text-gray-300">{analysis.priceOutlook}</p>
+            </div>
+          </>
+        );
+      })()}
       
       {/* Key Patterns and Insights */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div>
-          <h4 className="font-bold text-gold mb-2">Key Patterns</h4>
-          <ul className="list-disc pl-5 space-y-1 text-gray-300">
-            {metaAnalysis.keyPatterns?.split('\n').map((pattern: string, index: number) => (
-              <li key={index}>{pattern}</li>
-            ))}
-          </ul>
-        </div>
-        <div>
-          <h4 className="font-bold text-gold mb-2">Actionable Insights</h4>
-          <ul className="list-disc pl-5 space-y-1 text-gray-300">
-            {metaAnalysis.actionableInsights?.split('\n').map((insight: string, index: number) => (
-              <li key={index}>{insight}</li>
-            ))}
-          </ul>
-        </div>
-      </div>
-      
-      {/* Risk Assessment */}
-      <div className="mb-6">
-        <div className="flex items-center mb-2">
-          <h4 className="font-bold text-gold">Risk Assessment:</h4>
-          <span className={`ml-2 font-bold ${getRiskColor(metaAnalysis.riskAssessment)}`}>
-            {metaAnalysis.riskAssessment}
-          </span>
-        </div>
-        <ul className="list-disc pl-5 space-y-1 text-gray-300">
-          {metaAnalysis.riskFactors?.split('\n').map((factor: string, index: number) => (
-            <li key={index}>{factor}</li>
-          ))}
-        </ul>
-      </div>
-      
-      {/* Detailed Analysis */}
-      <div className="mb-6">
-        <h4 className="font-bold text-gold mb-2">Detailed Analysis</h4>
-        <p className="text-gray-300 whitespace-pre-line">{metaAnalysis.detailedAnalysis}</p>
-      </div>
-      
-      {/* Recommended Strategy */}
-      <div className="bg-gradient-to-r from-gold/20 to-black/0 p-4 rounded-lg">
-        <h4 className="font-bold text-gold mb-2">Recommended Strategy</h4>
-        <div className="flex items-center">
-          <div className={`text-lg font-bold ${
-            metaAnalysis.recommendedStrategy === 'ACCUMULATE' ? 'text-green-500' :
-            metaAnalysis.recommendedStrategy === 'REDUCE' ? 'text-red-500' :
-            'text-blue-500'
-          }`}>
-            {metaAnalysis.recommendedStrategy}
-          </div>
+      {(() => {
+        const analysis = metaAnalysis.analysis || metaAnalysis;
+        
+        return (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <h4 className="font-bold text-gold mb-2">Key Patterns</h4>
+                <ul className="list-disc pl-5 space-y-1 text-gray-300">
+                  {analysis.keyPatterns?.split('\n').map((pattern: string, index: number) => (
+                    <li key={index}>{pattern}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-bold text-gold mb-2">Actionable Insights</h4>
+                <ul className="list-disc pl-5 space-y-1 text-gray-300">
+                  {analysis.actionableInsights?.split('\n').map((insight: string, index: number) => (
+                    <li key={index}>{insight}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            
+            {/* Risk Assessment */}
+            <div className="mb-6">
+              <div className="flex items-center mb-2">
+                <h4 className="font-bold text-gold">Risk Assessment:</h4>
+                <span className={`ml-2 font-bold ${getRiskColor(analysis.riskAssessment)}`}>
+                  {analysis.riskAssessment}
+                </span>
+              </div>
+              <ul className="list-disc pl-5 space-y-1 text-gray-300">
+                {analysis.riskFactors?.split('\n').map((factor: string, index: number) => (
+                  <li key={index}>{factor}</li>
+                ))}
+              </ul>
+            </div>
+            
+            {/* Detailed Analysis */}
+            <div className="mb-6">
+              <h4 className="font-bold text-gold mb-2">Detailed Analysis</h4>
+              <p className="text-gray-300 whitespace-pre-line">{analysis.detailedAnalysis}</p>
+            </div>
+            
+            {/* Recommended Strategy */}
+            <div className="bg-gradient-to-r from-gold/20 to-black/0 p-4 rounded-lg">
+              <h4 className="font-bold text-gold mb-2">Recommended Strategy</h4>
+              <div className="flex items-center">
+                <div className={`text-lg font-bold ${
+                  analysis.recommendedStrategy === 'ACCUMULATE' ? 'text-green-500' :
+                  analysis.recommendedStrategy === 'REDUCE' ? 'text-red-500' :
+                  'text-blue-500'
+                }`}>
+                  {analysis.recommendedStrategy}
+                </div>
+              </div>
+            </div>
+          </>
+        );
+      })()}
           <div className="ml-auto text-xs text-gray-400">
             Based on analysis of {metaAnalysis.totalWhales} whale wallets
           </div>
@@ -286,35 +305,35 @@ export function WhaleMetaAnalysis({ token, timeframe, isLoading }: WhaleMetaAnal
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
             <p className="text-xs text-gray-400">Total Whales</p>
-            <p className="text-lg font-bold">{metaAnalysis.totalWhales}</p>
+            <p className="text-lg font-bold">{metaAnalysis.metrics?.totalWhales || metaAnalysis.totalWhales}</p>
           </div>
           <div>
             <p className="text-xs text-gray-400">Bullish</p>
-            <p className="text-lg font-bold text-green-500">{metaAnalysis.bullishPercentage}%</p>
+            <p className="text-lg font-bold text-green-500">{metaAnalysis.metrics?.bullishPercentage || metaAnalysis.bullishPercentage}%</p>
           </div>
           <div>
             <p className="text-xs text-gray-400">Bearish</p>
-            <p className="text-lg font-bold text-red-500">{metaAnalysis.bearishPercentage}%</p>
+            <p className="text-lg font-bold text-red-500">{metaAnalysis.metrics?.bearishPercentage || metaAnalysis.bearishPercentage}%</p>
           </div>
           <div>
             <p className="text-xs text-gray-400">Neutral</p>
-            <p className="text-lg font-bold text-blue-500">{metaAnalysis.neutralPercentage}%</p>
+            <p className="text-lg font-bold text-blue-500">{metaAnalysis.metrics?.neutralPercentage || metaAnalysis.neutralPercentage}%</p>
           </div>
           <div>
             <p className="text-xs text-gray-400">Accumulating</p>
-            <p className="text-lg font-bold text-green-500">{metaAnalysis.accumulationPercentage}%</p>
+            <p className="text-lg font-bold text-green-500">{metaAnalysis.metrics?.accumulationPercentage || metaAnalysis.accumulationPercentage}%</p>
           </div>
           <div>
             <p className="text-xs text-gray-400">Distributing</p>
-            <p className="text-lg font-bold text-red-500">{metaAnalysis.distributionPercentage}%</p>
+            <p className="text-lg font-bold text-red-500">{metaAnalysis.metrics?.distributionPercentage || metaAnalysis.distributionPercentage}%</p>
           </div>
           <div>
             <p className="text-xs text-gray-400">Holding</p>
-            <p className="text-lg font-bold text-blue-500">{metaAnalysis.holdingPercentage}%</p>
+            <p className="text-lg font-bold text-blue-500">{metaAnalysis.metrics?.holdingPercentage || metaAnalysis.holdingPercentage}%</p>
           </div>
           <div>
             <p className="text-xs text-gray-400">High Activity</p>
-            <p className="text-lg font-bold">{metaAnalysis.highActivityPercentage}%</p>
+            <p className="text-lg font-bold">{metaAnalysis.metrics?.highActivityPercentage || metaAnalysis.highActivityPercentage}%</p>
           </div>
         </div>
       </div>

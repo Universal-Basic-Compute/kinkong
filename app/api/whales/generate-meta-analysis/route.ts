@@ -153,7 +153,7 @@ Ensure your analysis is data-driven, balanced, and provides valuable insights fo
 
     // Use Claude API for analysis
     const message = await anthropic.messages.create({
-      model: "claude-3-7-sonnet-20250219",
+      model: "claude-3-7-sonnet-latest",
       max_tokens: 4000,
       temperature: 0.7,
       system: "You are a cryptocurrency whale analysis expert.",
@@ -172,7 +172,7 @@ Ensure your analysis is data-driven, balanced, and provides valuable insights fo
     const aiAnalysis = JSON.parse(aiResponse);
     
     // Create the meta-analysis record
-    const metaAnalysisTable = base.table('WHALES_META_ANALYSIS');
+    const metaAnalysisTable = base.table('WHALE_META_ANALYSIS');
     const metaAnalysis = {
       token: token,
       timeframe: timeframe,
