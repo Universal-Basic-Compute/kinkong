@@ -16,6 +16,18 @@ from typing import Dict, List, Any, Optional
 from dotenv import load_dotenv
 import anthropic
 
+class CustomJSONEncoder(json.JSONEncoder):
+    """Custom JSON encoder that can handle ChartAnalysis objects"""
+    def default(self, obj):
+        # Check if the object has a to_dict method (like ChartAnalysis)
+        if hasattr(obj, 'to_dict'):
+            return obj.to_dict()
+        # Check if it's a datetime object
+        elif isinstance(obj, datetime):
+            return obj.isoformat()
+        # Let the base class handle anything else
+        return super().default(obj)
+
 # Add project root to Python path
 project_root = str(Path(__file__).parent.parent.parent.absolute())
 if project_root not in sys.path:
@@ -153,11 +165,11 @@ class LPPositionAnalyzer:
         try:
             logger.info("Requesting Claude recommendation for LP allocations...")
             
-            # Format data for Claude
-            lp_positions_str = json.dumps(lp_positions, indent=2)
-            wallet_snapshot_str = json.dumps(wallet_snapshot, indent=2)
-            token_snapshots_str = json.dumps(token_snapshots, indent=2)
-            signals_str = json.dumps(signals, indent=2)
+            # Format data for Claude using the custom encoder
+            lp_positions_str = json.dumps(lp_positions, indent=2, cls=CustomJSONEncoder)
+            wallet_snapshot_str = json.dumps(wallet_snapshot, indent=2, cls=CustomJSONEncoder)
+            token_snapshots_str = json.dumps(token_snapshots, indent=2, cls=CustomJSONEncoder)
+            signals_str = json.dumps(signals, indent=2, cls=CustomJSONEncoder)
             
             # Create system prompt
             system_prompt = """You are an expert cryptocurrency liquidity pool (LP) allocation advisor. 
