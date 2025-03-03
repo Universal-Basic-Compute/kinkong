@@ -1364,12 +1364,50 @@ def generate_tweet_content(kol_data: Dict[str, Any]) -> str:
         logger.exception("Exception details:")
         return ""
 
-def send_tweet(tweet_content: str) -> bool:
+def get_kol_image_path(kol_data: Dict[str, Any], output_dir: str = "public/kols") -> Optional[str]:
     """
-    Send a tweet using the Twitter/X API
+    Get the path to a KOL image, either existing or generate a new one
+    
+    Args:
+        kol_data: Dictionary containing KOL data
+        output_dir: Directory where images are stored
+        
+    Returns:
+        Path to the image or None if not found/generated
+    """
+    logger = setup_logging()
+    
+    # Create output directory if it doesn't exist
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Determine filename based on X username or name
+    x_username = kol_data.get("xUsername", "").replace("@", "")
+    name = kol_data.get("name", "Unknown KOL")
+    
+    if x_username:
+        filename = f"{x_username}.png"
+    else:
+        # Create a safe filename from the name
+        safe_name = "".join(c for c in name if c.isalnum() or c in (' ', '_')).replace(' ', '_')
+        filename = f"{safe_name}.png"
+    
+    # Check if image already exists
+    image_path = os.path.join(output_dir, filename)
+    if os.path.exists(image_path):
+        logger.info(f"Found existing image for {name}: {image_path}")
+        return image_path
+    
+    # If image doesn't exist, generate a new one
+    logger.info(f"No existing image found for {name}, generating new image")
+    return generate_kol_image(kol_data, output_dir)
+
+def send_tweet(tweet_content: str, image_path: Optional[str] = None) -> bool:
+    """
+    Send a tweet using the Twitter/X API, optionally with an image
     
     Args:
         tweet_content: Content of the tweet to send
+        image_path: Optional path to an image to attach to the tweet
         
     Returns:
         Boolean indicating success or failure
@@ -1397,10 +1435,22 @@ def send_tweet(tweet_content: str) -> bool:
             auth = tweepy.OAuth1UserHandler(api_key, api_secret, access_token, access_token_secret)
             api = tweepy.API(auth)
             
-            # Send tweet
+            # Send tweet with or without image
             logger.info(f"Sending tweet: {tweet_content}")
-            api.update_status(tweet_content)
-            logger.info("Tweet sent successfully")
+            
+            if image_path and os.path.exists(image_path):
+                # Upload image and send tweet with media
+                logger.info(f"Attaching image: {image_path}")
+                media = api.media_upload(image_path)
+                api.update_status(status=tweet_content, media_ids=[media.media_id])
+                logger.info("Tweet with image sent successfully")
+            else:
+                # Send tweet without image
+                if image_path:
+                    logger.warning(f"Image not found at path: {image_path}")
+                api.update_status(tweet_content)
+                logger.info("Tweet sent successfully (without image)")
+                
             return True
         except ImportError:
             logger.error("Tweepy library not installed. Install with: pip install tweepy")
@@ -1439,7 +1489,7 @@ def generate_and_send_tweets_for_all_kols(dry_run: bool = True) -> None:
                     logger.warning(f"Skipping KOL with no X username: {fields.get('X', 'Unknown')}")
                     continue
                 
-                # Create data dictionary for tweet generation
+                # Create data dictionary for tweet generation and image generation
                 kol_data = {
                     "name": fields.get("X", "Unknown KOL"),
                     "xUsername": fields.get("xUsername", fields.get("X", "")),
@@ -1450,6 +1500,8 @@ def generate_and_send_tweets_for_all_kols(dry_run: bool = True) -> None:
                     "profile": fields.get("profile", "Unknown"),
                     "analysis": fields.get("analysis", ""),
                     "insights": fields.get("insights", ""),
+                    "profilePicture": fields.get("profilePicture", ""),
+                    "influenceScore": fields.get("influenceScore", 0),
                     "holdings": []
                 }
                 
@@ -1467,12 +1519,18 @@ def generate_and_send_tweets_for_all_kols(dry_run: bool = True) -> None:
                     logger.warning(f"Failed to generate tweet for {kol_data['name']}")
                     continue
                 
+                # Get image path (either existing or generate new)
+                image_path = get_kol_image_path(kol_data)
+                
+                if not image_path:
+                    logger.warning(f"Failed to get image for {kol_data['name']}")
+                
                 # Log the tweet content
                 logger.info(f"Tweet for {kol_data['name']}:\n{tweet_content}")
                 
                 # Send the tweet if not a dry run
                 if not dry_run:
-                    success = send_tweet(tweet_content)
+                    success = send_tweet(tweet_content, image_path)
                     if success:
                         logger.info(f"Tweet sent for {kol_data['name']}")
                     else:
@@ -1525,7 +1583,7 @@ def generate_and_send_tweet_by_name(kol_name: str, dry_run: bool = True) -> None
             logger.warning(f"Skipping KOL with no X username: {fields.get('X', 'Unknown')}")
             return
         
-        # Create data dictionary for tweet generation
+        # Create data dictionary for tweet generation and image generation
         kol_data = {
             "name": fields.get("X", "Unknown KOL"),
             "xUsername": fields.get("xUsername", fields.get("X", "")),
@@ -1536,6 +1594,8 @@ def generate_and_send_tweet_by_name(kol_name: str, dry_run: bool = True) -> None
             "profile": fields.get("profile", "Unknown"),
             "analysis": fields.get("analysis", ""),
             "insights": fields.get("insights", ""),
+            "profilePicture": fields.get("profilePicture", ""),
+            "influenceScore": fields.get("influenceScore", 0),
             "holdings": []
         }
         
@@ -1553,18 +1613,26 @@ def generate_and_send_tweet_by_name(kol_name: str, dry_run: bool = True) -> None
             logger.warning(f"Failed to generate tweet for {kol_data['name']}")
             return
         
+        # Get image path (either existing or generate new)
+        image_path = get_kol_image_path(kol_data)
+        
+        if not image_path:
+            logger.warning(f"Failed to get image for {kol_data['name']}")
+        
         # Log the tweet content
         logger.info(f"Tweet for {kol_data['name']}:\n{tweet_content}")
         
         # Send the tweet if not a dry run
         if not dry_run:
-            success = send_tweet(tweet_content)
+            success = send_tweet(tweet_content, image_path)
             if success:
                 logger.info(f"Tweet sent for {kol_data['name']}")
             else:
                 logger.warning(f"Failed to send tweet for {kol_data['name']}")
         else:
             logger.info("Dry run - tweet was not actually sent")
+            if image_path:
+                logger.info(f"Image would be attached: {image_path}")
     
     except Exception as e:
         logger.error(f"Error in generate_and_send_tweet_by_name: {e}")
