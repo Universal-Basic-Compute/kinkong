@@ -410,15 +410,18 @@ class KOLAnalyzer:
         record_id = kol_record["id"]
         fields = kol_record["fields"]
         
-        self.logger.info(f"Analyzing KOL: {fields.get('name', 'Unknown')}")
+        # Use "X" field for the name instead of "name"
+        kol_name = fields.get("X", "Unknown")
+        self.logger.info(f"Analyzing KOL: {kol_name}")
         
         # Extract key fields
         wallet_address = fields.get("wallet", "")
         x_username = fields.get("xUsername", "")
         
-        # Initialize result data
+        # Initialize result data with correct field name
         result_data = {
-            "name": fields.get("name", "Unknown"),
+            "name": kol_name,  # Store as "name" for internal use
+            "X": kol_name,     # Also store as "X" for Airtable update
             "wallet": wallet_address,
             "xUsername": x_username
         }
@@ -447,6 +450,7 @@ class KOLAnalyzer:
         
         # Prepare data for Airtable update
         update_data = {
+            "X": result_data.get("X", "Unknown"),  # Use X field for name
             "totalValue": result_data.get("totalValue", 0),
             "diversity": result_data.get("diversity", 0),
             "30DayChange": result_data.get("30DayChange", 0),
