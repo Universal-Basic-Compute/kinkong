@@ -222,18 +222,24 @@ class KOLAnalyzer:
             }
             params = {
                 "wallet": wallet_address,
-                "limit": 100
+                "limit": 200  # Increased limit to get more transactions
             }
             
-            response = requests.get(url, headers=headers, params=params, timeout=10)  # Add timeout
+            response = requests.get(url, headers=headers, params=params, timeout=15)  # Increased timeout
             
             if response.status_code != 200:
-                self.logger.error(f"Error from Birdeye API: {response.status_code} - {response.text}")
-                return {
-                    "recentTransactions": [],
-                    "30DayChange": 0,
-                    "riskScore": 50
-                }
+                # Try alternative endpoint
+                self.logger.warning(f"Primary endpoint failed, trying alternative endpoint")
+                url = "https://public-api.birdeye.so/v1/wallet/history"
+                response = requests.get(url, headers=headers, params=params, timeout=15)
+                
+                if response.status_code != 200:
+                    self.logger.error(f"Error from Birdeye API: {response.status_code} - {response.text}")
+                    return {
+                        "recentTransactions": [],
+                        "30DayChange": 0,
+                        "riskScore": 50
+                    }
             
             # Log the raw response for debugging
             self.logger.debug(f"Birdeye transactions API response: {response.text[:1000]}...")
@@ -259,36 +265,37 @@ class KOLAnalyzer:
                 # Try different possible paths to the transactions list
                 transactions = []
                 
-                # Path 1: data -> transactions
-                if "transactions" in txn_data and isinstance(txn_data["transactions"], list):
-                    transactions = txn_data["transactions"]
-                    self.logger.debug(f"Found transactions in data->transactions: {len(transactions)} transactions")
+                # Check all possible paths to find transactions
+                possible_paths = [
+                    # Direct paths
+                    txn_data.get("transactions", []),
+                    txn_data.get("items", []),
+                    # Nested under solana
+                    txn_data.get("solana", {}).get("transactions", []) if isinstance(txn_data.get("solana"), dict) else [],
+                    txn_data.get("solana", []) if isinstance(txn_data.get("solana"), list) else [],
+                    # Nested under other possible keys
+                    txn_data.get("history", []),
+                    txn_data.get("txs", []),
+                    txn_data.get("tx_list", [])
+                ]
                 
-                # Path 2: data -> solana -> transactions
-                elif "solana" in txn_data:
-                    solana_data = txn_data["solana"]
-                    if isinstance(solana_data, dict) and "transactions" in solana_data:
-                        transactions = solana_data["transactions"]
-                        self.logger.debug(f"Found transactions in data->solana->transactions: {len(transactions)} transactions")
-                    elif isinstance(solana_data, list):
-                        transactions = solana_data
-                        self.logger.debug(f"Found transactions in data->solana (list): {len(transactions)} transactions")
-                
-                # Path 3: data -> items
-                elif "items" in txn_data and isinstance(txn_data["items"], list):
-                    transactions = txn_data["items"]
-                    self.logger.debug(f"Found transactions in data->items: {len(transactions)} transactions")
+                # Use the first non-empty path
+                for path in possible_paths:
+                    if path and isinstance(path, list):
+                        transactions = path
+                        self.logger.debug(f"Found {len(transactions)} transactions")
+                        break
                 
                 # If we found transactions, process them
                 if transactions:
-                    for txn in transactions[:20]:
+                    for txn in transactions[:50]:  # Process more transactions
                         # Try different field names for transaction data
                         txn_type = txn.get("type", txn.get("txType", txn.get("transactionType", "Unknown")))
-                        symbol = txn.get("symbol", txn.get("tokenSymbol", "Unknown"))
+                        symbol = txn.get("symbol", txn.get("tokenSymbol", txn.get("token", "Unknown")))
                         
                         # Try different field names for value
                         value = 0
-                        for value_field in ["usdValue", "value", "valueUsd", "amountUsd"]:
+                        for value_field in ["usdValue", "value", "valueUsd", "amountUsd", "amount_usd"]:
                             if value_field in txn:
                                 try:
                                     value = float(txn[value_field])
@@ -298,7 +305,7 @@ class KOLAnalyzer:
                         
                         # Try different field names for timestamp
                         timestamp = 0
-                        for time_field in ["timestamp", "blockTime", "time", "date"]:
+                        for time_field in ["timestamp", "blockTime", "time", "date", "block_time"]:
                             if time_field in txn:
                                 try:
                                     if isinstance(txn[time_field], str):
@@ -310,12 +317,26 @@ class KOLAnalyzer:
                                 except (ValueError, TypeError):
                                     pass
                         
-                        recent_txns.append({
+                        # Add more transaction details if available
+                        tx_details = {
                             "type": txn_type,
                             "symbol": symbol,
                             "value": value,
                             "timestamp": timestamp
-                        })
+                        }
+                        
+                        # Add optional fields if available
+                        for field, key in [
+                            ("txHash", ["txHash", "signature", "tx_hash", "id"]),
+                            ("fee", ["fee", "transaction_fee"]),
+                            ("status", ["status", "tx_status"])
+                        ]:
+                            for k in key:
+                                if k in txn:
+                                    tx_details[field] = txn[k]
+                                    break
+                        
+                        recent_txns.append(tx_details)
                     
                     self.logger.info(f"Extracted {len(recent_txns)} recent transactions")
                     
@@ -374,7 +395,7 @@ class KOLAnalyzer:
                 change_30d = ((current_value - value_30d_ago) / value_30d_ago) * 100
             
             return {
-                "recentTransactions": recent_txns[:5],  # Top 5 recent transactions
+                "recentTransactions": recent_txns[:10],  # Return more recent transactions
                 "30DayChange": change_30d,
                 "riskScore": risk_score
             }
@@ -405,13 +426,20 @@ class KOLAnalyzer:
             # Remove @ if present
             username = username.replace("@", "")
             
-            url = f"https://api.twitter.com/2/users/by/username/{username}"
+            # Updated endpoint URL
+            url = f"https://api.x.com/2/users/by/username/{username}"
             params = {
-                "user.fields": "public_metrics,profile_image_url,description"
+                "user.fields": "public_metrics,profile_image_url,description,created_at"
             }
             headers = {"Authorization": f"Bearer {self.x_api_key}"}
             
-            response = requests.get(url, params=params, headers=headers, timeout=10)  # Add timeout
+            response = requests.get(url, params=params, headers=headers, timeout=10)
+            
+            # If the new endpoint fails, try the old one as fallback
+            if response.status_code != 200:
+                self.logger.warning(f"New X API endpoint failed with status {response.status_code}, trying legacy endpoint")
+                url = f"https://api.twitter.com/2/users/by/username/{username}"
+                response = requests.get(url, params=params, headers=headers, timeout=10)
             
             if response.status_code != 200:
                 self.logger.error(f"Error from X API: {response.status_code} - {response.text}")
@@ -427,7 +455,15 @@ class KOLAnalyzer:
             data = response.json()
             
             if "data" not in data:
-                return {"error": "User not found"}
+                self.logger.warning(f"User not found in X API response: {data}")
+                return {
+                    "profilePicture": "",
+                    "followers": 0,
+                    "following": 0,
+                    "tweets": 0,
+                    "description": "",
+                    "influenceScore": 0
+                }
             
             user_data = data["data"]
             metrics = user_data.get("public_metrics", {})
@@ -469,7 +505,7 @@ class KOLAnalyzer:
             }
     
     def generate_insights(self, kol_data: Dict[str, Any]) -> Dict[str, str]:
-        """Generate insights using Claude AI"""
+        """Generate insights using Claude AI and return as structured JSON"""
         if not self.claude_api_key:
             return {
                 "analysis": "Claude API key not configured",
@@ -514,10 +550,7 @@ class KOLAnalyzer:
             prompt = f"""
             You are a crypto analyst specializing in evaluating Key Opinion Leaders (KOLs) in the Solana ecosystem.
             
-            Analyze the following data about a crypto KOL and provide:
-            1. A concise analysis of their trading behavior, risk profile, and influence
-            2. Key insights about their investment strategy and potential value as an influencer
-            3. Assign them ONE profile type that best matches their behavior
+            Analyze the following data about a crypto KOL and provide your analysis in JSON format.
             
             {context}
             
@@ -533,46 +566,88 @@ class KOLAnalyzer:
             - Whale: Big money moves that others follow.
             - Degen: Lives for the community, thrives in chaos.
             
-            Provide your response in three parts:
-            1. Analysis: A paragraph summarizing the KOL's profile, trading behavior, and influence
-            2. Insights: 3-5 bullet points with specific observations about their strategy and value as an influencer
-            3. Profile: The ONE profile type that best describes this KOL (just the name, no explanation)
+            Return your analysis as a valid JSON object with the following structure:
+            {{
+              "analysis": "A paragraph summarizing the KOL's profile, trading behavior, and influence",
+              "insights": [
+                "First key insight about their strategy",
+                "Second key insight about their strategy",
+                "Third key insight about their strategy",
+                "Fourth key insight about their strategy",
+                "Fifth key insight about their strategy"
+              ],
+              "profile": "ONE_PROFILE_TYPE"
+            }}
+            
+            Ensure your response is ONLY the JSON object, with no additional text before or after.
             """
             
             response = self.claude.messages.create(
                 model="claude-3-7-sonnet-latest",
                 max_tokens=1000,
                 temperature=0.2,
-                system="You are a crypto analyst specializing in evaluating Key Opinion Leaders (KOLs) in the Solana ecosystem.",
+                system="You are a crypto analyst specializing in evaluating Key Opinion Leaders (KOLs) in the Solana ecosystem. Always respond with valid JSON.",
                 messages=[
                     {"role": "user", "content": prompt}
                 ]
             )
             
-            # Extract analysis, insights, and profile from response
-            content = response.content[0].text
+            # Extract JSON from response
+            content = response.content[0].text.strip()
             
-            # Split into sections
-            sections = content.split("Insights:")
-            analysis_section = sections[0].replace("Analysis:", "").strip()
-            
-            if len(sections) > 1:
-                remaining = sections[1]
-                insights_profile = remaining.split("Profile:")
-                insights_section = insights_profile[0].strip()
-                profile_section = insights_profile[1].strip() if len(insights_profile) > 1 else "Unknown"
-            else:
-                insights_section = "No insights generated"
-                profile_section = "Unknown"
-            
-            # Clean up profile to just get the type name
-            profile_type = profile_section.split("\n")[0].strip()
-            
-            return {
-                "analysis": analysis_section,
-                "insights": insights_section,
-                "profile": profile_type
-            }
+            # Try to parse the JSON response
+            try:
+                result = json.loads(content)
+                # Ensure all expected fields are present
+                if not all(k in result for k in ["analysis", "insights", "profile"]):
+                    self.logger.warning(f"Missing fields in Claude JSON response: {result.keys()}")
+                    # Add any missing fields
+                    if "analysis" not in result:
+                        result["analysis"] = "Analysis not provided"
+                    if "insights" not in result:
+                        result["insights"] = ["No insights provided"]
+                    if "profile" not in result:
+                        result["profile"] = "Unknown"
+                
+                # Convert insights list to string if needed
+                if isinstance(result["insights"], list):
+                    result["insights"] = "\n• " + "\n• ".join(result["insights"])
+                
+                return result
+            except json.JSONDecodeError as e:
+                self.logger.error(f"Failed to parse Claude response as JSON: {e}")
+                self.logger.debug(f"Raw response: {content}")
+                
+                # Fallback to text parsing if JSON parsing fails
+                try:
+                    # Try to extract sections manually
+                    if "Analysis:" in content and "Insights:" in content and "Profile:" in content:
+                        analysis = content.split("Analysis:")[1].split("Insights:")[0].strip()
+                        insights_section = content.split("Insights:")[1].split("Profile:")[0].strip()
+                        profile = content.split("Profile:")[1].strip().split("\n")[0].strip()
+                        
+                        # Format insights as bullet points
+                        insights_list = [line.strip().strip('*•-') for line in insights_section.split("\n") if line.strip()]
+                        insights = "\n• " + "\n• ".join(insights_list)
+                        
+                        return {
+                            "analysis": analysis,
+                            "insights": insights,
+                            "profile": profile
+                        }
+                    else:
+                        return {
+                            "analysis": "Error parsing Claude response",
+                            "insights": "Unable to extract insights from response",
+                            "profile": "Unknown"
+                        }
+                except Exception as parsing_error:
+                    self.logger.error(f"Error parsing Claude text response: {parsing_error}")
+                    return {
+                        "analysis": "Error parsing Claude response",
+                        "insights": "Unable to extract insights from response",
+                        "profile": "Unknown"
+                    }
         except Exception as e:
             self.logger.error(f"Error generating insights: {e}")
             return {
