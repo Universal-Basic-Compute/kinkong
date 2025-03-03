@@ -1519,46 +1519,81 @@ def send_tweet(tweet_content: str, image_path: Optional[str] = None) -> bool:
         return False
     
     try:
-        # Twitter API credentials
-        api_key = os.getenv('TWITTER_API_KEY')
-        api_secret = os.getenv('TWITTER_API_SECRET')
-        access_token = os.getenv('TWITTER_ACCESS_TOKEN')
-        access_token_secret = os.getenv('TWITTER_ACCESS_TOKEN_SECRET')
+        # Get OAuth credentials - using the same environment variables as monitor_mentions.py
+        api_key = os.getenv('X_API_KEY')
+        api_secret = os.getenv('X_API_SECRET')
+        access_token = os.getenv('X_ACCESS_TOKEN')
+        access_token_secret = os.getenv('X_ACCESS_TOKEN_SECRET')
         
+        # Verify credentials
         if not all([api_key, api_secret, access_token, access_token_secret]):
-            logger.error("Missing Twitter API credentials")
-            return False
-        
-        # Initialize Twitter API client
-        try:
-            import tweepy
-            auth = tweepy.OAuth1UserHandler(api_key, api_secret, access_token, access_token_secret)
-            api = tweepy.API(auth)
-            
-            # Send tweet with or without image
-            logger.info(f"Sending tweet: {tweet_content}")
-            
+            logger.error("Missing X API credentials")
+            # Log the tweet content for manual posting
+            logger.info(f"Tweet content (for manual posting):\n{tweet_content}")
             if image_path and os.path.exists(image_path):
-                # Upload image and send tweet with media
-                logger.info(f"Attaching image: {image_path}")
-                media = api.media_upload(image_path)
-                api.update_status(status=tweet_content, media_ids=[media.media_id])
-                logger.info("Tweet with image sent successfully")
-            else:
-                # Send tweet without image
-                if image_path:
-                    logger.warning(f"Image not found at path: {image_path}")
-                api.update_status(tweet_content)
-                logger.info("Tweet sent successfully (without image)")
-                
-            return True
-        except ImportError:
-            logger.error("Tweepy library not installed. Install with: pip install tweepy")
+                logger.info(f"Image path (for manual posting): {image_path}")
             return False
-    
+            
+        # Initialize tweepy client - same approach as in monitor_mentions.py
+        import tweepy
+        client = tweepy.Client(
+            consumer_key=api_key,
+            consumer_secret=api_secret,
+            access_token=access_token,
+            access_token_secret=access_token_secret
+        )
+        
+        # For media upload, we need the v1 API as well
+        if image_path and os.path.exists(image_path):
+            logger.info(f"Attaching image: {image_path}")
+            auth = tweepy.OAuth1UserHandler(
+                consumer_key=api_key,
+                consumer_secret=api_secret,
+                access_token=access_token,
+                access_token_secret=access_token_secret
+            )
+            api_v1 = tweepy.API(auth)
+            
+            # Upload media
+            media = api_v1.media_upload(image_path)
+            
+            # Send tweet with media
+            response = client.create_tweet(
+                text=tweet_content,
+                media_ids=[media.media_id]
+            )
+            logger.info("Tweet with image sent successfully")
+        else:
+            # Send tweet without media
+            if image_path:
+                logger.warning(f"Image not found at path: {image_path}")
+            
+            # Send tweet
+            response = client.create_tweet(
+                text=tweet_content
+            )
+            logger.info("Tweet sent successfully (without image)")
+        
+        if response.data:
+            logger.info(f"Successfully sent tweet: {tweet_content}")
+            return True
+        else:
+            logger.error("Failed to send tweet - no response data")
+            return False
+            
+    except ImportError as e:
+        logger.error(f"Tweepy library not installed or import error: {e}")
+        logger.info(f"Tweet content (for manual posting):\n{tweet_content}")
+        if image_path and os.path.exists(image_path):
+            logger.info(f"Image path (for manual posting): {image_path}")
+        return False
     except Exception as e:
         logger.error(f"Error sending tweet: {e}")
         logger.exception("Exception details:")
+        # Log the tweet content for manual posting
+        logger.info(f"Tweet content (for manual posting):\n{tweet_content}")
+        if image_path and os.path.exists(image_path):
+            logger.info(f"Image path (for manual posting): {image_path}")
         return False
 
 def generate_and_send_tweets_for_all_kols(dry_run: bool = True) -> None:
