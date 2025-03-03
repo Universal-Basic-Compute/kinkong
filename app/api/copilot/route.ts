@@ -723,15 +723,15 @@ Here are the key whales-related files for context:${whalesContext}`;
           
           default:
             // If no specific submission handler, fall back to mission-based context
-            handleMissionContext();
+            await handleMissionContext();
         }
       } else {
         // If no submission, use mission-based context
-        handleMissionContext();
+        await handleMissionContext();
       }
       
       // Helper function to handle mission-based context
-      function handleMissionContext() {
+      async function handleMissionContext() {
         // Add specific guidance based on the mission type
         switch (mission) {
         case 'token-discovery':
