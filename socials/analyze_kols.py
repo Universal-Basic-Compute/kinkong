@@ -26,7 +26,15 @@ def setup_logging():
             logging.FileHandler("kol_analysis.log")
         ]
     )
-    return logging.getLogger("kol_analyzer")
+    logger = logging.getLogger("kol_analyzer")
+    
+    # Add a debug file handler
+    debug_handler = logging.FileHandler("kol_analysis_debug.log")
+    debug_handler.setLevel(logging.DEBUG)
+    debug_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+    logger.addHandler(debug_handler)
+    
+    return logger
 
 class KOLAnalyzer:
     def __init__(self):
@@ -87,7 +95,13 @@ class KOLAnalyzer:
                 self.logger.error(f"Error from Birdeye API: {response.status_code} - {response.text}")
                 return {"error": f"API error: {response.status_code}"}
             
-            data = response.json()
+            # Check if response is valid JSON before parsing
+            try:
+                data = response.json()
+            except json.JSONDecodeError as e:
+                self.logger.error(f"Invalid JSON response from Birdeye API: {e}")
+                self.logger.debug(f"Response content: {response.text[:100]}...")
+                return {"error": "Invalid API response format"}
             
             # Calculate metrics
             holdings = []
@@ -137,7 +151,13 @@ class KOLAnalyzer:
                 self.logger.error(f"Error from Birdeye API: {response.status_code} - {response.text}")
                 return {"error": f"API error: {response.status_code}"}
             
-            data = response.json()
+            # Check if response is valid JSON before parsing
+            try:
+                data = response.json()
+            except json.JSONDecodeError as e:
+                self.logger.error(f"Invalid JSON response from Birdeye API: {e}")
+                self.logger.debug(f"Response content: {response.text[:100]}...")
+                return {"error": "Invalid API response format"}
             
             # Calculate metrics
             thirty_days_ago = time.time() - (30 * 24 * 60 * 60)
