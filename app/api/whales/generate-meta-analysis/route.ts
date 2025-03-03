@@ -8,9 +8,15 @@ const base = new Airtable({
 }).base(process.env.KINKONG_AIRTABLE_BASE_ID as string);
 
 // Initialize Anthropic client
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY as string,
-});
+const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
+let anthropic;
+if (anthropicApiKey) {
+  anthropic = new Anthropic({
+    apiKey: anthropicApiKey,
+  });
+} else {
+  console.error('ANTHROPIC_API_KEY is not defined');
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -151,6 +157,10 @@ Format your response as a JSON object with the following structure:
 Ensure your analysis is data-driven, balanced, and provides valuable insights for traders.
 `;
 
+    if (!anthropic) {
+      throw new Error('Anthropic client is not initialized');
+    }
+
     // Use Claude API for analysis
     const message = await anthropic.messages.create({
       model: "claude-3-7-sonnet-latest",
@@ -198,11 +208,11 @@ Ensure your analysis is data-driven, balanced, and provides valuable insights fo
       avgConfidence: avgConfidence
     };
     
-    const record = await metaAnalysisTable.create(metaAnalysis);
+    const record = await metaAnalysisTable.create([{ fields: metaAnalysis }]);
     
     return NextResponse.json({
       ...metaAnalysis,
-      id: record.id
+      id: record[0].id
     });
     
   } catch (error) {
