@@ -1403,10 +1403,12 @@ def main():
                             help='UBC score for token-maximizer strategy (-10 to +10)')
         parser.add_argument('--compute-score', type=int, default=0,
                             help='COMPUTE score for token-maximizer strategy (-10 to +10)')
+        parser.add_argument('--dry-run', action='store_true',
+                            help='Simulate execution without making actual trades')
         
         args = parser.parse_args()
         
-        logger.info(f"🔄 Trade executor running with action: {args.action}")
+        logger.info(f"🔄 Trade executor running with action: {args.action}{' (DRY RUN)' if args.dry_run else ''}")
         
         # Verify environment variables
         required_vars = [
@@ -1428,12 +1430,27 @@ def main():
         # Execute based on action parameter
         if args.action == 'token-maximizer':
             # Run token-maximizer strategy
-            logger.info(f"Running token-maximizer strategy with UBC score: {args.ubc_score}, COMPUTE score: {args.compute_score}")
+            logger.info(f"Running token-maximizer strategy with UBC score: {args.ubc_score}, COMPUTE score: {args.compute_score}{' (DRY RUN)' if args.dry_run else ''}")
             
             async def run_token_maximizer():
                 strategy = TokenMaximizerStrategy()
                 strategy.set_token_scores(args.ubc_score, args.compute_score)
-                await strategy.run_daily_update()
+                result = await strategy.run_daily_update(dry_run=args.dry_run)
+                
+                # If dry run, get and print the summary
+                if args.dry_run and result:
+                    summary = strategy.executor.get_last_rebalance_summary()
+                    print("\nDRY RUN SUMMARY:")
+                    print(json.dumps(summary, indent=2))
+                    
+                    # Print the summary to stdout as JSON for the API to capture
+                    print("\n--- JSON OUTPUT START ---")
+                    print(json.dumps({
+                        "success": result,
+                        "summary": summary,
+                        "isDryRun": True
+                    }))
+                    print("--- JSON OUTPUT END ---")
             
             asyncio.run(run_token_maximizer())
             

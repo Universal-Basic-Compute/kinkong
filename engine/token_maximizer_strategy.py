@@ -358,8 +358,8 @@ class TokenMaximizerStrategy:
                 "sol": 0
             }
     
-    async def execute_rebalance(self, target_allocation: Dict[str, float]) -> bool:
-        """Execute rebalance to match target allocation"""
+    async def execute_rebalance(self, target_allocation: Dict[str, float], dry_run: bool = False) -> bool:
+        """Execute rebalance to match target allocation, with optional dry-run mode"""
         try:
             # Get current allocation
             current_allocation = await self.get_current_allocation()
@@ -402,11 +402,12 @@ class TokenMaximizerStrategy:
             if simplified_target_total > 0:
                 simplified_target = {k: v / simplified_target_total for k, v in simplified_target.items()}
             
-            # Execute rebalance trades
+            # Execute or simulate rebalance trades
             success = await self.executor.execute_rebalance_trades(
                 simplified_current,
                 simplified_target,
-                total_value
+                total_value,
+                dry_run=dry_run
             )
             
             return success
@@ -415,10 +416,10 @@ class TokenMaximizerStrategy:
             self.logger.error(f"Error executing rebalance: {e}")
             return False
     
-    async def run_daily_update(self) -> bool:
-        """Run daily update process"""
+    async def run_daily_update(self, dry_run: bool = False) -> bool:
+        """Run daily update process with optional dry-run mode"""
         try:
-            self.logger.info("Starting Token Maximizer daily update")
+            self.logger.info(f"Starting Token Maximizer daily update {'(DRY RUN)' if dry_run else ''}")
             
             # If scores are not set manually, get them from Claude
             if self.ubc_score == 0 and self.compute_score == 0:
@@ -427,13 +428,13 @@ class TokenMaximizerStrategy:
             # Calculate target allocation
             target_allocation = self.calculate_allocation()
             
-            # Execute rebalance
-            success = await self.execute_rebalance(target_allocation)
+            # Execute rebalance (or simulate in dry-run mode)
+            success = await self.execute_rebalance(target_allocation, dry_run=dry_run)
             
             if success:
-                self.logger.info("Token Maximizer daily update completed successfully")
+                self.logger.info(f"Token Maximizer daily update {'simulation' if dry_run else 'execution'} completed successfully")
             else:
-                self.logger.error("Token Maximizer daily update failed")
+                self.logger.error(f"Token Maximizer daily update {'simulation' if dry_run else 'execution'} failed")
             
             return success
             

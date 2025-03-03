@@ -270,9 +270,9 @@ class TokenMaximizerExecutor:
             self.logger.error(f"Sell trade for {token.upper()} failed")
             return False
     
-    async def execute_rebalance_trades(self, current_allocation: Dict[str, float], target_allocation: Dict[str, float], portfolio_value: float) -> bool:
-        """Execute trades to rebalance portfolio according to target allocation"""
-        self.logger.info("Executing rebalance trades...")
+    async def execute_rebalance_trades(self, current_allocation: Dict[str, float], target_allocation: Dict[str, float], portfolio_value: float, dry_run: bool = False) -> bool:
+        """Execute trades to rebalance portfolio according to target allocation, with optional dry-run mode"""
+        self.logger.info(f"{'Simulating' if dry_run else 'Executing'} rebalance trades...")
         
         # Update token prices and balances
         await self.update_token_prices()
@@ -289,57 +289,163 @@ class TokenMaximizerExecutor:
             if abs(value_diff) > portfolio_value * 0.01:
                 trades.append({
                     "token": token,
-                    "value_diff": value_diff
+                    "value_diff": value_diff,
+                    "current_value": current_value,
+                    "target_value": target_value,
+                    "current_allocation": current_allocation.get(token, 0) * 100,
+                    "target_allocation": target_allocation.get(token, 0) * 100
                 })
                 self.logger.info(f"{token.upper()} needs adjustment of ${value_diff:.2f}")
+        
+        # If no significant trades needed
+        if not trades:
+            self.logger.info("No significant allocation changes needed (all within 1% threshold)")
+            return True
         
         # Sort trades: first sell, then buy
         sell_trades = [t for t in trades if t["value_diff"] < 0]
         buy_trades = [t for t in trades if t["value_diff"] > 0]
         
-        # Execute sell trades first to get USDC
+        # Create a summary of planned trades
+        trade_summary = {
+            "portfolio_value": portfolio_value,
+            "current_prices": {
+                "ubc": self.token_prices["ubc"],
+                "compute": self.token_prices["compute"],
+                "sol": self.token_prices["sol"]
+            },
+            "current_balances": {
+                "ubc": self.token_balances["ubc"],
+                "compute": self.token_balances["compute"],
+                "sol": self.token_balances["sol"]
+            },
+            "sell_trades": [],
+            "buy_trades": [],
+            "is_dry_run": dry_run
+        }
+        
+        # Process sell trades
         for trade in sell_trades:
             token = trade["token"]
             value = abs(trade["value_diff"])
+            token_price = self.token_prices[token]
+            token_amount = value / token_price if token_price > 0 else 0
             
-            if token == "sol":
-                # Special handling for SOL
-                self.logger.info(f"Selling {token.upper()} for ${value:.2f}")
-                success = await self.execute_sell_trade(token, value)
-                if not success:
-                    self.logger.error(f"Failed to sell {token.upper()}")
-            else:
-                self.logger.info(f"Selling {token.upper()} for ${value:.2f}")
+            trade_info = {
+                "token": token.upper(),
+                "value_usd": value,
+                "token_amount": token_amount,
+                "token_price": token_price,
+                "current_allocation": trade["current_allocation"],
+                "target_allocation": trade["target_allocation"],
+                "allocation_change": trade["target_allocation"] - trade["current_allocation"]
+            }
+            
+            trade_summary["sell_trades"].append(trade_info)
+            
+            self.logger.info(f"{'Would sell' if dry_run else 'Selling'} {token_amount:.6f} {token.upper()} (${value:.2f})")
+            
+            # Execute the trade if not in dry-run mode
+            if not dry_run:
                 success = await self.execute_sell_trade(token, value)
                 if not success:
                     self.logger.error(f"Failed to sell {token.upper()}")
         
-        # Update balances after sells
-        await self.update_token_balances()
+        # Update balances after sells if not in dry-run mode
+        if not dry_run and sell_trades:
+            await self.update_token_balances()
         
-        # Execute buy trades
+        # Process buy trades
         for trade in buy_trades:
             token = trade["token"]
             value = trade["value_diff"]
+            token_price = self.token_prices[token]
+            token_amount = value / token_price if token_price > 0 else 0
             
-            if token == "sol":
-                # Special handling for SOL
-                self.logger.info(f"Buying {token.upper()} for ${value:.2f}")
-                success = await self.execute_buy_trade(token, value)
-                if not success:
-                    self.logger.error(f"Failed to buy {token.upper()}")
-            else:
-                self.logger.info(f"Buying {token.upper()} for ${value:.2f}")
+            trade_info = {
+                "token": token.upper(),
+                "value_usd": value,
+                "token_amount": token_amount,
+                "token_price": token_price,
+                "current_allocation": trade["current_allocation"],
+                "target_allocation": trade["target_allocation"],
+                "allocation_change": trade["target_allocation"] - trade["current_allocation"]
+            }
+            
+            trade_summary["buy_trades"].append(trade_info)
+            
+            self.logger.info(f"{'Would buy' if dry_run else 'Buying'} {token_amount:.6f} {token.upper()} (${value:.2f})")
+            
+            # Execute the trade if not in dry-run mode
+            if not dry_run:
                 success = await self.execute_buy_trade(token, value)
                 if not success:
                     self.logger.error(f"Failed to buy {token.upper()}")
         
-        # Update balances after buys
-        await self.update_token_balances()
+        # Update balances after buys if not in dry-run mode
+        if not dry_run and buy_trades:
+            await self.update_token_balances()
         
-        self.logger.info("Rebalance trades completed")
+        # Calculate expected new allocation after trades
+        expected_new_balances = {}
+        for token in ["ubc", "compute", "sol"]:
+            expected_new_balances[token] = self.token_balances[token]
+            
+            # Adjust for sell trades
+            for trade in sell_trades:
+                if trade["token"] == token:
+                    token_price = self.token_prices[token]
+                    token_amount = abs(trade["value_diff"]) / token_price if token_price > 0 else 0
+                    expected_new_balances[token] -= token_amount
+            
+            # Adjust for buy trades
+            for trade in buy_trades:
+                if trade["token"] == token:
+                    token_price = self.token_prices[token]
+                    token_amount = trade["value_diff"] / token_price if token_price > 0 else 0
+                    expected_new_balances[token] += token_amount
+        
+        # Calculate expected new values and allocations
+        expected_new_values = {
+            token: expected_new_balances[token] * self.token_prices[token]
+            for token in ["ubc", "compute", "sol"]
+        }
+        
+        expected_total_value = sum(expected_new_values.values())
+        
+        expected_new_allocations = {
+            token: (expected_new_values[token] / expected_total_value) * 100 if expected_total_value > 0 else 0
+            for token in ["ubc", "compute", "sol"]
+        }
+        
+        # Add expected results to summary
+        trade_summary["expected_results"] = {
+            "new_balances": expected_new_balances,
+            "new_values": expected_new_values,
+            "new_allocations": expected_new_allocations,
+            "total_value": expected_total_value
+        }
+        
+        # Log summary
+        self.logger.info(f"\n{'Dry Run' if dry_run else 'Rebalance'} Summary:")
+        self.logger.info(f"Portfolio Value: ${portfolio_value:.2f}")
+        self.logger.info(f"Sell Trades: {len(sell_trades)}")
+        self.logger.info(f"Buy Trades: {len(buy_trades)}")
+        
+        if dry_run:
+            self.logger.info("\nExpected New Allocations:")
+            for token, allocation in expected_new_allocations.items():
+                self.logger.info(f"  {token.upper()}: {allocation:.2f}%")
+        
+        # Store the trade summary
+        self._last_rebalance_summary = trade_summary
+        
+        self.logger.info(f"Rebalance {'simulation' if dry_run else 'execution'} completed")
         return True
     
     def get_transaction_history(self) -> List[Dict]:
         """Get transaction history"""
         return self.transactions
+    def get_last_rebalance_summary(self) -> Dict:
+        """Get the summary of the last rebalance operation"""
+        return getattr(self, '_last_rebalance_summary', {})

@@ -21,7 +21,8 @@ export async function POST(request: Request) {
       const result = await executeTokenMaximizerStrategy({
         ubcScore: body.ubcScore,
         computeScore: body.computeScore,
-        wallet: body.wallet
+        wallet: body.wallet,
+        dryRun: body.dryRun === true  // Add dry-run parameter
       });
       
       return NextResponse.json(result);
@@ -61,9 +62,10 @@ async function executeTokenMaximizerStrategy(params: {
   ubcScore: number;
   computeScore: number;
   wallet: string;
+  dryRun?: boolean;
 }): Promise<any> {
   return new Promise((resolve, reject) => {
-    console.log(`Executing token-maximizer strategy with UBC score: ${params.ubcScore}, COMPUTE score: ${params.computeScore}`);
+    console.log(`Executing token-maximizer strategy with UBC score: ${params.ubcScore}, COMPUTE score: ${params.computeScore}${params.dryRun ? ' (DRY RUN)' : ''}`);
     
     // Get the project root directory
     const projectRoot = process.cwd();
@@ -71,13 +73,21 @@ async function executeTokenMaximizerStrategy(params: {
     // Construct path to Python script
     const scriptPath = path.join(projectRoot, 'engine', 'trades.py');
     
-    // Spawn Python process
-    const pythonProcess = spawn('python', [
+    // Prepare command line arguments
+    const args = [
       scriptPath,
       '--action', 'token-maximizer',
       '--ubc-score', params.ubcScore.toString(),
       '--compute-score', params.computeScore.toString()
-    ]);
+    ];
+    
+    // Add dry-run flag if needed
+    if (params.dryRun) {
+      args.push('--dry-run');
+    }
+    
+    // Spawn Python process
+    const pythonProcess = spawn('python', args);
     
     let stdout = '';
     let stderr = '';
@@ -104,22 +114,25 @@ async function executeTokenMaximizerStrategy(params: {
           const jsonOutput = JSON.parse(stdout);
           resolve({
             success: true,
-            message: 'Token-maximizer strategy execution completed',
-            data: jsonOutput
+            message: `Token-maximizer strategy ${params.dryRun ? 'simulation' : 'execution'} completed`,
+            data: jsonOutput,
+            isDryRun: params.dryRun === true
           });
         } catch (e) {
           // If not JSON, just return the raw output
           resolve({
             success: true,
-            message: 'Token-maximizer strategy execution completed',
-            output: stdout
+            message: `Token-maximizer strategy ${params.dryRun ? 'simulation' : 'execution'} completed`,
+            output: stdout,
+            isDryRun: params.dryRun === true
           });
         }
       } else {
         resolve({
           success: false,
-          message: 'Token-maximizer strategy execution failed',
-          error: stderr || `Process exited with code ${code}`
+          message: `Token-maximizer strategy ${params.dryRun ? 'simulation' : 'execution'} failed`,
+          error: stderr || `Process exited with code ${code}`,
+          isDryRun: params.dryRun === true
         });
       }
     });
@@ -130,7 +143,8 @@ async function executeTokenMaximizerStrategy(params: {
       reject({
         success: false,
         message: 'Failed to start token-maximizer process',
-        error: err.message
+        error: err.message,
+        isDryRun: params.dryRun === true
       });
     });
   });
