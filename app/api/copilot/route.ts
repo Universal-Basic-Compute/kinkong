@@ -2,6 +2,53 @@ import { NextRequest, NextResponse } from 'next/server';
 import { rateLimit } from '@/utils/rate-limit';
 import { getTable } from '@/backend/src/airtable/tables';
 import { COPILOT_PROMPT } from '@/prompts/copilot';
+import fs from 'fs/promises';
+import path from 'path';
+import { glob } from 'glob';
+
+// Helper function to find and read files
+async function getFileContents(pattern: string, maxFiles: number = 20, maxSizePerFile: number = 100000): Promise<string> {
+  try {
+    // Find files matching the pattern
+    const files = await glob(pattern, { nodir: true });
+    
+    // Sort files by name for consistency
+    files.sort();
+    
+    // Limit the number of files to prevent context overflow
+    const limitedFiles = files.slice(0, maxFiles);
+    
+    let allContents = '';
+    
+    // Read each file and append its contents
+    for (const file of limitedFiles) {
+      try {
+        // Read file content
+        const content = await fs.readFile(file, 'utf8');
+        
+        // Truncate content if it's too large
+        const truncatedContent = content.length > maxSizePerFile 
+          ? content.substring(0, maxSizePerFile) + '\n... [content truncated due to size]' 
+          : content;
+        
+        // Add file content with filename as header
+        allContents += `\n\n--- ${file} ---\n${truncatedContent}`;
+      } catch (err) {
+        console.log(`Could not read file ${file}: ${err}`);
+      }
+    }
+    
+    // If we limited the files, add a note
+    if (files.length > maxFiles) {
+      allContents += `\n\n[Note: Only showing ${maxFiles} of ${files.length} matching files]`;
+    }
+    
+    return allContents;
+  } catch (err) {
+    console.error(`Error finding files with pattern ${pattern}: ${err}`);
+    return '';
+  }
+}
 
 // Define interface for token discovery data
 interface TokenDiscoveryData {
