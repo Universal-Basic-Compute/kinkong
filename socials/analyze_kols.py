@@ -97,13 +97,19 @@ class KOLAnalyzer:
             }
             
             response = requests.get(url, headers=headers, params=params)
-            
+        
+            # Log the API request details
+            self.logger.info(f"Birdeye Holdings API Request: URL={url}, Params={params}")
+            self.logger.info(f"Birdeye Holdings API Response Status: {response.status_code}")
+        
             if response.status_code != 200:
                 self.logger.error(f"Error from Birdeye API: {response.status_code} - {response.text}")
                 return {"error": f"API error: {response.status_code}"}
-            
+        
             # Log the raw response for debugging
             self.logger.debug(f"Birdeye holdings API response: {response.text[:1000]}...")
+            # Log the raw response
+            self.logger.info(f"Birdeye Holdings API Response: {response.text[:500]}...")
             
             try:
                 data = response.json()
@@ -225,14 +231,21 @@ class KOLAnalyzer:
                 "limit": 200  # Increased limit to get more transactions
             }
             
+            # Log the API request details
+            self.logger.info(f"Birdeye Transactions API Request: URL={url}, Params={params}")
+        
             response = requests.get(url, headers=headers, params=params, timeout=15)  # Increased timeout
-            
+            self.logger.info(f"Birdeye Transactions API Response Status: {response.status_code}")
+        
             if response.status_code != 200:
                 # Try alternative endpoint
                 self.logger.warning(f"Primary endpoint failed, trying alternative endpoint")
                 url = "https://public-api.birdeye.so/v1/wallet/history"
+                self.logger.info(f"Birdeye Alternative API Request: URL={url}, Params={params}")
+            
                 response = requests.get(url, headers=headers, params=params, timeout=15)
-                
+                self.logger.info(f"Birdeye Alternative API Response Status: {response.status_code}")
+            
                 if response.status_code != 200:
                     self.logger.error(f"Error from Birdeye API: {response.status_code} - {response.text}")
                     return {
@@ -243,6 +256,8 @@ class KOLAnalyzer:
             
             # Log the raw response for debugging
             self.logger.debug(f"Birdeye transactions API response: {response.text[:1000]}...")
+            # Log the raw response
+            self.logger.info(f"Birdeye Transactions API Response: {response.text[:500]}...")
             
             try:
                 data = response.json()
@@ -433,13 +448,20 @@ class KOLAnalyzer:
             }
             headers = {"Authorization": f"Bearer {self.x_api_key}"}
             
+            # Log the API request details
+            self.logger.info(f"X API Request: URL={url}, Params={params}")
+            
             response = requests.get(url, params=params, headers=headers, timeout=10)
+            self.logger.info(f"X API Response Status: {response.status_code}")
             
             # If the new endpoint fails, try the old one as fallback
             if response.status_code != 200:
                 self.logger.warning(f"New X API endpoint failed with status {response.status_code}, trying legacy endpoint")
                 url = f"https://api.twitter.com/2/users/by/username/{username}"
+                self.logger.info(f"X Legacy API Request: URL={url}, Params={params}")
+                
                 response = requests.get(url, params=params, headers=headers, timeout=10)
+                self.logger.info(f"X Legacy API Response Status: {response.status_code}")
             
             if response.status_code != 200:
                 self.logger.error(f"Error from X API: {response.status_code} - {response.text}")
@@ -451,6 +473,9 @@ class KOLAnalyzer:
                     "description": "",
                     "influenceScore": 0
                 }
+            
+            # Log the raw response
+            self.logger.info(f"X API Response: {response.text}")
             
             data = response.json()
             
@@ -547,6 +572,9 @@ class KOLAnalyzer:
             - Bio: {kol_data.get('description', 'None')}
             """
             
+            # Log the context being sent to Claude
+            self.logger.info(f"Claude API Context: {context[:500]}...")
+            
             prompt = f"""
             You are a crypto analyst specializing in evaluating Key Opinion Leaders (KOLs) in the Solana ecosystem.
             
@@ -594,6 +622,9 @@ class KOLAnalyzer:
             
             # Extract JSON from response
             content = response.content[0].text.strip()
+            
+            # Log the Claude API response
+            self.logger.info(f"Claude API Response: {content[:500]}...")
             
             # Try to parse the JSON response
             try:
