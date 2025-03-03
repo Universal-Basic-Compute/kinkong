@@ -70,7 +70,7 @@ function StartPageContent() {
           </p>
           
           <a 
-            href="https://chromewebstore.google.com/detail/KinKong%20Copilot/pppphicmiiioggjhcbcbbghcdgbihbji"
+            href="https://chromewebstore.google.com/detail/kinkong-copilot/pppphicmiiioggjhcbcbbghcdgbihbji?hl=en"
             target="_blank"
             rel="noopener noreferrer"
             className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg font-bold text-white hover:scale-105 transition-all flex items-center"
