@@ -1037,7 +1037,7 @@ class KOLAnalyzer:
 
 def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kols") -> Optional[str]:
     """
-    Generate a KOL image using Ideogram API
+    Generate a KOL image using Ideogram API with a degen, aggressive, playful style
     
     Args:
         kol_data: Dictionary containing KOL data
@@ -1058,20 +1058,30 @@ def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kols"
         influence_score = kol_data.get("influenceScore", 0)
         
         # Determine color based on influence score
-        color_description = "gold and red" if influence_score >= 40 else "red and black"
+        color_description = "neon gold and fiery red" if influence_score >= 40 else "electric red and deep black"
         
-        # Create a simplified prompt for Ideogram focusing only on name, profile, and influence score
+        # Create a degen, aggressive, playful prompt for Ideogram
         prompt = f"""
-        Create a minimalist, high-impact crypto influencer card for @{x_username or name}.
+        Create a DEGEN, AGGRESSIVE, and PLAYFUL crypto influencer card for @{x_username or name} in the Solana ecosystem.
         
-        The design should feature ONLY:
-        1. The text "@{x_username or name}" in large, impactful typography as the main focus
-        2. "Profile: {profile_type}" in elegant gold font
-        3. "Influence Score: {influence_score}" in bold {color_description} colors
+        The design should feature:
+        1. The text "@{x_username or name}" in BOLD, EDGY typography with graffiti-style or glitch effects
+        2. "Profile: {profile_type}" in a cool, futuristic gold font with glow effects
+        3. "Influence Score: {influence_score}" in aggressive {color_description} colors with dynamic styling
         
-        The background should be dark with subtle crypto-themed elements.
+        Include Solana-themed elements like:
+        - Solana logo subtly integrated in the design
+        - Vibrant purple and teal accents (Solana brand colors)
+        - Digital/blockchain aesthetic with circuit patterns
         
-        The overall aesthetic should be premium, professional, and crypto-focused.
+        The background should be dark but energetic with:
+        - Neon glows
+        - Cyberpunk/vaporwave elements
+        - Subtle crypto meme references
+        - Chaotic, high-energy design elements
+        
+        Use fonts that are bold, edgy, and attention-grabbing - think esports, gaming, or street art typography.
+        The overall aesthetic should be high-energy, rebellious, and extremely cool - perfect for crypto Twitter.
         """
         
         # Ideogram API parameters
