@@ -846,6 +846,7 @@ class TradeExecutor:
             if original_value <= 0:
                 # Fallback calculation if original value is missing
                 original_value = entry_price * original_amount
+                self.logger.warning(f"Recalculated original value: ${original_value:.2f}")
                 
             # Calculate exit value based on current price and amount
             exit_value = current_price * token_amount
@@ -879,6 +880,9 @@ class TradeExecutor:
                 # Use a minimum value based on original value as fallback
                 exit_value = max(0.01, original_value * 0.1)  # At least 10% of original or 1 cent
                 self.logger.info(f"Using fallback exit value: ${exit_value:.2f}")
+                # Recalculate P&L and ROI with the adjusted exit value
+                realized_pnl = exit_value - original_value
+                roi = (realized_pnl / original_value * 100) if original_value > 0 else 0
             
             # Additional sanity check on ROI
             if roi > 1000:  # Cap ROI at 1000%
