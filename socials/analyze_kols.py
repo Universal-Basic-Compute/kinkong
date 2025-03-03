@@ -1036,6 +1036,8 @@ class KOLAnalyzer:
         self.logger.info("KOL analysis completed")
 
 def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kol_images") -> Optional[str]:
+    # Get logger from setup_logging
+    logger = setup_logging()
     """
     Generate a 3:4 image for a KOL with all the specified elements
     
@@ -1263,6 +1265,8 @@ def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kol_i
 
 def generate_all_kol_images():
     """Generate images for all KOLs in the database"""
+    # Get logger from setup_logging
+    logger = setup_logging()
     try:
         analyzer = KOLAnalyzer()
         kol_records = analyzer.get_all_kols()
@@ -1316,6 +1320,8 @@ def generate_all_kol_images():
 
 def generate_kol_image_by_name(kol_name: str):
     """Generate image for a specific KOL by name"""
+    # Get logger from setup_logging
+    logger = setup_logging()
     try:
         analyzer = KOLAnalyzer()
         kol_records = analyzer.get_all_kols()
@@ -1368,6 +1374,8 @@ def generate_kol_image_by_name(kol_name: str):
         return None
 
 async def main():
+    # Get logger from setup_logging
+    logger = setup_logging()
     try:
         # Parse command line arguments
         parser = argparse.ArgumentParser(description='KOL Analyzer and Image Generator')
