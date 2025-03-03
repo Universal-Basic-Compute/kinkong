@@ -321,6 +321,7 @@ interface CopilotRequest {
   wallet?: string;
   screenshot?: string; // Base64 encoded image
   mission?: string | null; // Add mission field
+  submission?: string | null; // Add submission ID field
 }
 
 const RATE_LIMIT_MESSAGES = [
@@ -492,7 +493,7 @@ export async function POST(request: NextRequest) {
     await rateLimiter.check(5, 'copilot_api');
 
     const requestBody: CopilotRequest = await request.json();
-    const { message, code, screenshot, mission } = requestBody;
+    const { message, code, screenshot, mission, submission } = requestBody;
 
     // Validate code
     if (!code) {
@@ -601,7 +602,7 @@ export async function POST(request: NextRequest) {
       console.log(`🔍 Token discovery data fetch result: Active tokens: ${tokenDiscoveryData.activeTokens.length}, Inactive tokens: ${tokenDiscoveryData.inactiveTokens.length}`);
     }
 
-    // Prepare full context with user data, wallet portfolio, investments, and mission
+    // Prepare full context with user data, wallet portfolio, investments, mission, and submission
     const fullContext = {
       request: requestBody,
       signals: contextData.signals,
@@ -611,7 +612,8 @@ export async function POST(request: NextRequest) {
       userInvestments: userInvestments, // Add user investments to context
       investmentValues: investmentValues, // Add investment values to context
       tokenDiscoveryData: tokenDiscoveryData, // Add token discovery data to context
-      mission: mission // Add mission to context
+      mission: mission, // Add mission to context
+      submission: submission // Add submission ID to context
     };
 
     const bodyContent = JSON.stringify(fullContext);
@@ -627,6 +629,11 @@ export async function POST(request: NextRequest) {
     if (mission) {
       // Add mission-specific guidance to the existing system prompt
       systemPrompt += `\n\nCurrent Mission: ${mission}\n`;
+      
+      // Add submission context if available
+      if (submission) {
+        systemPrompt += `Current Submission: ${submission}\n`;
+      }
       
       // Add specific guidance based on the mission type
       switch (mission) {

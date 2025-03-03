@@ -43,7 +43,7 @@ interface ChatContextType {
   clearScreenshot: () => void;
   scrollToBottom: () => void;
   messagesEndRef: React.RefObject<HTMLDivElement>;
-  handleSelectMission: (missionTitle: string, context: string, missionId: string) => void;
+  handleSelectMission: (missionTitle: string, context: string, missionId: string, submissionId?: string) => void;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -65,6 +65,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode; code: string | 
   const [subscription, setSubscription] = useState<{active: boolean; expiresAt?: string} | null>(null);
   const [currentMission, setCurrentMission] = useState<string | null>(null);
   const [selectedMissionId, setSelectedMissionId] = useState<string | null>(null);
+  const [currentSubmission, setCurrentSubmission] = useState<string | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -246,10 +247,11 @@ export const ChatProvider: React.FC<{ children: React.ReactNode; code: string | 
     }
   }
 
-  const handleSelectMission = (missionTitle: string, context: string, missionId: string) => {
+  const handleSelectMission = (missionTitle: string, context: string, missionId: string, submissionId?: string) => {
     // Store the mission ID for both context and UI highlighting
     setCurrentMission(missionId);
     setSelectedMissionId(missionId);
+    setCurrentSubmission(submissionId || null);
     
     // Automatically set the input field with the context
     setInput(context);
@@ -339,7 +341,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode; code: string | 
           code || 'default', 
           walletAddress,
           screenshot || undefined,
-          currentMission
+          currentMission,
+          currentSubmission
         ),
         timeoutPromise
       ]);
@@ -384,6 +387,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode; code: string | 
       setCurrentMission,
       selectedMissionId,
       setSelectedMissionId,
+      currentSubmission: currentSubmission,
       userData,
       handleSubmit,
       captureScreenshot,
