@@ -206,7 +206,12 @@ class KOLAnalyzer:
     def get_wallet_transactions(self, wallet_address: str) -> Dict[str, Any]:
         """Get wallet transaction history from Birdeye API"""
         if not self.birdeye_api_key or not wallet_address:
-            return {"error": "Missing API key or wallet address"}
+            self.logger.warning(f"Missing API key or wallet address for transactions")
+            return {
+                "recentTransactions": [],
+                "30DayChange": 0,
+                "riskScore": 50
+            }
         
         try:
             self.logger.info(f"Fetching transaction history for {wallet_address}")
@@ -220,11 +225,15 @@ class KOLAnalyzer:
                 "limit": 100
             }
             
-            response = requests.get(url, headers=headers, params=params)
+            response = requests.get(url, headers=headers, params=params, timeout=10)  # Add timeout
             
             if response.status_code != 200:
                 self.logger.error(f"Error from Birdeye API: {response.status_code} - {response.text}")
-                return {"error": f"API error: {response.status_code}"}
+                return {
+                    "recentTransactions": [],
+                    "30DayChange": 0,
+                    "riskScore": 50
+                }
             
             # Log the raw response for debugging
             self.logger.debug(f"Birdeye transactions API response: {response.text[:1000]}...")
@@ -372,12 +381,24 @@ class KOLAnalyzer:
         except Exception as e:
             self.logger.error(f"Error fetching wallet transactions: {e}")
             self.logger.exception("Exception details:")
-            return {"error": str(e)}
+            return {
+                "recentTransactions": [],
+                "30DayChange": 0,
+                "riskScore": 50
+            }
     
     def get_x_profile(self, username: str) -> Dict[str, Any]:
         """Get X (Twitter) profile information"""
         if not self.x_api_key or not username:
-            return {"error": "Missing API key or username"}
+            self.logger.warning(f"Missing X API key or username")
+            return {
+                "profilePicture": "",
+                "followers": 0,
+                "following": 0,
+                "tweets": 0,
+                "description": "",
+                "influenceScore": 0
+            }
         
         try:
             self.logger.info(f"Fetching X profile for {username}")
@@ -390,11 +411,18 @@ class KOLAnalyzer:
             }
             headers = {"Authorization": f"Bearer {self.x_api_key}"}
             
-            response = requests.get(url, params=params, headers=headers)
+            response = requests.get(url, params=params, headers=headers, timeout=10)  # Add timeout
             
             if response.status_code != 200:
                 self.logger.error(f"Error from X API: {response.status_code} - {response.text}")
-                return {"error": f"API error: {response.status_code}"}
+                return {
+                    "profilePicture": "",
+                    "followers": 0,
+                    "following": 0,
+                    "tweets": 0,
+                    "description": "",
+                    "influenceScore": 0
+                }
             
             data = response.json()
             
@@ -431,7 +459,14 @@ class KOLAnalyzer:
             }
         except Exception as e:
             self.logger.error(f"Error fetching X profile: {e}")
-            return {"error": str(e)}
+            return {
+                "profilePicture": "",
+                "followers": 0,
+                "following": 0,
+                "tweets": 0,
+                "description": "",
+                "influenceScore": 0
+            }
     
     def generate_insights(self, kol_data: Dict[str, Any]) -> Dict[str, str]:
         """Generate insights using Claude AI"""
@@ -663,7 +698,21 @@ class KOLAnalyzer:
             "name": kol_name,  # Store as "name" for internal use
             "X": kol_name,     # Also store as "X" for Airtable update
             "wallet": wallet_address,
-            "xUsername": x_username
+            "xUsername": x_username,
+            # Initialize with default values to ensure they exist
+            "totalValue": 0,
+            "tokenCount": 0,
+            "diversity": 0,
+            "holdings": [],
+            "recentTransactions": [],
+            "30DayChange": 0,
+            "riskScore": 50,
+            "profilePicture": "",
+            "followers": 0,
+            "following": 0,
+            "tweets": 0,
+            "description": "",
+            "influenceScore": 0
         }
         
         # Get wallet holdings data
@@ -671,18 +720,21 @@ class KOLAnalyzer:
             holdings_data = self.get_wallet_holdings(wallet_address)
             if "error" not in holdings_data:
                 result_data.update(holdings_data)
+                self.logger.info(f"Updated holdings data for {kol_name}: ${result_data.get('totalValue', 0):,.2f}")
         
         # Get wallet transaction history
         if wallet_address:
             transaction_data = self.get_wallet_transactions(wallet_address)
             if "error" not in transaction_data:
                 result_data.update(transaction_data)
+                self.logger.info(f"Updated transaction data for {kol_name}: {len(result_data.get('recentTransactions', []))} transactions")
         
         # Get X profile data
         if x_username:
             x_data = self.get_x_profile(x_username)
             if "error" not in x_data:
                 result_data.update(x_data)
+                self.logger.info(f"Updated X profile data for {kol_name}: {result_data.get('followers', 0):,} followers")
         
         # Generate insights with all collected data
         insights_data = self.generate_insights(result_data)
