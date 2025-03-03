@@ -190,7 +190,7 @@ class TokenMaximizerStrategy:
                 model="claude-3-7-sonnet-latest",
                 max_tokens=1000,
                 temperature=0,
-                system="You are a professional crypto trader specializing in Solana tokens. Analyze data and provide scores in JSON format only.",
+                system="You are a professional crypto trader specializing in Solana tokens, implementing the Token Maximizer strategy. This strategy focuses on maximizing the quantity of tokens held rather than dollar value. The core principle is '1 UBC = 1 UBC' - success is measured by increasing the number of tokens owned, not their USD value. Your task is to analyze market data and provide optimal allocation scores to accumulate more tokens over time through strategic positioning. Provide your analysis in JSON format only.",
                 messages=[
                     {"role": "user", "content": prompt}
                 ]
