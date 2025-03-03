@@ -172,8 +172,7 @@ export default function CopilotPage() {
         "10 messages per day",
         "Basic technical analysis",
         "Standard response time",
-        "Public signals access",
-        "Chrome extension access"
+        "Public signals access"
       ],
       action: () => {
         if (!connected) {
@@ -193,8 +192,7 @@ export default function CopilotPage() {
         "Exclusive Kong Copilot missions",
         "Exclusive Kong Copliot alpha signals",
         "+25% returns on Kong Invest",
-        "Stronger guarantees on Kong Invest",
-        "Chrome extension access"
+        "Stronger guarantees on Kong Invest"
       ],
       price: (
         <span>
@@ -441,10 +439,6 @@ export default function CopilotPage() {
               </svg>
               Install Chrome Extension
             </a>
-            <div className="flex items-center bg-black/50 px-4 py-2 rounded-lg">
-              <span className="text-green-400 mr-2">✓</span>
-              <span className="text-gray-300">10,000+ Users</span>
-            </div>
           </div>
           <div className="mt-6 text-gray-400 text-sm">
             Enhance your trading experience with real-time insights, portfolio analysis, and market intelligence.

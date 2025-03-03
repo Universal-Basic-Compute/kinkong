@@ -81,10 +81,6 @@ function StartPageContent() {
             Install Chrome Extension
           </a>
           
-          <div className="flex items-center bg-black/50 px-4 py-2 rounded-lg">
-            <span className="text-green-400 mr-2">✓</span>
-            <span className="text-gray-300">10,000+ Users</span>
-          </div>
         </div>
       </div>
 
