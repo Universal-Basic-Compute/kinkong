@@ -117,29 +117,48 @@ class KOLAnalyzer:
             holdings = []
             total_value = 0
             token_count = 0
+            tokens = []  # Initialize tokens list
             
             # Check the structure of the response and extract data
             if "success" in data and data["success"] and "data" in data:
-                # The structure might vary, so let's check different possible paths
                 tokens_data = data["data"]
+                found_tokens = False
                 
                 # Handle the case where data contains a "solana" key
-                if "solana" in tokens_data and isinstance(tokens_data["solana"], dict):
-                    tokens_data = tokens_data["solana"]
+                if "solana" in tokens_data:
+                    self.logger.debug(f"Found 'solana' key in response data")
+                    # If solana is a dict, use it for further processing
+                    if isinstance(tokens_data["solana"], dict):
+                        tokens_data = tokens_data["solana"]
+                        self.logger.debug(f"'solana' is a dict with keys: {tokens_data.keys()}")
+                    # If solana is a list, use it directly as tokens
+                    elif isinstance(tokens_data["solana"], list):
+                        tokens = tokens_data["solana"]
+                        self.logger.debug(f"Found {len(tokens)} tokens directly in 'solana' list")
+                        found_tokens = True
+                    else:
+                        self.logger.warning(f"'solana' key exists but has unexpected type: {type(tokens_data['solana'])}")
                 
-                # Check if items is directly in data
-                if "items" in tokens_data and isinstance(tokens_data["items"], list):
-                    tokens = tokens_data["items"]
-                # Or if tokens are directly in data
-                elif "tokens" in tokens_data and isinstance(tokens_data["tokens"], list):
-                    tokens = tokens_data["tokens"]
-                # Or if the data itself is a list
-                elif isinstance(tokens_data, list):
-                    tokens = tokens_data
-                else:
-                    # Log the structure for debugging
-                    self.logger.warning(f"Unexpected data structure in Birdeye response: {tokens_data.keys() if isinstance(tokens_data, dict) else 'not a dict'}")
-                    tokens = []
+                # Only check these structures if we didn't find tokens directly
+                if not found_tokens:
+                    # Check if items is directly in data
+                    if "items" in tokens_data and isinstance(tokens_data["items"], list):
+                        tokens = tokens_data["items"]
+                        self.logger.debug(f"Found tokens in 'items' key")
+                    # Or if tokens are directly in data
+                    elif "tokens" in tokens_data and isinstance(tokens_data["tokens"], list):
+                        tokens = tokens_data["tokens"]
+                        self.logger.debug(f"Found tokens in 'tokens' key")
+                    # Or if the data itself is a list
+                    elif isinstance(tokens_data, list):
+                        tokens = tokens_data
+                        self.logger.debug(f"tokens_data itself is a list of tokens")
+                    else:
+                        # Log the structure for debugging
+                        self.logger.warning(f"Unexpected data structure in Birdeye response: {tokens_data.keys() if isinstance(tokens_data, dict) else 'not a dict'}")
+                
+                # Log the number of tokens found
+                self.logger.debug(f"Found {len(tokens)} tokens in Birdeye response")
                 
                 for token in tokens:
                     # Extract token data, handling different possible structures
@@ -218,29 +237,45 @@ class KOLAnalyzer:
             value_30d_ago = 0
             current_value = 0
             risk_score = 50  # Default medium risk
+            transactions = []  # Initialize transactions list
             
             # Check the structure of the response and extract data
             if "success" in data and data["success"] and "data" in data:
-                # The structure might vary, so let's check different possible paths
                 txn_data = data["data"]
+                found_transactions = False
                 
                 # Handle the case where data contains a "solana" key
-                if "solana" in txn_data and isinstance(txn_data["solana"], dict):
-                    txn_data = txn_data["solana"]
+                if "solana" in txn_data:
+                    self.logger.debug(f"Found 'solana' key in response data")
+                    # If solana is a dict, use it for further processing
+                    if isinstance(txn_data["solana"], dict):
+                        txn_data = txn_data["solana"]
+                        self.logger.debug(f"'solana' is a dict with keys: {txn_data.keys()}")
+                    # If solana is a list, use it directly as transactions
+                    elif isinstance(txn_data["solana"], list):
+                        transactions = txn_data["solana"]
+                        self.logger.debug(f"Found {len(transactions)} transactions directly in 'solana' list")
+                        found_transactions = True
+                    else:
+                        self.logger.warning(f"'solana' key exists but has unexpected type: {type(txn_data['solana'])}")
                 
-                # Check if items is directly in data
-                if "items" in txn_data and isinstance(txn_data["items"], list):
-                    transactions = txn_data["items"]
-                # Or if transactions are directly in data
-                elif "transactions" in txn_data and isinstance(txn_data["transactions"], list):
-                    transactions = txn_data["transactions"]
-                # Or if the data itself is a list
-                elif isinstance(txn_data, list):
-                    transactions = txn_data
-                else:
-                    # Log the structure for debugging
-                    self.logger.warning(f"Unexpected data structure in Birdeye response: {txn_data.keys() if isinstance(txn_data, dict) else 'not a dict'}")
-                    transactions = []
+                # Only check these structures if we didn't find transactions directly
+                if not found_transactions:
+                    # Check if items is directly in data
+                    if "items" in txn_data and isinstance(txn_data["items"], list):
+                        transactions = txn_data["items"]
+                        self.logger.debug(f"Found transactions in 'items' key")
+                    # Or if transactions are directly in data
+                    elif "transactions" in txn_data and isinstance(txn_data["transactions"], list):
+                        transactions = txn_data["transactions"]
+                        self.logger.debug(f"Found transactions in 'transactions' key")
+                    # Or if the data itself is a list
+                    elif isinstance(txn_data, list):
+                        transactions = txn_data
+                        self.logger.debug(f"txn_data itself is a list of transactions")
+                    else:
+                        # Log the structure for debugging
+                        self.logger.warning(f"Unexpected data structure in Birdeye response: {txn_data.keys() if isinstance(txn_data, dict) else 'not a dict'}")
                 
                 # Log the number of transactions found
                 self.logger.debug(f"Found {len(transactions)} transactions in Birdeye response")
