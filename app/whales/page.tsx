@@ -87,12 +87,6 @@ export default function WhalesPage() {
         </div>
       </div>
 
-      {/* Add the WhaleMetaAnalysis component here */}
-      <WhaleMetaAnalysis 
-        token={selectedToken} 
-        timeframe={timeframe} 
-        isLoading={isLoading} 
-      />
 
       <WhaleMetricsCards data={whaleData} isLoading={isLoading} />
       
@@ -100,6 +94,13 @@ export default function WhalesPage() {
         <WhaleDistributionChart data={whaleData} isLoading={isLoading} />
         <WhaleOutlookChart data={whaleData} isLoading={isLoading} />
       </div>
+      
+      {/* WhaleMetaAnalysis moved here, after the charts */}
+      <WhaleMetaAnalysis 
+        token={selectedToken} 
+        timeframe={timeframe} 
+        isLoading={isLoading} 
+      />
       
       <WhaleAnalysisTable data={whaleData} isLoading={isLoading} />
     </main>
