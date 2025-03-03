@@ -360,6 +360,15 @@ async function checkMessageLimit(wallet: string | undefined, code: string): Prom
       )`
     }).firstPage();
 
+    // Check if the subscription has isAdmin=true
+    const isAdmin = subscriptions.length > 0 && subscriptions[0].get('isAdmin') === true;
+    
+    // If isAdmin is true, always return true (no message limit)
+    if (isAdmin) {
+      console.log('Admin subscription detected - no message limit applied');
+      return true;
+    }
+
     // If has active subscription, allow 100 messages per block
     // If free tier, allow 10 messages per day
     const isPremium = subscriptions.length > 0;
