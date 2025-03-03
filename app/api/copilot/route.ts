@@ -672,6 +672,33 @@ Here is the task scheduling configuration:${setupTasksContext}`;
             systemPrompt += `For this engine optimization mission, help the user analyze KinKong's trading engine implementation. Focus on understanding how the core algorithms work and identify potential optimizations for better performance and reliability.`;
           }
           break;
+        case 'trades-optimization':
+          // For trades optimization, load token discovery data instead of engine files
+          try {
+            // Fetch token snapshots for discovery (similar to token-discovery mission)
+            const tokenDiscoveryData = await getTokenSnapshotsForDiscovery();
+            
+            // Only include active tokens
+            const activeTokensContext = tokenDiscoveryData && tokenDiscoveryData.activeTokens 
+              ? `Active Tokens (${tokenDiscoveryData.activeTokens.length}):
+${tokenDiscoveryData.activeTokens
+  .sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0))
+  .slice(0, 10)
+  .map((token, index) => 
+    `${index + 1}. ${token.token} (${token.name || 'Unknown'}): $${parseFloat(token.price || 0).toFixed(6)}, Market Cap: $${formatNumber(token.marketCap)}, Volume 24h: $${formatNumber(token.volume24h)}, Liquidity: $${formatNumber(token.liquidity)}`
+  ).join('\n')}`
+              : 'No active tokens data available';
+            
+            systemPrompt += `For this trades optimization mission, help the user optimize the trading aspects of KinKong's strategy. Focus on analyzing entry/exit decisions, trade execution, and market adaptation to improve overall returns.
+
+Here is the current active token data for context:
+
+${activeTokensContext}`;
+          } catch (err) {
+            console.log(`Error loading trades optimization data: ${err}`);
+            systemPrompt += `For this trades optimization mission, help the user optimize the trading aspects of KinKong's strategy. Focus on analyzing entry/exit decisions, trade execution, and market adaptation to improve overall returns.`;
+          }
+          break;
         case 'technical-analysis':
           systemPrompt += `For this technical analysis workshop, help the user identify key chart patterns on specific tokens. Guide them in practicing support/resistance identification and developing a personalized trading strategy based on technical indicators. Explain concepts clearly and relate them to current market conditions.`;
           break;
