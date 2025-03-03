@@ -187,7 +187,7 @@ class TokenMaximizerStrategy:
             
             # Call Claude API
             response = self.claude.messages.create(
-                model="claude-3-opus-20240229",
+                model="claude-3-7-sonnet-latest",
                 max_tokens=1000,
                 temperature=0,
                 system="You are a professional crypto trader specializing in Solana tokens. Analyze data and provide scores in JSON format only.",
