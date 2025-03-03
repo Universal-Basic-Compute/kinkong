@@ -249,9 +249,6 @@ export function InvestmentsTable({ investments: propInvestments, latestSnapshot,
                           <span className="metallic-text-ubc font-medium">
                             {Math.floor(investment.ubcReturn || 0).toLocaleString('en-US')} $UBC
                           </span> 
-                          <span className="text-gray-400 text-sm ml-1">
-                            (${investment.return ? Math.floor(investment.return).toLocaleString('en-US') : '0'})
-                          </span>
                           {investment.isCalculated && (
                             <span className="text-xs text-yellow-500 ml-1">(Estimated)</span>
                           )}
@@ -260,9 +257,6 @@ export function InvestmentsTable({ investments: propInvestments, latestSnapshot,
                         <>
                           <span className="metallic-text-ubc font-medium">
                             0 $UBC
-                          </span> 
-                          <span className="text-gray-400 text-sm ml-1">
-                            ($0)
                           </span>
                         </>
                       )}
@@ -287,14 +281,14 @@ export function InvestmentsTable({ investments: propInvestments, latestSnapshot,
               <p>
                 <span className="text-gray-400">Portfolio Value:</span> 
                 <span className="text-white ml-2 font-medium">{Math.floor(latestSnapshot.totalValue).toLocaleString('en-US')}</span> 
-                <span className="text-gray-400">$USDC</span>
+                <span className="text-gray-400">USDC</span>
               </p>
               <p>
                 <span className="text-gray-400">Total Investment:</span> 
                 <span className="text-white ml-2 font-medium">
                   {Math.floor(localInvestments.filter(validateInvestment).reduce((sum, inv) => sum + (inv.usdAmount || 0), 0)).toLocaleString('en-US')}
                 </span> 
-                <span className="text-gray-400">$USDC</span>
+                <span className="text-gray-400">USDC</span>
               </p>
               <p className="text-gray-400">
                 Last Updated: {new Date(latestSnapshot.timestamp).toLocaleString('en-GB', {

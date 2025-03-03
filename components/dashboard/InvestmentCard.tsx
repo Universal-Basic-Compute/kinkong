@@ -173,10 +173,10 @@ export function InvestmentCard() {
       {totalUsdValue > 0 && (
         <div className="mt-3 pt-2 border-t border-gold/10">
           <p className="text-sm text-right">
-            Total Value: <span className="font-medium">${totalUsdValue.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2
-            })}</span>
+            Total Value: <span className="font-medium">{totalUsdValue.toLocaleString(undefined, {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0
+            })} USDC</span>
           </p>
           {totalUbcReturns > 0 && (
             <p className="text-sm text-right mt-1">

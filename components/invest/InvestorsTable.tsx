@@ -243,9 +243,6 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
                         <>
                           <span className="metallic-text-ubc font-medium">
                             {Math.floor(investor.ubcReturn || 0).toLocaleString('en-US')} $UBC
-                          </span> 
-                          <span className="text-gray-400 text-sm ml-1">
-                            (${investor.return ? Math.floor(investor.return).toLocaleString('en-US') : '0'})
                           </span>
                           {investor.isCalculated && (
                             <span className="text-xs text-yellow-500 ml-1">(Estimated)</span>
@@ -255,9 +252,6 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
                         <>
                           <span className="metallic-text-ubc font-medium">
                             0 $UBC
-                          </span> 
-                          <span className="text-gray-400 text-sm ml-1">
-                            ($0)
                           </span>
                         </>
                       )}
@@ -268,7 +262,8 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
                       {typeof investor.amount === 'number' ? (
                         <>
                           <div>
-                            <span className="text-white font-medium">${Math.floor(investor.amount).toLocaleString('en-US')}</span>
+                            <span className="text-white font-medium">{Math.floor(investor.amount).toLocaleString('en-US')}</span>{' '}
+                            <span className="text-gray-400">USDC</span>
                           </div>
                         </>
                       ) : (
