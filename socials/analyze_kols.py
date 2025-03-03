@@ -87,10 +87,10 @@ class KOLAnalyzer:
         
         try:
             self.logger.info(f"Fetching wallet holdings for {wallet_address}")
-            url = f"https://public-api.birdeye.so/v1/wallet/token_list"  # Updated endpoint
+            url = "https://public-api.birdeye.so/v1/wallet/token_list"
             headers = {
                 "X-API-KEY": self.birdeye_api_key,
-                "x-chain": "solana"  # Required header
+                "x-chain": "solana"
             }
             params = {
                 "wallet": wallet_address
@@ -103,82 +103,87 @@ class KOLAnalyzer:
                 return {"error": f"API error: {response.status_code}"}
             
             # Log the raw response for debugging
-            self.logger.debug(f"Birdeye holdings API response: {response.text[:500]}...")
+            self.logger.debug(f"Birdeye holdings API response: {response.text[:1000]}...")
             
-            # Check if response is valid JSON before parsing
             try:
                 data = response.json()
             except json.JSONDecodeError as e:
                 self.logger.error(f"Invalid JSON response from Birdeye API: {e}")
-                self.logger.debug(f"Response content: {response.text[:100]}...")
                 return {"error": "Invalid API response format"}
             
             # Calculate metrics
             holdings = []
             total_value = 0
             token_count = 0
-            tokens = []  # Initialize tokens list
             
-            # Check the structure of the response and extract data
-            if "success" in data and data["success"] and "data" in data:
-                tokens_data = data["data"]
-                found_tokens = False
+            # Check if the response is successful
+            if data.get("success", False):
+                # The tokens are likely in data -> tokens
+                tokens_data = data.get("data", {})
                 
-                # Handle the case where data contains a "solana" key
-                if "solana" in tokens_data:
-                    self.logger.debug(f"Found 'solana' key in response data")
-                    # If solana is a dict, use it for further processing
-                    if isinstance(tokens_data["solana"], dict):
-                        tokens_data = tokens_data["solana"]
-                        self.logger.debug(f"'solana' is a dict with keys: {tokens_data.keys()}")
-                    # If solana is a list, use it directly as tokens
-                    elif isinstance(tokens_data["solana"], list):
-                        tokens = tokens_data["solana"]
-                        self.logger.debug(f"Found {len(tokens)} tokens directly in 'solana' list")
-                        found_tokens = True
-                    else:
-                        self.logger.warning(f"'solana' key exists but has unexpected type: {type(tokens_data['solana'])}")
+                # Try different possible paths to the tokens list
+                tokens = []
                 
-                # Only check these structures if we didn't find tokens directly
-                if not found_tokens:
-                    # Check if items is directly in data
-                    if "items" in tokens_data and isinstance(tokens_data["items"], list):
-                        tokens = tokens_data["items"]
-                        self.logger.debug(f"Found tokens in 'items' key")
-                    # Or if tokens are directly in data
-                    elif "tokens" in tokens_data and isinstance(tokens_data["tokens"], list):
-                        tokens = tokens_data["tokens"]
-                        self.logger.debug(f"Found tokens in 'tokens' key")
-                    # Or if the data itself is a list
-                    elif isinstance(tokens_data, list):
-                        tokens = tokens_data
-                        self.logger.debug(f"tokens_data itself is a list of tokens")
-                    else:
-                        # Log the structure for debugging
-                        self.logger.warning(f"Unexpected data structure in Birdeye response: {tokens_data.keys() if isinstance(tokens_data, dict) else 'not a dict'}")
+                # Path 1: data -> tokens
+                if "tokens" in tokens_data and isinstance(tokens_data["tokens"], list):
+                    tokens = tokens_data["tokens"]
+                    self.logger.debug(f"Found tokens in data->tokens: {len(tokens)} tokens")
                 
-                # Log the number of tokens found
-                self.logger.debug(f"Found {len(tokens)} tokens in Birdeye response")
+                # Path 2: data -> solana -> tokens
+                elif "solana" in tokens_data:
+                    solana_data = tokens_data["solana"]
+                    if isinstance(solana_data, dict) and "tokens" in solana_data:
+                        tokens = solana_data["tokens"]
+                        self.logger.debug(f"Found tokens in data->solana->tokens: {len(tokens)} tokens")
+                    elif isinstance(solana_data, list):
+                        tokens = solana_data
+                        self.logger.debug(f"Found tokens in data->solana (list): {len(tokens)} tokens")
                 
-                for token in tokens:
-                    # Extract token data, handling different possible structures
-                    symbol = token.get("symbol", token.get("tokenSymbol", "Unknown"))
-                    value = token.get("value", token.get("usdValue", 0))
-                    amount = token.get("amount", token.get("tokenAmount", 0))
+                # Path 3: data -> items
+                elif "items" in tokens_data and isinstance(tokens_data["items"], list):
+                    tokens = tokens_data["items"]
+                    self.logger.debug(f"Found tokens in data->items: {len(tokens)} tokens")
+                
+                # If we found tokens, process them
+                if tokens:
+                    for token in tokens:
+                        # Try different field names for token data
+                        symbol = token.get("symbol", token.get("tokenSymbol", "Unknown"))
+                        
+                        # Try different field names for value
+                        value = 0
+                        for value_field in ["usdValue", "value", "valueUsd", "priceUsd"]:
+                            if value_field in token:
+                                try:
+                                    value = float(token[value_field])
+                                    break
+                                except (ValueError, TypeError):
+                                    pass
+                        
+                        # Try different field names for amount
+                        amount = 0
+                        for amount_field in ["amount", "tokenAmount", "balance"]:
+                            if amount_field in token:
+                                try:
+                                    amount = float(token[amount_field])
+                                    break
+                                except (ValueError, TypeError):
+                                    pass
+                        
+                        if value > 0:
+                            holdings.append({
+                                "symbol": symbol,
+                                "value": value,
+                                "amount": amount
+                            })
+                            total_value += value
+                            token_count += 1
                     
-                    if value > 0:
-                        holdings.append({
-                            "symbol": symbol,
-                            "value": value,
-                            "amount": amount
-                        })
-                        total_value += value
-                        token_count += 1
-                
-                # Log the extracted holdings
-                self.logger.debug(f"Extracted {len(holdings)} token holdings with total value ${total_value:.2f}")
+                    self.logger.info(f"Extracted {len(holdings)} token holdings with total value ${total_value:.2f}")
+                else:
+                    self.logger.warning(f"No tokens found in response. Response structure: {list(tokens_data.keys())}")
             else:
-                self.logger.warning(f"Birdeye API returned unsuccessful response or missing data: {data.get('success', False)}")
+                self.logger.warning(f"Birdeye API returned unsuccessful response: {data.get('success', False)}")
             
             # Calculate diversity score (0-100)
             diversity_score = 0
@@ -188,13 +193,14 @@ class KOLAnalyzer:
                 diversity_score = min(100, int(100 * (1 - concentration) * (1 - 1/token_count)))
             
             return {
-                "holdings": holdings[:10],  # Top 10 holdings
+                "holdings": sorted(holdings, key=lambda x: x["value"], reverse=True)[:10],  # Top 10 holdings by value
                 "totalValue": total_value,
                 "tokenCount": token_count,
                 "diversity": diversity_score
             }
         except Exception as e:
             self.logger.error(f"Error fetching wallet holdings: {e}")
+            self.logger.exception("Exception details:")
             return {"error": str(e)}
     
     def get_wallet_transactions(self, wallet_address: str) -> Dict[str, Any]:
@@ -204,10 +210,10 @@ class KOLAnalyzer:
         
         try:
             self.logger.info(f"Fetching transaction history for {wallet_address}")
-            url = f"https://public-api.birdeye.so/v1/wallet/tx_list"  # Updated endpoint
+            url = "https://public-api.birdeye.so/v1/wallet/tx_list"
             headers = {
                 "X-API-KEY": self.birdeye_api_key,
-                "x-chain": "solana"  # Required header
+                "x-chain": "solana"
             }
             params = {
                 "wallet": wallet_address,
@@ -221,14 +227,12 @@ class KOLAnalyzer:
                 return {"error": f"API error: {response.status_code}"}
             
             # Log the raw response for debugging
-            self.logger.debug(f"Birdeye transactions API response: {response.text[:500]}...")
+            self.logger.debug(f"Birdeye transactions API response: {response.text[:1000]}...")
             
-            # Check if response is valid JSON before parsing
             try:
                 data = response.json()
             except json.JSONDecodeError as e:
                 self.logger.error(f"Invalid JSON response from Birdeye API: {e}")
-                self.logger.debug(f"Response content: {response.text[:100]}...")
                 return {"error": "Invalid API response format"}
             
             # Calculate metrics
@@ -237,117 +241,123 @@ class KOLAnalyzer:
             value_30d_ago = 0
             current_value = 0
             risk_score = 50  # Default medium risk
-            transactions = []  # Initialize transactions list
             
-            # Check the structure of the response and extract data
-            if "success" in data and data["success"] and "data" in data:
-                txn_data = data["data"]
-                found_transactions = False
+            # Check if the response is successful
+            if data.get("success", False):
+                # The transactions are likely in data -> transactions
+                txn_data = data.get("data", {})
                 
-                # Handle the case where data contains a "solana" key
-                if "solana" in txn_data:
-                    self.logger.debug(f"Found 'solana' key in response data")
-                    # If solana is a dict, use it for further processing
-                    if isinstance(txn_data["solana"], dict):
-                        txn_data = txn_data["solana"]
-                        self.logger.debug(f"'solana' is a dict with keys: {txn_data.keys()}")
-                    # If solana is a list, use it directly as transactions
-                    elif isinstance(txn_data["solana"], list):
-                        transactions = txn_data["solana"]
-                        self.logger.debug(f"Found {len(transactions)} transactions directly in 'solana' list")
-                        found_transactions = True
-                    else:
-                        self.logger.warning(f"'solana' key exists but has unexpected type: {type(txn_data['solana'])}")
+                # Try different possible paths to the transactions list
+                transactions = []
                 
-                # Only check these structures if we didn't find transactions directly
-                if not found_transactions:
-                    # Check if items is directly in data
-                    if "items" in txn_data and isinstance(txn_data["items"], list):
-                        transactions = txn_data["items"]
-                        self.logger.debug(f"Found transactions in 'items' key")
-                    # Or if transactions are directly in data
-                    elif "transactions" in txn_data and isinstance(txn_data["transactions"], list):
-                        transactions = txn_data["transactions"]
-                        self.logger.debug(f"Found transactions in 'transactions' key")
-                    # Or if the data itself is a list
-                    elif isinstance(txn_data, list):
-                        transactions = txn_data
-                        self.logger.debug(f"txn_data itself is a list of transactions")
-                    else:
-                        # Log the structure for debugging
-                        self.logger.warning(f"Unexpected data structure in Birdeye response: {txn_data.keys() if isinstance(txn_data, dict) else 'not a dict'}")
+                # Path 1: data -> transactions
+                if "transactions" in txn_data and isinstance(txn_data["transactions"], list):
+                    transactions = txn_data["transactions"]
+                    self.logger.debug(f"Found transactions in data->transactions: {len(transactions)} transactions")
                 
-                # Log the number of transactions found
-                self.logger.debug(f"Found {len(transactions)} transactions in Birdeye response")
+                # Path 2: data -> solana -> transactions
+                elif "solana" in txn_data:
+                    solana_data = txn_data["solana"]
+                    if isinstance(solana_data, dict) and "transactions" in solana_data:
+                        transactions = solana_data["transactions"]
+                        self.logger.debug(f"Found transactions in data->solana->transactions: {len(transactions)} transactions")
+                    elif isinstance(solana_data, list):
+                        transactions = solana_data
+                        self.logger.debug(f"Found transactions in data->solana (list): {len(transactions)} transactions")
                 
-                # Get recent transactions
-                for txn in transactions[:20]:
-                    # Extract transaction data, handling different possible structures
-                    txn_type = txn.get("type", txn.get("txType", "Unknown"))
-                    symbol = txn.get("symbol", txn.get("tokenSymbol", "Unknown"))
-                    value = txn.get("value", txn.get("usdValue", 0))
-                    
-                    # Ensure timestamp is a number
-                    timestamp = txn.get("timestamp", txn.get("blockTime", 0))
-                    if isinstance(timestamp, str):
-                        try:
-                            timestamp = float(timestamp)
-                        except (ValueError, TypeError):
-                            timestamp = 0
-                    
-                    recent_txns.append({
-                        "type": txn_type,
-                        "symbol": symbol,
-                        "value": value,
-                        "timestamp": timestamp
-                    })
+                # Path 3: data -> items
+                elif "items" in txn_data and isinstance(txn_data["items"], list):
+                    transactions = txn_data["items"]
+                    self.logger.debug(f"Found transactions in data->items: {len(transactions)} transactions")
                 
-                # Calculate 30-day change
-                if len(transactions) > 0:
-                    # Try different field names for portfolio value
-                    current_value = transactions[0].get("portfolioValue", 
-                                    transactions[0].get("walletValue", 
-                                    transactions[0].get("totalValue", 0)))
+                # If we found transactions, process them
+                if transactions:
+                    for txn in transactions[:20]:
+                        # Try different field names for transaction data
+                        txn_type = txn.get("type", txn.get("txType", txn.get("transactionType", "Unknown")))
+                        symbol = txn.get("symbol", txn.get("tokenSymbol", "Unknown"))
+                        
+                        # Try different field names for value
+                        value = 0
+                        for value_field in ["usdValue", "value", "valueUsd", "amountUsd"]:
+                            if value_field in txn:
+                                try:
+                                    value = float(txn[value_field])
+                                    break
+                                except (ValueError, TypeError):
+                                    pass
+                        
+                        # Try different field names for timestamp
+                        timestamp = 0
+                        for time_field in ["timestamp", "blockTime", "time", "date"]:
+                            if time_field in txn:
+                                try:
+                                    if isinstance(txn[time_field], str):
+                                        # Try to parse string timestamp
+                                        timestamp = float(txn[time_field])
+                                    else:
+                                        timestamp = txn[time_field]
+                                    break
+                                except (ValueError, TypeError):
+                                    pass
+                        
+                        recent_txns.append({
+                            "type": txn_type,
+                            "symbol": symbol,
+                            "value": value,
+                            "timestamp": timestamp
+                        })
                     
-                    # Find portfolio value 30 days ago
-                    for txn in transactions:
-                        # Ensure timestamp is a number for comparison
-                        txn_time = txn.get("timestamp", txn.get("blockTime", 0))
-                        if isinstance(txn_time, str):
-                            try:
-                                txn_time = float(txn_time)
-                            except (ValueError, TypeError):
-                                txn_time = 0
+                    self.logger.info(f"Extracted {len(recent_txns)} recent transactions")
                     
-                        if txn_time < thirty_days_ago:
-                            value_30d_ago = txn.get("portfolioValue", 
-                                            txn.get("walletValue", 
-                                            txn.get("totalValue", 0)))
-                            break
-                
-                # Calculate risk score based on transaction patterns
-                if len(transactions) > 10:
-                    # Factors that increase risk:
-                    # 1. High transaction frequency
-                    txn_frequency = min(100, len([t for t in transactions 
-                                                if self._get_numeric_timestamp(t) > thirty_days_ago]))
+                    # Calculate 30-day change
+                    if len(transactions) > 0:
+                        # Try different field names for portfolio value
+                        current_value = transactions[0].get("portfolioValue", 
+                                        transactions[0].get("walletValue", 
+                                        transactions[0].get("totalValue", 0)))
+                        
+                        # Find portfolio value 30 days ago
+                        for txn in transactions:
+                            # Ensure timestamp is a number for comparison
+                            txn_time = txn.get("timestamp", txn.get("blockTime", 0))
+                            if isinstance(txn_time, str):
+                                try:
+                                    txn_time = float(txn_time)
+                                except (ValueError, TypeError):
+                                    txn_time = 0
+                        
+                            if txn_time < thirty_days_ago:
+                                value_30d_ago = txn.get("portfolioValue", 
+                                                txn.get("walletValue", 
+                                                txn.get("totalValue", 0)))
+                                break
                     
-                    # 2. Trading low-cap tokens
-                    low_cap_trades = sum(1 for t in transactions[:50] 
-                                        if t.get("symbol", t.get("tokenSymbol", "")) not in ["SOL", "USDC", "USDT"])
-                    
-                    # 3. High value volatility
-                    values = [t.get("value", t.get("usdValue", 0)) for t in transactions[:20] 
-                            if t.get("value", t.get("usdValue", 0)) > 0]
-                    value_volatility = 0
-                    if len(values) > 1:
-                        avg_value = sum(values) / len(values)
-                        value_volatility = sum(abs(v - avg_value) for v in values) / (avg_value * len(values))
-                    
-                    # Combine factors
-                    risk_score = min(100, int((txn_frequency * 0.3) + (low_cap_trades * 2) + (value_volatility * 30)))
+                    # Calculate risk score based on transaction patterns
+                    if len(transactions) > 10:
+                        # Factors that increase risk:
+                        # 1. High transaction frequency
+                        txn_frequency = min(100, len([t for t in transactions 
+                                                    if self._get_numeric_timestamp(t) > thirty_days_ago]))
+                        
+                        # 2. Trading low-cap tokens
+                        low_cap_trades = sum(1 for t in transactions[:50] 
+                                            if t.get("symbol", t.get("tokenSymbol", "")) not in ["SOL", "USDC", "USDT"])
+                        
+                        # 3. High value volatility
+                        values = [t.get("value", t.get("usdValue", 0)) for t in transactions[:20] 
+                                if t.get("value", t.get("usdValue", 0)) > 0]
+                        value_volatility = 0
+                        if len(values) > 1:
+                            avg_value = sum(values) / len(values)
+                            value_volatility = sum(abs(v - avg_value) for v in values) / (avg_value * len(values))
+                        
+                        # Combine factors
+                        risk_score = min(100, int((txn_frequency * 0.3) + (low_cap_trades * 2) + (value_volatility * 30)))
+                else:
+                    self.logger.warning(f"No transactions found in response. Response structure: {list(txn_data.keys())}")
             else:
-                self.logger.warning(f"Birdeye API returned unsuccessful response or missing data: {data.get('success', False)}")
+                self.logger.warning(f"Birdeye API returned unsuccessful response: {data.get('success', False)}")
             
             # Calculate 30-day change percentage
             change_30d = 0
@@ -361,6 +371,7 @@ class KOLAnalyzer:
             }
         except Exception as e:
             self.logger.error(f"Error fetching wallet transactions: {e}")
+            self.logger.exception("Exception details:")
             return {"error": str(e)}
     
     def get_x_profile(self, username: str) -> Dict[str, Any]:
@@ -544,6 +555,84 @@ class KOLAnalyzer:
             except (ValueError, TypeError):
                 return 0
         return timestamp
+        
+    def _print_nested_structure(self, data, prefix="", max_depth=3, current_depth=0):
+        """Helper to print the structure of nested dictionaries and lists"""
+        if current_depth >= max_depth:
+            print(f"{prefix}... (max depth reached)")
+            return
+        
+        if isinstance(data, dict):
+            print(f"{prefix}dict with keys: {list(data.keys())}")
+            for key, value in data.items():
+                print(f"{prefix}{key}:", end=" ")
+                if isinstance(value, (dict, list)):
+                    print()
+                    self._print_nested_structure(value, prefix + "  ", max_depth, current_depth + 1)
+                else:
+                    print(f"{type(value).__name__}: {str(value)[:50]}")
+        elif isinstance(data, list):
+            print(f"{prefix}list with {len(data)} items")
+            if data and current_depth < max_depth - 1:
+                print(f"{prefix}First item:")
+                self._print_nested_structure(data[0], prefix + "  ", max_depth, current_depth + 1)
+        else:
+            print(f"{prefix}{type(data).__name__}: {str(data)[:50]}")
+    
+    def test_birdeye_api(self, wallet_address: str):
+        """Test the Birdeye API and print the full response structure"""
+        if not self.birdeye_api_key or not wallet_address:
+            print("Missing API key or wallet address")
+            return
+        
+        print(f"Testing Birdeye API for wallet: {wallet_address}")
+        
+        # Test token list endpoint
+        url = "https://public-api.birdeye.so/v1/wallet/token_list"
+        headers = {
+            "X-API-KEY": self.birdeye_api_key,
+            "x-chain": "solana"
+        }
+        params = {
+            "wallet": wallet_address
+        }
+        
+        print("\nTesting token list endpoint...")
+        response = requests.get(url, headers=headers, params=params)
+        print(f"Status code: {response.status_code}")
+        
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                print("\nResponse structure:")
+                self._print_nested_structure(data)
+                print("\nFull response:")
+                print(json.dumps(data, indent=2)[:2000] + "...")  # Print first 2000 chars
+            except Exception as e:
+                print(f"Error parsing response: {e}")
+                print(f"Raw response: {response.text[:500]}...")
+        
+        # Test transaction list endpoint
+        url = "https://public-api.birdeye.so/v1/wallet/tx_list"
+        params = {
+            "wallet": wallet_address,
+            "limit": 10  # Limit to 10 for testing
+        }
+        
+        print("\nTesting transaction list endpoint...")
+        response = requests.get(url, headers=headers, params=params)
+        print(f"Status code: {response.status_code}")
+        
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                print("\nResponse structure:")
+                self._print_nested_structure(data)
+                print("\nFull response:")
+                print(json.dumps(data, indent=2)[:2000] + "...")  # Print first 2000 chars
+            except Exception as e:
+                print(f"Error parsing response: {e}")
+                print(f"Raw response: {response.text[:500]}...")
     
     def update_kol_record(self, record_id: str, data: Dict[str, Any]) -> bool:
         """Update KOL record in Airtable with new data"""
@@ -663,6 +752,13 @@ class KOLAnalyzer:
 async def main():
     try:
         analyzer = KOLAnalyzer()
+        
+        # Test mode - uncomment to test API with a specific wallet
+        # Replace with a valid wallet address
+        # test_wallet = "BCnqsPEtA1TkgednYEebRpkmwFRJDCjMQcKZMMtEdArc"
+        # analyzer.test_birdeye_api(test_wallet)
+        # return
+        
         await analyzer.analyze_all_kols()
     except Exception as e:
         logging.error(f"Error in main execution: {e}")
