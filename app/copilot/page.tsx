@@ -145,7 +145,7 @@ export default function CopilotPage() {
     {
       title: "UBC Ecosystem Integration",
       description: "Direct access to UBC news, updates, and cross-swarm intelligence",
-      icon: "🌐"
+      icon: "🔄"
     },
     {
       title: "Trading Signals",
