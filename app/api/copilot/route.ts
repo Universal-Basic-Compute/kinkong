@@ -47,7 +47,8 @@ async function getFileContents(pattern: string, maxFiles: number = 20, maxSizePe
   } catch (err) {
     console.error(`Error finding files with pattern ${pattern}: ${err}`);
     return '';
-  }
+        }
+      }
 }
 
 // Define interface for token discovery data
@@ -635,8 +636,96 @@ export async function POST(request: NextRequest) {
         systemPrompt += `Current Submission: ${submission}\n`;
       }
       
-      // Add specific guidance based on the mission type
-      switch (mission) {
+      // If there's a submission, use that for context loading
+      if (submission) {
+        // Handle submission-specific context
+        switch (submission) {
+          case 'engine-optimization':
+            // Dynamically load engine files and setup_tasks.ps1 for context
+            try {
+              const engineContext = await getFileContents('engine/*.py');
+              const setupTasksContext = await getFileContents('setup_tasks.ps1');
+              
+              systemPrompt += `For this engine optimization submission, help the user analyze KinKong's trading engine implementation. Focus on understanding how the core algorithms work and identify potential optimizations for better performance and reliability.
+
+Here are the key engine files for context:${engineContext}
+
+Here is the task scheduling configuration:${setupTasksContext}`;
+            } catch (err) {
+              console.log(`Error loading engine files: ${err}`);
+              systemPrompt += `For this engine optimization submission, help the user analyze KinKong's trading engine implementation. Focus on understanding how the core algorithms work and identify potential optimizations for better performance and reliability.`;
+            }
+            break;
+          
+          case 'trades-optimization':
+            // For trades optimization, load token discovery data instead of engine files
+            try {
+              // Fetch token snapshots for discovery (similar to token-discovery mission)
+              const tokenDiscoveryData = await getTokenSnapshotsForDiscovery();
+              
+              // Only include active tokens
+              const activeTokensContext = tokenDiscoveryData && tokenDiscoveryData.activeTokens 
+                ? `Active Tokens (${tokenDiscoveryData.activeTokens.length}):
+${tokenDiscoveryData.activeTokens
+  .sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0))
+  .slice(0, 10)
+  .map((token, index) => 
+    `${index + 1}. ${token.token} (${token.name || 'Unknown'}): $${parseFloat(token.price || 0).toFixed(6)}, Market Cap: $${formatNumber(token.marketCap)}, Volume 24h: $${formatNumber(token.volume24h)}, Liquidity: $${formatNumber(token.liquidity)}`
+  ).join('\n')}`
+                : 'No active tokens data available';
+              
+              systemPrompt += `For this trades optimization submission, help the user optimize the trading aspects of KinKong's strategy. Focus on analyzing entry/exit decisions, trade execution, and market adaptation to improve overall returns.
+
+Here is the current active token data for context:
+
+${activeTokensContext}`;
+            } catch (err) {
+              console.log(`Error loading trades optimization data: ${err}`);
+              systemPrompt += `For this trades optimization submission, help the user optimize the trading aspects of KinKong's strategy. Focus on analyzing entry/exit decisions, trade execution, and market adaptation to improve overall returns.`;
+            }
+            break;
+          
+          case 'socials-optimization':
+            // Dynamically load socials files for context
+            try {
+              const socialsContext = await getFileContents('socials/**/*.py');
+              
+              systemPrompt += `For this socials optimization submission, help the user review KinKong's social media integration and sentiment analysis. Focus on optimizing how we gather, process, and act on social signals to improve trading decisions.
+
+Here are the key socials-related files for context:${socialsContext}`;
+            } catch (err) {
+              console.log(`Error loading socials files: ${err}`);
+              systemPrompt += `For this socials optimization submission, help the user review KinKong's social media integration and sentiment analysis. Focus on optimizing how we gather, process, and act on social signals to improve trading decisions.`;
+            }
+            break;
+          
+          case 'whales-optimization':
+            // Dynamically load whales files for context
+            try {
+              const whalesContext = await getFileContents('engine/whales/**/*.py');
+              
+              systemPrompt += `For this whales optimization submission, help the user optimize KinKong's whale tracking and analysis capabilities. Focus on better identifying and following smart money movements to improve our strategy.
+
+Here are the key whales-related files for context:${whalesContext}`;
+            } catch (err) {
+              console.log(`Error loading whales files: ${err}`);
+              systemPrompt += `For this whales optimization submission, help the user optimize KinKong's whale tracking and analysis capabilities. Focus on better identifying and following smart money movements to improve our strategy.`;
+            }
+            break;
+          
+          default:
+            // If no specific submission handler, fall back to mission-based context
+            handleMissionContext();
+        }
+      } else {
+        // If no submission, use mission-based context
+        handleMissionContext();
+      }
+      
+      // Helper function to handle mission-based context
+      function handleMissionContext() {
+        // Add specific guidance based on the mission type
+        switch (mission) {
         case 'token-discovery':
           systemPrompt += `For this token discovery mission, focus on analyzing emerging tokens on Solana with strong fundamentals. Evaluate liquidity, volume trends, and holder distribution to help the user create a watchlist of promising tokens for potential investment. Provide detailed analysis of tokenomics and market positioning when relevant.`;
           break;
