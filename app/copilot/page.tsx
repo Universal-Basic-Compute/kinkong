@@ -143,11 +143,6 @@ export default function CopilotPage() {
       icon: "🎯"
     },
     {
-      title: "Community Alpha Access",
-      description: "Tap into the collective intelligence of the UBC community",
-      icon: "👥"
-    },
-    {
       title: "UBC Ecosystem Integration",
       description: "Direct access to UBC news, updates, and cross-swarm intelligence",
       icon: "🌐"
