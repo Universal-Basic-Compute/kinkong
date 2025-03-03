@@ -75,34 +75,6 @@ export default function MissionSidebar() {
       ]
     },
     {
-      id: 'strategy-optimization',
-      title: '⚙️ Strategy Optimization',
-      description: 'Analyze and optimize KinKong\'s trading strategy',
-      context: 'Help me analyze and optimize KinKong\'s trading strategy. I want to understand the current implementation and find ways to improve performance, efficiency, and results across different components of the system.',
-      submenu: [
-        {
-          id: 'engine-optimization',
-          title: 'Engine Optimization',
-          context: 'Let\'s analyze KinKong\'s trading engine implementation. I want to understand how the core algorithms work and identify potential optimizations for better performance and reliability.'
-        },
-        {
-          id: 'trades-optimization',
-          title: 'Trades Optimization',
-          context: 'Help me optimize the trading aspects of KinKong\'s strategy. I want to analyze entry/exit decisions, trade execution, and market adaptation to improve overall returns.'
-        },
-        {
-          id: 'socials-optimization',
-          title: 'Socials Optimization',
-          context: 'Let\'s review KinKong\'s social media integration and sentiment analysis. I want to optimize how we gather, process, and act on social signals to improve trading decisions.'
-        },
-        {
-          id: 'whales-optimization',
-          title: 'Whales Optimization',
-          context: 'Help me optimize KinKong\'s whale tracking and analysis capabilities. I want to better identify and follow smart money movements to improve our strategy.'
-        }
-      ]
-    },
-    {
       id: 'technical-analysis',
       title: '📊 Technical Analysis',
       description: 'Learn to identify key chart patterns',
@@ -189,6 +161,34 @@ export default function MissionSidebar() {
       context: 'Let\'s explore whale wallet movements and smart money flows. I want to analyze token distribution and concentration metrics to identify potential accumulation or distribution patterns before they affect price.',
       disabled: true,
       submenu: []
+    },
+    {
+      id: 'strategy-optimization',
+      title: '🧠 Strategy Exploration',
+      description: 'Analyze and explore KinKong\'s trading strategy',
+      context: 'Help me analyze and explore KinKong\'s trading strategy. I want to understand the current implementation and find ways to improve performance, efficiency, and results across different components of the system.',
+      submenu: [
+        {
+          id: 'engine-optimization',
+          title: 'Engine Optimization',
+          context: 'Let\'s analyze KinKong\'s trading engine implementation. I want to understand how the core algorithms work and identify potential optimizations for better performance and reliability.'
+        },
+        {
+          id: 'trades-optimization',
+          title: 'Trades Optimization',
+          context: 'Help me optimize the trading aspects of KinKong\'s strategy. I want to analyze entry/exit decisions, trade execution, and market adaptation to improve overall returns.'
+        },
+        {
+          id: 'socials-optimization',
+          title: 'Socials Optimization',
+          context: 'Let\'s review KinKong\'s social media integration and sentiment analysis. I want to optimize how we gather, process, and act on social signals to improve trading decisions.'
+        },
+        {
+          id: 'whales-optimization',
+          title: 'Whales Optimization',
+          context: 'Help me optimize KinKong\'s whale tracking and analysis capabilities. I want to better identify and follow smart money movements to improve our strategy.'
+        }
+      ]
     }
   ];
 
