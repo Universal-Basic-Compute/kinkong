@@ -1037,7 +1037,7 @@ class KOLAnalyzer:
 
 def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kols") -> Optional[str]:
     """
-    Generate a KOL image using Ideogram API with a degen, aggressive, playful style
+    Generate a KOL image using Ideogram API with a jungle-themed style
     
     Args:
         kol_data: Dictionary containing KOL data
@@ -1058,30 +1058,31 @@ def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kols"
         influence_score = kol_data.get("influenceScore", 0)
         
         # Determine color based on influence score
-        color_description = "neon gold and fiery red" if influence_score >= 40 else "electric red and deep black"
+        color_description = "rich gold and deep green" if influence_score >= 40 else "earthy red and jungle green"
         
-        # Create a degen, aggressive, playful prompt for Ideogram
+        # Create a jungle-themed prompt for Ideogram
         prompt = f"""
-        Create a DEGEN, AGGRESSIVE, and PLAYFUL crypto influencer card for @{x_username or name} in the Solana ecosystem.
+        Create a JUNGLE-THEMED crypto influencer card for @{x_username or name} in the Solana ecosystem.
         
         The design should feature:
-        1. The text "@{x_username or name}" in BOLD, EDGY typography with graffiti-style or glitch effects
-        2. "Profile: {profile_type}" in a cool, futuristic gold font with glow effects
-        3. "Influence Score: {influence_score}" in aggressive {color_description} colors with dynamic styling
+        1. The text "@{x_username or name}" in BOLD, ORGANIC typography with vine-like or leaf-inspired elements
+        2. "Profile: {profile_type}" in a natural, earthy gold font with subtle glow effects
+        3. "Influence Score: {influence_score}" in {color_description} colors with organic styling
         
-        Include Solana-themed elements like:
-        - Solana logo subtly integrated in the design
-        - Vibrant purple and teal accents (Solana brand colors)
-        - Digital/blockchain aesthetic with circuit patterns
+        Include jungle and Solana elements like:
+        - Lush tropical foliage and jungle vegetation as background elements
+        - Solana logo subtly integrated with natural elements
+        - Rich greens, browns, and gold accents
+        - Organic patterns resembling jungle canopy or forest floor
         
-        The background should be dark but energetic with:
-        - Neon glows
-        - Cyberpunk/vaporwave elements
-        - Subtle crypto meme references
-        - Chaotic, high-energy design elements
+        The background should be:
+        - Dense with jungle foliage
+        - Dappled with natural light filtering through leaves
+        - Rich in texture with moss, vines, and tropical plants
+        - Mysterious and deep like a jungle ecosystem
         
-        Use fonts that are bold, edgy, and attention-grabbing - think esports, gaming, or street art typography.
-        The overall aesthetic should be high-energy, rebellious, and extremely cool - perfect for crypto Twitter.
+        Use fonts that are bold but organic - think natural, handcrafted typography that feels like it belongs in a jungle setting.
+        The overall aesthetic should be wild, primal, and organic - like discovering a crypto artifact in an ancient jungle temple.
         """
         
         # Ideogram API parameters
