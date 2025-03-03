@@ -797,8 +797,10 @@ class KOLAnalyzer:
         
         # Extract key fields
         wallet_address = fields.get("wallet", "")
-        x_username = fields.get("xUsername", "")
-        
+    
+        # Try to get X username from different possible field names
+        x_username = fields.get("xUsername", fields.get("X", ""))
+    
         # Initialize result data with correct field name
         result_data = {
             "name": kol_name,  # Store as "name" for internal use
@@ -837,6 +839,7 @@ class KOLAnalyzer:
         
         # Get X profile data
         if x_username:
+            self.logger.info(f"Using X username: {x_username}")
             x_data = self.get_x_profile(x_username)
             if "error" not in x_data:
                 result_data.update(x_data)
