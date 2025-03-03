@@ -199,9 +199,8 @@ export default function MissionSidebar() {
   };
 
   const handleSubmenuItemClick = (mission: any, submenuItem: any) => {
-    // Combine the mission context with the submenu context for more specific guidance
-    const combinedContext = `${mission.context}\n\nSpecifically, ${submenuItem.context}`;
-    handleSelectMission(mission.title, combinedContext, mission.id, submenuItem.id);
+    // Instead of setting the input field with the context, just pass the mission ID and submission ID
+    handleSelectMission(mission.title, submenuItem.title, mission.id, submenuItem.id);
     setSelectedSubmissionId(submenuItem.id);
     // Keep the submenu open after selection
   };

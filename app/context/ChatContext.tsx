@@ -247,14 +247,14 @@ export const ChatProvider: React.FC<{ children: React.ReactNode; code: string | 
     }
   }
 
-  const handleSelectMission = (missionTitle: string, context: string, missionId: string, submissionId?: string) => {
+  const handleSelectMission = (missionTitle: string, submissionTitle: string, missionId: string, submissionId?: string) => {
     // Store the mission ID for both context and UI highlighting
     setCurrentMission(missionId);
     setSelectedMissionId(missionId);
     setCurrentSubmission(submissionId || null);
     
-    // Automatically set the input field with the context
-    setInput(context);
+    // Don't set the input field with the context anymore
+    // setInput(context);
     
     // Scroll to the input field to keep the user's focus there
     setTimeout(() => {
