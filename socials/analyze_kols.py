@@ -1598,7 +1598,7 @@ def send_tweet(tweet_content: str, image_path: Optional[str] = None) -> bool:
 
 def generate_and_send_tweets_for_all_kols(dry_run: bool = True) -> None:
     """
-    Generate and send tweets for all KOLs in the database
+    Generate and send detailed tweets for all KOLs in the database
     
     Args:
         dry_run: If True, generate tweets but don't send them
@@ -1612,7 +1612,7 @@ def generate_and_send_tweets_for_all_kols(dry_run: bool = True) -> None:
             logger.warning("No KOL records found")
             return
         
-        logger.info(f"Generating tweets for {len(kol_records)} KOLs")
+        logger.info(f"Generating detailed tweets for {len(kol_records)} KOLs")
         
         for record in kol_records:
             try:
@@ -1653,11 +1653,11 @@ def generate_and_send_tweets_for_all_kols(dry_run: bool = True) -> None:
                     except json.JSONDecodeError:
                         logger.warning(f"Invalid holdings JSON for {kol_data['name']}")
                 
-                # Generate tweet content
-                tweet_content = generate_tweet_content(kol_data)
+                # Generate detailed tweet content instead of regular tweet
+                tweet_content = generate_detailed_tweet_content(kol_data)
                 
                 if not tweet_content:
-                    logger.warning(f"Failed to generate tweet for {kol_data['name']}")
+                    logger.warning(f"Failed to generate detailed tweet for {kol_data['name']}")
                     continue
                 
                 # Get image path (either existing or generate new)
@@ -1667,27 +1667,27 @@ def generate_and_send_tweets_for_all_kols(dry_run: bool = True) -> None:
                     logger.warning(f"Failed to get image for {kol_data['name']}")
                 
                 # Log the tweet content
-                logger.info(f"Tweet for {kol_data['name']}:\n{tweet_content}")
+                logger.info(f"Detailed tweet for {kol_data['name']}:\n{tweet_content}")
                 
-                # Update the message field in Airtable regardless of dry run
+                # Update the detailedMessage field in Airtable regardless of dry run
                 update_data = {
-                    "message": tweet_content
+                    "detailedMessage": tweet_content
                 }
                 
                 # Send the tweet if not a dry run
                 if not dry_run:
                     success = send_tweet(tweet_content, image_path)
                     if success:
-                        logger.info(f"Tweet sent for {kol_data['name']}")
+                        logger.info(f"Detailed tweet sent for {kol_data['name']}")
                         # Update the sent field to True
                         update_data["sent"] = True
                         update_data["sentDate"] = time.strftime("%Y-%m-%d %H:%M:%S")
                     else:
-                        logger.warning(f"Failed to send tweet for {kol_data['name']}")
+                        logger.warning(f"Failed to send detailed tweet for {kol_data['name']}")
                 
                 # Update the Airtable record
                 analyzer.kol_table.update(record_id, update_data)
-                logger.info(f"Updated message field for {kol_data['name']}")
+                logger.info(f"Updated detailedMessage field for {kol_data['name']}")
                 
                 # Sleep to avoid rate limiting
                 time.sleep(2)
@@ -1697,9 +1697,9 @@ def generate_and_send_tweets_for_all_kols(dry_run: bool = True) -> None:
                 continue
         
         if dry_run:
-            logger.info("Dry run completed - no tweets were actually sent")
+            logger.info("Dry run completed - no detailed tweets were actually sent")
         else:
-            logger.info("Tweet generation and sending completed")
+            logger.info("Detailed tweet generation and sending completed")
     
     except Exception as e:
         logger.error(f"Error in generate_and_send_tweets_for_all_kols: {e}")
@@ -1782,7 +1782,7 @@ def generate_detailed_tweets_for_all_kols():
 
 def send_random_kol_tweet(force: bool = False) -> None:
     """
-    Generate and send a tweet for a random KOL that hasn't been tweeted yet
+    Generate and send a detailed tweet for a random KOL that hasn't been tweeted yet
     
     Args:
         force: If True, send tweet even if one was already sent
@@ -1843,11 +1843,11 @@ def send_random_kol_tweet(force: bool = False) -> None:
             except json.JSONDecodeError:
                 logger.warning(f"Invalid holdings JSON for {kol_data['name']}")
         
-        # Generate tweet content
-        tweet_content = generate_tweet_content(kol_data)
+        # Generate detailed tweet content instead of regular tweet
+        tweet_content = generate_detailed_tweet_content(kol_data)
         
         if not tweet_content:
-            logger.warning(f"Failed to generate tweet for {kol_data['name']}")
+            logger.warning(f"Failed to generate detailed tweet for {kol_data['name']}")
             return
         
         # Get image path (either existing or generate new)
@@ -1857,33 +1857,33 @@ def send_random_kol_tweet(force: bool = False) -> None:
             logger.warning(f"Failed to get image for {kol_data['name']}")
         
         # Log the tweet content
-        logger.info(f"Tweet for {kol_data['name']}:\n{tweet_content}")
+        logger.info(f"Detailed tweet for {kol_data['name']}:\n{tweet_content}")
         
         # Update the message field in Airtable
         update_data = {
-            "message": tweet_content
+            "detailedMessage": tweet_content  # Store in detailedMessage field
         }
         
         # Send the tweet
         success = send_tweet(tweet_content, image_path)
         if success:
-            logger.info(f"Tweet sent for {kol_data['name']}")
+            logger.info(f"Detailed tweet sent for {kol_data['name']}")
             # Update the sent field to True
             update_data["sent"] = True
             update_data["sentDate"] = time.strftime("%Y-%m-%d %H:%M:%S")
         else:
-            logger.warning(f"Failed to send tweet for {kol_data['name']}")
+            logger.warning(f"Failed to send detailed tweet for {kol_data['name']}")
         
         # Update the Airtable record
         analyzer.kol_table.update(record_id, update_data)
-        logger.info(f"Updated message field for {kol_data['name']}")
+        logger.info(f"Updated detailedMessage field for {kol_data['name']}")
         
     except Exception as e:
         logger.error(f"Error in send_random_kol_tweet: {e}")
 
 def generate_and_send_tweet_by_name(kol_name: str, dry_run: bool = True, force: bool = False) -> None:
     """
-    Generate and send a tweet for a specific KOL by name
+    Generate and send a detailed tweet for a specific KOL by name
     
     Args:
         kol_name: Name of the KOL
@@ -1943,11 +1943,11 @@ def generate_and_send_tweet_by_name(kol_name: str, dry_run: bool = True, force: 
             except json.JSONDecodeError:
                 logger.warning(f"Invalid holdings JSON for {kol_data['name']}")
         
-        # Generate tweet content
-        tweet_content = generate_tweet_content(kol_data)
+        # Generate detailed tweet content instead of regular tweet
+        tweet_content = generate_detailed_tweet_content(kol_data)
         
         if not tweet_content:
-            logger.warning(f"Failed to generate tweet for {kol_data['name']}")
+            logger.warning(f"Failed to generate detailed tweet for {kol_data['name']}")
             return
         
         # Get image path (either existing or generate new)
@@ -1957,30 +1957,30 @@ def generate_and_send_tweet_by_name(kol_name: str, dry_run: bool = True, force: 
             logger.warning(f"Failed to get image for {kol_data['name']}")
         
         # Log the tweet content
-        logger.info(f"Tweet for {kol_data['name']}:\n{tweet_content}")
+        logger.info(f"Detailed tweet for {kol_data['name']}:\n{tweet_content}")
         
-        # Update the message field in Airtable regardless of dry run
+        # Update the detailedMessage field in Airtable regardless of dry run
         update_data = {
-            "message": tweet_content
+            "detailedMessage": tweet_content
         }
         
         # Send the tweet if not a dry run
         if not dry_run:
             success = send_tweet(tweet_content, image_path)
             if success:
-                logger.info(f"Tweet sent for {kol_data['name']}")
+                logger.info(f"Detailed tweet sent for {kol_data['name']}")
                 # Update the sent field to True
                 update_data["sent"] = True
                 update_data["sentDate"] = time.strftime("%Y-%m-%d %H:%M:%S")
             else:
-                logger.warning(f"Failed to send tweet for {kol_data['name']}")
+                logger.warning(f"Failed to send detailed tweet for {kol_data['name']}")
         
         # Update the Airtable record
         analyzer.kol_table.update(record_id, update_data)
-        logger.info(f"Updated message field for {kol_data['name']}")
+        logger.info(f"Updated detailedMessage field for {kol_data['name']}")
         
         if dry_run:
-            logger.info("Dry run - tweet was not actually sent")
+            logger.info("Dry run - detailed tweet was not actually sent")
             if image_path:
                 logger.info(f"Image would be attached: {image_path}")
     
