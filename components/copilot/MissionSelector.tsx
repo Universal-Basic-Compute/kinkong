@@ -1,13 +1,21 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tooltip } from '@/components/ui/tooltip';
 import { useChat } from '@/app/context/ChatContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function MissionSidebar() {
-  const { selectedMissionId, handleSelectMission } = useChat();
+  const { selectedMissionId, handleSelectMission, currentSubmission } = useChat();
   const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null);
+  const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | null>(null);
+  
+  // Update selectedSubmissionId when currentSubmission changes
+  useEffect(() => {
+    if (currentSubmission) {
+      setSelectedSubmissionId(currentSubmission);
+    }
+  }, [currentSubmission]);
 
   const missions = [
     {
@@ -194,6 +202,7 @@ export default function MissionSidebar() {
     // Combine the mission context with the submenu context for more specific guidance
     const combinedContext = `${mission.context}\n\nSpecifically, ${submenuItem.context}`;
     handleSelectMission(mission.title, combinedContext, mission.id, submenuItem.id);
+    setSelectedSubmissionId(submenuItem.id);
     // Keep the submenu open after selection
   };
 
@@ -258,9 +267,11 @@ export default function MissionSidebar() {
               <div
                 key={item.id}
                 onClick={() => handleSubmenuItemClick(activeMission, item)}
-                className={`p-3 rounded-lg bg-black/50 border border-gold/20 hover:bg-gold/10 hover:border-gold/40 text-gold cursor-pointer transition-all ${
-                  selectedMissionId === activeMission.id ? 'border-l-4 border-l-gold' : ''
-                }`}
+                className={`p-3 rounded-lg ${
+                  selectedSubmissionId === item.id
+                    ? 'bg-gold/20 border-2 border-gold text-gold font-medium'
+                    : 'bg-black/50 border border-gold/20 hover:bg-gold/10 hover:border-gold/40 text-gold'
+                } cursor-pointer transition-all`}
               >
                 <h3 className="font-medium">{item.title}</h3>
                 <p className="text-xs text-gray-400 mt-1">{item.context.substring(0, 60)}...</p>
