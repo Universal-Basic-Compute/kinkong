@@ -16,14 +16,16 @@ print("\nCurrent working directory:", os.getcwd())
 print("Project root:", project_root)
 print("Python path:", sys.path)
 
-# Now try the import
+# Now try the imports
 try:
     from execute_trade import JupiterTradeExecutor
+    from token_native_strategy import TokenNativeStrategy
 except ImportError as e:
     print(f"\nImport failed: {e}")
     print("\nTrying alternate import path...")
     try:
         from engine.execute_trade import JupiterTradeExecutor
+        from engine.token_native_strategy import TokenNativeStrategy
     except ImportError as e:
         print(f"Alternate import also failed: {e}")
         raise
@@ -1387,9 +1389,9 @@ def main():
         # Configurer l'analyseur d'arguments
         parser = argparse.ArgumentParser(description='KinKong Trade Executor')
         parser.add_argument('--action', type=str, 
-                            choices=['monitor', 'open', 'close', 'all', 'test'], 
+                            choices=['monitor', 'open', 'close', 'all', 'test', 'token-native'], 
                             default='all', 
-                            help='Action to perform: monitor, open, close, all, or test')
+                            help='Action to perform: monitor, open, close, all, test, or token-native')
         parser.add_argument('--trade-id', type=str, 
                             help='Specific trade ID to close (only with --action=close)')
         parser.add_argument('--exit-reason', type=str, 
@@ -1397,6 +1399,10 @@ def main():
                             help='Exit reason when closing a specific trade')
         parser.add_argument('--signal-id', type=str, 
                             help='Specific signal ID to open (only with --action=open)')
+        parser.add_argument('--ubc-score', type=int, default=0,
+                            help='UBC score for token-native strategy (-10 to +10)')
+        parser.add_argument('--compute-score', type=int, default=0,
+                            help='COMPUTE score for token-native strategy (-10 to +10)')
         
         args = parser.parse_args()
         
@@ -1404,52 +1410,69 @@ def main():
         
         # Verify environment variables
         required_vars = [
-            'KINKONG_AIRTABLE_BASE_ID',
-            'KINKONG_AIRTABLE_API_KEY',
             'BIRDEYE_API_KEY',
             'STRATEGY_WALLET_PRIVATE_KEY'
         ]
+        
+        # Add Airtable vars only if not using token-native strategy
+        if args.action != 'token-native':
+            required_vars.extend([
+                'KINKONG_AIRTABLE_BASE_ID',
+                'KINKONG_AIRTABLE_API_KEY'
+            ])
         
         missing = [var for var in required_vars if not os.getenv(var)]
         if missing:
             raise ValueError(f"Missing environment variables: {', '.join(missing)}")
 
-        # Create trade executor
-        executor = TradeExecutor()
-        
         # Execute based on action parameter
-        if args.action == 'test':
-            # Run test trade
-            asyncio.run(executor.execute_test_trade())
+        if args.action == 'token-native':
+            # Run token-native strategy
+            logger.info(f"Running token-native strategy with UBC score: {args.ubc_score}, COMPUTE score: {args.compute_score}")
             
-        elif args.action == 'all':
-            # Run full monitoring process
-            asyncio.run(executor.monitor_signals())
+            async def run_token_native():
+                strategy = TokenNativeStrategy()
+                strategy.set_token_scores(args.ubc_score, args.compute_score)
+                await strategy.run_daily_update()
             
-        elif args.action == 'monitor':
-            # Only check exit conditions for existing trades
-            asyncio.run(executor.monitor_existing_trades())
+            asyncio.run(run_token_native())
             
-        elif args.action == 'open':
-            # Only open new trades
-            if args.signal_id:
-                # Open specific trade by signal ID
-                asyncio.run(executor.open_specific_trade(args.signal_id))
-            else:
-                # Open all eligible trades
-                asyncio.run(executor.open_new_trades())
+        else:
+            # Create trade executor for other actions
+            executor = TradeExecutor()
+            
+            if args.action == 'test':
+                # Run test trade
+                asyncio.run(executor.execute_test_trade())
                 
-        elif args.action == 'close':
-            # Only close trades
-            if args.trade_id:
-                # Close specific trade
-                if not args.exit_reason:
-                    logger.error("--exit-reason is required when closing a specific trade")
-                    sys.exit(1)
-                asyncio.run(executor.close_specific_trade(args.trade_id, args.exit_reason))
-            else:
-                # Close all eligible trades
-                asyncio.run(executor.close_eligible_trades())
+            elif args.action == 'all':
+                # Run full monitoring process
+                asyncio.run(executor.monitor_signals())
+                
+            elif args.action == 'monitor':
+                # Only check exit conditions for existing trades
+                asyncio.run(executor.monitor_existing_trades())
+                
+            elif args.action == 'open':
+                # Only open new trades
+                if args.signal_id:
+                    # Open specific trade by signal ID
+                    asyncio.run(executor.open_specific_trade(args.signal_id))
+                else:
+                    # Open all eligible trades
+                    asyncio.run(executor.open_new_trades())
+                    
+            elif args.action == 'close':
+                # Only close trades
+                if args.trade_id:
+                    # Close specific trade
+                    if not args.exit_reason:
+                        logger.error("--exit-reason is required when closing a specific trade")
+                        sys.exit(1)
+                    asyncio.run(executor.close_specific_trade(args.trade_id, args.exit_reason))
+                else:
+                    # Close all eligible trades
+                    asyncio.run(executor.close_eligible_trades())
 
     except Exception as e:
         logger.error(f"Fatal error: {e}")
