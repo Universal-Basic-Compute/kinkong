@@ -636,6 +636,19 @@ export async function POST(request: NextRequest) {
         case 'portfolio-rebalancing':
           systemPrompt += `For this portfolio rebalancing mission, help the user assess their current portfolio allocation and performance. Identify underperforming assets and potential replacements to create a step-by-step rebalancing plan based on current market conditions. Consider diversification, risk management, and market trends in your recommendations.`;
           break;
+        case 'strategy-optimization':
+          // Dynamically load strategy files for context
+          try {
+            const strategyContext = await getFileContents('backend/src/strategy/**/*.ts');
+            
+            systemPrompt += `For this strategy optimization mission, help the user analyze and optimize KinKong's trading strategy implementation. Focus on understanding the current algorithms, identifying bottlenecks, and suggesting improvements to enhance performance and returns.
+
+Here are the key strategy files for context:${strategyContext}`;
+          } catch (err) {
+            console.log(`Error loading strategy files: ${err}`);
+            systemPrompt += `For this strategy optimization mission, help the user analyze and optimize KinKong's trading strategy implementation. Focus on understanding the current algorithms, identifying bottlenecks, and suggesting improvements to enhance performance and returns.`;
+          }
+          break;
         case 'technical-analysis':
           systemPrompt += `For this technical analysis workshop, help the user identify key chart patterns on specific tokens. Guide them in practicing support/resistance identification and developing a personalized trading strategy based on technical indicators. Explain concepts clearly and relate them to current market conditions.`;
           break;
