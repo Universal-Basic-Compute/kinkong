@@ -6,6 +6,14 @@ import logging
 import asyncio
 import platform
 import requests
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+from PIL import Image, ImageDraw, ImageFont
+import numpy as np
+import io
+from datetime import datetime
+import argparse
 from typing import Dict, List, Optional, Any
 from dotenv import load_dotenv
 from airtable import Airtable
@@ -1027,17 +1035,374 @@ class KOLAnalyzer:
         
         self.logger.info("KOL analysis completed")
 
-async def main():
+def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kol_images") -> Optional[str]:
+    """
+    Generate a 3:4 image for a KOL with all the specified elements
+    
+    Args:
+        kol_data: Dictionary containing KOL data
+        output_dir: Directory to save the generated image
+        
+    Returns:
+        Path to the generated image or None if generation failed
+    """
+    try:
+        # Create output directory if it doesn't exist
+        os.makedirs(output_dir, exist_ok=True)
+        
+        # Extract KOL data
+        name = kol_data.get("name", "Unknown KOL")
+        x_username = kol_data.get("xUsername", "").replace("@", "")
+        profile_pic_url = kol_data.get("profilePicture", "")
+        influence_score = kol_data.get("influenceScore", 0)
+        profile_type = kol_data.get("profile", "Unknown")
+        analysis = kol_data.get("analysis", "No analysis available")
+        insights = kol_data.get("insights", "")
+        
+        # Extract insights as a list
+        if isinstance(insights, str):
+            # Split by newlines or bullet points
+            insights_list = [line.strip().lstrip('•').strip() for line in insights.split('\n') if line.strip()]
+        elif isinstance(insights, list):
+            insights_list = insights
+        else:
+            insights_list = ["No insights available"]
+        
+        # Get top 3 insights
+        top_insights = insights_list[:3]
+        
+        # Extract holdings data for pie chart
+        holdings = kol_data.get("holdings", [])
+        
+        # Create a 3:4 aspect ratio image (width:height)
+        width, height = 1200, 1600
+        img = Image.new('RGB', (width, height), color=(13, 13, 13))  # Dark background
+        draw = ImageDraw.Draw(img)
+        
+        # Load fonts
+        try:
+            # Try to load custom fonts
+            title_font = ImageFont.truetype("arial.ttf", 60)
+            subtitle_font = ImageFont.truetype("arial.ttf", 40)
+            body_font = ImageFont.truetype("arial.ttf", 30)
+            small_font = ImageFont.truetype("arial.ttf", 24)
+        except IOError:
+            # Fallback to default font
+            title_font = ImageFont.load_default()
+            subtitle_font = ImageFont.load_default()
+            body_font = ImageFont.load_default()
+            small_font = ImageFont.load_default()
+        
+        # Load Kinkong's head
+        try:
+            kong_img = Image.open("public/copilot.png").convert("RGBA")
+            # Resize to appropriate size
+            kong_size = (200, 200)
+            kong_img = kong_img.resize(kong_size, Image.LANCZOS)
+            
+            # Create a circular mask
+            mask = Image.new('L', kong_size, 0)
+            mask_draw = ImageDraw.Draw(mask)
+            mask_draw.ellipse((0, 0, kong_size[0], kong_size[1]), fill=255)
+            
+            # Apply mask to create circular image
+            kong_circular = Image.new('RGBA', kong_size, (0, 0, 0, 0))
+            kong_circular.paste(kong_img, (0, 0), mask)
+            
+            # Paste Kong's head in top right corner
+            img.paste(kong_circular, (width - 220, 20), kong_circular)
+        except Exception as e:
+            logger.error(f"Error loading Kong image: {e}")
+        
+        # Try to load profile picture if available
+        profile_pic = None
+        if profile_pic_url:
+            try:
+                response = requests.get(profile_pic_url)
+                if response.status_code == 200:
+                    profile_pic = Image.open(io.BytesIO(response.content)).convert("RGBA")
+                    
+                    # Resize to appropriate size
+                    pic_size = (150, 150)
+                    profile_pic = profile_pic.resize(pic_size, Image.LANCZOS)
+                    
+                    # Create a circular mask
+                    mask = Image.new('L', pic_size, 0)
+                    mask_draw = ImageDraw.Draw(mask)
+                    mask_draw.ellipse((0, 0, pic_size[0], pic_size[1]), fill=255)
+                    
+                    # Apply mask to create circular image
+                    profile_circular = Image.new('RGBA', pic_size, (0, 0, 0, 0))
+                    profile_circular.paste(profile_pic, (0, 0), mask)
+                    
+                    # Paste profile picture
+                    img.paste(profile_circular, (width - 400, 40), profile_circular)
+            except Exception as e:
+                logger.error(f"Error loading profile picture: {e}")
+        
+        # Draw name in top left
+        draw.text((40, 40), name, fill=(255, 215, 0), font=title_font)  # Gold color
+        
+        # Draw X handle
+        if x_username:
+            draw.text((40, 110), f"@{x_username}", fill=(120, 120, 120), font=subtitle_font)
+        
+        # Draw influence score
+        score_color = (0, 255, 0) if influence_score >= 70 else (255, 165, 0) if influence_score >= 40 else (255, 0, 0)
+        draw.text((width - 220, 230), f"Influence: {influence_score}", fill=score_color, font=subtitle_font)
+        
+        # Draw profile type
+        draw.text((40, 180), f"Profile: {profile_type}", fill=(255, 255, 255), font=subtitle_font)
+        
+        # Draw horizontal line
+        draw.line([(40, 250), (width - 40, 250)], fill=(255, 215, 0), width=2)
+        
+        # Draw analysis summary
+        # Wrap text to fit width
+        max_width = width - 80
+        lines = []
+        words = analysis.split()
+        current_line = words[0]
+        
+        for word in words[1:]:
+            test_line = current_line + " " + word
+            # Estimate text width (this is approximate)
+            if len(test_line) * 15 < max_width:  # Approximate character width
+                current_line = test_line
+            else:
+                lines.append(current_line)
+                current_line = word
+        
+        lines.append(current_line)
+        
+        # Draw wrapped text
+        y_position = 280
+        for line in lines[:6]:  # Limit to 6 lines
+            draw.text((40, y_position), line, fill=(255, 255, 255), font=body_font)
+            y_position += 40
+        
+        # Draw asset allocation pie chart
+        if holdings:
+            try:
+                # Create a figure for the pie chart
+                fig, ax = plt.subplots(figsize=(5, 5), facecolor='none')
+                
+                # Prepare data for pie chart
+                labels = []
+                sizes = []
+                others_value = 0
+                
+                # Get top 5 holdings by value
+                sorted_holdings = sorted(holdings, key=lambda x: x.get('value', 0), reverse=True)
+                for i, holding in enumerate(sorted_holdings):
+                    if i < 5:  # Top 5 holdings
+                        labels.append(holding.get('symbol', 'Unknown'))
+                        sizes.append(holding.get('value', 0))
+                    else:  # Group the rest as "Others"
+                        others_value += holding.get('value', 0)
+                
+                if others_value > 0:
+                    labels.append('Others')
+                    sizes.append(others_value)
+                
+                # Create pie chart
+                ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90, 
+                       textprops={'color': 'white', 'fontsize': 12})
+                ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle
+                plt.title('Asset Allocation', color='white', fontsize=14)
+                
+                # Save pie chart to buffer
+                buf = io.BytesIO()
+                plt.savefig(buf, format='png', transparent=True, bbox_inches='tight')
+                buf.seek(0)
+                plt.close(fig)
+                
+                # Open the image from buffer
+                pie_img = Image.open(buf).convert('RGBA')
+                
+                # Resize if needed
+                pie_size = (500, 500)
+                pie_img = pie_img.resize(pie_size, Image.LANCZOS)
+                
+                # Paste pie chart
+                img.paste(pie_img, (width - 550, y_position), pie_img)
+            except Exception as e:
+                logger.error(f"Error creating pie chart: {e}")
+        
+        # Draw insights
+        insights_y = y_position + 520
+        draw.text((40, insights_y), "Key Insights:", fill=(255, 215, 0), font=subtitle_font)
+        
+        for i, insight in enumerate(top_insights):
+            draw.text((60, insights_y + 60 + i*50), f"• {insight}", fill=(255, 255, 255), font=body_font)
+        
+        # Draw footer
+        footer_y = height - 80
+        draw.line([(40, footer_y), (width - 40, footer_y)], fill=(255, 215, 0), width=2)
+        
+        # Draw date
+        current_date = datetime.now().strftime("%Y-%m-%d")
+        draw.text((40, footer_y + 20), current_date, fill=(150, 150, 150), font=small_font)
+        
+        # Draw powered by text
+        powered_by = "Powered by Kong.ai & $UBC • NFA"
+        draw.text((width - 400, footer_y + 20), powered_by, fill=(150, 150, 150), font=small_font)
+        
+        # Save the image
+        safe_name = "".join(c for c in name if c.isalnum() or c in (' ', '_')).replace(' ', '_')
+        output_path = os.path.join(output_dir, f"{safe_name}.png")
+        img.save(output_path)
+        
+        logger.info(f"Generated KOL image: {output_path}")
+        return output_path
+    
+    except Exception as e:
+        logger.error(f"Error generating KOL image: {e}")
+        logger.exception("Exception details:")
+        return None
+
+def generate_all_kol_images():
+    """Generate images for all KOLs in the database"""
     try:
         analyzer = KOLAnalyzer()
+        kol_records = analyzer.get_all_kols()
         
-        # Test mode - uncomment to test API with a specific wallet
-        # Replace with a valid wallet address
-        # test_wallet = "BCnqsPEtA1TkgednYEebRpkmwFRJDCjMQcKZMMtEdArc"
-        # analyzer.test_birdeye_api(test_wallet)
-        # return
+        if not kol_records:
+            logger.warning("No KOL records found")
+            return
         
-        await analyzer.analyze_all_kols()
+        logger.info(f"Generating images for {len(kol_records)} KOLs")
+        
+        for record in kol_records:
+            try:
+                # Extract fields from record
+                fields = record['fields']
+                
+                # Create data dictionary for image generation
+                kol_data = {
+                    "name": fields.get("X", "Unknown KOL"),
+                    "xUsername": fields.get("xUsername", ""),
+                    "profilePicture": fields.get("profilePicture", ""),
+                    "influenceScore": fields.get("influenceScore", 0),
+                    "profile": fields.get("profile", "Unknown"),
+                    "analysis": fields.get("analysis", "No analysis available"),
+                    "insights": fields.get("insights", ""),
+                    "holdings": []
+                }
+                
+                # Parse holdings JSON if available
+                if "holdingsJSON" in fields and fields["holdingsJSON"]:
+                    try:
+                        kol_data["holdings"] = json.loads(fields["holdingsJSON"])
+                    except json.JSONDecodeError:
+                        logger.warning(f"Invalid holdings JSON for {kol_data['name']}")
+                
+                # Generate image
+                image_path = generate_kol_image(kol_data)
+                
+                if image_path:
+                    logger.info(f"Generated image for {kol_data['name']}: {image_path}")
+                else:
+                    logger.warning(f"Failed to generate image for {kol_data['name']}")
+            
+            except Exception as e:
+                logger.error(f"Error processing KOL record: {e}")
+                continue
+        
+        logger.info("KOL image generation completed")
+    
+    except Exception as e:
+        logger.error(f"Error in generate_all_kol_images: {e}")
+
+def generate_kol_image_by_name(kol_name: str):
+    """Generate image for a specific KOL by name"""
+    try:
+        analyzer = KOLAnalyzer()
+        kol_records = analyzer.get_all_kols()
+        
+        if not kol_records:
+            logger.warning("No KOL records found")
+            return
+        
+        # Find the KOL by name
+        matching_records = [r for r in kol_records if r['fields'].get('X', '').lower() == kol_name.lower()]
+        
+        if not matching_records:
+            logger.warning(f"No KOL found with name: {kol_name}")
+            return
+        
+        record = matching_records[0]
+        fields = record['fields']
+        
+        # Create data dictionary for image generation
+        kol_data = {
+            "name": fields.get("X", "Unknown KOL"),
+            "xUsername": fields.get("xUsername", ""),
+            "profilePicture": fields.get("profilePicture", ""),
+            "influenceScore": fields.get("influenceScore", 0),
+            "profile": fields.get("profile", "Unknown"),
+            "analysis": fields.get("analysis", "No analysis available"),
+            "insights": fields.get("insights", ""),
+            "holdings": []
+        }
+        
+        # Parse holdings JSON if available
+        if "holdingsJSON" in fields and fields["holdingsJSON"]:
+            try:
+                kol_data["holdings"] = json.loads(fields["holdingsJSON"])
+            except json.JSONDecodeError:
+                logger.warning(f"Invalid holdings JSON for {kol_data['name']}")
+        
+        # Generate image
+        image_path = generate_kol_image(kol_data)
+        
+        if image_path:
+            logger.info(f"Generated image for {kol_data['name']}: {image_path}")
+            return image_path
+        else:
+            logger.warning(f"Failed to generate image for {kol_data['name']}")
+            return None
+    
+    except Exception as e:
+        logger.error(f"Error in generate_kol_image_by_name: {e}")
+        return None
+
+async def main():
+    try:
+        # Parse command line arguments
+        parser = argparse.ArgumentParser(description='KOL Analyzer and Image Generator')
+        parser.add_argument('--analyze', action='store_true', help='Analyze all KOLs')
+        parser.add_argument('--generate-images', action='store_true', help='Generate images for all KOLs')
+        parser.add_argument('--generate-image', type=str, help='Generate image for a specific KOL by name')
+        parser.add_argument('--test-wallet', type=str, help='Test Birdeye API with a specific wallet')
+        
+        args = parser.parse_args()
+        
+        # Initialize analyzer
+        analyzer = KOLAnalyzer()
+        
+        # Test Birdeye API with a specific wallet
+        if args.test_wallet:
+            analyzer.test_birdeye_api(args.test_wallet)
+            return
+        
+        # Generate image for a specific KOL
+        if args.generate_image:
+            logger.info(f"Generating image for KOL: {args.generate_image}")
+            generate_kol_image_by_name(args.generate_image)
+            return
+        
+        # Generate images for all KOLs
+        if args.generate_images:
+            logger.info("Generating images for all KOLs")
+            generate_all_kol_images()
+            return
+        
+        # Default: analyze all KOLs
+        if args.analyze or not any([args.generate_images, args.generate_image, args.test_wallet]):
+            logger.info("Analyzing all KOLs")
+            await analyzer.analyze_all_kols()
+    
     except Exception as e:
         logging.error(f"Error in main execution: {e}")
 
