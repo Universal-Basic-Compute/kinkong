@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { executeTrade } from '@/backend/src/utils/jupiter_trade';
+import { spawn } from 'child_process';
+import path from 'path';
 
 export async function POST(request: Request) {
   try {
@@ -8,15 +10,14 @@ export async function POST(request: Request) {
     // Check if this is a token-maximizer strategy request
     if (body.strategy === 'token-maximizer') {
       // Validate token-maximizer parameters
-      if (!body.ubcScore || !body.computeScore || !body.wallet) {
+      if (body.ubcScore === undefined || body.computeScore === undefined || !body.wallet) {
         return NextResponse.json(
           { error: 'Missing required parameters for token-maximizer strategy' },
           { status: 400 }
         );
       }
       
-      // Execute token-maximizer strategy (this would call your Python backend)
-      // This is a placeholder - you would need to implement this function
+      // Execute token-maximizer strategy by calling Python script
       const result = await executeTokenMaximizerStrategy({
         ubcScore: body.ubcScore,
         computeScore: body.computeScore,
@@ -55,18 +56,82 @@ export async function POST(request: Request) {
   }
 }
 
-// Placeholder function for token-maximizer strategy execution
-// You would need to implement this to call your Python backend
+// Function to execute token-maximizer strategy by calling Python script
 async function executeTokenMaximizerStrategy(params: {
   ubcScore: number;
   computeScore: number;
   wallet: string;
-}) {
-  // This would make a call to your Python backend to execute the token-native strategy
-  // For now, just return a placeholder response
-  return {
-    success: true,
-    message: 'Token-maximizer strategy execution initiated',
-    params
-  };
+}): Promise<any> {
+  return new Promise((resolve, reject) => {
+    console.log(`Executing token-maximizer strategy with UBC score: ${params.ubcScore}, COMPUTE score: ${params.computeScore}`);
+    
+    // Get the project root directory
+    const projectRoot = process.cwd();
+    
+    // Construct path to Python script
+    const scriptPath = path.join(projectRoot, 'engine', 'trades.py');
+    
+    // Spawn Python process
+    const pythonProcess = spawn('python', [
+      scriptPath,
+      '--action', 'token-maximizer',
+      '--ubc-score', params.ubcScore.toString(),
+      '--compute-score', params.computeScore.toString()
+    ]);
+    
+    let stdout = '';
+    let stderr = '';
+    
+    // Collect stdout data
+    pythonProcess.stdout.on('data', (data) => {
+      stdout += data.toString();
+      console.log(`Python stdout: ${data}`);
+    });
+    
+    // Collect stderr data
+    pythonProcess.stderr.on('data', (data) => {
+      stderr += data.toString();
+      console.error(`Python stderr: ${data}`);
+    });
+    
+    // Handle process completion
+    pythonProcess.on('close', (code) => {
+      console.log(`Python process exited with code ${code}`);
+      
+      if (code === 0) {
+        // Try to parse JSON output if available
+        try {
+          const jsonOutput = JSON.parse(stdout);
+          resolve({
+            success: true,
+            message: 'Token-maximizer strategy execution completed',
+            data: jsonOutput
+          });
+        } catch (e) {
+          // If not JSON, just return the raw output
+          resolve({
+            success: true,
+            message: 'Token-maximizer strategy execution completed',
+            output: stdout
+          });
+        }
+      } else {
+        resolve({
+          success: false,
+          message: 'Token-maximizer strategy execution failed',
+          error: stderr || `Process exited with code ${code}`
+        });
+      }
+    });
+    
+    // Handle process errors
+    pythonProcess.on('error', (err) => {
+      console.error('Failed to start Python process:', err);
+      reject({
+        success: false,
+        message: 'Failed to start token-maximizer process',
+        error: err.message
+      });
+    });
+  });
 }
