@@ -1057,50 +1057,22 @@ def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kols"
         profile_type = kol_data.get("profile", "Unknown")
         influence_score = kol_data.get("influenceScore", 0)
         
-        # Extract insights for the prompt
-        insights = kol_data.get("insights", "")
-        if isinstance(insights, str):
-            # Split by newlines or bullet points
-            insights_list = [line.strip().lstrip('•').strip() for line in insights.split('\n') if line.strip()]
-        elif isinstance(insights, list):
-            insights_list = insights
-        else:
-            insights_list = ["No insights available"]
-        
-        # Get top 2 insights for the prompt
-        top_insights = insights_list[:2]
-        insights_text = ". ".join(top_insights)
-        
-        # Extract holdings data for the prompt
-        holdings = kol_data.get("holdings", [])
-        top_holdings = []
-        if holdings:
-            # Get top 3 holdings by value
-            sorted_holdings = sorted(holdings, key=lambda x: x.get('value', 0), reverse=True)
-            for i, holding in enumerate(sorted_holdings[:3]):
-                symbol = holding.get('symbol', 'Unknown')
-                top_holdings.append(symbol)
-        
-        holdings_text = ", ".join(top_holdings) if top_holdings else "Unknown"
-        
         # Determine color based on influence score
         color_description = "gold and red" if influence_score >= 40 else "red and black"
         
-        # Create a detailed prompt for Ideogram
+        # Create a simplified prompt for Ideogram focusing only on name, profile, and influence score
         prompt = f"""
-        A professional, modern crypto analyst dashboard for @{x_username or name}. 
+        Create a minimalist, high-impact crypto influencer card for @{x_username or name}.
         
-        The design should feature the text "@{x_username or name}" in large, impactful typography at the top.
-        "Influence Score: {influence_score}" should be prominently displayed in bold {color_description} colors.
-        "Profile: {profile_type}" should be displayed in an elegant gold font with a subtle glow effect.
+        The design should feature ONLY:
+        1. The text "@{x_username or name}" in large, impactful typography as the main focus
+        2. "Profile: {profile_type}" in elegant gold font
+        3. "Influence Score: {influence_score}" in bold {color_description} colors
         
-        Include a stylized pie chart visualization showing top holdings: {holdings_text}.
+        The background should be dark with subtle crypto-themed elements.
+        NO pie charts, NO key insights, NO holdings information, and NO "powered by" text.
         
-        The background should have a dark theme with subtle gold gradients and professional financial graphics.
-        
-        Key insights should be displayed in a clean, modern layout: {insights_text}
-        
-        The overall aesthetic should be premium, professional, and crypto-focused with "Powered by Kong.ai" in the bottom corner.
+        The overall aesthetic should be premium, professional, and crypto-focused.
         """
         
         # Ideogram API parameters
