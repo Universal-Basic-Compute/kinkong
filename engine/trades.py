@@ -19,13 +19,13 @@ print("Python path:", sys.path)
 # Now try the imports
 try:
     from execute_trade import JupiterTradeExecutor
-    from token_native_strategy import TokenNativeStrategy
+    from token_maximizer_strategy import TokenMaximizerStrategy
 except ImportError as e:
     print(f"\nImport failed: {e}")
     print("\nTrying alternate import path...")
     try:
         from engine.execute_trade import JupiterTradeExecutor
-        from engine.token_native_strategy import TokenNativeStrategy
+        from engine.token_maximizer_strategy import TokenMaximizerStrategy
     except ImportError as e:
         print(f"Alternate import also failed: {e}")
         raise
@@ -1389,9 +1389,9 @@ def main():
         # Configurer l'analyseur d'arguments
         parser = argparse.ArgumentParser(description='KinKong Trade Executor')
         parser.add_argument('--action', type=str, 
-                            choices=['monitor', 'open', 'close', 'all', 'test', 'token-native'], 
+                            choices=['monitor', 'open', 'close', 'all', 'test', 'token-maximizer'], 
                             default='all', 
-                            help='Action to perform: monitor, open, close, all, test, or token-native')
+                            help='Action to perform: monitor, open, close, all, test, or token-maximizer')
         parser.add_argument('--trade-id', type=str, 
                             help='Specific trade ID to close (only with --action=close)')
         parser.add_argument('--exit-reason', type=str, 
@@ -1400,9 +1400,9 @@ def main():
         parser.add_argument('--signal-id', type=str, 
                             help='Specific signal ID to open (only with --action=open)')
         parser.add_argument('--ubc-score', type=int, default=0,
-                            help='UBC score for token-native strategy (-10 to +10)')
+                            help='UBC score for token-maximizer strategy (-10 to +10)')
         parser.add_argument('--compute-score', type=int, default=0,
-                            help='COMPUTE score for token-native strategy (-10 to +10)')
+                            help='COMPUTE score for token-maximizer strategy (-10 to +10)')
         
         args = parser.parse_args()
         
@@ -1414,8 +1414,8 @@ def main():
             'STRATEGY_WALLET_PRIVATE_KEY'
         ]
         
-        # Add Airtable vars only if not using token-native strategy
-        if args.action != 'token-native':
+        # Add Airtable vars only if not using token-maximizer strategy
+        if args.action != 'token-maximizer':
             required_vars.extend([
                 'KINKONG_AIRTABLE_BASE_ID',
                 'KINKONG_AIRTABLE_API_KEY'
@@ -1426,16 +1426,16 @@ def main():
             raise ValueError(f"Missing environment variables: {', '.join(missing)}")
 
         # Execute based on action parameter
-        if args.action == 'token-native':
-            # Run token-native strategy
-            logger.info(f"Running token-native strategy with UBC score: {args.ubc_score}, COMPUTE score: {args.compute_score}")
+        if args.action == 'token-maximizer':
+            # Run token-maximizer strategy
+            logger.info(f"Running token-maximizer strategy with UBC score: {args.ubc_score}, COMPUTE score: {args.compute_score}")
             
-            async def run_token_native():
-                strategy = TokenNativeStrategy()
+            async def run_token_maximizer():
+                strategy = TokenMaximizerStrategy()
                 strategy.set_token_scores(args.ubc_score, args.compute_score)
                 await strategy.run_daily_update()
             
-            asyncio.run(run_token_native())
+            asyncio.run(run_token_maximizer())
             
         else:
             # Create trade executor for other actions

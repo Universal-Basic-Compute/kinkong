@@ -17,7 +17,7 @@ if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 # Import trade executor
-from engine.execute_trade import JupiterTradeExecutor
+from engine.token_maximizer_executor import TokenMaximizerExecutor
 
 def setup_logging():
     """Configure logging with a single handler"""
@@ -47,9 +47,9 @@ load_dotenv()
 # Initialize logger
 logger = setup_logging()
 
-class TokenNativeStrategy:
+class TokenMaximizerStrategy:
     """
-    Implements the Score-Based Token-Native Strategy for UBC/COMPUTE/SOL allocation
+    Implements the Score-Based Token Maximizer Strategy for UBC/COMPUTE/SOL allocation
     """
     
     # Token mint addresses
@@ -66,7 +66,7 @@ class TokenNativeStrategy:
     def __init__(self):
         """Initialize the strategy with default values"""
         self.logger = setup_logging()
-        self.jupiter = JupiterTradeExecutor()
+        self.executor = TokenMaximizerExecutor()
         
         # Initialize scores
         self.ubc_score = 0  # Neutral by default
@@ -138,50 +138,28 @@ class TokenNativeStrategy:
         }
     
     async def update_token_prices(self):
-        """Update token prices from DexScreener API"""
+        """Update token prices using the executor"""
         self.logger.info("Updating token prices...")
         
-        # List of tokens to update
-        tokens = [
-            {"name": "ubc", "mint": self.UBC_MINT},
-            {"name": "compute", "mint": self.COMPUTE_MINT},
-            {"name": "sol", "mint": self.SOL_MINT}
-        ]
+        # Use the executor to update prices
+        await self.executor.update_token_prices()
         
-        for token in tokens:
-            try:
-                price = await self.jupiter.get_token_price(token["mint"])
-                if price:
-                    self.token_prices[token["name"]] = price
-                    self.logger.info(f"{token['name'].upper()} price: ${price:.6f}")
-                else:
-                    self.logger.warning(f"Could not get price for {token['name'].upper()}")
-            except Exception as e:
-                self.logger.error(f"Error getting {token['name'].upper()} price: {e}")
+        # Copy prices from executor
+        self.token_prices = self.executor.token_prices.copy()
         
         # For LP tokens, we would need to calculate based on reserves
         # This is a simplified placeholder
         self.logger.info("Token prices updated")
     
     async def update_token_balances(self):
-        """Update token balances from wallet"""
+        """Update token balances using the executor"""
         self.logger.info("Updating token balances...")
         
-        # List of tokens to update
-        tokens = [
-            {"name": "ubc", "mint": self.UBC_MINT},
-            {"name": "compute", "mint": self.COMPUTE_MINT},
-            {"name": "sol", "mint": self.SOL_MINT},
-            {"name": "usdc", "mint": self.USDC_MINT}
-        ]
+        # Use the executor to update balances
+        await self.executor.update_token_balances()
         
-        for token in tokens:
-            try:
-                balance = await self.jupiter.get_token_balance(token["mint"])
-                self.token_balances[token["name"]] = balance
-                self.logger.info(f"{token['name'].upper()} balance: {balance}")
-            except Exception as e:
-                self.logger.error(f"Error getting {token['name'].upper()} balance: {e}")
+        # Copy balances from executor
+        self.token_balances = self.executor.token_balances.copy()
         
         # For LP tokens, we would need to get the LP token balance
         # This is a simplified placeholder
@@ -323,46 +301,12 @@ class TokenNativeStrategy:
         # Calculate total portfolio value
         total_value = self.calculate_portfolio_value()
         
-        # Calculate target values for each position
-        target_values = {}
-        for key in self.target_allocations:
-            target_values[key] = total_value * self.target_allocations[key]
-            self.logger.info(f"{key} target value: ${target_values[key]:.2f}")
-        
-        # Calculate current values
-        current_values = {}
-        for key in self.current_allocations:
-            current_values[key] = total_value * self.current_allocations[key]
-            self.logger.info(f"{key} current value: ${current_values[key]:.2f}")
-        
-        # Calculate trades needed
-        trades_needed = []
-        for key in target_values:
-            value_diff = target_values[key] - current_values[key]
-            if abs(value_diff) > total_value * 0.01:  # Only trade if diff > 1% of portfolio
-                trades_needed.append({
-                    "position": key,
-                    "value_diff": value_diff
-                })
-                self.logger.info(f"{key} needs adjustment of ${value_diff:.2f}")
-        
-        # Execute trades (simplified implementation)
-        for trade in trades_needed:
-            position = trade["position"]
-            value_diff = trade["value_diff"]
-            
-            # Skip LP positions for now (would require LP interactions)
-            if "_lp" in position:
-                self.logger.info(f"Skipping LP position {position} (not implemented)")
-                continue
-            
-            # For direct token holdings
-            if value_diff > 0:
-                # Need to buy more of this token
-                await self.execute_buy_trade(position, value_diff)
-            else:
-                # Need to sell some of this token
-                await self.execute_sell_trade(position, abs(value_diff))
+        # Execute rebalance trades using the executor
+        await self.executor.execute_rebalance_trades(
+            self.current_allocations,
+            self.target_allocations,
+            total_value
+        )
         
         # Update last rebalance timestamp
         self.last_rebalance = datetime.now(timezone.utc)
@@ -373,122 +317,12 @@ class TokenNativeStrategy:
         self.calculate_current_allocations()
     
     async def execute_buy_trade(self, token: str, value_usd: float):
-        """Execute a buy trade for a token using USDC"""
-        self.logger.info(f"Executing buy trade for {token.upper()}: ${value_usd:.2f}")
-        
-        # Get token mint address
-        token_mint = getattr(self, f"{token.upper()}_MINT", None)
-        if not token_mint:
-            self.logger.error(f"No mint address found for {token.upper()}")
-            return False
-        
-        # Check if we have enough USDC
-        usdc_balance = self.token_balances["usdc"]
-        usdc_value = usdc_balance * self.token_prices["usdc"]
-        
-        if usdc_value < value_usd:
-            self.logger.warning(f"Insufficient USDC balance: ${usdc_value:.2f} < ${value_usd:.2f}")
-            # Adjust trade size to available USDC
-            value_usd = usdc_value
-            self.logger.info(f"Adjusted trade size to ${value_usd:.2f}")
-        
-        if value_usd < 1.0:
-            self.logger.warning(f"Trade value too small: ${value_usd:.2f}")
-            return False
-        
-        # Execute trade using Jupiter
-        success, transaction_bytes, quote_data = await self.jupiter.execute_validated_swap(
-            input_token=self.USDC_MINT,
-            output_token=token_mint,
-            amount=value_usd,  # Amount in USDC
-            min_amount=1.0,
-            max_slippage=1.0
-        )
-        
-        if not success or not transaction_bytes:
-            self.logger.error(f"Failed to prepare buy transaction for {token.upper()}")
-            return False
-        
-        # Prepare and execute transaction
-        transaction = await self.jupiter.prepare_transaction(transaction_bytes)
-        if not transaction:
-            self.logger.error(f"Failed to prepare transaction")
-            return False
-        
-        result = await self.jupiter.execute_trade_with_retries(
-            transaction,
-            token_mint,
-            quote_data
-        )
-        
-        if result and result.get('signature'):
-            self.logger.info(f"Buy trade for {token.upper()} successful: {result['signature']}")
-            return True
-        else:
-            self.logger.error(f"Buy trade for {token.upper()} failed")
-            return False
+        """Execute a buy trade for a token using USDC via the executor"""
+        return await self.executor.execute_buy_trade(token, value_usd)
     
     async def execute_sell_trade(self, token: str, value_usd: float):
-        """Execute a sell trade for a token to USDC"""
-        self.logger.info(f"Executing sell trade for {token.upper()}: ${value_usd:.2f}")
-        
-        # Get token mint address
-        token_mint = getattr(self, f"{token.upper()}_MINT", None)
-        if not token_mint:
-            self.logger.error(f"No mint address found for {token.upper()}")
-            return False
-        
-        # Calculate token amount to sell
-        token_price = self.token_prices[token]
-        if token_price <= 0:
-            self.logger.error(f"Invalid token price for {token.upper()}: ${token_price:.6f}")
-            return False
-        
-        token_amount = value_usd / token_price
-        token_balance = self.token_balances[token]
-        
-        if token_balance < token_amount:
-            self.logger.warning(f"Insufficient {token.upper()} balance: {token_balance} < {token_amount}")
-            # Adjust trade size to available balance
-            token_amount = token_balance
-            value_usd = token_amount * token_price
-            self.logger.info(f"Adjusted trade size to {token_amount} {token.upper()} (${value_usd:.2f})")
-        
-        if value_usd < 1.0:
-            self.logger.warning(f"Trade value too small: ${value_usd:.2f}")
-            return False
-        
-        # Execute trade using Jupiter
-        success, transaction_bytes, quote_data = await self.jupiter.execute_validated_swap(
-            input_token=token_mint,
-            output_token=self.USDC_MINT,
-            amount=token_amount,  # Amount in token units
-            min_amount=0.1,
-            max_slippage=1.0
-        )
-        
-        if not success or not transaction_bytes:
-            self.logger.error(f"Failed to prepare sell transaction for {token.upper()}")
-            return False
-        
-        # Prepare and execute transaction
-        transaction = await self.jupiter.prepare_transaction(transaction_bytes)
-        if not transaction:
-            self.logger.error(f"Failed to prepare transaction")
-            return False
-        
-        result = await self.jupiter.execute_trade_with_retries(
-            transaction,
-            self.USDC_MINT,
-            quote_data
-        )
-        
-        if result and result.get('signature'):
-            self.logger.info(f"Sell trade for {token.upper()} successful: {result['signature']}")
-            return True
-        else:
-            self.logger.error(f"Sell trade for {token.upper()} failed")
-            return False
+        """Execute a sell trade for a token to USDC via the executor"""
+        return await self.executor.execute_sell_trade(token, value_usd)
     
     async def track_token_growth(self):
         """Track token growth over time"""
@@ -546,9 +380,9 @@ class TokenNativeStrategy:
 async def main():
     """Main function to run the strategy"""
     logger = setup_logging()
-    logger.info("Starting Token Native Strategy")
+    logger.info("Starting Token Maximizer Strategy")
     
-    strategy = TokenNativeStrategy()
+    strategy = TokenMaximizerStrategy()
     
     # Example: Set scores based on market analysis
     strategy.set_token_scores(5, -3)  # UBC +5, COMPUTE -3

@@ -5,19 +5,19 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     
-    // Check if this is a token-native strategy request
-    if (body.strategy === 'token-native') {
-      // Validate token-native parameters
+    // Check if this is a token-maximizer strategy request
+    if (body.strategy === 'token-maximizer') {
+      // Validate token-maximizer parameters
       if (!body.ubcScore || !body.computeScore || !body.wallet) {
         return NextResponse.json(
-          { error: 'Missing required parameters for token-native strategy' },
+          { error: 'Missing required parameters for token-maximizer strategy' },
           { status: 400 }
         );
       }
       
-      // Execute token-native strategy (this would call your Python backend)
+      // Execute token-maximizer strategy (this would call your Python backend)
       // This is a placeholder - you would need to implement this function
-      const result = await executeTokenNativeStrategy({
+      const result = await executeTokenMaximizerStrategy({
         ubcScore: body.ubcScore,
         computeScore: body.computeScore,
         wallet: body.wallet
@@ -55,9 +55,9 @@ export async function POST(request: Request) {
   }
 }
 
-// Placeholder function for token-native strategy execution
+// Placeholder function for token-maximizer strategy execution
 // You would need to implement this to call your Python backend
-async function executeTokenNativeStrategy(params: {
+async function executeTokenMaximizerStrategy(params: {
   ubcScore: number;
   computeScore: number;
   wallet: string;
@@ -66,7 +66,7 @@ async function executeTokenNativeStrategy(params: {
   // For now, just return a placeholder response
   return {
     success: true,
-    message: 'Token-native strategy execution initiated',
+    message: 'Token-maximizer strategy execution initiated',
     params
   };
 }
