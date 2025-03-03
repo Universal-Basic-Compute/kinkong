@@ -223,34 +223,26 @@ class KOLAnalyzer:
             url = "https://public-api.birdeye.so/v1/wallet/tx_list"
             headers = {
                 "X-API-KEY": self.birdeye_api_key,
-                "x-chain": "solana"
+                "x-chain": "solana",
+                "accept": "application/json"  # Added as per documentation
             }
             params = {
                 "wallet": wallet_address,
-                "limit": 500  # Increased limit to get more historical transactions
+                "limit": 100  # Use the default limit as per documentation
             }
             
             # Log the API request details
             self.logger.info(f"Birdeye Transactions API Request: URL={url}, Params={params}")
             
-            response = requests.get(url, headers=headers, params=params, timeout=20)  # Increased timeout
+            response = requests.get(url, headers=headers, params=params, timeout=15)
             self.logger.info(f"Birdeye Transactions API Response Status: {response.status_code}")
             
             if response.status_code != 200:
-                # Try alternative endpoint
-                self.logger.warning(f"Primary endpoint failed, trying alternative endpoint")
-                url = "https://public-api.birdeye.so/v1/wallet/history"
-                self.logger.info(f"Birdeye Alternative API Request: URL={url}, Params={params}")
-                
-                response = requests.get(url, headers=headers, params=params, timeout=20)
-                self.logger.info(f"Birdeye Alternative API Response Status: {response.status_code}")
-                
-                if response.status_code != 200:
-                    self.logger.error(f"Error from Birdeye API: {response.status_code} - {response.text}")
-                    return {
-                        "recentTransactions": [],
-                        "riskScore": 50
-                    }
+                self.logger.error(f"Error from Birdeye API: {response.status_code} - {response.text}")
+                return {
+                    "recentTransactions": [],
+                    "riskScore": 50
+                }
             
             # Log the raw response for debugging
             self.logger.debug(f"Birdeye transactions API response: {response.text[:1000]}...")
