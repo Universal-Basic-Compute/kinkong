@@ -250,31 +250,59 @@ export function WhaleMetaAnalysis({ token, timeframe, isLoading }: WhaleMetaAnal
           </div>
           <div>
             <p className="text-xs text-gray-400">Bullish</p>
-            <p className="text-lg font-bold text-green-500">{metaAnalysis.metrics?.bullishPercentage || metaAnalysis.bullishPercentage}%</p>
+            <p className="text-lg font-bold text-green-500">
+              {typeof (metaAnalysis.metrics?.bullishPercentage || metaAnalysis.bullishPercentage) === 'number' 
+                ? Math.round(metaAnalysis.metrics?.bullishPercentage || metaAnalysis.bullishPercentage) 
+                : 0}%
+            </p>
           </div>
           <div>
             <p className="text-xs text-gray-400">Bearish</p>
-            <p className="text-lg font-bold text-red-500">{metaAnalysis.metrics?.bearishPercentage || metaAnalysis.bearishPercentage}%</p>
+            <p className="text-lg font-bold text-red-500">
+              {typeof (metaAnalysis.metrics?.bearishPercentage || metaAnalysis.bearishPercentage) === 'number'
+                ? Math.round(metaAnalysis.metrics?.bearishPercentage || metaAnalysis.bearishPercentage)
+                : 0}%
+            </p>
           </div>
           <div>
             <p className="text-xs text-gray-400">Neutral</p>
-            <p className="text-lg font-bold text-blue-500">{metaAnalysis.metrics?.neutralPercentage || metaAnalysis.neutralPercentage}%</p>
+            <p className="text-lg font-bold text-blue-500">
+              {typeof (metaAnalysis.metrics?.neutralPercentage || metaAnalysis.neutralPercentage) === 'number'
+                ? Math.round(metaAnalysis.metrics?.neutralPercentage || metaAnalysis.neutralPercentage)
+                : 0}%
+            </p>
           </div>
           <div>
             <p className="text-xs text-gray-400">Accumulating</p>
-            <p className="text-lg font-bold text-green-500">{metaAnalysis.metrics?.accumulationPercentage || metaAnalysis.accumulationPercentage}%</p>
+            <p className="text-lg font-bold text-green-500">
+              {typeof (metaAnalysis.metrics?.accumulationPercentage || metaAnalysis.accumulationPercentage) === 'number'
+                ? Math.round(metaAnalysis.metrics?.accumulationPercentage || metaAnalysis.accumulationPercentage)
+                : 0}%
+            </p>
           </div>
           <div>
             <p className="text-xs text-gray-400">Distributing</p>
-            <p className="text-lg font-bold text-red-500">{metaAnalysis.metrics?.distributionPercentage || metaAnalysis.distributionPercentage}%</p>
+            <p className="text-lg font-bold text-red-500">
+              {typeof (metaAnalysis.metrics?.distributionPercentage || metaAnalysis.distributionPercentage) === 'number'
+                ? Math.round(metaAnalysis.metrics?.distributionPercentage || metaAnalysis.distributionPercentage)
+                : 0}%
+            </p>
           </div>
           <div>
             <p className="text-xs text-gray-400">Holding</p>
-            <p className="text-lg font-bold text-blue-500">{metaAnalysis.metrics?.holdingPercentage || metaAnalysis.holdingPercentage}%</p>
+            <p className="text-lg font-bold text-blue-500">
+              {typeof (metaAnalysis.metrics?.holdingPercentage || metaAnalysis.holdingPercentage) === 'number'
+                ? Math.round(metaAnalysis.metrics?.holdingPercentage || metaAnalysis.holdingPercentage)
+                : 0}%
+            </p>
           </div>
           <div>
             <p className="text-xs text-gray-400">High Activity</p>
-            <p className="text-lg font-bold">{metaAnalysis.metrics?.highActivityPercentage || metaAnalysis.highActivityPercentage}%</p>
+            <p className="text-lg font-bold">
+              {typeof (metaAnalysis.metrics?.highActivityPercentage || metaAnalysis.highActivityPercentage) === 'number'
+                ? Math.round(metaAnalysis.metrics?.highActivityPercentage || metaAnalysis.highActivityPercentage)
+                : 0}%
+            </p>
           </div>
         </div>
       </div>
