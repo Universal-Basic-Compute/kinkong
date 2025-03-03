@@ -729,95 +729,7 @@ Here are the key whales-related files for context:${whalesContext}`;
         // If no submission, use mission-based context
         await handleMissionContext();
       }
-      
-      // Helper function to handle mission-based context
-      async function handleMissionContext() {
-        // Add specific guidance based on the mission type
-        switch (mission) {
-        case 'token-discovery':
-          systemPrompt += `For this token discovery mission, focus on analyzing emerging tokens on Solana with strong fundamentals. Evaluate liquidity, volume trends, and holder distribution to help the user create a watchlist of promising tokens for potential investment. Provide detailed analysis of tokenomics and market positioning when relevant.`;
-          break;
-        case 'portfolio-rebalancing':
-          systemPrompt += `For this portfolio rebalancing mission, help the user assess their current portfolio allocation and performance. Identify underperforming assets and potential replacements to create a step-by-step rebalancing plan based on current market conditions. Consider diversification, risk management, and market trends in your recommendations.`;
-          break;
-        case 'strategy-optimization':
-          // Dynamically load knowledge files for context (both .ts, .py and .md files)
-          try {
-            const strategyContext = await getFileContents('knowledge/**/*.{ts,py,md}');
-            
-            systemPrompt += `For this strategy optimization mission, help the user analyze and optimize KinKong's trading strategy implementation. Focus on understanding the current algorithms, identifying bottlenecks, and suggesting improvements to enhance performance and returns.
-
-Here are the key strategy files for context:${strategyContext}`;
-          } catch (err) {
-            console.log(`Error loading knowledge files: ${err}`);
-            systemPrompt += `For this strategy optimization mission, help the user analyze and optimize KinKong's trading strategy implementation. Focus on understanding the current algorithms, identifying bottlenecks, and suggesting improvements to enhance performance and returns.`;
-          }
-          break;
-        case 'engine-optimization':
-          // Dynamically load engine files and setup_tasks.ps1 for context
-          try {
-            const engineContext = await getFileContents('engine/*.py');
-            const setupTasksContext = await getFileContents('setup_tasks.ps1');
-            
-            systemPrompt += `For this engine optimization mission, help the user analyze KinKong's trading engine implementation. Focus on understanding how the core algorithms work and identify potential optimizations for better performance and reliability.
-
-Here are the key engine files for context:${engineContext}
-
-Here is the task scheduling configuration:${setupTasksContext}`;
-          } catch (err) {
-            console.log(`Error loading engine files: ${err}`);
-            systemPrompt += `For this engine optimization mission, help the user analyze KinKong's trading engine implementation. Focus on understanding how the core algorithms work and identify potential optimizations for better performance and reliability.`;
-          }
-          break;
-        case 'trades-optimization':
-          // For trades optimization, load token discovery data instead of engine files
-          try {
-            // Fetch token snapshots for discovery (similar to token-discovery mission)
-            const tokenDiscoveryData = await getTokenSnapshotsForDiscovery();
-            
-            // Only include active tokens
-            const activeTokensContext = tokenDiscoveryData && tokenDiscoveryData.activeTokens 
-              ? `Active Tokens (${tokenDiscoveryData.activeTokens.length}):
-${tokenDiscoveryData.activeTokens
-  .sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0))
-  .slice(0, 10)
-  .map((token, index) => 
-    `${index + 1}. ${token.token} (${token.name || 'Unknown'}): $${parseFloat(token.price || 0).toFixed(6)}, Market Cap: $${formatNumber(token.marketCap)}, Volume 24h: $${formatNumber(token.volume24h)}, Liquidity: $${formatNumber(token.liquidity)}`
-  ).join('\n')}`
-              : 'No active tokens data available';
-            
-            systemPrompt += `For this trades optimization mission, help the user optimize the trading aspects of KinKong's strategy. Focus on analyzing entry/exit decisions, trade execution, and market adaptation to improve overall returns.
-
-Here is the current active token data for context:
-
-${activeTokensContext}`;
-          } catch (err) {
-            console.log(`Error loading trades optimization data: ${err}`);
-            systemPrompt += `For this trades optimization mission, help the user optimize the trading aspects of KinKong's strategy. Focus on analyzing entry/exit decisions, trade execution, and market adaptation to improve overall returns.`;
-          }
-          break;
-        case 'technical-analysis':
-          systemPrompt += `For this technical analysis workshop, help the user identify key chart patterns on specific tokens. Guide them in practicing support/resistance identification and developing a personalized trading strategy based on technical indicators. Explain concepts clearly and relate them to current market conditions.`;
-          break;
-        case 'risk-management':
-          systemPrompt += `For this risk management optimization mission, help the user evaluate their position sizing and stop-loss strategies. Calculate optimal risk-reward ratios based on volatility and create a risk management framework aligned with the user's risk tolerance. Emphasize capital preservation while maximizing returns.`;
-          break;
-        case 'defi-yield':
-          systemPrompt += `For this DeFi yield optimization mission, help the user discover the highest-yielding DeFi protocols on Solana. Compare risks and rewards across lending platforms and liquidity pools to develop a yield farming strategy based on the user's risk profile. Consider impermanent loss, protocol risks, and sustainable APY.`;
-          break;
-        case 'sentiment-analysis':
-          systemPrompt += `For this market sentiment analysis mission, help the user track social media trends and community sentiment for key tokens. Focus on correlating sentiment indicators with price action and creating alerts for significant sentiment shifts that could impact prices. Consider Twitter, Discord, and Telegram as primary sources.`;
-          break;
-        case 'swing-trading':
-          systemPrompt += `For this swing trading setup mission, help the user identify potential swing trading opportunities in the current market. Analyze optimal entry and exit points with specific price targets and develop a tracking system for managing multiple swing positions. Focus on medium-term price movements and key levels.`;
-          break;
-        case 'on-chain-data':
-          systemPrompt += `For this on-chain data investigation mission, help the user explore whale wallet movements and smart money flows. Analyze token distribution and concentration metrics to identify potential accumulation or distribution patterns before they affect price. Focus on on-chain indicators of future price movements.`;
-          break;
-        default:
-          systemPrompt += `For this mission, provide personalized trading and investment advice based on the user's preferences and the current market conditions.`;
-        }
-      }
+    }
 
     // Update system prompt to include user preferences if available
     if (userData) {
@@ -835,7 +747,7 @@ Tailor your responses to match this user's experience level, interests, and risk
       systemPrompt += `\n\nUser's Wallet Portfolio:
 The user's wallet contains ${walletPortfolio.items.length} tokens. Here are the top holdings:
 ${walletPortfolio.items.slice(0, 10).map((item: any, index: number) => 
-  `${index + 1}. ${item.symbol || 'Unknown'}: $${parseFloat(item.value || 0).toFixed(2)} (${item.percentage ? (item.percentage * 100).toFixed(2) : '0'}%)`
+`${index + 1}. ${item.symbol || 'Unknown'}: $${parseFloat(item.value || 0).toFixed(2)} (${item.percentage ? (item.percentage * 100).toFixed(2) : '0'}%)`
 ).join('\n')}
 
 Total Portfolio Value: $${parseFloat(walletPortfolio.totalValue?.toString() || '0').toFixed(2)}
@@ -859,26 +771,26 @@ You have access to data on ${tokenDiscoveryData.activeTokens.length} active toke
 
 Active Tokens (Top 5 by Market Cap):
 ${tokenDiscoveryData.activeTokens
-  .sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0))
-  .slice(0, 5)
-  .map((token, index) => 
-    `${index + 1}. ${token.token} (${token.name || 'Unknown'}): $${parseFloat(token.price || 0).toFixed(6)}, Market Cap: $${formatNumber(token.marketCap)}, Volume 24h: $${formatNumber(token.volume24h)}, Liquidity: $${formatNumber(token.liquidity)}`
-  ).join('\n')}
+.sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0))
+.slice(0, 5)
+.map((token, index) => 
+  `${index + 1}. ${token.token} (${token.name || 'Unknown'}): $${parseFloat(token.price || 0).toFixed(6)}, Market Cap: $${formatNumber(token.marketCap)}, Volume 24h: $${formatNumber(token.volume24h)}, Liquidity: $${formatNumber(token.liquidity)}`
+).join('\n')}
 
 Active Tokens (Top 5 by Volume Growth):
 ${tokenDiscoveryData.activeTokens
-  .sort((a, b) => (b.volumeGrowth || 0) - (a.volumeGrowth || 0))
-  .slice(0, 5)
-  .map((token, index) => 
-    `${index + 1}. ${token.token} (${token.name || 'Unknown'}): Volume Growth: ${(token.volumeGrowth || 0).toFixed(2)}%, Price Performance: ${(token.pricePerformance || 0).toFixed(2)}%, Holders: ${formatNumber(token.holders)}`
-  ).join('\n')}
+.sort((a, b) => (b.volumeGrowth || 0) - (a.volumeGrowth || 0))
+.slice(0, 5)
+.map((token, index) => 
+  `${index + 1}. ${token.token} (${token.name || 'Unknown'}): Volume Growth: ${(token.volumeGrowth || 0).toFixed(2)}%, Price Performance: ${(token.pricePerformance || 0).toFixed(2)}%, Holders: ${formatNumber(token.holders)}`
+).join('\n')}
 
 Recently Inactive Tokens:
 ${tokenDiscoveryData.inactiveTokens
-  .slice(0, 3)
-  .map((token, index) => 
-    `${index + 1}. ${token.token} (${token.name || 'Unknown'}): Last Price: $${parseFloat(token.price || 0).toFixed(6)}, Last Volume: $${formatNumber(token.volume24h)}`
-  ).join('\n')}
+.slice(0, 3)
+.map((token, index) => 
+  `${index + 1}. ${token.token} (${token.name || 'Unknown'}): Last Price: $${parseFloat(token.price || 0).toFixed(6)}, Last Volume: $${formatNumber(token.volume24h)}`
+).join('\n')}
 
 Use this token data to help the user discover promising tokens, analyze market trends, and make informed investment decisions.`;
     }
@@ -1017,11 +929,10 @@ Use this token data to help the user discover promising tokens, analyze market t
           'Cache-Control': 'no-cache'
         }
       });
-
-    } catch (error) {
+    } catch (innerError) {
       clearTimeout(timeoutId);
 
-      if (error instanceof Error && error.name === 'AbortError') {
+      if (innerError instanceof Error && innerError.name === 'AbortError') {
         return new NextResponse(
           JSON.stringify({
             error: 'Request timeout after 30 seconds',
@@ -1034,20 +945,19 @@ Use this token data to help the user discover promising tokens, analyze market t
         );
       }
 
-      throw error;
+      throw innerError;
     }
-
-  } catch (error) {
+  } catch (outerError) {
     console.error('❌ Copilot error:', {
-      name: error instanceof Error ? error.name : 'Unknown',
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
+      name: outerError instanceof Error ? outerError.name : 'Unknown',
+      message: outerError instanceof Error ? outerError.message : 'Unknown error',
+      stack: outerError instanceof Error ? outerError.stack : undefined
     });
 
     return new NextResponse(
       JSON.stringify({
         error: 'Failed to process request',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: outerError instanceof Error ? outerError.message : 'Unknown error'
       }),
       {
         status: 500,
