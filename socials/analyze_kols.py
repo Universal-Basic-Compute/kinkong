@@ -1035,7 +1035,7 @@ class KOLAnalyzer:
         
         self.logger.info("KOL analysis completed")
 
-def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kol_images") -> Optional[str]:
+def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kols") -> Optional[str]:
     # Get logger from setup_logging
     logger = setup_logging()
     """
@@ -1076,9 +1076,16 @@ def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kol_i
         # Extract holdings data for pie chart
         holdings = kol_data.get("holdings", [])
         
+        # Define colors for the theme
+        bg_color = (13, 13, 13)  # Black
+        gold_color = (255, 215, 0)  # Gold
+        red_color = (220, 53, 69)  # Red
+        text_color = (255, 255, 255)  # White
+        secondary_text_color = (180, 180, 180)  # Light gray
+        
         # Create a 3:4 aspect ratio image (width:height)
         width, height = 1200, 1600
-        img = Image.new('RGB', (width, height), color=(13, 13, 13))  # Dark background
+        img = Image.new('RGB', (width, height), color=bg_color)
         draw = ImageDraw.Draw(img)
         
         # Load fonts
@@ -1142,29 +1149,29 @@ def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kol_i
             except Exception as e:
                 logger.error(f"Error loading profile picture: {e}")
         
-        # Draw name in top left
-        draw.text((40, 40), name, fill=(255, 215, 0), font=title_font)  # Gold color
+        # Draw name in top left with gold color
+        draw.text((40, 40), name, fill=gold_color, font=title_font)
         
         # Draw X handle
         if x_username:
-            draw.text((40, 110), f"@{x_username}", fill=(120, 120, 120), font=subtitle_font)
+            draw.text((40, 110), f"@{x_username}", fill=secondary_text_color, font=subtitle_font)
         
-        # Draw influence score
-        score_color = (0, 255, 0) if influence_score >= 70 else (255, 165, 0) if influence_score >= 40 else (255, 0, 0)
+        # Draw influence score with red accent
+        score_color = red_color if influence_score < 40 else gold_color
         draw.text((width - 220, 230), f"Influence: {influence_score}", fill=score_color, font=subtitle_font)
         
         # Draw profile type
-        draw.text((40, 180), f"Profile: {profile_type}", fill=(255, 255, 255), font=subtitle_font)
+        draw.text((40, 180), f"Profile: {profile_type}", fill=text_color, font=subtitle_font)
         
-        # Draw horizontal line
-        draw.line([(40, 250), (width - 40, 250)], fill=(255, 215, 0), width=2)
+        # Draw horizontal line with gold color
+        draw.line([(40, 250), (width - 40, 250)], fill=gold_color, width=2)
         
         # Draw analysis summary
         # Wrap text to fit width
         max_width = width - 80
         lines = []
         words = analysis.split()
-        current_line = words[0]
+        current_line = words[0] if words else ""
         
         for word in words[1:]:
             test_line = current_line + " " + word
@@ -1175,12 +1182,13 @@ def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kol_i
                 lines.append(current_line)
                 current_line = word
         
-        lines.append(current_line)
+        if current_line:
+            lines.append(current_line)
         
         # Draw wrapped text
         y_position = 280
         for line in lines[:6]:  # Limit to 6 lines
-            draw.text((40, y_position), line, fill=(255, 255, 255), font=body_font)
+            draw.text((40, y_position), line, fill=text_color, font=body_font)
             y_position += 40
         
         # Draw asset allocation pie chart
@@ -1207,9 +1215,13 @@ def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kol_i
                     labels.append('Others')
                     sizes.append(others_value)
                 
+                # Define colors for the pie chart - use red and gold theme
+                pie_colors = ['#FFD700', '#DC3545', '#FFA500', '#B8860B', '#CD7F32', '#A9A9A9']
+                
                 # Create pie chart
                 ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90, 
-                       textprops={'color': 'white', 'fontsize': 12})
+                       textprops={'color': 'white', 'fontsize': 12},
+                       colors=pie_colors)
                 ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle
                 plt.title('Asset Allocation', color='white', fontsize=14)
                 
@@ -1231,28 +1243,34 @@ def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kol_i
             except Exception as e:
                 logger.error(f"Error creating pie chart: {e}")
         
-        # Draw insights
+        # Draw insights with gold header
         insights_y = y_position + 520
-        draw.text((40, insights_y), "Key Insights:", fill=(255, 215, 0), font=subtitle_font)
+        draw.text((40, insights_y), "Key Insights:", fill=gold_color, font=subtitle_font)
         
         for i, insight in enumerate(top_insights):
-            draw.text((60, insights_y + 60 + i*50), f"• {insight}", fill=(255, 255, 255), font=body_font)
+            draw.text((60, insights_y + 60 + i*50), f"• {insight}", fill=text_color, font=body_font)
         
         # Draw footer
         footer_y = height - 80
-        draw.line([(40, footer_y), (width - 40, footer_y)], fill=(255, 215, 0), width=2)
+        draw.line([(40, footer_y), (width - 40, footer_y)], fill=gold_color, width=2)
         
         # Draw date
         current_date = datetime.now().strftime("%Y-%m-%d")
-        draw.text((40, footer_y + 20), current_date, fill=(150, 150, 150), font=small_font)
+        draw.text((40, footer_y + 20), current_date, fill=secondary_text_color, font=small_font)
         
         # Draw powered by text
         powered_by = "Powered by Kong.ai & $UBC • NFA"
-        draw.text((width - 400, footer_y + 20), powered_by, fill=(150, 150, 150), font=small_font)
+        draw.text((width - 400, footer_y + 20), powered_by, fill=secondary_text_color, font=small_font)
         
-        # Save the image
-        safe_name = "".join(c for c in name if c.isalnum() or c in (' ', '_')).replace(' ', '_')
-        output_path = os.path.join(output_dir, f"{safe_name}.png")
+        # Save the image using the X handle if available, otherwise use the name
+        if x_username:
+            filename = f"{x_username.replace('@', '')}.png"
+        else:
+            # Create a safe filename from the name
+            safe_name = "".join(c for c in name if c.isalnum() or c in (' ', '_')).replace(' ', '_')
+            filename = f"{safe_name}.png"
+            
+        output_path = os.path.join(output_dir, filename)
         img.save(output_path)
         
         logger.info(f"Generated KOL image: {output_path}")
