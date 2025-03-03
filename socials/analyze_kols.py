@@ -1483,10 +1483,16 @@ def generate_and_send_tweets_for_all_kols(dry_run: bool = True) -> None:
             try:
                 # Extract fields from record
                 fields = record['fields']
+                record_id = record['id']
                 
                 # Skip if no X username
                 if not fields.get("xUsername") and not fields.get("X"):
                     logger.warning(f"Skipping KOL with no X username: {fields.get('X', 'Unknown')}")
+                    continue
+                
+                # Skip if already sent
+                if fields.get("sent") == True:
+                    logger.info(f"Skipping KOL {fields.get('X', 'Unknown')} - tweet already sent")
                     continue
                 
                 # Create data dictionary for tweet generation and image generation
@@ -1528,13 +1534,25 @@ def generate_and_send_tweets_for_all_kols(dry_run: bool = True) -> None:
                 # Log the tweet content
                 logger.info(f"Tweet for {kol_data['name']}:\n{tweet_content}")
                 
+                # Update the message field in Airtable regardless of dry run
+                update_data = {
+                    "message": tweet_content
+                }
+                
                 # Send the tweet if not a dry run
                 if not dry_run:
                     success = send_tweet(tweet_content, image_path)
                     if success:
                         logger.info(f"Tweet sent for {kol_data['name']}")
+                        # Update the sent field to True
+                        update_data["sent"] = True
+                        update_data["sentDate"] = time.strftime("%Y-%m-%d %H:%M:%S")
                     else:
                         logger.warning(f"Failed to send tweet for {kol_data['name']}")
+                
+                # Update the Airtable record
+                analyzer.kol_table.update(record_id, update_data)
+                logger.info(f"Updated message field for {kol_data['name']}")
                 
                 # Sleep to avoid rate limiting
                 time.sleep(2)
@@ -1551,13 +1569,14 @@ def generate_and_send_tweets_for_all_kols(dry_run: bool = True) -> None:
     except Exception as e:
         logger.error(f"Error in generate_and_send_tweets_for_all_kols: {e}")
 
-def generate_and_send_tweet_by_name(kol_name: str, dry_run: bool = True) -> None:
+def generate_and_send_tweet_by_name(kol_name: str, dry_run: bool = True, force: bool = False) -> None:
     """
     Generate and send a tweet for a specific KOL by name
     
     Args:
         kol_name: Name of the KOL
         dry_run: If True, generate tweet but don't send it
+        force: If True, send tweet even if one was already sent
     """
     logger = setup_logging()
     try:
@@ -1577,10 +1596,16 @@ def generate_and_send_tweet_by_name(kol_name: str, dry_run: bool = True) -> None
         
         record = matching_records[0]
         fields = record['fields']
+        record_id = record['id']
         
         # Skip if no X username
         if not fields.get("xUsername") and not fields.get("X"):
             logger.warning(f"Skipping KOL with no X username: {fields.get('X', 'Unknown')}")
+            return
+        
+        # Check if already sent and not forcing
+        if not force and fields.get("sent") == True:
+            logger.info(f"Tweet already sent for {fields.get('X', 'Unknown')}. Use --force to send anyway.")
             return
         
         # Create data dictionary for tweet generation and image generation
@@ -1622,14 +1647,27 @@ def generate_and_send_tweet_by_name(kol_name: str, dry_run: bool = True) -> None
         # Log the tweet content
         logger.info(f"Tweet for {kol_data['name']}:\n{tweet_content}")
         
+        # Update the message field in Airtable regardless of dry run
+        update_data = {
+            "message": tweet_content
+        }
+        
         # Send the tweet if not a dry run
         if not dry_run:
             success = send_tweet(tweet_content, image_path)
             if success:
                 logger.info(f"Tweet sent for {kol_data['name']}")
+                # Update the sent field to True
+                update_data["sent"] = True
+                update_data["sentDate"] = time.strftime("%Y-%m-%d %H:%M:%S")
             else:
                 logger.warning(f"Failed to send tweet for {kol_data['name']}")
-        else:
+        
+        # Update the Airtable record
+        analyzer.kol_table.update(record_id, update_data)
+        logger.info(f"Updated message field for {kol_data['name']}")
+        
+        if dry_run:
             logger.info("Dry run - tweet was not actually sent")
             if image_path:
                 logger.info(f"Image would be attached: {image_path}")
@@ -1651,6 +1689,7 @@ async def main():
         parser.add_argument('--generate-tweet', type=str, help='Generate tweet for a specific KOL by name (dry run)')
         parser.add_argument('--send-tweets', action='store_true', help='Generate and send tweets for all KOLs')
         parser.add_argument('--send-tweet', type=str, help='Generate and send tweet for a specific KOL by name')
+        parser.add_argument('--force', action='store_true', help='Force sending tweet even if already sent')
         
         args = parser.parse_args()
         
@@ -1683,7 +1722,7 @@ async def main():
         # Generate tweet for a specific KOL (dry run)
         if args.generate_tweet:
             logger.info(f"Generating tweet for KOL: {args.generate_tweet} (dry run)")
-            generate_and_send_tweet_by_name(args.generate_tweet, dry_run=True)
+            generate_and_send_tweet_by_name(args.generate_tweet, dry_run=True, force=args.force)
             return
         
         # Generate and send tweets for all KOLs
@@ -1695,7 +1734,7 @@ async def main():
         # Generate and send tweet for a specific KOL
         if args.send_tweet:
             logger.info(f"Generating and sending tweet for KOL: {args.send_tweet}")
-            generate_and_send_tweet_by_name(args.send_tweet, dry_run=False)
+            generate_and_send_tweet_by_name(args.send_tweet, dry_run=False, force=args.force)
             return
         
         # Default: analyze all KOLs
