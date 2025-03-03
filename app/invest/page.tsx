@@ -213,7 +213,7 @@ async function convertTokensToUSD(investments: Investment[], ubcPrice: number, c
 
 export default function Invest() {
   const { connected, publicKey, signTransaction } = useWallet();
-  const [selectedToken, setSelectedToken] = useState<'UBC' | 'COMPUTE'>('UBC');
+  const [selectedToken, setSelectedToken] = useState<'UBC' | 'COMPUTE' | 'USDC'>('UBC');
   const [amount, setAmount] = useState<number>(100000);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [ubcPrice, setUbcPrice] = useState<number>(0.0001);
@@ -222,7 +222,8 @@ export default function Invest() {
   // Token-specific minimum amounts
   const MIN_AMOUNTS = {
     UBC: 100000,
-    COMPUTE: 1000000
+    COMPUTE: 1000000,
+    USDC: 200
   };
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [latestSnapshot, setLatestSnapshot] = useState<WalletSnapshot | null>(null);
@@ -245,6 +246,11 @@ export default function Invest() {
     
     fetchPrices();
   }, []);
+  
+  // Update default amount when token changes
+  useEffect(() => {
+    setAmount(MIN_AMOUNTS[selectedToken]);
+  }, [selectedToken]);
 
   useEffect(() => {
     async function fetchData() {
@@ -405,8 +411,10 @@ export default function Invest() {
       let sourceMint: PublicKey;
       if (selectedToken === 'UBC') {
         sourceMint = UBC_MINT;
-      } else { // COMPUTE
+      } else if (selectedToken === 'COMPUTE') {
         sourceMint = COMPUTE_MINT;
+      } else { // USDC
+        sourceMint = USDC_MINT;
       }
 
       // Get user's token account
@@ -604,7 +612,7 @@ export default function Invest() {
                   <label className="block text-sm mb-2 text-gray-300">
                     Select Token
                   </label>
-                  <div className="grid grid-cols-2 gap-2 mb-4">
+                  <div className="grid grid-cols-3 gap-2 mb-4">
                     <button
                       type="button"
                       onClick={() => setSelectedToken('UBC')}
@@ -626,6 +634,17 @@ export default function Invest() {
                       }`}
                     >
                       <span className="metallic-text-compute">$COMPUTE</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedToken('USDC')}
+                      className={`py-2 px-4 rounded-lg border ${
+                        selectedToken === 'USDC' 
+                          ? 'bg-gold/20 border-gold text-white' 
+                          : 'bg-black/20 border-gray-700 text-gray-400'
+                      }`}
+                    >
+                      <span className="metallic-text-usdc">$USDC</span>
                     </button>
                   </div>
                 </div>
