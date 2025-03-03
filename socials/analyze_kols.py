@@ -215,7 +215,6 @@ class KOLAnalyzer:
             self.logger.warning(f"Missing API key or wallet address for transactions")
             return {
                 "recentTransactions": [],
-                "30DayChange": 0,
                 "riskScore": 50
             }
         
@@ -250,7 +249,6 @@ class KOLAnalyzer:
                     self.logger.error(f"Error from Birdeye API: {response.status_code} - {response.text}")
                     return {
                         "recentTransactions": [],
-                        "30DayChange": 0,
                         "riskScore": 50
                     }
             
@@ -268,8 +266,6 @@ class KOLAnalyzer:
             # Calculate metrics
             thirty_days_ago_timestamp = time.time() - (30 * 24 * 60 * 60)
             recent_txns = []
-            value_30d_ago = None
-            current_value = None
             risk_score = 50  # Default medium risk
             
             # Check if the response is successful
@@ -352,30 +348,6 @@ class KOLAnalyzer:
                     
                     self.logger.info(f"Extracted {len(recent_txns)} formatted transactions")
                     
-                    # Calculate 30-day change
-                    try:
-                        # Get current portfolio value from the most recent transaction
-                        if transactions and len(transactions) > 0:
-                            # Try to get the current portfolio value
-                            current_value = self._extract_portfolio_value(transactions[0])
-                            self.logger.info(f"Current portfolio value: {current_value}")
-                            
-                            # Find a transaction from approximately 30 days ago
-                            for txn in transactions:
-                                txn_time = txn.get("timestamp_numeric", 0)
-                                if txn_time < thirty_days_ago_timestamp:
-                                    value_30d_ago = self._extract_portfolio_value(txn)
-                                    self.logger.info(f"Portfolio value from 30 days ago: {value_30d_ago}")
-                                    break
-                            
-                            # If we couldn't find a transaction from 30 days ago, try to estimate
-                            if value_30d_ago is None and len(transactions) > 1:
-                                # Use the oldest transaction we have
-                                value_30d_ago = self._extract_portfolio_value(transactions[-1])
-                                self.logger.info(f"Using oldest available transaction for portfolio value: {value_30d_ago}")
-                    except Exception as e:
-                        self.logger.error(f"Error calculating 30-day change: {e}")
-                    
                     # Calculate risk score based on transaction patterns
                     try:
                         # Only calculate if we have enough transactions
@@ -457,15 +429,8 @@ class KOLAnalyzer:
             else:
                 self.logger.warning(f"Birdeye API returned unsuccessful response: {data.get('success', False)}")
             
-            # Calculate 30-day change percentage
-            change_30d = 0
-            if value_30d_ago is not None and value_30d_ago > 0 and current_value is not None and current_value > 0:
-                change_30d = ((current_value - value_30d_ago) / value_30d_ago) * 100
-                self.logger.info(f"Calculated 30-day change: {change_30d:.2f}%")
-            
             return {
                 "recentTransactions": recent_txns[:15],  # Return more recent transactions
-                "30DayChange": change_30d,
                 "riskScore": risk_score
             }
         except Exception as e:
@@ -473,7 +438,6 @@ class KOLAnalyzer:
             self.logger.exception("Exception details:")
             return {
                 "recentTransactions": [],
-                "30DayChange": 0,
                 "riskScore": 50
             }
     
@@ -612,7 +576,6 @@ class KOLAnalyzer:
             {json.dumps(kol_data.get('holdings', []), indent=2)}
             
             Transaction History:
-            - 30 Day Change: {kol_data.get('30DayChange', 0):.2f}%
             - Risk Score: {kol_data.get('riskScore', 50)}/100
             
             Recent Transactions:
@@ -860,43 +823,6 @@ class KOLAnalyzer:
             self.logger.error(f"Error extracting transaction details: {e}")
             return None
 
-    def _extract_portfolio_value(self, txn: Dict) -> Optional[float]:
-        """Extract portfolio value from a transaction"""
-        try:
-            # Try different fields that might contain portfolio value
-            for field in ["portfolioValue", "walletValue", "totalValue", "totalUsdValue"]:
-                if field in txn and txn[field]:
-                    try:
-                        return float(txn[field])
-                    except (ValueError, TypeError):
-                        pass
-            
-            # If not found in direct fields, check if it's in a nested structure
-            if "portfolio" in txn and isinstance(txn["portfolio"], dict):
-                for field in ["value", "usdValue", "totalValue"]:
-                    if field in txn["portfolio"] and txn["portfolio"][field]:
-                        try:
-                            return float(txn["portfolio"][field])
-                        except (ValueError, TypeError):
-                            pass
-            
-            # If we still don't have a value, try to estimate from the holdings
-            # This is a fallback and may not be accurate
-            if "holdings" in txn and isinstance(txn["holdings"], list):
-                total = 0
-                for holding in txn["holdings"]:
-                    if "usdValue" in holding:
-                        try:
-                            total += float(holding["usdValue"])
-                        except (ValueError, TypeError):
-                            pass
-                if total > 0:
-                    return total
-            
-            return None
-        except Exception as e:
-            self.logger.error(f"Error extracting portfolio value: {e}")
-            return None
         
     def _print_nested_structure(self, data, prefix="", max_depth=3, current_depth=0):
         """Helper to print the structure of nested dictionaries and lists"""
@@ -1014,7 +940,6 @@ class KOLAnalyzer:
             "diversity": 0,
             "holdings": [],
             "recentTransactions": [],
-            "30DayChange": 0,
             "riskScore": 50,
             "profilePicture": "",
             "followers": 0,
@@ -1055,7 +980,6 @@ class KOLAnalyzer:
             "X": result_data.get("X", "Unknown"),  # Use X field for name
             "totalValue": result_data.get("totalValue", 0),
             "diversity": result_data.get("diversity", 0),
-            "30DayChange": result_data.get("30DayChange", 0),
             "riskScore": result_data.get("riskScore", 50),
             "influenceScore": result_data.get("influenceScore", 0),
             "profilePicture": result_data.get("profilePicture", ""),
