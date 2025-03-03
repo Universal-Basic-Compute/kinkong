@@ -170,17 +170,27 @@ export function WhaleMetaAnalysis({ token, timeframe, isLoading }: WhaleMetaAnal
         <div>
           <h4 className="font-bold text-gold mb-2">Key Patterns</h4>
           <ul className="list-disc pl-5 space-y-1 text-gray-300">
-            {analysis.keyPatterns?.split('\n').map((pattern: string, index: number) => (
-              <li key={index}>{pattern}</li>
-            ))}
+            {Array.isArray(analysis.keyPatterns) 
+              ? analysis.keyPatterns.map((pattern: string, index: number) => (
+                  <li key={index}>{pattern}</li>
+                ))
+              : analysis.keyPatterns?.split('\n').map((pattern: string, index: number) => (
+                  <li key={index}>{pattern}</li>
+                ))
+            }
           </ul>
         </div>
         <div>
           <h4 className="font-bold text-gold mb-2">Actionable Insights</h4>
           <ul className="list-disc pl-5 space-y-1 text-gray-300">
-            {analysis.actionableInsights?.split('\n').map((insight: string, index: number) => (
-              <li key={index}>{insight}</li>
-            ))}
+            {Array.isArray(analysis.actionableInsights) 
+              ? analysis.actionableInsights.map((insight: string, index: number) => (
+                  <li key={index}>{insight}</li>
+                ))
+              : analysis.actionableInsights?.split('\n').map((insight: string, index: number) => (
+                  <li key={index}>{insight}</li>
+                ))
+            }
           </ul>
         </div>
       </div>
@@ -194,9 +204,14 @@ export function WhaleMetaAnalysis({ token, timeframe, isLoading }: WhaleMetaAnal
           </span>
         </div>
         <ul className="list-disc pl-5 space-y-1 text-gray-300">
-          {analysis.riskFactors?.split('\n').map((factor: string, index: number) => (
-            <li key={index}>{factor}</li>
-          ))}
+          {Array.isArray(analysis.riskFactors) 
+            ? analysis.riskFactors.map((factor: string, index: number) => (
+                <li key={index}>{factor}</li>
+              ))
+            : analysis.riskFactors?.split('\n').map((factor: string, index: number) => (
+                <li key={index}>{factor}</li>
+              ))
+          }
         </ul>
       </div>
       
