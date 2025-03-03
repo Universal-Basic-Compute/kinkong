@@ -649,6 +649,22 @@ Here are the key strategy files for context:${strategyContext}`;
             systemPrompt += `For this strategy optimization mission, help the user analyze and optimize KinKong's trading strategy implementation. Focus on understanding the current algorithms, identifying bottlenecks, and suggesting improvements to enhance performance and returns.`;
           }
           break;
+        case 'engine-optimization':
+          // Dynamically load engine files and setup_tasks.ps1 for context
+          try {
+            const engineContext = await getFileContents('engine/*.py');
+            const setupTasksContext = await getFileContents('setup_tasks.ps1');
+            
+            systemPrompt += `For this engine optimization mission, help the user analyze KinKong's trading engine implementation. Focus on understanding how the core algorithms work and identify potential optimizations for better performance and reliability.
+
+Here are the key engine files for context:${engineContext}
+
+Here is the task scheduling configuration:${setupTasksContext}`;
+          } catch (err) {
+            console.log(`Error loading engine files: ${err}`);
+            systemPrompt += `For this engine optimization mission, help the user analyze KinKong's trading engine implementation. Focus on understanding how the core algorithms work and identify potential optimizations for better performance and reliability.`;
+          }
+          break;
         case 'technical-analysis':
           systemPrompt += `For this technical analysis workshop, help the user identify key chart patterns on specific tokens. Guide them in practicing support/resistance identification and developing a personalized trading strategy based on technical indicators. Explain concepts clearly and relate them to current market conditions.`;
           break;
