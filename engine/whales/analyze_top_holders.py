@@ -456,15 +456,29 @@ def main():
         if missing:
             raise ValueError(f"Missing environment variables: {', '.join(missing)}")
         
-        # Run analysis
-        asyncio.run(analyze_top_holders())
-        logger.info("✅ Whale analysis completed")
+        # Parse command line arguments
+        import argparse
+        parser = argparse.ArgumentParser(description='Analyze whale holders and generate meta-analysis')
+        parser.add_argument('--meta-only', action='store_true', help='Only generate meta-analysis without analyzing top holders')
+        parser.add_argument('--token', type=str, default='ALL', choices=['UBC', 'COMPUTE', 'ALL'], help='Token to analyze')
+        parser.add_argument('--timeframe', type=str, default='7d', choices=['7d', '30d', '90d'], help='Timeframe for analysis')
+        args = parser.parse_args()
         
-        # Generate meta-analysis for each token and combined
-        for token_key in ["UBC", "COMPUTE", "ALL"]:
-            for timeframe in ["7d", "30d"]:
-                logger.info(f"Generating meta-analysis for {token_key} ({timeframe})...")
-                asyncio.run(generate_meta_analysis(token_key, timeframe))
+        if args.meta_only:
+            # Only run meta-analysis
+            logger.info(f"Generating meta-analysis for {args.token} ({args.timeframe})...")
+            asyncio.run(generate_meta_analysis(args.token, args.timeframe))
+            logger.info("✅ Meta-analysis completed")
+        else:
+            # Run full analysis
+            asyncio.run(analyze_top_holders())
+            logger.info("✅ Whale analysis completed")
+            
+            # Generate meta-analysis for each token and combined
+            for token_key in ["UBC", "COMPUTE", "ALL"]:
+                for timeframe in ["7d", "30d"]:
+                    logger.info(f"Generating meta-analysis for {token_key} ({timeframe})...")
+                    asyncio.run(generate_meta_analysis(token_key, timeframe))
         
     except Exception as e:
         logger.error(f"❌ Script failed: {e}")
