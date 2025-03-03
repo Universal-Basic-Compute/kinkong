@@ -1092,7 +1092,7 @@ def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kols"
             "image_request": {
                 "prompt": prompt,
                 "aspect_ratio": "ASPECT_4_3",  # 4:3 landscape format
-                "model": "V_2",
+                "model": "V_2_TURBO",  # Changed from V_2 to V_2_TURBO
                 "magic_prompt_option": "AUTO",
                 "style_type": "DESIGN",  # Design style for dashboards
                 "num_images": 1
