@@ -73,14 +73,13 @@ class SignalGenerator:
         ]
 
     async def get_active_tokens(self) -> List[Dict]:
-        """Get list of active tokens excluding stablecoins and tokens with empty mint addresses"""
+        """Get list of active tokens excluding tokens with empty mint addresses"""
         try:
-            # Using get_all with formula instead of select
+            # Using get_all with a simpler formula
             records = self.tokens_table.get_all(
                 formula="AND(" +
                     "{isActive}=1, " +
-                    "NOT({mint}=''), " +
-                    "NOT({isStablecoin}=1)" +  # Exclude stablecoins
+                    "NOT({mint}='')" +
                 ")"
             )
             
@@ -89,7 +88,7 @@ class SignalGenerator:
                 'mint': record['fields']['mint']
             } for record in records]
             
-            logger.info(f"Found {len(tokens)} active tokens for analysis (excluding stablecoins)")
+            logger.info(f"Found {len(tokens)} active tokens for analysis")
             return tokens
             
         except Exception as e:
