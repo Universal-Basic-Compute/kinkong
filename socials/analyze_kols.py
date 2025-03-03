@@ -102,6 +102,9 @@ class KOLAnalyzer:
                 self.logger.error(f"Error from Birdeye API: {response.status_code} - {response.text}")
                 return {"error": f"API error: {response.status_code}"}
             
+            # Log the raw response for debugging
+            self.logger.debug(f"Birdeye holdings API response: {response.text[:500]}...")
+            
             # Check if response is valid JSON before parsing
             try:
                 data = response.json()
@@ -115,17 +118,44 @@ class KOLAnalyzer:
             total_value = 0
             token_count = 0
             
+            # Check the structure of the response and extract data
             if "success" in data and data["success"] and "data" in data:
-                tokens = data["data"].get("items", [])
+                # The structure might vary, so let's check different possible paths
+                tokens_data = data["data"]
+                
+                # Check if items is directly in data
+                if "items" in tokens_data and isinstance(tokens_data["items"], list):
+                    tokens = tokens_data["items"]
+                # Or if tokens are directly in data
+                elif "tokens" in tokens_data and isinstance(tokens_data["tokens"], list):
+                    tokens = tokens_data["tokens"]
+                # Or if the data itself is a list
+                elif isinstance(tokens_data, list):
+                    tokens = tokens_data
+                else:
+                    # Log the structure for debugging
+                    self.logger.warning(f"Unexpected data structure in Birdeye response: {tokens_data.keys() if isinstance(tokens_data, dict) else 'not a dict'}")
+                    tokens = []
+                
                 for token in tokens:
-                    if token.get("value", 0) > 0:
+                    # Extract token data, handling different possible structures
+                    symbol = token.get("symbol", token.get("tokenSymbol", "Unknown"))
+                    value = token.get("value", token.get("usdValue", 0))
+                    amount = token.get("amount", token.get("tokenAmount", 0))
+                    
+                    if value > 0:
                         holdings.append({
-                            "symbol": token.get("symbol", "Unknown"),
-                            "value": token.get("value", 0),
-                            "amount": token.get("amount", 0)
+                            "symbol": symbol,
+                            "value": value,
+                            "amount": amount
                         })
-                        total_value += token.get("value", 0)
+                        total_value += value
                         token_count += 1
+                
+                # Log the extracted holdings
+                self.logger.debug(f"Extracted {len(holdings)} token holdings with total value ${total_value:.2f}")
+            else:
+                self.logger.warning(f"Birdeye API returned unsuccessful response or missing data: {data.get('success', False)}")
             
             # Calculate diversity score (0-100)
             diversity_score = 0
@@ -167,6 +197,9 @@ class KOLAnalyzer:
                 self.logger.error(f"Error from Birdeye API: {response.status_code} - {response.text}")
                 return {"error": f"API error: {response.status_code}"}
             
+            # Log the raw response for debugging
+            self.logger.debug(f"Birdeye transactions API response: {response.text[:500]}...")
+            
             # Check if response is valid JSON before parsing
             try:
                 data = response.json()
@@ -182,40 +215,73 @@ class KOLAnalyzer:
             current_value = 0
             risk_score = 50  # Default medium risk
             
+            # Check the structure of the response and extract data
             if "success" in data and data["success"] and "data" in data:
-                transactions = data["data"].get("items", [])
+                # The structure might vary, so let's check different possible paths
+                txn_data = data["data"]
+                
+                # Check if items is directly in data
+                if "items" in txn_data and isinstance(txn_data["items"], list):
+                    transactions = txn_data["items"]
+                # Or if transactions are directly in data
+                elif "transactions" in txn_data and isinstance(txn_data["transactions"], list):
+                    transactions = txn_data["transactions"]
+                # Or if the data itself is a list
+                elif isinstance(txn_data, list):
+                    transactions = txn_data
+                else:
+                    # Log the structure for debugging
+                    self.logger.warning(f"Unexpected data structure in Birdeye response: {txn_data.keys() if isinstance(txn_data, dict) else 'not a dict'}")
+                    transactions = []
+                
+                # Log the number of transactions found
+                self.logger.debug(f"Found {len(transactions)} transactions in Birdeye response")
                 
                 # Get recent transactions
-                for txn in transactions[:20]:  # Last 20 transactions
+                for txn in transactions[:20]:
+                    # Extract transaction data, handling different possible structures
+                    txn_type = txn.get("type", txn.get("txType", "Unknown"))
+                    symbol = txn.get("symbol", txn.get("tokenSymbol", "Unknown"))
+                    value = txn.get("value", txn.get("usdValue", 0))
+                    timestamp = txn.get("timestamp", txn.get("blockTime", 0))
+                    
                     recent_txns.append({
-                        "type": txn.get("type", "Unknown"),
-                        "symbol": txn.get("symbol", "Unknown"),
-                        "value": txn.get("value", 0),
-                        "timestamp": txn.get("timestamp", 0)
+                        "type": txn_type,
+                        "symbol": symbol,
+                        "value": value,
+                        "timestamp": timestamp
                     })
                 
                 # Calculate 30-day change
                 if len(transactions) > 0:
-                    current_value = transactions[0].get("portfolioValue", 0)
+                    # Try different field names for portfolio value
+                    current_value = transactions[0].get("portfolioValue", 
+                                    transactions[0].get("walletValue", 
+                                    transactions[0].get("totalValue", 0)))
                     
                     # Find portfolio value 30 days ago
                     for txn in transactions:
-                        if txn.get("timestamp", 0) < thirty_days_ago:
-                            value_30d_ago = txn.get("portfolioValue", 0)
+                        txn_time = txn.get("timestamp", txn.get("blockTime", 0))
+                        if txn_time < thirty_days_ago:
+                            value_30d_ago = txn.get("portfolioValue", 
+                                            txn.get("walletValue", 
+                                            txn.get("totalValue", 0)))
                             break
                 
                 # Calculate risk score based on transaction patterns
-                # Higher score = higher risk
                 if len(transactions) > 10:
                     # Factors that increase risk:
                     # 1. High transaction frequency
-                    txn_frequency = min(100, len([t for t in transactions if t.get("timestamp", 0) > thirty_days_ago]))
+                    txn_frequency = min(100, len([t for t in transactions 
+                                                if t.get("timestamp", t.get("blockTime", 0)) > thirty_days_ago]))
                     
                     # 2. Trading low-cap tokens
-                    low_cap_trades = sum(1 for t in transactions[:50] if t.get("symbol", "") not in ["SOL", "USDC", "USDT"])
+                    low_cap_trades = sum(1 for t in transactions[:50] 
+                                        if t.get("symbol", t.get("tokenSymbol", "")) not in ["SOL", "USDC", "USDT"])
                     
                     # 3. High value volatility
-                    values = [t.get("value", 0) for t in transactions[:20] if t.get("value", 0) > 0]
+                    values = [t.get("value", t.get("usdValue", 0)) for t in transactions[:20] 
+                            if t.get("value", t.get("usdValue", 0)) > 0]
                     value_volatility = 0
                     if len(values) > 1:
                         avg_value = sum(values) / len(values)
@@ -223,6 +289,8 @@ class KOLAnalyzer:
                     
                     # Combine factors
                     risk_score = min(100, int((txn_frequency * 0.3) + (low_cap_trades * 2) + (value_volatility * 30)))
+            else:
+                self.logger.warning(f"Birdeye API returned unsuccessful response or missing data: {data.get('success', False)}")
             
             # Calculate 30-day change percentage
             change_30d = 0
@@ -479,13 +547,23 @@ class KOLAnalyzer:
             "lastUpdated": time.strftime("%Y-%m-%d %H:%M:%S")
         }
         
-        # Update holdings as JSON string
-        if "holdings" in result_data:
-            update_data["holdingsJSON"] = json.dumps(result_data["holdings"])
+        # Update holdings as JSON string - ensure it's not empty
+        holdings = result_data.get("holdings", [])
+        if holdings:
+            self.logger.info(f"Found {len(holdings)} holdings for {kol_name}")
+            update_data["holdingsJSON"] = json.dumps(holdings)
+        else:
+            self.logger.warning(f"No holdings found for {kol_name}")
+            update_data["holdingsJSON"] = json.dumps([{"symbol": "No data", "value": 0, "amount": 0}])
         
-        # Update recent transactions as JSON string
-        if "recentTransactions" in result_data:
-            update_data["transactionsJSON"] = json.dumps(result_data["recentTransactions"])
+        # Update recent transactions as JSON string - ensure it's not empty
+        transactions = result_data.get("recentTransactions", [])
+        if transactions:
+            self.logger.info(f"Found {len(transactions)} transactions for {kol_name}")
+            update_data["transactionsJSON"] = json.dumps(transactions)
+        else:
+            self.logger.warning(f"No transactions found for {kol_name}")
+            update_data["transactionsJSON"] = json.dumps([{"type": "No data", "symbol": "Unknown", "value": 0, "timestamp": 0}])
         
         return {
             "record_id": record_id,
