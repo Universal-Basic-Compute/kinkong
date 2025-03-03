@@ -1,0 +1,624 @@
+2025-03-03 10:04:50,816 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-03 10:04:51,042 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-03 10:04:53,500 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-03 10:04:53,500 - kol_analyzer - INFO - Selected random KOL: doloxbt
+2025-03-03 10:04:54,202 - kol_analyzer - INFO - Generating detailed tweet for KOL: doloxbt
+2025-03-03 10:31:16,462 - anthropic._base_client - INFO - Retrying request to /v1/messages in 0.473086 seconds
+2025-03-03 10:31:16,943 - anthropic._base_client - INFO - Retrying request to /v1/messages in 0.938795 seconds
+2025-03-03 10:31:46,492 - kol_analyzer - ERROR - Error generating detailed tweet content: Connection error.
+2025-03-03 10:31:46,492 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Python312\Lib\site-packages\httpcore\_exceptions.py", line 10, in map_exceptions
+    yield
+  File "C:\Python312\Lib\site-packages\httpcore\backends\sync.py", line 28, in read
+    return self._sock.recv(max_bytes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\ssl.py", line 1233, in recv
+    return self.read(buflen)
+           ^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\ssl.py", line 1106, in read
+    return self._sslobj.read(len)
+           ^^^^^^^^^^^^^^^^^^^^^^
+TimeoutError: The read operation timed out
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_transports\default.py", line 60, in map_httpcore_exceptions
+    yield
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_transports\default.py", line 218, in handle_request
+    resp = self._pool.handle_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\connection_pool.py", line 253, in handle_request
+    raise exc
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\connection_pool.py", line 237, in handle_request
+    response = connection.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\connection.py", line 90, in handle_request
+    return self._connection.handle_request(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\http11.py", line 112, in handle_request
+    raise exc
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\http11.py", line 91, in handle_request
+    ) = self._receive_response_headers(**kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\http11.py", line 155, in _receive_response_headers
+    event = self._receive_event(timeout=timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\http11.py", line 191, in _receive_event
+    data = self._network_stream.read(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\backends\sync.py", line 26, in read
+    with map_exceptions(exc_map):
+  File "C:\Python312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "C:\Python312\Lib\site-packages\httpcore\_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc)
+httpcore.ReadTimeout: The read operation timed out
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Python312\Lib\site-packages\anthropic\_base_client.py", line 995, in _request
+    response = self._client.send(
+               ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py", line 908, in send
+    response = self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py", line 936, in _send_handling_auth
+    response = self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py", line 973, in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py", line 1009, in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_transports\default.py", line 217, in handle_request
+    with map_httpcore_exceptions():
+  File "C:\Python312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_transports\default.py", line 77, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ReadTimeout: The read operation timed out
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Python312\Lib\site-packages\httpcore\_exceptions.py", line 10, in map_exceptions
+    yield
+  File "C:\Python312\Lib\site-packages\httpcore\backends\sync.py", line 94, in connect_tcp
+    sock = socket.create_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\socket.py", line 829, in create_connection
+    for res in getaddrinfo(host, port, 0, SOCK_STREAM):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\socket.py", line 964, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+socket.gaierror: [Errno 11001] getaddrinfo failed
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_transports\default.py", line 60, in map_httpcore_exceptions
+    yield
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_transports\default.py", line 218, in handle_request
+    resp = self._pool.handle_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\connection_pool.py", line 253, in handle_request
+    raise exc
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\connection_pool.py", line 237, in handle_request
+    response = connection.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\connection.py", line 86, in handle_request
+    raise exc
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\connection.py", line 63, in handle_request
+    stream = self._connect(request)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\connection.py", line 111, in _connect
+    stream = self._network_backend.connect_tcp(**kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\backends\sync.py", line 93, in connect_tcp
+    with map_exceptions(exc_map):
+  File "C:\Python312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "C:\Python312\Lib\site-packages\httpcore\_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc)
+httpcore.ConnectError: [Errno 11001] getaddrinfo failed
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Python312\Lib\site-packages\anthropic\_base_client.py", line 995, in _request
+    response = self._client.send(
+               ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py", line 908, in send
+    response = self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py", line 936, in _send_handling_auth
+    response = self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py", line 973, in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py", line 1009, in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_transports\default.py", line 217, in handle_request
+    with map_httpcore_exceptions():
+  File "C:\Python312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_transports\default.py", line 77, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ConnectError: [Errno 11001] getaddrinfo failed
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Python312\Lib\site-packages\httpcore\_exceptions.py", line 10, in map_exceptions
+    yield
+  File "C:\Python312\Lib\site-packages\httpcore\backends\sync.py", line 94, in connect_tcp
+    sock = socket.create_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\socket.py", line 829, in create_connection
+    for res in getaddrinfo(host, port, 0, SOCK_STREAM):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\socket.py", line 964, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+socket.gaierror: [Errno 11001] getaddrinfo failed
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_transports\default.py", line 60, in map_httpcore_exceptions
+    yield
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_transports\default.py", line 218, in handle_request
+    resp = self._pool.handle_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\connection_pool.py", line 253, in handle_request
+    raise exc
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\connection_pool.py", line 237, in handle_request
+    response = connection.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\connection.py", line 86, in handle_request
+    raise exc
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\connection.py", line 63, in handle_request
+    stream = self._connect(request)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\connection.py", line 111, in _connect
+    stream = self._network_backend.connect_tcp(**kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\backends\sync.py", line 93, in connect_tcp
+    with map_exceptions(exc_map):
+  File "C:\Python312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "C:\Python312\Lib\site-packages\httpcore\_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc)
+httpcore.ConnectError: [Errno 11001] getaddrinfo failed
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Python312\Lib\site-packages\anthropic\_base_client.py", line 995, in _request
+    response = self._client.send(
+               ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py", line 908, in send
+    response = self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py", line 936, in _send_handling_auth
+    response = self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py", line 973, in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py", line 1009, in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_transports\default.py", line 217, in handle_request
+    with map_httpcore_exceptions():
+  File "C:\Python312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_transports\default.py", line 77, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ConnectError: [Errno 11001] getaddrinfo failed
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1443, in generate_detailed_tweet_content
+    response = claude.messages.create(
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\anthropic\_utils\_utils.py", line 275, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\anthropic\resources\messages\messages.py", line 904, in create
+    return self._post(
+           ^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\anthropic\_base_client.py", line 1282, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\anthropic\_base_client.py", line 959, in request
+    return self._request(
+           ^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\anthropic\_base_client.py", line 1004, in _request
+    return self._retry_request(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\anthropic\_base_client.py", line 1097, in _retry_request
+    return self._request(
+           ^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\anthropic\_base_client.py", line 1019, in _request
+    return self._retry_request(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\anthropic\_base_client.py", line 1097, in _retry_request
+    return self._request(
+           ^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\anthropic\_base_client.py", line 1029, in _request
+    raise APIConnectionError(request=request) from err
+anthropic.APIConnectionError: Connection error.
+2025-03-03 10:31:46,587 - kol_analyzer - WARNING - Failed to generate detailed tweet for doloxbt
+2025-03-03 12:45:18,058 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-03 12:45:18,702 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-03 12:45:19,633 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-03 12:45:19,634 - kol_analyzer - INFO - Selected random KOL: gorillacapsol
+2025-03-03 12:45:20,492 - kol_analyzer - INFO - Generating detailed tweet for KOL: gorillacapsol
+2025-03-03 12:58:19,855 - anthropic._base_client - INFO - Retrying request to /v1/messages in 0.470341 seconds
+2025-03-03 12:58:20,339 - anthropic._base_client - INFO - Retrying request to /v1/messages in 0.845773 seconds
+2025-03-03 12:58:22,800 - kol_analyzer - ERROR - Error generating detailed tweet content: Connection error.
+2025-03-03 12:58:22,801 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Python312\Lib\site-packages\httpcore\_exceptions.py", line 10, in map_exceptions
+    yield
+  File "C:\Python312\Lib\site-packages\httpcore\backends\sync.py", line 28, in read
+    return self._sock.recv(max_bytes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\ssl.py", line 1233, in recv
+    return self.read(buflen)
+           ^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\ssl.py", line 1106, in read
+    return self._sslobj.read(len)
+           ^^^^^^^^^^^^^^^^^^^^^^
+TimeoutError: The read operation timed out
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_transports\default.py", line 60, in map_httpcore_exceptions
+    yield
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_transports\default.py", line 218, in handle_request
+    resp = self._pool.handle_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\connection_pool.py", line 253, in handle_request
+    raise exc
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\connection_pool.py", line 237, in handle_request
+    response = connection.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\connection.py", line 90, in handle_request
+    return self._connection.handle_request(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\http11.py", line 112, in handle_request
+    raise exc
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\http11.py", line 91, in handle_request
+    ) = self._receive_response_headers(**kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\http11.py", line 155, in _receive_response_headers
+    event = self._receive_event(timeout=timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\http11.py", line 191, in _receive_event
+    data = self._network_stream.read(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\backends\sync.py", line 26, in read
+    with map_exceptions(exc_map):
+  File "C:\Python312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "C:\Python312\Lib\site-packages\httpcore\_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc)
+httpcore.ReadTimeout: The read operation timed out
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Python312\Lib\site-packages\anthropic\_base_client.py", line 995, in _request
+    response = self._client.send(
+               ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py", line 908, in send
+    response = self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py", line 936, in _send_handling_auth
+    response = self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py", line 973, in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py", line 1009, in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_transports\default.py", line 217, in handle_request
+    with map_httpcore_exceptions():
+  File "C:\Python312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_transports\default.py", line 77, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ReadTimeout: The read operation timed out
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Python312\Lib\site-packages\httpcore\_exceptions.py", line 10, in map_exceptions
+    yield
+  File "C:\Python312\Lib\site-packages\httpcore\backends\sync.py", line 94, in connect_tcp
+    sock = socket.create_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\socket.py", line 829, in create_connection
+    for res in getaddrinfo(host, port, 0, SOCK_STREAM):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\socket.py", line 964, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+socket.gaierror: [Errno 11001] getaddrinfo failed
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_transports\default.py", line 60, in map_httpcore_exceptions
+    yield
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_transports\default.py", line 218, in handle_request
+    resp = self._pool.handle_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\connection_pool.py", line 253, in handle_request
+    raise exc
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\connection_pool.py", line 237, in handle_request
+    response = connection.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\connection.py", line 86, in handle_request
+    raise exc
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\connection.py", line 63, in handle_request
+    stream = self._connect(request)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\connection.py", line 111, in _connect
+    stream = self._network_backend.connect_tcp(**kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\backends\sync.py", line 93, in connect_tcp
+    with map_exceptions(exc_map):
+  File "C:\Python312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "C:\Python312\Lib\site-packages\httpcore\_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc)
+httpcore.ConnectError: [Errno 11001] getaddrinfo failed
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Python312\Lib\site-packages\anthropic\_base_client.py", line 995, in _request
+    response = self._client.send(
+               ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py", line 908, in send
+    response = self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py", line 936, in _send_handling_auth
+    response = self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py", line 973, in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py", line 1009, in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_transports\default.py", line 217, in handle_request
+    with map_httpcore_exceptions():
+  File "C:\Python312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_transports\default.py", line 77, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ConnectError: [Errno 11001] getaddrinfo failed
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Python312\Lib\site-packages\httpcore\_exceptions.py", line 10, in map_exceptions
+    yield
+  File "C:\Python312\Lib\site-packages\httpcore\backends\sync.py", line 94, in connect_tcp
+    sock = socket.create_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\socket.py", line 829, in create_connection
+    for res in getaddrinfo(host, port, 0, SOCK_STREAM):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\socket.py", line 964, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+socket.gaierror: [Errno 11001] getaddrinfo failed
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_transports\default.py", line 60, in map_httpcore_exceptions
+    yield
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_transports\default.py", line 218, in handle_request
+    resp = self._pool.handle_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\connection_pool.py", line 253, in handle_request
+    raise exc
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\connection_pool.py", line 237, in handle_request
+    response = connection.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\connection.py", line 86, in handle_request
+    raise exc
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\connection.py", line 63, in handle_request
+    stream = self._connect(request)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\connection.py", line 111, in _connect
+    stream = self._network_backend.connect_tcp(**kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\backends\sync.py", line 93, in connect_tcp
+    with map_exceptions(exc_map):
+  File "C:\Python312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "C:\Python312\Lib\site-packages\httpcore\_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc)
+httpcore.ConnectError: [Errno 11001] getaddrinfo failed
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Python312\Lib\site-packages\anthropic\_base_client.py", line 995, in _request
+    response = self._client.send(
+               ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py", line 908, in send
+    response = self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py", line 936, in _send_handling_auth
+    response = self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py", line 973, in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_client.py", line 1009, in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_transports\default.py", line 217, in handle_request
+    with map_httpcore_exceptions():
+  File "C:\Python312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "C:\Users\conta\AppData\Roaming\Python\Python312\site-packages\httpx\_transports\default.py", line 77, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ConnectError: [Errno 11001] getaddrinfo failed
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1443, in generate_detailed_tweet_content
+    response = claude.messages.create(
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\anthropic\_utils\_utils.py", line 275, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\anthropic\resources\messages\messages.py", line 904, in create
+    return self._post(
+           ^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\anthropic\_base_client.py", line 1282, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\anthropic\_base_client.py", line 959, in request
+    return self._request(
+           ^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\anthropic\_base_client.py", line 1004, in _request
+    return self._retry_request(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\anthropic\_base_client.py", line 1097, in _retry_request
+    return self._request(
+           ^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\anthropic\_base_client.py", line 1019, in _request
+    return self._retry_request(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\anthropic\_base_client.py", line 1097, in _retry_request
+    return self._request(
+           ^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\anthropic\_base_client.py", line 1029, in _request
+    raise APIConnectionError(request=request) from err
+anthropic.APIConnectionError: Connection error.
+2025-03-03 12:58:22,859 - kol_analyzer - WARNING - Failed to generate detailed tweet for gorillacapsol
+2025-03-03 15:44:55,928 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-03 15:44:56,676 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-03 15:44:57,675 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-03 15:44:57,675 - kol_analyzer - INFO - Selected random KOL: Yennii56
+2025-03-03 15:44:58,290 - kol_analyzer - INFO - Generating detailed tweet for KOL: Yennii56
+2025-03-03 15:45:08,472 - kol_analyzer - INFO - No existing image found for Yennii56, generating new image
+2025-03-03 15:45:08,474 - kol_analyzer - INFO - Sending request to Ideogram API for Yennii56
+2025-03-03 15:45:19,577 - kol_analyzer - INFO - Downloading image from https://ideogram.ai/api/images/ephemeral/vJHiAmhrRf-0d_OJKj3_DQ.png?exp=1741099520&sig=f00a824ac7def4db6316106a1e9e768bf0f7617f681fa08107f11ac44f193c08
+2025-03-03 15:45:20,338 - kol_analyzer - INFO - Generated KOL image: public/kols\Yennii56.png
+2025-03-03 15:45:20,622 - kol_analyzer - INFO - Attaching image: public/kols\Yennii56.png
+2025-03-03 15:45:22,313 - kol_analyzer - INFO - Tweet with image sent successfully
+2025-03-03 15:45:22,608 - kol_analyzer - INFO - Detailed tweet sent for Yennii56
+2025-03-03 15:45:22,940 - kol_analyzer - INFO - Updated detailedMessage field for Yennii56
+2025-03-03 17:09:13,015 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-03 17:09:13,589 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-03 17:09:14,567 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-03 17:09:14,567 - kol_analyzer - INFO - Selected random KOL: leensx100
+2025-03-03 17:09:15,540 - kol_analyzer - INFO - Generating detailed tweet for KOL: leensx100
+2025-03-03 17:09:25,526 - kol_analyzer - INFO - No existing image found for leensx100, generating new image
+2025-03-03 17:09:25,528 - kol_analyzer - INFO - Sending request to Ideogram API for leensx100
+2025-03-03 17:09:36,702 - kol_analyzer - INFO - Downloading image from https://ideogram.ai/api/images/ephemeral/7d3O5ZywQ3ykHuzMWk0iSg.png?exp=1741104577&sig=447e37d260c2b69a7090e42e8ff18da82041aef2641c8312f8636bc12da389e8
+2025-03-03 17:09:37,650 - kol_analyzer - INFO - Generated KOL image: public/kols\leensx100.png
+2025-03-03 17:09:37,937 - kol_analyzer - INFO - Attaching image: public/kols\leensx100.png
+2025-03-03 17:09:39,521 - kol_analyzer - INFO - Tweet with image sent successfully
+2025-03-03 17:09:39,564 - kol_analyzer - INFO - Detailed tweet sent for leensx100
+2025-03-03 17:09:39,866 - kol_analyzer - INFO - Updated detailedMessage field for leensx100
+2025-03-03 18:56:31,527 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-03 18:56:32,310 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-03 18:56:34,276 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-03 18:56:34,277 - kol_analyzer - INFO - Selected random KOL: timmpix1
+2025-03-03 18:56:34,958 - kol_analyzer - INFO - Generating detailed tweet for KOL: timmpix1
+2025-03-03 18:56:44,753 - kol_analyzer - INFO - No existing image found for timmpix1, generating new image
+2025-03-03 18:56:44,755 - kol_analyzer - INFO - Sending request to Ideogram API for timmpix1
+2025-03-03 18:56:55,848 - kol_analyzer - INFO - Downloading image from https://ideogram.ai/api/images/ephemeral/M73SBtnLQVOuKCGzHTJt1w.png?exp=1741111017&sig=c3fe33e191f646c036f35d291b4ffc5251e4b35703127d8d5c50097ff43d20ea
+2025-03-03 18:56:56,739 - kol_analyzer - INFO - Generated KOL image: public/kols\timmpix1.png
+2025-03-03 18:56:57,150 - kol_analyzer - INFO - Attaching image: public/kols\timmpix1.png
+2025-03-03 18:56:58,935 - kol_analyzer - INFO - Tweet with image sent successfully
+2025-03-03 18:56:58,995 - kol_analyzer - INFO - Detailed tweet sent for timmpix1
+2025-03-03 18:56:59,244 - kol_analyzer - INFO - Updated detailedMessage field for timmpix1
+2025-03-03 19:45:03,744 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-03 19:45:03,962 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-03 19:45:05,015 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-03 19:45:05,016 - kol_analyzer - INFO - Selected random KOL: absolquant
+2025-03-03 19:45:05,685 - kol_analyzer - INFO - Generating detailed tweet for KOL: absolquant
+2025-03-03 19:45:14,240 - kol_analyzer - INFO - No existing image found for absolquant, generating new image
+2025-03-03 19:45:14,242 - kol_analyzer - INFO - Sending request to Ideogram API for absolquant
+2025-03-03 19:45:25,433 - kol_analyzer - INFO - Downloading image from https://ideogram.ai/api/images/ephemeral/fcbhclIrT7GDE1oFhsUh7Q.png?exp=1741113925&sig=beaa8149a5450f5f6bb0e29208c2484e6a11f3ea6ee335a6d29a48fc6d659093
+2025-03-03 19:45:26,470 - kol_analyzer - INFO - Generated KOL image: public/kols\absolquant.png
+2025-03-03 19:45:26,730 - kol_analyzer - INFO - Attaching image: public/kols\absolquant.png
+2025-03-03 19:45:28,494 - kol_analyzer - INFO - Tweet with image sent successfully
+2025-03-03 19:45:28,537 - kol_analyzer - INFO - Detailed tweet sent for absolquant
+2025-03-03 19:45:28,869 - kol_analyzer - INFO - Updated detailedMessage field for absolquant
+2025-03-03 20:45:03,496 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-03 20:45:03,685 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-03 20:45:04,785 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-03 20:45:04,786 - kol_analyzer - INFO - Selected random KOL: angitradez
+2025-03-03 20:45:05,436 - kol_analyzer - INFO - Generating detailed tweet for KOL: angitradez
+2025-03-03 20:45:14,048 - kol_analyzer - INFO - No existing image found for angitradez, generating new image
+2025-03-03 20:45:14,050 - kol_analyzer - INFO - Sending request to Ideogram API for angitradez
+2025-03-03 20:45:25,043 - kol_analyzer - INFO - Downloading image from https://ideogram.ai/api/images/ephemeral/j4eXwLLpT6Oyk985hjenAw.png?exp=1741117525&sig=0e48bfbff37081baf72b9e422fdb640f8f7cfbeb5227be2937306f9a02994fb8
+2025-03-03 20:45:25,800 - kol_analyzer - INFO - Generated KOL image: public/kols\angitradez.png
+2025-03-03 20:45:26,063 - kol_analyzer - INFO - Attaching image: public/kols\angitradez.png
+2025-03-03 20:45:28,585 - kol_analyzer - INFO - Tweet with image sent successfully
+2025-03-03 20:45:28,623 - kol_analyzer - INFO - Detailed tweet sent for angitradez
+2025-03-03 20:45:28,885 - kol_analyzer - INFO - Updated detailedMessage field for angitradez
+2025-03-03 21:45:07,160 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-03 21:45:07,843 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-03 21:45:08,961 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-03 21:45:08,961 - kol_analyzer - INFO - Selected random KOL: Al4neu
+2025-03-03 21:45:09,631 - kol_analyzer - INFO - Generating detailed tweet for KOL: Al4neu
+2025-03-03 21:45:18,965 - kol_analyzer - INFO - No existing image found for Al4neu, generating new image
+2025-03-03 21:45:18,968 - kol_analyzer - INFO - Sending request to Ideogram API for Al4neu
+2025-03-03 21:45:30,541 - kol_analyzer - INFO - Downloading image from https://ideogram.ai/api/images/ephemeral/XmqEHLMSRCyLiJMom0JVwA.png?exp=1741121130&sig=1251a443c3cd1afc15fd7a8ec10e4df68373c7fc8b63e823e2e92979a73f1761
+2025-03-03 21:45:31,321 - kol_analyzer - INFO - Generated KOL image: public/kols\Al4neu.png
+2025-03-03 21:45:31,645 - kol_analyzer - INFO - Attaching image: public/kols\Al4neu.png
+2025-03-03 21:45:33,193 - kol_analyzer - INFO - Tweet with image sent successfully
+2025-03-03 21:45:33,233 - kol_analyzer - INFO - Detailed tweet sent for Al4neu
+2025-03-03 21:45:33,599 - kol_analyzer - INFO - Updated detailedMessage field for Al4neu
+2025-03-03 22:45:03,428 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-03 22:45:03,619 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-03 22:45:04,658 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-03 22:45:04,659 - kol_analyzer - INFO - Selected random KOL: polarsterrr
+2025-03-03 22:45:04,947 - kol_analyzer - INFO - Generating detailed tweet for KOL: polarsterrr
+2025-03-03 22:45:13,220 - kol_analyzer - INFO - No existing image found for polarsterrr, generating new image
+2025-03-03 22:45:13,222 - kol_analyzer - INFO - Sending request to Ideogram API for polarsterrr
+2025-03-03 22:45:24,137 - kol_analyzer - INFO - Downloading image from https://ideogram.ai/api/images/ephemeral/Mu3CORFdSZ6E4sXrp_y2rA.png?exp=1741124724&sig=240cb2ac1629549aafcbb76f6479f562f4c31363eb1e01f9ace529860dcb6c6b
+2025-03-03 22:45:24,863 - kol_analyzer - INFO - Generated KOL image: public/kols\polarsterrr.png
+2025-03-03 22:45:25,137 - kol_analyzer - INFO - Attaching image: public/kols\polarsterrr.png
+2025-03-03 22:45:26,619 - kol_analyzer - INFO - Tweet with image sent successfully
+2025-03-03 22:45:26,651 - kol_analyzer - INFO - Detailed tweet sent for polarsterrr
+2025-03-03 22:45:27,015 - kol_analyzer - INFO - Updated detailedMessage field for polarsterrr
+2025-03-03 23:45:03,581 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-03 23:45:03,771 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-03 23:45:04,865 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-03 23:45:04,866 - kol_analyzer - INFO - Selected random KOL: RipJalens
+2025-03-03 23:45:05,494 - kol_analyzer - INFO - Generating detailed tweet for KOL: RipJalens
+2025-03-03 23:45:14,496 - kol_analyzer - INFO - No existing image found for RipJalens, generating new image
+2025-03-03 23:45:14,499 - kol_analyzer - INFO - Sending request to Ideogram API for RipJalens
+2025-03-03 23:45:25,413 - kol_analyzer - INFO - Downloading image from https://ideogram.ai/api/images/ephemeral/FJyrW4zPQ3OyuZHF0sEpVw.png?exp=1741128325&sig=10bc3815fdfa37f2745d00b6a995faba05ef11ec15fa8a7afbcc4241b370b704
+2025-03-03 23:45:26,196 - kol_analyzer - INFO - Generated KOL image: public/kols\RipJalens.png
+2025-03-03 23:45:26,485 - kol_analyzer - INFO - Attaching image: public/kols\RipJalens.png
+2025-03-03 23:45:28,304 - kol_analyzer - INFO - Tweet with image sent successfully
+2025-03-03 23:45:28,345 - kol_analyzer - INFO - Detailed tweet sent for RipJalens
+2025-03-03 23:45:28,740 - kol_analyzer - INFO - Updated detailedMessage field for RipJalens
