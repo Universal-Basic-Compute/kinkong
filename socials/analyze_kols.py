@@ -1070,7 +1070,6 @@ def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kols"
         3. "Influence Score: {influence_score}" in bold {color_description} colors
         
         The background should be dark with subtle crypto-themed elements.
-        NO pie charts, NO key insights, NO holdings information, and NO "powered by" text.
         
         The overall aesthetic should be premium, professional, and crypto-focused.
         """
