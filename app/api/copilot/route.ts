@@ -816,8 +816,8 @@ ${activeTokensContext}`;
           break;
         default:
           systemPrompt += `For this mission, provide personalized trading and investment advice based on the user's preferences and the current market conditions.`;
+        }
       }
-    }
 
     // Update system prompt to include user preferences if available
     if (userData) {
