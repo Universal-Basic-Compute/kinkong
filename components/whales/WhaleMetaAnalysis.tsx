@@ -239,7 +239,6 @@ export function WhaleMetaAnalysis({ token, timeframe, isLoading }: WhaleMetaAnal
           </div>
         </div>
       </div>
-}
       
       <div className="border-t border-gray-700 pt-4 mt-6">
         <h4 className="font-bold text-gold mb-2">Analysis Metrics</h4>
