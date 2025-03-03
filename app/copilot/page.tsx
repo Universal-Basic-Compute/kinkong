@@ -128,6 +128,11 @@ export default function CopilotPage() {
 
   const features = [
     {
+      title: "Chrome Extension",
+      description: "Access KinKong's intelligence directly in your browser while trading",
+      icon: "🌐"
+    },
+    {
       title: "Technical Analysis Integration",
       description: "Access KinKong's real-time technical analysis and trading signals",
       icon: "📊"
@@ -167,7 +172,8 @@ export default function CopilotPage() {
         "10 messages per day",
         "Basic technical analysis",
         "Standard response time",
-        "Public signals access"
+        "Public signals access",
+        "Chrome extension access"
       ],
       action: () => {
         if (!connected) {
@@ -187,7 +193,8 @@ export default function CopilotPage() {
         "Exclusive Kong Copilot missions",
         "Exclusive Kong Copliot alpha signals",
         "+25% returns on Kong Invest",
-        "Stronger guarantees on Kong Invest"
+        "Stronger guarantees on Kong Invest",
+        "Chrome extension access"
       ],
       price: (
         <span>
@@ -208,7 +215,8 @@ export default function CopilotPage() {
         "Exclusive Kong Copilot missions",
         "Exclusive Kong Copliot alpha signals",
         "+25% returns on Kong Invest",
-        "Stronger guarantees on Kong Invest"
+        "Stronger guarantees on Kong Invest",
+        "Chrome extension access"
       ],
       price: (
         <span>
@@ -409,6 +417,37 @@ export default function CopilotPage() {
             </div>
           </div>
           <div className="max-w-2xl mx-auto">
+          </div>
+        </div>
+
+        {/* Chrome Extension Promotion */}
+        <div className="p-8 bg-gradient-to-r from-black/60 to-purple-900/30 border-2 border-gold/40 rounded-lg text-center mb-12 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-40 h-40 -mt-10 -mr-10 opacity-20">
+            <img src="/chrome-logo.png" alt="Chrome" className="w-full h-full object-contain" />
+          </div>
+          <h2 className="text-3xl font-bold mb-4 text-gold">KinKong Copilot Chrome Extension</h2>
+          <p className="text-xl text-gray-300 mb-6 max-w-3xl mx-auto">
+            Access KinKong's AI-powered trading intelligence directly in your browser with our official Chrome extension.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a 
+              href="https://chromewebstore.google.com/detail/KinKong%20Copilot/pppphicmiiioggjhcbcbbghcdgbihbji"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg font-bold text-white hover:scale-105 transition-all flex items-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Install Chrome Extension
+            </a>
+            <div className="flex items-center bg-black/50 px-4 py-2 rounded-lg">
+              <span className="text-green-400 mr-2">✓</span>
+              <span className="text-gray-300">10,000+ Users</span>
+            </div>
+          </div>
+          <div className="mt-6 text-gray-400 text-sm">
+            Enhance your trading experience with real-time insights, portfolio analysis, and market intelligence.
           </div>
         </div>
 
