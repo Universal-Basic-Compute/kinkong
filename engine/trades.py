@@ -872,7 +872,18 @@ class TradeExecutor:
                 
             # Calculate P&L and ROI
             realized_pnl = exit_value - original_value
-            roi = (realized_pnl / original_value * 100) if original_value > 0 else 0
+            
+            # Calculate ROI based on price change percentage for more accuracy
+            if entry_price > 0 and current_price > 0:
+                # For BUY trades, ROI is (exit_price - entry_price) / entry_price
+                # For SELL trades, ROI would be (entry_price - exit_price) / entry_price
+                price_change_pct = ((current_price - entry_price) / entry_price) * 100
+                roi = price_change_pct  # This gives the actual percentage change in price
+            else:
+                # Fallback to value-based calculation if prices aren't available
+                roi = (realized_pnl / original_value * 100) if original_value > 0 else 0
+            
+            self.logger.info(f"Price Change: {((current_price - entry_price) / entry_price) * 100:.2f}%")
             
             # Ensure we're not storing zero for exit_value when we have valid data
             if exit_value <= 0 and current_price > 0:
@@ -880,26 +891,24 @@ class TradeExecutor:
                 # Use a minimum value based on original value as fallback
                 exit_value = max(0.01, original_value * 0.1)  # At least 10% of original or 1 cent
                 self.logger.info(f"Using fallback exit value: ${exit_value:.2f}")
-                # Recalculate P&L and ROI with the adjusted exit value
+                # Recalculate P&L with the adjusted exit value
                 realized_pnl = exit_value - original_value
-                roi = (realized_pnl / original_value * 100) if original_value > 0 else 0
+                # ROI is already calculated based on price change
             
             # Additional sanity check on ROI
             if roi > 1000:  # Cap ROI at 1000%
                 self.logger.warning(f"⚠️ ROI {roi:.2f}% exceeds reasonable limits, capping at 1000%")
                 roi = 1000
-                realized_pnl = (roi / 100) * original_value
-                exit_value = original_value + realized_pnl
                 
             # Fix for negative ROI - it should never be below -100%
             if roi < -100:
                 self.logger.warning(f"⚠️ ROI {roi:.2f}% is below -100%, capping at -100%")
                 roi = -100
-                realized_pnl = -original_value
-                exit_value = 0
                 
             # Log the calculation details for debugging
             self.logger.info(f"P&L Calculation Details:")
+            self.logger.info(f"Entry Price: ${entry_price:.6f}")
+            self.logger.info(f"Exit Price: ${current_price:.6f}")
             self.logger.info(f"Original Value: ${original_value:.2f}")
             self.logger.info(f"Exit Value: ${exit_value:.2f}")
             self.logger.info(f"Realized P&L: ${realized_pnl:.2f}")
