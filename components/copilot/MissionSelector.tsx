@@ -78,9 +78,9 @@ export default function MissionSidebar() {
           context: 'Let\'s analyze KinKong\'s trading engine implementation. I want to understand how the core algorithms work and identify potential optimizations for better performance and reliability.'
         },
         {
-          id: 'timing-optimization',
-          title: 'Timing Optimization',
-          context: 'Help me optimize the timing aspects of KinKong\'s strategy. I want to analyze entry/exit timing, rebalancing frequency, and market cycle adaptation to improve overall returns.'
+          id: 'trades-optimization',
+          title: 'Trades Optimization',
+          context: 'Help me optimize the trading aspects of KinKong\'s strategy. I want to analyze entry/exit decisions, trade execution, and market adaptation to improve overall returns.'
         },
         {
           id: 'socials-optimization',
