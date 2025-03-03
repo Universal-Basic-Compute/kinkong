@@ -87,9 +87,16 @@ class KOLAnalyzer:
         
         try:
             self.logger.info(f"Fetching wallet holdings for {wallet_address}")
-            url = f"https://public-api.birdeye.so/v1/wallet/tokenholdings?wallet={wallet_address}"
-            headers = {"X-API-KEY": self.birdeye_api_key}
-            response = requests.get(url, headers=headers)
+            url = f"https://public-api.birdeye.so/v1/wallet/token_list"  # Updated endpoint
+            headers = {
+                "X-API-KEY": self.birdeye_api_key,
+                "x-chain": "solana"  # Required header
+            }
+            params = {
+                "wallet": wallet_address
+            }
+            
+            response = requests.get(url, headers=headers, params=params)
             
             if response.status_code != 200:
                 self.logger.error(f"Error from Birdeye API: {response.status_code} - {response.text}")
@@ -108,8 +115,9 @@ class KOLAnalyzer:
             total_value = 0
             token_count = 0
             
-            if "data" in data and "items" in data["data"]:
-                for token in data["data"]["items"]:
+            if "success" in data and data["success"] and "data" in data:
+                tokens = data["data"].get("items", [])
+                for token in tokens:
                     if token.get("value", 0) > 0:
                         holdings.append({
                             "symbol": token.get("symbol", "Unknown"),
@@ -143,9 +151,17 @@ class KOLAnalyzer:
         
         try:
             self.logger.info(f"Fetching transaction history for {wallet_address}")
-            url = f"https://public-api.birdeye.so/v1/wallet/history?wallet={wallet_address}"
-            headers = {"X-API-KEY": self.birdeye_api_key}
-            response = requests.get(url, headers=headers)
+            url = f"https://public-api.birdeye.so/v1/wallet/tx_list"  # Updated endpoint
+            headers = {
+                "X-API-KEY": self.birdeye_api_key,
+                "x-chain": "solana"  # Required header
+            }
+            params = {
+                "wallet": wallet_address,
+                "limit": 100
+            }
+            
+            response = requests.get(url, headers=headers, params=params)
             
             if response.status_code != 200:
                 self.logger.error(f"Error from Birdeye API: {response.status_code} - {response.text}")
@@ -166,8 +182,8 @@ class KOLAnalyzer:
             current_value = 0
             risk_score = 50  # Default medium risk
             
-            if "data" in data and "items" in data["data"]:
-                transactions = data["data"]["items"]
+            if "success" in data and data["success"] and "data" in data:
+                transactions = data["data"].get("items", [])
                 
                 # Get recent transactions
                 for txn in transactions[:20]:  # Last 20 transactions
