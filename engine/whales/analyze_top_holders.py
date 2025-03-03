@@ -5,7 +5,7 @@ import time
 import asyncio
 import aiohttp
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from dotenv import load_dotenv
 from airtable import Airtable
@@ -265,11 +265,11 @@ async def generate_meta_analysis(token_key="ALL", timeframe="7d"):
     # Calculate date range based on timeframe
     now = datetime.now(timezone.utc)
     if timeframe == "30d":
-        start_date = now.replace(day=now.day - 30)
+        start_date = now - timedelta(days=30)
     elif timeframe == "90d":
-        start_date = now.replace(day=now.day - 90)
+        start_date = now - timedelta(days=90)
     else:  # Default to 7d
-        start_date = now.replace(day=now.day - 7)
+        start_date = now - timedelta(days=7)
     
     start_date_str = start_date.strftime("%Y-%m-%d")
     
