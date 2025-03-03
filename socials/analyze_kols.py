@@ -1037,7 +1037,7 @@ class KOLAnalyzer:
 
 def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kols") -> Optional[str]:
     """
-    Generate a 4:3 landscape format image for a KOL with enhanced visuals
+    Generate a KOL image using Ideogram API
     
     Args:
         kol_data: Dictionary containing KOL data
@@ -1054,12 +1054,11 @@ def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kols"
         # Extract KOL data
         name = kol_data.get("name", "Unknown KOL")
         x_username = kol_data.get("xUsername", "").replace("@", "")
-        profile_pic_url = kol_data.get("profilePicture", "")
-        influence_score = kol_data.get("influenceScore", 0)
         profile_type = kol_data.get("profile", "Unknown")
-        insights = kol_data.get("insights", "")
+        influence_score = kol_data.get("influenceScore", 0)
         
-        # Extract insights as a list
+        # Extract insights for the prompt
+        insights = kol_data.get("insights", "")
         if isinstance(insights, str):
             # Split by newlines or bullet points
             insights_list = [line.strip().lstrip('•').strip() for line in insights.split('\n') if line.strip()]
@@ -1068,303 +1067,96 @@ def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kols"
         else:
             insights_list = ["No insights available"]
         
-        # Get top 2 insights (for landscape format)
+        # Get top 2 insights for the prompt
         top_insights = insights_list[:2]
+        insights_text = ". ".join(top_insights)
         
-        # Extract holdings data for pie chart
+        # Extract holdings data for the prompt
         holdings = kol_data.get("holdings", [])
-        
-        # Define colors for the theme
-        bg_color = (13, 13, 13)  # Black
-        gold_color = (255, 215, 0)  # Gold
-        red_color = (220, 53, 69)  # Red
-        text_color = (255, 255, 255)  # White
-        secondary_text_color = (180, 180, 180)  # Light gray
-        
-        # Create a 4:3 aspect ratio image (width:height) - Landscape format
-        width, height = 1600, 1200
-        img = Image.new('RGB', (width, height), color=bg_color)
-        draw = ImageDraw.Draw(img)
-        
-        # Create a more dramatic gradient background
-        for y in range(height):
-            # Create a gradient from dark to gold-tinted at the top
-            r = int(13 + (1 - y/height) * 30)
-            g = int(13 + (1 - y/height) * 25)
-            b = int(13 + (1 - y/height) * 5)
-            
-            # Draw a horizontal line with the gradient color
-            draw.line([(0, y), (width, y)], fill=(r, g, b))
-        
-        # Add a subtle gold glow at the top
-        for y in range(300):
-            alpha = int(50 * (1 - y/300))  # Fade out as y increases
-            overlay_color = (min(255, 13 + int(alpha * 2.42)), 
-                            min(255, 13 + int(alpha * 2.02)), 
-                            min(255, 13 + int(alpha * 0.0)))
-            draw.line([(0, y), (width, y)], fill=overlay_color)
-        
-        # Load fonts - try to use more stylish fonts if available
-        try:
-            # Try to load custom fonts - adjust paths as needed
-            title_font = ImageFont.truetype("arial.ttf", 80)  # Larger for impact
-            profile_font = ImageFont.truetype("arial.ttf", 70)  # Larger for profile type
-            subtitle_font = ImageFont.truetype("arial.ttf", 50)
-            body_font = ImageFont.truetype("arial.ttf", 40)  # Larger for readability
-            small_font = ImageFont.truetype("arial.ttf", 30)
-        except IOError:
-            # Fallback to default font
-            title_font = ImageFont.load_default()
-            profile_font = ImageFont.load_default()
-            subtitle_font = ImageFont.load_default()
-            body_font = ImageFont.load_default()
-            small_font = ImageFont.load_default()
-        
-        # Load Kinkong's head for top left
-        try:
-            kong_img = Image.open("public/copilot.png").convert("RGBA")
-            # Resize to appropriate size
-            kong_size = (150, 150)
-            kong_img = kong_img.resize(kong_size, Image.LANCZOS)
-            
-            # Create a circular mask
-            mask = Image.new('L', kong_size, 0)
-            mask_draw = ImageDraw.Draw(mask)
-            mask_draw.ellipse((0, 0, kong_size[0], kong_size[1]), fill=255)
-            
-            # Apply mask to create circular image
-            kong_circular = Image.new('RGBA', kong_size, (0, 0, 0, 0))
-            kong_circular.paste(kong_img, (0, 0), mask)
-            
-            # Paste Kong's head in top left corner
-            img.paste(kong_circular, (40, 40), kong_circular)
-        except Exception as e:
-            logger.error(f"Error loading Kong image: {e}")
-        
-        # Try to load profile picture if available
-        profile_pic = None
-        if profile_pic_url:
-            try:
-                response = requests.get(profile_pic_url)
-                if response.status_code == 200:
-                    profile_pic = Image.open(io.BytesIO(response.content)).convert("RGBA")
-                    
-                    # Resize to appropriate size
-                    pic_size = (150, 150)
-                    profile_pic = profile_pic.resize(pic_size, Image.LANCZOS)
-                    
-                    # Create a circular mask
-                    mask = Image.new('L', pic_size, 0)
-                    mask_draw = ImageDraw.Draw(mask)
-                    mask_draw.ellipse((0, 0, pic_size[0], pic_size[1]), fill=255)
-                    
-                    # Apply mask to create circular image
-                    profile_circular = Image.new('RGBA', pic_size, (0, 0, 0, 0))
-                    profile_circular.paste(profile_pic, (0, 0), mask)
-                    
-                    # Paste profile picture in top right
-                    img.paste(profile_circular, (width - 190, 40), profile_circular)
-            except Exception as e:
-                logger.error(f"Error loading profile picture: {e}")
-        
-        # Draw name in top center with gold color and shadow effect
-        name_width = draw.textlength(name, font=title_font)
-        # Draw shadow
-        draw.text((width/2 - name_width/2 + 2, 52), name, fill=(50, 50, 50), font=title_font)
-        # Draw text
-        draw.text((width/2 - name_width/2, 50), name, fill=gold_color, font=title_font)
-        
-        # Draw influence score with red accent
-        score_color = red_color if influence_score < 40 else gold_color
-        influence_text = f"Influence: {influence_score}"
-        influence_width = draw.textlength(influence_text, font=subtitle_font)
-        draw.text((width - influence_width - 40, 50), influence_text, fill=score_color, font=subtitle_font)
-        
-        # Draw profile type - stylized with glowing background
-        profile_y = 150
-        profile_text = f"Profile: {profile_type}"
-        profile_width = draw.textlength(profile_text, font=profile_font)
-        
-        # Draw a glowing background for profile type
-        profile_bg_rect = [(width/2 - profile_width/2 - 30, profile_y - 15), 
-                          (width/2 + profile_width/2 + 30, profile_y + 75)]
-        
-        # Draw multiple rectangles with decreasing opacity for glow effect
-        for i in range(10, 0, -2):
-            expanded_rect = [
-                (profile_bg_rect[0][0] - i, profile_bg_rect[0][1] - i),
-                (profile_bg_rect[1][0] + i, profile_bg_rect[1][1] + i)
-            ]
-            draw.rectangle(expanded_rect, fill=None, outline=(255, 215, 0, 50), width=1)
-        
-        # Main rectangle
-        draw.rectangle(profile_bg_rect, fill=(30, 30, 30, 200), outline=gold_color, width=3)
-        
-        # Draw profile text with shadow for depth
-        draw.text((width/2 - profile_width/2 + 2, profile_y + 2), profile_text, fill=(50, 50, 50), font=profile_font)
-        draw.text((width/2 - profile_width/2, profile_y), profile_text, fill=gold_color, font=profile_font)
-        
-        # Draw horizontal line with gold color and glow effect
-        for i in range(5, 0, -1):
-            draw.line([(40, 250 + i), (width - 40, 250 + i)], fill=(255, 215, 0, 50 * i), width=1)
-        draw.line([(40, 250), (width - 40, 250)], fill=gold_color, width=3)
-        
-        # Layout for landscape format - split into left and right sections
-        left_section_width = width // 2
-        
-        # Draw asset allocation pie chart on the left
+        top_holdings = []
         if holdings:
-            try:
-                # Create a figure for the pie chart
-                fig, ax = plt.subplots(figsize=(8, 8), facecolor='none')
-                
-                # Prepare data for pie chart
-                labels = []
-                sizes = []
-                others_value = 0
-                
-                # Get top 5 holdings by value
-                sorted_holdings = sorted(holdings, key=lambda x: x.get('value', 0), reverse=True)
-                for i, holding in enumerate(sorted_holdings):
-                    if i < 5:  # Top 5 holdings
-                        labels.append(holding.get('symbol', 'Unknown'))
-                        sizes.append(holding.get('value', 0))
-                    else:  # Group the rest as "Others"
-                        others_value += holding.get('value', 0)
-                
-                if others_value > 0:
-                    labels.append('Others')
-                    sizes.append(others_value)
-                
-                # Define colors for the pie chart - use vibrant colors
-                pie_colors = ['#FFD700', '#DC3545', '#FFA500', '#B8860B', '#CD7F32', '#A9A9A9']
-                
-                # Create pie chart with larger text
-                wedges, texts, autotexts = ax.pie(sizes, labels=None, autopct='%1.1f%%', 
-                                                 startangle=90, colors=pie_colors,
-                                                 wedgeprops={'edgecolor': 'black', 'linewidth': 1})
-                
-                # Make the percentage text larger and white
-                for autotext in autotexts:
-                    autotext.set_color('white')
-                    autotext.set_fontsize(16)
-                    autotext.set_weight('bold')
-                
-                # Add a title
-                plt.title('Asset Allocation', color='white', fontsize=24, pad=20, fontweight='bold')
-                
-                # Add legend with larger font
-                ax.legend(wedges, labels, loc="center left", bbox_to_anchor=(1, 0, 0.5, 1), 
-                         fontsize=18, frameon=False, labelcolor='white')
-                
-                ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle
-                
-                # Save pie chart to buffer
-                buf = io.BytesIO()
-                plt.savefig(buf, format='png', transparent=True, bbox_inches='tight')
-                buf.seek(0)
-                plt.close(fig)
-                
-                # Open the image from buffer
-                pie_img = Image.open(buf).convert('RGBA')
-                
-                # Resize if needed
-                pie_size = (650, 650)
-                pie_img = pie_img.resize(pie_size, Image.LANCZOS)
-                
-                # Paste pie chart on the left side
-                img.paste(pie_img, (left_section_width//2 - pie_size[0]//2, 300), pie_img)
-            except Exception as e:
-                logger.error(f"Error creating pie chart: {e}")
+            # Get top 3 holdings by value
+            sorted_holdings = sorted(holdings, key=lambda x: x.get('value', 0), reverse=True)
+            for i, holding in enumerate(sorted_holdings[:3]):
+                symbol = holding.get('symbol', 'Unknown')
+                top_holdings.append(symbol)
         
-        # Draw insights on the right side
-        insights_x = left_section_width + 50
-        insights_y = 300
-        insights_header = "Key Insights:"
-        header_width = draw.textlength(insights_header, font=subtitle_font)
+        holdings_text = ", ".join(top_holdings) if top_holdings else "Unknown"
         
-        # Draw a glowing background for insights header
-        header_bg_rect = [(insights_x + header_width/2 - 120, insights_y - 15), 
-                         (insights_x + header_width/2 + 120, insights_y + 55)]
+        # Determine color based on influence score
+        color_description = "gold and red" if influence_score >= 40 else "red and black"
         
-        # Draw multiple rectangles with decreasing opacity for glow effect
-        for i in range(10, 0, -2):
-            expanded_rect = [
-                (header_bg_rect[0][0] - i, header_bg_rect[0][1] - i),
-                (header_bg_rect[1][0] + i, header_bg_rect[1][1] + i)
-            ]
-            draw.rectangle(expanded_rect, fill=None, outline=(255, 215, 0, 50), width=1)
+        # Create a detailed prompt for Ideogram
+        prompt = f"""
+        A professional, modern crypto analyst dashboard for @{x_username or name}. 
         
-        # Main rectangle
-        draw.rectangle(header_bg_rect, fill=(30, 30, 30, 200), outline=gold_color, width=2)
+        The design should feature the text "@{x_username or name}" in large, impactful typography at the top.
+        "Influence Score: {influence_score}" should be prominently displayed in bold {color_description} colors.
+        "Profile: {profile_type}" should be displayed in an elegant gold font with a subtle glow effect.
         
-        # Draw insights header with shadow
-        draw.text((insights_x + 2, insights_y + 2), insights_header, fill=(50, 50, 50), font=subtitle_font)
-        draw.text((insights_x, insights_y), insights_header, fill=gold_color, font=subtitle_font)
+        Include a stylized pie chart visualization showing top holdings: {holdings_text}.
         
-        # Draw insights with better wrapping
-        insights_start_y = insights_y + 80
-        max_width = width - insights_x - 60  # Margin on right side
+        The background should have a dark theme with subtle gold gradients and professional financial graphics.
         
-        for i, insight in enumerate(top_insights):
-            # Wrap text to fit width
-            words = insight.split()
-            lines = []
-            current_line = words[0] if words else ""
-            
-            for word in words[1:]:
-                test_line = current_line + " " + word
-                line_width = draw.textlength(test_line, font=body_font)
-                
-                if line_width < max_width:
-                    current_line = test_line
-                else:
-                    lines.append(current_line)
-                    current_line = word
-            
-            if current_line:
-                lines.append(current_line)
-            
-            # Draw bullet point with gold color
-            bullet_y = insights_start_y + i * (len(lines) * 50 + 30)
-            
-            # Draw a glowing bullet point
-            for j in range(5, 0, -1):
-                draw.ellipse([(insights_x - 20 - j, bullet_y + 15 - j), 
-                             (insights_x - 20 + 10 + j, bullet_y + 15 + 10 + j)], 
-                             fill=None, outline=(255, 215, 0, 50 * j))
-            
-            draw.text((insights_x - 20, bullet_y), "•", fill=gold_color, font=body_font)
-            
-            # Draw wrapped insight text with subtle shadow for depth
-            for j, line in enumerate(lines):
-                line_y = bullet_y + j * 50
-                # Shadow
-                draw.text((insights_x + 2, line_y + 2), line, fill=(50, 50, 50), font=body_font)
-                # Text
-                draw.text((insights_x, line_y), line, fill=text_color, font=body_font)
-            
-            # Add spacing between insights
-            insights_start_y += len(lines) * 50 + 30
+        Key insights should be displayed in a clean, modern layout: {insights_text}
         
-        # Draw footer
-        footer_y = height - 80
+        The overall aesthetic should be premium, professional, and crypto-focused with "Powered by Kong.ai" in the bottom corner.
+        """
         
-        # Draw glowing line
-        for i in range(5, 0, -1):
-            draw.line([(40, footer_y + i), (width - 40, footer_y + i)], 
-                     fill=(255, 215, 0, 50 * i), width=1)
+        # Ideogram API parameters
+        ideogram_api_key = os.getenv('IDEOGRAM_API_KEY')
+        if not ideogram_api_key:
+            logger.error("Missing Ideogram API key")
+            return None
         
-        draw.line([(40, footer_y), (width - 40, footer_y)], fill=gold_color, width=3)
+        # Prepare the API request
+        url = "https://api.ideogram.ai/generate"
+        headers = {
+            "Api-Key": ideogram_api_key,
+            "Content-Type": "application/json"
+        }
         
-        # Draw date
-        current_date = datetime.now().strftime("%Y-%m-%d")
-        draw.text((60, footer_y + 20), current_date, fill=secondary_text_color, font=small_font)
+        payload = {
+            "image_request": {
+                "prompt": prompt,
+                "aspect_ratio": "ASPECT_4_3",  # 4:3 landscape format
+                "model": "V_2",
+                "magic_prompt_option": "AUTO",
+                "style_type": "DESIGN",  # Design style for dashboards
+                "num_images": 1
+            }
+        }
         
-        # Draw powered by text
-        powered_by = "Powered by Kong.ai & $UBC • NFA"
-        powered_width = draw.textlength(powered_by, font=small_font)
-        draw.text((width - powered_width - 60, footer_y + 20), powered_by, fill=secondary_text_color, font=small_font)
+        logger.info(f"Sending request to Ideogram API for {name}")
+        
+        # Make the API request
+        response = requests.post(url, headers=headers, json=payload, timeout=60)
+        
+        if response.status_code != 200:
+            logger.error(f"Ideogram API error: {response.status_code} - {response.text}")
+            return None
+        
+        # Parse the response
+        result = response.json()
+        
+        if not result.get("data") or not result["data"]:
+            logger.error(f"No image data in Ideogram response: {result}")
+            return None
+        
+        # Get the image URL
+        image_url = result["data"][0].get("url")
+        
+        if not image_url:
+            logger.error(f"No image URL in Ideogram response: {result}")
+            return None
+        
+        # Download the image
+        logger.info(f"Downloading image from {image_url}")
+        img_response = requests.get(image_url, timeout=30)
+        
+        if img_response.status_code != 200:
+            logger.error(f"Failed to download image: {img_response.status_code}")
+            return None
         
         # Save the image using the X handle if available, otherwise use the name
         if x_username:
@@ -1373,9 +1165,12 @@ def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kols"
             # Create a safe filename from the name
             safe_name = "".join(c for c in name if c.isalnum() or c in (' ', '_')).replace(' ', '_')
             filename = f"{safe_name}.png"
-            
+        
         output_path = os.path.join(output_dir, filename)
-        img.save(output_path)
+        
+        # Save the image
+        with open(output_path, 'wb') as f:
+            f.write(img_response.content)
         
         logger.info(f"Generated KOL image: {output_path}")
         return output_path
