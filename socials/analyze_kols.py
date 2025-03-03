@@ -123,6 +123,10 @@ class KOLAnalyzer:
                 # The structure might vary, so let's check different possible paths
                 tokens_data = data["data"]
                 
+                # Handle the case where data contains a "solana" key
+                if "solana" in tokens_data and isinstance(tokens_data["solana"], dict):
+                    tokens_data = tokens_data["solana"]
+                
                 # Check if items is directly in data
                 if "items" in tokens_data and isinstance(tokens_data["items"], list):
                     tokens = tokens_data["items"]
@@ -219,6 +223,10 @@ class KOLAnalyzer:
             if "success" in data and data["success"] and "data" in data:
                 # The structure might vary, so let's check different possible paths
                 txn_data = data["data"]
+                
+                # Handle the case where data contains a "solana" key
+                if "solana" in txn_data and isinstance(txn_data["solana"], dict):
+                    txn_data = txn_data["solana"]
                 
                 # Check if items is directly in data
                 if "items" in txn_data and isinstance(txn_data["items"], list):
