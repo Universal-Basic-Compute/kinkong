@@ -286,7 +286,14 @@ class KOLAnalyzer:
                     txn_type = txn.get("type", txn.get("txType", "Unknown"))
                     symbol = txn.get("symbol", txn.get("tokenSymbol", "Unknown"))
                     value = txn.get("value", txn.get("usdValue", 0))
+                    
+                    # Ensure timestamp is a number
                     timestamp = txn.get("timestamp", txn.get("blockTime", 0))
+                    if isinstance(timestamp, str):
+                        try:
+                            timestamp = float(timestamp)
+                        except (ValueError, TypeError):
+                            timestamp = 0
                     
                     recent_txns.append({
                         "type": txn_type,
@@ -304,7 +311,14 @@ class KOLAnalyzer:
                     
                     # Find portfolio value 30 days ago
                     for txn in transactions:
+                        # Ensure timestamp is a number for comparison
                         txn_time = txn.get("timestamp", txn.get("blockTime", 0))
+                        if isinstance(txn_time, str):
+                            try:
+                                txn_time = float(txn_time)
+                            except (ValueError, TypeError):
+                                txn_time = 0
+                    
                         if txn_time < thirty_days_ago:
                             value_30d_ago = txn.get("portfolioValue", 
                                             txn.get("walletValue", 
@@ -316,7 +330,7 @@ class KOLAnalyzer:
                     # Factors that increase risk:
                     # 1. High transaction frequency
                     txn_frequency = min(100, len([t for t in transactions 
-                                                if t.get("timestamp", t.get("blockTime", 0)) > thirty_days_ago]))
+                                                if self._get_numeric_timestamp(t) > thirty_days_ago]))
                     
                     # 2. Trading low-cap tokens
                     low_cap_trades = sum(1 for t in transactions[:50] 
@@ -520,6 +534,16 @@ class KOLAnalyzer:
                 "insights": "Unable to generate insights due to an error",
                 "profile": "Unknown"
             }
+    
+    def _get_numeric_timestamp(self, transaction):
+        """Helper method to safely extract a numeric timestamp from a transaction"""
+        timestamp = transaction.get("timestamp", transaction.get("blockTime", 0))
+        if isinstance(timestamp, str):
+            try:
+                return float(timestamp)
+            except (ValueError, TypeError):
+                return 0
+        return timestamp
     
     def update_kol_record(self, record_id: str, data: Dict[str, Any]) -> bool:
         """Update KOL record in Airtable with new data"""
