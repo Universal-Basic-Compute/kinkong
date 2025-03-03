@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ArrowUpIcon, ArrowDownIcon, MinusIcon, ArrowPathIcon } from '@heroicons/react/24/solid';
+import { ArrowUpIcon, ArrowDownIcon, MinusIcon } from '@heroicons/react/24/solid';
 
 interface WhaleMetaAnalysisProps {
   token: string;
@@ -52,7 +52,6 @@ export function WhaleMetaAnalysis({ token, timeframe, isLoading }: WhaleMetaAnal
       fetchMetaAnalysis();
     }
   }, [token, timeframe, isLoading]);
-
 
   if (isLoading || isLoadingAnalysis) {
     return (
@@ -126,6 +125,9 @@ export function WhaleMetaAnalysis({ token, timeframe, isLoading }: WhaleMetaAnal
     }
   };
 
+  // Extract analysis data from either direct or nested structure
+  const analysis = metaAnalysis.analysis || metaAnalysis;
+
   return (
     <div className="bg-black/30 p-6 rounded-lg border border-gold/20 mb-8">
       <div className="flex justify-between items-start mb-4">
@@ -141,102 +143,86 @@ export function WhaleMetaAnalysis({ token, timeframe, isLoading }: WhaleMetaAnal
         </div>
       </div>
       
-      {/* Extract analysis data from either direct or nested structure */}
-      {(() => {
-        const analysis = metaAnalysis.analysis || metaAnalysis;
-        
-        return (
-          <>
-            {/* Summary and Sentiment */}
-            <div className="mb-6">
-              <div className="flex items-center mb-2">
-                <div className="mr-2">
-                  {getSentimentIcon(analysis.sentiment)}
-                </div>
-                <h4 className={`text-lg font-bold ${getSentimentColor(analysis.sentiment)}`}>
-                  {analysis.sentiment} Outlook
-                </h4>
-                <div className="ml-auto bg-black/30 px-3 py-1 rounded-full text-sm">
-                  Confidence: {analysis.confidenceScore}/100
-                </div>
-              </div>
-              <p className="text-gray-300">{analysis.summary}</p>
-            </div>
-            
-            {/* Price Outlook */}
-            <div className="mb-6 bg-black/20 p-4 rounded-lg border border-gray-800">
-              <h4 className="font-bold text-gold mb-2">Price Outlook</h4>
-              <p className="text-gray-300">{analysis.priceOutlook}</p>
-            </div>
-          </>
-        );
-      })()}
+      {/* Summary and Sentiment */}
+      <div className="mb-6">
+        <div className="flex items-center mb-2">
+          <div className="mr-2">
+            {getSentimentIcon(analysis.sentiment)}
+          </div>
+          <h4 className={`text-lg font-bold ${getSentimentColor(analysis.sentiment)}`}>
+            {analysis.sentiment} Outlook
+          </h4>
+          <div className="ml-auto bg-black/30 px-3 py-1 rounded-full text-sm">
+            Confidence: {analysis.confidenceScore}/100
+          </div>
+        </div>
+        <p className="text-gray-300">{analysis.summary}</p>
+      </div>
+      
+      {/* Price Outlook */}
+      <div className="mb-6 bg-black/20 p-4 rounded-lg border border-gray-800">
+        <h4 className="font-bold text-gold mb-2">Price Outlook</h4>
+        <p className="text-gray-300">{analysis.priceOutlook}</p>
+      </div>
       
       {/* Key Patterns and Insights */}
-      {(() => {
-        const analysis = metaAnalysis.analysis || metaAnalysis;
-        
-        return (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div>
-                <h4 className="font-bold text-gold mb-2">Key Patterns</h4>
-                <ul className="list-disc pl-5 space-y-1 text-gray-300">
-                  {analysis.keyPatterns?.split('\n').map((pattern: string, index: number) => (
-                    <li key={index}>{pattern}</li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-bold text-gold mb-2">Actionable Insights</h4>
-                <ul className="list-disc pl-5 space-y-1 text-gray-300">
-                  {analysis.actionableInsights?.split('\n').map((insight: string, index: number) => (
-                    <li key={index}>{insight}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-            
-            {/* Risk Assessment */}
-            <div className="mb-6">
-              <div className="flex items-center mb-2">
-                <h4 className="font-bold text-gold">Risk Assessment:</h4>
-                <span className={`ml-2 font-bold ${getRiskColor(analysis.riskAssessment)}`}>
-                  {analysis.riskAssessment}
-                </span>
-              </div>
-              <ul className="list-disc pl-5 space-y-1 text-gray-300">
-                {analysis.riskFactors?.split('\n').map((factor: string, index: number) => (
-                  <li key={index}>{factor}</li>
-                ))}
-              </ul>
-            </div>
-            
-            {/* Detailed Analysis */}
-            <div className="mb-6">
-              <h4 className="font-bold text-gold mb-2">Detailed Analysis</h4>
-              <p className="text-gray-300 whitespace-pre-line">{analysis.detailedAnalysis}</p>
-            </div>
-            
-            {/* Recommended Strategy */}
-            <div className="bg-gradient-to-r from-gold/20 to-black/0 p-4 rounded-lg">
-              <h4 className="font-bold text-gold mb-2">Recommended Strategy</h4>
-              <div className="flex items-center">
-                <div className={`text-lg font-bold ${
-                  analysis.recommendedStrategy === 'ACCUMULATE' ? 'text-green-500' :
-                  analysis.recommendedStrategy === 'REDUCE' ? 'text-red-500' :
-                  'text-blue-500'
-                }`}>
-                  {analysis.recommendedStrategy}
-                </div>
-              </div>
-            </div>
-          </>
-        );
-      })()}
-          <div className="ml-auto text-xs text-gray-400">
-            Based on analysis of {metaAnalysis.metrics?.totalWhales || metaAnalysis.totalWhales} whale wallets
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div>
+          <h4 className="font-bold text-gold mb-2">Key Patterns</h4>
+          <ul className="list-disc pl-5 space-y-1 text-gray-300">
+            {analysis.keyPatterns?.split('\n').map((pattern: string, index: number) => (
+              <li key={index}>{pattern}</li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <h4 className="font-bold text-gold mb-2">Actionable Insights</h4>
+          <ul className="list-disc pl-5 space-y-1 text-gray-300">
+            {analysis.actionableInsights?.split('\n').map((insight: string, index: number) => (
+              <li key={index}>{insight}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+      
+      {/* Risk Assessment */}
+      <div className="mb-6">
+        <div className="flex items-center mb-2">
+          <h4 className="font-bold text-gold">Risk Assessment:</h4>
+          <span className={`ml-2 font-bold ${getRiskColor(analysis.riskAssessment)}`}>
+            {analysis.riskAssessment}
+          </span>
+        </div>
+        <ul className="list-disc pl-5 space-y-1 text-gray-300">
+          {analysis.riskFactors?.split('\n').map((factor: string, index: number) => (
+            <li key={index}>{factor}</li>
+          ))}
+        </ul>
+      </div>
+      
+      {/* Detailed Analysis */}
+      <div className="mb-6">
+        <h4 className="font-bold text-gold mb-2">Detailed Analysis</h4>
+        <p className="text-gray-300 whitespace-pre-line">{analysis.detailedAnalysis}</p>
+      </div>
+      
+      {/* Recommended Strategy */}
+      <div className="bg-gradient-to-r from-gold/20 to-black/0 p-4 rounded-lg">
+        <h4 className="font-bold text-gold mb-2">Recommended Strategy</h4>
+        <div className="flex items-center">
+          <div className={`text-lg font-bold ${
+            analysis.recommendedStrategy === 'ACCUMULATE' ? 'text-green-500' :
+            analysis.recommendedStrategy === 'REDUCE' ? 'text-red-500' :
+            'text-blue-500'
+          }`}>
+            {analysis.recommendedStrategy}
           </div>
+        </div>
+      </div>
+      
+      <div className="mt-4">
+        <div className="ml-auto text-xs text-gray-400">
+          Based on analysis of {metaAnalysis.metrics?.totalWhales || metaAnalysis.totalWhales} whale wallets
         </div>
       </div>
       
