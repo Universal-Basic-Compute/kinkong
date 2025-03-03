@@ -57,28 +57,34 @@ interface TokenDiscoveryData {
 }
 
 // Function to handle mission-specific context
-async function handleMissionContext() {
+async function handleMissionContext(mission: string | null | undefined, systemPrompt: string): Promise<string> {
   // Add specific guidance based on the mission type
-  switch (mission) {
-    case 'token-discovery':
-      systemPrompt += `For this token discovery mission, focus on analyzing emerging tokens on Solana with strong fundamentals. Evaluate liquidity, volume trends, and holder distribution to help the user create a watchlist of promising tokens for potential investment. Provide detailed analysis of tokenomics and market positioning when relevant.`;
-      break;
-    case 'portfolio-rebalancing':
-      systemPrompt += `For this portfolio rebalancing mission, help the user assess their current portfolio allocation and performance. Identify underperforming assets and potential replacements to create a step-by-step rebalancing plan based on current market conditions. Consider diversification, risk management, and market trends in your recommendations.`;
-      break;
-    case 'defi-yield':
-      systemPrompt += `For this DeFi yield mission, help the user discover the highest-yielding DeFi protocols on Solana. Compare risks and rewards across lending platforms and liquidity pools to develop a yield farming strategy based on the user's risk profile. Consider impermanent loss, protocol risks, and sustainable APY in your analysis.`;
-      break;
-    case 'swing-trading':
-      systemPrompt += `For this swing trading mission, help the user identify potential swing trading opportunities in the current market. Analyze optimal entry and exit points with specific price targets and develop a tracking system for managing multiple swing positions. Focus on risk management and technical analysis for medium-term trades.`;
-      break;
-    case 'strategy-optimization':
-      systemPrompt += `For this strategy optimization mission, help the user analyze and optimize KinKong's trading strategy. Focus on understanding the current algorithms, identifying bottlenecks, and suggesting improvements to enhance performance and returns. Consider both technical implementation details and strategic trading concepts.`;
-      break;
-    default:
-      // No specific mission guidance needed
-      break;
+  let updatedPrompt = systemPrompt;
+  
+  if (mission) {
+    switch (mission) {
+      case 'token-discovery':
+        updatedPrompt += `For this token discovery mission, focus on analyzing emerging tokens on Solana with strong fundamentals. Evaluate liquidity, volume trends, and holder distribution to help the user create a watchlist of promising tokens for potential investment. Provide detailed analysis of tokenomics and market positioning when relevant.`;
+        break;
+      case 'portfolio-rebalancing':
+        updatedPrompt += `For this portfolio rebalancing mission, help the user assess their current portfolio allocation and performance. Identify underperforming assets and potential replacements to create a step-by-step rebalancing plan based on current market conditions. Consider diversification, risk management, and market trends in your recommendations.`;
+        break;
+      case 'defi-yield':
+        updatedPrompt += `For this DeFi yield mission, help the user discover the highest-yielding DeFi protocols on Solana. Compare risks and rewards across lending platforms and liquidity pools to develop a yield farming strategy based on the user's risk profile. Consider impermanent loss, protocol risks, and sustainable APY in your analysis.`;
+        break;
+      case 'swing-trading':
+        updatedPrompt += `For this swing trading mission, help the user identify potential swing trading opportunities in the current market. Analyze optimal entry and exit points with specific price targets and develop a tracking system for managing multiple swing positions. Focus on risk management and technical analysis for medium-term trades.`;
+        break;
+      case 'strategy-optimization':
+        updatedPrompt += `For this strategy optimization mission, help the user analyze and optimize KinKong's trading strategy. Focus on understanding the current algorithms, identifying bottlenecks, and suggesting improvements to enhance performance and returns. Consider both technical implementation details and strategic trading concepts.`;
+        break;
+      default:
+        // No specific mission guidance needed
+        break;
+    }
   }
+  
+  return updatedPrompt;
 }
 
 // Function to fetch token snapshots and merge with token data
@@ -748,11 +754,11 @@ Here are the key whales-related files for context:${whalesContext}`;
           
           default:
             // If no specific submission handler, fall back to mission-based context
-            await handleMissionContext();
+            systemPrompt = await handleMissionContext(mission, systemPrompt);
         }
       } else {
         // If no submission, use mission-based context
-        await handleMissionContext();
+        systemPrompt = await handleMissionContext(mission, systemPrompt);
       }
     }
 
