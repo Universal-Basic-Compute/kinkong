@@ -135,44 +135,18 @@ class TokenMaximizerStrategy:
             
             self.logger.info(f"Claude context data logged to {context_log_path}")
             
-            # Create prompt for Claude
-            prompt = f"""
-            You are a professional crypto trader specializing in Solana tokens. Your task is to score two tokens (UBC and COMPUTE) relative to SOL on a scale from -10 to +10.
-
-            # Context Data
-            
-            ## Market Sentiment
-            Classification: {market_sentiment['classification']}
-            Confidence: {market_sentiment['confidence']}
-            Reasoning: {market_sentiment['reasoning']}
-            
-            ## UBC Token Snapshots (7-day history)
-            ```
-            {json.dumps(ubc_snapshots, indent=2)}
-            ```
-            
-            ## COMPUTE Token Snapshots (7-day history)
-            ```
-            {json.dumps(compute_snapshots, indent=2)}
-            ```
-            
-            # Scoring Guidelines
-            
-            Score each token on a scale from -10 to +10:
-            - +10: Extremely bullish on token vs SOL
-            - 0: Neutral on token vs SOL
-            - -10: Extremely bearish on token vs SOL
-            
-            # Response Format
+            # Create prompt for Claude (now much simpler)
+            prompt = """
+            Score the UBC and COMPUTE tokens relative to SOL on a scale from -10 to +10.
             
             Provide your analysis and final scores in this JSON format:
             ```json
-            {{
+            {
                 "ubc_score": 0,  // Integer between -10 and +10
                 "compute_score": 0,  // Integer between -10 and +10
                 "ubc_reasoning": "",
                 "compute_reasoning": ""
-            }}
+            }
             ```
             
             Only respond with valid JSON. No other text.
@@ -185,12 +159,47 @@ class TokenMaximizerStrategy:
             
             self.logger.info(f"Claude prompt logged to {prompt_log_path}")
             
-            # Call Claude API
+            # Create system prompt with context data
+            system_prompt = f"""You are a professional crypto trader specializing in Solana tokens, implementing the Token Maximizer strategy. This strategy focuses on maximizing the quantity of tokens held rather than dollar value. The core principle is '1 UBC = 1 UBC' - success is measured by increasing the number of tokens owned, not their USD value. Your task is to analyze market data and provide optimal allocation scores to accumulate more tokens over time through strategic positioning. Provide your analysis in JSON format only.
+
+# Context Data
+
+## Market Sentiment
+Classification: {market_sentiment['classification']}
+Confidence: {market_sentiment['confidence']}
+Reasoning: {market_sentiment['reasoning']}
+
+## UBC Token Snapshots (7-day history)
+```
+{json.dumps(ubc_snapshots, indent=2)}
+```
+
+## COMPUTE Token Snapshots (7-day history)
+```
+{json.dumps(compute_snapshots, indent=2)}
+```
+
+# Scoring Guidelines
+
+Score each token on a scale from -10 to +10:
+- +10: Extremely bullish on token vs SOL
+- 0: Neutral on token vs SOL
+- -10: Extremely bearish on token vs SOL
+"""
+            
+            # Log the system prompt
+            system_prompt_log_path = self.logs_dir / f"claude_system_prompt_{timestamp}.txt"
+            with open(system_prompt_log_path, "w") as f:
+                f.write(system_prompt)
+            
+            self.logger.info(f"Claude system prompt logged to {system_prompt_log_path}")
+            
+            # Call Claude API with context in system prompt
             response = self.claude.messages.create(
                 model="claude-3-7-sonnet-latest",
                 max_tokens=1000,
                 temperature=0,
-                system="You are a professional crypto trader specializing in Solana tokens, implementing the Token Maximizer strategy. This strategy focuses on maximizing the quantity of tokens held rather than dollar value. The core principle is '1 UBC = 1 UBC' - success is measured by increasing the number of tokens owned, not their USD value. Your task is to analyze market data and provide optimal allocation scores to accumulate more tokens over time through strategic positioning. Provide your analysis in JSON format only.",
+                system=system_prompt,
                 messages=[
                     {"role": "user", "content": prompt}
                 ]
