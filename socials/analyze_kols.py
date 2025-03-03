@@ -1780,6 +1780,107 @@ def generate_detailed_tweets_for_all_kols():
     except Exception as e:
         logger.error(f"Error in generate_detailed_tweets_for_all_kols: {e}")
 
+def send_random_kol_tweet(force: bool = False) -> None:
+    """
+    Generate and send a tweet for a random KOL that hasn't been tweeted yet
+    
+    Args:
+        force: If True, send tweet even if one was already sent
+    """
+    logger = setup_logging()
+    try:
+        analyzer = KOLAnalyzer()
+        kol_records = analyzer.get_all_kols()
+        
+        if not kol_records:
+            logger.warning("No KOL records found")
+            return
+        
+        # Filter KOLs that have X usernames
+        valid_kols = [r for r in kol_records if r['fields'].get("xUsername") or r['fields'].get("X")]
+        
+        if not valid_kols:
+            logger.warning("No KOLs with X usernames found")
+            return
+        
+        # If not forcing, filter out KOLs that have already been tweeted
+        if not force:
+            valid_kols = [r for r in valid_kols if not r['fields'].get("sent")]
+            
+            if not valid_kols:
+                logger.warning("All KOLs have already been tweeted. Use --force to send anyway.")
+                return
+        
+        # Select a random KOL
+        import random
+        random_kol = random.choice(valid_kols)
+        fields = random_kol['fields']
+        record_id = random_kol['id']
+        
+        kol_name = fields.get("X", "Unknown KOL")
+        logger.info(f"Selected random KOL: {kol_name}")
+        
+        # Create data dictionary for tweet generation and image generation
+        kol_data = {
+            "name": kol_name,
+            "xUsername": fields.get("xUsername", fields.get("X", "")),
+            "totalValue": fields.get("totalValue", 0),
+            "tokenCount": fields.get("tokenCount", 0),
+            "diversity": fields.get("diversity", 0),
+            "riskScore": fields.get("riskScore", 50),
+            "profile": fields.get("profile", "Unknown"),
+            "analysis": fields.get("analysis", ""),
+            "insights": fields.get("insights", ""),
+            "profilePicture": fields.get("profilePicture", ""),
+            "influenceScore": fields.get("influenceScore", 0),
+            "holdings": []
+        }
+        
+        # Parse holdings JSON if available
+        if "holdingsJSON" in fields and fields["holdingsJSON"]:
+            try:
+                kol_data["holdings"] = json.loads(fields["holdingsJSON"])
+            except json.JSONDecodeError:
+                logger.warning(f"Invalid holdings JSON for {kol_data['name']}")
+        
+        # Generate tweet content
+        tweet_content = generate_tweet_content(kol_data)
+        
+        if not tweet_content:
+            logger.warning(f"Failed to generate tweet for {kol_data['name']}")
+            return
+        
+        # Get image path (either existing or generate new)
+        image_path = get_kol_image_path(kol_data)
+        
+        if not image_path:
+            logger.warning(f"Failed to get image for {kol_data['name']}")
+        
+        # Log the tweet content
+        logger.info(f"Tweet for {kol_data['name']}:\n{tweet_content}")
+        
+        # Update the message field in Airtable
+        update_data = {
+            "message": tweet_content
+        }
+        
+        # Send the tweet
+        success = send_tweet(tweet_content, image_path)
+        if success:
+            logger.info(f"Tweet sent for {kol_data['name']}")
+            # Update the sent field to True
+            update_data["sent"] = True
+            update_data["sentDate"] = time.strftime("%Y-%m-%d %H:%M:%S")
+        else:
+            logger.warning(f"Failed to send tweet for {kol_data['name']}")
+        
+        # Update the Airtable record
+        analyzer.kol_table.update(record_id, update_data)
+        logger.info(f"Updated message field for {kol_data['name']}")
+        
+    except Exception as e:
+        logger.error(f"Error in send_random_kol_tweet: {e}")
+
 def generate_and_send_tweet_by_name(kol_name: str, dry_run: bool = True, force: bool = False) -> None:
     """
     Generate and send a tweet for a specific KOL by name
@@ -1902,12 +2003,19 @@ async def main():
         parser.add_argument('--generate-detailed-tweets', action='store_true', help='Generate detailed tweets for all KOLs')
         parser.add_argument('--send-tweets', action='store_true', help='Generate and send tweets for all KOLs')
         parser.add_argument('--send-tweet', type=str, help='Generate and send tweet for a specific KOL by name')
+        parser.add_argument('--send-random-tweet', action='store_true', help='Generate and send tweet for a random KOL')
         parser.add_argument('--force', action='store_true', help='Force sending tweet even if already sent')
         
         args = parser.parse_args()
         
         # Initialize analyzer
         analyzer = KOLAnalyzer()
+        
+        # Send a random KOL tweet
+        if args.send_random_tweet:
+            logger.info("Generating and sending tweet for a random KOL")
+            send_random_kol_tweet(force=args.force)
+            return
         
         # Generate detailed tweet for a specific KOL
         if args.generate_detailed_tweet:
