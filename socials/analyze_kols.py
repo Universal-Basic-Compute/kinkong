@@ -1,0 +1,458 @@
+#!/usr/bin/env python3
+import os
+import json
+import time
+import logging
+import asyncio
+import platform
+import requests
+from typing import Dict, List, Optional, Any
+from dotenv import load_dotenv
+from airtable import Airtable
+from anthropic import Anthropic
+
+# Fix for Windows asyncio
+if platform.system() == 'Windows':
+    import asyncio
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+def setup_logging():
+    """Configure logging for the script"""
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.StreamHandler(),
+            logging.FileHandler("kol_analysis.log")
+        ]
+    )
+    return logging.getLogger("kol_analyzer")
+
+class KOLAnalyzer:
+    def __init__(self):
+        # Load environment variables
+        load_dotenv()
+        self.logger = setup_logging()
+        
+        # Initialize Airtable
+        self.base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
+        self.api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
+        
+        if not self.base_id or not self.api_key:
+            raise ValueError("Missing Airtable credentials in environment variables")
+        
+        self.kol_table = Airtable(self.base_id, 'KOL_ANALYSIS', self.api_key)
+        
+        # API keys
+        self.birdeye_api_key = os.getenv('BIRDEYE_API_KEY')
+        self.x_api_key = os.getenv('X_BEARER_TOKEN')
+        self.claude_api_key = os.getenv('ANTHROPIC_API_KEY')
+        
+        if not self.birdeye_api_key:
+            self.logger.warning("Missing Birdeye API key - wallet analysis will be limited")
+        
+        if not self.x_api_key:
+            self.logger.warning("Missing X API key - social analysis will be limited")
+            
+        if not self.claude_api_key:
+            self.logger.warning("Missing Claude API key - insights generation will be limited")
+        
+        # Initialize Claude client
+        if self.claude_api_key:
+            self.claude = Anthropic(api_key=self.claude_api_key)
+    
+    def get_all_kols(self) -> List[Dict]:
+        """Fetch all KOL records from Airtable"""
+        try:
+            self.logger.info("Fetching KOL records from Airtable")
+            records = self.kol_table.get_all()
+            self.logger.info(f"Found {len(records)} KOL records")
+            return records
+        except Exception as e:
+            self.logger.error(f"Error fetching KOL records: {e}")
+            return []
+    
+    def get_wallet_holdings(self, wallet_address: str) -> Dict[str, Any]:
+        """Get wallet holdings data from Birdeye API"""
+        if not self.birdeye_api_key or not wallet_address:
+            return {"error": "Missing API key or wallet address"}
+        
+        try:
+            self.logger.info(f"Fetching wallet holdings for {wallet_address}")
+            url = f"https://public-api.birdeye.so/v1/wallet/tokenholdings?wallet={wallet_address}"
+            headers = {"X-API-KEY": self.birdeye_api_key}
+            response = requests.get(url, headers=headers)
+            
+            if response.status_code != 200:
+                self.logger.error(f"Error from Birdeye API: {response.status_code} - {response.text}")
+                return {"error": f"API error: {response.status_code}"}
+            
+            data = response.json()
+            
+            # Calculate metrics
+            holdings = []
+            total_value = 0
+            token_count = 0
+            
+            if "data" in data and "items" in data["data"]:
+                for token in data["data"]["items"]:
+                    if token.get("value", 0) > 0:
+                        holdings.append({
+                            "symbol": token.get("symbol", "Unknown"),
+                            "value": token.get("value", 0),
+                            "amount": token.get("amount", 0)
+                        })
+                        total_value += token.get("value", 0)
+                        token_count += 1
+            
+            # Calculate diversity score (0-100)
+            diversity_score = 0
+            if token_count > 0 and total_value > 0:
+                # Higher score for more tokens and more even distribution
+                concentration = sum((h["value"] / total_value) ** 2 for h in holdings)
+                diversity_score = min(100, int(100 * (1 - concentration) * (1 - 1/token_count)))
+            
+            return {
+                "holdings": holdings[:10],  # Top 10 holdings
+                "totalValue": total_value,
+                "tokenCount": token_count,
+                "diversity": diversity_score
+            }
+        except Exception as e:
+            self.logger.error(f"Error fetching wallet holdings: {e}")
+            return {"error": str(e)}
+    
+    def get_wallet_transactions(self, wallet_address: str) -> Dict[str, Any]:
+        """Get wallet transaction history from Birdeye API"""
+        if not self.birdeye_api_key or not wallet_address:
+            return {"error": "Missing API key or wallet address"}
+        
+        try:
+            self.logger.info(f"Fetching transaction history for {wallet_address}")
+            url = f"https://public-api.birdeye.so/v1/wallet/history?wallet={wallet_address}"
+            headers = {"X-API-KEY": self.birdeye_api_key}
+            response = requests.get(url, headers=headers)
+            
+            if response.status_code != 200:
+                self.logger.error(f"Error from Birdeye API: {response.status_code} - {response.text}")
+                return {"error": f"API error: {response.status_code}"}
+            
+            data = response.json()
+            
+            # Calculate metrics
+            thirty_days_ago = time.time() - (30 * 24 * 60 * 60)
+            recent_txns = []
+            value_30d_ago = 0
+            current_value = 0
+            risk_score = 50  # Default medium risk
+            
+            if "data" in data and "items" in data["data"]:
+                transactions = data["data"]["items"]
+                
+                # Get recent transactions
+                for txn in transactions[:20]:  # Last 20 transactions
+                    recent_txns.append({
+                        "type": txn.get("type", "Unknown"),
+                        "symbol": txn.get("symbol", "Unknown"),
+                        "value": txn.get("value", 0),
+                        "timestamp": txn.get("timestamp", 0)
+                    })
+                
+                # Calculate 30-day change
+                if len(transactions) > 0:
+                    current_value = transactions[0].get("portfolioValue", 0)
+                    
+                    # Find portfolio value 30 days ago
+                    for txn in transactions:
+                        if txn.get("timestamp", 0) < thirty_days_ago:
+                            value_30d_ago = txn.get("portfolioValue", 0)
+                            break
+                
+                # Calculate risk score based on transaction patterns
+                # Higher score = higher risk
+                if len(transactions) > 10:
+                    # Factors that increase risk:
+                    # 1. High transaction frequency
+                    txn_frequency = min(100, len([t for t in transactions if t.get("timestamp", 0) > thirty_days_ago]))
+                    
+                    # 2. Trading low-cap tokens
+                    low_cap_trades = sum(1 for t in transactions[:50] if t.get("symbol", "") not in ["SOL", "USDC", "USDT"])
+                    
+                    # 3. High value volatility
+                    values = [t.get("value", 0) for t in transactions[:20] if t.get("value", 0) > 0]
+                    value_volatility = 0
+                    if len(values) > 1:
+                        avg_value = sum(values) / len(values)
+                        value_volatility = sum(abs(v - avg_value) for v in values) / (avg_value * len(values))
+                    
+                    # Combine factors
+                    risk_score = min(100, int((txn_frequency * 0.3) + (low_cap_trades * 2) + (value_volatility * 30)))
+            
+            # Calculate 30-day change percentage
+            change_30d = 0
+            if value_30d_ago > 0 and current_value > 0:
+                change_30d = ((current_value - value_30d_ago) / value_30d_ago) * 100
+            
+            return {
+                "recentTransactions": recent_txns[:5],  # Top 5 recent transactions
+                "30DayChange": change_30d,
+                "riskScore": risk_score
+            }
+        except Exception as e:
+            self.logger.error(f"Error fetching wallet transactions: {e}")
+            return {"error": str(e)}
+    
+    def get_x_profile(self, username: str) -> Dict[str, Any]:
+        """Get X (Twitter) profile information"""
+        if not self.x_api_key or not username:
+            return {"error": "Missing API key or username"}
+        
+        try:
+            self.logger.info(f"Fetching X profile for {username}")
+            # Remove @ if present
+            username = username.replace("@", "")
+            
+            url = f"https://api.twitter.com/2/users/by/username/{username}"
+            params = {
+                "user.fields": "public_metrics,profile_image_url,description"
+            }
+            headers = {"Authorization": f"Bearer {self.x_api_key}"}
+            
+            response = requests.get(url, params=params, headers=headers)
+            
+            if response.status_code != 200:
+                self.logger.error(f"Error from X API: {response.status_code} - {response.text}")
+                return {"error": f"API error: {response.status_code}"}
+            
+            data = response.json()
+            
+            if "data" not in data:
+                return {"error": "User not found"}
+            
+            user_data = data["data"]
+            metrics = user_data.get("public_metrics", {})
+            
+            # Calculate influence score (0-100)
+            followers = metrics.get("followers_count", 0)
+            following = metrics.get("following_count", 0) or 1  # Avoid division by zero
+            tweets = metrics.get("tweet_count", 0)
+            
+            # Factors for influence score:
+            # 1. Follower count (logarithmic scale)
+            follower_score = min(70, int(10 * (1 + (followers / 1000))))
+            
+            # 2. Follower/following ratio
+            ratio_score = min(20, int(10 * (followers / following)))
+            
+            # 3. Activity level
+            activity_score = min(10, int(tweets / 1000))
+            
+            influence_score = follower_score + ratio_score + activity_score
+            
+            return {
+                "profilePicture": user_data.get("profile_image_url", ""),
+                "followers": followers,
+                "following": following,
+                "tweets": tweets,
+                "description": user_data.get("description", ""),
+                "influenceScore": influence_score
+            }
+        except Exception as e:
+            self.logger.error(f"Error fetching X profile: {e}")
+            return {"error": str(e)}
+    
+    def generate_insights(self, kol_data: Dict[str, Any]) -> Dict[str, str]:
+        """Generate insights using Claude AI"""
+        if not self.claude_api_key:
+            return {
+                "analysis": "Claude API key not configured",
+                "insights": "Unable to generate insights"
+            }
+        
+        try:
+            self.logger.info(f"Generating insights for KOL: {kol_data.get('name', 'Unknown')}")
+            
+            # Prepare context for Claude
+            context = f"""
+            KOL Analysis Data:
+            
+            Name: {kol_data.get('name', 'Unknown')}
+            X Username: {kol_data.get('xUsername', 'Unknown')}
+            Wallet Address: {kol_data.get('wallet', 'Unknown')}
+            
+            Wallet Holdings:
+            - Total Value: ${kol_data.get('totalValue', 0):,.2f}
+            - Token Count: {kol_data.get('tokenCount', 0)}
+            - Diversity Score: {kol_data.get('diversity', 0)}/100
+            
+            Top Holdings:
+            {json.dumps(kol_data.get('holdings', []), indent=2)}
+            
+            Transaction History:
+            - 30 Day Change: {kol_data.get('30DayChange', 0):.2f}%
+            - Risk Score: {kol_data.get('riskScore', 50)}/100
+            
+            Recent Transactions:
+            {json.dumps(kol_data.get('recentTransactions', []), indent=2)}
+            
+            Social Influence:
+            - Influence Score: {kol_data.get('influenceScore', 0)}/100
+            - Followers: {kol_data.get('followers', 0):,}
+            - Following: {kol_data.get('following', 0):,}
+            - Tweets: {kol_data.get('tweets', 0):,}
+            - Bio: {kol_data.get('description', 'None')}
+            """
+            
+            prompt = f"""
+            You are a crypto analyst specializing in evaluating Key Opinion Leaders (KOLs) in the Solana ecosystem.
+            
+            Analyze the following data about a crypto KOL and provide:
+            1. A concise analysis of their trading behavior, risk profile, and influence
+            2. Key insights about their investment strategy and potential value as an influencer
+            
+            {context}
+            
+            Provide your response in two parts:
+            1. Analysis: A paragraph summarizing the KOL's profile, trading behavior, and influence
+            2. Insights: 3-5 bullet points with specific observations about their strategy and value as an influencer
+            """
+            
+            response = self.claude.messages.create(
+                model="claude-3-sonnet-20240229",
+                max_tokens=1000,
+                temperature=0.2,
+                system="You are a crypto analyst specializing in evaluating Key Opinion Leaders (KOLs) in the Solana ecosystem.",
+                messages=[
+                    {"role": "user", "content": prompt}
+                ]
+            )
+            
+            # Extract analysis and insights from response
+            content = response.content[0].text
+            
+            # Split into analysis and insights sections
+            sections = content.split("Insights:")
+            
+            analysis = sections[0].replace("Analysis:", "").strip()
+            insights = sections[1].strip() if len(sections) > 1 else "No insights generated"
+            
+            return {
+                "analysis": analysis,
+                "insights": insights
+            }
+        except Exception as e:
+            self.logger.error(f"Error generating insights: {e}")
+            return {
+                "analysis": f"Error generating analysis: {str(e)}",
+                "insights": "Unable to generate insights due to an error"
+            }
+    
+    def update_kol_record(self, record_id: str, data: Dict[str, Any]) -> bool:
+        """Update KOL record in Airtable with new data"""
+        try:
+            self.logger.info(f"Updating KOL record: {record_id}")
+            self.kol_table.update(record_id, data)
+            self.logger.info(f"Successfully updated KOL record: {record_id}")
+            return True
+        except Exception as e:
+            self.logger.error(f"Error updating KOL record: {e}")
+            return False
+    
+    def analyze_kol(self, kol_record: Dict) -> Dict[str, Any]:
+        """Analyze a single KOL and return updated data"""
+        record_id = kol_record["id"]
+        fields = kol_record["fields"]
+        
+        self.logger.info(f"Analyzing KOL: {fields.get('name', 'Unknown')}")
+        
+        # Extract key fields
+        wallet_address = fields.get("wallet", "")
+        x_username = fields.get("xUsername", "")
+        
+        # Initialize result data
+        result_data = {
+            "name": fields.get("name", "Unknown"),
+            "wallet": wallet_address,
+            "xUsername": x_username
+        }
+        
+        # Get wallet holdings data
+        if wallet_address:
+            holdings_data = self.get_wallet_holdings(wallet_address)
+            if "error" not in holdings_data:
+                result_data.update(holdings_data)
+        
+        # Get wallet transaction history
+        if wallet_address:
+            transaction_data = self.get_wallet_transactions(wallet_address)
+            if "error" not in transaction_data:
+                result_data.update(transaction_data)
+        
+        # Get X profile data
+        if x_username:
+            x_data = self.get_x_profile(x_username)
+            if "error" not in x_data:
+                result_data.update(x_data)
+        
+        # Generate insights with all collected data
+        insights_data = self.generate_insights(result_data)
+        result_data.update(insights_data)
+        
+        # Prepare data for Airtable update
+        update_data = {
+            "totalValue": result_data.get("totalValue", 0),
+            "diversity": result_data.get("diversity", 0),
+            "30DayChange": result_data.get("30DayChange", 0),
+            "riskScore": result_data.get("riskScore", 50),
+            "influenceScore": result_data.get("influenceScore", 0),
+            "profilePicture": result_data.get("profilePicture", ""),
+            "analysis": result_data.get("analysis", ""),
+            "insights": result_data.get("insights", ""),
+            "lastUpdated": time.strftime("%Y-%m-%d %H:%M:%S")
+        }
+        
+        # Update holdings as JSON string
+        if "holdings" in result_data:
+            update_data["holdingsJSON"] = json.dumps(result_data["holdings"])
+        
+        # Update recent transactions as JSON string
+        if "recentTransactions" in result_data:
+            update_data["transactionsJSON"] = json.dumps(result_data["recentTransactions"])
+        
+        return {
+            "record_id": record_id,
+            "update_data": update_data,
+            "full_data": result_data
+        }
+    
+    async def analyze_all_kols(self):
+        """Analyze all KOLs and update their records"""
+        kol_records = self.get_all_kols()
+        
+        if not kol_records:
+            self.logger.warning("No KOL records found to analyze")
+            return
+        
+        self.logger.info(f"Starting analysis of {len(kol_records)} KOLs")
+        
+        for kol_record in kol_records:
+            try:
+                result = self.analyze_kol(kol_record)
+                self.update_kol_record(result["record_id"], result["update_data"])
+                
+                # Sleep to avoid rate limiting
+                await asyncio.sleep(2)
+            except Exception as e:
+                self.logger.error(f"Error analyzing KOL {kol_record.get('id', 'Unknown')}: {e}")
+        
+        self.logger.info("KOL analysis completed")
+
+async def main():
+    try:
+        analyzer = KOLAnalyzer()
+        await analyzer.analyze_all_kols()
+    except Exception as e:
+        logging.error(f"Error in main execution: {e}")
+
+if __name__ == "__main__":
+    asyncio.run(main())
