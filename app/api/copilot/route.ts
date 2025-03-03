@@ -47,8 +47,7 @@ async function getFileContents(pattern: string, maxFiles: number = 20, maxSizePe
   } catch (err) {
     console.error(`Error finding files with pattern ${pattern}: ${err}`);
     return '';
-        }
-      }
+  }
 }
 
 // Define interface for token discovery data
