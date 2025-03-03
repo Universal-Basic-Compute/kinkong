@@ -228,24 +228,24 @@ class KOLAnalyzer:
             }
             params = {
                 "wallet": wallet_address,
-                "limit": 200  # Increased limit to get more transactions
+                "limit": 500  # Increased limit to get more historical transactions
             }
             
             # Log the API request details
             self.logger.info(f"Birdeye Transactions API Request: URL={url}, Params={params}")
-        
-            response = requests.get(url, headers=headers, params=params, timeout=15)  # Increased timeout
+            
+            response = requests.get(url, headers=headers, params=params, timeout=20)  # Increased timeout
             self.logger.info(f"Birdeye Transactions API Response Status: {response.status_code}")
-        
+            
             if response.status_code != 200:
                 # Try alternative endpoint
                 self.logger.warning(f"Primary endpoint failed, trying alternative endpoint")
                 url = "https://public-api.birdeye.so/v1/wallet/history"
                 self.logger.info(f"Birdeye Alternative API Request: URL={url}, Params={params}")
-            
-                response = requests.get(url, headers=headers, params=params, timeout=15)
+                
+                response = requests.get(url, headers=headers, params=params, timeout=20)
                 self.logger.info(f"Birdeye Alternative API Response Status: {response.status_code}")
-            
+                
                 if response.status_code != 200:
                     self.logger.error(f"Error from Birdeye API: {response.status_code} - {response.text}")
                     return {
@@ -266,139 +266,192 @@ class KOLAnalyzer:
                 return {"error": "Invalid API response format"}
             
             # Calculate metrics
-            thirty_days_ago = time.time() - (30 * 24 * 60 * 60)
+            thirty_days_ago_timestamp = time.time() - (30 * 24 * 60 * 60)
             recent_txns = []
-            value_30d_ago = 0
-            current_value = 0
+            value_30d_ago = None
+            current_value = None
             risk_score = 50  # Default medium risk
             
             # Check if the response is successful
             if data.get("success", False):
-                # The transactions are likely in data -> transactions
+                # Extract transactions from the response
                 txn_data = data.get("data", {})
-                
-                # Try different possible paths to the transactions list
                 transactions = []
                 
                 # Check all possible paths to find transactions
-                possible_paths = [
-                    # Direct paths
-                    txn_data.get("transactions", []),
-                    txn_data.get("items", []),
-                    # Nested under solana
-                    txn_data.get("solana", {}).get("transactions", []) if isinstance(txn_data.get("solana"), dict) else [],
-                    txn_data.get("solana", []) if isinstance(txn_data.get("solana"), list) else [],
-                    # Nested under other possible keys
-                    txn_data.get("history", []),
-                    txn_data.get("txs", []),
-                    txn_data.get("tx_list", [])
-                ]
-                
-                # Use the first non-empty path
-                for path in possible_paths:
-                    if path and isinstance(path, list):
-                        transactions = path
-                        self.logger.debug(f"Found {len(transactions)} transactions")
-                        break
+                if "solana" in txn_data and isinstance(txn_data["solana"], list):
+                    transactions = txn_data["solana"]
+                    self.logger.info(f"Found {len(transactions)} transactions in data->solana")
+                else:
+                    possible_paths = [
+                        # Direct paths
+                        txn_data.get("transactions", []),
+                        txn_data.get("items", []),
+                        # Nested under solana
+                        txn_data.get("solana", {}).get("transactions", []) if isinstance(txn_data.get("solana"), dict) else [],
+                        # Nested under other possible keys
+                        txn_data.get("history", []),
+                        txn_data.get("txs", []),
+                        txn_data.get("tx_list", [])
+                    ]
+                    
+                    # Use the first non-empty path
+                    for path in possible_paths:
+                        if path and isinstance(path, list):
+                            transactions = path
+                            self.logger.info(f"Found {len(transactions)} transactions in alternative path")
+                            break
                 
                 # If we found transactions, process them
                 if transactions:
-                    for txn in transactions[:50]:  # Process more transactions
-                        # Try different field names for transaction data
-                        txn_type = txn.get("type", txn.get("txType", txn.get("transactionType", "Unknown")))
-                        symbol = txn.get("symbol", txn.get("tokenSymbol", txn.get("token", "Unknown")))
-                        
-                        # Try different field names for value
-                        value = 0
-                        for value_field in ["usdValue", "value", "valueUsd", "amountUsd", "amount_usd"]:
-                            if value_field in txn:
+                    # Sort transactions by timestamp if possible
+                    try:
+                        # First, ensure all transactions have a numeric timestamp
+                        for txn in transactions:
+                            if "blockTime" in txn and isinstance(txn["blockTime"], str):
                                 try:
-                                    value = float(txn[value_field])
-                                    break
-                                except (ValueError, TypeError):
-                                    pass
-                        
-                        # Try different field names for timestamp
-                        timestamp = 0
-                        for time_field in ["timestamp", "blockTime", "time", "date", "block_time"]:
-                            if time_field in txn:
-                                try:
-                                    if isinstance(txn[time_field], str):
-                                        # Try to parse string timestamp
-                                        timestamp = float(txn[time_field])
+                                    # Convert ISO format to timestamp
+                                    if "T" in txn["blockTime"]:
+                                        from datetime import datetime
+                                        dt = datetime.fromisoformat(txn["blockTime"].replace("Z", "+00:00"))
+                                        txn["timestamp_numeric"] = dt.timestamp()
                                     else:
-                                        timestamp = txn[time_field]
-                                    break
+                                        txn["timestamp_numeric"] = float(txn["blockTime"])
                                 except (ValueError, TypeError):
-                                    pass
+                                    txn["timestamp_numeric"] = 0
+                            elif "blockTime" in txn:
+                                txn["timestamp_numeric"] = float(txn["blockTime"])
+                            elif "timestamp" in txn:
+                                if isinstance(txn["timestamp"], str):
+                                    try:
+                                        if "T" in txn["timestamp"]:
+                                            from datetime import datetime
+                                            dt = datetime.fromisoformat(txn["timestamp"].replace("Z", "+00:00"))
+                                            txn["timestamp_numeric"] = dt.timestamp()
+                                        else:
+                                            txn["timestamp_numeric"] = float(txn["timestamp"])
+                                    except (ValueError, TypeError):
+                                        txn["timestamp_numeric"] = 0
+                                else:
+                                    txn["timestamp_numeric"] = float(txn["timestamp"])
+                            else:
+                                txn["timestamp_numeric"] = 0
                         
-                        # Add more transaction details if available
-                        tx_details = {
-                            "type": txn_type,
-                            "symbol": symbol,
-                            "value": value,
-                            "timestamp": timestamp
-                        }
-                        
-                        # Add optional fields if available
-                        for field, key in [
-                            ("txHash", ["txHash", "signature", "tx_hash", "id"]),
-                            ("fee", ["fee", "transaction_fee"]),
-                            ("status", ["status", "tx_status"])
-                        ]:
-                            for k in key:
-                                if k in txn:
-                                    tx_details[field] = txn[k]
-                                    break
-                        
-                        recent_txns.append(tx_details)
+                        # Sort by timestamp_numeric in descending order (newest first)
+                        transactions.sort(key=lambda x: x.get("timestamp_numeric", 0), reverse=True)
+                        self.logger.info(f"Sorted {len(transactions)} transactions by timestamp")
+                    except Exception as e:
+                        self.logger.error(f"Error sorting transactions: {e}")
                     
-                    self.logger.info(f"Extracted {len(recent_txns)} recent transactions")
+                    # Process transactions for display
+                    for txn in transactions[:100]:  # Process more transactions for analysis
+                        # Extract transaction data
+                        tx_details = self._extract_transaction_details(txn)
+                        if tx_details:
+                            recent_txns.append(tx_details)
+                    
+                    self.logger.info(f"Extracted {len(recent_txns)} formatted transactions")
                     
                     # Calculate 30-day change
-                    if len(transactions) > 0:
-                        # Try different field names for portfolio value
-                        current_value = transactions[0].get("portfolioValue", 
-                                        transactions[0].get("walletValue", 
-                                        transactions[0].get("totalValue", 0)))
-                        
-                        # Find portfolio value 30 days ago
-                        for txn in transactions:
-                            # Ensure timestamp is a number for comparison
-                            txn_time = txn.get("timestamp", txn.get("blockTime", 0))
-                            if isinstance(txn_time, str):
-                                try:
-                                    txn_time = float(txn_time)
-                                except (ValueError, TypeError):
-                                    txn_time = 0
-                        
-                            if txn_time < thirty_days_ago:
-                                value_30d_ago = txn.get("portfolioValue", 
-                                                txn.get("walletValue", 
-                                                txn.get("totalValue", 0)))
-                                break
+                    try:
+                        # Get current portfolio value from the most recent transaction
+                        if transactions and len(transactions) > 0:
+                            # Try to get the current portfolio value
+                            current_value = self._extract_portfolio_value(transactions[0])
+                            self.logger.info(f"Current portfolio value: {current_value}")
+                            
+                            # Find a transaction from approximately 30 days ago
+                            for txn in transactions:
+                                txn_time = txn.get("timestamp_numeric", 0)
+                                if txn_time < thirty_days_ago_timestamp:
+                                    value_30d_ago = self._extract_portfolio_value(txn)
+                                    self.logger.info(f"Portfolio value from 30 days ago: {value_30d_ago}")
+                                    break
+                            
+                            # If we couldn't find a transaction from 30 days ago, try to estimate
+                            if value_30d_ago is None and len(transactions) > 1:
+                                # Use the oldest transaction we have
+                                value_30d_ago = self._extract_portfolio_value(transactions[-1])
+                                self.logger.info(f"Using oldest available transaction for portfolio value: {value_30d_ago}")
+                    except Exception as e:
+                        self.logger.error(f"Error calculating 30-day change: {e}")
                     
                     # Calculate risk score based on transaction patterns
-                    if len(transactions) > 10:
-                        # Factors that increase risk:
-                        # 1. High transaction frequency
-                        txn_frequency = min(100, len([t for t in transactions 
-                                                    if self._get_numeric_timestamp(t) > thirty_days_ago]))
-                        
-                        # 2. Trading low-cap tokens
-                        low_cap_trades = sum(1 for t in transactions[:50] 
-                                            if t.get("symbol", t.get("tokenSymbol", "")) not in ["SOL", "USDC", "USDT"])
-                        
-                        # 3. High value volatility
-                        values = [t.get("value", t.get("usdValue", 0)) for t in transactions[:20] 
-                                if t.get("value", t.get("usdValue", 0)) > 0]
-                        value_volatility = 0
-                        if len(values) > 1:
-                            avg_value = sum(values) / len(values)
-                            value_volatility = sum(abs(v - avg_value) for v in values) / (avg_value * len(values))
-                        
-                        # Combine factors
-                        risk_score = min(100, int((txn_frequency * 0.3) + (low_cap_trades * 2) + (value_volatility * 30)))
+                    try:
+                        # Only calculate if we have enough transactions
+                        if len(transactions) >= 5:
+                            # 1. Transaction frequency (0-40 points)
+                            # Count transactions in the last 30 days
+                            recent_tx_count = sum(1 for t in transactions if t.get("timestamp_numeric", 0) > thirty_days_ago_timestamp)
+                            tx_frequency_score = min(40, int(recent_tx_count * 0.8))
+                            
+                            # 2. Token diversity (0-30 points)
+                            # Count unique tokens in transactions
+                            unique_tokens = set()
+                            for t in transactions[:50]:  # Look at last 50 transactions
+                                token_symbol = None
+                                # Try different fields that might contain the token symbol
+                                for field in ["symbol", "tokenSymbol", "token"]:
+                                    if field in t:
+                                        token_symbol = t[field]
+                                        break
+                                
+                                # Also check in balanceChange if it exists
+                                if "balanceChange" in t and isinstance(t["balanceChange"], list):
+                                    for change in t["balanceChange"]:
+                                        if "symbol" in change:
+                                            token_symbol = change["symbol"]
+                                
+                                if token_symbol:
+                                    unique_tokens.add(token_symbol)
+                            
+                            # More unique tokens = higher risk
+                            token_diversity_score = min(30, len(unique_tokens) * 3)
+                            
+                            # 3. Transaction size volatility (0-30 points)
+                            # Calculate coefficient of variation of transaction values
+                            tx_values = []
+                            for t in transactions[:20]:  # Look at last 20 transactions
+                                value = 0
+                                # Try to extract value from different possible fields
+                                for field in ["value", "usdValue", "amountUsd"]:
+                                    if field in t and t[field]:
+                                        try:
+                                            value = float(t[field])
+                                            break
+                                        except (ValueError, TypeError):
+                                            pass
+                                
+                                # Also check in balanceChange if it exists
+                                if value == 0 and "balanceChange" in t and isinstance(t["balanceChange"], list):
+                                    for change in t["balanceChange"]:
+                                        if "usdValue" in change:
+                                            try:
+                                                value += abs(float(change["usdValue"]))
+                                            except (ValueError, TypeError):
+                                                pass
+                                
+                                if value > 0:
+                                    tx_values.append(value)
+                            
+                            volatility_score = 0
+                            if tx_values and len(tx_values) >= 3:
+                                mean_value = sum(tx_values) / len(tx_values)
+                                if mean_value > 0:
+                                    std_dev = (sum((v - mean_value) ** 2 for v in tx_values) / len(tx_values)) ** 0.5
+                                    cv = std_dev / mean_value  # Coefficient of variation
+                                    volatility_score = min(30, int(cv * 100))
+                            
+                            # Combine scores
+                            risk_score = tx_frequency_score + token_diversity_score + volatility_score
+                            self.logger.info(f"Risk score components: frequency={tx_frequency_score}, diversity={token_diversity_score}, volatility={volatility_score}")
+                        else:
+                            # Not enough transactions to calculate a meaningful risk score
+                            risk_score = 50  # Default medium risk
+                            self.logger.info(f"Not enough transactions ({len(transactions)}) to calculate risk score, using default")
+                    except Exception as e:
+                        self.logger.error(f"Error calculating risk score: {e}")
+                        risk_score = 50  # Default on error
                 else:
                     self.logger.warning(f"No transactions found in response. Response structure: {list(txn_data.keys())}")
             else:
@@ -406,11 +459,12 @@ class KOLAnalyzer:
             
             # Calculate 30-day change percentage
             change_30d = 0
-            if value_30d_ago > 0 and current_value > 0:
+            if value_30d_ago is not None and value_30d_ago > 0 and current_value is not None and current_value > 0:
                 change_30d = ((current_value - value_30d_ago) / value_30d_ago) * 100
+                self.logger.info(f"Calculated 30-day change: {change_30d:.2f}%")
             
             return {
-                "recentTransactions": recent_txns[:10],  # Return more recent transactions
+                "recentTransactions": recent_txns[:15],  # Return more recent transactions
                 "30DayChange": change_30d,
                 "riskScore": risk_score
             }
@@ -696,6 +750,153 @@ class KOLAnalyzer:
             except (ValueError, TypeError):
                 return 0
         return timestamp
+        
+    def _extract_transaction_details(self, txn: Dict) -> Optional[Dict]:
+        """Extract relevant details from a transaction"""
+        try:
+            # Initialize with default values
+            tx_details = {
+                "type": "Unknown",
+                "symbol": "Unknown",
+                "value": 0,
+                "timestamp": 0
+            }
+            
+            # Extract transaction type
+            for type_field in ["type", "txType", "transactionType", "mainAction"]:
+                if type_field in txn and txn[type_field]:
+                    tx_details["type"] = txn[type_field]
+                    break
+            
+            # Extract symbol
+            symbol = None
+            # Try direct symbol fields
+            for symbol_field in ["symbol", "tokenSymbol", "token"]:
+                if symbol_field in txn and txn[symbol_field]:
+                    symbol = txn[symbol_field]
+                    break
+            
+            # If no symbol found, check balanceChange
+            if not symbol and "balanceChange" in txn and isinstance(txn["balanceChange"], list) and txn["balanceChange"]:
+                # Use the symbol from the first balance change with the largest value
+                max_value = 0
+                for change in txn["balanceChange"]:
+                    if "symbol" in change and change["symbol"]:
+                        try:
+                            value = abs(float(change.get("usdValue", 0)))
+                            if value > max_value:
+                                max_value = value
+                                symbol = change["symbol"]
+                        except (ValueError, TypeError):
+                            pass
+            
+            if symbol:
+                tx_details["symbol"] = symbol
+            
+            # Extract value
+            value = 0
+            # Try direct value fields
+            for value_field in ["usdValue", "value", "valueUsd", "amountUsd", "amount_usd"]:
+                if value_field in txn and txn[value_field]:
+                    try:
+                        value = float(txn[value_field])
+                        break
+                    except (ValueError, TypeError):
+                        pass
+            
+            # If no value found, sum balanceChange values
+            if value == 0 and "balanceChange" in txn and isinstance(txn["balanceChange"], list):
+                for change in txn["balanceChange"]:
+                    if "usdValue" in change:
+                        try:
+                            value += abs(float(change["usdValue"]))
+                        except (ValueError, TypeError):
+                            pass
+            
+            tx_details["value"] = value
+            
+            # Extract timestamp
+            timestamp = txn.get("timestamp_numeric", 0)
+            if timestamp == 0:
+                # Try to get timestamp from other fields
+                for time_field in ["timestamp", "blockTime", "time", "date", "block_time"]:
+                    if time_field in txn and txn[time_field]:
+                        try:
+                            if isinstance(txn[time_field], str):
+                                # Try to parse ISO format
+                                if "T" in txn[time_field]:
+                                    from datetime import datetime
+                                    dt = datetime.fromisoformat(txn[time_field].replace("Z", "+00:00"))
+                                    timestamp = dt.timestamp()
+                                else:
+                                    timestamp = float(txn[time_field])
+                            else:
+                                timestamp = float(txn[time_field])
+                            break
+                        except (ValueError, TypeError):
+                            pass
+            
+            tx_details["timestamp"] = timestamp
+            
+            # Add transaction hash if available
+            for hash_field in ["txHash", "signature", "tx_hash", "id"]:
+                if hash_field in txn and txn[hash_field]:
+                    tx_details["txHash"] = txn[hash_field]
+                    break
+            
+            # Add fee if available
+            if "fee" in txn:
+                try:
+                    tx_details["fee"] = float(txn["fee"]) / 1e9  # Convert lamports to SOL
+                except (ValueError, TypeError):
+                    pass
+            
+            # Add status if available
+            if "status" in txn:
+                tx_details["status"] = "success" if txn["status"] else "failed"
+            
+            return tx_details
+        except Exception as e:
+            self.logger.error(f"Error extracting transaction details: {e}")
+            return None
+
+    def _extract_portfolio_value(self, txn: Dict) -> Optional[float]:
+        """Extract portfolio value from a transaction"""
+        try:
+            # Try different fields that might contain portfolio value
+            for field in ["portfolioValue", "walletValue", "totalValue", "totalUsdValue"]:
+                if field in txn and txn[field]:
+                    try:
+                        return float(txn[field])
+                    except (ValueError, TypeError):
+                        pass
+            
+            # If not found in direct fields, check if it's in a nested structure
+            if "portfolio" in txn and isinstance(txn["portfolio"], dict):
+                for field in ["value", "usdValue", "totalValue"]:
+                    if field in txn["portfolio"] and txn["portfolio"][field]:
+                        try:
+                            return float(txn["portfolio"][field])
+                        except (ValueError, TypeError):
+                            pass
+            
+            # If we still don't have a value, try to estimate from the holdings
+            # This is a fallback and may not be accurate
+            if "holdings" in txn and isinstance(txn["holdings"], list):
+                total = 0
+                for holding in txn["holdings"]:
+                    if "usdValue" in holding:
+                        try:
+                            total += float(holding["usdValue"])
+                        except (ValueError, TypeError):
+                            pass
+                if total > 0:
+                    return total
+            
+            return None
+        except Exception as e:
+            self.logger.error(f"Error extracting portfolio value: {e}")
+            return None
         
     def _print_nested_structure(self, data, prefix="", max_depth=3, current_depth=0):
         """Helper to print the structure of nested dictionaries and lists"""
