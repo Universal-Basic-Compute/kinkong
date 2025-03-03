@@ -1264,6 +1264,311 @@ def generate_kol_image_by_name(kol_name: str):
         logger.error(f"Error in generate_kol_image_by_name: {e}")
         return None
 
+def generate_tweet_content(kol_data: Dict[str, Any]) -> str:
+    """
+    Generate tweet content using Claude AI based on KOL analysis
+    
+    Args:
+        kol_data: Dictionary containing KOL data
+        
+    Returns:
+        Generated tweet content
+    """
+    logger = setup_logging()
+    
+    if not kol_data.get("name") or not kol_data.get("xUsername"):
+        logger.warning("Missing KOL name or X username")
+        return ""
+    
+    try:
+        # Initialize Claude client
+        claude_api_key = os.getenv('ANTHROPIC_API_KEY')
+        if not claude_api_key:
+            logger.error("Missing Claude API key")
+            return ""
+        
+        claude = Anthropic(api_key=claude_api_key)
+        
+        # Prepare context for Claude
+        context = f"""
+        KOL Analysis Data:
+        
+        Name: {kol_data.get('name', 'Unknown')}
+        X Username: @{kol_data.get('xUsername', '').replace('@', '')}
+        
+        Wallet Holdings:
+        - Total Value: ${kol_data.get('totalValue', 0):,.2f}
+        - Token Count: {kol_data.get('tokenCount', 0)}
+        - Diversity Score: {kol_data.get('diversity', 0)}/100
+        
+        Top Holdings:
+        {json.dumps(kol_data.get('holdings', []), indent=2)}
+        
+        Risk Score: {kol_data.get('riskScore', 50)}/100
+        
+        Profile Type: {kol_data.get('profile', 'Unknown')}
+        
+        Analysis: {kol_data.get('analysis', '')}
+        
+        Insights: {kol_data.get('insights', '')}
+        """
+        
+        prompt = f"""
+        You are a crypto analyst who creates engaging tweets about crypto Key Opinion Leaders (KOLs).
+        
+        Write a tweet mentioning @{kol_data.get('xUsername', '').replace('@', '')} that:
+        1. Analyzes their portfolio in detail
+        2. Provides specific recommendations based on their holdings and profile
+        3. Ends with "Visit konginvest.ai for more Alpha"
+        
+        The tone should be 90% professional analysis with 10% degen crypto energy.
+        
+        Use the following data for your analysis:
+        {context}
+        
+        IMPORTANT GUIDELINES:
+        - Keep the tweet under 280 characters
+        - Include specific token names from their portfolio
+        - Be direct and actionable in recommendations
+        - Mention their profile type ({kol_data.get('profile', 'Unknown')})
+        - Add 1-2 relevant emojis
+        - Include the @{kol_data.get('xUsername', '').replace('@', '')} mention
+        - End with "Visit konginvest.ai for more Alpha"
+        """
+        
+        logger.info(f"Generating tweet for KOL: {kol_data.get('name')}")
+        
+        response = claude.messages.create(
+            model="claude-3-7-sonnet-latest",
+            max_tokens=300,
+            temperature=0.7,  # Slightly higher temperature for creative content
+            system="You are a crypto analyst who creates engaging tweets. Keep responses under 280 characters.",
+            messages=[
+                {"role": "user", "content": prompt}
+            ]
+        )
+        
+        tweet_content = response.content[0].text.strip()
+        
+        # Ensure the tweet ends with the required text
+        if "Visit konginvest.ai for more Alpha" not in tweet_content:
+            # If tweet is too long, truncate it to fit the ending
+            max_length = 280 - len(" Visit konginvest.ai for more Alpha")
+            tweet_content = tweet_content[:max_length] + " Visit konginvest.ai for more Alpha"
+        
+        logger.info(f"Generated tweet for {kol_data.get('name')}: {tweet_content}")
+        return tweet_content
+    
+    except Exception as e:
+        logger.error(f"Error generating tweet content: {e}")
+        logger.exception("Exception details:")
+        return ""
+
+def send_tweet(tweet_content: str) -> bool:
+    """
+    Send a tweet using the Twitter/X API
+    
+    Args:
+        tweet_content: Content of the tweet to send
+        
+    Returns:
+        Boolean indicating success or failure
+    """
+    logger = setup_logging()
+    
+    if not tweet_content:
+        logger.warning("Empty tweet content")
+        return False
+    
+    try:
+        # Twitter API credentials
+        api_key = os.getenv('TWITTER_API_KEY')
+        api_secret = os.getenv('TWITTER_API_SECRET')
+        access_token = os.getenv('TWITTER_ACCESS_TOKEN')
+        access_token_secret = os.getenv('TWITTER_ACCESS_TOKEN_SECRET')
+        
+        if not all([api_key, api_secret, access_token, access_token_secret]):
+            logger.error("Missing Twitter API credentials")
+            return False
+        
+        # Initialize Twitter API client
+        try:
+            import tweepy
+            auth = tweepy.OAuth1UserHandler(api_key, api_secret, access_token, access_token_secret)
+            api = tweepy.API(auth)
+            
+            # Send tweet
+            logger.info(f"Sending tweet: {tweet_content}")
+            api.update_status(tweet_content)
+            logger.info("Tweet sent successfully")
+            return True
+        except ImportError:
+            logger.error("Tweepy library not installed. Install with: pip install tweepy")
+            return False
+    
+    except Exception as e:
+        logger.error(f"Error sending tweet: {e}")
+        logger.exception("Exception details:")
+        return False
+
+def generate_and_send_tweets_for_all_kols(dry_run: bool = True) -> None:
+    """
+    Generate and send tweets for all KOLs in the database
+    
+    Args:
+        dry_run: If True, generate tweets but don't send them
+    """
+    logger = setup_logging()
+    try:
+        analyzer = KOLAnalyzer()
+        kol_records = analyzer.get_all_kols()
+        
+        if not kol_records:
+            logger.warning("No KOL records found")
+            return
+        
+        logger.info(f"Generating tweets for {len(kol_records)} KOLs")
+        
+        for record in kol_records:
+            try:
+                # Extract fields from record
+                fields = record['fields']
+                
+                # Skip if no X username
+                if not fields.get("xUsername") and not fields.get("X"):
+                    logger.warning(f"Skipping KOL with no X username: {fields.get('X', 'Unknown')}")
+                    continue
+                
+                # Create data dictionary for tweet generation
+                kol_data = {
+                    "name": fields.get("X", "Unknown KOL"),
+                    "xUsername": fields.get("xUsername", fields.get("X", "")),
+                    "totalValue": fields.get("totalValue", 0),
+                    "tokenCount": fields.get("tokenCount", 0),
+                    "diversity": fields.get("diversity", 0),
+                    "riskScore": fields.get("riskScore", 50),
+                    "profile": fields.get("profile", "Unknown"),
+                    "analysis": fields.get("analysis", ""),
+                    "insights": fields.get("insights", ""),
+                    "holdings": []
+                }
+                
+                # Parse holdings JSON if available
+                if "holdingsJSON" in fields and fields["holdingsJSON"]:
+                    try:
+                        kol_data["holdings"] = json.loads(fields["holdingsJSON"])
+                    except json.JSONDecodeError:
+                        logger.warning(f"Invalid holdings JSON for {kol_data['name']}")
+                
+                # Generate tweet content
+                tweet_content = generate_tweet_content(kol_data)
+                
+                if not tweet_content:
+                    logger.warning(f"Failed to generate tweet for {kol_data['name']}")
+                    continue
+                
+                # Log the tweet content
+                logger.info(f"Tweet for {kol_data['name']}:\n{tweet_content}")
+                
+                # Send the tweet if not a dry run
+                if not dry_run:
+                    success = send_tweet(tweet_content)
+                    if success:
+                        logger.info(f"Tweet sent for {kol_data['name']}")
+                    else:
+                        logger.warning(f"Failed to send tweet for {kol_data['name']}")
+                
+                # Sleep to avoid rate limiting
+                time.sleep(2)
+            
+            except Exception as e:
+                logger.error(f"Error processing KOL record: {e}")
+                continue
+        
+        if dry_run:
+            logger.info("Dry run completed - no tweets were actually sent")
+        else:
+            logger.info("Tweet generation and sending completed")
+    
+    except Exception as e:
+        logger.error(f"Error in generate_and_send_tweets_for_all_kols: {e}")
+
+def generate_and_send_tweet_by_name(kol_name: str, dry_run: bool = True) -> None:
+    """
+    Generate and send a tweet for a specific KOL by name
+    
+    Args:
+        kol_name: Name of the KOL
+        dry_run: If True, generate tweet but don't send it
+    """
+    logger = setup_logging()
+    try:
+        analyzer = KOLAnalyzer()
+        kol_records = analyzer.get_all_kols()
+        
+        if not kol_records:
+            logger.warning("No KOL records found")
+            return
+        
+        # Find the KOL by name
+        matching_records = [r for r in kol_records if r['fields'].get('X', '').lower() == kol_name.lower()]
+        
+        if not matching_records:
+            logger.warning(f"No KOL found with name: {kol_name}")
+            return
+        
+        record = matching_records[0]
+        fields = record['fields']
+        
+        # Skip if no X username
+        if not fields.get("xUsername") and not fields.get("X"):
+            logger.warning(f"Skipping KOL with no X username: {fields.get('X', 'Unknown')}")
+            return
+        
+        # Create data dictionary for tweet generation
+        kol_data = {
+            "name": fields.get("X", "Unknown KOL"),
+            "xUsername": fields.get("xUsername", fields.get("X", "")),
+            "totalValue": fields.get("totalValue", 0),
+            "tokenCount": fields.get("tokenCount", 0),
+            "diversity": fields.get("diversity", 0),
+            "riskScore": fields.get("riskScore", 50),
+            "profile": fields.get("profile", "Unknown"),
+            "analysis": fields.get("analysis", ""),
+            "insights": fields.get("insights", ""),
+            "holdings": []
+        }
+        
+        # Parse holdings JSON if available
+        if "holdingsJSON" in fields and fields["holdingsJSON"]:
+            try:
+                kol_data["holdings"] = json.loads(fields["holdingsJSON"])
+            except json.JSONDecodeError:
+                logger.warning(f"Invalid holdings JSON for {kol_data['name']}")
+        
+        # Generate tweet content
+        tweet_content = generate_tweet_content(kol_data)
+        
+        if not tweet_content:
+            logger.warning(f"Failed to generate tweet for {kol_data['name']}")
+            return
+        
+        # Log the tweet content
+        logger.info(f"Tweet for {kol_data['name']}:\n{tweet_content}")
+        
+        # Send the tweet if not a dry run
+        if not dry_run:
+            success = send_tweet(tweet_content)
+            if success:
+                logger.info(f"Tweet sent for {kol_data['name']}")
+            else:
+                logger.warning(f"Failed to send tweet for {kol_data['name']}")
+        else:
+            logger.info("Dry run - tweet was not actually sent")
+    
+    except Exception as e:
+        logger.error(f"Error in generate_and_send_tweet_by_name: {e}")
+
 async def main():
     # Get logger from setup_logging
     logger = setup_logging()
@@ -1274,6 +1579,10 @@ async def main():
         parser.add_argument('--generate-images', action='store_true', help='Generate images for all KOLs')
         parser.add_argument('--generate-image', type=str, help='Generate image for a specific KOL by name')
         parser.add_argument('--test-wallet', type=str, help='Test Birdeye API with a specific wallet')
+        parser.add_argument('--generate-tweets', action='store_true', help='Generate tweets for all KOLs (dry run)')
+        parser.add_argument('--generate-tweet', type=str, help='Generate tweet for a specific KOL by name (dry run)')
+        parser.add_argument('--send-tweets', action='store_true', help='Generate and send tweets for all KOLs')
+        parser.add_argument('--send-tweet', type=str, help='Generate and send tweet for a specific KOL by name')
         
         args = parser.parse_args()
         
@@ -1297,8 +1606,33 @@ async def main():
             generate_all_kol_images()
             return
         
+        # Generate tweets for all KOLs (dry run)
+        if args.generate_tweets:
+            logger.info("Generating tweets for all KOLs (dry run)")
+            generate_and_send_tweets_for_all_kols(dry_run=True)
+            return
+        
+        # Generate tweet for a specific KOL (dry run)
+        if args.generate_tweet:
+            logger.info(f"Generating tweet for KOL: {args.generate_tweet} (dry run)")
+            generate_and_send_tweet_by_name(args.generate_tweet, dry_run=True)
+            return
+        
+        # Generate and send tweets for all KOLs
+        if args.send_tweets:
+            logger.info("Generating and sending tweets for all KOLs")
+            generate_and_send_tweets_for_all_kols(dry_run=False)
+            return
+        
+        # Generate and send tweet for a specific KOL
+        if args.send_tweet:
+            logger.info(f"Generating and sending tweet for KOL: {args.send_tweet}")
+            generate_and_send_tweet_by_name(args.send_tweet, dry_run=False)
+            return
+        
         # Default: analyze all KOLs
-        if args.analyze or not any([args.generate_images, args.generate_image, args.test_wallet]):
+        if args.analyze or not any([args.generate_images, args.generate_image, args.test_wallet, 
+                                   args.generate_tweets, args.generate_tweet, args.send_tweets, args.send_tweet]):
             logger.info("Analyzing all KOLs")
             await analyzer.analyze_all_kols()
     
