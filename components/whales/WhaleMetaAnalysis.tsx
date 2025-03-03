@@ -235,10 +235,11 @@ export function WhaleMetaAnalysis({ token, timeframe, isLoading }: WhaleMetaAnal
         );
       })()}
           <div className="ml-auto text-xs text-gray-400">
-            Based on analysis of {metaAnalysis.totalWhales} whale wallets
+            Based on analysis of {metaAnalysis.metrics?.totalWhales || metaAnalysis.totalWhales} whale wallets
           </div>
         </div>
       </div>
+}
       
       <div className="border-t border-gray-700 pt-4 mt-6">
         <h4 className="font-bold text-gold mb-2">Analysis Metrics</h4>
