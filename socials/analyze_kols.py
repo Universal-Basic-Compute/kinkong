@@ -266,7 +266,8 @@ class KOLAnalyzer:
         if not self.claude_api_key:
             return {
                 "analysis": "Claude API key not configured",
-                "insights": "Unable to generate insights"
+                "insights": "Unable to generate insights",
+                "profile": "Unknown"
             }
         
         try:
@@ -309,16 +310,30 @@ class KOLAnalyzer:
             Analyze the following data about a crypto KOL and provide:
             1. A concise analysis of their trading behavior, risk profile, and influence
             2. Key insights about their investment strategy and potential value as an influencer
+            3. Assign them ONE profile type that best matches their behavior
             
             {context}
             
-            Provide your response in two parts:
+            Profile types to choose from (select exactly ONE that best fits):
+            - Alpha: First to find winning plays before anyone else.
+            - Storyteller: Creates narratives that move markets.
+            - Chartist: Lives by the charts, dies by the charts.
+            - Contrarian: Always against the crowd, often right.
+            - Maxi: Devoted to one ecosystem above all others.
+            - Detective: Digs deeper than anyone else for edge.
+            - Catalyst: Makes things happen through sheer influence.
+            - Strategist: Chess player thinking multiple moves ahead.
+            - Whale: Big money moves that others follow.
+            - Degen: Lives for the community, thrives in chaos.
+            
+            Provide your response in three parts:
             1. Analysis: A paragraph summarizing the KOL's profile, trading behavior, and influence
             2. Insights: 3-5 bullet points with specific observations about their strategy and value as an influencer
+            3. Profile: The ONE profile type that best describes this KOL (just the name, no explanation)
             """
             
             response = self.claude.messages.create(
-                model="claude-3-sonnet-20240229",
+                model="claude-3-7-sonnet-latest",
                 max_tokens=1000,
                 temperature=0.2,
                 system="You are a crypto analyst specializing in evaluating Key Opinion Leaders (KOLs) in the Solana ecosystem.",
@@ -327,24 +342,36 @@ class KOLAnalyzer:
                 ]
             )
             
-            # Extract analysis and insights from response
+            # Extract analysis, insights, and profile from response
             content = response.content[0].text
             
-            # Split into analysis and insights sections
+            # Split into sections
             sections = content.split("Insights:")
+            analysis_section = sections[0].replace("Analysis:", "").strip()
             
-            analysis = sections[0].replace("Analysis:", "").strip()
-            insights = sections[1].strip() if len(sections) > 1 else "No insights generated"
+            if len(sections) > 1:
+                remaining = sections[1]
+                insights_profile = remaining.split("Profile:")
+                insights_section = insights_profile[0].strip()
+                profile_section = insights_profile[1].strip() if len(insights_profile) > 1 else "Unknown"
+            else:
+                insights_section = "No insights generated"
+                profile_section = "Unknown"
+            
+            # Clean up profile to just get the type name
+            profile_type = profile_section.split("\n")[0].strip()
             
             return {
-                "analysis": analysis,
-                "insights": insights
+                "analysis": analysis_section,
+                "insights": insights_section,
+                "profile": profile_type
             }
         except Exception as e:
             self.logger.error(f"Error generating insights: {e}")
             return {
                 "analysis": f"Error generating analysis: {str(e)}",
-                "insights": "Unable to generate insights due to an error"
+                "insights": "Unable to generate insights due to an error",
+                "profile": "Unknown"
             }
     
     def update_kol_record(self, record_id: str, data: Dict[str, Any]) -> bool:
@@ -408,6 +435,7 @@ class KOLAnalyzer:
             "profilePicture": result_data.get("profilePicture", ""),
             "analysis": result_data.get("analysis", ""),
             "insights": result_data.get("insights", ""),
+            "profile": result_data.get("profile", "Unknown"),
             "lastUpdated": time.strftime("%Y-%m-%d %H:%M:%S")
         }
         
