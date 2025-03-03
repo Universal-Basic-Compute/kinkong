@@ -80,6 +80,12 @@ $tasks = @(
         Script = "python ../scripts/calculate_closed_signals.py"
         Schedule = "Hourly"
         StartTime = "00:05"  # Start at 5 minutes past the hour
+    },
+    @{
+        Name = "KinKong_RandomKOLTweet"
+        Script = "python ../socials/analyze_kols.py --send-random-tweet"
+        Schedule = "Hourly"
+        StartTime = "00:45"  # Run at 45 minutes past each hour
     }
 )
 
