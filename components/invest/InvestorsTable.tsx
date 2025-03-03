@@ -4,7 +4,7 @@ import { TokenDisplay } from '@/utils/tokenDisplay';
 import { useWallet } from '@solana/wallet-adapter-react';
 
 // Define types
-type SortField = 'date' | 'investment' | 'return';
+type SortField = 'date' | 'return';
 type SortDirection = 'asc' | 'desc';
 
 interface Investor {
@@ -29,25 +29,17 @@ interface InvestorsTableProps {
   initialData?: Investor[];
 }
 
-function formatTimeAgo(date: Date): string {
+function getDaysAgo(date: Date): string {
   const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffTime = Math.abs(now.getTime() - date.getTime());
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
   
-  if (diffHours < 1) {
-    return 'Just now';
-  } else if (diffHours === 1) {
-    return '1 hour ago';
-  } else if (diffHours < 24) {
-    return `${diffHours} hours ago`;
-  } else if (diffHours < 48) {
+  if (diffDays === 0) {
+    return 'Today';
+  } else if (diffDays === 1) {
     return 'Yesterday';
   } else {
-    return date.toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    }).replace(/\//g, '/');
+    return `${diffDays} days ago`;
   }
 }
 
@@ -159,8 +151,6 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
     switch (sortField) {
       case 'date':
         return multiplier * (new Date(a.date).getTime() - new Date(b.date).getTime());
-      case 'investment':
-        return multiplier * ((a.usdAmount || 0) - (b.usdAmount || 0));
       case 'return':
         return multiplier * ((a.ubcReturn || 0) - (b.ubcReturn || 0));
       default:
@@ -195,12 +185,6 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
                     onClick={() => handleSort('return')}
                   >
                     Weekly Redistribution{renderSortIndicator('return')}
-                  </th>
-                  <th 
-                    className="px-4 py-3 text-right font-bold cursor-pointer hover:text-gold"
-                    onClick={() => handleSort('investment')}
-                  >
-                    Investment Value{renderSortIndicator('investment')}
                   </th>
                   <th 
                     className="px-4 py-3 text-left font-bold cursor-pointer hover:text-gold"
@@ -257,26 +241,12 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
                       )}
                     </td>
                     
-                    {/* Investment Value Cell (moved after Weekly Return) */}
-                    <td className="px-4 py-4 text-right">
-                      {typeof investor.amount === 'number' ? (
-                        <>
-                          <div>
-                            <span className="text-white font-medium">{Math.floor(investor.amount).toLocaleString('en-US')}</span>{' '}
-                            <span className="text-gray-400">USDC</span>
-                          </div>
-                        </>
-                      ) : (
-                        'N/A'
-                      )}
-                    </td>
-                    
-                    {/* Date Cell */}
+                    {/* Date Cell - Modified to show days ago */}
                     <td className="px-4 py-4">
                       {investor.date 
                         ? (
                           <span className="text-gray-400">
-                            {formatTimeAgo(new Date(investor.date))}
+                            {getDaysAgo(new Date(investor.date))}
                           </span>
                         )
                         : <span className="text-gray-400">N/A</span>}
