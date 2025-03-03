@@ -1036,10 +1036,8 @@ class KOLAnalyzer:
         self.logger.info("KOL analysis completed")
 
 def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kols") -> Optional[str]:
-    # Get logger from setup_logging
-    logger = setup_logging()
     """
-    Generate a 3:4 image for a KOL with all the specified elements
+    Generate a 4:3 landscape format image for a KOL with enhanced visuals
     
     Args:
         kol_data: Dictionary containing KOL data
@@ -1048,6 +1046,7 @@ def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kols"
     Returns:
         Path to the generated image or None if generation failed
     """
+    logger = setup_logging()
     try:
         # Create output directory if it doesn't exist
         os.makedirs(output_dir, exist_ok=True)
@@ -1069,8 +1068,8 @@ def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kols"
         else:
             insights_list = ["No insights available"]
         
-        # Get top 3 insights
-        top_insights = insights_list[:3]
+        # Get top 2 insights (for landscape format)
+        top_insights = insights_list[:2]
         
         # Extract holdings data for pie chart
         holdings = kol_data.get("holdings", [])
@@ -1082,37 +1081,37 @@ def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kols"
         text_color = (255, 255, 255)  # White
         secondary_text_color = (180, 180, 180)  # Light gray
         
-        # Create a 3:4 aspect ratio image (width:height)
-        width, height = 1200, 1600
+        # Create a 4:3 aspect ratio image (width:height) - Landscape format
+        width, height = 1600, 1200
         img = Image.new('RGB', (width, height), color=bg_color)
         draw = ImageDraw.Draw(img)
         
-        # Create gradient background
+        # Create a more dramatic gradient background
         for y in range(height):
-            # Create a subtle gradient from dark to slightly lighter
-            r = int(13 + (y / height) * 20)
-            g = int(13 + (y / height) * 15)
-            b = int(13 + (y / height) * 25)
+            # Create a gradient from dark to gold-tinted at the top
+            r = int(13 + (1 - y/height) * 30)
+            g = int(13 + (1 - y/height) * 25)
+            b = int(13 + (1 - y/height) * 5)
             
             # Draw a horizontal line with the gradient color
             draw.line([(0, y), (width, y)], fill=(r, g, b))
         
-        # Add a subtle gold gradient at the top
-        for y in range(200):
-            alpha = int(40 * (1 - y/200))  # Fade out as y increases
+        # Add a subtle gold glow at the top
+        for y in range(300):
+            alpha = int(50 * (1 - y/300))  # Fade out as y increases
             overlay_color = (min(255, 13 + int(alpha * 2.42)), 
                             min(255, 13 + int(alpha * 2.02)), 
                             min(255, 13 + int(alpha * 0.0)))
             draw.line([(0, y), (width, y)], fill=overlay_color)
         
-        # Load fonts
+        # Load fonts - try to use more stylish fonts if available
         try:
-            # Try to load custom fonts
-            title_font = ImageFont.truetype("arial.ttf", 70)  # Increased size
-            profile_font = ImageFont.truetype("arial.ttf", 60)  # Larger for profile type
-            subtitle_font = ImageFont.truetype("arial.ttf", 50)  # Increased size
-            body_font = ImageFont.truetype("arial.ttf", 36)  # Increased size
-            small_font = ImageFont.truetype("arial.ttf", 30)  # Increased size
+            # Try to load custom fonts - adjust paths as needed
+            title_font = ImageFont.truetype("arial.ttf", 80)  # Larger for impact
+            profile_font = ImageFont.truetype("arial.ttf", 70)  # Larger for profile type
+            subtitle_font = ImageFont.truetype("arial.ttf", 50)
+            body_font = ImageFont.truetype("arial.ttf", 40)  # Larger for readability
+            small_font = ImageFont.truetype("arial.ttf", 30)
         except IOError:
             # Fallback to default font
             title_font = ImageFont.load_default()
@@ -1125,7 +1124,7 @@ def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kols"
         try:
             kong_img = Image.open("public/copilot.png").convert("RGBA")
             # Resize to appropriate size
-            kong_size = (180, 180)
+            kong_size = (150, 150)
             kong_img = kong_img.resize(kong_size, Image.LANCZOS)
             
             # Create a circular mask
@@ -1151,7 +1150,7 @@ def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kols"
                     profile_pic = Image.open(io.BytesIO(response.content)).convert("RGBA")
                     
                     # Resize to appropriate size
-                    pic_size = (180, 180)
+                    pic_size = (150, 150)
                     profile_pic = profile_pic.resize(pic_size, Image.LANCZOS)
                     
                     # Create a circular mask
@@ -1164,46 +1163,60 @@ def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kols"
                     profile_circular.paste(profile_pic, (0, 0), mask)
                     
                     # Paste profile picture in top right
-                    img.paste(profile_circular, (width - 220, 40), profile_circular)
+                    img.paste(profile_circular, (width - 190, 40), profile_circular)
             except Exception as e:
                 logger.error(f"Error loading profile picture: {e}")
         
-        # Draw name in top center with gold color
+        # Draw name in top center with gold color and shadow effect
         name_width = draw.textlength(name, font=title_font)
+        # Draw shadow
+        draw.text((width/2 - name_width/2 + 2, 52), name, fill=(50, 50, 50), font=title_font)
+        # Draw text
         draw.text((width/2 - name_width/2, 50), name, fill=gold_color, font=title_font)
-        
-        # Draw X handle
-        if x_username:
-            x_width = draw.textlength(f"@{x_username}", font=subtitle_font)
-            draw.text((width/2 - x_width/2, 130), f"@{x_username}", fill=secondary_text_color, font=subtitle_font)
         
         # Draw influence score with red accent
         score_color = red_color if influence_score < 40 else gold_color
         influence_text = f"Influence: {influence_score}"
         influence_width = draw.textlength(influence_text, font=subtitle_font)
-        draw.text((width - influence_width - 40, 40), influence_text, fill=score_color, font=subtitle_font)
+        draw.text((width - influence_width - 40, 50), influence_text, fill=score_color, font=subtitle_font)
         
-        # Draw profile type - stylized with background
-        profile_y = 220
+        # Draw profile type - stylized with glowing background
+        profile_y = 150
         profile_text = f"Profile: {profile_type}"
         profile_width = draw.textlength(profile_text, font=profile_font)
         
-        # Draw a semi-transparent background for profile type
-        profile_bg_rect = [(width/2 - profile_width/2 - 20, profile_y - 10), 
-                          (width/2 + profile_width/2 + 20, profile_y + 70)]
-        draw.rectangle(profile_bg_rect, fill=(30, 30, 30, 128), outline=gold_color, width=2)
+        # Draw a glowing background for profile type
+        profile_bg_rect = [(width/2 - profile_width/2 - 30, profile_y - 15), 
+                          (width/2 + profile_width/2 + 30, profile_y + 75)]
         
-        # Draw profile text
+        # Draw multiple rectangles with decreasing opacity for glow effect
+        for i in range(10, 0, -2):
+            expanded_rect = [
+                (profile_bg_rect[0][0] - i, profile_bg_rect[0][1] - i),
+                (profile_bg_rect[1][0] + i, profile_bg_rect[1][1] + i)
+            ]
+            draw.rectangle(expanded_rect, fill=None, outline=(255, 215, 0, 50), width=1)
+        
+        # Main rectangle
+        draw.rectangle(profile_bg_rect, fill=(30, 30, 30, 200), outline=gold_color, width=3)
+        
+        # Draw profile text with shadow for depth
+        draw.text((width/2 - profile_width/2 + 2, profile_y + 2), profile_text, fill=(50, 50, 50), font=profile_font)
         draw.text((width/2 - profile_width/2, profile_y), profile_text, fill=gold_color, font=profile_font)
         
-        # Draw horizontal line with gold color
-        draw.line([(40, 320), (width - 40, 320)], fill=gold_color, width=3)
+        # Draw horizontal line with gold color and glow effect
+        for i in range(5, 0, -1):
+            draw.line([(40, 250 + i), (width - 40, 250 + i)], fill=(255, 215, 0, 50 * i), width=1)
+        draw.line([(40, 250), (width - 40, 250)], fill=gold_color, width=3)
         
-        # Draw asset allocation pie chart
+        # Layout for landscape format - split into left and right sections
+        left_section_width = width // 2
+        
+        # Draw asset allocation pie chart on the left
         if holdings:
             try:
                 # Create a figure for the pie chart
-                fig, ax = plt.subplots(figsize=(8, 8), facecolor='none')  # Larger pie chart
+                fig, ax = plt.subplots(figsize=(8, 8), facecolor='none')
                 
                 # Prepare data for pie chart
                 labels = []
@@ -1223,24 +1236,26 @@ def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kols"
                     labels.append('Others')
                     sizes.append(others_value)
                 
-                # Define colors for the pie chart - use red and gold theme
+                # Define colors for the pie chart - use vibrant colors
                 pie_colors = ['#FFD700', '#DC3545', '#FFA500', '#B8860B', '#CD7F32', '#A9A9A9']
                 
                 # Create pie chart with larger text
                 wedges, texts, autotexts = ax.pie(sizes, labels=None, autopct='%1.1f%%', 
-                                                 startangle=90, colors=pie_colors)
+                                                 startangle=90, colors=pie_colors,
+                                                 wedgeprops={'edgecolor': 'black', 'linewidth': 1})
                 
                 # Make the percentage text larger and white
                 for autotext in autotexts:
                     autotext.set_color('white')
-                    autotext.set_fontsize(14)
+                    autotext.set_fontsize(16)
+                    autotext.set_weight('bold')
                 
                 # Add a title
-                plt.title('Asset Allocation', color='white', fontsize=20, pad=20)
+                plt.title('Asset Allocation', color='white', fontsize=24, pad=20, fontweight='bold')
                 
                 # Add legend with larger font
                 ax.legend(wedges, labels, loc="center left", bbox_to_anchor=(1, 0, 0.5, 1), 
-                         fontsize=16, frameon=False, labelcolor='white')
+                         fontsize=18, frameon=False, labelcolor='white')
                 
                 ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle
                 
@@ -1254,30 +1269,42 @@ def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kols"
                 pie_img = Image.open(buf).convert('RGBA')
                 
                 # Resize if needed
-                pie_size = (600, 600)  # Larger pie chart
+                pie_size = (650, 650)
                 pie_img = pie_img.resize(pie_size, Image.LANCZOS)
                 
-                # Paste pie chart centered
-                img.paste(pie_img, (width//2 - pie_size[0]//2, 350), pie_img)
+                # Paste pie chart on the left side
+                img.paste(pie_img, (left_section_width//2 - pie_size[0]//2, 300), pie_img)
             except Exception as e:
                 logger.error(f"Error creating pie chart: {e}")
         
-        # Draw insights with gold header
-        insights_y = 980
+        # Draw insights on the right side
+        insights_x = left_section_width + 50
+        insights_y = 300
         insights_header = "Key Insights:"
         header_width = draw.textlength(insights_header, font=subtitle_font)
         
-        # Draw a semi-transparent background for insights header
-        header_bg_rect = [(width/2 - header_width/2 - 20, insights_y - 10), 
-                         (width/2 + header_width/2 + 20, insights_y + 60)]
-        draw.rectangle(header_bg_rect, fill=(30, 30, 30, 128), outline=gold_color, width=2)
+        # Draw a glowing background for insights header
+        header_bg_rect = [(insights_x + header_width/2 - 120, insights_y - 15), 
+                         (insights_x + header_width/2 + 120, insights_y + 55)]
         
-        # Draw insights header
-        draw.text((width/2 - header_width/2, insights_y), insights_header, fill=gold_color, font=subtitle_font)
+        # Draw multiple rectangles with decreasing opacity for glow effect
+        for i in range(10, 0, -2):
+            expanded_rect = [
+                (header_bg_rect[0][0] - i, header_bg_rect[0][1] - i),
+                (header_bg_rect[1][0] + i, header_bg_rect[1][1] + i)
+            ]
+            draw.rectangle(expanded_rect, fill=None, outline=(255, 215, 0, 50), width=1)
+        
+        # Main rectangle
+        draw.rectangle(header_bg_rect, fill=(30, 30, 30, 200), outline=gold_color, width=2)
+        
+        # Draw insights header with shadow
+        draw.text((insights_x + 2, insights_y + 2), insights_header, fill=(50, 50, 50), font=subtitle_font)
+        draw.text((insights_x, insights_y), insights_header, fill=gold_color, font=subtitle_font)
         
         # Draw insights with better wrapping
         insights_start_y = insights_y + 80
-        max_width = width - 120  # Margin on both sides
+        max_width = width - insights_x - 60  # Margin on right side
         
         for i, insight in enumerate(top_insights):
             # Wrap text to fit width
@@ -1298,30 +1325,46 @@ def generate_kol_image(kol_data: Dict[str, Any], output_dir: str = "public/kols"
             if current_line:
                 lines.append(current_line)
             
-            # Draw bullet point
-            bullet_y = insights_start_y + i * (len(lines) * 45 + 20)
-            draw.text((60, bullet_y), "•", fill=gold_color, font=body_font)
+            # Draw bullet point with gold color
+            bullet_y = insights_start_y + i * (len(lines) * 50 + 30)
             
-            # Draw wrapped insight text
+            # Draw a glowing bullet point
+            for j in range(5, 0, -1):
+                draw.ellipse([(insights_x - 20 - j, bullet_y + 15 - j), 
+                             (insights_x - 20 + 10 + j, bullet_y + 15 + 10 + j)], 
+                             fill=None, outline=(255, 215, 0, 50 * j))
+            
+            draw.text((insights_x - 20, bullet_y), "•", fill=gold_color, font=body_font)
+            
+            # Draw wrapped insight text with subtle shadow for depth
             for j, line in enumerate(lines):
-                line_y = bullet_y + j * 45
-                draw.text((100, line_y), line, fill=text_color, font=body_font)
+                line_y = bullet_y + j * 50
+                # Shadow
+                draw.text((insights_x + 2, line_y + 2), line, fill=(50, 50, 50), font=body_font)
+                # Text
+                draw.text((insights_x, line_y), line, fill=text_color, font=body_font)
             
             # Add spacing between insights
-            insights_start_y += len(lines) * 45 + 20
+            insights_start_y += len(lines) * 50 + 30
         
         # Draw footer
-        footer_y = height - 100
+        footer_y = height - 80
+        
+        # Draw glowing line
+        for i in range(5, 0, -1):
+            draw.line([(40, footer_y + i), (width - 40, footer_y + i)], 
+                     fill=(255, 215, 0, 50 * i), width=1)
+        
         draw.line([(40, footer_y), (width - 40, footer_y)], fill=gold_color, width=3)
         
         # Draw date
         current_date = datetime.now().strftime("%Y-%m-%d")
-        draw.text((60, footer_y + 30), current_date, fill=secondary_text_color, font=small_font)
+        draw.text((60, footer_y + 20), current_date, fill=secondary_text_color, font=small_font)
         
         # Draw powered by text
         powered_by = "Powered by Kong.ai & $UBC • NFA"
         powered_width = draw.textlength(powered_by, font=small_font)
-        draw.text((width - powered_width - 60, footer_y + 30), powered_by, fill=secondary_text_color, font=small_font)
+        draw.text((width - powered_width - 60, footer_y + 20), powered_by, fill=secondary_text_color, font=small_font)
         
         # Save the image using the X handle if available, otherwise use the name
         if x_username:
