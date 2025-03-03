@@ -107,60 +107,56 @@ class TokenMaximizerStrategy:
             }
         ]
     
-    async def get_token_scores_from_claude(self) -> Tuple[int, int]:
-        """Get token scores from Claude API based on market data"""
+    async def get_token_score_from_claude(self, token: str) -> int:
+        """Get score for a specific token from Claude API based on market data"""
         try:
             if not self.claude_api_key:
-                self.logger.warning("No Claude API key available, using default scores")
-                return (0, 0)
+                self.logger.warning(f"No Claude API key available, using default score for {token}")
+                return 0
             
             # Get market data
             market_sentiment = await self.get_market_sentiment()
-            ubc_snapshots = await self.get_token_snapshots("UBC")
-            compute_snapshots = await self.get_token_snapshots("COMPUTE")
+            token_snapshots = await self.get_token_snapshots(token)
             
             # Prepare context for Claude
             context = {
                 "market_sentiment": market_sentiment,
-                "ubc_snapshots": ubc_snapshots,
-                "compute_snapshots": compute_snapshots,
+                "token_snapshots": token_snapshots,
                 "current_time": datetime.now(timezone.utc).isoformat()
             }
             
             # Log the context data
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            context_log_path = self.logs_dir / f"claude_context_{timestamp}.json"
+            context_log_path = self.logs_dir / f"claude_{token.lower()}_context_{timestamp}.json"
             with open(context_log_path, "w") as f:
                 json.dump(context, f, indent=2)
             
-            self.logger.info(f"Claude context data logged to {context_log_path}")
+            self.logger.info(f"Claude context data for {token} logged to {context_log_path}")
             
             # Create prompt for Claude (now much simpler)
-            prompt = """
-            Score the UBC and COMPUTE tokens relative to SOL on a scale from -10 to +10.
+            prompt = f"""
+            Score the {token} token relative to SOL on a scale from -10 to +10.
             
-            Provide your analysis and final scores in this JSON format:
+            Provide your analysis and final score in this JSON format:
             ```json
-            {
-                "ubc_score": 0,  // Integer between -10 and +10
-                "compute_score": 0,  // Integer between -10 and +10
-                "ubc_reasoning": "",
-                "compute_reasoning": ""
-            }
+            {{
+                "score": 0,  // Integer between -10 and +10
+                "reasoning": ""
+            }}
             ```
             
             Only respond with valid JSON. No other text.
             """
             
             # Log the prompt
-            prompt_log_path = self.logs_dir / f"claude_prompt_{timestamp}.txt"
+            prompt_log_path = self.logs_dir / f"claude_{token.lower()}_prompt_{timestamp}.txt"
             with open(prompt_log_path, "w") as f:
                 f.write(prompt)
             
-            self.logger.info(f"Claude prompt logged to {prompt_log_path}")
+            self.logger.info(f"Claude prompt for {token} logged to {prompt_log_path}")
             
             # Create system prompt with context data
-            system_prompt = f"""You are a professional crypto trader specializing in Solana tokens, implementing the Token Maximizer strategy. This strategy focuses on maximizing the quantity of tokens held rather than dollar value. The core principle is '1 UBC = 1 UBC' - success is measured by increasing the number of tokens owned, not their USD value. Your task is to analyze market data and provide optimal allocation scores to accumulate more tokens over time through strategic positioning. Provide your analysis in JSON format only.
+            system_prompt = f"""You are a professional crypto trader specializing in Solana tokens, implementing the Token Maximizer strategy. This strategy focuses on maximizing the quantity of tokens held rather than dollar value. The core principle is '1 {token} = 1 {token}' - success is measured by increasing the number of tokens owned, not their USD value. Your task is to analyze market data and provide optimal allocation score to accumulate more tokens over time through strategic positioning. Provide your analysis in JSON format only.
 
 # Context Data
 
@@ -169,30 +165,25 @@ Classification: {market_sentiment['classification']}
 Confidence: {market_sentiment['confidence']}
 Reasoning: {market_sentiment['reasoning']}
 
-## UBC Token Snapshots (7-day history)
+## {token} Token Snapshots (7-day history)
 ```
-{json.dumps(ubc_snapshots, indent=2)}
-```
-
-## COMPUTE Token Snapshots (7-day history)
-```
-{json.dumps(compute_snapshots, indent=2)}
+{json.dumps(token_snapshots, indent=2)}
 ```
 
 # Scoring Guidelines
 
-Score each token on a scale from -10 to +10:
-- +10: Extremely bullish on token vs SOL
-- 0: Neutral on token vs SOL
-- -10: Extremely bearish on token vs SOL
+Score {token} on a scale from -10 to +10 relative to SOL:
+- +10: Extremely bullish on {token} vs SOL
+- 0: Neutral on {token} vs SOL
+- -10: Extremely bearish on {token} vs SOL
 """
             
             # Log the system prompt
-            system_prompt_log_path = self.logs_dir / f"claude_system_prompt_{timestamp}.txt"
+            system_prompt_log_path = self.logs_dir / f"claude_{token.lower()}_system_prompt_{timestamp}.txt"
             with open(system_prompt_log_path, "w") as f:
                 f.write(system_prompt)
             
-            self.logger.info(f"Claude system prompt logged to {system_prompt_log_path}")
+            self.logger.info(f"Claude system prompt for {token} logged to {system_prompt_log_path}")
             
             # Call Claude API with context in system prompt
             response = self.claude.messages.create(
@@ -209,11 +200,11 @@ Score each token on a scale from -10 to +10:
             response_text = response.content[0].text
             
             # Log the response
-            response_log_path = self.logs_dir / f"claude_response_{timestamp}.txt"
+            response_log_path = self.logs_dir / f"claude_{token.lower()}_response_{timestamp}.txt"
             with open(response_log_path, "w") as f:
                 f.write(response_text)
             
-            self.logger.info(f"Claude response logged to {response_log_path}")
+            self.logger.info(f"Claude response for {token} logged to {response_log_path}")
             
             # Clean up response to ensure it's valid JSON
             json_str = response_text.strip()
@@ -227,14 +218,35 @@ Score each token on a scale from -10 to +10:
             # Parse JSON
             score_data = json.loads(json_str)
             
-            # Extract scores
-            ubc_score = int(score_data.get("ubc_score", 0))
-            compute_score = int(score_data.get("compute_score", 0))
+            # Extract score
+            score = int(score_data.get("score", 0))
+            reasoning = score_data.get("reasoning", "")
             
-            # Log the scores
+            # Log the score
+            self.logger.info(f"Claude score for {token}: {score}")
+            self.logger.info(f"{token} reasoning: {reasoning}")
+            
+            return score
+            
+        except Exception as e:
+            self.logger.error(f"Error getting token score for {token} from Claude: {e}")
+            return 0
+
+    async def get_token_scores_from_claude(self) -> Tuple[int, int]:
+        """Get token scores from Claude API based on market data"""
+        try:
+            if not self.claude_api_key:
+                self.logger.warning("No Claude API key available, using default scores")
+                return (0, 0)
+            
+            # Make separate calls for each token
+            self.logger.info("Getting UBC score from Claude...")
+            ubc_score = await self.get_token_score_from_claude("UBC")
+            
+            self.logger.info("Getting COMPUTE score from Claude...")
+            compute_score = await self.get_token_score_from_claude("COMPUTE")
+            
             self.logger.info(f"Claude scores - UBC: {ubc_score}, COMPUTE: {compute_score}")
-            self.logger.info(f"UBC reasoning: {score_data.get('ubc_reasoning', '')}")
-            self.logger.info(f"COMPUTE reasoning: {score_data.get('compute_reasoning', '')}")
             
             return (ubc_score, compute_score)
             
