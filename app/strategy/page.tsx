@@ -1,5 +1,4 @@
 import { StrategyThoughts } from '@/components/strategy/StrategyThoughts';
-import { StrategyDocs } from '@/components/strategy/StrategyDocs';
 import { MarketSentimentDisplay } from '@/components/strategy/MarketSentimentDisplay';
 
 export default function Strategy() {
@@ -17,11 +16,6 @@ export default function Strategy() {
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-6">KinKong's Thoughts</h2>
           <StrategyThoughts />
-        </section>
-
-        <section className="mb-8">
-          <h2 className="text-2xl font-bold mb-6">Strategy Documentation</h2>
-          <StrategyDocs />
         </section>
       </div>
     </main>
