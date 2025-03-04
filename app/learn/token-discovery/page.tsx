@@ -196,7 +196,7 @@ const TokenDiscoveryPage = () => {
                 </li>
                 <li className="flex items-start">
                   <span className="text-gold mr-2">•</span>
-                  <span>For Price Momentum: Reduce allocation for tokens up >30% in 24h</span>
+                  <span>For Price Momentum: Reduce allocation for tokens up {'>'}30% in 24h</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-gold mr-2">•</span>

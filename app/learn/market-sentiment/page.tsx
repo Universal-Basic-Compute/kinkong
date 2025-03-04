@@ -144,7 +144,7 @@ const MarketSentimentPage = () => {
             <ol className="space-y-2 text-gray-300">
               <li className="flex items-start">
                 <span className="text-green-400 mr-2">1.</span>
-                <span>>60% of AI tokens above 7-day average</span>
+                <span>{'>'}60% of AI tokens above 7-day average</span>
               </li>
               <li className="flex items-start">
                 <span className="text-green-400 mr-2">2.</span>
@@ -152,11 +152,11 @@ const MarketSentimentPage = () => {
               </li>
               <li className="flex items-start">
                 <span className="text-green-400 mr-2">3.</span>
-                <span>>60% of volume on up days</span>
+                <span>{'>'}60% of volume on up days</span>
               </li>
               <li className="flex items-start">
                 <span className="text-green-400 mr-2">4.</span>
-                <span>>60% of POSITION signals are BUY</span>
+                <span>{'>'}60% of POSITION signals are BUY</span>
               </li>
             </ol>
           </div>
@@ -190,7 +190,7 @@ const MarketSentimentPage = () => {
             <ol className="space-y-2 text-gray-300">
               <li className="flex items-start">
                 <span className="text-red-400 mr-2">1.</span>
-                <span><40% of AI tokens above 7-day average</span>
+                <span>{'<'}40% of AI tokens above 7-day average</span>
               </li>
               <li className="flex items-start">
                 <span className="text-red-400 mr-2">2.</span>
@@ -198,11 +198,11 @@ const MarketSentimentPage = () => {
               </li>
               <li className="flex items-start">
                 <span className="text-red-400 mr-2">3.</span>
-                <span>>60% of volume on down days</span>
+                <span>{'>'}60% of volume on down days</span>
               </li>
               <li className="flex items-start">
                 <span className="text-red-400 mr-2">4.</span>
-                <span><40% of POSITION signals are BUY</span>
+                <span>{'<'}40% of POSITION signals are BUY</span>
               </li>
             </ol>
           </div>
