@@ -425,19 +425,19 @@ class LPPositionManager:
             if not position_data:
                 return
                 
-            # Check if position already exists by address
+            # Check if position already exists by pool address
             existing_positions = self.positions_table.get_all(
-                formula=f"{{positionAddress}}='{position_data['positionAddress']}'"
+                formula=f"{{pool}}='{position_data['poolAddress']}'"
             )
             
             if existing_positions:
                 # Update existing position
-                self.logger.info(f"Updating existing position: {position_data['positionAddress']}")
+                self.logger.info(f"Updating existing position for pool: {position_data['poolAddress']}")
                 position_data['updatedAt'] = datetime.now(timezone.utc).isoformat()
                 self.positions_table.update(existing_positions[0]['id'], position_data)
             else:
                 # Create new position
-                self.logger.info(f"Creating new position: {position_data['positionAddress']}")
+                self.logger.info(f"Creating new position for pool: {position_data['poolAddress']}")
                 self.positions_table.insert(position_data)
                 
         except Exception as e:
