@@ -97,7 +97,7 @@ class LPPositionManager:
         try:
             # Get all active positions
             active_positions = self.positions_table.get_all(
-                formula="active=TRUE()"
+                formula="isActive=TRUE()"
             )
             
             self.logger.info(f"Found {len(active_positions)} active positions to deactivate")
@@ -106,7 +106,7 @@ class LPPositionManager:
             for position in active_positions:
                 self.positions_table.update(
                     position['id'],
-                    {'active': False, 'updatedAt': datetime.now(timezone.utc).isoformat()}
+                    {'isActive': False, 'updatedAt': datetime.now(timezone.utc).isoformat()}
                 )
                 
             self.logger.info(f"Successfully deactivated {len(active_positions)} positions")
@@ -208,7 +208,7 @@ class LPPositionManager:
                 'lowerBound': lower_bound,
                 'upperBound': upper_bound,
                 'currentPrice': current_price,
-                'active': True,
+                'isActive': True,
                 'createdAt': datetime.now(timezone.utc).isoformat(),
                 'updatedAt': datetime.now(timezone.utc).isoformat()
             }
@@ -252,7 +252,7 @@ class LPPositionManager:
                 'lowerBound': lower_bound,
                 'upperBound': upper_bound,
                 'currentPrice': current_price,
-                'active': True,
+                'isActive': True,
                 'createdAt': datetime.now(timezone.utc).isoformat(),
                 'updatedAt': datetime.now(timezone.utc).isoformat()
             }
