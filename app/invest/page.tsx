@@ -690,7 +690,7 @@ export default function Invest() {
                     </li>
                     <li className="flex items-start">
                       <span className="text-gold mr-2">•</span>
-                      <span>Profits redistributed in $UBC</span>
+                      <span>Profits redistributed in invested currency</span>
                     </li>
                     <li className="flex items-start">
                       <span className="text-gold mr-2">•</span>
