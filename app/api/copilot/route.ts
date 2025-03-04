@@ -7,7 +7,7 @@ import path from 'path';
 import { glob } from 'glob';
 
 // Helper function to find and read files
-async function getFileContents(pattern: string, maxFiles: number = 20, maxSizePerFile: number = 100000): Promise<string> {
+async function getFileContents(pattern: string, maxFiles: number = 10, maxSizePerFile: number = 50000): Promise<string> {
   try {
     // Find files matching the pattern
     const files = await glob(pattern, { nodir: true });
@@ -682,14 +682,23 @@ export async function POST(request: NextRequest) {
           case 'engine-optimization':
             // Dynamically load engine files and setup_tasks.ps1 for context
             try {
-              const engineContext = await getFileContents('engine/*.py');
-              const setupTasksContext = await getFileContents('setup_tasks.ps1');
+              // Load only the most important engine files with reduced size
+              const engineContext = await getFileContents('engine/*.py', 5, 30000); // Reduced to 5 files and 30KB max
+              
+              // Add specific important files that should always be included
+              const tradesContext = await getFileContents('engine/trades.py', 1, 30000);
+              const tokensContext = await getFileContents('engine/tokens.py', 1, 30000);
+              const signalsContext = await getFileContents('engine/signals.py', 1, 30000);
+              
+              // Skip setup_tasks.ps1 which might be large
               
               systemPrompt += `For this engine optimization submission, help the user analyze KinKong's trading engine implementation. Focus on understanding how the core algorithms work and identify potential optimizations for better performance and reliability.
 
-Here are the key engine files for context:${engineContext}
-
-Here is the task scheduling configuration:${setupTasksContext}`;
+Here are the key engine files for context:
+${tradesContext}
+${tokensContext}
+${signalsContext}
+${engineContext}`;
             } catch (err) {
               console.log(`Error loading engine files: ${err}`);
               systemPrompt += `For this engine optimization submission, help the user analyze KinKong's trading engine implementation. Focus on understanding how the core algorithms work and identify potential optimizations for better performance and reliability.`;
@@ -702,14 +711,14 @@ Here is the task scheduling configuration:${setupTasksContext}`;
               // Fetch token snapshots for discovery (similar to token-discovery mission)
               const tokenDiscoveryData = await getTokenSnapshotsForDiscovery();
               
-              // Only include active tokens
+              // Only include active tokens - limit to top 5 instead of 10
               const activeTokensContext = tokenDiscoveryData && tokenDiscoveryData.activeTokens 
                 ? `Active Tokens (${tokenDiscoveryData.activeTokens.length}):
 ${tokenDiscoveryData.activeTokens
   .sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0))
-  .slice(0, 10)
+  .slice(0, 5) // Reduced from 10 to 5
   .map((token, index) => 
-    `${index + 1}. ${token.token} (${token.name || 'Unknown'}): $${parseFloat(token.price || 0).toFixed(6)}, Market Cap: $${formatNumber(token.marketCap)}, Volume 24h: $${formatNumber(token.volume24h)}, Liquidity: $${formatNumber(token.liquidity)}`
+    `${index + 1}. ${token.token} (${token.name || 'Unknown'}): $${parseFloat(token.price || 0).toFixed(6)}, Market Cap: $${formatNumber(token.marketCap)}, Volume 24h: $${formatNumber(token.volume24h)}`
   ).join('\n')}`
                 : 'No active tokens data available';
               
@@ -727,7 +736,8 @@ ${activeTokensContext}`;
           case 'socials-optimization':
             // Dynamically load socials files for context
             try {
-              const socialsContext = await getFileContents('socials/**/*.py');
+              // Limit file count and size
+              const socialsContext = await getFileContents('socials/**/*.py', 5, 30000);
               
               systemPrompt += `For this socials optimization submission, help the user review KinKong's social media integration and sentiment analysis. Focus on optimizing how we gather, process, and act on social signals to improve trading decisions.
 
@@ -741,7 +751,8 @@ Here are the key socials-related files for context:${socialsContext}`;
           case 'whales-optimization':
             // Dynamically load whales files for context
             try {
-              const whalesContext = await getFileContents('engine/whales/**/*.py');
+              // Limit file count and size
+              const whalesContext = await getFileContents('engine/whales/**/*.py', 5, 30000);
               
               systemPrompt += `For this whales optimization submission, help the user optimize KinKong's whale tracking and analysis capabilities. Focus on better identifying and following smart money movements to improve our strategy.
 
@@ -843,7 +854,7 @@ Use this token data to help the user discover promising tokens, analyze market t
     }
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // Increase to 60 seconds
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // Reduce timeout to 30 seconds
 
     try {
       // Prepare messages array with conversation history
