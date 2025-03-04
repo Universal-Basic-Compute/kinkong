@@ -421,7 +421,9 @@ class TokenMaximizerStrategy:
             self.logger.info(f"Claude prompt for {token} logged to {prompt_log_path}")
             
             # Create system prompt with context data
-            system_prompt = f"""You are a professional crypto trader specializing in Solana tokens, implementing the Token Maximizer strategy. This strategy focuses on maximizing the quantity of tokens held rather than dollar value. The core principle is '1 {token} = 1 {token}' - success is measured by increasing the number of tokens owned, not their USD value. Your task is to analyze market data and provide optimal allocation score to accumulate more tokens over time through strategic positioning. Provide your analysis in JSON format only.
+            system_prompt = f"""You are a professional crypto trader specializing in Solana tokens, implementing the Token Maximizer strategy. This strategy focuses on maximizing the quantity of tokens held rather than dollar value. The core principle is '1 {token} = 1 {token}' - success is measured by increasing the number of tokens owned, not their USD value. 
+
+Your task is to analyze market data and predict the likely price evolution of {token} relative to SOL over the next 24 hours. Based on this prediction, provide an optimal allocation score to accumulate more tokens over time through strategic positioning. Provide your analysis in JSON format only.
 
 # Context Data
 
@@ -437,10 +439,10 @@ Indicators: {market_sentiment['indicators']}
 
 # Scoring Guidelines
 
-Score {token} on a scale from -10 to +10 relative to SOL:
-- +10: Extremely bullish on {token} vs SOL
-- 0: Neutral on {token} vs SOL
-- -10: Extremely bearish on {token} vs SOL
+Score {token} on a scale from -10 to +10 relative to SOL for the next 24 hours:
+- +10: Extremely bullish on {token} vs SOL (expect {token} to significantly outperform SOL in next 24h)
+- 0: Neutral on {token} vs SOL (expect similar performance to SOL in next 24h)
+- -10: Extremely bearish on {token} vs SOL (expect {token} to significantly underperform SOL in next 24h)
 """
             
             # Log the system prompt directly in the logs instead of writing to a file
