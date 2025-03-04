@@ -83,14 +83,85 @@ class TokenMaximizerStrategy:
         self.logger.info(f"Token scores set - UBC: {self.ubc_score}, COMPUTE: {self.compute_score}")
     
     async def get_market_sentiment(self) -> Dict:
-        """Get current market sentiment data"""
-        # This would normally fetch from an API or database
-        # For now, return a placeholder
-        return {
-            "classification": "NEUTRAL",
-            "confidence": 0.5,
-            "indicators": "Market showing mixed signals with balanced buying and selling pressure."
-        }
+        """Get the latest market sentiment data from Airtable"""
+        try:
+            # Initialize Airtable credentials if not already done
+            if not hasattr(self, 'airtable_base_id') or not hasattr(self, 'airtable_api_key'):
+                self.airtable_base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
+                self.airtable_api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
+                
+                if not self.airtable_base_id or not self.airtable_api_key:
+                    self.logger.warning("Missing Airtable credentials, using default market sentiment")
+                    return {
+                        "classification": "NEUTRAL",
+                        "confidence": 0.5,
+                        "indicators": "Market showing mixed signals with balanced buying and selling pressure."
+                    }
+            
+            # Use aiohttp to make a request to Airtable API
+            url = f"https://api.airtable.com/v0/{self.airtable_base_id}/MARKET_SENTIMENT"
+            headers = {
+                "Authorization": f"Bearer {self.airtable_api_key}",
+                "Content-Type": "application/json"
+            }
+            
+            # Add parameters to sort by createdAt in descending order and limit to 1 record
+            params = {
+                "sort[0][field]": "createdAt",
+                "sort[0][direction]": "desc",
+                "maxRecords": 1
+            }
+            
+            self.logger.info("Fetching latest market sentiment from Airtable...")
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers=headers, params=params) as response:
+                    if response.status != 200:
+                        self.logger.error(f"Airtable API error: {response.status}")
+                        # Fall back to default sentiment
+                        return {
+                            "classification": "NEUTRAL",
+                            "confidence": 0.5,
+                            "indicators": "Market showing mixed signals with balanced buying and selling pressure."
+                        }
+                    
+                    data = await response.json()
+                    records = data.get('records', [])
+                    
+                    if not records:
+                        self.logger.warning("No market sentiment records found in Airtable")
+                        # Fall back to default sentiment
+                        return {
+                            "classification": "NEUTRAL",
+                            "confidence": 0.5,
+                            "indicators": "Market showing mixed signals with balanced buying and selling pressure."
+                        }
+                    
+                    # Get the latest record
+                    latest_record = records[0]
+                    fields = latest_record.get('fields', {})
+                    
+                    # Extract sentiment data
+                    classification = fields.get('classification', 'NEUTRAL')
+                    confidence = float(fields.get('confidence', 0.5))
+                    indicators = fields.get('indicators', 'Market showing mixed signals with balanced buying and selling pressure.')
+                    
+                    self.logger.info(f"Latest market sentiment: {classification} (confidence: {confidence})")
+                    
+                    return {
+                        "classification": classification,
+                        "confidence": confidence,
+                        "indicators": indicators
+                    }
+        
+        except Exception as e:
+            self.logger.error(f"Error fetching market sentiment: {e}")
+            # Fall back to default sentiment
+            return {
+                "classification": "NEUTRAL",
+                "confidence": 0.5,
+                "indicators": "Market showing mixed signals with balanced buying and selling pressure."
+            }
     
     async def get_token_dexscreener_data(self, token: str) -> Dict:
         """Get token data directly from DexScreener API"""
