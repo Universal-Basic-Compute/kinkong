@@ -38,6 +38,14 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems: NavItem[] = [
+    {
+      label: 'Get Started',
+      isGroup: false,
+      href: '/copilot/start',
+      subItems: [],
+      isGlowing: true,
+      customClass: 'text-gold animate-pulse'
+    },
     { 
       label: 'Learn',
       isGroup: true,
@@ -161,14 +169,6 @@ const Header = () => {
       isGlowing: false,
       customClass: ''
     },
-    {
-      label: 'Get Started',
-      isGroup: false,
-      href: '/copilot/start',
-      subItems: [],
-      isGlowing: true,
-      customClass: 'text-gold animate-pulse'
-    }
   ];
 
   return (
