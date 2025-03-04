@@ -118,8 +118,10 @@ class LPPositionManager:
     async def fetch_dlmm_positions(self, pool_address: str) -> List[Dict]:
         """Fetch DLMM positions for a specific pool"""
         try:
-            # Use Kamino API to fetch DLMM positions
-            url = f"https://api.kamino.finance/v2/dlmm/positions?address={pool_address}&owner={self.wallet_address}"
+            # Use updated Kamino API endpoint for DLMM positions
+            url = f"https://api.kamino.finance/v1/dlmm/positions?address={pool_address}&owner={self.wallet_address}"
+            
+            self.logger.info(f"Fetching DLMM positions from: {url}")
             
             async with aiohttp.ClientSession() as session:
                 async with session.get(url) as response:
@@ -140,14 +142,30 @@ class LPPositionManager:
     async def fetch_dyn_positions(self, pool_address: str) -> List[Dict]:
         """Fetch DYN positions for a specific pool"""
         try:
-            # Use Meteora API to fetch DYN positions
-            url = f"https://api.meteora.ag/v1/pools/{pool_address}/positions?owner={self.wallet_address}"
+            # Try alternative Meteora API endpoint
+            url = f"https://api.meteora.ag/v2/pools/{pool_address}/positions?owner={self.wallet_address}"
+            
+            self.logger.info(f"Fetching DYN positions from: {url}")
             
             async with aiohttp.ClientSession() as session:
-                async with session.get(url) as response:
+                async with session.get(url, timeout=30) as response:
                     if response.status != 200:
                         self.logger.error(f"Failed to fetch DYN positions: {await response.text()}")
-                        return []
+                        
+                        # Try fallback endpoint
+                        fallback_url = f"https://api.meteora.ag/v1/pools/{pool_address}/positions?owner={self.wallet_address}"
+                        self.logger.info(f"Trying fallback URL: {fallback_url}")
+                        
+                        async with session.get(fallback_url, timeout=30) as fallback_response:
+                            if fallback_response.status != 200:
+                                self.logger.error(f"Fallback also failed: {await fallback_response.text()}")
+                                return []
+                            
+                            data = await fallback_response.json()
+                            positions = data.get('positions', [])
+                            
+                            self.logger.info(f"Found {len(positions)} DYN positions from fallback for pool {pool_address}")
+                            return positions
                     
                     data = await response.json()
                     positions = data.get('positions', [])
@@ -159,18 +177,61 @@ class LPPositionManager:
             self.logger.error(f"Error fetching DYN positions: {e}")
             return []
 
+    async def fetch_positions_from_jupiter(self, pool_address: str) -> List[Dict]:
+        """Fetch positions using Jupiter API as a fallback"""
+        try:
+            # Use Jupiter API to get position information
+            url = f"https://quote-api.jup.ag/v6/positions?owner={self.wallet_address}"
+            
+            self.logger.info(f"Fetching positions from Jupiter API: {url}")
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as response:
+                    if response.status != 200:
+                        self.logger.error(f"Failed to fetch positions from Jupiter: {await response.text()}")
+                        return []
+                    
+                    data = await response.json()
+                    all_positions = data.get('data', [])
+                    
+                    # Filter positions for the specific pool
+                    pool_positions = [
+                        pos for pos in all_positions 
+                        if pos.get('poolAddress') == pool_address
+                    ]
+                    
+                    self.logger.info(f"Found {len(pool_positions)} positions from Jupiter for pool {pool_address}")
+                    return pool_positions
+                    
+        except Exception as e:
+            self.logger.error(f"Error fetching positions from Jupiter: {e}")
+            return []
+
     async def fetch_positions_for_pool(self, pool: Dict) -> List[Dict]:
         """Fetch positions for a specific pool based on its type"""
         pool_address = pool['address']
         pool_type = pool['type']
         
+        positions = []
+        
+        # Try primary method based on pool type
         if pool_type == "DLMM":
-            return await self.fetch_dlmm_positions(pool_address)
+            positions = await self.fetch_dlmm_positions(pool_address)
         elif pool_type == "DYN":
-            return await self.fetch_dyn_positions(pool_address)
+            positions = await self.fetch_dyn_positions(pool_address)
         else:
             self.logger.error(f"Unknown pool type: {pool_type}")
-            return []
+        
+        # If primary method failed, try Jupiter fallback
+        if not positions:
+            self.logger.info(f"Primary method failed, trying Jupiter fallback for {pool_address}")
+            positions = await self.fetch_positions_from_jupiter(pool_address)
+        
+        # If still no positions, log error
+        if not positions:
+            self.logger.error(f"Could not fetch positions for pool {pool_address} using any method")
+        
+        return positions
 
     def normalize_dlmm_position(self, position: Dict, pool: Dict) -> Dict:
         """Normalize DLMM position data"""
