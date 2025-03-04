@@ -90,8 +90,8 @@ class LPPositionManager:
         # Token mint addresses for reference
         self.token_mints = {
             "SOL": "So11111111111111111111111111111111111111112",
-            "UBC": "UBCgZu1mAkwBqHKzR5vUjNFPMxYFy3mEAQmXQZxDqQV",
-            "COMPUTE": "COMPkZjd5pJECCJXkX8c6NykNDccpVpPmkb7CEW5ekKQ"
+            "UBC": "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump",
+            "COMPUTE": "B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo"
         }
         
         # Initialize token prices dictionary
