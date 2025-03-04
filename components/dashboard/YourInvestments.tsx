@@ -184,8 +184,12 @@ export const YourInvestments: React.FC<YourInvestmentsProps> = ({ className }) =
         <h2 className="text-xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-gold via-amber-300 to-gold">
           Your Investments
         </h2>
-        <div className="text-center py-8 text-gray-400">
-          You don't have any active investments
+        <div className="text-center py-6 px-4">
+          <p className="text-gray-300 mb-2">How KinKong Investments Work:</p>
+          <p className="text-gray-400 text-sm mb-1">You invest in $UBC, $COMPUTE, or $USDC.</p>
+          <p className="text-gray-400 text-sm mb-1">You get returns in the currency you invested in, claimable weekly.</p>
+          <p className="text-gray-400 text-sm mb-1">You can track KinKong's performance on the site.</p>
+          <p className="text-gray-400 text-sm">When withdrawing, you receive your principal in the same currency.</p>
         </div>
       </div>
     );
