@@ -7,6 +7,8 @@ import logging
 from typing import List, Dict, Optional
 from datetime import datetime, timezone
 import aiohttp
+import random
+import time
 from dotenv import load_dotenv
 from airtable import Airtable
 
@@ -116,7 +118,7 @@ class LPPositionManager:
             raise
 
     async def fetch_dlmm_positions(self, pool_address: str) -> List[Dict]:
-        """Fetch DLMM positions for a specific pool using Shyft API"""
+        """Fetch DLMM positions for a specific pool using Shyft API with rate limit handling"""
         try:
             # Get Shyft API key from environment variables
             shyft_api_key = os.getenv('SHYFT_API_KEY')
@@ -155,135 +157,218 @@ class LPPositionManager:
             """
             
             # Make the API request to get positions
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
-                    f"https://programs.shyft.to/v0/graphql/accounts?api_key={shyft_api_key}&network=mainnet-beta",
-                    json={
-                        "query": operations_doc,
-                        "variables": {},
-                        "operationName": "MyQuery"
-                    },
-                    headers={"Content-Type": "application/json"}
-                ) as response:
-                    if response.status != 200:
-                        self.logger.error(f"Failed to fetch positions from Shyft: {await response.text()}")
+            max_retries = 3
+            base_delay = 2
+            
+            for retry in range(max_retries):
+                try:
+                    # Add delay before retry
+                    if retry > 0:
+                        delay = base_delay * (2 ** retry) + random.uniform(0, 1)
+                        self.logger.info(f"Retry {retry+1}/{max_retries} after {delay:.2f}s delay")
+                        await asyncio.sleep(delay)
+                    
+                    async with aiohttp.ClientSession() as session:
+                        async with session.post(
+                            f"https://programs.shyft.to/v0/graphql/accounts?api_key={shyft_api_key}&network=mainnet-beta",
+                            json={
+                                "query": operations_doc,
+                                "variables": {},
+                                "operationName": "MyQuery"
+                            },
+                            headers={"Content-Type": "application/json"}
+                        ) as response:
+                            response_text = await response.text()
+                            
+                            # Check for rate limit errors
+                            if "RateLimitExceeded" in response_text:
+                                if retry < max_retries - 1:
+                                    self.logger.warning(f"Rate limit exceeded, retrying in {base_delay * (2 ** (retry+1))}s...")
+                                    continue
+                                else:
+                                    self.logger.error(f"Rate limit exceeded after {max_retries} retries")
+                                    return []
+                            
+                            if response.status != 200:
+                                self.logger.error(f"Failed to fetch positions from Shyft: {response_text}")
+                                if retry < max_retries - 1:
+                                    continue
+                                return []
+                            
+                            result = await response.json()
+                            
+                            if "errors" in result:
+                                error_msg = str(result['errors'])
+                                self.logger.error(f"GraphQL errors: {error_msg}")
+                                
+                                # Check for rate limit errors in the error message
+                                if "rate limit" in error_msg.lower() or "quota" in error_msg.lower():
+                                    if retry < max_retries - 1:
+                                        self.logger.warning(f"Rate limit error, retrying in {base_delay * (2 ** (retry+1))}s...")
+                                        continue
+                                
+                                return []
+                            
+                            positions = []
+                            
+                            # Process Position data
+                            if "data" in result and "meteora_dlmm_Position" in result["data"]:
+                                for position in result["data"]["meteora_dlmm_Position"]:
+                                    # Only include positions for the specific pool we're looking for
+                                    if position["lbPair"] == pool_address:
+                                        # Add a delay before fetching LB pair details to avoid rate limits
+                                        await asyncio.sleep(1)
+                                        
+                                        # Get LB pair details
+                                        lb_pair_details = await self.fetch_lb_pair_details(position["lbPair"], shyft_api_key)
+                                        
+                                        # Create position object with LB pair details
+                                        position_data = {
+                                            "address": position["lbPair"],
+                                            "poolAddress": position["lbPair"],
+                                            "owner": position["owner"],
+                                            "lowerBinId": position["lowerBinId"],
+                                            "upperBinId": position["upperBinId"],
+                                            "totalClaimedFeeXAmount": position["totalClaimedFeeXAmount"],
+                                            "totalClaimedFeeYAmount": position["totalClaimedFeeYAmount"],
+                                            "lastUpdatedAt": position["lastUpdatedAt"],
+                                            "lbPairDetails": lb_pair_details
+                                        }
+                                        
+                                        positions.append(position_data)
+                            
+                            # Process PositionV2 data
+                            if "data" in result and "meteora_dlmm_PositionV2" in result["data"]:
+                                for position in result["data"]["meteora_dlmm_PositionV2"]:
+                                    # Only include positions for the specific pool we're looking for
+                                    if position["lbPair"] == pool_address:
+                                        # Add a delay before fetching LB pair details to avoid rate limits
+                                        await asyncio.sleep(1)
+                                        
+                                        # Get LB pair details
+                                        lb_pair_details = await self.fetch_lb_pair_details(position["lbPair"], shyft_api_key)
+                                        
+                                        # Create position object with LB pair details
+                                        position_data = {
+                                            "address": position["lbPair"],
+                                            "poolAddress": position["lbPair"],
+                                            "owner": position["owner"],
+                                            "lowerBinId": position["lowerBinId"],
+                                            "upperBinId": position["upperBinId"],
+                                            "totalClaimedFeeXAmount": position["totalClaimedFeeXAmount"],
+                                            "totalClaimedFeeYAmount": position["totalClaimedFeeYAmount"],
+                                            "lastUpdatedAt": position["lastUpdatedAt"],
+                                            "lbPairDetails": lb_pair_details,
+                                            "version": "V2"
+                                        }
+                                        
+                                        positions.append(position_data)
+                            
+                            self.logger.info(f"Found {len(positions)} positions for pool {pool_address}")
+                            return positions
+                
+                except Exception as e:
+                    self.logger.error(f"Error in fetch attempt {retry+1}: {e}")
+                    if retry < max_retries - 1:
+                        continue
+                    else:
+                        self.logger.error(f"All retries failed")
                         return []
-                    
-                    result = await response.json()
-                    
-                    if "errors" in result:
-                        self.logger.error(f"GraphQL errors: {result['errors']}")
-                        return []
-                    
-                    positions = []
-                    
-                    # Process Position data
-                    if "data" in result and "meteora_dlmm_Position" in result["data"]:
-                        for position in result["data"]["meteora_dlmm_Position"]:
-                            # Only include positions for the specific pool we're looking for
-                            if position["lbPair"] == pool_address:
-                                # Get LB pair details
-                                lb_pair_details = await self.fetch_lb_pair_details(position["lbPair"], shyft_api_key)
-                                
-                                # Create position object with LB pair details
-                                position_data = {
-                                    "address": position["lbPair"],
-                                    "poolAddress": position["lbPair"],
-                                    "owner": position["owner"],
-                                    "lowerBinId": position["lowerBinId"],
-                                    "upperBinId": position["upperBinId"],
-                                    "totalClaimedFeeXAmount": position["totalClaimedFeeXAmount"],
-                                    "totalClaimedFeeYAmount": position["totalClaimedFeeYAmount"],
-                                    "lastUpdatedAt": position["lastUpdatedAt"],
-                                    "lbPairDetails": lb_pair_details
-                                }
-                                
-                                positions.append(position_data)
-                    
-                    # Process PositionV2 data
-                    if "data" in result and "meteora_dlmm_PositionV2" in result["data"]:
-                        for position in result["data"]["meteora_dlmm_PositionV2"]:
-                            # Only include positions for the specific pool we're looking for
-                            if position["lbPair"] == pool_address:
-                                # Get LB pair details
-                                lb_pair_details = await self.fetch_lb_pair_details(position["lbPair"], shyft_api_key)
-                                
-                                # Create position object with LB pair details
-                                position_data = {
-                                    "address": position["lbPair"],
-                                    "poolAddress": position["lbPair"],
-                                    "owner": position["owner"],
-                                    "lowerBinId": position["lowerBinId"],
-                                    "upperBinId": position["upperBinId"],
-                                    "totalClaimedFeeXAmount": position["totalClaimedFeeXAmount"],
-                                    "totalClaimedFeeYAmount": position["totalClaimedFeeYAmount"],
-                                    "lastUpdatedAt": position["lastUpdatedAt"],
-                                    "lbPairDetails": lb_pair_details,
-                                    "version": "V2"
-                                }
-                                
-                                positions.append(position_data)
-                    
-                    self.logger.info(f"Found {len(positions)} positions for pool {pool_address}")
-                    return positions
-                    
+                        
         except Exception as e:
             self.logger.error(f"Error fetching DLMM positions: {e}")
             return []
 
     async def fetch_lb_pair_details(self, lb_pair_address: str, shyft_api_key: str) -> Dict:
-        """Fetch LB pair details for a specific pair address"""
-        try:
-            # GraphQL query to get LB pair details
-            query = f"""
-                query MyQuery {{
-                    meteora_dlmm_LbPair(
-                        where: {{pubkey: {{_eq: "{lb_pair_address}"}}}}
-                    ) {{
-                        pubkey
-                        oracle
-                        pairType
-                        reserveX
-                        reserveY
-                        status
-                        tokenXMint
-                        tokenYMint
+        """Fetch LB pair details for a specific pair address with rate limit handling"""
+        max_retries = 3
+        base_delay = 2  # Base delay in seconds
+        
+        for retry in range(max_retries):
+            try:
+                # GraphQL query to get LB pair details
+                query = f"""
+                    query MyQuery {{
+                        meteora_dlmm_LbPair(
+                            where: {{pubkey: {{_eq: "{lb_pair_address}"}}}}
+                        ) {{
+                            pubkey
+                            oracle
+                            pairType
+                            reserveX
+                            reserveY
+                            status
+                            tokenXMint
+                            tokenYMint
+                        }}
                     }}
-                }}
-            """
-            
-            # Make the API request to get LB pair details
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
-                    f"https://programs.shyft.to/v0/graphql/accounts?api_key={shyft_api_key}&network=mainnet-beta",
-                    json={
-                        "query": query,
-                        "variables": {},
-                        "operationName": "MyQuery"
-                    },
-                    headers={"Content-Type": "application/json"}
-                ) as response:
-                    if response.status != 200:
-                        self.logger.error(f"Failed to fetch LB pair details: {await response.text()}")
+                """
+                
+                # Add delay before request to avoid rate limits
+                if retry > 0:
+                    # Exponential backoff with jitter
+                    delay = base_delay * (2 ** retry) + random.uniform(0, 1)
+                    self.logger.info(f"Retry {retry+1}/{max_retries} after {delay:.2f}s delay")
+                    await asyncio.sleep(delay)
+                
+                # Make the API request to get LB pair details
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(
+                        f"https://programs.shyft.to/v0/graphql/accounts?api_key={shyft_api_key}&network=mainnet-beta",
+                        json={
+                            "query": query,
+                            "variables": {},
+                            "operationName": "MyQuery"
+                        },
+                        headers={"Content-Type": "application/json"}
+                    ) as response:
+                        response_text = await response.text()
+                        
+                        # Check for rate limit errors
+                        if "RateLimitExceeded" in response_text:
+                            if retry < max_retries - 1:
+                                self.logger.warning(f"Rate limit exceeded, retrying in {base_delay * (2 ** (retry+1))}s...")
+                                continue
+                            else:
+                                self.logger.error(f"Rate limit exceeded after {max_retries} retries")
+                                # Return empty dict but don't fail completely
+                                return {}
+                        
+                        if response.status != 200:
+                            self.logger.error(f"Failed to fetch LB pair details: {response_text}")
+                            if retry < max_retries - 1:
+                                continue
+                            return {}
+                        
+                        result = await response.json()
+                        
+                        if "errors" in result:
+                            error_msg = str(result['errors'])
+                            self.logger.error(f"GraphQL errors: {error_msg}")
+                            
+                            # Check for rate limit errors in the error message
+                            if "rate limit" in error_msg.lower() or "quota" in error_msg.lower():
+                                if retry < max_retries - 1:
+                                    self.logger.warning(f"Rate limit error, retrying in {base_delay * (2 ** (retry+1))}s...")
+                                    continue
+                            
+                            return {}
+                        
+                        if "data" in result and "meteora_dlmm_LbPair" in result["data"] and len(result["data"]["meteora_dlmm_LbPair"]) > 0:
+                            return result["data"]["meteora_dlmm_LbPair"][0]
+                        
                         return {}
-                    
-                    result = await response.json()
-                    
-                    if "errors" in result:
-                        self.logger.error(f"GraphQL errors: {result['errors']}")
-                        return {}
-                    
-                    if "data" in result and "meteora_dlmm_LbPair" in result["data"] and len(result["data"]["meteora_dlmm_LbPair"]) > 0:
-                        return result["data"]["meteora_dlmm_LbPair"][0]
-                    
-                    return {}
-                    
-        except Exception as e:
-            self.logger.error(f"Error fetching LB pair details: {e}")
-            return {}
+                        
+            except Exception as e:
+                self.logger.error(f"Error fetching LB pair details: {e}")
+                if retry < max_retries - 1:
+                    continue
+                return {}
+        
+        return {}  # Return empty dict if all retries failed
 
     async def fetch_dyn_positions(self, pool_address: str) -> List[Dict]:
-        """Fetch DYN positions for a specific pool using Shyft API"""
+        """Fetch DYN positions for a specific pool using Shyft API with rate limit handling"""
         try:
             # Get Shyft API key from environment variables
             shyft_api_key = os.getenv('SHYFT_API_KEY')
@@ -312,108 +397,188 @@ class LPPositionManager:
             """
             
             # Make the API request to get positions
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
-                    f"https://programs.shyft.to/v0/graphql/accounts?api_key={shyft_api_key}&network=mainnet-beta",
-                    json={
-                        "query": operations_doc,
-                        "variables": {},
-                        "operationName": "MyQuery"
-                    },
-                    headers={"Content-Type": "application/json"}
-                ) as response:
-                    if response.status != 200:
-                        self.logger.error(f"Failed to fetch DYN positions from Shyft: {await response.text()}")
-                        return []
+            max_retries = 3
+            base_delay = 2
+            
+            for retry in range(max_retries):
+                try:
+                    # Add delay before retry
+                    if retry > 0:
+                        delay = base_delay * (2 ** retry) + random.uniform(0, 1)
+                        self.logger.info(f"Retry {retry+1}/{max_retries} after {delay:.2f}s delay")
+                        await asyncio.sleep(delay)
                     
-                    result = await response.json()
-                    
-                    if "errors" in result:
-                        self.logger.error(f"GraphQL errors: {result['errors']}")
-                        return []
-                    
-                    positions = []
-                    
-                    # Process Position data
-                    if "data" in result and "meteora_dyn_Position" in result["data"]:
-                        for position in result["data"]["meteora_dyn_Position"]:
-                            # Only include positions for the specific pool we're looking for
-                            if position["pool"] == pool_address:
-                                # Get pool details
-                                pool_details = await self.fetch_dyn_pool_details(position["pool"], shyft_api_key)
+                    async with aiohttp.ClientSession() as session:
+                        async with session.post(
+                            f"https://programs.shyft.to/v0/graphql/accounts?api_key={shyft_api_key}&network=mainnet-beta",
+                            json={
+                                "query": operations_doc,
+                                "variables": {},
+                                "operationName": "MyQuery"
+                            },
+                            headers={"Content-Type": "application/json"}
+                        ) as response:
+                            response_text = await response.text()
+                            
+                            # Check for rate limit errors
+                            if "RateLimitExceeded" in response_text:
+                                if retry < max_retries - 1:
+                                    self.logger.warning(f"Rate limit exceeded, retrying in {base_delay * (2 ** (retry+1))}s...")
+                                    continue
+                                else:
+                                    self.logger.error(f"Rate limit exceeded after {max_retries} retries")
+                                    return []
+                            
+                            if response.status != 200:
+                                self.logger.error(f"Failed to fetch DYN positions from Shyft: {response_text}")
+                                if retry < max_retries - 1:
+                                    continue
+                                return []
+                            
+                            result = await response.json()
+                            
+                            if "errors" in result:
+                                error_msg = str(result['errors'])
+                                self.logger.error(f"GraphQL errors: {error_msg}")
                                 
-                                # Create position object with pool details
-                                position_data = {
-                                    "address": position["pool"],
-                                    "poolAddress": position["pool"],
-                                    "owner": position["owner"],
-                                    "liquidity": position["liquidity"],
-                                    "lowerTick": position["lowerTick"],
-                                    "upperTick": position["upperTick"],
-                                    "tokenFeesOwedX": position["tokenFeesOwedX"],
-                                    "tokenFeesOwedY": position["tokenFeesOwedY"],
-                                    "lastUpdatedAt": position["lastUpdatedAt"],
-                                    "poolDetails": pool_details
-                                }
+                                # Check for rate limit errors in the error message
+                                if "rate limit" in error_msg.lower() or "quota" in error_msg.lower():
+                                    if retry < max_retries - 1:
+                                        self.logger.warning(f"Rate limit error, retrying in {base_delay * (2 ** (retry+1))}s...")
+                                        continue
                                 
-                                positions.append(position_data)
-                    
-                    self.logger.info(f"Found {len(positions)} DYN positions for pool {pool_address}")
-                    return positions
-                    
+                                return []
+                            
+                            positions = []
+                            
+                            # Process Position data
+                            if "data" in result and "meteora_dyn_Position" in result["data"]:
+                                for position in result["data"]["meteora_dyn_Position"]:
+                                    # Only include positions for the specific pool we're looking for
+                                    if position["pool"] == pool_address:
+                                        # Add a delay before fetching pool details to avoid rate limits
+                                        await asyncio.sleep(1)
+                                        
+                                        # Get pool details
+                                        pool_details = await self.fetch_dyn_pool_details(position["pool"], shyft_api_key)
+                                        
+                                        # Create position object with pool details
+                                        position_data = {
+                                            "address": position["pool"],
+                                            "poolAddress": position["pool"],
+                                            "owner": position["owner"],
+                                            "liquidity": position["liquidity"],
+                                            "lowerTick": position["lowerTick"],
+                                            "upperTick": position["upperTick"],
+                                            "tokenFeesOwedX": position["tokenFeesOwedX"],
+                                            "tokenFeesOwedY": position["tokenFeesOwedY"],
+                                            "lastUpdatedAt": position["lastUpdatedAt"],
+                                            "poolDetails": pool_details
+                                        }
+                                        
+                                        positions.append(position_data)
+                            
+                            self.logger.info(f"Found {len(positions)} DYN positions for pool {pool_address}")
+                            return positions
+                
+                except Exception as e:
+                    self.logger.error(f"Error in fetch attempt {retry+1}: {e}")
+                    if retry < max_retries - 1:
+                        continue
+                    else:
+                        self.logger.error(f"All retries failed")
+                        return []
+                        
         except Exception as e:
             self.logger.error(f"Error fetching DYN positions: {e}")
             return []
 
     async def fetch_dyn_pool_details(self, pool_address: str, shyft_api_key: str) -> Dict:
-        """Fetch DYN pool details for a specific pool address"""
-        try:
-            # GraphQL query to get pool details
-            query = f"""
-                query MyQuery {{
-                    meteora_dyn_Pool(
-                        where: {{pubkey: {{_eq: "{pool_address}"}}}}
-                    ) {{
-                        pubkey
-                        tokenX
-                        tokenY
-                        fee
-                        liquidity
-                        sqrtPriceX64
-                        tick
+        """Fetch DYN pool details for a specific pool address with rate limit handling"""
+        max_retries = 3
+        base_delay = 2  # Base delay in seconds
+        
+        for retry in range(max_retries):
+            try:
+                # GraphQL query to get pool details
+                query = f"""
+                    query MyQuery {{
+                        meteora_dyn_Pool(
+                            where: {{pubkey: {{_eq: "{pool_address}"}}}}
+                        ) {{
+                            pubkey
+                            tokenX
+                            tokenY
+                            fee
+                            liquidity
+                            sqrtPriceX64
+                            tick
+                        }}
                     }}
-                }}
-            """
-            
-            # Make the API request to get pool details
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
-                    f"https://programs.shyft.to/v0/graphql/accounts?api_key={shyft_api_key}&network=mainnet-beta",
-                    json={
-                        "query": query,
-                        "variables": {},
-                        "operationName": "MyQuery"
-                    },
-                    headers={"Content-Type": "application/json"}
-                ) as response:
-                    if response.status != 200:
-                        self.logger.error(f"Failed to fetch DYN pool details: {await response.text()}")
+                """
+                
+                # Add delay before request to avoid rate limits
+                if retry > 0:
+                    # Exponential backoff with jitter
+                    delay = base_delay * (2 ** retry) + random.uniform(0, 1)
+                    self.logger.info(f"Retry {retry+1}/{max_retries} after {delay:.2f}s delay")
+                    await asyncio.sleep(delay)
+                
+                # Make the API request to get pool details
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(
+                        f"https://programs.shyft.to/v0/graphql/accounts?api_key={shyft_api_key}&network=mainnet-beta",
+                        json={
+                            "query": query,
+                            "variables": {},
+                            "operationName": "MyQuery"
+                        },
+                        headers={"Content-Type": "application/json"}
+                    ) as response:
+                        response_text = await response.text()
+                        
+                        # Check for rate limit errors
+                        if "RateLimitExceeded" in response_text:
+                            if retry < max_retries - 1:
+                                self.logger.warning(f"Rate limit exceeded, retrying in {base_delay * (2 ** (retry+1))}s...")
+                                continue
+                            else:
+                                self.logger.error(f"Rate limit exceeded after {max_retries} retries")
+                                # Return empty dict but don't fail completely
+                                return {}
+                        
+                        if response.status != 200:
+                            self.logger.error(f"Failed to fetch DYN pool details: {response_text}")
+                            if retry < max_retries - 1:
+                                continue
+                            return {}
+                        
+                        result = await response.json()
+                        
+                        if "errors" in result:
+                            error_msg = str(result['errors'])
+                            self.logger.error(f"GraphQL errors: {error_msg}")
+                            
+                            # Check for rate limit errors in the error message
+                            if "rate limit" in error_msg.lower() or "quota" in error_msg.lower():
+                                if retry < max_retries - 1:
+                                    self.logger.warning(f"Rate limit error, retrying in {base_delay * (2 ** (retry+1))}s...")
+                                    continue
+                            
+                            return {}
+                        
+                        if "data" in result and "meteora_dyn_Pool" in result["data"] and len(result["data"]["meteora_dyn_Pool"]) > 0:
+                            return result["data"]["meteora_dyn_Pool"][0]
+                        
                         return {}
-                    
-                    result = await response.json()
-                    
-                    if "errors" in result:
-                        self.logger.error(f"GraphQL errors: {result['errors']}")
-                        return {}
-                    
-                    if "data" in result and "meteora_dyn_Pool" in result["data"] and len(result["data"]["meteora_dyn_Pool"]) > 0:
-                        return result["data"]["meteora_dyn_Pool"][0]
-                    
-                    return {}
-                    
-        except Exception as e:
-            self.logger.error(f"Error fetching DYN pool details: {e}")
-            return {}
+                        
+            except Exception as e:
+                self.logger.error(f"Error fetching DYN pool details: {e}")
+                if retry < max_retries - 1:
+                    continue
+                return {}
+        
+        return {}  # Return empty dict if all retries failed
 
     async def fetch_positions_for_pool(self, pool: Dict) -> List[Dict]:
         """Fetch positions for a specific pool based on its type"""
@@ -433,6 +598,9 @@ class LPPositionManager:
         # If no positions found, log it but don't create placeholders
         if not positions:
             self.logger.warning(f"No positions found for pool {pool_address}")
+        
+        # Add a small delay between pools to avoid rate limits
+        await asyncio.sleep(2)
         
         return positions
 
@@ -595,9 +763,11 @@ class LPPositionManager:
                     # Save to Airtable
                     if normalized_position:
                         await self.save_position(normalized_position)
+                        # Small delay between saving positions
+                        await asyncio.sleep(0.5)
                 
-                # Small delay between pools
-                await asyncio.sleep(1)
+                # Larger delay between pools
+                await asyncio.sleep(3)
                 
             self.logger.info("Finished processing all positions")
             
