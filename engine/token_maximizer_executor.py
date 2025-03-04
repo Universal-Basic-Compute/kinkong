@@ -111,6 +111,12 @@ class TokenMaximizerExecutor:
         """Update token prices from Jupiter API"""
         self.logger.info("Updating token prices...")
         
+        # Hardcoded pair addresses
+        hardcoded_pairs = {
+            "UBC": "hbjg1zpronbeiv86qdt1wzwgymts1ppxjcfoz819cbjd",
+            "COMPUTE": "hn7ibjiyx399d1efyxcwashzrsmfumonyvxgfxg41rr3"
+        }
+        
         # List of tokens to update
         tokens = [
             {"name": "ubc", "mint": self.UBC_MINT},
@@ -120,12 +126,44 @@ class TokenMaximizerExecutor:
         
         for token in tokens:
             try:
-                price = await self.jupiter.get_token_price(token["mint"])
-                if price:
-                    self.token_prices[token["name"]] = price
-                    self.logger.info(f"{token['name'].upper()} price: ${price:.6f}")
+                # Check if we have a hardcoded pair for this token
+                token_upper = token["name"].upper()
+                if token_upper in hardcoded_pairs:
+                    # Use hardcoded pair address
+                    pair_address = hardcoded_pairs[token_upper]
+                    self.logger.info(f"Using hardcoded pair address for {token_upper}: {pair_address}")
+                    
+                    # Fetch data from DexScreener using the pair address
+                    dexscreener_url = f"https://api.dexscreener.com/latest/dex/pairs/solana/{pair_address}"
+                    
+                    async with aiohttp.ClientSession() as session:
+                        async with session.get(dexscreener_url) as response:
+                            if response.status == 200:
+                                data = await response.json()
+                                pairs = data.get('pairs', [])
+                                
+                                if pairs and len(pairs) > 0:
+                                    # Use the first pair (should be only one since we requested by pair address)
+                                    best_pair = pairs[0]
+                                    price = float(best_pair.get('priceUsd', 0))
+                                    
+                                    if price > 0:
+                                        self.token_prices[token["name"]] = price
+                                        self.logger.info(f"{token_upper} price: ${price:.6f}")
+                                    else:
+                                        self.logger.warning(f"Invalid price (0) for {token_upper} from hardcoded pair")
+                                else:
+                                    self.logger.warning(f"No pair data found for hardcoded {token_upper} pair: {pair_address}")
+                            else:
+                                self.logger.error(f"DexScreener API error for {token_upper}: {response.status}")
                 else:
-                    self.logger.warning(f"Could not get price for {token['name'].upper()}")
+                    # Use regular Jupiter price API
+                    price = await self.jupiter.get_token_price(token["mint"])
+                    if price:
+                        self.token_prices[token["name"]] = price
+                        self.logger.info(f"{token_upper} price: ${price:.6f}")
+                    else:
+                        self.logger.warning(f"Could not get price for {token_upper}")
             except Exception as e:
                 self.logger.error(f"Error getting {token['name'].upper()} price: {e}")
         
