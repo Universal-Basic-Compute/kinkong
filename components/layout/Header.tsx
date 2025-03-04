@@ -53,44 +53,37 @@ const Header = () => {
         { 
           label: 'Trading Strategy', 
           href: '/learn/trading-strategy',
-          description: 'Understand KinKong\'s core trading approach',
-          emoji: '📊'
+          description: 'Understand KinKong\'s core trading approach'
         },
         { 
           label: 'Market Sentiment', 
           href: '/learn/market-sentiment',
-          description: 'How KinKong classifies market conditions',
-          emoji: '🧠'
+          description: 'How KinKong classifies market conditions'
         },
         { 
           label: 'Trade Sizing', 
           href: '/learn/trade-sizing',
-          description: 'Dynamic position sizing methodology',
-          emoji: '⚖️'
+          description: 'Dynamic position sizing methodology'
         },
         { 
           label: 'Token Discovery', 
           href: '/learn/token-discovery',
-          description: 'How KinKong finds promising tokens',
-          emoji: '🔍'
+          description: 'How KinKong finds promising tokens'
         },
         { 
           label: 'Technical Flows', 
           href: '/learn/technical-flows',
-          description: 'Behind the scenes of KinKong\'s operations',
-          emoji: '⚙️'
+          description: 'Behind the scenes of KinKong\'s operations'
         },
         { 
           label: 'Liquidity Strategy', 
           href: '/learn/liquidity-strategy',
-          description: 'KinKong\'s approach to providing liquidity',
-          emoji: '💧'
+          description: 'KinKong\'s approach to providing liquidity'
         },
         { 
           label: 'Token Maximizer', 
           href: '/learn/token-maximizer',
-          description: 'Score-based token allocation system',
-          emoji: '🔄'
+          description: 'Score-based token allocation system'
         }
       ]
     },
