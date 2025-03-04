@@ -116,93 +116,104 @@ class LPPositionManager:
             raise
 
     async def fetch_dlmm_positions(self, pool_address: str) -> List[Dict]:
-        """Fetch DLMM positions for a specific pool"""
+        """Fetch DLMM positions for a specific pool using Birdeye API"""
         try:
-            # Try different Kamino API endpoints
-            endpoints = [
-                f"https://api.kamino.finance/liquidity-book/positions?address={pool_address}&owner={self.wallet_address}",
-                f"https://api.kamino.finance/dlmm/positions?address={pool_address}&owner={self.wallet_address}",
-                f"https://api.kamino.finance/clmm/positions?address={pool_address}&owner={self.wallet_address}"
-            ]
-            
-            for endpoint in endpoints:
-                self.logger.info(f"Fetching DLMM positions from: {endpoint}")
-                
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(endpoint, timeout=30) as response:
-                        if response.status == 200:
-                            data = await response.json()
-                            positions = data.get('positions', [])
-                            
-                            self.logger.info(f"Found {len(positions)} DLMM positions for pool {pool_address}")
-                            return positions
-                        else:
-                            self.logger.warning(f"Failed to fetch DLMM positions from {endpoint}: {response.status}")
-            
-            # If all endpoints failed, try the Birdeye API as a fallback
+            # Use Birdeye API to get positions
             birdeye_url = f"https://public-api.birdeye.so/defi/positions?wallet={self.wallet_address}"
             birdeye_key = os.getenv('BIRDEYE_API_KEY')
             
-            if birdeye_key:
-                self.logger.info(f"Trying Birdeye API fallback: {birdeye_url}")
+            if not birdeye_key:
+                self.logger.error("BIRDEYE_API_KEY not found in environment variables")
+                return []
                 
-                headers = {
-                    'x-api-key': birdeye_key,
-                    'accept': 'application/json'
-                }
-                
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(birdeye_url, headers=headers, timeout=30) as response:
-                        if response.status == 200:
-                            data = await response.json()
-                            if data.get('success'):
-                                all_positions = data.get('data', [])
-                                # Filter positions for this pool
-                                pool_positions = [
-                                    pos for pos in all_positions 
-                                    if pos.get('poolAddress') == pool_address
-                                ]
-                                
-                                self.logger.info(f"Found {len(pool_positions)} positions from Birdeye for pool {pool_address}")
-                                return pool_positions
-                        
-                        self.logger.warning(f"Birdeye API fallback failed: {response.status}")
+            self.logger.info(f"Fetching positions from Birdeye API: {birdeye_url}")
             
-            # If all API methods failed, log the error
-            self.logger.error(f"All API methods failed to fetch DLMM positions for pool {pool_address}")
-            return []
+            headers = {
+                'x-api-key': birdeye_key,
+                'accept': 'application/json'
+            }
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(birdeye_url, headers=headers, timeout=30) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        if data.get('success'):
+                            all_positions = data.get('data', [])
+                            # Filter positions for this pool
+                            pool_positions = [
+                                pos for pos in all_positions 
+                                if pos.get('poolAddress') == pool_address
+                            ]
+                            
+                            self.logger.info(f"Found {len(pool_positions)} positions from Birdeye for pool {pool_address}")
+                            return pool_positions
+                    
+                    self.logger.warning(f"Birdeye API failed: {response.status}")
+                    
+            # If Birdeye API failed, create a placeholder position
+            self.logger.info(f"Creating placeholder position for pool {pool_address}")
+            return [{
+                'address': f"placeholder-{pool_address}",
+                'poolAddress': pool_address,
+                'token0Amount': 0,
+                'token1Amount': 0,
+                'token0AmountUsd': 0,
+                'token1AmountUsd': 0,
+                'feesUsd': 0,
+                'source': 'placeholder'
+            }]
                         
         except Exception as e:
             self.logger.error(f"Error fetching DLMM positions: {e}")
             return []
 
     async def fetch_dyn_positions(self, pool_address: str) -> List[Dict]:
-        """Fetch DYN positions for a specific pool"""
+        """Fetch DYN positions for a specific pool using Birdeye API"""
         try:
-            # Try different Meteora API endpoints
-            endpoints = [
-                f"https://api.meteora.ag/v1/pools/{pool_address}/positions?owner={self.wallet_address}",
-                f"https://api.meteora.ag/v2/pools/{pool_address}/positions?owner={self.wallet_address}",
-                f"https://api.meteora.ag/positions?owner={self.wallet_address}&pool={pool_address}"
-            ]
+            # Use Birdeye API to get positions
+            birdeye_url = f"https://public-api.birdeye.so/defi/positions?wallet={self.wallet_address}"
+            birdeye_key = os.getenv('BIRDEYE_API_KEY')
             
-            for endpoint in endpoints:
-                self.logger.info(f"Fetching DYN positions from: {endpoint}")
+            if not birdeye_key:
+                self.logger.error("BIRDEYE_API_KEY not found in environment variables")
+                return []
                 
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(endpoint, timeout=30) as response:
-                        if response.status == 200:
-                            data = await response.json()
-                            positions = data.get('positions', [])
-                            
-                            self.logger.info(f"Found {len(positions)} DYN positions for pool {pool_address}")
-                            return positions
-                        else:
-                            self.logger.warning(f"Failed to fetch DYN positions from {endpoint}: {response.status}")
+            self.logger.info(f"Fetching positions from Birdeye API: {birdeye_url}")
             
-            # If all API methods failed, log the error
-            self.logger.error(f"All API methods failed to fetch DYN positions for pool {pool_address}")
-            return []
+            headers = {
+                'x-api-key': birdeye_key,
+                'accept': 'application/json'
+            }
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(birdeye_url, headers=headers, timeout=30) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        if data.get('success'):
+                            all_positions = data.get('data', [])
+                            # Filter positions for this pool
+                            pool_positions = [
+                                pos for pos in all_positions 
+                                if pos.get('poolAddress') == pool_address
+                            ]
+                            
+                            self.logger.info(f"Found {len(pool_positions)} positions from Birdeye for pool {pool_address}")
+                            return pool_positions
+                    
+                    self.logger.warning(f"Birdeye API failed: {response.status}")
+                    
+            # If Birdeye API failed, create a placeholder position
+            self.logger.info(f"Creating placeholder position for pool {pool_address}")
+            return [{
+                'address': f"placeholder-{pool_address}",
+                'poolAddress': pool_address,
+                'token0Amount': 0,
+                'token1Amount': 0,
+                'token0AmountUsd': 0,
+                'token1AmountUsd': 0,
+                'feesUsd': 0,
+                'source': 'placeholder'
+            }]
                         
         except Exception as e:
             self.logger.error(f"Error fetching DYN positions: {e}")
@@ -292,22 +303,9 @@ class LPPositionManager:
         else:
             self.logger.error(f"Unknown pool type: {pool_type}")
         
-        # If primary method failed, try Jupiter fallback
+        # If no positions found, create a placeholder
         if not positions:
-            self.logger.info(f"Primary method failed, trying Jupiter fallback for {pool_address}")
-            positions = await self.fetch_positions_from_jupiter(pool_address)
-        
-        # If Jupiter failed, try Solscan fallback
-        if not positions:
-            self.logger.info(f"Jupiter fallback failed, trying Solscan fallback for {pool_address}")
-            positions = await self.fetch_positions_from_solscan(pool_address)
-        
-        # If still no positions, create a placeholder position with zero values
-        if not positions:
-            self.logger.warning(f"Could not fetch positions for pool {pool_address} using any method")
-            self.logger.info(f"Creating placeholder position with zero values")
-            
-            # Create a placeholder position with zero values
+            self.logger.warning(f"No positions found for pool {pool_address}, creating placeholder")
             positions = [{
                 'address': f"placeholder-{pool_address}",
                 'poolAddress': pool_address,
