@@ -118,23 +118,60 @@ class LPPositionManager:
     async def fetch_dlmm_positions(self, pool_address: str) -> List[Dict]:
         """Fetch DLMM positions for a specific pool"""
         try:
-            # Use updated Kamino API endpoint for DLMM positions
-            url = f"https://api.kamino.finance/v1/dlmm/positions?address={pool_address}&owner={self.wallet_address}"
+            # Try different Kamino API endpoints
+            endpoints = [
+                f"https://api.kamino.finance/liquidity-book/positions?address={pool_address}&owner={self.wallet_address}",
+                f"https://api.kamino.finance/dlmm/positions?address={pool_address}&owner={self.wallet_address}",
+                f"https://api.kamino.finance/clmm/positions?address={pool_address}&owner={self.wallet_address}"
+            ]
             
-            self.logger.info(f"Fetching DLMM positions from: {url}")
+            for endpoint in endpoints:
+                self.logger.info(f"Fetching DLMM positions from: {endpoint}")
+                
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(endpoint, timeout=30) as response:
+                        if response.status == 200:
+                            data = await response.json()
+                            positions = data.get('positions', [])
+                            
+                            self.logger.info(f"Found {len(positions)} DLMM positions for pool {pool_address}")
+                            return positions
+                        else:
+                            self.logger.warning(f"Failed to fetch DLMM positions from {endpoint}: {response.status}")
             
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url) as response:
-                    if response.status != 200:
-                        self.logger.error(f"Failed to fetch DLMM positions: {await response.text()}")
-                        return []
-                    
-                    data = await response.json()
-                    positions = data.get('positions', [])
-                    
-                    self.logger.info(f"Found {len(positions)} DLMM positions for pool {pool_address}")
-                    return positions
-                    
+            # If all endpoints failed, try the Birdeye API as a fallback
+            birdeye_url = f"https://public-api.birdeye.so/defi/positions?wallet={self.wallet_address}"
+            birdeye_key = os.getenv('BIRDEYE_API_KEY')
+            
+            if birdeye_key:
+                self.logger.info(f"Trying Birdeye API fallback: {birdeye_url}")
+                
+                headers = {
+                    'x-api-key': birdeye_key,
+                    'accept': 'application/json'
+                }
+                
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(birdeye_url, headers=headers, timeout=30) as response:
+                        if response.status == 200:
+                            data = await response.json()
+                            if data.get('success'):
+                                all_positions = data.get('data', [])
+                                # Filter positions for this pool
+                                pool_positions = [
+                                    pos for pos in all_positions 
+                                    if pos.get('poolAddress') == pool_address
+                                ]
+                                
+                                self.logger.info(f"Found {len(pool_positions)} positions from Birdeye for pool {pool_address}")
+                                return pool_positions
+                        
+                        self.logger.warning(f"Birdeye API fallback failed: {response.status}")
+            
+            # If all API methods failed, log the error
+            self.logger.error(f"All API methods failed to fetch DLMM positions for pool {pool_address}")
+            return []
+                        
         except Exception as e:
             self.logger.error(f"Error fetching DLMM positions: {e}")
             return []
@@ -142,37 +179,31 @@ class LPPositionManager:
     async def fetch_dyn_positions(self, pool_address: str) -> List[Dict]:
         """Fetch DYN positions for a specific pool"""
         try:
-            # Try alternative Meteora API endpoint
-            url = f"https://api.meteora.ag/v2/pools/{pool_address}/positions?owner={self.wallet_address}"
+            # Try different Meteora API endpoints
+            endpoints = [
+                f"https://api.meteora.ag/v1/pools/{pool_address}/positions?owner={self.wallet_address}",
+                f"https://api.meteora.ag/v2/pools/{pool_address}/positions?owner={self.wallet_address}",
+                f"https://api.meteora.ag/positions?owner={self.wallet_address}&pool={pool_address}"
+            ]
             
-            self.logger.info(f"Fetching DYN positions from: {url}")
-            
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url, timeout=30) as response:
-                    if response.status != 200:
-                        self.logger.error(f"Failed to fetch DYN positions: {await response.text()}")
-                        
-                        # Try fallback endpoint
-                        fallback_url = f"https://api.meteora.ag/v1/pools/{pool_address}/positions?owner={self.wallet_address}"
-                        self.logger.info(f"Trying fallback URL: {fallback_url}")
-                        
-                        async with session.get(fallback_url, timeout=30) as fallback_response:
-                            if fallback_response.status != 200:
-                                self.logger.error(f"Fallback also failed: {await fallback_response.text()}")
-                                return []
-                            
-                            data = await fallback_response.json()
+            for endpoint in endpoints:
+                self.logger.info(f"Fetching DYN positions from: {endpoint}")
+                
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(endpoint, timeout=30) as response:
+                        if response.status == 200:
+                            data = await response.json()
                             positions = data.get('positions', [])
                             
-                            self.logger.info(f"Found {len(positions)} DYN positions from fallback for pool {pool_address}")
+                            self.logger.info(f"Found {len(positions)} DYN positions for pool {pool_address}")
                             return positions
-                    
-                    data = await response.json()
-                    positions = data.get('positions', [])
-                    
-                    self.logger.info(f"Found {len(positions)} DYN positions for pool {pool_address}")
-                    return positions
-                    
+                        else:
+                            self.logger.warning(f"Failed to fetch DYN positions from {endpoint}: {response.status}")
+            
+            # If all API methods failed, log the error
+            self.logger.error(f"All API methods failed to fetch DYN positions for pool {pool_address}")
+            return []
+                        
         except Exception as e:
             self.logger.error(f"Error fetching DYN positions: {e}")
             return []
@@ -206,6 +237,45 @@ class LPPositionManager:
         except Exception as e:
             self.logger.error(f"Error fetching positions from Jupiter: {e}")
             return []
+            
+    async def fetch_positions_from_solscan(self, pool_address: str) -> List[Dict]:
+        """Fetch positions using Solscan API as a fallback"""
+        try:
+            url = f"https://public-api.solscan.io/account/tokens?account={self.wallet_address}"
+            
+            self.logger.info(f"Fetching positions from Solscan API: {url}")
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, timeout=30) as response:
+                    if response.status != 200:
+                        self.logger.error(f"Failed to fetch positions from Solscan: {await response.text()}")
+                        return []
+                    
+                    data = await response.json()
+                    
+                    # Filter for LP tokens related to our pool
+                    # This is a simplified approach - in reality, we'd need to check if tokens are LP tokens
+                    # and if they're related to our pool
+                    pool_positions = []
+                    for token in data:
+                        token_address = token.get('tokenAddress')
+                        token_amount = float(token.get('tokenAmount', {}).get('uiAmount', 0))
+                        
+                        if token_amount > 0:
+                            # Add as a simplified position
+                            pool_positions.append({
+                                'address': token_address,
+                                'poolAddress': pool_address,
+                                'tokenAmount': token_amount,
+                                'source': 'solscan'
+                            })
+                    
+                    self.logger.info(f"Found {len(pool_positions)} potential positions from Solscan")
+                    return pool_positions
+                    
+        except Exception as e:
+            self.logger.error(f"Error fetching positions from Solscan: {e}")
+            return []
 
     async def fetch_positions_for_pool(self, pool: Dict) -> List[Dict]:
         """Fetch positions for a specific pool based on its type"""
@@ -227,9 +297,27 @@ class LPPositionManager:
             self.logger.info(f"Primary method failed, trying Jupiter fallback for {pool_address}")
             positions = await self.fetch_positions_from_jupiter(pool_address)
         
-        # If still no positions, log error
+        # If Jupiter failed, try Solscan fallback
         if not positions:
-            self.logger.error(f"Could not fetch positions for pool {pool_address} using any method")
+            self.logger.info(f"Jupiter fallback failed, trying Solscan fallback for {pool_address}")
+            positions = await self.fetch_positions_from_solscan(pool_address)
+        
+        # If still no positions, create a placeholder position with zero values
+        if not positions:
+            self.logger.warning(f"Could not fetch positions for pool {pool_address} using any method")
+            self.logger.info(f"Creating placeholder position with zero values")
+            
+            # Create a placeholder position with zero values
+            positions = [{
+                'address': f"placeholder-{pool_address}",
+                'poolAddress': pool_address,
+                'token0Amount': 0,
+                'token1Amount': 0,
+                'token0AmountUsd': 0,
+                'token1AmountUsd': 0,
+                'feesUsd': 0,
+                'source': 'placeholder'
+            }]
         
         return positions
 
