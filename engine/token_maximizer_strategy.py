@@ -59,9 +59,9 @@ class TokenMaximizerStrategy:
         self.executor = TokenMaximizerExecutor()
         
         # Initialize Claude client
-        self.claude_api_key = os.getenv('CLAUDE_API_KEY')
+        self.claude_api_key = os.getenv('ANTHROPIC_API_KEY')
         if not self.claude_api_key:
-            self.logger.warning("CLAUDE_API_KEY not found in environment variables")
+            self.logger.warning("ANTHROPIC_API_KEY not found in environment variables")
         else:
             self.claude = anthropic.Anthropic(api_key=self.claude_api_key)
         
