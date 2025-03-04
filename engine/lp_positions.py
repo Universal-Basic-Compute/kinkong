@@ -116,177 +116,304 @@ class LPPositionManager:
             raise
 
     async def fetch_dlmm_positions(self, pool_address: str) -> List[Dict]:
-        """Fetch DLMM positions for a specific pool using Birdeye API"""
+        """Fetch DLMM positions for a specific pool using Shyft API"""
         try:
-            # Use Birdeye API to get positions
-            birdeye_url = f"https://public-api.birdeye.so/defi/positions?wallet={self.wallet_address}"
-            birdeye_key = os.getenv('BIRDEYE_API_KEY')
-            
-            if not birdeye_key:
-                self.logger.error("BIRDEYE_API_KEY not found in environment variables")
+            # Get Shyft API key from environment variables
+            shyft_api_key = os.getenv('SHYFT_API_KEY')
+            if not shyft_api_key:
+                self.logger.error("SHYFT_API_KEY not found in environment variables")
                 return []
                 
-            self.logger.info(f"Fetching positions from Birdeye API: {birdeye_url}")
+            self.logger.info(f"Fetching positions from Shyft API for wallet: {self.wallet_address}")
             
-            headers = {
-                'x-api-key': birdeye_key,
-                'accept': 'application/json'
-            }
+            # GraphQL query to get positions for the wallet
+            operations_doc = f"""
+                query MyQuery {{
+                  meteora_dlmm_PositionV2(
+                    where: {{owner: {{_eq: "{self.wallet_address}"}}}}
+                  ) {{
+                    upperBinId
+                    lowerBinId
+                    totalClaimedFeeYAmount
+                    totalClaimedFeeXAmount
+                    lastUpdatedAt
+                    lbPair
+                    owner
+                  }}
+                  meteora_dlmm_Position(
+                    where: {{owner: {{_eq: "{self.wallet_address}"}}}}
+                  ) {{
+                    lastUpdatedAt
+                    lbPair
+                    lowerBinId
+                    upperBinId
+                    totalClaimedFeeYAmount
+                    totalClaimedFeeXAmount
+                    owner
+                  }}
+                }}
+            """
             
+            # Make the API request to get positions
             async with aiohttp.ClientSession() as session:
-                async with session.get(birdeye_url, headers=headers, timeout=30) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        if data.get('success'):
-                            all_positions = data.get('data', [])
-                            # Filter positions for this pool
-                            pool_positions = [
-                                pos for pos in all_positions 
-                                if pos.get('poolAddress') == pool_address
-                            ]
-                            
-                            self.logger.info(f"Found {len(pool_positions)} positions from Birdeye for pool {pool_address}")
-                            return pool_positions
+                async with session.post(
+                    f"https://programs.shyft.to/v0/graphql/accounts?api_key={shyft_api_key}&network=mainnet-beta",
+                    json={
+                        "query": operations_doc,
+                        "variables": {},
+                        "operationName": "MyQuery"
+                    },
+                    headers={"Content-Type": "application/json"}
+                ) as response:
+                    if response.status != 200:
+                        self.logger.error(f"Failed to fetch positions from Shyft: {await response.text()}")
+                        return []
                     
-                    self.logger.warning(f"Birdeye API failed: {response.status}")
+                    result = await response.json()
                     
-            # If Birdeye API failed, create a placeholder position
-            self.logger.info(f"Creating placeholder position for pool {pool_address}")
-            return [{
-                'address': f"placeholder-{pool_address}",
-                'poolAddress': pool_address,
-                'token0Amount': 0,
-                'token1Amount': 0,
-                'token0AmountUsd': 0,
-                'token1AmountUsd': 0,
-                'feesUsd': 0,
-                'source': 'placeholder'
-            }]
-                        
+                    if "errors" in result:
+                        self.logger.error(f"GraphQL errors: {result['errors']}")
+                        return []
+                    
+                    positions = []
+                    
+                    # Process Position data
+                    if "data" in result and "meteora_dlmm_Position" in result["data"]:
+                        for position in result["data"]["meteora_dlmm_Position"]:
+                            # Only include positions for the specific pool we're looking for
+                            if position["lbPair"] == pool_address:
+                                # Get LB pair details
+                                lb_pair_details = await self.fetch_lb_pair_details(position["lbPair"], shyft_api_key)
+                                
+                                # Create position object with LB pair details
+                                position_data = {
+                                    "address": position["lbPair"],
+                                    "poolAddress": position["lbPair"],
+                                    "owner": position["owner"],
+                                    "lowerBinId": position["lowerBinId"],
+                                    "upperBinId": position["upperBinId"],
+                                    "totalClaimedFeeXAmount": position["totalClaimedFeeXAmount"],
+                                    "totalClaimedFeeYAmount": position["totalClaimedFeeYAmount"],
+                                    "lastUpdatedAt": position["lastUpdatedAt"],
+                                    "lbPairDetails": lb_pair_details
+                                }
+                                
+                                positions.append(position_data)
+                    
+                    # Process PositionV2 data
+                    if "data" in result and "meteora_dlmm_PositionV2" in result["data"]:
+                        for position in result["data"]["meteora_dlmm_PositionV2"]:
+                            # Only include positions for the specific pool we're looking for
+                            if position["lbPair"] == pool_address:
+                                # Get LB pair details
+                                lb_pair_details = await self.fetch_lb_pair_details(position["lbPair"], shyft_api_key)
+                                
+                                # Create position object with LB pair details
+                                position_data = {
+                                    "address": position["lbPair"],
+                                    "poolAddress": position["lbPair"],
+                                    "owner": position["owner"],
+                                    "lowerBinId": position["lowerBinId"],
+                                    "upperBinId": position["upperBinId"],
+                                    "totalClaimedFeeXAmount": position["totalClaimedFeeXAmount"],
+                                    "totalClaimedFeeYAmount": position["totalClaimedFeeYAmount"],
+                                    "lastUpdatedAt": position["lastUpdatedAt"],
+                                    "lbPairDetails": lb_pair_details,
+                                    "version": "V2"
+                                }
+                                
+                                positions.append(position_data)
+                    
+                    self.logger.info(f"Found {len(positions)} positions for pool {pool_address}")
+                    return positions
+                    
         except Exception as e:
             self.logger.error(f"Error fetching DLMM positions: {e}")
             return []
 
-    async def fetch_dyn_positions(self, pool_address: str) -> List[Dict]:
-        """Fetch DYN positions for a specific pool using Birdeye API"""
+    async def fetch_lb_pair_details(self, lb_pair_address: str, shyft_api_key: str) -> Dict:
+        """Fetch LB pair details for a specific pair address"""
         try:
-            # Use Birdeye API to get positions
-            birdeye_url = f"https://public-api.birdeye.so/defi/positions?wallet={self.wallet_address}"
-            birdeye_key = os.getenv('BIRDEYE_API_KEY')
+            # GraphQL query to get LB pair details
+            query = f"""
+                query MyQuery {{
+                    meteora_dlmm_LbPair(
+                        where: {{pubkey: {{_eq: "{lb_pair_address}"}}}}
+                    ) {{
+                        pubkey
+                        oracle
+                        pairType
+                        reserveX
+                        reserveY
+                        status
+                        tokenXMint
+                        tokenYMint
+                    }}
+                }}
+            """
             
-            if not birdeye_key:
-                self.logger.error("BIRDEYE_API_KEY not found in environment variables")
+            # Make the API request to get LB pair details
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    f"https://programs.shyft.to/v0/graphql/accounts?api_key={shyft_api_key}&network=mainnet-beta",
+                    json={
+                        "query": query,
+                        "variables": {},
+                        "operationName": "MyQuery"
+                    },
+                    headers={"Content-Type": "application/json"}
+                ) as response:
+                    if response.status != 200:
+                        self.logger.error(f"Failed to fetch LB pair details: {await response.text()}")
+                        return {}
+                    
+                    result = await response.json()
+                    
+                    if "errors" in result:
+                        self.logger.error(f"GraphQL errors: {result['errors']}")
+                        return {}
+                    
+                    if "data" in result and "meteora_dlmm_LbPair" in result["data"] and len(result["data"]["meteora_dlmm_LbPair"]) > 0:
+                        return result["data"]["meteora_dlmm_LbPair"][0]
+                    
+                    return {}
+                    
+        except Exception as e:
+            self.logger.error(f"Error fetching LB pair details: {e}")
+            return {}
+
+    async def fetch_dyn_positions(self, pool_address: str) -> List[Dict]:
+        """Fetch DYN positions for a specific pool using Shyft API"""
+        try:
+            # Get Shyft API key from environment variables
+            shyft_api_key = os.getenv('SHYFT_API_KEY')
+            if not shyft_api_key:
+                self.logger.error("SHYFT_API_KEY not found in environment variables")
                 return []
                 
-            self.logger.info(f"Fetching positions from Birdeye API: {birdeye_url}")
+            self.logger.info(f"Fetching DYN positions from Shyft API for wallet: {self.wallet_address}")
             
-            headers = {
-                'x-api-key': birdeye_key,
-                'accept': 'application/json'
-            }
+            # GraphQL query to get positions for the wallet
+            operations_doc = f"""
+                query MyQuery {{
+                  meteora_dyn_Position(
+                    where: {{owner: {{_eq: "{self.wallet_address}"}}}}
+                  ) {{
+                    lastUpdatedAt
+                    pool
+                    owner
+                    liquidity
+                    lowerTick
+                    upperTick
+                    tokenFeesOwedX
+                    tokenFeesOwedY
+                  }}
+                }}
+            """
             
+            # Make the API request to get positions
             async with aiohttp.ClientSession() as session:
-                async with session.get(birdeye_url, headers=headers, timeout=30) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        if data.get('success'):
-                            all_positions = data.get('data', [])
-                            # Filter positions for this pool
-                            pool_positions = [
-                                pos for pos in all_positions 
-                                if pos.get('poolAddress') == pool_address
-                            ]
-                            
-                            self.logger.info(f"Found {len(pool_positions)} positions from Birdeye for pool {pool_address}")
-                            return pool_positions
+                async with session.post(
+                    f"https://programs.shyft.to/v0/graphql/accounts?api_key={shyft_api_key}&network=mainnet-beta",
+                    json={
+                        "query": operations_doc,
+                        "variables": {},
+                        "operationName": "MyQuery"
+                    },
+                    headers={"Content-Type": "application/json"}
+                ) as response:
+                    if response.status != 200:
+                        self.logger.error(f"Failed to fetch DYN positions from Shyft: {await response.text()}")
+                        return []
                     
-                    self.logger.warning(f"Birdeye API failed: {response.status}")
+                    result = await response.json()
                     
-            # If Birdeye API failed, create a placeholder position
-            self.logger.info(f"Creating placeholder position for pool {pool_address}")
-            return [{
-                'address': f"placeholder-{pool_address}",
-                'poolAddress': pool_address,
-                'token0Amount': 0,
-                'token1Amount': 0,
-                'token0AmountUsd': 0,
-                'token1AmountUsd': 0,
-                'feesUsd': 0,
-                'source': 'placeholder'
-            }]
-                        
+                    if "errors" in result:
+                        self.logger.error(f"GraphQL errors: {result['errors']}")
+                        return []
+                    
+                    positions = []
+                    
+                    # Process Position data
+                    if "data" in result and "meteora_dyn_Position" in result["data"]:
+                        for position in result["data"]["meteora_dyn_Position"]:
+                            # Only include positions for the specific pool we're looking for
+                            if position["pool"] == pool_address:
+                                # Get pool details
+                                pool_details = await self.fetch_dyn_pool_details(position["pool"], shyft_api_key)
+                                
+                                # Create position object with pool details
+                                position_data = {
+                                    "address": position["pool"],
+                                    "poolAddress": position["pool"],
+                                    "owner": position["owner"],
+                                    "liquidity": position["liquidity"],
+                                    "lowerTick": position["lowerTick"],
+                                    "upperTick": position["upperTick"],
+                                    "tokenFeesOwedX": position["tokenFeesOwedX"],
+                                    "tokenFeesOwedY": position["tokenFeesOwedY"],
+                                    "lastUpdatedAt": position["lastUpdatedAt"],
+                                    "poolDetails": pool_details
+                                }
+                                
+                                positions.append(position_data)
+                    
+                    self.logger.info(f"Found {len(positions)} DYN positions for pool {pool_address}")
+                    return positions
+                    
         except Exception as e:
             self.logger.error(f"Error fetching DYN positions: {e}")
             return []
 
-    async def fetch_positions_from_jupiter(self, pool_address: str) -> List[Dict]:
-        """Fetch positions using Jupiter API as a fallback"""
+    async def fetch_dyn_pool_details(self, pool_address: str, shyft_api_key: str) -> Dict:
+        """Fetch DYN pool details for a specific pool address"""
         try:
-            # Use Jupiter API to get position information
-            url = f"https://quote-api.jup.ag/v6/positions?owner={self.wallet_address}"
+            # GraphQL query to get pool details
+            query = f"""
+                query MyQuery {{
+                    meteora_dyn_Pool(
+                        where: {{pubkey: {{_eq: "{pool_address}"}}}}
+                    ) {{
+                        pubkey
+                        tokenX
+                        tokenY
+                        fee
+                        liquidity
+                        sqrtPriceX64
+                        tick
+                    }}
+                }}
+            """
             
-            self.logger.info(f"Fetching positions from Jupiter API: {url}")
-            
+            # Make the API request to get pool details
             async with aiohttp.ClientSession() as session:
-                async with session.get(url) as response:
+                async with session.post(
+                    f"https://programs.shyft.to/v0/graphql/accounts?api_key={shyft_api_key}&network=mainnet-beta",
+                    json={
+                        "query": query,
+                        "variables": {},
+                        "operationName": "MyQuery"
+                    },
+                    headers={"Content-Type": "application/json"}
+                ) as response:
                     if response.status != 200:
-                        self.logger.error(f"Failed to fetch positions from Jupiter: {await response.text()}")
-                        return []
+                        self.logger.error(f"Failed to fetch DYN pool details: {await response.text()}")
+                        return {}
                     
-                    data = await response.json()
-                    all_positions = data.get('data', [])
+                    result = await response.json()
                     
-                    # Filter positions for the specific pool
-                    pool_positions = [
-                        pos for pos in all_positions 
-                        if pos.get('poolAddress') == pool_address
-                    ]
+                    if "errors" in result:
+                        self.logger.error(f"GraphQL errors: {result['errors']}")
+                        return {}
                     
-                    self.logger.info(f"Found {len(pool_positions)} positions from Jupiter for pool {pool_address}")
-                    return pool_positions
+                    if "data" in result and "meteora_dyn_Pool" in result["data"] and len(result["data"]["meteora_dyn_Pool"]) > 0:
+                        return result["data"]["meteora_dyn_Pool"][0]
+                    
+                    return {}
                     
         except Exception as e:
-            self.logger.error(f"Error fetching positions from Jupiter: {e}")
-            return []
-            
-    async def fetch_positions_from_solscan(self, pool_address: str) -> List[Dict]:
-        """Fetch positions using Solscan API as a fallback"""
-        try:
-            url = f"https://public-api.solscan.io/account/tokens?account={self.wallet_address}"
-            
-            self.logger.info(f"Fetching positions from Solscan API: {url}")
-            
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url, timeout=30) as response:
-                    if response.status != 200:
-                        self.logger.error(f"Failed to fetch positions from Solscan: {await response.text()}")
-                        return []
-                    
-                    data = await response.json()
-                    
-                    # Filter for LP tokens related to our pool
-                    # This is a simplified approach - in reality, we'd need to check if tokens are LP tokens
-                    # and if they're related to our pool
-                    pool_positions = []
-                    for token in data:
-                        token_address = token.get('tokenAddress')
-                        token_amount = float(token.get('tokenAmount', {}).get('uiAmount', 0))
-                        
-                        if token_amount > 0:
-                            # Add as a simplified position
-                            pool_positions.append({
-                                'address': token_address,
-                                'poolAddress': pool_address,
-                                'tokenAmount': token_amount,
-                                'source': 'solscan'
-                            })
-                    
-                    self.logger.info(f"Found {len(pool_positions)} potential positions from Solscan")
-                    return pool_positions
-                    
-        except Exception as e:
-            self.logger.error(f"Error fetching positions from Solscan: {e}")
-            return []
+            self.logger.error(f"Error fetching DYN pool details: {e}")
+            return {}
 
     async def fetch_positions_for_pool(self, pool: Dict) -> List[Dict]:
         """Fetch positions for a specific pool based on its type"""
@@ -303,42 +430,44 @@ class LPPositionManager:
         else:
             self.logger.error(f"Unknown pool type: {pool_type}")
         
-        # If no positions found, create a placeholder
+        # If no positions found, log it but don't create placeholders
         if not positions:
-            self.logger.warning(f"No positions found for pool {pool_address}, creating placeholder")
-            positions = [{
-                'address': f"placeholder-{pool_address}",
-                'poolAddress': pool_address,
-                'token0Amount': 0,
-                'token1Amount': 0,
-                'token0AmountUsd': 0,
-                'token1AmountUsd': 0,
-                'feesUsd': 0,
-                'source': 'placeholder'
-            }]
+            self.logger.warning(f"No positions found for pool {pool_address}")
         
         return positions
 
     def normalize_dlmm_position(self, position: Dict, pool: Dict) -> Dict:
-        """Normalize DLMM position data"""
+        """Normalize DLMM position data from Shyft API"""
         try:
-            # Extract token amounts and USD values
-            token0_amount = float(position.get('token0Amount', 0))
-            token1_amount = float(position.get('token1Amount', 0))
-            token0_usd = float(position.get('token0AmountUsd', 0))
-            token1_usd = float(position.get('token1AmountUsd', 0))
-            total_value_usd = token0_usd + token1_usd
+            # Extract token information from LB pair details
+            lb_pair_details = position.get('lbPairDetails', {})
             
-            # Calculate fees if available
-            fees_usd = float(position.get('feesUsd', 0))
+            # Get token mints
+            token_x_mint = lb_pair_details.get('tokenXMint', '')
+            token_y_mint = lb_pair_details.get('tokenYMint', '')
+            
+            # Determine which token is which based on our pool definition
+            token0_is_x = False
+            for token_name, token_mint in self.token_mints.items():
+                if token_mint == token_x_mint and token_name == pool['token0']:
+                    token0_is_x = True
+                    break
+                if token_mint == token_y_mint and token_name == pool['token0']:
+                    token0_is_x = False
+                    break
+            
+            # Extract claimed fees
+            claimed_fee_x = float(position.get('totalClaimedFeeXAmount', 0))
+            claimed_fee_y = float(position.get('totalClaimedFeeYAmount', 0))
+            
+            # Calculate total fees in USD (simplified, would need price data for accuracy)
+            fees_usd = 0  # Would need price data to calculate accurately
             
             # Get position bounds
-            lower_bound = position.get('lowerBound', 0)
-            upper_bound = position.get('upperBound', 0)
+            lower_bound = position.get('lowerBinId', 0)
+            upper_bound = position.get('upperBinId', 0)
             
-            # Get current price if available
-            current_price = position.get('currentPrice', 0)
-            
+            # Create normalized position data
             return {
                 'pool': pool['address'],  # Use 'pool' as the field name for Airtable
                 'poolAddress': pool['address'],
@@ -347,15 +476,14 @@ class LPPositionManager:
                 'token0': pool['token0'],
                 'token1': pool['token1'],
                 'positionAddress': position.get('address', ''),
-                'token0Amount': token0_amount,
-                'token1Amount': token1_amount,
-                'token0ValueUsd': token0_usd,
-                'token1ValueUsd': token1_usd,
-                'totalValueUsd': total_value_usd,
-                'feesUsd': fees_usd,
                 'lowerBound': lower_bound,
                 'upperBound': upper_bound,
-                'currentPrice': current_price,
+                'feesUsd': fees_usd,
+                'lastUpdatedAt': position.get('lastUpdatedAt', ''),
+                'tokenXMint': token_x_mint,
+                'tokenYMint': token_y_mint,
+                'claimedFeeX': claimed_fee_x,
+                'claimedFeeY': claimed_fee_y,
                 'isActive': True,
                 'createdAt': datetime.now(timezone.utc).isoformat(),
                 'updatedAt': datetime.now(timezone.utc).isoformat()
@@ -365,25 +493,27 @@ class LPPositionManager:
             return {}
 
     def normalize_dyn_position(self, position: Dict, pool: Dict) -> Dict:
-        """Normalize DYN position data"""
+        """Normalize DYN position data from Shyft API"""
         try:
-            # Extract token amounts and USD values
-            token0_amount = float(position.get('token0', {}).get('amount', 0))
-            token1_amount = float(position.get('token1', {}).get('amount', 0))
-            token0_usd = float(position.get('token0', {}).get('usdValue', 0))
-            token1_usd = float(position.get('token1', {}).get('usdValue', 0))
-            total_value_usd = token0_usd + token1_usd
+            # Extract token information from pool details
+            pool_details = position.get('poolDetails', {})
             
-            # Get fees if available
-            fees_usd = float(position.get('feesUsd', 0))
+            # Get token mints
+            token_x = pool_details.get('tokenX', '')
+            token_y = pool_details.get('tokenY', '')
             
-            # Get position bounds if available
-            lower_bound = position.get('lowerPrice', 0)
-            upper_bound = position.get('upperPrice', 0)
+            # Extract fees owed
+            fees_owed_x = float(position.get('tokenFeesOwedX', 0))
+            fees_owed_y = float(position.get('tokenFeesOwedY', 0))
             
-            # Get current price if available
-            current_price = position.get('currentPrice', 0)
+            # Get position bounds
+            lower_tick = position.get('lowerTick', 0)
+            upper_tick = position.get('upperTick', 0)
             
+            # Get liquidity
+            liquidity = position.get('liquidity', 0)
+            
+            # Create normalized position data
             return {
                 'pool': pool['address'],  # Use 'pool' as the field name for Airtable
                 'poolAddress': pool['address'],
@@ -391,16 +521,15 @@ class LPPositionManager:
                 'poolType': pool['type'],
                 'token0': pool['token0'],
                 'token1': pool['token1'],
-                'positionAddress': position.get('address', position.get('positionAddress', '')),
-                'token0Amount': token0_amount,
-                'token1Amount': token1_amount,
-                'token0ValueUsd': token0_usd,
-                'token1ValueUsd': token1_usd,
-                'totalValueUsd': total_value_usd,
-                'feesUsd': fees_usd,
-                'lowerBound': lower_bound,
-                'upperBound': upper_bound,
-                'currentPrice': current_price,
+                'positionAddress': position.get('address', ''),
+                'lowerTick': lower_tick,
+                'upperTick': upper_tick,
+                'liquidity': liquidity,
+                'tokenX': token_x,
+                'tokenY': token_y,
+                'feesOwedX': fees_owed_x,
+                'feesOwedY': fees_owed_y,
+                'lastUpdatedAt': position.get('lastUpdatedAt', ''),
                 'isActive': True,
                 'createdAt': datetime.now(timezone.utc).isoformat(),
                 'updatedAt': datetime.now(timezone.utc).isoformat()
