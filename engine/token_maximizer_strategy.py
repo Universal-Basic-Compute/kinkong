@@ -198,15 +198,13 @@ class TokenMaximizerStrategy:
                         response_text = await response.text()
                         
                         self.logger.info(f"DexScreener API response status: {response_status}")
-                        self.logger.info(f"DexScreener API raw response: {response_text}")
-                        
+                    
                         if response_status != 200:
                             self.logger.error(f"DexScreener API error: {response_status}")
                             return {}
                         
                         try:
                             data = json.loads(response_text)
-                            self.logger.info(f"Parsed JSON data: {json.dumps(data, indent=2)}")
                         except json.JSONDecodeError as e:
                             self.logger.error(f"Failed to parse JSON response: {e}")
                             return {}
@@ -221,7 +219,6 @@ class TokenMaximizerStrategy:
                         
                         # Use the first pair (should be only one since we requested by pair address)
                         best_pair = pairs[0]
-                        self.logger.info(f"Selected pair data: {json.dumps(best_pair, indent=2)}")
                         
                         # Extract relevant data with additional validation
                         price_usd = best_pair.get('priceUsd', '0')
@@ -283,7 +280,6 @@ class TokenMaximizerStrategy:
                         response_text = await response.text()
                         
                         self.logger.info(f"DexScreener API response status: {response_status}")
-                        self.logger.info(f"DexScreener API raw response: {response_text}")
                         
                         if response_status != 200:
                             self.logger.error(f"DexScreener API error: {response_status}")
@@ -291,7 +287,6 @@ class TokenMaximizerStrategy:
                         
                         try:
                             data = json.loads(response_text)
-                            self.logger.info(f"Parsed JSON data: {json.dumps(data, indent=2)}")
                         except json.JSONDecodeError as e:
                             self.logger.error(f"Failed to parse JSON response: {e}")
                             return {}
@@ -312,9 +307,8 @@ class TokenMaximizerStrategy:
                         
                         # Use the most liquid pair
                         best_pair = max(sol_pairs, key=lambda x: float(x.get('liquidity', {}).get('usd', 0) or 0))
-                        self.logger.info(f"Selected pair data: {json.dumps(best_pair, indent=2)}")
-                
-                # Extract relevant data with additional validation
+            
+            # Extract relevant data with additional validation
                 price_usd = best_pair.get('priceUsd', '0')
                 price_change = best_pair.get('priceChange', {}).get('h24', '0')
                 volume = best_pair.get('volume', {}).get('h24', '0')
