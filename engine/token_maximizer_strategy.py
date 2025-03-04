@@ -3,6 +3,8 @@ import json
 import logging
 import asyncio
 import aiohttp
+import base64
+import sys
 from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional, Tuple, Any
 from dotenv import load_dotenv
@@ -368,7 +370,7 @@ class TokenMaximizerStrategy:
             return {}
     
     async def get_token_score_from_claude(self, token: str) -> int:
-        """Get score for a specific token from Claude API based on market data"""
+        """Get score for a specific token from Claude API based on market data and charts"""
         try:
             if not self.claude_api_key:
                 self.logger.warning(f"No Claude API key available, using default score for {token}")
@@ -377,6 +379,9 @@ class TokenMaximizerStrategy:
             # Get market data
             market_sentiment = await self.get_market_sentiment()
             token_data = await self.get_token_dexscreener_data(token)
+            
+            # Generate chart for TOKEN/SOL performance
+            chart_path = await self.generate_token_vs_sol_chart(token)
             
             # Prepare context for Claude
             context = {
@@ -441,15 +446,43 @@ Score {token} on a scale from -10 to +10 relative to SOL:
             # Log the system prompt directly in the logs instead of writing to a file
             self.logger.info(f"\n===== SYSTEM PROMPT FOR {token} =====\n{system_prompt}\n=====END SYSTEM PROMPT=====")
             
-            # Call Claude API with context in system prompt
+            # Call Claude API with context in system prompt and chart image
+            messages = [{"role": "user", "content": prompt}]
+            
+            # Add chart image if available
+            if chart_path and os.path.exists(chart_path):
+                self.logger.info(f"Including chart image in Claude request: {chart_path}")
+                with open(chart_path, "rb") as image_file:
+                    image_data = base64.b64encode(image_file.read()).decode('utf-8')
+                    
+                    # Create message with both text and image
+                    messages = [
+                        {
+                            "role": "user", 
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": prompt
+                                },
+                                {
+                                    "type": "image",
+                                    "source": {
+                                        "type": "base64",
+                                        "media_type": "image/png",
+                                        "data": image_data
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+            
+            # Call Claude API
             response = self.claude.messages.create(
                 model="claude-3-7-sonnet-latest",
                 max_tokens=1000,
                 temperature=0,
                 system=system_prompt,
-                messages=[
-                    {"role": "user", "content": prompt}
-                ]
+                messages=messages
             )
             
             # Extract JSON from response
@@ -507,6 +540,61 @@ Score {token} on a scale from -10 to +10 relative to SOL:
             # If all else fails, return neutral score
             return 0
 
+    async def generate_token_vs_sol_chart(self, token: str) -> Optional[str]:
+        """Generate a chart showing TOKEN/SOL performance using existing chart generation code"""
+        try:
+            self.logger.info(f"Generating {token}/SOL performance chart...")
+            
+            # Import the chart generation function from scripts
+            sys.path.insert(0, str(project_root / "scripts"))
+            from generate_chart import fetch_token_data, generate_chart
+            
+            # Define chart configuration
+            config = {
+                'timeframe': '1H',  # 1-hour candles
+                'strategy_timeframe': 'INTRADAY',
+                'duration_hours': 24,  # Last 24 hours
+                'title': f'{token}/SOL Performance (24H)',
+                'subtitle': '1-hour candles - Relative Performance',
+                'filename': f'{token.lower()}_vs_sol_24h.png'
+            }
+            
+            # Get token mint address
+            token_mint = getattr(self.executor, f"{token.upper()}_MINT", None)
+            if not token_mint:
+                self.logger.error(f"No mint address found for {token}")
+                return None
+            
+            # Fetch token data
+            df = fetch_token_data(
+                timeframe=config['timeframe'],
+                hours=config['duration_hours'],
+                token_address=token_mint
+            )
+            
+            if df is None or df.empty:
+                self.logger.warning(f"No data available for {token} chart")
+                return None
+            
+            # Create charts directory if it doesn't exist
+            charts_dir = project_root / "public" / "charts" / token.lower()
+            charts_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Generate chart
+            output_path = charts_dir / config['filename']
+            success = generate_chart(df, config)
+            
+            if success:
+                self.logger.info(f"Successfully generated chart at {output_path}")
+                return str(output_path)
+            else:
+                self.logger.error(f"Failed to generate chart for {token}")
+                return None
+                
+        except Exception as e:
+            self.logger.error(f"Error generating chart for {token}: {e}")
+            return None
+    
     async def get_token_scores_from_claude(self) -> Tuple[int, int]:
         """Get token scores from Claude API based on market data"""
         try:
