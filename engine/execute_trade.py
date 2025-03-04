@@ -240,7 +240,13 @@ class JupiterTradeExecutor:
                         self.logger.debug(f"Birdeye API response: {json.dumps(data, indent=2)}")
                         
                         if data.get('success'):
-                            token_data = data.get('data', {})
+                            token_data = data.get('data')
+                            
+                            # Handle case where data is None
+                            if token_data is None:
+                                self.logger.warning(f"No token data returned for {token_mint}, assuming zero balance")
+                                return 0
+                            
                             # Get balance and handle decimals (USDC has 6 decimals)
                             raw_balance = float(token_data.get('balance', 0))
                             decimals = int(token_data.get('decimals', 6))  # Default to 6 for USDC
@@ -490,7 +496,11 @@ class JupiterTradeExecutor:
                                     self.logger.info("No balance found, setting to 0")
                                 else:
                                     balance_data = data.get('data', {})
-                                    initial_balance = float(balance_data.get('balance', 0))
+                                    if balance_data is None:
+                                        initial_balance = 0
+                                        self.logger.info("Balance data is None, setting to 0")
+                                    else:
+                                        initial_balance = float(balance_data.get('balance', 0))
                                     
                                 self.logger.info(f"Initial balance: {initial_balance}")
 
@@ -525,7 +535,12 @@ class JupiterTradeExecutor:
                                             if check_data.get('success') and check_data.get('data') is None:
                                                 new_balance = 0
                                             else:
-                                                new_balance = float(check_data.get('data', {}).get('balance', 0))
+                                                balance_data = check_data.get('data')
+                                                if balance_data is None:
+                                                    new_balance = 0
+                                                    self.logger.info("New balance data is None, setting to 0")
+                                                else:
+                                                    new_balance = float(balance_data.get('balance', 0))
                                             
                                             self.logger.info(f"New balance: {new_balance}")
                                             
