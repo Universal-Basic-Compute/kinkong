@@ -19,6 +19,7 @@ if str(project_root) not in sys.path:
 
 # Import executor
 from engine.token_maximizer_executor import TokenMaximizerExecutor
+from engine.execute_trade import JupiterTradeExecutor
 
 def setup_logging():
     """Configure logging with a single handler"""
@@ -127,16 +128,42 @@ class TokenMaximizerStrategy:
                     # Use the most liquid pair
                     best_pair = max(sol_pairs, key=lambda x: float(x.get('liquidity', {}).get('usd', 0) or 0))
                     
-                    # Extract relevant data
+                    # Extract relevant data with additional validation
+                    price_usd = best_pair.get('priceUsd', '0')
+                    price_change = best_pair.get('priceChange', {}).get('h24', '0')
+                    volume = best_pair.get('volume', {}).get('h24', '0')
+                    liquidity = best_pair.get('liquidity', {}).get('usd', '0')
+                    fdv = best_pair.get('fdv', '0')
+                    
+                    # Ensure all values are valid floats
+                    try:
+                        price_usd = float(price_usd) if price_usd else 0
+                        price_change = float(price_change) if price_change else 0
+                        volume = float(volume) if volume else 0
+                        liquidity = float(liquidity) if liquidity else 0
+                        fdv = float(fdv) if fdv else 0
+                    except (ValueError, TypeError) as e:
+                        self.logger.warning(f"Error parsing numeric values for {token}: {e}")
+                        price_usd = 0
+                        price_change = 0
+                        volume = 0
+                        liquidity = 0
+                        fdv = 0
+                    
+                    # Validate price is reasonable (not extremely high or low)
+                    if price_usd > 1000000 or price_usd < 0.0000001:
+                        self.logger.warning(f"Suspicious price for {token}: ${price_usd}. Setting to 0 for safety.")
+                        price_usd = 0
+                    
                     token_data = {
                         "symbol": token,
                         "name": best_pair.get('baseToken', {}).get('name', token),
                         "address": token_mint,
-                        "price": float(best_pair.get('priceUsd', 0)),
-                        "priceChange24h": float(best_pair.get('priceChange', {}).get('h24', 0) or 0),
-                        "volume24h": float(best_pair.get('volume', {}).get('h24', 0) or 0),
-                        "liquidity": float(best_pair.get('liquidity', {}).get('usd', 0) or 0),
-                        "fdv": float(best_pair.get('fdv', 0) or 0),
+                        "price": price_usd,
+                        "priceChange24h": price_change,
+                        "volume24h": volume,
+                        "liquidity": liquidity,
+                        "fdv": fdv,
                         "pairAddress": best_pair.get('pairAddress', ''),
                         "dexId": best_pair.get('dexId', ''),
                         "url": f"https://dexscreener.com/solana/{best_pair.get('pairAddress', '')}"
@@ -269,6 +296,25 @@ Score {token} on a scale from -10 to +10 relative to SOL:
             
         except Exception as e:
             self.logger.error(f"Error getting token score for {token} from Claude: {e}")
+            
+            # Fallback to a simple price-based score if Claude fails
+            try:
+                token_data = await self.get_token_dexscreener_data(token)
+                if token_data:
+                    # Simple scoring based on 24h price change
+                    price_change = token_data.get('priceChange24h', 0)
+                    
+                    # Convert price change to a score between -10 and 10
+                    # 20% change = max score, linear scale
+                    fallback_score = int((price_change / 20) * 10)
+                    fallback_score = max(-10, min(10, fallback_score))
+                    
+                    self.logger.info(f"Using fallback score for {token} based on price change: {fallback_score}")
+                    return fallback_score
+            except Exception as fallback_err:
+                self.logger.error(f"Fallback scoring also failed for {token}: {fallback_err}")
+            
+            # If all else fails, return neutral score
             return 0
 
     async def get_token_scores_from_claude(self) -> Tuple[int, int]:
