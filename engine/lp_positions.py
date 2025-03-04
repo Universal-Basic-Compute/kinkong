@@ -427,7 +427,7 @@ class LPPositionManager:
                 
             # Check if position already exists by address
             existing_positions = self.positions_table.get_all(
-                formula=f"positionAddress='{position_data['positionAddress']}'"
+                formula=f"{{positionAddress}}='{position_data['positionAddress']}'"
             )
             
             if existing_positions:
