@@ -584,7 +584,8 @@ export default function Invest() {
   
   return (
     <main className="min-h-screen p-4 max-w-6xl mx-auto">
-      <h1 className="text-4xl font-bold mb-8 text-center">Invest in KinKong</h1>
+      <h1 className="text-4xl font-bold mb-2 text-center">Invest in KinKong</h1>
+      <p className="text-center text-xl text-gray-300 mb-8">Get weekly returns on your UBC ecosystem assets</p>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* First row - takes up full width (or 70% on larger screens) */}
