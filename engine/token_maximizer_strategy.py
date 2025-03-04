@@ -103,30 +103,60 @@ class TokenMaximizerStrategy:
                 self.logger.error(f"No mint address found for {token}")
                 return {}
             
-            # Fetch data from DexScreener
-            dexscreener_url = f"https://api.dexscreener.com/latest/dex/tokens/{token_mint}"
+            # Hardcoded pair addresses
+            hardcoded_pairs = {
+                "UBC": "hbjg1zpronbeiv86qdt1wzwgymts1ppxjcfoz819cbjd",
+                "COMPUTE": "hn7ibjiyx399d1efyxcwashzrsmfumonyvxgfxg41rr3"
+            }
             
-            async with aiohttp.ClientSession() as session:
-                async with session.get(dexscreener_url) as response:
-                    if response.status != 200:
-                        self.logger.error(f"DexScreener API error: {response.status}")
-                        return {}
-                    
-                    data = await response.json()
-                    pairs = data.get('pairs', [])
-                    
-                    if not pairs:
-                        self.logger.warning(f"No pairs found for {token}")
-                        return {}
-                    
-                    # Filter for Solana pairs
-                    sol_pairs = [p for p in pairs if p.get('chainId') == 'solana']
-                    if not sol_pairs:
-                        self.logger.warning(f"No Solana pairs found for {token}")
-                        return {}
-                    
-                    # Use the most liquid pair
-                    best_pair = max(sol_pairs, key=lambda x: float(x.get('liquidity', {}).get('usd', 0) or 0))
+            # Check if we have a hardcoded pair for this token
+            if token.upper() in hardcoded_pairs:
+                pair_address = hardcoded_pairs[token.upper()]
+                self.logger.info(f"Using hardcoded pair address for {token}: {pair_address}")
+                
+                # Fetch data from DexScreener using the pair address
+                dexscreener_url = f"https://api.dexscreener.com/latest/dex/pairs/solana/{pair_address}"
+                
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(dexscreener_url) as response:
+                        if response.status != 200:
+                            self.logger.error(f"DexScreener API error: {response.status}")
+                            return {}
+                        
+                        data = await response.json()
+                        pairs = data.get('pairs', [])
+                        
+                        if not pairs or len(pairs) == 0:
+                            self.logger.warning(f"No pair data found for hardcoded {token} pair: {pair_address}")
+                            return {}
+                        
+                        # Use the first pair (should be only one since we requested by pair address)
+                        best_pair = pairs[0]
+            else:
+                # Original code for tokens without hardcoded pairs
+                dexscreener_url = f"https://api.dexscreener.com/latest/dex/tokens/{token_mint}"
+                
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(dexscreener_url) as response:
+                        if response.status != 200:
+                            self.logger.error(f"DexScreener API error: {response.status}")
+                            return {}
+                        
+                        data = await response.json()
+                        pairs = data.get('pairs', [])
+                        
+                        if not pairs:
+                            self.logger.warning(f"No pairs found for {token}")
+                            return {}
+                        
+                        # Filter for Solana pairs
+                        sol_pairs = [p for p in pairs if p.get('chainId') == 'solana']
+                        if not sol_pairs:
+                            self.logger.warning(f"No Solana pairs found for {token}")
+                            return {}
+                        
+                        # Use the most liquid pair
+                        best_pair = max(sol_pairs, key=lambda x: float(x.get('liquidity', {}).get('usd', 0) or 0))
                     
                     # Extract relevant data with additional validation
                     price_usd = best_pair.get('priceUsd', '0')
