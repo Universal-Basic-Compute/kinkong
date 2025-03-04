@@ -400,8 +400,8 @@ class TokenMaximizerStrategy:
             Provide your analysis and final score in this JSON format:
             ```json
             {{
-                "score": 0,  // Integer between -10 and +10
-                "reasoning": ""
+                "reasoning": "",
+                "score": 0  // Integer between -10 and +10
             }}
             ```
             
