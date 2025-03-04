@@ -86,6 +86,12 @@ $tasks = @(
         Script = "python ../socials/analyze_kols.py --send-random-tweet"
         Schedule = "Hourly"
         StartTime = "00:45"  # Run at 45 minutes past each hour
+    },
+    @{
+        Name = "KinKong_MarketSentiment"
+        Script = "market_sentiment.py"
+        Schedule = "Daily"
+        StartTime = "18:00"  # Run at 6:00 PM
     }
 )
 
