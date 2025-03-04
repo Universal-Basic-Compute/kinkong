@@ -89,7 +89,7 @@ class TokenMaximizerStrategy:
         return {
             "classification": "NEUTRAL",
             "confidence": 0.5,
-            "reasoning": "Market showing mixed signals with balanced buying and selling pressure."
+            "indicators": "Market showing mixed signals with balanced buying and selling pressure."
         }
     
     async def get_token_dexscreener_data(self, token: str) -> Dict:
@@ -263,7 +263,7 @@ class TokenMaximizerStrategy:
 ## Market Sentiment
 Classification: {market_sentiment['classification']}
 Confidence: {market_sentiment['confidence']}
-Reasoning: {market_sentiment['reasoning']}
+Indicators: {market_sentiment['indicators']}
 
 ## {token} Token Data (DexScreener)
 ```
