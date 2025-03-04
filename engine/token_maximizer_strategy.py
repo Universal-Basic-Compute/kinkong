@@ -178,12 +178,8 @@ Score {token} on a scale from -10 to +10 relative to SOL:
 - -10: Extremely bearish on {token} vs SOL
 """
             
-            # Log the system prompt
-            system_prompt_log_path = self.logs_dir / f"claude_{token.lower()}_system_prompt_{timestamp}.txt"
-            with open(system_prompt_log_path, "w") as f:
-                f.write(system_prompt)
-            
-            self.logger.info(f"Claude system prompt for {token} logged to {system_prompt_log_path}")
+            # Log the system prompt directly in the logs instead of writing to a file
+            self.logger.info(f"\n===== SYSTEM PROMPT FOR {token} =====\n{system_prompt}\n=====END SYSTEM PROMPT=====")
             
             # Call Claude API with context in system prompt
             response = self.claude.messages.create(
