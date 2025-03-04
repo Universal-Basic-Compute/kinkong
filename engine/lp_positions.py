@@ -627,14 +627,6 @@ class LPPositionManager:
                     token0_is_x = False
                     break
             
-            # Extract claimed fees
-            claimed_fee_x = float(position.get('totalClaimedFeeXAmount', 0))
-            claimed_fee_y = float(position.get('totalClaimedFeeYAmount', 0))
-            
-            # Get position bounds
-            lower_bound = position.get('lowerBinId', 0)
-            upper_bound = position.get('upperBinId', 0)
-            
             # Get reserve amounts from LB pair details
             reserve_x = float(lb_pair_details.get('reserveX', 0))
             reserve_y = float(lb_pair_details.get('reserveY', 0))
@@ -657,10 +649,7 @@ class LPPositionManager:
             token1_value_usd = token1_amount * token1_price
             total_value_usd = token0_value_usd + token1_value_usd
             
-            # Calculate total fees in USD
-            fees_usd = 0  # Would need price data to calculate accurately
-            
-            # Create normalized position data
+            # Create normalized position data - REMOVE SPECIFIC FIELDS
             return {
                 'pool': pool['address'],  # Use 'pool' as the field name for Airtable
                 'poolAddress': pool['address'],
@@ -669,19 +658,11 @@ class LPPositionManager:
                 'token0': pool['token0'],
                 'token1': pool['token1'],
                 'positionAddress': position.get('address', ''),
-                'lowerBound': lower_bound,
-                'upperBound': upper_bound,
                 'token0Amount': token0_amount,
                 'token1Amount': token1_amount,
                 'token0ValueUsd': token0_value_usd,
                 'token1ValueUsd': token1_value_usd,
                 'totalValueUsd': total_value_usd,
-                'feesUsd': fees_usd,
-                'lastUpdatedAt': position.get('lastUpdatedAt', ''),
-                'tokenXMint': token_x_mint,
-                'tokenYMint': token_y_mint,
-                'claimedFeeX': claimed_fee_x,
-                'claimedFeeY': claimed_fee_y,
                 'isActive': True,
                 'createdAt': datetime.now(timezone.utc).isoformat(),
                 'updatedAt': datetime.now(timezone.utc).isoformat()
@@ -696,26 +677,10 @@ class LPPositionManager:
             # Extract token information from pool details
             pool_details = position.get('poolDetails', {})
             
-            # Get token mints
-            token_x = pool_details.get('tokenX', '')
-            token_y = pool_details.get('tokenY', '')
-            
-            # Extract fees owed
-            fees_owed_x = float(position.get('tokenFeesOwedX', 0))
-            fees_owed_y = float(position.get('tokenFeesOwedY', 0))
-            
-            # Get position bounds
-            lower_tick = position.get('lowerTick', 0)
-            upper_tick = position.get('upperTick', 0)
-            
-            # Get liquidity
-            liquidity = float(position.get('liquidity', 0))
-            
             # Calculate token amounts based on liquidity and price range
             # This is a simplified calculation and would need to be adjusted based on actual math for DYN positions
             # For more accurate calculations, we would need to use the actual formulas from the DYN protocol
-            sqrt_price_x64 = float(pool_details.get('sqrtPriceX64', 0))
-            current_tick = int(pool_details.get('tick', 0))
+            liquidity = float(position.get('liquidity', 0))
             
             # Placeholder calculations - these need to be replaced with actual DYN formulas
             token0_amount = liquidity * 0.01  # Placeholder
@@ -729,7 +694,7 @@ class LPPositionManager:
             token1_value_usd = token1_amount * token1_price
             total_value_usd = token0_value_usd + token1_value_usd
             
-            # Create normalized position data
+            # Create normalized position data - REMOVE SPECIFIC FIELDS
             return {
                 'pool': pool['address'],  # Use 'pool' as the field name for Airtable
                 'poolAddress': pool['address'],
@@ -738,19 +703,11 @@ class LPPositionManager:
                 'token0': pool['token0'],
                 'token1': pool['token1'],
                 'positionAddress': position.get('address', ''),
-                'lowerTick': lower_tick,
-                'upperTick': upper_tick,
-                'liquidity': liquidity,
-                'tokenX': token_x,
-                'tokenY': token_y,
                 'token0Amount': token0_amount,
                 'token1Amount': token1_amount,
                 'token0ValueUsd': token0_value_usd,
                 'token1ValueUsd': token1_value_usd,
                 'totalValueUsd': total_value_usd,
-                'feesOwedX': fees_owed_x,
-                'feesOwedY': fees_owed_y,
-                'lastUpdatedAt': position.get('lastUpdatedAt', ''),
                 'isActive': True,
                 'createdAt': datetime.now(timezone.utc).isoformat(),
                 'updatedAt': datetime.now(timezone.utc).isoformat()
