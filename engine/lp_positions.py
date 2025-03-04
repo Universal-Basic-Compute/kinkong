@@ -342,6 +342,7 @@ class LPPositionManager:
             current_price = position.get('currentPrice', 0)
             
             return {
+                'pool': pool['address'],  # Use 'pool' as the field name for Airtable
                 'poolAddress': pool['address'],
                 'poolName': pool['name'],
                 'poolType': pool['type'],
@@ -386,6 +387,7 @@ class LPPositionManager:
             current_price = position.get('currentPrice', 0)
             
             return {
+                'pool': pool['address'],  # Use 'pool' as the field name for Airtable
                 'poolAddress': pool['address'],
                 'poolName': pool['name'],
                 'poolType': pool['type'],
@@ -434,10 +436,12 @@ class LPPositionManager:
                 # Update existing position
                 self.logger.info(f"Updating existing position for pool: {position_data['poolAddress']}")
                 position_data['updatedAt'] = datetime.now(timezone.utc).isoformat()
+                position_data['pool'] = position_data['poolAddress']  # Ensure pool field is set
                 self.positions_table.update(existing_positions[0]['id'], position_data)
             else:
                 # Create new position
                 self.logger.info(f"Creating new position for pool: {position_data['poolAddress']}")
+                position_data['pool'] = position_data['poolAddress']  # Ensure pool field is set
                 self.positions_table.insert(position_data)
                 
         except Exception as e:
