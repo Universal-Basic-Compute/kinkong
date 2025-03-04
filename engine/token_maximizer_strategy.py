@@ -442,9 +442,14 @@ Score {token} on a scale from -10 to +10 relative to SOL:
         try:
             self.logger.info(f"Starting Token Maximizer daily update {'(DRY RUN)' if dry_run else ''}")
             
-            # If scores are not set manually, get them from Claude
-            if self.ubc_score == 0 and self.compute_score == 0:
+            # Always get scores from Claude unless they were explicitly set
+            # This ensures we use AI-generated scores by default
+            if not (self.ubc_score != 0 or self.compute_score != 0):
+                self.logger.info("Getting token scores from Claude AI...")
                 self.ubc_score, self.compute_score = await self.get_token_scores_from_claude()
+                self.logger.info(f"Claude AI scores - UBC: {self.ubc_score}, COMPUTE: {self.compute_score}")
+            else:
+                self.logger.info(f"Using manually set scores - UBC: {self.ubc_score}, COMPUTE: {self.compute_score}")
             
             # Calculate target allocation
             target_allocation = self.calculate_allocation()

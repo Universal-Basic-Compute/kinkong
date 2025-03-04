@@ -10,18 +10,18 @@ export async function POST(request: Request) {
     // Check if this is a token-maximizer strategy request
     if (body.strategy === 'token-maximizer') {
       // Validate token-maximizer parameters
-      if (body.ubcScore === undefined || body.computeScore === undefined || !body.wallet) {
+      if (!body.wallet) {
         return NextResponse.json(
-          { error: 'Missing required parameters for token-maximizer strategy' },
+          { error: 'Missing wallet parameter for token-maximizer strategy' },
           { status: 400 }
         );
       }
-      
+        
       // Execute token-maximizer strategy by calling Python script
       const result = await executeTokenMaximizerStrategy({
-        ubcScore: body.ubcScore,
-        computeScore: body.computeScore,
         wallet: body.wallet,
+        ubcScore: body.ubcScore, // Optional: manual override
+        computeScore: body.computeScore, // Optional: manual override
         dryRun: body.dryRun === true  // Add dry-run parameter
       });
       
@@ -59,13 +59,13 @@ export async function POST(request: Request) {
 
 // Function to execute token-maximizer strategy by calling Python script
 async function executeTokenMaximizerStrategy(params: {
-  ubcScore: number;
-  computeScore: number;
   wallet: string;
+  ubcScore?: number;
+  computeScore?: number;
   dryRun?: boolean;
 }): Promise<any> {
   return new Promise((resolve, reject) => {
-    console.log(`Executing token-maximizer strategy with UBC score: ${params.ubcScore}, COMPUTE score: ${params.computeScore}${params.dryRun ? ' (DRY RUN)' : ''}`);
+    console.log(`Executing token-maximizer strategy${params.dryRun ? ' (DRY RUN)' : ''}`);
     
     // Get the project root directory
     const projectRoot = process.cwd();
@@ -76,10 +76,19 @@ async function executeTokenMaximizerStrategy(params: {
     // Prepare command line arguments
     const args = [
       scriptPath,
-      '--action', 'token-maximizer',
-      '--ubc-score', params.ubcScore.toString(),
-      '--compute-score', params.computeScore.toString()
+      '--action', 'token-maximizer'
     ];
+    
+    // Add manual scores only if provided
+    if (params.ubcScore !== undefined) {
+      args.push('--ubc-score', params.ubcScore.toString());
+      console.log(`Using manual UBC score: ${params.ubcScore}`);
+    }
+    
+    if (params.computeScore !== undefined) {
+      args.push('--compute-score', params.computeScore.toString());
+      console.log(`Using manual COMPUTE score: ${params.computeScore}`);
+    }
     
     // Add dry-run flag if needed
     if (params.dryRun) {

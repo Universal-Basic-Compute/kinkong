@@ -1430,11 +1430,18 @@ def main():
         # Execute based on action parameter
         if args.action == 'token-maximizer':
             # Run token-maximizer strategy
-            logger.info(f"Running token-maximizer strategy with UBC score: {args.ubc_score}, COMPUTE score: {args.compute_score}{' (DRY RUN)' if args.dry_run else ''}")
+            if args.ubc_score != 0 or args.compute_score != 0:
+                logger.info(f"Running token-maximizer strategy with manual scores - UBC: {args.ubc_score}, COMPUTE: {args.compute_score}{' (DRY RUN)' if args.dry_run else ''}")
+            else:
+                logger.info(f"Running token-maximizer strategy with automatic Claude AI scoring{' (DRY RUN)' if args.dry_run else ''}")
             
             async def run_token_maximizer():
                 strategy = TokenMaximizerStrategy()
-                strategy.set_token_scores(args.ubc_score, args.compute_score)
+                
+                # Only set scores if they were explicitly provided
+                if args.ubc_score != 0 or args.compute_score != 0:
+                    strategy.set_token_scores(args.ubc_score, args.compute_score)
+                    
                 result = await strategy.run_daily_update(dry_run=args.dry_run)
                 
                 # If dry run, get and print the summary
