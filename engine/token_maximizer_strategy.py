@@ -91,16 +91,16 @@ class TokenMaximizerStrategy:
             "reasoning": "Market showing mixed signals with balanced buying and selling pressure."
         }
     
-    async def get_token_snapshots(self, token: str) -> List[Dict]:
-        """Get recent token snapshots from DexScreener"""
+    async def get_token_dexscreener_data(self, token: str) -> Dict:
+        """Get token data directly from DexScreener API"""
         try:
-            self.logger.info(f"Fetching token snapshots for {token}...")
+            self.logger.info(f"Fetching DexScreener data for {token}...")
             
             # Get token mint address
             token_mint = getattr(self.executor, f"{token.upper()}_MINT", None)
             if not token_mint:
                 self.logger.error(f"No mint address found for {token}")
-                return []
+                return {}
             
             # Fetch data from DexScreener
             dexscreener_url = f"https://api.dexscreener.com/latest/dex/tokens/{token_mint}"
@@ -109,45 +109,46 @@ class TokenMaximizerStrategy:
                 async with session.get(dexscreener_url) as response:
                     if response.status != 200:
                         self.logger.error(f"DexScreener API error: {response.status}")
-                        return []
+                        return {}
                     
                     data = await response.json()
                     pairs = data.get('pairs', [])
                     
                     if not pairs:
                         self.logger.warning(f"No pairs found for {token}")
-                        return []
+                        return {}
                     
                     # Filter for Solana pairs
                     sol_pairs = [p for p in pairs if p.get('chainId') == 'solana']
                     if not sol_pairs:
                         self.logger.warning(f"No Solana pairs found for {token}")
-                        return []
+                        return {}
                     
                     # Use the most liquid pair
                     best_pair = max(sol_pairs, key=lambda x: float(x.get('liquidity', {}).get('usd', 0) or 0))
                     
-                    # Create snapshot from pair data
-                    current_time = datetime.now(timezone.utc)
-                    snapshot = {
-                        "timestamp": current_time.isoformat(),
+                    # Extract relevant data
+                    token_data = {
+                        "symbol": token,
+                        "name": best_pair.get('baseToken', {}).get('name', token),
+                        "address": token_mint,
                         "price": float(best_pair.get('priceUsd', 0)),
+                        "priceChange24h": float(best_pair.get('priceChange', {}).get('h24', 0) or 0),
                         "volume24h": float(best_pair.get('volume', {}).get('h24', 0) or 0),
-                        "marketCap": float(best_pair.get('fdv', 0) or 0),  # Fully diluted valuation
                         "liquidity": float(best_pair.get('liquidity', {}).get('usd', 0) or 0),
-                        "priceChange24h": float(best_pair.get('priceChange', {}).get('h24', 0) or 0) / 100,  # Convert percentage to decimal
-                        "volumeChange24h": 0  # DexScreener doesn't provide volume change, default to 0
+                        "fdv": float(best_pair.get('fdv', 0) or 0),
+                        "pairAddress": best_pair.get('pairAddress', ''),
+                        "dexId": best_pair.get('dexId', ''),
+                        "url": f"https://dexscreener.com/solana/{best_pair.get('pairAddress', '')}"
                     }
                     
-                    self.logger.info(f"Snapshot for {token}: Price=${snapshot['price']:.4f}, 24h Change={snapshot['priceChange24h']*100:.2f}%")
+                    self.logger.info(f"DexScreener data for {token}: Price=${token_data['price']:.4f}, 24h Change={token_data['priceChange24h']:.2f}%")
                     
-                    # Return as a list with one item (current snapshot)
-                    # In a production system, you would fetch historical data and return multiple snapshots
-                    return [snapshot]
+                    return token_data
                     
         except Exception as e:
-            self.logger.error(f"Error fetching token snapshots for {token}: {e}")
-            return []
+            self.logger.error(f"Error fetching DexScreener data for {token}: {e}")
+            return {}
     
     async def get_token_score_from_claude(self, token: str) -> int:
         """Get score for a specific token from Claude API based on market data"""
@@ -158,12 +159,12 @@ class TokenMaximizerStrategy:
             
             # Get market data
             market_sentiment = await self.get_market_sentiment()
-            token_snapshots = await self.get_token_snapshots(token)
+            token_data = await self.get_token_dexscreener_data(token)
             
             # Prepare context for Claude
             context = {
                 "market_sentiment": market_sentiment,
-                "token_snapshots": token_snapshots,
+                "token_data": token_data,
                 "current_time": datetime.now(timezone.utc).isoformat()
             }
             
@@ -207,9 +208,9 @@ Classification: {market_sentiment['classification']}
 Confidence: {market_sentiment['confidence']}
 Reasoning: {market_sentiment['reasoning']}
 
-## {token} Token Snapshots (7-day history)
+## {token} Token Data (DexScreener)
 ```
-{json.dumps(token_snapshots, indent=2)}
+{json.dumps(token_data, indent=2)}
 ```
 
 # Scoring Guidelines
