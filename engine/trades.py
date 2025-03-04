@@ -1389,9 +1389,9 @@ def main():
         # Configurer l'analyseur d'arguments
         parser = argparse.ArgumentParser(description='KinKong Trade Executor')
         parser.add_argument('--action', type=str, 
-                            choices=['monitor', 'open', 'close', 'all', 'test', 'token-maximizer'], 
+                            choices=['monitor', 'open', 'close', 'all', 'test', 'token-maximizer', 'lp-positions'], 
                             default='all', 
-                            help='Action to perform: monitor, open, close, all, test, or token-maximizer')
+                            help='Action to perform: monitor, open, close, all, test, token-maximizer, or lp-positions')
         parser.add_argument('--trade-id', type=str, 
                             help='Specific trade ID to close (only with --action=close)')
         parser.add_argument('--exit-reason', type=str, 
@@ -1428,7 +1428,18 @@ def main():
             raise ValueError(f"Missing environment variables: {', '.join(missing)}")
 
         # Execute based on action parameter
-        if args.action == 'token-maximizer':
+        if args.action == 'lp-positions':
+            # Run LP position manager
+            logger.info("Running LP position manager to fetch and update LP positions")
+            
+            async def run_lp_position_manager():
+                from engine.lp_positions import LPPositionManager
+                manager = LPPositionManager()
+                await manager.process_all_positions()
+                
+            asyncio.run(run_lp_position_manager())
+            
+        elif args.action == 'token-maximizer':
             # Run token-maximizer strategy
             if args.ubc_score != 0 or args.compute_score != 0:
                 logger.info(f"Running token-maximizer strategy with manual scores - UBC: {args.ubc_score}, COMPUTE: {args.compute_score}{' (DRY RUN)' if args.dry_run else ''}")
