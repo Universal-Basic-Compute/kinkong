@@ -35,6 +35,8 @@ interface ChatContextType {
   subscription: { active: boolean; expiresAt?: string } | null;
   currentMission: string | null;
   setCurrentMission: (mission: string | null) => void;
+  currentSubmission: string | null;
+  setCurrentSubmission: (submission: string | null) => void;
   selectedMissionId: string | null;
   setSelectedMissionId: (id: string | null) => void;
   userData: UserData | null;
@@ -385,9 +387,10 @@ export const ChatProvider: React.FC<{ children: React.ReactNode; code: string | 
       subscription,
       currentMission,
       setCurrentMission,
+      currentSubmission,
+      setCurrentSubmission,
       selectedMissionId,
       setSelectedMissionId,
-      currentSubmission: currentSubmission,
       userData,
       handleSubmit,
       captureScreenshot,
