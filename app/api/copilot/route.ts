@@ -843,7 +843,7 @@ Use this token data to help the user discover promising tokens, analyze market t
     }
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // Increase to 60 seconds
 
     try {
       // Prepare messages array with conversation history
@@ -966,8 +966,8 @@ Use this token data to help the user discover promising tokens, analyze market t
       if (innerError instanceof Error && innerError.name === 'AbortError') {
         return new NextResponse(
           JSON.stringify({
-            error: 'Request timeout after 30 seconds',
-            details: 'The request took too long to complete'
+            error: 'Request timeout after 60 seconds',
+            details: 'The request took too long to complete. Try again with a shorter message or without a screenshot.'
           }),
           {
             status: 408,

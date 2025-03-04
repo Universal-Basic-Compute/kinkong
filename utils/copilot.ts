@@ -14,36 +14,58 @@ export async function askKinKongCopilot(message: string, code: string, wallet?: 
     console.log('Mission context:', mission || 'none');
     console.log('Submission context:', submission || 'none');
 
-    const response = await fetch('/api/copilot', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(requestBody)
-    });
+    // Create an AbortController with a longer timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 seconds timeout
 
-    if (!response.ok) {
-      throw new Error('Failed to get copilot response');
-    }
+    try {
+      const response = await fetch('/api/copilot', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
+      });
 
-    // Handle streaming response
-    const reader = response.body?.getReader();
-    const decoder = new TextDecoder();
-    let result = '';
+      // Clear the timeout
+      clearTimeout(timeoutId);
 
-    if (reader) {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value);
-        result += chunk;
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API error: ${response.status} - ${errorText}`);
       }
+
+      // Handle streaming response
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let result = '';
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value);
+          result += chunk;
+        }
+      }
+
+      return result;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        throw new Error('Request timed out after 90 seconds. Please try again with a shorter message or without a screenshot.');
+      }
+      
+      throw error;
     }
-
-    return result;
-
   } catch (error) {
     console.error('Error asking KinKong-copilot:', error);
-    throw error;
+    if (error instanceof Error) {
+      throw error; // Preserve the original error message
+    } else {
+      throw new Error('Failed to get copilot response');
+    }
   }
 }
