@@ -622,7 +622,7 @@ export default function Invest() {
                           : 'bg-black/20 border-gray-700 text-gray-400'
                       }`}
                     >
-                      <span className="metallic-text-ubc">$UBC</span>
+                      <span className="metallic-text-ubc text-sm">$UBC</span>
                     </button>
                     <button
                       type="button"
@@ -633,7 +633,7 @@ export default function Invest() {
                           : 'bg-black/20 border-gray-700 text-gray-400'
                       }`}
                     >
-                      <span className="metallic-text-compute">$COMPUTE</span>
+                      <span className="metallic-text-compute text-sm">$COMPUTE</span>
                     </button>
                     <button
                       type="button"
@@ -644,7 +644,7 @@ export default function Invest() {
                           : 'bg-black/20 border-gray-700 text-gray-400'
                       }`}
                     >
-                      <span className="metallic-text-usdc">$USDC</span>
+                      <span className="metallic-text-usdc text-sm">$USDC</span>
                     </button>
                   </div>
                 </div>
