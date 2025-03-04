@@ -39,6 +39,54 @@ const Header = () => {
 
   const navItems: NavItem[] = [
     { 
+      label: 'Learn',
+      isGroup: true,
+      subItems: [
+        { 
+          label: 'Trading Strategy', 
+          href: '/learn/trading-strategy',
+          description: 'Understand KinKong\'s core trading approach',
+          emoji: '📊'
+        },
+        { 
+          label: 'Market Sentiment', 
+          href: '/learn/market-sentiment',
+          description: 'How KinKong classifies market conditions',
+          emoji: '🧠'
+        },
+        { 
+          label: 'Trade Sizing', 
+          href: '/learn/trade-sizing',
+          description: 'Dynamic position sizing methodology',
+          emoji: '⚖️'
+        },
+        { 
+          label: 'Token Discovery', 
+          href: '/learn/token-discovery',
+          description: 'How KinKong finds promising tokens',
+          emoji: '🔍'
+        },
+        { 
+          label: 'Technical Flows', 
+          href: '/learn/technical-flows',
+          description: 'Behind the scenes of KinKong\'s operations',
+          emoji: '⚙️'
+        },
+        { 
+          label: 'Liquidity Strategy', 
+          href: '/learn/liquidity-strategy',
+          description: 'KinKong\'s approach to providing liquidity',
+          emoji: '💧'
+        },
+        { 
+          label: 'Token Maximizer', 
+          href: '/learn/token-maximizer',
+          description: 'Score-based token allocation system',
+          emoji: '🔄'
+        }
+      ]
+    },
+    { 
       label: 'Kong Invest',
       isGroup: true,
       subItems: [
