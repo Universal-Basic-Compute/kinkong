@@ -164,7 +164,7 @@ class TokenMaximizerStrategy:
             }
     
     async def get_token_dexscreener_data(self, token: str) -> Dict:
-        """Get token data directly from DexScreener API"""
+        """Get token data directly from DexScreener API with detailed logging"""
         try:
             self.logger.info(f"Fetching DexScreener data for {token}...")
             
@@ -188,14 +188,30 @@ class TokenMaximizerStrategy:
                 # Fetch data from DexScreener using the pair address
                 dexscreener_url = f"https://api.dexscreener.com/latest/dex/pairs/solana/{pair_address}"
                 
+                self.logger.info(f"Making API request to: {dexscreener_url}")
+                
                 async with aiohttp.ClientSession() as session:
                     async with session.get(dexscreener_url) as response:
-                        if response.status != 200:
-                            self.logger.error(f"DexScreener API error: {response.status}")
+                        response_status = response.status
+                        response_text = await response.text()
+                        
+                        self.logger.info(f"DexScreener API response status: {response_status}")
+                        self.logger.info(f"DexScreener API raw response: {response_text}")
+                        
+                        if response_status != 200:
+                            self.logger.error(f"DexScreener API error: {response_status}")
                             return {}
                         
-                        data = await response.json()
+                        try:
+                            data = json.loads(response_text)
+                            self.logger.info(f"Parsed JSON data: {json.dumps(data, indent=2)}")
+                        except json.JSONDecodeError as e:
+                            self.logger.error(f"Failed to parse JSON response: {e}")
+                            return {}
+                        
                         pairs = data.get('pairs', [])
+                        
+                        self.logger.info(f"Found {len(pairs)} pairs")
                         
                         if not pairs or len(pairs) == 0:
                             self.logger.warning(f"No pair data found for hardcoded {token} pair: {pair_address}")
@@ -203,18 +219,84 @@ class TokenMaximizerStrategy:
                         
                         # Use the first pair (should be only one since we requested by pair address)
                         best_pair = pairs[0]
+                        self.logger.info(f"Selected pair data: {json.dumps(best_pair, indent=2)}")
+                        
+                        # Extract relevant data with additional validation
+                        price_usd = best_pair.get('priceUsd', '0')
+                        price_change = best_pair.get('priceChange', {}).get('h24', '0')
+                        volume = best_pair.get('volume', {}).get('h24', '0')
+                        liquidity = best_pair.get('liquidity', {}).get('usd', '0')
+                        fdv = best_pair.get('fdv', '0')
+                        
+                        self.logger.info(f"Extracted raw values - price: {price_usd}, change: {price_change}, volume: {volume}, liquidity: {liquidity}, fdv: {fdv}")
+                        
+                        # Ensure all values are valid floats
+                        try:
+                            price_usd = float(price_usd) if price_usd else 0
+                            price_change = float(price_change) if price_change else 0
+                            volume = float(volume) if volume else 0
+                            liquidity = float(liquidity) if liquidity else 0
+                            fdv = float(fdv) if fdv else 0
+                        except (ValueError, TypeError) as e:
+                            self.logger.warning(f"Error parsing numeric values for {token}: {e}")
+                            price_usd = 0
+                            price_change = 0
+                            volume = 0
+                            liquidity = 0
+                            fdv = 0
+                        
+                        self.logger.info(f"Parsed values - price: {price_usd}, change: {price_change}, volume: {volume}, liquidity: {liquidity}, fdv: {fdv}")
+                        
+                        # Validate price is reasonable (not extremely high or low)
+                        if price_usd > 1000000 or price_usd < 0.0000001:
+                            self.logger.warning(f"Suspicious price for {token}: ${price_usd}. Setting to 0 for safety.")
+                            price_usd = 0
+                        
+                        token_data = {
+                            "symbol": token,
+                            "name": best_pair.get('baseToken', {}).get('name', token),
+                            "address": token_mint,
+                            "price": price_usd,
+                            "priceChange24h": price_change,
+                            "volume24h": volume,
+                            "liquidity": liquidity,
+                            "fdv": fdv,
+                            "pairAddress": best_pair.get('pairAddress', ''),
+                            "dexId": best_pair.get('dexId', ''),
+                            "url": f"https://dexscreener.com/solana/{best_pair.get('pairAddress', '')}"
+                        }
+                        
+                        self.logger.info(f"Final token data: {json.dumps(token_data, indent=2)}")
+                        
+                        return token_data
             else:
                 # Original code for tokens without hardcoded pairs
                 dexscreener_url = f"https://api.dexscreener.com/latest/dex/tokens/{token_mint}"
                 
+                self.logger.info(f"Making API request to: {dexscreener_url}")
+                
                 async with aiohttp.ClientSession() as session:
                     async with session.get(dexscreener_url) as response:
-                        if response.status != 200:
-                            self.logger.error(f"DexScreener API error: {response.status}")
+                        response_status = response.status
+                        response_text = await response.text()
+                        
+                        self.logger.info(f"DexScreener API response status: {response_status}")
+                        self.logger.info(f"DexScreener API raw response: {response_text}")
+                        
+                        if response_status != 200:
+                            self.logger.error(f"DexScreener API error: {response_status}")
                             return {}
                         
-                        data = await response.json()
+                        try:
+                            data = json.loads(response_text)
+                            self.logger.info(f"Parsed JSON data: {json.dumps(data, indent=2)}")
+                        except json.JSONDecodeError as e:
+                            self.logger.error(f"Failed to parse JSON response: {e}")
+                            return {}
+                        
                         pairs = data.get('pairs', [])
+                        
+                        self.logger.info(f"Found {len(pairs)} pairs")
                         
                         if not pairs:
                             self.logger.warning(f"No pairs found for {token}")
@@ -228,54 +310,61 @@ class TokenMaximizerStrategy:
                         
                         # Use the most liquid pair
                         best_pair = max(sol_pairs, key=lambda x: float(x.get('liquidity', {}).get('usd', 0) or 0))
-                    
-                    # Extract relevant data with additional validation
-                    price_usd = best_pair.get('priceUsd', '0')
-                    price_change = best_pair.get('priceChange', {}).get('h24', '0')
-                    volume = best_pair.get('volume', {}).get('h24', '0')
-                    liquidity = best_pair.get('liquidity', {}).get('usd', '0')
-                    fdv = best_pair.get('fdv', '0')
-                    
-                    # Ensure all values are valid floats
-                    try:
-                        price_usd = float(price_usd) if price_usd else 0
-                        price_change = float(price_change) if price_change else 0
-                        volume = float(volume) if volume else 0
-                        liquidity = float(liquidity) if liquidity else 0
-                        fdv = float(fdv) if fdv else 0
-                    except (ValueError, TypeError) as e:
-                        self.logger.warning(f"Error parsing numeric values for {token}: {e}")
-                        price_usd = 0
-                        price_change = 0
-                        volume = 0
-                        liquidity = 0
-                        fdv = 0
-                    
-                    # Validate price is reasonable (not extremely high or low)
-                    if price_usd > 1000000 or price_usd < 0.0000001:
-                        self.logger.warning(f"Suspicious price for {token}: ${price_usd}. Setting to 0 for safety.")
-                        price_usd = 0
-                    
-                    token_data = {
-                        "symbol": token,
-                        "name": best_pair.get('baseToken', {}).get('name', token),
-                        "address": token_mint,
-                        "price": price_usd,
-                        "priceChange24h": price_change,
-                        "volume24h": volume,
-                        "liquidity": liquidity,
-                        "fdv": fdv,
-                        "pairAddress": best_pair.get('pairAddress', ''),
-                        "dexId": best_pair.get('dexId', ''),
-                        "url": f"https://dexscreener.com/solana/{best_pair.get('pairAddress', '')}"
-                    }
-                    
-                    self.logger.info(f"DexScreener data for {token}: Price=${token_data['price']:.4f}, 24h Change={token_data['priceChange24h']:.2f}%")
-                    
-                    return token_data
+                        self.logger.info(f"Selected pair data: {json.dumps(best_pair, indent=2)}")
+                
+                # Extract relevant data with additional validation
+                price_usd = best_pair.get('priceUsd', '0')
+                price_change = best_pair.get('priceChange', {}).get('h24', '0')
+                volume = best_pair.get('volume', {}).get('h24', '0')
+                liquidity = best_pair.get('liquidity', {}).get('usd', '0')
+                fdv = best_pair.get('fdv', '0')
+                
+                self.logger.info(f"Extracted raw values - price: {price_usd}, change: {price_change}, volume: {volume}, liquidity: {liquidity}, fdv: {fdv}")
+                
+                # Ensure all values are valid floats
+                try:
+                    price_usd = float(price_usd) if price_usd else 0
+                    price_change = float(price_change) if price_change else 0
+                    volume = float(volume) if volume else 0
+                    liquidity = float(liquidity) if liquidity else 0
+                    fdv = float(fdv) if fdv else 0
+                except (ValueError, TypeError) as e:
+                    self.logger.warning(f"Error parsing numeric values for {token}: {e}")
+                    price_usd = 0
+                    price_change = 0
+                    volume = 0
+                    liquidity = 0
+                    fdv = 0
+                
+                self.logger.info(f"Parsed values - price: {price_usd}, change: {price_change}, volume: {volume}, liquidity: {liquidity}, fdv: {fdv}")
+                
+                # Validate price is reasonable (not extremely high or low)
+                if price_usd > 1000000 or price_usd < 0.0000001:
+                    self.logger.warning(f"Suspicious price for {token}: ${price_usd}. Setting to 0 for safety.")
+                    price_usd = 0
+                
+                token_data = {
+                    "symbol": token,
+                    "name": best_pair.get('baseToken', {}).get('name', token),
+                    "address": token_mint,
+                    "price": price_usd,
+                    "priceChange24h": price_change,
+                    "volume24h": volume,
+                    "liquidity": liquidity,
+                    "fdv": fdv,
+                    "pairAddress": best_pair.get('pairAddress', ''),
+                    "dexId": best_pair.get('dexId', ''),
+                    "url": f"https://dexscreener.com/solana/{best_pair.get('pairAddress', '')}"
+                }
+                
+                self.logger.info(f"Final token data: {json.dumps(token_data, indent=2)}")
+                
+                return token_data
                     
         except Exception as e:
             self.logger.error(f"Error fetching DexScreener data for {token}: {e}")
+            import traceback
+            self.logger.error(f"Traceback: {traceback.format_exc()}")
             return {}
     
     async def get_token_score_from_claude(self, token: str) -> int:
