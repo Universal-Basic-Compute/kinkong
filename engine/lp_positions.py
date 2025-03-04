@@ -93,6 +93,9 @@ class LPPositionManager:
             "UBC": "UBCgZu1mAkwBqHKzR5vUjNFPMxYFy3mEAQmXQZxDqQV",
             "COMPUTE": "COMPkZjd5pJECCJXkX8c6NykNDccpVpPmkb7CEW5ekKQ"
         }
+        
+        # Initialize token prices dictionary
+        self.token_prices = {}
 
     async def deactivate_existing_positions(self):
         """Deactivate all existing LP positions"""
@@ -628,12 +631,34 @@ class LPPositionManager:
             claimed_fee_x = float(position.get('totalClaimedFeeXAmount', 0))
             claimed_fee_y = float(position.get('totalClaimedFeeYAmount', 0))
             
-            # Calculate total fees in USD (simplified, would need price data for accuracy)
-            fees_usd = 0  # Would need price data to calculate accurately
-            
             # Get position bounds
             lower_bound = position.get('lowerBinId', 0)
             upper_bound = position.get('upperBinId', 0)
+            
+            # Get reserve amounts from LB pair details
+            reserve_x = float(lb_pair_details.get('reserveX', 0))
+            reserve_y = float(lb_pair_details.get('reserveY', 0))
+            
+            # Calculate token amounts based on position's share of the pool
+            # This is a simplified calculation and may need adjustment based on actual bin distribution
+            # For more accurate calculations, we would need to know the exact bin distribution
+            token_x_amount = reserve_x * 0.01  # Placeholder - needs actual calculation
+            token_y_amount = reserve_y * 0.01  # Placeholder - needs actual calculation
+            
+            # Map token amounts to token0 and token1
+            token0_amount = token_x_amount if token0_is_x else token_y_amount
+            token1_amount = token_y_amount if token0_is_x else token_x_amount
+            
+            # Calculate USD values using token prices
+            token0_price = self.token_prices.get(pool['token0'], 0)
+            token1_price = self.token_prices.get(pool['token1'], 0)
+            
+            token0_value_usd = token0_amount * token0_price
+            token1_value_usd = token1_amount * token1_price
+            total_value_usd = token0_value_usd + token1_value_usd
+            
+            # Calculate total fees in USD
+            fees_usd = 0  # Would need price data to calculate accurately
             
             # Create normalized position data
             return {
@@ -646,6 +671,11 @@ class LPPositionManager:
                 'positionAddress': position.get('address', ''),
                 'lowerBound': lower_bound,
                 'upperBound': upper_bound,
+                'token0Amount': token0_amount,
+                'token1Amount': token1_amount,
+                'token0ValueUsd': token0_value_usd,
+                'token1ValueUsd': token1_value_usd,
+                'totalValueUsd': total_value_usd,
                 'feesUsd': fees_usd,
                 'lastUpdatedAt': position.get('lastUpdatedAt', ''),
                 'tokenXMint': token_x_mint,
@@ -679,7 +709,25 @@ class LPPositionManager:
             upper_tick = position.get('upperTick', 0)
             
             # Get liquidity
-            liquidity = position.get('liquidity', 0)
+            liquidity = float(position.get('liquidity', 0))
+            
+            # Calculate token amounts based on liquidity and price range
+            # This is a simplified calculation and would need to be adjusted based on actual math for DYN positions
+            # For more accurate calculations, we would need to use the actual formulas from the DYN protocol
+            sqrt_price_x64 = float(pool_details.get('sqrtPriceX64', 0))
+            current_tick = int(pool_details.get('tick', 0))
+            
+            # Placeholder calculations - these need to be replaced with actual DYN formulas
+            token0_amount = liquidity * 0.01  # Placeholder
+            token1_amount = liquidity * 0.01  # Placeholder
+            
+            # Calculate USD values using token prices
+            token0_price = self.token_prices.get(pool['token0'], 0)
+            token1_price = self.token_prices.get(pool['token1'], 0)
+            
+            token0_value_usd = token0_amount * token0_price
+            token1_value_usd = token1_amount * token1_price
+            total_value_usd = token0_value_usd + token1_value_usd
             
             # Create normalized position data
             return {
@@ -695,6 +743,11 @@ class LPPositionManager:
                 'liquidity': liquidity,
                 'tokenX': token_x,
                 'tokenY': token_y,
+                'token0Amount': token0_amount,
+                'token1Amount': token1_amount,
+                'token0ValueUsd': token0_value_usd,
+                'token1ValueUsd': token1_value_usd,
+                'totalValueUsd': total_value_usd,
                 'feesOwedX': fees_owed_x,
                 'feesOwedY': fees_owed_y,
                 'lastUpdatedAt': position.get('lastUpdatedAt', ''),
@@ -747,6 +800,10 @@ class LPPositionManager:
         try:
             # First deactivate all existing positions
             await self.deactivate_existing_positions()
+            
+            # Fetch token prices first
+            self.token_prices = await self.fetch_token_prices()
+            self.logger.info(f"Fetched prices: {self.token_prices}")
             
             # Process each pool
             for pool in self.pools:
