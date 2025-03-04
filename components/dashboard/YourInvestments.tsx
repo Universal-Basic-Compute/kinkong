@@ -189,7 +189,9 @@ export const YourInvestments: React.FC<YourInvestmentsProps> = ({ className }) =
           <p className="text-gray-400 text-sm mb-1">You invest in $UBC, $COMPUTE, or $USDC.</p>
           <p className="text-gray-400 text-sm mb-1">You get returns in the currency you invested in, claimable weekly.</p>
           <p className="text-gray-400 text-sm mb-1">You can track KinKong's performance on the site.</p>
-          <p className="text-gray-400 text-sm">When withdrawing, you receive your principal in the same currency.</p>
+          <p className="text-gray-400 text-sm mb-3">When withdrawing, you receive your principal in the same currency.</p>
+          
+          <p className="text-gold text-md italic mt-4">Simple, transparent, efficient</p>
         </div>
       </div>
     );
