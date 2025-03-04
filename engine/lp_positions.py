@@ -51,7 +51,7 @@ class LPPositionManager:
         # Load environment variables
         self.base_id = os.getenv('KINKONG_AIRTABLE_BASE_ID')
         self.api_key = os.getenv('KINKONG_AIRTABLE_API_KEY')
-        self.wallet_address = os.getenv('STRATEGY_WALLET_PUBLIC_KEY')
+        self.wallet_address = os.getenv('STRATEGY_WALLET')
         
         if not self.base_id or not self.api_key or not self.wallet_address:
             raise ValueError("Missing required environment variables")
