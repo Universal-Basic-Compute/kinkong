@@ -50,6 +50,35 @@ class ProfitRedistributor:
         # Initialize WalletSnapshotTaker for taking a new snapshot if needed
         self.snapshot_taker = WalletSnapshotTaker()
         
+    def get_active_subscriptions(self):
+        """Get a mapping of wallet addresses with active subscriptions"""
+        self.logger.info("Fetching active subscriptions")
+        
+        # Initialize subscriptions table
+        subscriptions_table = Airtable(
+            self.base_id,
+            'SUBSCRIPTIONS',
+            self.api_key
+        )
+        
+        # Get current date in ISO format
+        now = datetime.now(timezone.utc).isoformat()
+        
+        # Query for active subscriptions with endDate > now
+        active_subscriptions = subscriptions_table.get_all(
+            formula=f"AND(status='active', IS_AFTER({{endDate}}, '{now}'))"
+        )
+        
+        # Create wallet to subscription mapping
+        wallet_subscriptions = {}
+        for sub in active_subscriptions:
+            wallet = sub['fields'].get('wallet')
+            if wallet:
+                wallet_subscriptions[wallet] = True
+        
+        self.logger.info(f"Found {len(wallet_subscriptions)} wallets with active subscriptions")
+        return wallet_subscriptions
+        
     def get_compute_price_from_meteora(self):
         """Helper function to get COMPUTE price from Meteora pool"""
         self.logger.info("Fetching COMPUTE price from Meteora pool")
@@ -438,6 +467,9 @@ class ProfitRedistributor:
             pool_75_amount = profit_distribution['pool_2']
             self.logger.info(f"75% Pool amount to distribute: ${pool_75_amount:.2f}")
             
+            # Get active subscriptions
+            active_subscriptions = self.get_active_subscriptions()
+            
             # Get all investors from the INVESTMENTS table
             investments = self.investments_table.get_all()
             
@@ -468,6 +500,7 @@ class ProfitRedistributor:
             # Calculate total investment value across all wallets
             total_investment_value_usd = 0
             wallet_investment_values = {}
+            wallet_has_subscription = {}
             
             for wallet, investments in wallet_investments.items():
                 wallet_value = 0
@@ -484,27 +517,59 @@ class ProfitRedistributor:
                     else:
                         self.logger.warning(f"No price available for {token}, skipping in calculation")
                 
-                wallet_investment_values[wallet] = wallet_value
-                total_investment_value_usd += wallet_value
+                # Check if wallet has active subscription
+                has_subscription = wallet in active_subscriptions
+                wallet_has_subscription[wallet] = has_subscription
                 
-            self.logger.info(f"Total investment value across all wallets: ${total_investment_value_usd:.2f}")
+                # Apply different rate based on subscription status
+                # For calculation purposes, we'll adjust the investment value
+                # Non-subscribers get 50% instead of 75% (2/3 of the full rate)
+                effective_value = wallet_value
+                if not has_subscription:
+                    # Apply 2/3 factor to represent 50% vs 75% rate
+                    effective_value = wallet_value * (50/75)
+                    self.logger.info(f"Wallet {wallet}: No active subscription, applying 50% rate (2/3 factor)")
+                else:
+                    self.logger.info(f"Wallet {wallet}: Has active subscription, applying full 75% rate")
+                
+                wallet_investment_values[wallet] = {
+                    'actual_value': wallet_value,
+                    'effective_value': effective_value,
+                    'has_subscription': has_subscription
+                }
+                total_investment_value_usd += effective_value
+                
+            self.logger.info(f"Total effective investment value across all wallets: ${total_investment_value_usd:.2f}")
             
             # Calculate distribution for each wallet based on their percentage of total investment
             distributions = []
             
-            for wallet, investment_value in wallet_investment_values.items():
+            for wallet, investment_data in wallet_investment_values.items():
                 if total_investment_value_usd > 0:
-                    percentage = (investment_value / total_investment_value_usd) * 100
-                    distribution_amount = (investment_value / total_investment_value_usd) * pool_75_amount
+                    actual_value = investment_data['actual_value']
+                    effective_value = investment_data['effective_value']
+                    has_subscription = investment_data['has_subscription']
+                    
+                    # Calculate percentage based on effective value
+                    percentage = (effective_value / total_investment_value_usd) * 100
+                    
+                    # Calculate distribution amount
+                    distribution_amount = (effective_value / total_investment_value_usd) * pool_75_amount
+                    
+                    # Calculate the effective rate (75% for subscribers, 50% for non-subscribers)
+                    effective_rate = 75 if has_subscription else 50
                     
                     distributions.append({
                         'wallet': wallet,
-                        'investment_value': investment_value,
+                        'investment_value': actual_value,
+                        'effective_value': effective_value,
                         'percentage': percentage,
-                        'distribution_amount': distribution_amount
+                        'distribution_amount': distribution_amount,
+                        'has_subscription': has_subscription,
+                        'effective_rate': effective_rate
                     })
                     
-                    self.logger.info(f"Wallet {wallet}: Investment ${investment_value:.2f} ({percentage:.2f}%) → Distribution ${distribution_amount:.2f}")
+                    self.logger.info(f"Wallet {wallet}: Investment ${actual_value:.2f}, Rate {effective_rate}% → Distribution ${distribution_amount:.2f}")
                 
             # Sort distributions by amount (descending)
             distributions.sort(key=lambda x: x['distribution_amount'], reverse=True)
@@ -535,13 +600,16 @@ class ProfitRedistributor:
             else:
                 wallet_display = wallet
             
-            # Create message text with reordered fields: investor -> UBC amount -> amount
-            # Removed the percentage field
+            # Add subscription status indicator
+            subscription_status = "✅ Premium (75%)" if investor_data.get('has_subscription', False) else "⚠️ Basic (50%)"
+            
+            # Create message text with subscription status
             message = f"""🎉 *KinKong Profit Redistribution*
             
 📊 *Investor*: `{wallet_display}`
 🪙 *UBC Amount*: {investor_data['ubcAmount']:.2f} UBC
 💰 *Amount*: ${investor_data['distribution_amount']:.2f}
+🔑 *Status*: {subscription_status}
 
 Status: Pending ⏳
 """
@@ -757,6 +825,8 @@ Status: Pending ⏳
                             'percentage': investor_data['percentage'],
                             'amount': investor_data['distribution_amount'],
                             'ubcAmount': investor_data['ubcAmount'],  # Add UBC amount field
+                            'hasSubscription': investor_data.get('has_subscription', False),  # Add subscription status
+                            'effectiveRate': investor_data.get('effective_rate', 75),  # Add effective rate
                             'status': 'PENDING',  # Initial status
                             'createdAt': now
                         }
@@ -771,6 +841,8 @@ Status: Pending ⏳
                             'percentage': investor_data['percentage'],
                             'amount': investor_data['distribution_amount'],
                             'ubcAmount': investor_data['ubcAmount'],  # Add UBC amount field
+                            'hasSubscription': investor_data.get('has_subscription', False),  # Add subscription status
+                            'effectiveRate': investor_data.get('effective_rate', 75),  # Add effective rate
                             'status': 'PENDING',  # Initial status
                             'createdAt': now
                         }
@@ -861,6 +933,11 @@ def main():
                 print("-" * 80)
                 print(f"Total Distributed: ${total_distributed:.2f} (should match Pool 2: ${result['pool_2']:.2f})")
                 print(f"Total UBC Required: {total_ubc_needed:.2f} UBC (at price ${ubc_price:.6f})")
+                
+                # Print subscription status summary
+                subscribers = sum(1 for d in distributions if d.get('has_subscription', False))
+                non_subscribers = len(distributions) - subscribers
+                print(f"\nSubscription Status: {subscribers} Premium (75%), {non_subscribers} Basic (50%)")
                 
                 # Check for rounding errors
                 if abs(total_distributed - result['pool_2']) > 0.01:
