@@ -9,19 +9,20 @@ type SortDirection = 'asc' | 'desc';
 
 interface Investor {
   investmentId: string;
-  amount: number; // This is now the redistribution amount (previously ubcReturn)
-  token: string; // Make token required, not optional
-  usdAmount?: number;
-  solscanUrl?: string;
-  date: string;
-  username?: string;
+  amount: number;
+  token: string;
   wallet: string;
+  date: string;
+  percentage?: number;
+  claimed?: boolean;
+  hasSubscription?: boolean;
+  effectiveRate?: number;
+  redistributionId?: string;
+  username?: string;
+  solscanUrl?: string;
+  usdAmount?: number;
   return?: number;
   isCalculated?: boolean;
-  redistributionId?: string;
-  redistributionDate?: string;
-  percentage?: number; // Add percentage field
-  claimed?: boolean; // Add claimed status field
 }
 
 interface InvestorsTableProps {
@@ -101,49 +102,43 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
 
   // Fetch data from API
   useEffect(() => {
-    async function fetchInvestors() {
+    async function fetchRedistributions() {
       try {
         const timestamp = new Date().getTime(); // Cache-busting
-        const response = await fetch(`/api/investments?t=${timestamp}`);
+        const response = await fetch(`/api/redistributions?t=${timestamp}`);
         
         if (!response.ok) {
-          throw new Error(`Failed to fetch investors: ${response.status}`);
+          throw new Error(`Failed to fetch redistributions: ${response.status}`);
         }
         
         const data = await response.json();
-        console.log(`Fetched ${data.length} investors`);
+        console.log(`Fetched ${data.length} redistributions`);
         
         // Add debugging to check token field
         if (data.length > 0) {
-          console.log('Sample investor data:', {
+          console.log('Sample redistribution data:', {
             id: data[0].investmentId,
             token: data[0].token,
             amount: data[0].amount
           });
         }
         
-        // Ensure all investors have a token field
-        const processedData = data.map((investor: any) => ({
-          ...investor,
-          token: investor.token || 'UBC' // Default to UBC if token is missing
-        }));
-        
-        setInvestors(processedData);
+        setInvestors(data);
         
         // Calculate total investment
-        const total = processedData.reduce((sum: number, investor: Investor) => {
+        const total = data.reduce((sum: number, investor: Investor) => {
           return sum + (investor.usdAmount || 0);
         }, 0);
         
         setTotalInvestment(total);
       } catch (error) {
-        console.error('Error fetching investors:', error);
+        console.error('Error fetching redistributions:', error);
       } finally {
         setIsLoading(false);
       }
     }
 
-    fetchInvestors();
+    fetchRedistributions();
   }, []);
 
   // Handle sorting
@@ -253,6 +248,12 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
                             </span>
                             {investor.isCalculated && (
                               <span className="text-xs text-yellow-500 ml-1">(Estimated)</span>
+                            )}
+                            {investor.hasSubscription && (
+                              <div className="text-xs text-green-500">Pro Rate: {investor.effectiveRate}%</div>
+                            )}
+                            {!investor.hasSubscription && investor.effectiveRate && (
+                              <div className="text-xs text-gray-400">Basic Rate: {investor.effectiveRate}%</div>
                             )}
                           </>
                         ) : (
