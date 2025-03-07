@@ -147,6 +147,124 @@ const TradeChartCarousel = () => {
   );
 };
 
+// Latest Redistributions component
+const LatestRedistributions = () => {
+  const [redistributions, setRedistributions] = useState<Record<string, any> | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchRedistributions() {
+      try {
+        const response = await fetch('/api/redistributions/latest');
+        if (!response.ok) {
+          throw new Error('Failed to fetch latest redistributions');
+        }
+        const data = await response.json();
+        setRedistributions(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load redistributions');
+        console.error('Error fetching redistributions:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchRedistributions();
+  }, []);
+
+  function formatDate(dateString: string) {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  function formatAmount(amount: number) {
+    if (amount === undefined || amount === null) return 'N/A';
+    return new Intl.NumberFormat('en-US', {
+      maximumFractionDigits: 2,
+      minimumFractionDigits: 0,
+    }).format(amount);
+  }
+
+  return (
+    <div className="mb-8">
+      <h2 className="text-2xl font-bold text-gold mb-4">Latest Redistributions</h2>
+      
+      {isLoading ? (
+        <div className="flex justify-center py-6">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gold"></div>
+        </div>
+      ) : error ? (
+        <div className="bg-black/30 p-4 rounded-lg border border-gold/20 text-center">
+          <p className="text-red-400">{error}</p>
+        </div>
+      ) : !redistributions ? (
+        <div className="bg-black/30 p-4 rounded-lg border border-gold/20 text-center">
+          <p className="text-gray-400">No redistributions found</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* COMPUTE Redistribution */}
+          <div className="bg-black/30 p-6 rounded-lg border border-gold/20 card-3d overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 to-transparent"></div>
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 rounded-full bg-blue-900/50 flex items-center justify-center mr-3">
+                    <span className="text-blue-400 font-bold">C</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-blue-400">COMPUTE</h3>
+                </div>
+                <div className="text-xs text-gray-400">
+                  {redistributions['COMPUTE'] ? formatDate(redistributions['COMPUTE'].createdAt) : 'No data'}
+                </div>
+              </div>
+              
+              <div className="mt-4 text-center">
+                <div className="text-4xl font-bold text-white mb-1">
+                  {redistributions['COMPUTE'] ? formatAmount(redistributions['COMPUTE'].amount) : '0'}
+                </div>
+                <div className="text-sm text-gray-400">tokens redistributed</div>
+              </div>
+            </div>
+          </div>
+          
+          {/* UBC Redistribution */}
+          <div className="bg-black/30 p-6 rounded-lg border border-gold/20 card-3d overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 to-transparent"></div>
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 rounded-full bg-purple-900/50 flex items-center justify-center mr-3">
+                    <span className="text-purple-400 font-bold">U</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-purple-400">UBC</h3>
+                </div>
+                <div className="text-xs text-gray-400">
+                  {redistributions['UBC'] ? formatDate(redistributions['UBC'].createdAt) : 'No data'}
+                </div>
+              </div>
+              
+              <div className="mt-4 text-center">
+                <div className="text-4xl font-bold text-white mb-1">
+                  {redistributions['UBC'] ? formatAmount(redistributions['UBC'].amount) : '0'}
+                </div>
+                <div className="text-sm text-gray-400">tokens redistributed</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Reusable tooltip component
 const InfoTooltip = ({ text }: { text: string }) => (
   <div className="group relative inline-block ml-1">
@@ -268,6 +386,9 @@ export default function Performance() {
           <h1 className="text-4xl font-bold text-gold mb-2">Performance & Analytics</h1>
           <p className="text-gray-400">Detailed trading performance metrics and history</p>
         </div>
+
+        {/* Latest Redistributions */}
+        <LatestRedistributions />
 
         {/* Key Metrics */}
         <section className="mb-8">
