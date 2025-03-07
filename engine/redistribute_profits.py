@@ -369,22 +369,40 @@ class ProfitRedistributor:
             
             # Create a record for the overall redistribution
             now = datetime.now(timezone.utc).isoformat()
+            period_start = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
             
-            # Create the main redistribution record
-            main_record = {
-                'createdAt': now,
-                'ubcAmount': ubc_amount,
-                'computeAmount': compute_amount,
-                'status': 'PENDING',  # Initial status
-                'periodStart': (datetime.now(timezone.utc) - timedelta(days=7)).isoformat(),
-                'periodEnd': now
-            }
+            # Create two main redistribution records - one for UBC and one for COMPUTE
+            main_record_ids = {}
             
-            # Create the main redistribution record
-            main_record_result = redistributions_table.insert(main_record)
-            main_record_id = main_record_result['id']
+            # Create UBC redistribution record
+            if ubc_amount > 0:
+                ubc_record = {
+                    'createdAt': now,
+                    'amount': ubc_amount,  # Use 'amount' instead of 'ubcAmount'
+                    'token': 'UBC',  # Add token field
+                    'status': 'PENDING',  # Initial status
+                    'periodStart': period_start,
+                    'periodEnd': now
+                }
+                
+                ubc_record_result = redistributions_table.insert(ubc_record)
+                main_record_ids['UBC'] = ubc_record_result['id']
+                self.logger.info(f"Created UBC redistribution record with ID: {main_record_ids['UBC']}")
             
-            self.logger.info(f"Created main redistribution record with ID: {main_record_id}")
+            # Create COMPUTE redistribution record
+            if compute_amount > 0:
+                compute_record = {
+                    'createdAt': now,
+                    'amount': compute_amount,  # Use 'amount' instead of 'computeAmount'
+                    'token': 'COMPUTE',  # Add token field
+                    'status': 'PENDING',  # Initial status
+                    'periodStart': period_start,
+                    'periodEnd': now
+                }
+                
+                compute_record_result = redistributions_table.insert(compute_record)
+                main_record_ids['COMPUTE'] = compute_record_result['id']
+                self.logger.info(f"Created COMPUTE redistribution record with ID: {main_record_ids['COMPUTE']}")
             
             # Now create investor redistribution records
             investor_records = []
@@ -398,11 +416,18 @@ class ProfitRedistributor:
             investments = investments_table.get_all()
             
             for investor_data in investor_distributions:
+                token = investor_data['token']
+                
+                # Skip if we don't have a main record for this token
+                if token not in main_record_ids:
+                    self.logger.warning(f"No main record for token {token}, skipping investor distribution")
+                    continue
+                    
                 # Get all investments for this wallet and token
                 wallet_investments = [
                     inv for inv in investments 
                     if inv['fields'].get('wallet') == investor_data['wallet'] and 
-                       inv['fields'].get('token', '').upper() == investor_data['token']
+                       inv['fields'].get('token', '').upper() == token
                 ]
                 
                 # If there are investments for this wallet and token, link the redistribution to them
@@ -413,9 +438,9 @@ class ProfitRedistributor:
                     
                     investor_record = {
                         'fields': {
-                            'redistributionId': main_record_id,  # Link to the main redistribution record
+                            'redistributionId': main_record_ids[token],  # Link to the appropriate main record
                             'wallet': investor_data['wallet'],
-                            'token': investor_data['token'],  # Add token field
+                            'token': token,
                             'investmentId': investment_id,  # Add this field to link to specific investment
                             'percentage': investor_data['percentage'],
                             'amount': investor_data['amount'],
@@ -429,9 +454,9 @@ class ProfitRedistributor:
                     # If no investments found for this wallet and token, create record without investment ID
                     investor_record = {
                         'fields': {
-                            'redistributionId': main_record_id,  # Link to the main redistribution record
+                            'redistributionId': main_record_ids[token],  # Link to the appropriate main record
                             'wallet': investor_data['wallet'],
-                            'token': investor_data['token'],  # Add token field
+                            'token': token,
                             'percentage': investor_data['percentage'],
                             'amount': investor_data['amount'],
                             'hasSubscription': investor_data.get('has_subscription', False),
@@ -449,7 +474,8 @@ class ProfitRedistributor:
             
             self.logger.info(f"Created {len(investor_records)} investor redistribution records")
             
-            return main_record_id
+            # Return the main record IDs
+            return main_record_ids
         except Exception as e:
             self.logger.error(f"Error saving redistribution to Airtable: {e}")
             return None
@@ -547,9 +573,11 @@ def main():
                 print(f"Warning: COMPUTE distribution total differs from input amount by {abs(total_compute_distributed - compute_amount):.6f}")
             
             # Save redistribution data to Airtable
-            redistribution_id = redistributor.save_redistribution_to_airtable(ubc_amount, compute_amount, distributions)
-            if redistribution_id:
-                print(f"\n✅ Redistribution saved to Airtable with ID: {redistribution_id}")
+            redistribution_ids = redistributor.save_redistribution_to_airtable(ubc_amount, compute_amount, distributions)
+            if redistribution_ids:
+                print(f"\n✅ Redistribution saved to Airtable with IDs:")
+                for token, record_id in redistribution_ids.items():
+                    print(f"  - {token}: {record_id}")
             else:
                 print("\n❌ Failed to save redistribution to Airtable")
         else:
