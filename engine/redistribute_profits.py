@@ -65,8 +65,9 @@ class ProfitRedistributor:
         now = datetime.now(timezone.utc).isoformat()
         
         # Query for active subscriptions with endDate > now
+        # Use ACTIVE (uppercase) for status and ensure proper date comparison
         active_subscriptions = subscriptions_table.get_all(
-            formula=f"AND(status='active', IS_AFTER({{endDate}}, '{now}'))"
+            formula=f"AND(status='ACTIVE', IS_AFTER({{endDate}}, '{now}'))"
         )
         
         # Create wallet to subscription mapping
