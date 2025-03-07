@@ -79,134 +79,7 @@ class ProfitRedistributor:
         self.logger.info(f"Found {len(wallet_subscriptions)} wallets with active subscriptions")
         return wallet_subscriptions
         
-    def get_compute_price_from_meteora(self):
-        """Helper function to get COMPUTE price from Meteora pool"""
-        self.logger.info("Fetching COMPUTE price from Meteora pool")
-        compute_price = None
-        
-        try:
-            meteora_pool_id = "HN7ibjiyX399d1EfYXcWaSHZRSMfUmonYvXGFXG41Rr3"
-            
-            # First try Birdeye API for Meteora pool
-            birdeye_url = "https://public-api.birdeye.so/v1/pool/price"
-            params = {
-                "pool_address": meteora_pool_id
-            }
-            headers = {
-                "x-api-key": os.getenv('BIRDEYE_API_KEY'),
-                "x-chain": "solana",
-                "accept": "application/json"
-            }
-            
-            try:
-                response = requests.get(birdeye_url, params=params, headers=headers)
-                
-                # Check if we have a valid response with content
-                if response.status_code == 200 and response.content and len(response.content.strip()) > 0:
-                    try:
-                        pool_data = response.json()
-                        
-                        if pool_data.get('success'):
-                            compute_price = float(pool_data.get('data', {}).get('price', 0))
-                            self.logger.info(f"COMPUTE price from Birdeye: ${compute_price:.6f}")
-                        else:
-                            self.logger.warning(f"Failed to get COMPUTE price from Birdeye: {pool_data.get('message')}")
-                    except json.JSONDecodeError as e:
-                        self.logger.warning(f"Invalid JSON response from Birdeye: {e}")
-                        self.logger.debug(f"Response content: {response.content[:100]}...")
-                else:
-                    self.logger.warning(f"Failed to get COMPUTE price from Birdeye: Status {response.status_code}, Content length: {len(response.content) if response.content else 0}")
-            except requests.exceptions.RequestException as e:
-                self.logger.warning(f"Request error from Birdeye: {e}")
-                
-            # If Birdeye fails, try DexScreener
-            if not compute_price:
-                try:
-                    dexscreener_url = f"https://api.dexscreener.com/latest/dex/pools/solana/{meteora_pool_id}"
-                    
-                    response = requests.get(dexscreener_url, timeout=10)
-                    
-                    if response.status_code == 200 and response.content and len(response.content.strip()) > 0:
-                        try:
-                            data = response.json()
-                            
-                            if data.get('pairs') and len(data['pairs']) > 0:
-                                compute_pair = data['pairs'][0]
-                                
-                                if compute_pair and compute_pair.get('priceUsd'):
-                                    compute_price = float(compute_pair['priceUsd'])
-                                    self.logger.info(f"COMPUTE price from DexScreener: ${compute_price:.6f}")
-                            else:
-                                self.logger.warning("No pairs found for COMPUTE token on DexScreener")
-                        except json.JSONDecodeError as e:
-                            self.logger.warning(f"Invalid JSON response from DexScreener: {e}")
-                    else:
-                        self.logger.warning(f"Failed to get COMPUTE price from DexScreener: Status {response.status_code}")
-                except Exception as e:
-                    self.logger.warning(f"Error fetching from DexScreener: {e}")
-            
-            # If both Birdeye and DexScreener fail, try Jupiter API
-            if not compute_price:
-                try:
-                    compute_mint = "B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo"
-                    jupiter_url = "https://price.jup.ag/v4/price"
-                    jupiter_params = {
-                        "ids": compute_mint
-                    }
-                    
-                    jupiter_response = requests.get(jupiter_url, params=jupiter_params, timeout=10)
-                    
-                    if jupiter_response.status_code == 200 and jupiter_response.content and len(jupiter_response.content.strip()) > 0:
-                        try:
-                            jupiter_data = jupiter_response.json()
-                            
-                            if jupiter_data.get('data') and jupiter_data['data'].get(compute_mint):
-                                compute_price = float(jupiter_data['data'][compute_mint].get('price', 0))
-                                self.logger.info(f"COMPUTE price from Jupiter: ${compute_price:.6f}")
-                        except json.JSONDecodeError as e:
-                            self.logger.warning(f"Invalid JSON response from Jupiter: {e}")
-                    else:
-                        self.logger.warning(f"Failed to get COMPUTE price from Jupiter: Status {jupiter_response.status_code}")
-                except Exception as e:
-                    self.logger.warning(f"Error fetching from Jupiter: {e}")
-            
-            # If all methods fail, try to get price from wallet snapshot
-            if not compute_price:
-                try:
-                    self.logger.info("Trying to get COMPUTE price from latest wallet snapshot")
-                    latest_snapshot = self.get_snapshot_by_date(datetime.now(timezone.utc))
-                    
-                    if latest_snapshot and 'holdings' in latest_snapshot['fields']:
-                        try:
-                            holdings = json.loads(latest_snapshot['fields']['holdings'])
-                            for holding in holdings:
-                                if holding.get('token') == 'COMPUTE':
-                                    compute_price = float(holding.get('price', 0))
-                                    self.logger.info(f"COMPUTE price from wallet snapshot: ${compute_price:.6f}")
-                                    break
-                        except (json.JSONDecodeError, ValueError) as e:
-                            self.logger.warning(f"Error parsing holdings from snapshot: {e}")
-                except Exception as e:
-                    self.logger.warning(f"Error getting price from wallet snapshot: {e}")
-            
-            # If still no price, try getting from the snapshot taker's token balances
-            if not compute_price:
-                try:
-                    self.logger.info("Using snapshot taker to get COMPUTE price")
-                    token_balances = self.snapshot_taker.get_token_balances()
-                    
-                    for balance in token_balances:
-                        if balance.get('symbol') == 'COMPUTE':
-                            compute_price = float(balance.get('priceUsd', 0))
-                            self.logger.info(f"COMPUTE price from wallet balances: ${compute_price:.6f}")
-                            break
-                except Exception as e:
-                    self.logger.warning(f"Error getting price from snapshot taker: {e}")
-            
-            return compute_price
-        except Exception as e:
-            self.logger.error(f"Error in get_compute_price_from_meteora: {e}")
-            return None
+    # Method removed as it's no longer needed
         
     def get_snapshot_by_date(self, target_date):
         """Get the closest wallet snapshot to the target date"""
@@ -304,61 +177,7 @@ class ProfitRedistributor:
             # Return zero if we can't get the data
             return 0.0
     
-    def get_token_prices(self):
-        """Get current prices for relevant tokens"""
-        self.logger.info("Fetching current token prices")
-        
-        token_prices = {
-            'USDC': 1.0,  # Stablecoins are 1:1 with USD
-            'USDT': 1.0
-        }
-        
-        # Fetch UBC price from DexScreener
-        try:
-            ubc_mint = "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump"
-            dexscreener_url = f"https://api.dexscreener.com/latest/dex/tokens/{ubc_mint}"
-            
-            response = requests.get(dexscreener_url)
-            response.raise_for_status()
-            data = response.json()
-            
-            if data.get('pairs') and len(data['pairs']) > 0:
-                # Get the first pair with USDC or USDT (stablecoin pair)
-                ubc_pair = None
-                for pair in data['pairs']:
-                    # Look for USDC or USDT pair
-                    if 'USDC' in pair.get('quoteToken', {}).get('symbol', '') or 'USDT' in pair.get('quoteToken', {}).get('symbol', ''):
-                        ubc_pair = pair
-                        break
-                
-                # If no USDC/USDT pair, just use the first pair
-                if not ubc_pair and len(data['pairs']) > 0:
-                    ubc_pair = data['pairs'][0]
-                
-                if ubc_pair and ubc_pair.get('priceUsd'):
-                    token_prices['UBC'] = float(ubc_pair['priceUsd'])
-                    self.logger.info(f"UBC price: ${token_prices['UBC']:.6f}")
-            else:
-                self.logger.warning("No pairs found for UBC token")
-        except Exception as e:
-            self.logger.error(f"Error fetching UBC price: {e}")
-        
-        # Fetch COMPUTE price using the helper function
-        compute_price = self.get_compute_price_from_meteora()
-        if compute_price:
-            token_prices['COMPUTE'] = compute_price
-            self.logger.info(f"COMPUTE price set: ${token_prices['COMPUTE']:.6f}")
-        else:
-            # If all methods fail, use a fallback price to avoid zero values
-            # This is a last resort to prevent investments from being valued at $0
-            fallback_price = 0.0001  # Very small fallback price
-            token_prices['COMPUTE'] = fallback_price
-            self.logger.warning(f"Using fallback price for COMPUTE: ${fallback_price}")
-        
-        # Log all token prices
-        self.logger.info(f"Token prices: {token_prices}")
-        
-        return token_prices
+    # Method removed as it's no longer needed
             
     def get_total_investments_value(self, date=None):
         """Get the total value of all investments at a given date"""
@@ -377,79 +196,7 @@ class ProfitRedistributor:
         self.logger.warning("Historical investment data not available, using current as approximation")
         return self.get_total_investments_value()
     
-    def calculate_profit_distribution(self):
-        """Calculate profit over the last 7 days and distribute it"""
-        self.logger.info("Calculating profit distribution for the last 7 days")
-        
-        # Take a new snapshot to ensure we have the latest data
-        self.logger.info("Taking a new wallet snapshot")
-        self.snapshot_taker.take_snapshot()
-        
-        # Get current date and date 7 days ago
-        now = datetime.now(timezone.utc)
-        seven_days_ago = now - timedelta(days=7)
-        
-        # Get snapshots closest to now and 7 days ago
-        current_snapshot = self.get_snapshot_by_date(now)
-        past_snapshot = self.get_snapshot_by_date(seven_days_ago)
-        
-        if not current_snapshot or not past_snapshot:
-            self.logger.error("Could not find required snapshots")
-            return None
-        
-        # Extract total values from snapshots
-        current_wallet_value = float(current_snapshot['fields'].get('totalValue', 0))
-        past_wallet_value = float(past_snapshot['fields'].get('totalValue', 0))
-        
-        # Get net investment change during this period
-        net_investment_change = self.get_investment_change(seven_days_ago, now)
-        
-        # Calculate profit: (Current Value - Past Value - Net Investment Change)
-        # If net_investment_change is positive (more money added), we subtract it to get true profit
-        # If net_investment_change is negative (money withdrawn), adding it (subtracting a negative) accounts for value taken out
-        total_profit = current_wallet_value - past_wallet_value - net_investment_change
-        
-        # Display the calculation details
-        self.logger.info("\n=== Profit Calculation ===")
-        self.logger.info(f"Current Wallet Value: ${current_wallet_value:.2f}")
-        self.logger.info(f"Past Wallet Value (7 days ago): ${past_wallet_value:.2f}")
-        self.logger.info(f"Net Investment Change: ${net_investment_change:.2f}")
-        self.logger.info(f"Total Profit (7 days): ${total_profit:.2f}")
-        
-        # Calculate distribution pools
-        if total_profit <= 0:
-            self.logger.warning("No profit to distribute")
-            return {
-                "total_profit": total_profit,
-                "pool_1": 0,  # 25% pool
-                "pool_2": 0,   # 75% pool
-                "fees": 0      # 3% fees
-            }
-    
-        # Calculate 3% fee from total profit
-        fees = total_profit * 0.03
-    
-        # Calculate remaining profit after fees
-        profit_after_fees = total_profit - fees
-    
-        # Calculate distribution pools from remaining profit
-        pool_1 = profit_after_fees * 0.25  # 25% pool
-        pool_2 = profit_after_fees * 0.75  # 75% pool
-    
-        self.logger.info("\n=== Profit Distribution ===")
-        self.logger.info(f"Total Profit (7 days): ${total_profit:.2f}")
-        self.logger.info(f"Fees (3%): ${fees:.2f}")
-        self.logger.info(f"Profit After Fees: ${profit_after_fees:.2f}")
-        self.logger.info(f"Pool 1 (25%): ${pool_1:.2f}")
-        self.logger.info(f"Pool 2 (75%): ${pool_2:.2f}")
-    
-        return {
-            "total_profit": total_profit,
-            "profit_after_fees": profit_after_fees,
-            "fees": fees,
-            "pool_1": pool_1,
-            "pool_2": pool_2
-        }
+    # Method removed as it's no longer needed
         
     def calculate_investor_distributions(self):
         """Calculate distribution amounts for each investor based on their current investment value"""
@@ -586,111 +333,13 @@ class ProfitRedistributor:
         self.logger.info(f"Telegram notifications disabled - skipping notification for wallet: {investor_data['wallet']}")
         return True
             
-    def verify_ubc_balance(self, total_ubc_needed):
-        """Verify that there's enough UBC in the wallet to cover the redistribution"""
-        self.logger.info(f"Verifying UBC balance for redistribution (need {total_ubc_needed:.2f} UBC)")
-        
-        try:
-            # Get the wallet address from environment variables
-            wallet = os.getenv('KINKONG_WALLET')
-            if not wallet:
-                self.logger.error("KINKONG_WALLET not found in environment variables")
-                return False
+    # Method removed as it's no longer needed
             
-            # Get Birdeye API key
-            birdeye_api_key = os.getenv('BIRDEYE_API_KEY')
-            if not birdeye_api_key:
-                self.logger.error("BIRDEYE_API_KEY not found in environment variables")
-                return False
-            
-            # UBC token mint address
-            ubc_mint = "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump"
-            
-            # Call Birdeye API to get wallet token list
-            url = "https://public-api.birdeye.so/v1/wallet/token_list"
-            params = {
-                "wallet": wallet
-            }
-            headers = {
-                "x-api-key": birdeye_api_key,
-                "x-chain": "solana",
-                "accept": "application/json"
-            }
-            
-            response = requests.get(url, params=params, headers=headers)
-            response.raise_for_status()
-            data = response.json()
-            
-            if not data.get('success'):
-                self.logger.error(f"Birdeye API returned error: {data.get('message', 'Unknown error')}")
-                return False
-            
-            # Find UBC token in the wallet
-            ubc_balance = 0
-            for token in data.get('data', {}).get('items', []):
-                if token.get('address') == ubc_mint:
-                    ubc_balance = float(token.get('uiAmount', 0))
-                    self.logger.info(f"Found UBC in wallet: {ubc_balance:.2f} UBC")
-                    break
-            
-            # If UBC not found in wallet
-            if ubc_balance == 0:
-                self.logger.warning("No UBC found in wallet")
-                return False
-            
-            # Check if there's enough UBC
-            if ubc_balance >= total_ubc_needed:
-                self.logger.info(f"✅ Sufficient UBC balance: {ubc_balance:.2f} UBC (need {total_ubc_needed:.2f} UBC)")
-                return True
-            else:
-                self.logger.warning(f"❌ Insufficient UBC balance: {ubc_balance:.2f} UBC (need {total_ubc_needed:.2f} UBC)")
-                return False
-            
-        except Exception as e:
-            self.logger.error(f"Error verifying UBC balance: {e}")
-            return False
-            
-    def save_redistribution_to_airtable(self, profit_distribution, investor_distributions):
+    def save_redistribution_to_airtable(self, ubc_amount, compute_amount, investor_distributions):
         """Save redistribution data to Airtable REDISTRIBUTIONS and INVESTOR_REDISTRIBUTIONS tables"""
         self.logger.info("Saving redistribution data to Airtable")
         
         try:
-            # Get token prices to convert USD to UBC
-            token_prices = self.get_token_prices()
-            ubc_price = token_prices.get('UBC', 0.001)  # Default to 0.001 if UBC price not available
-            self.logger.info(f"Using UBC price for conversion: ${ubc_price:.6f}")
-            
-            # Calculate total UBC needed for all redistributions
-            total_ubc_needed = 0
-            investor_data_with_ubc = []
-            
-            for dist in investor_distributions:
-                # Convert USD amount to UBC tokens
-                ubc_amount = 0
-                if ubc_price > 0:
-                    ubc_amount = dist['distribution_amount'] / ubc_price
-                
-                # Add to total UBC needed
-                total_ubc_needed += ubc_amount
-                
-                # Store investor data with UBC amount for later use
-                investor_data_with_ubc.append({
-                    'wallet': dist['wallet'],
-                    'investment_value': dist['investment_value'],
-                    'percentage': dist['percentage'],
-                    'distribution_amount': dist['distribution_amount'],
-                    'ubcAmount': ubc_amount
-                })
-            
-            self.logger.info(f"Total UBC needed for redistribution: {total_ubc_needed:.2f} UBC")
-            
-            # Verify that there's enough UBC in the wallet
-            has_sufficient_ubc = self.verify_ubc_balance(total_ubc_needed)
-            
-            if not has_sufficient_ubc:
-                self.logger.error("Cannot proceed with redistribution due to insufficient UBC balance")
-                return None
-            
             # Initialize Airtable table for redistributions
             redistributions_table = Airtable(
                 self.base_id,
@@ -711,13 +360,8 @@ class ProfitRedistributor:
             # Create the main redistribution record
             main_record = {
                 'createdAt': now,
-                'totalProfit': profit_distribution['total_profit'],
-                'fees': profit_distribution['fees'],
-                'profitAfterFees': profit_distribution['profit_after_fees'],
-                'pool1Amount': profit_distribution['pool_1'],
-                'pool2Amount': profit_distribution['pool_2'],
-                'totalUbcAmount': total_ubc_needed,  # Add total UBC amount
-                'ubcPrice': ubc_price,  # Add UBC price used for conversion
+                'ubcAmount': ubc_amount,
+                'computeAmount': compute_amount,
                 'status': 'PENDING',  # Initial status
                 'periodStart': (datetime.now(timezone.utc) - timedelta(days=7)).isoformat(),
                 'periodEnd': now
@@ -740,11 +384,15 @@ class ProfitRedistributor:
             )
             investments = investments_table.get_all()
             
-            for investor_data in investor_data_with_ubc:
-                # Get all investments for this wallet
-                wallet_investments = [inv for inv in investments if inv['fields'].get('wallet') == investor_data['wallet']]
+            for investor_data in investor_distributions:
+                # Get all investments for this wallet and token
+                wallet_investments = [
+                    inv for inv in investments 
+                    if inv['fields'].get('wallet') == investor_data['wallet'] and 
+                       inv['fields'].get('token', '').upper() == investor_data['token']
+                ]
                 
-                # If there are investments for this wallet, link the redistribution to them
+                # If there are investments for this wallet and token, link the redistribution to them
                 if wallet_investments:
                     # Sort investments by amount (descending) to match the largest investment first
                     wallet_investments.sort(key=lambda x: float(x['fields'].get('amount', 0)), reverse=True)
@@ -754,29 +402,27 @@ class ProfitRedistributor:
                         'fields': {
                             'redistributionId': main_record_id,  # Link to the main redistribution record
                             'wallet': investor_data['wallet'],
+                            'token': investor_data['token'],  # Add token field
                             'investmentId': investment_id,  # Add this field to link to specific investment
-                            'investmentValue': investor_data['investment_value'],
                             'percentage': investor_data['percentage'],
-                            'amount': investor_data['distribution_amount'],
-                            'ubcAmount': investor_data['ubcAmount'],  # Add UBC amount field
-                            'hasSubscription': investor_data.get('has_subscription', False),  # Add subscription status
-                            'effectiveRate': investor_data.get('effective_rate', 75),  # Add effective rate
+                            'amount': investor_data['amount'],
+                            'hasSubscription': investor_data.get('has_subscription', False),
+                            'effectiveRate': investor_data.get('effective_rate', 75),
                             'status': 'PENDING',  # Initial status
                             'createdAt': now
                         }
                     }
                 else:
-                    # If no investments found for this wallet, create record without investment ID
+                    # If no investments found for this wallet and token, create record without investment ID
                     investor_record = {
                         'fields': {
                             'redistributionId': main_record_id,  # Link to the main redistribution record
                             'wallet': investor_data['wallet'],
-                            'investmentValue': investor_data['investment_value'],
+                            'token': investor_data['token'],  # Add token field
                             'percentage': investor_data['percentage'],
-                            'amount': investor_data['distribution_amount'],
-                            'ubcAmount': investor_data['ubcAmount'],  # Add UBC amount field
-                            'hasSubscription': investor_data.get('has_subscription', False),  # Add subscription status
-                            'effectiveRate': investor_data.get('effective_rate', 75),  # Add effective rate
+                            'amount': investor_data['amount'],
+                            'hasSubscription': investor_data.get('has_subscription', False),
+                            'effectiveRate': investor_data.get('effective_rate', 75),
                             'status': 'PENDING',  # Initial status
                             'createdAt': now
                         }
@@ -785,13 +431,7 @@ class ProfitRedistributor:
                 # Insert the record into Airtable
                 investor_record_result = investor_redistributions_table.insert(investor_record['fields'])
                 
-                # Telegram notifications disabled
-                # try:
-                #     self.send_telegram_notification(main_record_id, investor_data)
-                # except Exception as e:
-                #     self.logger.warning(f"Failed to send Telegram notification: {e}")
-                
-                self.logger.info(f"Wallet {investor_data['wallet']}: ${investor_data['distribution_amount']:.2f} = {investor_data['ubcAmount']:.2f} UBC")
+                self.logger.info(f"Wallet {investor_data['wallet']}: {investor_data['amount']:.6f} {investor_data['token']}")
                 investor_records.append(investor_record_result)
             
             self.logger.info(f"Created {len(investor_records)} investor redistribution records")
@@ -810,91 +450,97 @@ def main():
         required_vars = [
             'KINKONG_AIRTABLE_BASE_ID',
             'KINKONG_AIRTABLE_API_KEY',
-            'BIRDEYE_API_KEY',
-            'KINKONG_WALLET',
-            'TELEGRAM_BOT_TOKEN',
-            'TELEGRAM_CHAT_ID'
+            'KINKONG_WALLET'
         ]
         
         missing = [var for var in required_vars if not os.getenv(var)]
         if missing:
             print(f"⚠️ Warning: Missing environment variables: {', '.join(missing)}")
-            print("Telegram notifications may not work without TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID")
+        
+        # Get UBC and COMPUTE amounts from command line arguments
+        ubc_amount = 0
+        compute_amount = 0
+        
+        if len(sys.argv) >= 3:
+            try:
+                ubc_amount = float(sys.argv[1])
+                compute_amount = float(sys.argv[2])
+            except ValueError:
+                print("Error: UBC and COMPUTE amounts must be numbers")
+                sys.exit(1)
+        else:
+            print("Usage: python redistribute_profits.py <ubc_amount> <compute_amount>")
+            sys.exit(1)
         
         # Initialize and run profit redistribution
         redistributor = ProfitRedistributor()
-        result = redistributor.calculate_profit_distribution()
         
-        if result and result['total_profit'] > 0:
-            print("\n=== KinKong Profit Redistribution ===")
-            print(f"Total Profit (7 days): ${result['total_profit']:.2f}")
-            print(f"Fees (3%): ${result['fees']:.2f}")
-            print(f"Profit After Fees: ${result['profit_after_fees']:.2f}")
-            print(f"Pool 1 (25%): ${result['pool_1']:.2f}")
-            print(f"Pool 2 (75%): ${result['pool_2']:.2f}")
+        print("\n=== KinKong Profit Redistribution ===")
+        print(f"UBC Amount to Distribute: {ubc_amount} UBC")
+        print(f"COMPUTE Amount to Distribute: {compute_amount} COMPUTE")
+        
+        # Calculate and display investor distributions
+        print("\n=== Investor Distributions ===")
+        distributions = redistributor.calculate_investor_distributions(ubc_amount, compute_amount)
+        
+        if distributions:
+            print(f"{'Wallet':<42} {'Token':<8} {'Share':<8} {'Distribution':<12}")
+            print("-" * 80)
             
-            # Calculate and display investor distributions
-            print("\n=== Investor Distributions ===")
-            distributions = redistributor.calculate_investor_distributions()
+            # Group distributions by token
+            ubc_distributions = [d for d in distributions if d['token'] == 'UBC']
+            compute_distributions = [d for d in distributions if d['token'] == 'COMPUTE']
             
-            if distributions:
-                print(f"{'Wallet':<42} {'Investment':<12} {'Share':<8} {'Distribution':<12}")
-                print("-" * 80)
-                
-                # Get UBC price for display
-                token_prices = redistributor.get_token_prices()
-                ubc_price = token_prices.get('UBC', 0.001)
-                
-                # Calculate total UBC needed
-                total_ubc_needed = 0
-                
-                for dist in distributions:
-                    wallet = dist['wallet']
-                    # Truncate wallet address for display
-                    if len(wallet) > 38:
-                        wallet_display = wallet[:18] + "..." + wallet[-17:]
-                    else:
-                        wallet_display = wallet
-                    
-                    # Calculate UBC amount
-                    ubc_amount = dist['distribution_amount'] / ubc_price if ubc_price > 0 else 0
-                    total_ubc_needed += ubc_amount
-                    
-                    print(f"{wallet_display:<42} ${dist['investment_value']:<11.2f} {dist['percentage']:<7.2f}% ${dist['distribution_amount']:<11.2f}")
-                
-                # Verify total distribution matches pool amount
-                total_distributed = sum(d['distribution_amount'] for d in distributions)
-                print("-" * 80)
-                print(f"Total Distributed: ${total_distributed:.2f} (should match Pool 2: ${result['pool_2']:.2f})")
-                print(f"Total UBC Required: {total_ubc_needed:.2f} UBC (at price ${ubc_price:.6f})")
-                
-                # Print subscription status summary
-                subscribers = sum(1 for d in distributions if d.get('has_subscription', False))
-                non_subscribers = len(distributions) - subscribers
-                print(f"\nSubscription Status: {subscribers} Premium (75%), {non_subscribers} Basic (50%)")
-                
-                # Check for rounding errors
-                if abs(total_distributed - result['pool_2']) > 0.01:
-                    print(f"Warning: Distribution total differs from Pool 2 amount by ${abs(total_distributed - result['pool_2']):.2f}")
-                
-                # Verify UBC balance
-                has_sufficient_ubc = redistributor.verify_ubc_balance(total_ubc_needed)
-                if has_sufficient_ubc:
-                    print(f"\n✅ UBC Balance Verification: PASSED")
-                    
-                    # Save redistribution data to Airtable
-                    redistribution_id = redistributor.save_redistribution_to_airtable(result, distributions)
-                    if redistribution_id:
-                        print(f"\n✅ Redistribution saved to Airtable with ID: {redistribution_id}")
-                    else:
-                        print("\n❌ Failed to save redistribution to Airtable")
+            # Print UBC distributions
+            for dist in ubc_distributions:
+                wallet = dist['wallet']
+                # Truncate wallet address for display
+                if len(wallet) > 38:
+                    wallet_display = wallet[:18] + "..." + wallet[-17:]
                 else:
-                    print(f"\n❌ UBC Balance Verification: FAILED - Insufficient UBC in wallet")
-                    print("Redistribution not saved to Airtable due to insufficient UBC balance")
+                    wallet_display = wallet
+                
+                print(f"{wallet_display:<42} {dist['token']:<8} {dist['percentage']:<7.2f}% {dist['amount']:<11.6f}")
+            
+            # Print COMPUTE distributions
+            for dist in compute_distributions:
+                wallet = dist['wallet']
+                # Truncate wallet address for display
+                if len(wallet) > 38:
+                    wallet_display = wallet[:18] + "..." + wallet[-17:]
+                else:
+                    wallet_display = wallet
+                
+                print(f"{wallet_display:<42} {dist['token']:<8} {dist['percentage']:<7.2f}% {dist['amount']:<11.6f}")
+            
+            # Verify total distribution matches input amounts
+            total_ubc_distributed = sum(d['amount'] for d in distributions if d['token'] == 'UBC')
+            total_compute_distributed = sum(d['amount'] for d in distributions if d['token'] == 'COMPUTE')
+            
+            print("-" * 80)
+            print(f"Total UBC Distributed: {total_ubc_distributed:.6f} (should match input: {ubc_amount})")
+            print(f"Total COMPUTE Distributed: {total_compute_distributed:.6f} (should match input: {compute_amount})")
+            
+            # Print subscription status summary
+            subscribers = sum(1 for d in distributions if d.get('has_subscription', False))
+            non_subscribers = len(set(d['wallet'] for d in distributions)) - subscribers
+            print(f"\nSubscription Status: {subscribers} Premium (75%), {non_subscribers} Basic (50%)")
+            
+            # Check for rounding errors
+            if abs(total_ubc_distributed - ubc_amount) > 0.000001:
+                print(f"Warning: UBC distribution total differs from input amount by {abs(total_ubc_distributed - ubc_amount):.6f}")
+            
+            if abs(total_compute_distributed - compute_amount) > 0.000001:
+                print(f"Warning: COMPUTE distribution total differs from input amount by {abs(total_compute_distributed - compute_amount):.6f}")
+            
+            # Save redistribution data to Airtable
+            redistribution_id = redistributor.save_redistribution_to_airtable(ubc_amount, compute_amount, distributions)
+            if redistribution_id:
+                print(f"\n✅ Redistribution saved to Airtable with ID: {redistribution_id}")
             else:
-                print("No investor distributions calculated")
+                print("\n❌ Failed to save redistribution to Airtable")
         else:
-            print("No profit to distribute")
+            print("No investor distributions calculated")
         
     except Exception as e:
         print(f"\n❌ Script failed: {str(e)}")
