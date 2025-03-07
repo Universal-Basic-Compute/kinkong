@@ -198,29 +198,18 @@ class ProfitRedistributor:
     
     # Method removed as it's no longer needed
         
-    def calculate_investor_distributions(self):
-        """Calculate distribution amounts for each investor based on their current investment value"""
-        self.logger.info("Calculating investor distributions from the 75% pool")
+    def calculate_investor_distributions(self, ubc_amount, compute_amount):
+        """Calculate distribution amounts for each investor based on their investment token"""
+        self.logger.info(f"Calculating investor distributions: {ubc_amount} UBC and {compute_amount} COMPUTE")
         
         try:
-            # First calculate the total profit and pools
-            profit_distribution = self.calculate_profit_distribution()
-            
-            if not profit_distribution or profit_distribution['total_profit'] <= 0:
-                self.logger.warning("No profit to distribute to investors")
-                return []
-            
-            # Get the 75% pool amount
-            pool_75_amount = profit_distribution['pool_2']
-            self.logger.info(f"75% Pool amount to distribute: ${pool_75_amount:.2f}")
-            
             # Get active subscriptions
             active_subscriptions = self.get_active_subscriptions()
             
             # Get all investors from the INVESTMENTS table
             investments = self.investments_table.get_all()
             
-            # Group investments by wallet
+            # Group investments by wallet and token
             wallet_investments = {}
             for investment in investments:
                 wallet = investment['fields'].get('wallet')
@@ -231,9 +220,12 @@ class ProfitRedistributor:
                 token_symbol = investment['fields'].get('token', 'USDC').upper()
                 
                 if wallet not in wallet_investments:
-                    wallet_investments[wallet] = []
+                    wallet_investments[wallet] = {}
                     
-                wallet_investments[wallet].append({
+                if token_symbol not in wallet_investments[wallet]:
+                    wallet_investments[wallet][token_symbol] = []
+                    
+                wallet_investments[wallet][token_symbol].append({
                     'token': token_symbol,
                     'amount': amount,
                     'id': investment['id']
@@ -241,85 +233,105 @@ class ProfitRedistributor:
             
             self.logger.info(f"Found {len(wallet_investments)} unique investors")
             
-            # Get token prices for conversion to USD
-            token_prices = self.get_token_prices()
-            
-            # Calculate total investment value across all wallets
-            total_investment_value_usd = 0
-            wallet_investment_values = {}
+            # Calculate total investment value by token
+            total_ubc_investment = 0
+            total_compute_investment = 0
+            wallet_token_investments = {}
             wallet_has_subscription = {}
             
-            for wallet, investments in wallet_investments.items():
-                wallet_value = 0
-                
-                for investment in investments:
-                    token = investment['token']
-                    amount = investment['amount']
-                    
-                    # Convert token amount to USD
-                    if token in token_prices:
-                        value_usd = amount * token_prices[token]
-                        wallet_value += value_usd
-                        self.logger.info(f"Wallet {wallet}: {amount} {token} = ${value_usd:.2f}")
-                    else:
-                        self.logger.warning(f"No price available for {token}, skipping in calculation")
-                
+            for wallet, token_investments in wallet_investments.items():
                 # Check if wallet has active subscription
                 has_subscription = wallet in active_subscriptions
                 wallet_has_subscription[wallet] = has_subscription
                 
+                # Initialize wallet token investments if not exists
+                if wallet not in wallet_token_investments:
+                    wallet_token_investments[wallet] = {}
+                
+                # Calculate UBC investment
+                ubc_investment = sum(inv['amount'] for inv in token_investments.get('UBC', []))
+                
                 # Apply different rate based on subscription status
-                # For calculation purposes, we'll adjust the investment value
-                # Non-subscribers get 50% instead of 75% (2/3 of the full rate)
-                effective_value = wallet_value
+                effective_ubc = ubc_investment
                 if not has_subscription:
-                    # Apply 2/3 factor to represent 50% vs 75% rate
-                    effective_value = wallet_value * (50/75)
-                    self.logger.info(f"Wallet {wallet}: No active subscription, applying 50% rate (2/3 factor)")
+                    # Non-subscribers get 50% instead of 75% (2/3 of the full rate)
+                    effective_ubc = ubc_investment * (50/75)
+                    self.logger.info(f"Wallet {wallet}: No active subscription, applying 50% rate for UBC")
                 else:
-                    self.logger.info(f"Wallet {wallet}: Has active subscription, applying full 75% rate")
+                    self.logger.info(f"Wallet {wallet}: Has active subscription, applying full 75% rate for UBC")
                 
-                wallet_investment_values[wallet] = {
-                    'actual_value': wallet_value,
-                    'effective_value': effective_value,
-                    'has_subscription': has_subscription
+                wallet_token_investments[wallet]['UBC'] = {
+                    'actual': ubc_investment,
+                    'effective': effective_ubc
                 }
-                total_investment_value_usd += effective_value
+                total_ubc_investment += effective_ubc
                 
-            self.logger.info(f"Total effective investment value across all wallets: ${total_investment_value_usd:.2f}")
+                # Calculate COMPUTE investment
+                compute_investment = sum(inv['amount'] for inv in token_investments.get('COMPUTE', []))
+                
+                # Apply different rate based on subscription status
+                effective_compute = compute_investment
+                if not has_subscription:
+                    # Non-subscribers get 50% instead of 75% (2/3 of the full rate)
+                    effective_compute = compute_investment * (50/75)
+                    self.logger.info(f"Wallet {wallet}: No active subscription, applying 50% rate for COMPUTE")
+                else:
+                    self.logger.info(f"Wallet {wallet}: Has active subscription, applying full 75% rate for COMPUTE")
+                
+                wallet_token_investments[wallet]['COMPUTE'] = {
+                    'actual': compute_investment,
+                    'effective': effective_compute
+                }
+                total_compute_investment += effective_compute
+            
+            self.logger.info(f"Total effective UBC investment: {total_ubc_investment} UBC")
+            self.logger.info(f"Total effective COMPUTE investment: {total_compute_investment} COMPUTE")
             
             # Calculate distribution for each wallet based on their percentage of total investment
             distributions = []
             
-            for wallet, investment_data in wallet_investment_values.items():
-                if total_investment_value_usd > 0:
-                    actual_value = investment_data['actual_value']
-                    effective_value = investment_data['effective_value']
-                    has_subscription = investment_data['has_subscription']
-                    
-                    # Calculate percentage based on effective value
-                    percentage = (effective_value / total_investment_value_usd) * 100
-                    
-                    # Calculate distribution amount
-                    distribution_amount = (effective_value / total_investment_value_usd) * pool_75_amount
-                    
-                    # Calculate the effective rate (75% for subscribers, 50% for non-subscribers)
-                    effective_rate = 75 if has_subscription else 50
+            for wallet, token_investments in wallet_token_investments.items():
+                has_subscription = wallet_has_subscription[wallet]
+                effective_rate = 75 if has_subscription else 50
+                
+                # Calculate UBC distribution
+                ubc_distribution = 0
+                ubc_percentage = 0
+                if total_ubc_investment > 0 and token_investments.get('UBC', {}).get('effective', 0) > 0:
+                    ubc_percentage = (token_investments['UBC']['effective'] / total_ubc_investment) * 100
+                    ubc_distribution = (token_investments['UBC']['effective'] / total_ubc_investment) * ubc_amount
                     
                     distributions.append({
                         'wallet': wallet,
-                        'investment_value': actual_value,
-                        'effective_value': effective_value,
-                        'percentage': percentage,
-                        'distribution_amount': distribution_amount,
+                        'token': 'UBC',
+                        'percentage': ubc_percentage,
+                        'amount': ubc_distribution,
                         'has_subscription': has_subscription,
                         'effective_rate': effective_rate
                     })
                     
-                    self.logger.info(f"Wallet {wallet}: Investment ${actual_value:.2f}, Rate {effective_rate}% → Distribution ${distribution_amount:.2f}")
+                    self.logger.info(f"Wallet {wallet}: UBC Investment {token_investments['UBC']['actual']}, Rate {effective_rate}% → Distribution {ubc_distribution:.6f} UBC")
                 
+                # Calculate COMPUTE distribution
+                compute_distribution = 0
+                compute_percentage = 0
+                if total_compute_investment > 0 and token_investments.get('COMPUTE', {}).get('effective', 0) > 0:
+                    compute_percentage = (token_investments['COMPUTE']['effective'] / total_compute_investment) * 100
+                    compute_distribution = (token_investments['COMPUTE']['effective'] / total_compute_investment) * compute_amount
+                    
+                    distributions.append({
+                        'wallet': wallet,
+                        'token': 'COMPUTE',
+                        'percentage': compute_percentage,
+                        'amount': compute_distribution,
+                        'has_subscription': has_subscription,
+                        'effective_rate': effective_rate
+                    })
+                    
+                    self.logger.info(f"Wallet {wallet}: COMPUTE Investment {token_investments['COMPUTE']['actual']}, Rate {effective_rate}% → Distribution {compute_distribution:.6f} COMPUTE")
+            
             # Sort distributions by amount (descending)
-            distributions.sort(key=lambda x: x['distribution_amount'], reverse=True)
+            distributions.sort(key=lambda x: x['amount'], reverse=True)
             
             return distributions
         
