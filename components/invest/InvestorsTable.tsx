@@ -9,7 +9,7 @@ type SortDirection = 'asc' | 'desc';
 
 interface Investor {
   investmentId: string;
-  amount: number; // This will now be investmentValue
+  amount: number; // This is now the redistribution amount (previously ubcReturn)
   token?: string;
   usdAmount?: number;
   solscanUrl?: string;
@@ -17,7 +17,6 @@ interface Investor {
   username?: string;
   wallet: string;
   return?: number;
-  ubcReturn?: number;
   isCalculated?: boolean;
   redistributionId?: string;
   redistributionDate?: string;
@@ -152,7 +151,7 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
       case 'date':
         return multiplier * (new Date(a.date).getTime() - new Date(b.date).getTime());
       case 'return':
-        return multiplier * ((a.ubcReturn || 0) - (b.ubcReturn || 0));
+        return multiplier * ((a.amount || 0) - (b.amount || 0));
       default:
         return 0;
     }
@@ -223,10 +222,10 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
                     
                     {/* Weekly Return Cell (moved before Investment Value) */}
                     <td className="px-4 py-4 text-right">
-                      {investor.ubcReturn !== undefined || investor.isCalculated ? (
+                      {investor.amount !== undefined ? (
                         <>
-                          <span className="metallic-text-ubc font-medium">
-                            {Math.floor(investor.ubcReturn || 0).toLocaleString('en-US')} $UBC
+                          <span className={`metallic-text-${(investor.token || 'ubc').toLowerCase()} font-medium`}>
+                            {Math.floor(investor.amount || 0).toLocaleString('en-US')} ${investor.token || 'UBC'}
                           </span>
                           {investor.isCalculated && (
                             <span className="text-xs text-yellow-500 ml-1">(Estimated)</span>
@@ -234,8 +233,8 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
                         </>
                       ) : (
                         <>
-                          <span className="metallic-text-ubc font-medium">
-                            0 $UBC
+                          <span className={`metallic-text-${(investor.token || 'ubc').toLowerCase()} font-medium`}>
+                            0 ${investor.token || 'UBC'}
                           </span>
                         </>
                       )}
