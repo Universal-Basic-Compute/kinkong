@@ -699,7 +699,7 @@ export default function Invest() {
                     </li>
                     <li className="flex items-start">
                       <span className="text-gold mr-2">•</span>
-                      <span>0.9% fee on Withdrawals</span>
+                      <span>0.9% fee on Withdrawals for Pro, 1.4% for standard</span>
                     </li>
                     <li className="flex items-start">
                       <span className="text-gold mr-2">•</span>
