@@ -194,7 +194,7 @@ const LatestRedistributions = () => {
 
   return (
     <div className="mb-8">
-      <h2 className="text-2xl font-bold text-gold mb-4">Latest Redistributions</h2>
+      <h2 className="text-2xl font-bold text-gold mb-4">Latest Weekly Redistribution</h2>
       
       {isLoading ? (
         <div className="flex justify-center py-6">
