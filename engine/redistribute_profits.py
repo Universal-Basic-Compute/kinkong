@@ -582,75 +582,9 @@ class ProfitRedistributor:
             
     def send_telegram_notification(self, redistribution_id, investor_data):
         """Send a Telegram notification for an investor redistribution"""
-        try:
-            self.logger.info(f"Sending Telegram notification for investor: {investor_data['wallet']}")
-            
-            # Get Telegram bot token and use the specified channel ID
-            bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
-            chat_id = "-1001699255893"  # Use the specified channel ID
-            
-            if not bot_token:
-                self.logger.warning("Telegram bot token not found in environment variables")
-                return False
-            
-            # Format wallet address for display
-            wallet = investor_data['wallet']
-            if len(wallet) > 20:
-                wallet_display = wallet[:10] + '...' + wallet[-10:]
-            else:
-                wallet_display = wallet
-            
-            # Add subscription status indicator
-            subscription_status = "✅ Premium (75%)" if investor_data.get('has_subscription', False) else "⚠️ Basic (50%)"
-            
-            # Create message text with subscription status
-            message = f"""🎉 *KinKong Profit Redistribution*
-            
-📊 *Investor*: `{wallet_display}`
-🪙 *UBC Amount*: {investor_data['ubcAmount']:.2f} UBC
-💰 *Amount*: ${investor_data['distribution_amount']:.2f}
-🔑 *Status*: {subscription_status}
-
-Status: Pending ⏳
-"""
-            
-            # First send the image
-            image_path = "public/copilot.png"
-            
-            # Check if image exists
-            if os.path.exists(image_path):
-                # Send photo with caption
-                telegram_url = f"https://api.telegram.org/bot{bot_token}/sendPhoto"
-                
-                # Open and read the image file
-                with open(image_path, 'rb') as photo:
-                    files = {'photo': photo}
-                    payload = {
-                        "chat_id": chat_id,
-                        "caption": message,
-                        "parse_mode": "Markdown"
-                    }
-                    
-                    response = requests.post(telegram_url, data=payload, files=files)
-                    response.raise_for_status()
-            else:
-                # If image doesn't exist, just send the text message
-                self.logger.warning(f"Image file not found at {image_path}, sending text-only message")
-                telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-                payload = {
-                    "chat_id": chat_id,
-                    "text": message,
-                    "parse_mode": "Markdown"
-                }
-                
-                response = requests.post(telegram_url, json=payload)
-                response.raise_for_status()
-            
-            self.logger.info(f"Telegram notification sent successfully for {wallet_display}")
-            return True
-        except Exception as e:
-            self.logger.error(f"Error sending Telegram notification: {e}")
-            return False
+        # Skip sending notifications as requested
+        self.logger.info(f"Telegram notifications disabled - skipping notification for wallet: {investor_data['wallet']}")
+        return True
             
     def verify_ubc_balance(self, total_ubc_needed):
         """Verify that there's enough UBC in the wallet to cover the redistribution"""
@@ -851,11 +785,11 @@ Status: Pending ⏳
                 # Insert the record into Airtable
                 investor_record_result = investor_redistributions_table.insert(investor_record['fields'])
                 
-                # Send Telegram notification for this investor
-                try:
-                    self.send_telegram_notification(main_record_id, investor_data)
-                except Exception as e:
-                    self.logger.warning(f"Failed to send Telegram notification: {e}")
+                # Telegram notifications disabled
+                # try:
+                #     self.send_telegram_notification(main_record_id, investor_data)
+                # except Exception as e:
+                #     self.logger.warning(f"Failed to send Telegram notification: {e}")
                 
                 self.logger.info(f"Wallet {investor_data['wallet']}: ${investor_data['distribution_amount']:.2f} = {investor_data['ubcAmount']:.2f} UBC")
                 investor_records.append(investor_record_result)
