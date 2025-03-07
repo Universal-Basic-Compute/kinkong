@@ -10,7 +10,7 @@ type SortDirection = 'asc' | 'desc';
 interface Investor {
   investmentId: string;
   amount: number; // This is now the redistribution amount (previously ubcReturn)
-  token?: string;
+  token: string; // Make token required, not optional
   usdAmount?: number;
   solscanUrl?: string;
   date: string;
@@ -113,10 +113,25 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
         const data = await response.json();
         console.log(`Fetched ${data.length} investors`);
         
-        setInvestors(data);
+        // Add debugging to check token field
+        if (data.length > 0) {
+          console.log('Sample investor data:', {
+            id: data[0].investmentId,
+            token: data[0].token,
+            amount: data[0].amount
+          });
+        }
+        
+        // Ensure all investors have a token field
+        const processedData = data.map((investor: any) => ({
+          ...investor,
+          token: investor.token || 'UBC' // Default to UBC if token is missing
+        }));
+        
+        setInvestors(processedData);
         
         // Calculate total investment
-        const total = data.reduce((sum: number, investor: Investor) => {
+        const total = processedData.reduce((sum: number, investor: Investor) => {
           return sum + (investor.usdAmount || 0);
         }, 0);
         
@@ -222,22 +237,32 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
                     
                     {/* Weekly Return Cell (moved before Investment Value) */}
                     <td className="px-4 py-4 text-right">
-                      {investor.amount !== undefined ? (
-                        <>
-                          <span className={`metallic-text-${(investor.token || 'ubc').toLowerCase()} font-medium`}>
-                            {Math.floor(investor.amount || 0).toLocaleString('en-US')} ${investor.token || 'UBC'}
-                          </span>
-                          {investor.isCalculated && (
-                            <span className="text-xs text-yellow-500 ml-1">(Estimated)</span>
-                          )}
-                        </>
-                      ) : (
-                        <>
-                          <span className={`metallic-text-${(investor.token || 'ubc').toLowerCase()} font-medium`}>
-                            0 ${investor.token || 'UBC'}
-                          </span>
-                        </>
-                      )}
+                      {(() => {
+                        // Add debugging to see what's coming from the API
+                        console.log(`Investor ${investor.investmentId} token:`, investor.token);
+                        console.log(`Investor ${investor.investmentId} amount:`, investor.amount);
+                        
+                        // Default to UBC if token is missing
+                        const tokenType = investor.token || 'UBC';
+                        const tokenClass = `metallic-text-${tokenType.toLowerCase()}`;
+                        
+                        return investor.amount !== undefined ? (
+                          <>
+                            <span className={tokenClass + " font-medium"}>
+                              {Math.floor(investor.amount || 0).toLocaleString('en-US')} ${tokenType}
+                            </span>
+                            {investor.isCalculated && (
+                              <span className="text-xs text-yellow-500 ml-1">(Estimated)</span>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <span className={tokenClass + " font-medium"}>
+                              0 ${tokenType}
+                            </span>
+                          </>
+                        );
+                      })()}
                     </td>
                     
                     {/* Date Cell - Modified to show days ago */}
