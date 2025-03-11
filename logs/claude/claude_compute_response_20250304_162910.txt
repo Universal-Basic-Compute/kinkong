@@ -1,0 +1,6 @@
+```json
+{
+    "reasoning": "COMPUTE shows mixed signals with a positive 24h price change of 1.32%, but in a generally bearish market environment. The overall market sentiment is bearish with only 43.8% of tokens above their 7-day average. While COMPUTE has positive recent momentum, the AI token sector is underperforming SOL by -9.0%, indicating sector weakness. The token has modest liquidity ($5,424) and 24h volume ($835), suggesting limited trading activity. The positive price action in the last 24 hours is encouraging, but may not be sustainable given the broader market context where SOL is outperforming AI tokens. The low position signals (only 5% BUY signals) further indicates caution. Given these factors, COMPUTE may slightly underperform SOL in the next 24 hours.",
+    "score": -2
+}
+```

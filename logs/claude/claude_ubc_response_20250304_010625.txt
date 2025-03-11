@@ -1,0 +1,6 @@
+```json
+{
+    "score": 2,
+    "reasoning": "UBC shows moderate positive indicators with a 5% price increase in the last 24 hours and a 10% volume increase. The token has decent liquidity at 500,000 and a stable market cap of 10M. While these metrics are positive, the market sentiment is neutral with balanced buying/selling pressure. The limited historical data makes it difficult to establish a strong trend, but the recent price and volume momentum slightly favors UBC over SOL in the short term for token maximization purposes."
+}
+```

@@ -1,0 +1,6 @@
+```json
+{
+    "score": 0,
+    "reasoning": "Insufficient data provided to make an informed assessment of COMPUTE token relative to SOL. The COMPUTE token data from DexScreener is empty, and the market sentiment is neutral with moderate confidence. Without price action, volume, liquidity metrics, or other technical indicators, I cannot determine if COMPUTE would outperform or underperform SOL. A neutral score of 0 reflects this lack of actionable information."
+}
+```

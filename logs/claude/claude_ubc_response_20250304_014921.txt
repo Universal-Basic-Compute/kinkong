@@ -1,0 +1,6 @@
+```json
+{
+    "score": -7,
+    "reasoning": "The market sentiment is strongly bearish with only 20% confidence in positive movement. Key negative indicators include: only 43.8% of tokens trading above 7-day average, very low buy signals (only 5% of position signals are BUY), and AI tokens underperforming SOL by -9%. While volume shows slight growth (4%), the distribution metrics indicate bearish pressure with less than optimal volume on up days. Without specific UBC token data available, the general AI token sector weakness against SOL suggests taking a defensive position. The Token Maximizer strategy would favor holding SOL over UBC in this environment to preserve token quantity until market conditions improve."
+}
+```

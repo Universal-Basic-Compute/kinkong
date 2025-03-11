@@ -1,0 +1,6 @@
+```json
+{
+    "score": 0,
+    "reasoning": "Insufficient data provided to make an informed assessment. The COMPUTE token snapshot history is empty, and the market sentiment is neutral with a moderate confidence level. Without specific price action, volume trends, or token-specific metrics for COMPUTE, I cannot determine if it will outperform or underperform SOL. Maintaining a neutral stance is appropriate until more data becomes available."
+}
+```

@@ -1,0 +1,6 @@
+```json
+{
+    "score": -7,
+    "reasoning": "UBC is showing significant weakness with a -28.9% 24h price change in a bearish market. The overall market sentiment is bearish with low confidence (20.0), and only 43.8% of tokens are above their 7-day average. While sector volume is up 4.0%, UBC's specific metrics are concerning - high price volatility, relatively low liquidity ($335K), and the AI token sector is underperforming SOL by -9.0%. Position signals show only 5% BUY signals, indicating weak long-term confidence. In a token maximizer strategy, this severe downtrend suggests UBC will likely continue to depreciate against SOL in the near term, making it a poor choice for token accumulation."
+}
+```

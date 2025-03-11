@@ -1,0 +1,21 @@
+{
+  "market_sentiment": {
+    "classification": "NEUTRAL",
+    "confidence": 0.5,
+    "reasoning": "Market showing mixed signals with balanced buying and selling pressure."
+  },
+  "token_data": {
+    "symbol": "UBC",
+    "name": "Basic Attention Token (Wormhole)",
+    "address": "EPeUFDgHRxs9xxEPVaL6kfGQvCon7jmAWKVUHuux1Tpz",
+    "price": 0.1639,
+    "priceChange24h": -10.64,
+    "volume24h": 1930.16,
+    "liquidity": 16923.7,
+    "fdv": 216022.0,
+    "pairAddress": "BrVVTnrihfyXiHZMVwPsKeLN2vVxMGpgk7Wt6cdrkZLV",
+    "dexId": "orca",
+    "url": "https://dexscreener.com/solana/BrVVTnrihfyXiHZMVwPsKeLN2vVxMGpgk7Wt6cdrkZLV"
+  },
+  "current_time": "2025-03-04T00:22:05.638612+00:00"
+}

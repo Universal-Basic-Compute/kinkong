@@ -1,0 +1,6 @@
+```json
+{
+    "score": 2,
+    "reasoning": "COMPUTE shows modest positive indicators with a 5% price increase and 10% volume growth over 24 hours, suggesting some accumulation. The neutral market sentiment (0.5 confidence) indicates balanced conditions without extreme pressure in either direction. Liquidity appears reasonable at 5% of market cap, providing sufficient trading depth for the Token Maximizer strategy. While the data is limited to a single snapshot rather than the full 7-day history, the positive price and volume momentum slightly favors COMPUTE over SOL for token accumulation in the near term."
+}
+```

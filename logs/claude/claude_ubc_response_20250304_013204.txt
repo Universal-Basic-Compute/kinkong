@@ -1,0 +1,6 @@
+```json
+{
+    "score": -4,
+    "reasoning": "UBC is showing significant weakness with a -10.64% 24h price change, indicating negative short-term momentum. The relatively low liquidity ($16,923) and 24h volume ($1,930) suggest limited market interest and potential difficulty in executing larger trades without price impact. The neutral market sentiment doesn't provide a catalyst for reversal. The token's price action is underperforming compared to the broader market, making it likely to continue losing value against SOL in the near term. While not catastrophically bearish, the technical indicators suggest maintaining a reduced position in UBC relative to SOL is prudent for the token maximizer strategy."
+}
+```

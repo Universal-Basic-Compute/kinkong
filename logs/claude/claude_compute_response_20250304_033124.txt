@@ -1,0 +1,6 @@
+```json
+{
+    "score": -6,
+    "reasoning": "COMPUTE shows significant weakness compared to SOL in the current bearish market. With a 7.55% price drop in the last 24 hours while the overall market sentiment is bearish (20% confidence), COMPUTE is underperforming. The token's relatively low liquidity ($5,679) and 24h volume ($817) indicate limited trading activity and potential difficulty in accumulating tokens without price impact. The negative relative strength of AI tokens vs SOL (-9.0%) further suggests SOL is currently a stronger hold. The position signals showing only 5% BUY signals reinforces the bearish outlook. While the Token Maximizer strategy focuses on token quantity rather than USD value, the current market conditions suggest COMPUTE will likely continue to decline against SOL in the short term, making it suboptimal for accumulation at this moment."
+}
+```

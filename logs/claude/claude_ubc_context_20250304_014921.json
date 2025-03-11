@@ -1,0 +1,9 @@
+{
+  "market_sentiment": {
+    "classification": "BEARISH",
+    "confidence": 20.0,
+    "indicators": "{\"price_action\": {\"is_bullish\": false, \"details\": \"43.8% of tokens above 7d average\", \"tokens_above_avg\": 7, \"total_tokens\": 16, \"percentage\": 43.75, \"info\": \"Measures how many AI tokens are trading above their 7-day average price. A higher percentage indicates broader market strength and positive momentum across the sector.\"}, \"volume\": {\"is_bullish\": true, \"details\": \"Volume growth: 4.0%\", \"current\": 4388933497.280001, \"previous\": 4218992889.4900002, \"growth\": 4.027989907575861, \"info\": \"Compares current week's trading volume to previous week. Growing volume suggests increasing market participation and validates price movements.\"}, \"distribution\": {\"is_bullish\": false, \"details\": \"51.3% of volume on up days\", \"up_day_volume\": 4289081767.59, \"info\": \"Analyzes if more trading volume occurs on up-days vs down-days. Higher volume on up-days indicates stronger buying pressure and market conviction.\"}, \"position_signals\": {\"is_bullish\": false, \"details\": \"5.0% of POSITION signals are BUY (1/20 signals in last 3 days)\", \"total_signals\": 20, \"buy_signals\": 1, \"buy_percentage\": 5.0, \"info\": \"Tracks the ratio of buy vs sell signals from long-term position trades. A higher percentage of buy signals suggests stronger long-term market confidence.\"}, \"relative_strength\": {\"is_bullish\": false, \"details\": \"AI tokens vs SOL: -9.0%\", \"sol_performance\": 5.752284474459798, \"ai_tokens_performance\": -3.2443780161463245, \"info\": \"Compares AI tokens performance against SOL. Outperformance indicates sector-specific strength rather than just general market movement.\"}}"
+  },
+  "token_data": null,
+  "current_time": "2025-03-04T00:49:21.302755+00:00"
+}

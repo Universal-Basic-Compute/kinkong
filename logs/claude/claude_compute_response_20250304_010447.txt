@@ -1,0 +1,6 @@
+```json
+{
+    "score": 2,
+    "reasoning": "COMPUTE shows modest positive indicators with a 5% price increase and 10% volume growth over 24 hours, suggesting some accumulation potential. The neutral market sentiment (0.5 confidence) indicates balanced conditions without extreme volatility risks. While the token has decent liquidity ($500K) relative to its market cap ($10M), the limited historical data makes it difficult to establish a strong directional bias. The positive price and volume momentum slightly favors COMPUTE over SOL in the short term for token maximization, but the neutral overall market conditions warrant a conservative bullish stance."
+}
+```

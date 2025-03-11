@@ -1,0 +1,13 @@
+
+            Score the COMPUTE token relative to SOL on a scale from -10 to +10.
+            
+            Provide your analysis and final score in this JSON format:
+            ```json
+            {
+                "score": 0,  // Integer between -10 and +10
+                "reasoning": ""
+            }
+            ```
+            
+            Only respond with valid JSON. No other text.
+            

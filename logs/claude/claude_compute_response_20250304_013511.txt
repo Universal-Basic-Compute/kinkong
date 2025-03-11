@@ -1,0 +1,6 @@
+```json
+{
+    "score": 0,
+    "reasoning": "Unable to provide a meaningful score due to missing COMPUTE token data. The DexScreener data shows 'null', indicating no available information about price, volume, or market activity for the COMPUTE token. Without this critical information, it's impossible to make an informed assessment relative to SOL. Maintaining a neutral stance (0) is the only appropriate option until data becomes available."
+}
+```

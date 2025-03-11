@@ -1,0 +1,19 @@
+{
+  "market_sentiment": {
+    "classification": "NEUTRAL",
+    "confidence": 0.5,
+    "reasoning": "Market showing mixed signals with balanced buying and selling pressure."
+  },
+  "token_snapshots": [
+    {
+      "timestamp": "2025-03-04T00:12:36.283447+00:00",
+      "price": 0.163,
+      "volume24h": 1948.56,
+      "marketCap": 214809.0,
+      "liquidity": 16848.44,
+      "priceChange24h": -0.11199999999999999,
+      "volumeChange24h": 0
+    }
+  ],
+  "current_time": "2025-03-04T00:12:36.284406+00:00"
+}

@@ -1,0 +1,6 @@
+```json
+{
+    "score": -3,
+    "reasoning": "COMPUTE shows several concerning signals for token accumulation: 1) Negative 24h price change (-1.46%) in an already bearish market, 2) Low trading volume ($787.87) indicating limited liquidity and potential difficulty in position building, 3) Small liquidity pool ($5,152) which could lead to high slippage when accumulating tokens, 4) Overall bearish market sentiment with only 43.8% of tokens above 7d average, 5) Only 5% of position signals are BUY signals, suggesting limited institutional confidence, 6) AI tokens underperforming SOL by -9.0%. The only positive is the general market volume growth of 4.0%, but this doesn't offset the specific weaknesses in COMPUTE. While not catastrophically bearish, the token appears weaker than SOL for accumulation in the current environment."
+}
+```

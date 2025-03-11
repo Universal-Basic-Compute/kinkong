@@ -1,0 +1,6 @@
+```json
+{
+    "score": 0,
+    "reasoning": "Unable to provide a directional score due to missing UBC token data. The DexScreener data returned null, which means I cannot analyze price action, liquidity, or trading volume for UBC. Without this critical information, I must maintain a neutral stance (0) as there is insufficient data to determine whether UBC will outperform or underperform SOL. The market sentiment is also classified as neutral with moderate confidence, providing no additional directional bias."
+}
+```

@@ -1,0 +1,108 @@
+2025-03-04 18:09:23 - INFO - Starting market sentiment analysis...
+2025-03-04 18:09:26 - INFO - Analyzing price action...
+2025-03-04 18:09:47 - INFO - 
+Position Signals Analysis:
+2025-03-04 18:09:47 - INFO - Total signals (3d): 27
+2025-03-04 18:09:47 - INFO - BUY signals: 1
+2025-03-04 18:09:47 - INFO - BUY percentage: 3.7%
+2025-03-04 18:09:47 - INFO - Sentiment: BEARISH
+2025-03-04 18:09:54 - INFO - 
+Market Sentiment Analysis:
+2025-03-04 18:09:54 - INFO - Classification: BEARISH
+2025-03-04 18:09:54 - INFO - Confidence: 20.0%
+2025-03-04 18:09:54 - INFO - Bullish Indicators: 1/5
+2025-03-04 18:09:54 - INFO - 
+Indicator Details:
+2025-03-04 18:09:54 - INFO - price_action: BEARISH
+2025-03-04 18:09:54 - INFO - • 37.5% of tokens above 7d average
+2025-03-04 18:09:54 - INFO - volume: BULLISH
+2025-03-04 18:09:54 - INFO - • Volume growth: 1.8%
+2025-03-04 18:09:54 - INFO - distribution: BEARISH
+2025-03-04 18:09:54 - INFO - • 47.6% of volume on up days
+2025-03-04 18:09:54 - INFO - position_signals: BEARISH
+2025-03-04 18:09:54 - INFO - • 3.7% of POSITION signals are BUY (1/27 signals in last 3 days)
+2025-03-04 18:09:54 - INFO - relative_strength: BEARISH
+2025-03-04 18:09:54 - INFO - • AI tokens vs SOL: -2.4%
+2025-03-04 18:09:54 - INFO - Saving sentiment analysis to Airtable...
+2025-03-04 18:09:54 - INFO - [SUCCESS] Market sentiment recorded successfully
+2025-03-08 18:00:03 - INFO - Starting market sentiment analysis...
+2025-03-08 18:00:06 - INFO - Analyzing price action...
+2025-03-08 18:00:24 - INFO - 
+Position Signals Analysis:
+2025-03-08 18:00:24 - INFO - Total signals (3d): 21
+2025-03-08 18:00:24 - INFO - BUY signals: 2
+2025-03-08 18:00:24 - INFO - BUY percentage: 9.5%
+2025-03-08 18:00:24 - INFO - Sentiment: BEARISH
+2025-03-08 18:00:30 - INFO - 
+Market Sentiment Analysis:
+2025-03-08 18:00:30 - INFO - Classification: BEARISH
+2025-03-08 18:00:30 - INFO - Confidence: 0.0%
+2025-03-08 18:00:30 - INFO - Bullish Indicators: 0/5
+2025-03-08 18:00:30 - INFO - 
+Indicator Details:
+2025-03-08 18:00:30 - INFO - price_action: BEARISH
+2025-03-08 18:00:30 - INFO - • 28.6% of tokens above 7d average
+2025-03-08 18:00:30 - INFO - volume: BEARISH
+2025-03-08 18:00:30 - INFO - • Volume growth: -9.5%
+2025-03-08 18:00:30 - INFO - distribution: BEARISH
+2025-03-08 18:00:30 - INFO - • 54.9% of volume on up days
+2025-03-08 18:00:30 - INFO - position_signals: BEARISH
+2025-03-08 18:00:30 - INFO - • 9.5% of POSITION signals are BUY (2/21 signals in last 3 days)
+2025-03-08 18:00:30 - INFO - relative_strength: BEARISH
+2025-03-08 18:00:30 - INFO - • AI tokens vs SOL: -4.5%
+2025-03-08 18:00:30 - INFO - Saving sentiment analysis to Airtable...
+2025-03-08 18:00:30 - INFO - [SUCCESS] Market sentiment recorded successfully
+2025-03-09 18:00:02 - INFO - Starting market sentiment analysis...
+2025-03-09 18:00:05 - INFO - Analyzing price action...
+2025-03-09 18:00:21 - INFO - 
+Position Signals Analysis:
+2025-03-09 18:00:21 - INFO - Total signals (3d): 42
+2025-03-09 18:00:21 - INFO - BUY signals: 2
+2025-03-09 18:00:21 - INFO - BUY percentage: 4.8%
+2025-03-09 18:00:21 - INFO - Sentiment: BEARISH
+2025-03-09 18:00:26 - INFO - 
+Market Sentiment Analysis:
+2025-03-09 18:00:26 - INFO - Classification: BEARISH
+2025-03-09 18:00:26 - INFO - Confidence: 20.0%
+2025-03-09 18:00:26 - INFO - Bullish Indicators: 1/5
+2025-03-09 18:00:26 - INFO - 
+Indicator Details:
+2025-03-09 18:00:26 - INFO - price_action: BEARISH
+2025-03-09 18:00:26 - INFO - • 33.3% of tokens above 7d average
+2025-03-09 18:00:26 - INFO - volume: BEARISH
+2025-03-09 18:00:26 - INFO - • Volume growth: -22.8%
+2025-03-09 18:00:26 - INFO - distribution: BEARISH
+2025-03-09 18:00:26 - INFO - • 52.5% of volume on up days
+2025-03-09 18:00:26 - INFO - position_signals: BEARISH
+2025-03-09 18:00:26 - INFO - • 4.8% of POSITION signals are BUY (2/42 signals in last 3 days)
+2025-03-09 18:00:26 - INFO - relative_strength: BULLISH
+2025-03-09 18:00:26 - INFO - • AI tokens vs SOL: +6.1%
+2025-03-09 18:00:26 - INFO - Saving sentiment analysis to Airtable...
+2025-03-09 18:00:26 - INFO - [SUCCESS] Market sentiment recorded successfully
+2025-03-10 18:19:40 - INFO - Starting market sentiment analysis...
+2025-03-10 18:19:45 - INFO - Analyzing price action...
+2025-03-10 18:19:52 - INFO - 
+Position Signals Analysis:
+2025-03-10 18:19:52 - INFO - Total signals (3d): 38
+2025-03-10 18:19:52 - INFO - BUY signals: 1
+2025-03-10 18:19:52 - INFO - BUY percentage: 2.6%
+2025-03-10 18:19:52 - INFO - Sentiment: BEARISH
+2025-03-10 18:19:54 - INFO - 
+Market Sentiment Analysis:
+2025-03-10 18:19:54 - INFO - Classification: BEARISH
+2025-03-10 18:19:54 - INFO - Confidence: 20.0%
+2025-03-10 18:19:54 - INFO - Bullish Indicators: 1/5
+2025-03-10 18:19:54 - INFO - 
+Indicator Details:
+2025-03-10 18:19:54 - INFO - price_action: BEARISH
+2025-03-10 18:19:54 - INFO - • 40.0% of tokens above 7d average
+2025-03-10 18:19:54 - INFO - volume: BEARISH
+2025-03-10 18:19:54 - INFO - • Volume growth: -8.6%
+2025-03-10 18:19:54 - INFO - distribution: BEARISH
+2025-03-10 18:19:54 - INFO - • 49.6% of volume on up days
+2025-03-10 18:19:54 - INFO - position_signals: BEARISH
+2025-03-10 18:19:54 - INFO - • 2.6% of POSITION signals are BUY (1/38 signals in last 3 days)
+2025-03-10 18:19:54 - INFO - relative_strength: BULLISH
+2025-03-10 18:19:54 - INFO - • AI tokens vs SOL: +10.4%
+2025-03-10 18:19:54 - INFO - Saving sentiment analysis to Airtable...
+2025-03-10 18:19:55 - INFO - [SUCCESS] Market sentiment recorded successfully

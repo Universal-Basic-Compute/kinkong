@@ -1,0 +1,6 @@
+```json
+{
+    "score": -7,
+    "reasoning": "UBC is showing significant weakness with a -29.5% 24h price change in a bearish market. The overall market sentiment is bearish with only 43.8% of tokens above 7d average. UBC's high price volatility combined with relatively low liquidity ($334K) makes it vulnerable in this environment. Position signals are overwhelmingly bearish with only 5% BUY signals. SOL is outperforming AI tokens by 9%, and UBC's negative momentum is stronger than the sector average. The token maximizer strategy suggests reducing UBC exposure in favor of SOL during this period of weakness to accumulate more tokens when conditions improve."
+}
+```

@@ -1,0 +1,6 @@
+```json
+{
+    "score": -3,
+    "reasoning": "COMPUTE shows concerning signals in a bearish market environment: 1) Negative 24h price change (-1.97%) indicating short-term weakness, 2) Low trading volume ($1,011) suggesting limited market interest, 3) Small liquidity pool ($5,424) which increases volatility risk, 4) Overall bearish market sentiment with only 43.8% of tokens above 7d average, 5) Only 5% of position signals are BUY, indicating weak long-term confidence. While the sector shows some volume growth (+4%), AI tokens are underperforming SOL by -9%. The token maximizer strategy suggests caution here - COMPUTE's fundamentals don't support accumulation versus holding SOL in current conditions. The negative momentum and limited liquidity create higher risk of further token depreciation against SOL."
+}
+```

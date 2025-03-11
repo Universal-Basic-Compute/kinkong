@@ -1,0 +1,6 @@
+```json
+{
+    "reasoning": "UBC is showing significant weakness compared to SOL with a 24h price decline of -17.05% (from DexScreener data) and -13.32% against SOL directly (from chart). The chart shows UBC/SOL in a clear downtrend with price below both EMA20 and EMA50, indicating bearish momentum. Market sentiment is broadly bearish with only 43.8% of tokens trading above their 7-day average. UBC's relatively low liquidity ($341K) makes it vulnerable to further price swings. The token's volume profile shows declining interest after initial spikes. With only 5% of position signals being BUY and AI tokens underperforming SOL by -9%, the overall sector weakness compounds UBC's negative outlook. For token maximization strategy, this presents a potential opportunity to accumulate more UBC tokens at lower prices, but the strong downtrend suggests waiting for stabilization.",
+    "score": -7
+}
+```

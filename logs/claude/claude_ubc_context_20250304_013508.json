@@ -1,0 +1,9 @@
+{
+  "market_sentiment": {
+    "classification": "NEUTRAL",
+    "confidence": 0.5,
+    "reasoning": "Market showing mixed signals with balanced buying and selling pressure."
+  },
+  "token_data": null,
+  "current_time": "2025-03-04T00:35:08.444105+00:00"
+}

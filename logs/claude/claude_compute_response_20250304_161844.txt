@@ -1,0 +1,6 @@
+```json
+{
+    "reasoning": "COMPUTE shows concerning metrics in a bearish market environment. With a -1.97% 24h price change, relatively low volume ($1,011), and modest liquidity ($5,424), it lacks momentum. The overall market sentiment is bearish with only 43.8% of tokens above 7-day average and just 5% of position signals being BUY. AI tokens are underperforming SOL by -9%, indicating sector weakness. COMPUTE's small market cap (FDV $1.7M) makes it vulnerable in this environment. While the token maximizer strategy focuses on accumulating tokens rather than USD value, positioning in SOL temporarily would likely allow for acquiring more COMPUTE tokens after further price decline.",
+    "score": -6
+}
+```
