@@ -246,7 +246,7 @@ export const YourInvestments: React.FC<YourInvestmentsProps> = ({ className }) =
                 <td className="text-right py-3 px-4">
                   <button 
                     onClick={() => handleWithdraw(investment.investmentId)}
-                    className="bg-gradient-to-r from-gold to-amber-500 hover:from-amber-500 hover:to-gold text-black font-medium py-1.5 px-4 rounded-md text-sm transition-all duration-300 shadow-md hover:shadow-gold/20"
+                    className="bg-gray-700 hover:bg-gray-600 text-gray-300 font-medium py-1.5 px-4 rounded-md text-sm transition-all duration-300 shadow-md"
                   >
                     Withdraw
                   </button>
