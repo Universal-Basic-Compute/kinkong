@@ -4,7 +4,12 @@ const dotenv = require('dotenv');
 const fs = require('fs');
 const path = require('path');
 
-dotenv.config();
+// Load environment variables from the project root .env file
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+
+// Add this after dotenv.config() to debug:
+console.log('Environment loaded from:', path.resolve(process.cwd(), '.env'));
+console.log('STRATEGY_WALLET_PRIVATE_KEY exists:', !!process.env.STRATEGY_WALLET_PRIVATE_KEY);
 
 // Setup logging
 function setupLogging() {
@@ -41,16 +46,19 @@ async function sendTokens(
       const privateKey = Buffer.from(privateKeyString, 'base64');
       sourceWalletKeypair = Keypair.fromSecretKey(new Uint8Array(privateKey));
     } catch (e) {
+      console.log('Base64 decode failed:', e.message);
       try {
         // Try as JSON array
         const privateKeyArray = JSON.parse(privateKeyString);
         sourceWalletKeypair = Keypair.fromSecretKey(new Uint8Array(privateKeyArray));
       } catch (e2) {
+        console.log('JSON parse failed:', e2.message);
         try {
           // Try as hex string
           const privateKey = Buffer.from(privateKeyString, 'hex');
           sourceWalletKeypair = Keypair.fromSecretKey(new Uint8Array(privateKey));
         } catch (e3) {
+          console.log('Hex decode failed:', e3.message);
           // Try loading from file if environment variable is a path
           try {
             if (fs.existsSync(privateKeyString)) {
@@ -61,7 +69,8 @@ async function sendTokens(
               throw new Error('File not found');
             }
           } catch (e4) {
-            throw new Error('Invalid private key format. Please provide a valid base64, JSON array, hex encoded private key, or path to key file');
+            console.log('File load failed:', e4.message);
+            throw new Error(`Invalid private key format. Value: "${privateKeyString.substring(0, 10)}..."`);
           }
         }
       }
@@ -180,14 +189,30 @@ async function sendTelegramNotification(transferData) {
   }
 }
 
+// Function to generate a test keypair
+function generateTestKeypair() {
+  const keypair = Keypair.generate();
+  console.log('Generated test keypair:');
+  console.log('Public key:', keypair.publicKey.toString());
+  console.log('Private key (array):', JSON.stringify(Array.from(keypair.secretKey)));
+  return keypair;
+}
+
 // Command line interface
 async function main() {
   try {
     // Parse command line arguments
     const args = process.argv.slice(2);
     
+    // Check for test mode
+    if (args[0] === 'generate-keypair') {
+      generateTestKeypair();
+      return;
+    }
+    
     if (args.length < 3) {
       console.log('Usage: node send_tokens.js <destination_wallet> <token_mint> <amount> [decimals=9]');
+      console.log('       node send_tokens.js generate-keypair');
       process.exit(1);
     }
     
