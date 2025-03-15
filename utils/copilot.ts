@@ -2,6 +2,7 @@ export async function askKinKongCopilot(message: string, wallet?: string, screen
   try {
     const requestBody = {
       message,
+      code: 'default', // Add default code
       wallet, // Add wallet to track conversation history properly
       mission, // Add mission to the request body
       submission, // Add submission ID to the request body

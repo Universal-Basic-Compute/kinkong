@@ -344,7 +344,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode; code: string | 
       // We no longer need a separate timeout promise since it's handled in askKinKongCopilot
       const response = await askKinKongCopilot(
         input, 
-        code || 'default', 
         walletAddress,
         screenshot || undefined,
         currentMission,
