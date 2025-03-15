@@ -3,6 +3,7 @@ const { Token, TOKEN_PROGRAM_ID } = require('@solana/spl-token');
 const dotenv = require('dotenv');
 const fs = require('fs');
 const path = require('path');
+const bs58 = require('bs58');
 
 // Load environment variables from the project root .env file
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
@@ -59,18 +60,25 @@ async function sendTokens(
           sourceWalletKeypair = Keypair.fromSecretKey(new Uint8Array(privateKey));
         } catch (e3) {
           console.log('Hex decode failed:', e3.message);
-          // Try loading from file if environment variable is a path
           try {
-            if (fs.existsSync(privateKeyString)) {
-              const keyFile = fs.readFileSync(privateKeyString, 'utf-8');
-              const privateKeyArray = JSON.parse(keyFile);
-              sourceWalletKeypair = Keypair.fromSecretKey(new Uint8Array(privateKeyArray));
-            } else {
-              throw new Error('File not found');
-            }
+            // Try as base58 string
+            const privateKey = bs58.decode(privateKeyString);
+            sourceWalletKeypair = Keypair.fromSecretKey(new Uint8Array(privateKey));
           } catch (e4) {
-            console.log('File load failed:', e4.message);
-            throw new Error(`Invalid private key format. Value: "${privateKeyString.substring(0, 10)}..."`);
+            console.log('Base58 decode failed:', e4.message);
+            // Try loading from file if environment variable is a path
+            try {
+              if (fs.existsSync(privateKeyString)) {
+                const keyFile = fs.readFileSync(privateKeyString, 'utf-8');
+                const privateKeyArray = JSON.parse(keyFile);
+                sourceWalletKeypair = Keypair.fromSecretKey(new Uint8Array(privateKeyArray));
+              } else {
+                throw new Error('File not found');
+              }
+            } catch (e5) {
+              console.log('File load failed:', e5.message);
+              throw new Error(`Invalid private key format. Value: "${privateKeyString.substring(0, 10)}..."`);
+            }
           }
         }
       }
