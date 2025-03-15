@@ -589,7 +589,7 @@ export default function Invest() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* First row - takes up full width (or 70% on larger screens) */}
-        <div className="md:col-span-2">
+        <div className="md:col-span-2 order-2 md:order-1">
           <section className="mb-8">
             <h2 className="text-2xl font-bold mb-4">Your Investments</h2>
             <YourInvestments />
@@ -602,8 +602,8 @@ export default function Invest() {
         </div>
         
         {/* Second row - takes up 30% width and is fixed */}
-        <div className="md:col-span-1">
-          <div className="sticky top-24">
+        <div className="md:col-span-1 order-1 md:order-2 mb-8 md:mb-0">
+          <div className="md:sticky md:top-24">
             <section>
               <h2 className="text-2xl font-bold mb-4">Invest Now</h2>
               <div className="investment-form bg-black/30 p-6 rounded-lg border border-gold/20">
