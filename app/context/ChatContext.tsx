@@ -243,8 +243,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode; code: string | 
       console.log('Subscription check result:', result);
       
       // Make sure we're setting the subscription state correctly
-      // Check for both result.active and result.isActive
-      if (result.active || result.isActive) {
+      if (result.active) {
         setSubscription({
           active: true,
           expiresAt: result.subscription?.endDate
@@ -259,7 +258,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode; code: string | 
     }
   }
 
-  const handleSelectMission = (missionTitle: string, submissionTitle: string, missionId: string, submissionId?: string) => {
+  const handleSelectMission = (missionTitle: string, context: string, missionId: string, submissionId?: string) => {
     // Store the mission ID for both context and UI highlighting
     setCurrentMission(missionId);
     setSelectedMissionId(missionId);

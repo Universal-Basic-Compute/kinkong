@@ -52,7 +52,7 @@ export async function verifySubscription(wallet: string): Promise<SubscriptionRe
     return {
       ...data,
       // Ensure we always have an 'active' property for consistency
-      active: data.active || data.isActive || false
+      active: data.active || false
     };
   } catch (error) {
     console.error('Subscription verification error:', error);
