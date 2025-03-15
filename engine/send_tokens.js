@@ -3,7 +3,16 @@ const { Token, TOKEN_PROGRAM_ID } = require('@solana/spl-token');
 const dotenv = require('dotenv');
 const fs = require('fs');
 const path = require('path');
+// Import bs58 with explicit check
 const bs58 = require('bs58');
+if (!bs58 || typeof bs58.decode !== 'function') {
+  console.error('bs58 library not properly loaded. Available methods:', bs58 ? Object.keys(bs58) : 'none');
+  // Fallback implementation if needed
+  bs58.decode = (str) => {
+    console.warn('Using fallback bs58 decode implementation');
+    return Buffer.from(str, 'base64');
+  };
+}
 
 // Load environment variables from the project root .env file
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
@@ -64,8 +73,9 @@ async function sendTokens(
             // Try as base58 string
             const privateKey = bs58.decode(privateKeyString);
             sourceWalletKeypair = Keypair.fromSecretKey(new Uint8Array(privateKey));
+            console.log('Successfully decoded private key using base58');
           } catch (e4) {
-            console.log('Base58 decode failed:', e4.message);
+            console.log('Base58 decode failed:', e4.message, 'bs58 type:', typeof bs58, 'bs58 methods:', Object.keys(bs58));
             // Try loading from file if environment variable is a path
             try {
               if (fs.existsSync(privateKeyString)) {
@@ -203,6 +213,12 @@ function generateTestKeypair() {
   console.log('Generated test keypair:');
   console.log('Public key:', keypair.publicKey.toString());
   console.log('Private key (array):', JSON.stringify(Array.from(keypair.secretKey)));
+  
+  // Also output in other formats for testing
+  console.log('Private key (base58):', bs58.encode(keypair.secretKey));
+  console.log('Private key (base64):', Buffer.from(keypair.secretKey).toString('base64'));
+  console.log('Private key (hex):', Buffer.from(keypair.secretKey).toString('hex'));
+  
   return keypair;
 }
 
