@@ -1,8 +1,7 @@
-export async function askKinKongCopilot(message: string, code: string, wallet?: string, screenshot?: string, mission?: string | null, submission?: string | null) {
+export async function askKinKongCopilot(message: string, wallet?: string, screenshot?: string, mission?: string | null, submission?: string | null) {
   try {
     const requestBody = {
       message,
-      code,
       wallet, // Add wallet to track conversation history properly
       mission, // Add mission to the request body
       submission, // Add submission ID to the request body
