@@ -135,9 +135,9 @@ const Header = () => {
       isGroup: true,
       subItems: [
         { 
-          label: 'Presentation', 
+          label: 'Kong Pro', 
           href: '/copilot',
-          description: 'Learn about KinKong Copilot',
+          description: 'Learn about KinKong Pro',
           emoji: '🤖'
         },
         { 
