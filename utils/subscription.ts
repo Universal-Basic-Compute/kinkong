@@ -40,8 +40,20 @@ export async function verifySubscription(wallet: string): Promise<SubscriptionRe
       };
     }
     
+    // If the API returns isActive field, normalize it to active
+    if (data.isActive === true) {
+      return { 
+        active: true,
+        subscription: data.subscription
+      };
+    }
+    
     // Return the original data if none of the above conditions match
-    return data;
+    return {
+      ...data,
+      // Ensure we always have an 'active' property for consistency
+      active: data.active || data.isActive || false
+    };
   } catch (error) {
     console.error('Subscription verification error:', error);
     // Return inactive subscription on error instead of throwing

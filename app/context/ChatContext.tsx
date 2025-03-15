@@ -243,7 +243,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode; code: string | 
       console.log('Subscription check result:', result);
       
       // Make sure we're setting the subscription state correctly
-      if (result.active) {
+      // Check for both result.active and result.isActive
+      if (result.active || result.isActive) {
         setSubscription({
           active: true,
           expiresAt: result.subscription?.endDate
