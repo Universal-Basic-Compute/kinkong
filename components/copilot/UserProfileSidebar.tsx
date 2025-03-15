@@ -123,8 +123,14 @@ function WalletAnalysisSection({ wallet }: { wallet: string }) {
 
 export default function UserProfileSidebar() {
   const { publicKey } = useWallet();
-  const { userData, subscription } = useChat();
+  const { userData, subscription, loading: chatContextLoading } = useChat();
   const { onboardingData } = useOnboarding();
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
+  
+  // Update subscription loading state when chat context loading changes
+  useEffect(() => {
+    setSubscriptionLoading(chatContextLoading);
+  }, [chatContextLoading, subscription]);
 
   return (
     <div className="w-72 bg-black/40 border-l border-gold/20 p-4 overflow-y-auto">
@@ -186,7 +192,13 @@ export default function UserProfileSidebar() {
       <div className="mt-4 p-3 bg-black/30 rounded-lg border border-gold/10">
         <h3 className="font-medium text-sm uppercase text-gray-400 mb-2">Subscription</h3>
         <div className="flex items-center">
-          {subscription?.active ? (
+          {subscriptionLoading ? (
+            // Loading indicator for subscription status
+            <div className="flex items-center text-gray-400">
+              <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-gold mr-2"></div>
+              <span className="text-sm">Checking subscription...</span>
+            </div>
+          ) : subscription?.active ? (
             // Show Pro subscription with lightning icon
             <div className="flex items-center text-gold">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">

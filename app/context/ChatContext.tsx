@@ -40,6 +40,7 @@ interface ChatContextType {
   selectedMissionId: string | null;
   setSelectedMissionId: (id: string | null) => void;
   userData: UserData | null;
+  loading: boolean;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
   captureScreenshot: () => Promise<void>;
   clearScreenshot: () => void;
@@ -393,6 +394,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode; code: string | 
       selectedMissionId,
       setSelectedMissionId,
       userData,
+      loading,
       handleSubmit,
       captureScreenshot,
       clearScreenshot,
