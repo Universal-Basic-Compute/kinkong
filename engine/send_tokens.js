@@ -3,14 +3,26 @@ const { Token, TOKEN_PROGRAM_ID } = require('@solana/spl-token');
 const dotenv = require('dotenv');
 const fs = require('fs');
 const path = require('path');
-// Import bs58 with explicit check
-const bs58 = require('bs58');
-if (!bs58 || typeof bs58.decode !== 'function') {
-  console.error('bs58 library not properly loaded. Available methods:', bs58 ? Object.keys(bs58) : 'none');
-  // Fallback implementation if needed
-  bs58.decode = (str) => {
-    console.warn('Using fallback bs58 decode implementation');
-    return Buffer.from(str, 'base64');
+// Import bs58 with proper ES/CommonJS module handling
+let bs58;
+try {
+  bs58 = require('bs58');
+  // Check if bs58 is imported as an ES module
+  if (bs58.default && typeof bs58.default.decode === 'function') {
+    bs58 = bs58.default;
+  }
+} catch (error) {
+  console.error('Failed to import bs58:', error);
+  // Provide a minimal fallback
+  bs58 = {
+    decode: (str) => {
+      console.warn('Using fallback bs58 decode implementation');
+      return Buffer.from(str, 'base64');
+    },
+    encode: (buffer) => {
+      console.warn('Using fallback bs58 encode implementation');
+      return Buffer.from(buffer).toString('base64');
+    }
   };
 }
 
@@ -235,7 +247,7 @@ async function main() {
     }
     
     if (args.length < 3) {
-      console.log('Usage: node send_tokens.js <destination_wallet> <token_mint> <amount> [decimals=9]');
+      console.log('Usage: node send_tokens.js <destination_wallet> <token_mint> <amount> [decimals=9] [private_key]');
       console.log('       node send_tokens.js generate-keypair');
       process.exit(1);
     }
@@ -244,6 +256,12 @@ async function main() {
     const tokenMint = args[1];
     const amount = parseFloat(args[2]);
     const decimals = args.length > 3 ? parseInt(args[3]) : 9;
+    
+    // Use private key from command line if provided
+    if (args.length > 4) {
+      process.env.STRATEGY_WALLET_PRIVATE_KEY = args[4];
+      console.log("Using private key from command line argument");
+    }
     
     if (isNaN(amount) || amount <= 0) {
       throw new Error('Amount must be a positive number');
