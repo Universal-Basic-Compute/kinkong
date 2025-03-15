@@ -237,11 +237,19 @@ export const ChatProvider: React.FC<{ children: React.ReactNode; code: string | 
     try {
       // Get the actual subscription status
       const result = await verifySubscription(code);
-      // Use the actual result without overriding
-      setSubscription(result);
       
       // Log the subscription status for debugging
-      console.log('Subscription status:', result);
+      console.log('Subscription check result:', result);
+      
+      // Make sure we're setting the subscription state correctly
+      if (result.active) {
+        setSubscription({
+          active: true,
+          expiresAt: result.subscription?.endDate
+        });
+      } else {
+        setSubscription({ active: false });
+      }
     } catch (err) {
       console.error('Error checking subscription:', err);
       // On error, set subscription to inactive

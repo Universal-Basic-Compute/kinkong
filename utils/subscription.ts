@@ -11,7 +11,7 @@ interface SubscriptionResponse {
 
 export async function verifySubscription(code: string): Promise<SubscriptionResponse> {
   try {
-    const response = await fetch(`/api/subscription?code=${code}`);
+    const response = await fetch(`/api/subscription/check?code=${code}`);
     if (!response.ok) throw new Error('Failed to verify subscription');
     
     const data = await response.json();
