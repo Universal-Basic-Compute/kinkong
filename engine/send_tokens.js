@@ -34,9 +34,38 @@ async function sendTokens(
       throw new Error('STRATEGY_WALLET_PRIVATE_KEY not found in environment variables');
     }
     
-    // Convert private key to Uint8Array
-    const privateKey = Uint8Array.from(Buffer.from(privateKeyString, 'base64'));
-    const sourceWalletKeypair = Keypair.fromSecretKey(privateKey);
+    // Try different formats for the private key
+    let sourceWalletKeypair;
+    try {
+      // Try as base64 string
+      const privateKey = Buffer.from(privateKeyString, 'base64');
+      sourceWalletKeypair = Keypair.fromSecretKey(new Uint8Array(privateKey));
+    } catch (e) {
+      try {
+        // Try as JSON array
+        const privateKeyArray = JSON.parse(privateKeyString);
+        sourceWalletKeypair = Keypair.fromSecretKey(new Uint8Array(privateKeyArray));
+      } catch (e2) {
+        try {
+          // Try as hex string
+          const privateKey = Buffer.from(privateKeyString, 'hex');
+          sourceWalletKeypair = Keypair.fromSecretKey(new Uint8Array(privateKey));
+        } catch (e3) {
+          // Try loading from file if environment variable is a path
+          try {
+            if (fs.existsSync(privateKeyString)) {
+              const keyFile = fs.readFileSync(privateKeyString, 'utf-8');
+              const privateKeyArray = JSON.parse(keyFile);
+              sourceWalletKeypair = Keypair.fromSecretKey(new Uint8Array(privateKeyArray));
+            } else {
+              throw new Error('File not found');
+            }
+          } catch (e4) {
+            throw new Error('Invalid private key format. Please provide a valid base64, JSON array, hex encoded private key, or path to key file');
+          }
+        }
+      }
+    }
     
     // Verify source wallet address matches expected address
     const sourceWalletAddress = sourceWalletKeypair.publicKey.toString();
