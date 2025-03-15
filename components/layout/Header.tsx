@@ -138,7 +138,7 @@ const Header = () => {
           label: 'Kong Pro', 
           href: '/copilot',
           description: 'Learn about KinKong Pro',
-          emoji: '🤖'
+          emoji: '⚡'
         },
         { 
           label: 'Signals', 
