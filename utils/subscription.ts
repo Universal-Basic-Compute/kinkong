@@ -9,13 +9,23 @@ interface SubscriptionResponse {
   error?: string;
 }
 
-export async function verifySubscription(code: string): Promise<SubscriptionResponse> {
+export async function verifySubscription(wallet: string): Promise<SubscriptionResponse> {
   try {
-    const response = await fetch(`/api/subscription/check?code=${code}`);
-    if (!response.ok) throw new Error('Failed to verify subscription');
+    // If no wallet is provided, return inactive subscription
+    if (!wallet) {
+      return { active: false };
+    }
+    
+    const response = await fetch(`/api/subscription/check?wallet=${wallet}`);
+    
+    if (!response.ok) {
+      console.warn(`Subscription check failed with status: ${response.status}`);
+      // Return inactive subscription on error
+      return { active: false };
+    }
     
     const data = await response.json();
-    console.log('Raw subscription data:', data); // Log the raw data for debugging
+    console.log('Raw subscription data:', data);
     
     // If the API returns a status field directly, handle it
     if (data.status && data.status === 'ACTIVE') {
@@ -34,7 +44,8 @@ export async function verifySubscription(code: string): Promise<SubscriptionResp
     return data;
   } catch (error) {
     console.error('Subscription verification error:', error);
-    throw error;
+    // Return inactive subscription on error instead of throwing
+    return { active: false };
   }
 }
 

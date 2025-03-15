@@ -228,15 +228,16 @@ export const ChatProvider: React.FC<{ children: React.ReactNode; code: string | 
   };
 
   async function checkSubscription() {
-    if (!code) {
-      // Without a code, set subscription to inactive
+    if (!publicKey) {
+      // Without a wallet, set subscription to inactive
       setSubscription({ active: false });
       return;
     }
 
     try {
-      // Get the actual subscription status
-      const result = await verifySubscription(code);
+      // Get the actual subscription status using wallet address
+      const walletAddress = publicKey.toString();
+      const result = await verifySubscription(walletAddress);
       
       // Log the subscription status for debugging
       console.log('Subscription check result:', result);
