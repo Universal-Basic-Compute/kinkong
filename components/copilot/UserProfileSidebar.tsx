@@ -185,15 +185,26 @@ export default function UserProfileSidebar() {
       {/* Subscription Status */}
       <div className="mt-4 p-3 bg-black/30 rounded-lg border border-gold/10">
         <h3 className="font-medium text-sm uppercase text-gray-400 mb-2">Subscription</h3>
-        <div className="flex items-center text-gold">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-          <span className="text-sm">
-            {subscription?.expiresAt 
-              ? `Active until ${new Date(subscription.expiresAt).toLocaleDateString()}` 
-              : 'Free Tier'}
-          </span>
+        <div className="flex items-center">
+          {subscription?.active ? (
+            // Show Pro subscription with lightning icon
+            <div className="flex items-center text-gold">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <span className="text-sm">
+                Kong Pro {subscription?.expiresAt ? `until ${new Date(subscription.expiresAt).toLocaleDateString()}` : ''}
+              </span>
+            </div>
+          ) : (
+            // Show Free Tier
+            <div className="flex items-center text-gray-400">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <span className="text-sm">Free Tier</span>
+            </div>
+          )}
         </div>
       </div>
       
