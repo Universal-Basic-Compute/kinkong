@@ -1,4 +1,19 @@
 const { Connection, Keypair, PublicKey, Transaction, sendAndConfirmTransaction } = require('@solana/web3.js');
+
+// Function to get the correct decimals for common tokens
+function getTokenDecimals(tokenMint) {
+  // Common token decimals
+  const knownTokens = {
+    'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v': 6, // USDC
+    'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB': 6, // USDT
+    'So11111111111111111111111111111111111111112': 9, // SOL (wrapped)
+    'mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So': 9, // mSOL
+    'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263': 5, // Bonk
+    // Add more tokens as needed
+  };
+  
+  return knownTokens[tokenMint] || 9; // Default to 9 if unknown
+}
 const { 
   TOKEN_PROGRAM_ID, 
   createTransferInstruction, 
@@ -166,6 +181,8 @@ async function sendTokens(
 
     // Calculate amount with decimals
     const amountWithDecimals = Math.round(amount * Math.pow(10, decimals));
+    
+    logger.info(`Sending ${amount} tokens (${amountWithDecimals} base units with ${decimals} decimals) to ${destinationWallet}`);
 
     // Add transfer instruction
     transaction.add(
@@ -176,8 +193,6 @@ async function sendTokens(
         amountWithDecimals
       )
     );
-    
-    logger.info(`Sending ${amount} tokens to ${destinationWallet}`);
     const signature = await sendAndConfirmTransaction(
       connection,
       transaction,
@@ -281,7 +296,9 @@ async function main() {
     const destinationWallet = args[0];
     const tokenMint = args[1];
     const amount = parseFloat(args[2]);
-    const decimals = args.length > 3 ? parseInt(args[3]) : 9;
+    const decimals = args.length > 3 ? parseInt(args[3]) : getTokenDecimals(tokenMint);
+    
+    console.log(`Using ${decimals} decimals for token ${tokenMint}`);
     
     // Use private key from command line if provided
     if (args.length > 4) {
