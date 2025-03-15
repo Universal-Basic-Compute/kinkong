@@ -1,5 +1,10 @@
 const { Connection, Keypair, PublicKey, Transaction, sendAndConfirmTransaction } = require('@solana/web3.js');
-const { Token, TOKEN_PROGRAM_ID } = require('@solana/spl-token');
+const { 
+  TOKEN_PROGRAM_ID, 
+  createTransferInstruction, 
+  getAssociatedTokenAddress, 
+  createAssociatedTokenAccountInstruction 
+} = require('@solana/spl-token');
 const dotenv = require('dotenv');
 const fs = require('fs');
 const path = require('path');
@@ -116,37 +121,58 @@ async function sendTokens(
     const rpcUrl = process.env.NEXT_PUBLIC_HELIUS_RPC_URL || 'https://api.mainnet-beta.solana.com';
     const connection = new Connection(rpcUrl, 'confirmed');
     
-    // Create token instance
+    // Get token mint public key
     const tokenMintPublicKey = new PublicKey(tokenMint);
-    const token = new Token(
-      connection,
-      tokenMintPublicKey,
-      TOKEN_PROGRAM_ID,
-      sourceWalletKeypair
-    );
-    
-    // Get source token account
-    const sourceTokenAccount = await token.getOrCreateAssociatedAccountInfo(
-      sourceWalletKeypair.publicKey
-    );
-    
-    // Get destination token account
+    const sourceWalletPublicKey = sourceWalletKeypair.publicKey;
     const destinationWalletPublicKey = new PublicKey(destinationWallet);
-    const destinationTokenAccount = await token.getOrCreateAssociatedAccountInfo(
+
+    // Get associated token accounts
+    const sourceTokenAccount = await getAssociatedTokenAddress(
+      tokenMintPublicKey,
+      sourceWalletPublicKey
+    );
+
+    const destinationTokenAccount = await getAssociatedTokenAddress(
+      tokenMintPublicKey,
       destinationWalletPublicKey
     );
-    
+
+    // Check if destination token account exists
+    let transaction = new Transaction();
+    try {
+      const accountInfo = await connection.getAccountInfo(destinationTokenAccount);
+      if (!accountInfo) {
+        // If the account doesn't exist, create it
+        transaction.add(
+          createAssociatedTokenAccountInstruction(
+            sourceWalletPublicKey,
+            destinationTokenAccount,
+            destinationWalletPublicKey,
+            tokenMintPublicKey
+          )
+        );
+      }
+    } catch (error) {
+      // If there's an error, assume the account doesn't exist and create it
+      transaction.add(
+        createAssociatedTokenAccountInstruction(
+          sourceWalletPublicKey,
+          destinationTokenAccount,
+          destinationWalletPublicKey,
+          tokenMintPublicKey
+        )
+      );
+    }
+
     // Calculate amount with decimals
-    const amountWithDecimals = amount * Math.pow(10, decimals);
-    
-    // Create and send transaction
-    const transaction = new Transaction().add(
-      Token.createTransferInstruction(
-        TOKEN_PROGRAM_ID,
-        sourceTokenAccount.address,
-        destinationTokenAccount.address,
-        sourceWalletKeypair.publicKey,
-        [],
+    const amountWithDecimals = Math.round(amount * Math.pow(10, decimals));
+
+    // Add transfer instruction
+    transaction.add(
+      createTransferInstruction(
+        sourceTokenAccount,
+        destinationTokenAccount,
+        sourceWalletPublicKey,
         amountWithDecimals
       )
     );
