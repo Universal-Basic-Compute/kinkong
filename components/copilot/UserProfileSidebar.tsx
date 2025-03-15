@@ -199,13 +199,20 @@ export default function UserProfileSidebar() {
               <span className="text-sm">Checking subscription...</span>
             </div>
           ) : subscription?.active ? (
-            // Show Pro subscription with lightning icon
+            // Show Pro subscription with lightning icon and days remaining
             <div className="flex items-center text-gold">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
               <span className="text-sm">
-                Kong Pro {subscription?.expiresAt ? `until ${new Date(subscription.expiresAt).toLocaleDateString()}` : ''}
+                Kong Pro {subscription?.expiresAt ? (() => {
+                  // Calculate days remaining
+                  const expiryDate = new Date(subscription.expiresAt);
+                  const today = new Date();
+                  const diffTime = expiryDate.getTime() - today.getTime();
+                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                  return `(${diffDays} days left)`;
+                })() : ''}
               </span>
             </div>
           ) : (
