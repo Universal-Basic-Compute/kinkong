@@ -193,10 +193,15 @@ export default function UserProfileSidebar() {
         <h3 className="font-medium text-sm uppercase text-gray-400 mb-2">Subscription</h3>
         <div className="flex items-center">
           {subscriptionLoading ? (
-            // Loading indicator for subscription status
-            <div className="flex items-center text-gray-400">
-              <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-gold mr-2"></div>
-              <span className="text-sm">Checking subscription...</span>
+            // Loading indicator for subscription status - show Kong Pro by default
+            <div className="flex items-center text-gold">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <span className="text-sm">
+                Kong Pro
+                <span className="ml-1 animate-pulse">...</span>
+              </span>
             </div>
           ) : subscription?.active ? (
             // Show Pro subscription with lightning icon and days remaining
