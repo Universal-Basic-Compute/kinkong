@@ -274,7 +274,7 @@ const Header = () => {
         </div>
 
         {isMobileMenuOpen && (
-          <div className="border-t border-gold/20 bg-black/95 backdrop-blur-sm md:hidden">
+          <div className="border-t border-gold/20 bg-black/95 backdrop-blur-sm md:hidden max-h-[80vh] overflow-y-auto custom-scrollbar">
             <nav className="p-4 flex flex-col space-y-2">
               {navItems.map((item: NavItem) => (
                 <div key={item.label}>
