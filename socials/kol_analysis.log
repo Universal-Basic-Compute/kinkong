@@ -3229,3 +3229,1268 @@ When authenticating requests to the Twitter API v2 endpoints, you must use keys 
 2025-03-11 20:45:24,762 - kol_analyzer - INFO - Image path (for manual posting): public/kols\gorillacapsol.png
 2025-03-11 20:45:24,767 - kol_analyzer - WARNING - Failed to send detailed tweet for gorillacapsol
 2025-03-11 20:45:25,082 - kol_analyzer - INFO - Updated detailedMessage field for gorillacapsol
+2025-03-11 21:45:04,341 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-11 21:45:04,632 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-11 21:45:05,686 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-11 21:45:05,687 - kol_analyzer - INFO - Selected random KOL: 4GH0STEE
+2025-03-11 21:45:06,330 - kol_analyzer - INFO - Generating detailed tweet for KOL: 4GH0STEE
+2025-03-11 21:45:15,738 - kol_analyzer - INFO - Found existing image for 4GH0STEE: public/kols\4GH0STEE.png
+2025-03-11 21:45:16,013 - kol_analyzer - INFO - Attaching image: public/kols\4GH0STEE.png
+2025-03-11 21:45:17,365 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-11 21:45:17,367 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-11 21:45:17,452 - kol_analyzer - INFO - Image path (for manual posting): public/kols\4GH0STEE.png
+2025-03-11 21:45:17,452 - kol_analyzer - WARNING - Failed to send detailed tweet for 4GH0STEE
+2025-03-11 21:45:17,817 - kol_analyzer - INFO - Updated detailedMessage field for 4GH0STEE
+2025-03-11 22:45:04,919 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-11 22:45:05,455 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-11 22:45:06,531 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-11 22:45:06,531 - kol_analyzer - INFO - Selected random KOL: Latuche95
+2025-03-11 22:45:08,597 - kol_analyzer - INFO - Generating detailed tweet for KOL: Latuche95
+2025-03-11 22:45:18,702 - kol_analyzer - INFO - Found existing image for Latuche95: public/kols\Latuche95.png
+2025-03-11 22:45:19,002 - kol_analyzer - INFO - Attaching image: public/kols\Latuche95.png
+2025-03-11 22:45:20,252 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-11 22:45:20,252 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-11 22:45:20,302 - kol_analyzer - INFO - Image path (for manual posting): public/kols\Latuche95.png
+2025-03-11 22:45:20,302 - kol_analyzer - WARNING - Failed to send detailed tweet for Latuche95
+2025-03-11 22:45:20,586 - kol_analyzer - INFO - Updated detailedMessage field for Latuche95
+2025-03-12 00:09:45,343 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-12 00:09:45,815 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-12 00:09:46,765 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-12 00:09:46,765 - kol_analyzer - INFO - Selected random KOL: moneymaykah_
+2025-03-12 00:09:47,427 - kol_analyzer - INFO - Generating detailed tweet for KOL: moneymaykah_
+2025-03-12 00:09:56,526 - kol_analyzer - INFO - Found existing image for moneymaykah_: public/kols\moneymaykah_.png
+2025-03-12 00:09:56,807 - kol_analyzer - INFO - Attaching image: public/kols\moneymaykah_.png
+2025-03-12 00:09:58,170 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 00:09:58,170 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 00:09:58,259 - kol_analyzer - INFO - Image path (for manual posting): public/kols\moneymaykah_.png
+2025-03-12 00:09:58,259 - kol_analyzer - WARNING - Failed to send detailed tweet for moneymaykah_
+2025-03-12 00:09:58,484 - kol_analyzer - INFO - Updated detailedMessage field for moneymaykah_
+2025-03-12 00:45:03,327 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-12 00:45:03,502 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-12 00:45:04,614 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-12 00:45:04,614 - kol_analyzer - INFO - Selected random KOL: assasin_eth
+2025-03-12 00:45:05,301 - kol_analyzer - INFO - Generating detailed tweet for KOL: assasin_eth
+2025-03-12 00:45:12,307 - kol_analyzer - INFO - Found existing image for assasin_eth: public/kols\assasin_eth.png
+2025-03-12 00:45:12,575 - kol_analyzer - INFO - Attaching image: public/kols\assasin_eth.png
+2025-03-12 00:45:13,907 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 00:45:13,907 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 00:45:13,973 - kol_analyzer - INFO - Image path (for manual posting): public/kols\assasin_eth.png
+2025-03-12 00:45:13,973 - kol_analyzer - WARNING - Failed to send detailed tweet for assasin_eth
+2025-03-12 00:45:14,380 - kol_analyzer - INFO - Updated detailedMessage field for assasin_eth
+2025-03-12 01:46:42,004 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-12 01:46:43,854 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-12 01:46:44,968 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-12 01:46:44,970 - kol_analyzer - INFO - Selected random KOL: sullyfromDeets
+2025-03-12 01:46:46,546 - kol_analyzer - INFO - Generating detailed tweet for KOL: sullyfromDeets
+2025-03-12 01:46:56,324 - kol_analyzer - INFO - No existing image found for sullyfromDeets, generating new image
+2025-03-12 01:46:56,331 - kol_analyzer - INFO - Sending request to Ideogram API for sullyfromDeets
+2025-03-12 01:47:07,530 - kol_analyzer - INFO - Downloading image from https://ideogram.ai/api/images/ephemeral/JCPhTGe6RpO0YlQijBestQ.png?exp=1741826827&sig=3c4102a3bd7abe40d3c84812196bfbdc0bccfe1ed836c8fea1314c654ef735a0
+2025-03-12 01:47:08,378 - kol_analyzer - INFO - Generated KOL image: public/kols\sullyfromDeets.png
+2025-03-12 01:47:09,751 - kol_analyzer - INFO - Attaching image: public/kols\sullyfromDeets.png
+2025-03-12 01:47:11,005 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 01:47:11,006 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 01:47:11,110 - kol_analyzer - INFO - Image path (for manual posting): public/kols\sullyfromDeets.png
+2025-03-12 01:47:11,118 - kol_analyzer - WARNING - Failed to send detailed tweet for sullyfromDeets
+2025-03-12 01:47:11,453 - kol_analyzer - INFO - Updated detailedMessage field for sullyfromDeets
+2025-03-12 02:45:03,716 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-12 02:45:03,911 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-12 02:45:06,994 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-12 02:45:06,994 - kol_analyzer - INFO - Selected random KOL: sullyfromDeets
+2025-03-12 02:45:07,650 - kol_analyzer - INFO - Generating detailed tweet for KOL: sullyfromDeets
+2025-03-12 02:45:16,583 - kol_analyzer - INFO - Found existing image for sullyfromDeets: public/kols\sullyfromDeets.png
+2025-03-12 02:45:16,815 - kol_analyzer - INFO - Attaching image: public/kols\sullyfromDeets.png
+2025-03-12 02:45:18,099 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 02:45:18,100 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 02:45:18,131 - kol_analyzer - INFO - Image path (for manual posting): public/kols\sullyfromDeets.png
+2025-03-12 02:45:18,131 - kol_analyzer - WARNING - Failed to send detailed tweet for sullyfromDeets
+2025-03-12 02:45:18,433 - kol_analyzer - INFO - Updated detailedMessage field for sullyfromDeets
+2025-03-12 03:52:49,258 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-12 03:52:49,898 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-12 03:52:52,162 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-12 03:52:52,162 - kol_analyzer - INFO - Selected random KOL: 0xDutch_
+2025-03-12 03:52:52,809 - kol_analyzer - INFO - Generating detailed tweet for KOL: 0xDutch_
+2025-03-12 03:53:02,049 - kol_analyzer - INFO - Found existing image for 0xDutch_: public/kols\0xDutch_.png
+2025-03-12 03:53:02,353 - kol_analyzer - INFO - Attaching image: public/kols\0xDutch_.png
+2025-03-12 03:53:03,735 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 03:53:03,737 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 03:53:03,784 - kol_analyzer - INFO - Image path (for manual posting): public/kols\0xDutch_.png
+2025-03-12 03:53:03,786 - kol_analyzer - WARNING - Failed to send detailed tweet for 0xDutch_
+2025-03-12 03:53:04,231 - kol_analyzer - INFO - Updated detailedMessage field for 0xDutch_
+2025-03-12 04:45:06,184 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-12 04:45:06,827 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-12 04:45:07,888 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-12 04:45:07,888 - kol_analyzer - INFO - Selected random KOL: imperooterxbt
+2025-03-12 04:45:08,557 - kol_analyzer - INFO - Generating detailed tweet for KOL: imperooterxbt
+2025-03-12 04:45:16,120 - kol_analyzer - INFO - No existing image found for imperooterxbt, generating new image
+2025-03-12 04:45:16,120 - kol_analyzer - INFO - Sending request to Ideogram API for imperooterxbt
+2025-03-12 04:45:26,922 - kol_analyzer - INFO - Downloading image from https://ideogram.ai/api/images/ephemeral/JITyL5U9TryQH3Bz0-N7Pg.png?exp=1741837526&sig=70200218dd8f6004710867d6f5dff5da67a8edd9b6d3802694b8590067b9c79b
+2025-03-12 04:45:27,651 - kol_analyzer - INFO - Generated KOL image: public/kols\imperooterxbt.png
+2025-03-12 04:45:27,980 - kol_analyzer - INFO - Attaching image: public/kols\imperooterxbt.png
+2025-03-12 04:45:29,271 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 04:45:29,271 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 04:45:29,365 - kol_analyzer - INFO - Image path (for manual posting): public/kols\imperooterxbt.png
+2025-03-12 04:45:29,365 - kol_analyzer - WARNING - Failed to send detailed tweet for imperooterxbt
+2025-03-12 04:45:29,886 - kol_analyzer - INFO - Updated detailedMessage field for imperooterxbt
+2025-03-12 05:45:06,226 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-12 05:45:06,910 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-12 05:45:08,024 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-12 05:45:08,024 - kol_analyzer - INFO - Selected random KOL: 4GH0STEE
+2025-03-12 05:45:08,694 - kol_analyzer - INFO - Generating detailed tweet for KOL: 4GH0STEE
+2025-03-12 05:45:18,396 - kol_analyzer - INFO - Found existing image for 4GH0STEE: public/kols\4GH0STEE.png
+2025-03-12 05:45:18,697 - kol_analyzer - INFO - Attaching image: public/kols\4GH0STEE.png
+2025-03-12 05:45:19,995 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 05:45:19,995 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 05:45:20,089 - kol_analyzer - INFO - Image path (for manual posting): public/kols\4GH0STEE.png
+2025-03-12 05:45:20,089 - kol_analyzer - WARNING - Failed to send detailed tweet for 4GH0STEE
+2025-03-12 05:45:20,501 - kol_analyzer - INFO - Updated detailedMessage field for 4GH0STEE
+2025-03-12 06:45:03,203 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-12 06:45:03,413 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-12 06:45:04,507 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-12 06:45:04,507 - kol_analyzer - INFO - Selected random KOL: qtdegen
+2025-03-12 06:45:05,028 - kol_analyzer - INFO - Generating detailed tweet for KOL: qtdegen
+2025-03-12 06:45:14,338 - kol_analyzer - INFO - Found existing image for qtdegen: public/kols\qtdegen.png
+2025-03-12 06:45:14,591 - kol_analyzer - INFO - Attaching image: public/kols\qtdegen.png
+2025-03-12 06:45:15,917 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 06:45:15,917 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 06:45:15,955 - kol_analyzer - INFO - Image path (for manual posting): public/kols\qtdegen.png
+2025-03-12 06:45:15,955 - kol_analyzer - WARNING - Failed to send detailed tweet for qtdegen
+2025-03-12 06:45:16,247 - kol_analyzer - INFO - Updated detailedMessage field for qtdegen
+2025-03-12 07:45:03,131 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-12 07:45:03,324 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-12 07:45:04,504 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-12 07:45:04,504 - kol_analyzer - INFO - Selected random KOL: NachSOL
+2025-03-12 07:45:05,203 - kol_analyzer - INFO - Generating detailed tweet for KOL: NachSOL
+2025-03-12 07:45:12,838 - kol_analyzer - INFO - Found existing image for NachSOL: public/kols\NachSOL.png
+2025-03-12 07:45:13,076 - kol_analyzer - INFO - Attaching image: public/kols\NachSOL.png
+2025-03-12 07:45:14,344 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 07:45:14,348 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 07:45:14,413 - kol_analyzer - INFO - Image path (for manual posting): public/kols\NachSOL.png
+2025-03-12 07:45:14,414 - kol_analyzer - WARNING - Failed to send detailed tweet for NachSOL
+2025-03-12 07:45:14,696 - kol_analyzer - INFO - Updated detailedMessage field for NachSOL
+2025-03-12 08:45:03,070 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-12 08:45:03,280 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-12 08:45:06,728 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-12 08:45:06,728 - kol_analyzer - INFO - Selected random KOL: Loopierr
+2025-03-12 08:45:07,395 - kol_analyzer - INFO - Generating detailed tweet for KOL: Loopierr
+2025-03-12 08:45:16,820 - kol_analyzer - INFO - Found existing image for Loopierr: public/kols\Loopierr.png
+2025-03-12 08:45:17,100 - kol_analyzer - INFO - Attaching image: public/kols\Loopierr.png
+2025-03-12 08:45:18,350 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 08:45:18,350 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 08:45:18,390 - kol_analyzer - INFO - Image path (for manual posting): public/kols\Loopierr.png
+2025-03-12 08:45:18,390 - kol_analyzer - WARNING - Failed to send detailed tweet for Loopierr
+2025-03-12 08:45:18,710 - kol_analyzer - INFO - Updated detailedMessage field for Loopierr
+2025-03-12 09:45:03,125 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-12 09:45:03,334 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-12 09:45:04,356 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-12 09:45:04,357 - kol_analyzer - INFO - Selected random KOL: spunosounds
+2025-03-12 09:45:05,033 - kol_analyzer - INFO - Generating detailed tweet for KOL: spunosounds
+2025-03-12 09:45:14,514 - kol_analyzer - INFO - Found existing image for spunosounds: public/kols\spunosounds.png
+2025-03-12 09:45:14,759 - kol_analyzer - INFO - Attaching image: public/kols\spunosounds.png
+2025-03-12 09:45:16,008 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 09:45:16,009 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 09:45:16,067 - kol_analyzer - INFO - Image path (for manual posting): public/kols\spunosounds.png
+2025-03-12 09:45:16,069 - kol_analyzer - WARNING - Failed to send detailed tweet for spunosounds
+2025-03-12 09:45:16,376 - kol_analyzer - INFO - Updated detailedMessage field for spunosounds
+2025-03-12 11:25:53,765 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-12 11:25:54,095 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-12 11:25:56,788 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-12 11:25:56,788 - kol_analyzer - INFO - Selected random KOL: FrostyJayss
+2025-03-12 11:25:57,480 - kol_analyzer - INFO - Generating detailed tweet for KOL: FrostyJayss
+2025-03-12 12:56:37,891 - anthropic._base_client - INFO - Retrying request to /v1/messages in 0.408283 seconds
+2025-03-12 12:56:46,773 - kol_analyzer - INFO - Found existing image for FrostyJayss: public/kols\FrostyJayss.png
+2025-03-12 12:56:47,041 - kol_analyzer - INFO - Attaching image: public/kols\FrostyJayss.png
+2025-03-12 12:56:48,903 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 12:56:48,903 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 12:56:48,965 - kol_analyzer - INFO - Image path (for manual posting): public/kols\FrostyJayss.png
+2025-03-12 12:56:48,965 - kol_analyzer - WARNING - Failed to send detailed tweet for FrostyJayss
+2025-03-12 12:56:49,064 - kol_analyzer - ERROR - Error in send_random_kol_tweet: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+2025-03-12 16:34:18,872 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-12 16:34:19,202 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-12 16:34:21,227 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-12 16:34:21,227 - kol_analyzer - INFO - Selected random KOL: Zinc_ETH
+2025-03-12 16:34:21,548 - kol_analyzer - INFO - Generating detailed tweet for KOL: Zinc_ETH
+2025-03-12 16:34:29,970 - kol_analyzer - INFO - No existing image found for Zinc_ETH, generating new image
+2025-03-12 16:34:29,970 - kol_analyzer - INFO - Sending request to Ideogram API for Zinc_ETH
+2025-03-12 16:34:41,272 - kol_analyzer - INFO - Downloading image from https://ideogram.ai/api/images/ephemeral/FvIUBFq_QiWHAVm_vAJfVw.png?exp=1741880081&sig=1ca404b5f93c81836137204890bd6e601796a707f63a78b8590e6656ea059962
+2025-03-12 16:34:42,127 - kol_analyzer - INFO - Generated KOL image: public/kols\Zinc_ETH.png
+2025-03-12 16:34:42,315 - kol_analyzer - INFO - Attaching image: public/kols\Zinc_ETH.png
+2025-03-12 16:34:44,732 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 16:34:44,732 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 16:34:44,764 - kol_analyzer - INFO - Image path (for manual posting): public/kols\Zinc_ETH.png
+2025-03-12 16:34:44,764 - kol_analyzer - WARNING - Failed to send detailed tweet for Zinc_ETH
+2025-03-12 16:34:45,062 - kol_analyzer - INFO - Updated detailedMessage field for Zinc_ETH
+2025-03-12 16:45:03,950 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-12 16:45:04,182 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-12 16:45:07,716 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-12 16:45:07,716 - kol_analyzer - INFO - Selected random KOL: NachSOL
+2025-03-12 16:45:08,377 - kol_analyzer - INFO - Generating detailed tweet for KOL: NachSOL
+2025-03-12 16:45:16,288 - kol_analyzer - INFO - Found existing image for NachSOL: public/kols\NachSOL.png
+2025-03-12 16:45:16,525 - kol_analyzer - INFO - Attaching image: public/kols\NachSOL.png
+2025-03-12 16:45:18,904 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 16:45:18,906 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 16:45:18,958 - kol_analyzer - INFO - Image path (for manual posting): public/kols\NachSOL.png
+2025-03-12 16:45:18,959 - kol_analyzer - WARNING - Failed to send detailed tweet for NachSOL
+2025-03-12 16:45:19,322 - kol_analyzer - INFO - Updated detailedMessage field for NachSOL
+2025-03-12 17:45:22,399 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-12 17:45:22,603 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-12 17:45:25,690 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-12 17:45:25,690 - kol_analyzer - INFO - Selected random KOL: Zinc_ETH
+2025-03-12 17:45:26,433 - kol_analyzer - INFO - Generating detailed tweet for KOL: Zinc_ETH
+2025-03-12 17:45:34,441 - kol_analyzer - INFO - Found existing image for Zinc_ETH: public/kols\Zinc_ETH.png
+2025-03-12 17:45:34,709 - kol_analyzer - INFO - Attaching image: public/kols\Zinc_ETH.png
+2025-03-12 17:45:37,271 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 17:45:37,271 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 17:45:37,350 - kol_analyzer - INFO - Image path (for manual posting): public/kols\Zinc_ETH.png
+2025-03-12 17:45:37,350 - kol_analyzer - WARNING - Failed to send detailed tweet for Zinc_ETH
+2025-03-12 17:45:37,713 - kol_analyzer - INFO - Updated detailedMessage field for Zinc_ETH
+2025-03-12 18:56:09,455 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-12 18:56:09,644 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-12 18:56:12,192 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-12 18:56:12,192 - kol_analyzer - INFO - Selected random KOL: NachSOL
+2025-03-12 18:56:12,875 - kol_analyzer - INFO - Generating detailed tweet for KOL: NachSOL
+2025-03-12 19:00:09,074 - kol_analyzer - INFO - Found existing image for NachSOL: public/kols\NachSOL.png
+2025-03-12 19:00:09,354 - kol_analyzer - INFO - Attaching image: public/kols\NachSOL.png
+2025-03-12 19:00:11,416 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 19:00:11,416 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 19:00:11,494 - kol_analyzer - INFO - Image path (for manual posting): public/kols\NachSOL.png
+2025-03-12 19:00:11,494 - kol_analyzer - WARNING - Failed to send detailed tweet for NachSOL
+2025-03-12 19:00:11,988 - kol_analyzer - INFO - Updated detailedMessage field for NachSOL
+2025-03-12 19:45:03,860 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-12 19:45:04,054 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-12 19:45:05,122 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-12 19:45:05,122 - kol_analyzer - INFO - Selected random KOL: solrevv
+2025-03-12 19:45:05,756 - kol_analyzer - INFO - Generating detailed tweet for KOL: solrevv
+2025-03-12 19:45:13,871 - kol_analyzer - INFO - Found existing image for solrevv: public/kols\solrevv.png
+2025-03-12 19:45:14,184 - kol_analyzer - INFO - Attaching image: public/kols\solrevv.png
+2025-03-12 19:45:16,088 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 19:45:16,089 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 19:45:16,136 - kol_analyzer - INFO - Image path (for manual posting): public/kols\solrevv.png
+2025-03-12 19:45:16,138 - kol_analyzer - WARNING - Failed to send detailed tweet for solrevv
+2025-03-12 19:45:16,453 - kol_analyzer - INFO - Updated detailedMessage field for solrevv
+2025-03-12 20:45:03,666 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-12 20:45:03,856 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-12 20:45:07,555 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-12 20:45:07,556 - kol_analyzer - INFO - Selected random KOL: qtdegen
+2025-03-12 20:45:08,236 - kol_analyzer - INFO - Generating detailed tweet for KOL: qtdegen
+2025-03-12 20:45:17,154 - kol_analyzer - INFO - Found existing image for qtdegen: public/kols\qtdegen.png
+2025-03-12 20:45:17,406 - kol_analyzer - INFO - Attaching image: public/kols\qtdegen.png
+2025-03-12 20:45:19,884 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 20:45:19,884 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 20:45:19,948 - kol_analyzer - INFO - Image path (for manual posting): public/kols\qtdegen.png
+2025-03-12 20:45:19,961 - kol_analyzer - WARNING - Failed to send detailed tweet for qtdegen
+2025-03-12 20:45:20,340 - kol_analyzer - INFO - Updated detailedMessage field for qtdegen
+2025-03-12 21:45:04,187 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-12 21:45:04,423 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-12 21:45:05,504 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-12 21:45:05,505 - kol_analyzer - INFO - Selected random KOL: cladzsol
+2025-03-12 21:45:06,114 - kol_analyzer - INFO - Generating detailed tweet for KOL: cladzsol
+2025-03-12 21:45:14,033 - kol_analyzer - INFO - Found existing image for cladzsol: public/kols\cladzsol.png
+2025-03-12 21:45:14,293 - kol_analyzer - INFO - Attaching image: public/kols\cladzsol.png
+2025-03-12 21:45:15,760 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 21:45:15,764 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-12 21:45:15,818 - kol_analyzer - INFO - Image path (for manual posting): public/kols\cladzsol.png
+2025-03-12 21:45:15,819 - kol_analyzer - WARNING - Failed to send detailed tweet for cladzsol
+2025-03-12 21:45:16,175 - kol_analyzer - INFO - Updated detailedMessage field for cladzsol
+2025-03-13 14:45:06,308 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-13 14:45:07,004 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-13 14:45:08,214 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-13 14:45:08,214 - kol_analyzer - INFO - Selected random KOL: CartiTheMenace
+2025-03-13 14:45:08,830 - kol_analyzer - INFO - Generating detailed tweet for KOL: CartiTheMenace
+2025-03-13 14:45:18,148 - kol_analyzer - INFO - Found existing image for CartiTheMenace: public/kols\CartiTheMenace.png
+2025-03-13 14:45:18,372 - kol_analyzer - INFO - Attaching image: public/kols\CartiTheMenace.png
+2025-03-13 14:45:20,031 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-13 14:45:20,031 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-13 14:45:20,126 - kol_analyzer - INFO - Image path (for manual posting): public/kols\CartiTheMenace.png
+2025-03-13 14:45:20,126 - kol_analyzer - WARNING - Failed to send detailed tweet for CartiTheMenace
+2025-03-13 14:45:20,537 - kol_analyzer - INFO - Updated detailedMessage field for CartiTheMenace
+2025-03-13 15:45:03,481 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-13 15:45:03,669 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-13 15:45:04,677 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-13 15:45:04,677 - kol_analyzer - INFO - Selected random KOL: 4GH0STEE
+2025-03-13 15:45:05,370 - kol_analyzer - INFO - Generating detailed tweet for KOL: 4GH0STEE
+2025-03-13 15:45:14,692 - kol_analyzer - INFO - Found existing image for 4GH0STEE: public/kols\4GH0STEE.png
+2025-03-13 15:45:14,974 - kol_analyzer - INFO - Attaching image: public/kols\4GH0STEE.png
+2025-03-13 15:45:16,886 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-13 15:45:16,886 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-13 15:45:16,950 - kol_analyzer - INFO - Image path (for manual posting): public/kols\4GH0STEE.png
+2025-03-13 15:45:16,950 - kol_analyzer - WARNING - Failed to send detailed tweet for 4GH0STEE
+2025-03-13 15:45:17,296 - kol_analyzer - INFO - Updated detailedMessage field for 4GH0STEE
+2025-03-13 16:45:03,734 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-13 16:45:03,941 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-13 16:45:05,099 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-13 16:45:05,101 - kol_analyzer - INFO - Selected random KOL: roboPBOC
+2025-03-13 16:45:05,766 - kol_analyzer - INFO - Generating detailed tweet for KOL: roboPBOC
+2025-03-13 16:45:13,798 - kol_analyzer - INFO - Found existing image for roboPBOC: public/kols\roboPBOC.png
+2025-03-13 16:45:14,101 - kol_analyzer - INFO - Attaching image: public/kols\roboPBOC.png
+2025-03-13 16:45:15,487 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-13 16:45:15,489 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-13 16:45:15,540 - kol_analyzer - INFO - Image path (for manual posting): public/kols\roboPBOC.png
+2025-03-13 16:45:15,541 - kol_analyzer - WARNING - Failed to send detailed tweet for roboPBOC
+2025-03-13 16:45:15,987 - kol_analyzer - INFO - Updated detailedMessage field for roboPBOC
+2025-03-13 17:45:03,627 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-13 17:45:03,841 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-13 17:45:04,878 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-13 17:45:04,878 - kol_analyzer - INFO - Selected random KOL: earlTrades
+2025-03-13 17:45:05,533 - kol_analyzer - INFO - Generating detailed tweet for KOL: earlTrades
+2025-03-13 17:45:15,958 - kol_analyzer - INFO - Found existing image for earlTrades: public/kols\earlTrades.png
+2025-03-13 17:45:16,205 - kol_analyzer - INFO - Attaching image: public/kols\earlTrades.png
+2025-03-13 17:45:18,445 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-13 17:45:18,446 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-13 17:45:18,506 - kol_analyzer - INFO - Image path (for manual posting): public/kols\earlTrades.png
+2025-03-13 17:45:18,508 - kol_analyzer - WARNING - Failed to send detailed tweet for earlTrades
+2025-03-13 17:45:18,823 - kol_analyzer - INFO - Updated detailedMessage field for earlTrades
+2025-03-13 18:45:04,296 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-13 18:45:04,527 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-13 18:45:05,633 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-13 18:45:05,634 - kol_analyzer - INFO - Selected random KOL: Zinc_ETH
+2025-03-13 18:45:06,288 - kol_analyzer - INFO - Generating detailed tweet for KOL: Zinc_ETH
+2025-03-13 18:45:14,571 - kol_analyzer - INFO - Found existing image for Zinc_ETH: public/kols\Zinc_ETH.png
+2025-03-13 18:45:14,892 - kol_analyzer - INFO - Attaching image: public/kols\Zinc_ETH.png
+2025-03-13 18:45:16,637 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-13 18:45:16,639 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-13 18:45:16,689 - kol_analyzer - INFO - Image path (for manual posting): public/kols\Zinc_ETH.png
+2025-03-13 18:45:16,691 - kol_analyzer - WARNING - Failed to send detailed tweet for Zinc_ETH
+2025-03-13 18:45:16,957 - kol_analyzer - INFO - Updated detailedMessage field for Zinc_ETH
+2025-03-13 19:45:03,636 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-13 19:45:03,846 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-13 19:45:04,995 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-13 19:45:04,996 - kol_analyzer - INFO - Selected random KOL: qtdegen
+2025-03-13 19:45:05,659 - kol_analyzer - INFO - Generating detailed tweet for KOL: qtdegen
+2025-03-13 19:45:14,513 - kol_analyzer - INFO - Found existing image for qtdegen: public/kols\qtdegen.png
+2025-03-13 19:45:14,786 - kol_analyzer - INFO - Attaching image: public/kols\qtdegen.png
+2025-03-13 19:45:17,552 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-13 19:45:17,553 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-13 19:45:17,618 - kol_analyzer - INFO - Image path (for manual posting): public/kols\qtdegen.png
+2025-03-13 19:45:17,620 - kol_analyzer - WARNING - Failed to send detailed tweet for qtdegen
+2025-03-13 19:45:18,028 - kol_analyzer - INFO - Updated detailedMessage field for qtdegen
+2025-03-13 20:45:04,025 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-13 20:45:04,242 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-13 20:45:05,352 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-13 20:45:05,352 - kol_analyzer - INFO - Selected random KOL: Kevsznx
+2025-03-13 20:45:05,984 - kol_analyzer - INFO - Generating detailed tweet for KOL: Kevsznx
+2025-03-13 20:45:15,346 - kol_analyzer - INFO - Found existing image for Kevsznx: public/kols\Kevsznx.png
+2025-03-13 20:45:15,645 - kol_analyzer - INFO - Attaching image: public/kols\Kevsznx.png
+2025-03-13 20:45:17,984 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-13 20:45:17,985 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-13 20:45:18,039 - kol_analyzer - INFO - Image path (for manual posting): public/kols\Kevsznx.png
+2025-03-13 20:45:18,040 - kol_analyzer - WARNING - Failed to send detailed tweet for Kevsznx
+2025-03-13 20:45:18,408 - kol_analyzer - INFO - Updated detailedMessage field for Kevsznx
+2025-03-13 23:45:08,418 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-13 23:45:08,988 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-13 23:45:10,143 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-13 23:45:10,143 - kol_analyzer - INFO - Selected random KOL: sullyfromDeets
+2025-03-13 23:45:10,734 - kol_analyzer - INFO - Generating detailed tweet for KOL: sullyfromDeets
+2025-03-13 23:45:19,200 - kol_analyzer - INFO - Found existing image for sullyfromDeets: public/kols\sullyfromDeets.png
+2025-03-13 23:45:19,545 - kol_analyzer - INFO - Attaching image: public/kols\sullyfromDeets.png
+2025-03-13 23:45:21,349 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-13 23:45:21,351 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-13 23:45:21,435 - kol_analyzer - INFO - Image path (for manual posting): public/kols\sullyfromDeets.png
+2025-03-13 23:45:21,436 - kol_analyzer - WARNING - Failed to send detailed tweet for sullyfromDeets
+2025-03-13 23:45:21,857 - kol_analyzer - INFO - Updated detailedMessage field for sullyfromDeets
+2025-03-14 03:02:07,663 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-14 03:02:08,345 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-14 03:02:12,487 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-14 03:02:12,487 - kol_analyzer - INFO - Selected random KOL: moneymaykah_
+2025-03-14 03:02:13,103 - kol_analyzer - INFO - Generating detailed tweet for KOL: moneymaykah_
+2025-03-14 03:02:20,969 - kol_analyzer - INFO - Found existing image for moneymaykah_: public/kols\moneymaykah_.png
+2025-03-14 03:02:21,216 - kol_analyzer - INFO - Attaching image: public/kols\moneymaykah_.png
+2025-03-14 03:02:22,784 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-14 03:02:22,785 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-14 03:02:22,835 - kol_analyzer - INFO - Image path (for manual posting): public/kols\moneymaykah_.png
+2025-03-14 03:02:22,837 - kol_analyzer - WARNING - Failed to send detailed tweet for moneymaykah_
+2025-03-14 03:02:23,282 - kol_analyzer - INFO - Updated detailedMessage field for moneymaykah_
+2025-03-14 09:47:05,811 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-14 09:47:06,541 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-14 09:47:07,509 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-14 09:47:07,510 - kol_analyzer - INFO - Selected random KOL: Kevsznx
+2025-03-14 09:47:08,741 - kol_analyzer - INFO - Generating detailed tweet for KOL: Kevsznx
+2025-03-14 09:47:18,630 - kol_analyzer - INFO - Found existing image for Kevsznx: public/kols\Kevsznx.png
+2025-03-14 09:47:19,253 - kol_analyzer - INFO - Attaching image: public/kols\Kevsznx.png
+2025-03-14 09:47:22,259 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-14 09:47:22,259 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-14 09:47:22,422 - kol_analyzer - INFO - Image path (for manual posting): public/kols\Kevsznx.png
+2025-03-14 09:47:22,422 - kol_analyzer - WARNING - Failed to send detailed tweet for Kevsznx
+2025-03-14 09:47:22,660 - kol_analyzer - INFO - Updated detailedMessage field for Kevsznx
+2025-03-14 11:59:20,846 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-14 11:59:21,163 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-14 14:45:06,892 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-14 14:45:07,561 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-14 14:45:08,675 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-14 14:45:08,676 - kol_analyzer - INFO - Selected random KOL: Loopierr
+2025-03-14 14:45:09,329 - kol_analyzer - INFO - Generating detailed tweet for KOL: Loopierr
+2025-03-14 14:45:18,036 - kol_analyzer - INFO - Found existing image for Loopierr: public/kols\Loopierr.png
+2025-03-14 14:45:18,348 - kol_analyzer - INFO - Attaching image: public/kols\Loopierr.png
+2025-03-14 14:45:20,317 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-14 14:45:20,318 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-14 14:45:20,408 - kol_analyzer - INFO - Image path (for manual posting): public/kols\Loopierr.png
+2025-03-14 14:45:20,409 - kol_analyzer - WARNING - Failed to send detailed tweet for Loopierr
+2025-03-14 14:45:20,733 - kol_analyzer - INFO - Updated detailedMessage field for Loopierr
+2025-03-14 15:45:07,081 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-14 15:45:07,776 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-14 15:45:08,763 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-14 15:45:08,763 - kol_analyzer - INFO - Selected random KOL: imperooterxbt
+2025-03-14 15:45:09,417 - kol_analyzer - INFO - Generating detailed tweet for KOL: imperooterxbt
+2025-03-14 15:45:17,919 - kol_analyzer - INFO - Found existing image for imperooterxbt: public/kols\imperooterxbt.png
+2025-03-14 15:45:18,197 - kol_analyzer - INFO - Attaching image: public/kols\imperooterxbt.png
+2025-03-14 15:45:20,390 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-14 15:45:20,392 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-14 15:45:20,476 - kol_analyzer - INFO - Image path (for manual posting): public/kols\imperooterxbt.png
+2025-03-14 15:45:20,477 - kol_analyzer - WARNING - Failed to send detailed tweet for imperooterxbt
+2025-03-14 15:45:20,844 - kol_analyzer - INFO - Updated detailedMessage field for imperooterxbt
+2025-03-14 17:10:22,291 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-14 17:10:22,511 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-14 17:10:23,496 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-14 17:10:23,496 - kol_analyzer - INFO - Selected random KOL: Oura456
+2025-03-14 17:10:24,052 - kol_analyzer - INFO - Generating detailed tweet for KOL: Oura456
+2025-03-14 17:10:33,882 - kol_analyzer - INFO - Found existing image for Oura456: public/kols\Oura456.png
+2025-03-14 17:10:34,274 - kol_analyzer - INFO - Attaching image: public/kols\Oura456.png
+2025-03-14 17:10:36,603 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-14 17:10:36,603 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-14 17:10:36,651 - kol_analyzer - INFO - Image path (for manual posting): public/kols\Oura456.png
+2025-03-14 17:10:36,652 - kol_analyzer - WARNING - Failed to send detailed tweet for Oura456
+2025-03-14 17:10:36,901 - kol_analyzer - INFO - Updated detailedMessage field for Oura456
+2025-03-14 17:45:04,891 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-14 17:45:05,606 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-14 17:45:06,905 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-14 17:45:06,906 - kol_analyzer - INFO - Selected random KOL: frankdegods
+2025-03-14 17:45:07,575 - kol_analyzer - INFO - Generating detailed tweet for KOL: frankdegods
+2025-03-14 17:45:16,841 - kol_analyzer - INFO - Found existing image for frankdegods: public/kols\frankdegods.png
+2025-03-14 17:45:17,242 - kol_analyzer - INFO - Attaching image: public/kols\frankdegods.png
+2025-03-14 17:45:19,259 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-14 17:45:19,259 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-14 17:45:19,357 - kol_analyzer - INFO - Image path (for manual posting): public/kols\frankdegods.png
+2025-03-14 17:45:19,357 - kol_analyzer - WARNING - Failed to send detailed tweet for frankdegods
+2025-03-14 17:45:19,705 - kol_analyzer - INFO - Updated detailedMessage field for frankdegods
+2025-03-14 18:45:03,000 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-14 18:45:03,256 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-14 18:45:04,408 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-14 18:45:04,408 - kol_analyzer - INFO - Selected random KOL: spunosounds
+2025-03-14 18:45:05,084 - kol_analyzer - INFO - Generating detailed tweet for KOL: spunosounds
+2025-03-14 18:45:14,284 - kol_analyzer - INFO - Found existing image for spunosounds: public/kols\spunosounds.png
+2025-03-14 18:45:14,583 - kol_analyzer - INFO - Attaching image: public/kols\spunosounds.png
+2025-03-14 18:45:16,770 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-14 18:45:16,770 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-14 18:45:16,827 - kol_analyzer - INFO - Image path (for manual posting): public/kols\spunosounds.png
+2025-03-14 18:45:16,827 - kol_analyzer - WARNING - Failed to send detailed tweet for spunosounds
+2025-03-14 18:45:17,301 - kol_analyzer - INFO - Updated detailedMessage field for spunosounds
+2025-03-14 20:26:22,428 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-14 20:26:23,096 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-14 20:26:24,296 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-14 20:26:24,297 - kol_analyzer - INFO - Selected random KOL: ratwizardx
+2025-03-14 20:26:24,970 - kol_analyzer - INFO - Generating detailed tweet for KOL: ratwizardx
+2025-03-14 20:26:34,246 - kol_analyzer - INFO - Found existing image for ratwizardx: public/kols\ratwizardx.png
+2025-03-14 20:26:34,507 - kol_analyzer - INFO - Attaching image: public/kols\ratwizardx.png
+2025-03-14 20:26:36,535 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-14 20:26:36,535 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-14 20:26:36,617 - kol_analyzer - INFO - Image path (for manual posting): public/kols\ratwizardx.png
+2025-03-14 20:26:36,618 - kol_analyzer - WARNING - Failed to send detailed tweet for ratwizardx
+2025-03-14 20:26:36,846 - kol_analyzer - INFO - Updated detailedMessage field for ratwizardx
+2025-03-14 20:45:02,948 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-14 20:45:03,152 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-14 20:45:04,240 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-14 20:45:04,240 - kol_analyzer - INFO - Selected random KOL: earlTrades
+2025-03-14 20:45:04,963 - kol_analyzer - INFO - Generating detailed tweet for KOL: earlTrades
+2025-03-14 20:45:13,965 - kol_analyzer - INFO - Found existing image for earlTrades: public/kols\earlTrades.png
+2025-03-14 20:45:14,280 - kol_analyzer - INFO - Attaching image: public/kols\earlTrades.png
+2025-03-14 20:45:15,661 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-14 20:45:15,663 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-14 20:45:15,719 - kol_analyzer - INFO - Image path (for manual posting): public/kols\earlTrades.png
+2025-03-14 20:45:15,720 - kol_analyzer - WARNING - Failed to send detailed tweet for earlTrades
+2025-03-14 20:45:16,162 - kol_analyzer - INFO - Updated detailedMessage field for earlTrades
+2025-03-14 21:50:32,053 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-14 21:50:32,382 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-14 21:50:35,354 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-14 21:50:35,354 - kol_analyzer - INFO - Selected random KOL: NachSOL
+2025-03-14 21:50:36,081 - kol_analyzer - INFO - Generating detailed tweet for KOL: NachSOL
+2025-03-14 21:50:44,632 - kol_analyzer - INFO - Found existing image for NachSOL: public/kols\NachSOL.png
+2025-03-14 21:50:44,946 - kol_analyzer - INFO - Attaching image: public/kols\NachSOL.png
+2025-03-14 21:50:47,390 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-14 21:50:47,390 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-14 21:50:47,445 - kol_analyzer - INFO - Image path (for manual posting): public/kols\NachSOL.png
+2025-03-14 21:50:47,445 - kol_analyzer - WARNING - Failed to send detailed tweet for NachSOL
+2025-03-14 21:50:47,819 - kol_analyzer - INFO - Updated detailedMessage field for NachSOL
+2025-03-14 23:49:21,793 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-14 23:49:22,549 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-14 23:49:23,561 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-14 23:49:23,561 - kol_analyzer - INFO - Selected random KOL: Zinc_ETH
+2025-03-14 23:49:24,249 - kol_analyzer - INFO - Generating detailed tweet for KOL: Zinc_ETH
+2025-03-14 23:49:33,201 - kol_analyzer - INFO - Found existing image for Zinc_ETH: public/kols\Zinc_ETH.png
+2025-03-14 23:49:33,633 - kol_analyzer - INFO - Attaching image: public/kols\Zinc_ETH.png
+2025-03-14 23:49:35,676 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-14 23:49:35,677 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-14 23:49:35,755 - kol_analyzer - INFO - Image path (for manual posting): public/kols\Zinc_ETH.png
+2025-03-14 23:49:35,755 - kol_analyzer - WARNING - Failed to send detailed tweet for Zinc_ETH
+2025-03-14 23:49:36,006 - kol_analyzer - INFO - Updated detailedMessage field for Zinc_ETH
+2025-03-15 03:11:00,692 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-15 03:14:01,339 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-15 03:14:01,354 - kol_analyzer - ERROR - Error fetching KOL records: HTTPSConnectionPool(host='api.airtable.com', port=443): Max retries exceeded with url: /v0/apprIPsnFk2qFS5ie/KOL_ANALYSIS (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x00000229D53E4770>: Failed to resolve 'api.airtable.com' ([Errno 11001] getaddrinfo failed)"))
+2025-03-15 03:14:01,355 - kol_analyzer - WARNING - No KOL records found
+2025-03-15 10:12:50,418 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-15 10:12:50,739 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-15 10:12:50,743 - kol_analyzer - ERROR - Error fetching KOL records: HTTPSConnectionPool(host='api.airtable.com', port=443): Max retries exceeded with url: /v0/apprIPsnFk2qFS5ie/KOL_ANALYSIS (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002A047BAB800>: Failed to resolve 'api.airtable.com' ([Errno 11001] getaddrinfo failed)"))
+2025-03-15 10:12:50,744 - kol_analyzer - WARNING - No KOL records found
+2025-03-15 18:45:08,724 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-15 18:45:09,491 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-15 18:45:10,661 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-15 18:45:10,661 - kol_analyzer - INFO - Selected random KOL: Zinc_ETH
+2025-03-15 18:45:11,408 - kol_analyzer - INFO - Generating detailed tweet for KOL: Zinc_ETH
+2025-03-15 18:45:20,132 - kol_analyzer - INFO - Found existing image for Zinc_ETH: public/kols\Zinc_ETH.png
+2025-03-15 18:45:20,547 - kol_analyzer - INFO - Attaching image: public/kols\Zinc_ETH.png
+2025-03-15 18:45:22,636 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-15 18:45:22,636 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-15 18:45:22,748 - kol_analyzer - INFO - Image path (for manual posting): public/kols\Zinc_ETH.png
+2025-03-15 18:45:22,749 - kol_analyzer - WARNING - Failed to send detailed tweet for Zinc_ETH
+2025-03-15 18:45:23,109 - kol_analyzer - INFO - Updated detailedMessage field for Zinc_ETH
+2025-03-15 19:45:02,893 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-15 19:45:03,083 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-15 19:45:07,759 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-15 19:45:07,759 - kol_analyzer - INFO - Selected random KOL: earlTrades
+2025-03-15 19:45:08,430 - kol_analyzer - INFO - Generating detailed tweet for KOL: earlTrades
+2025-03-15 19:45:16,934 - kol_analyzer - INFO - Found existing image for earlTrades: public/kols\earlTrades.png
+2025-03-15 19:45:17,250 - kol_analyzer - INFO - Attaching image: public/kols\earlTrades.png
+2025-03-15 19:45:18,783 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-15 19:45:18,798 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-15 19:45:18,845 - kol_analyzer - INFO - Image path (for manual posting): public/kols\earlTrades.png
+2025-03-15 19:45:18,845 - kol_analyzer - WARNING - Failed to send detailed tweet for earlTrades
+2025-03-15 19:45:19,240 - kol_analyzer - INFO - Updated detailedMessage field for earlTrades
+2025-03-15 21:40:41,925 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-15 21:40:42,514 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-15 21:40:43,436 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-15 21:40:43,436 - kol_analyzer - INFO - Selected random KOL: Euris_JT
+2025-03-15 21:40:44,108 - kol_analyzer - INFO - Generating detailed tweet for KOL: Euris_JT
+2025-03-15 21:40:52,071 - kol_analyzer - INFO - No existing image found for Euris_JT, generating new image
+2025-03-15 21:40:52,073 - kol_analyzer - INFO - Sending request to Ideogram API for Euris_JT
+2025-03-15 21:41:03,128 - kol_analyzer - INFO - Downloading image from https://ideogram.ai/api/images/ephemeral/fep0UdhUShmSpFSLDrWCDg.png?exp=1742157662&sig=49be106deedf5c7e3503c820f12a2321ba46fd8a4743daa512281651a8a25d6b
+2025-03-15 21:41:03,994 - kol_analyzer - INFO - Generated KOL image: public/kols\Euris_JT.png
+2025-03-15 21:41:04,277 - kol_analyzer - INFO - Attaching image: public/kols\Euris_JT.png
+2025-03-15 21:41:05,894 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-15 21:41:05,909 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-15 21:41:05,941 - kol_analyzer - INFO - Image path (for manual posting): public/kols\Euris_JT.png
+2025-03-15 21:41:05,956 - kol_analyzer - WARNING - Failed to send detailed tweet for Euris_JT
+2025-03-15 21:41:06,255 - kol_analyzer - INFO - Updated detailedMessage field for Euris_JT
+2025-03-15 22:13:20,879 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-15 22:13:21,240 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-15 22:13:22,200 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-15 22:13:22,284 - kol_analyzer - INFO - Selected random KOL: Obijai
+2025-03-15 22:13:22,849 - kol_analyzer - INFO - Generating detailed tweet for KOL: Obijai
+2025-03-15 22:13:31,879 - kol_analyzer - INFO - Found existing image for Obijai: public/kols\Obijai.png
+2025-03-15 22:13:32,133 - kol_analyzer - INFO - Attaching image: public/kols\Obijai.png
+2025-03-15 22:13:33,574 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-15 22:13:33,574 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-15 22:13:33,685 - kol_analyzer - INFO - Image path (for manual posting): public/kols\Obijai.png
+2025-03-15 22:13:33,685 - kol_analyzer - WARNING - Failed to send detailed tweet for Obijai
+2025-03-15 22:13:33,923 - kol_analyzer - INFO - Updated detailedMessage field for Obijai
+2025-03-15 22:45:06,144 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-15 22:45:06,836 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-15 22:45:07,901 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-15 22:45:07,902 - kol_analyzer - INFO - Selected random KOL: Oura456
+2025-03-15 22:45:08,575 - kol_analyzer - INFO - Generating detailed tweet for KOL: Oura456
+2025-03-15 22:45:18,572 - kol_analyzer - INFO - Found existing image for Oura456: public/kols\Oura456.png
+2025-03-15 22:45:18,860 - kol_analyzer - INFO - Attaching image: public/kols\Oura456.png
+2025-03-15 22:45:20,267 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-15 22:45:20,269 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-15 22:45:20,348 - kol_analyzer - INFO - Image path (for manual posting): public/kols\Oura456.png
+2025-03-15 22:45:20,349 - kol_analyzer - WARNING - Failed to send detailed tweet for Oura456
+2025-03-15 22:45:20,616 - kol_analyzer - INFO - Updated detailedMessage field for Oura456
+2025-03-16 00:45:22,270 - kol_analyzer - INFO - Generating and sending tweet for a random KOL
+2025-03-16 00:45:24,353 - kol_analyzer - INFO - Fetching KOL records from Airtable
+2025-03-16 00:45:26,295 - kol_analyzer - INFO - Found 60 KOL records
+2025-03-16 00:45:26,301 - kol_analyzer - INFO - Selected random KOL: NachSOL
+2025-03-16 00:45:28,685 - kol_analyzer - INFO - Generating detailed tweet for KOL: NachSOL
+2025-03-16 00:45:42,421 - kol_analyzer - INFO - Found existing image for NachSOL: public/kols\NachSOL.png
+2025-03-16 00:45:43,056 - kol_analyzer - INFO - Attaching image: public/kols\NachSOL.png
+2025-03-16 00:45:44,771 - kol_analyzer - ERROR - Error sending tweet: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-16 00:45:44,772 - kol_analyzer - ERROR - Exception details:
+Traceback (most recent call last):
+  File "C:\Users\conta\kinkong\socials\analyze_kols.py", line 1561, in send_tweet
+    response = client.create_tweet(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 839, in create_tweet
+    return self._make_request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 129, in _make_request
+    response = self.request(method, route, params=request_params,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\tweepy\client.py", line 100, in request
+    raise Forbidden(response)
+tweepy.errors.Forbidden: 403 Forbidden
+When authenticating requests to the Twitter API v2 endpoints, you must use keys and tokens from a Twitter developer App that is attached to a Project. You can create a project via the developer portal.
+2025-03-16 00:45:44,841 - kol_analyzer - INFO - Image path (for manual posting): public/kols\NachSOL.png
+2025-03-16 00:45:44,841 - kol_analyzer - WARNING - Failed to send detailed tweet for NachSOL
+2025-03-16 00:45:45,204 - kol_analyzer - INFO - Updated detailedMessage field for NachSOL
