@@ -574,9 +574,18 @@ class WalletSnapshotTaker:
             )
             
             # Get all active LP positions using the correct field names 'token0Amount' and 'token1Amount'
+            formula = "AND({isActive}=TRUE(), OR({token0Amount}>0, {token1Amount}>0))"
+            print(f"Using filter formula: {formula}")
+            
             records = lp_positions_table.get_all(
-                formula="AND({isActive}=TRUE(), OR({token0Amount}>0, {token1Amount}>0))"
+                formula=formula
             )
+            
+            print(f"Found {len(records)} LP position records")
+            
+            # Debug: Print the first record to see its structure
+            if records:
+                print(f"Sample LP position record: {json.dumps(records[0], indent=2)}")
             
             lp_positions = []
             
@@ -587,19 +596,22 @@ class WalletSnapshotTaker:
                 amount0 = float(fields.get('token0Amount', 0) or 0)
                 amount1 = float(fields.get('token1Amount', 0) or 0)
                 
+                print(f"Processing LP position: {fields.get('name', 'Unknown')} - token0Amount: {amount0}, token1Amount: {amount1}")
+                
                 # Try to get valueUSD, or calculate it if missing
                 value_usd = 0
                 if 'valueUSD' in fields and fields['valueUSD']:
                     value_usd = float(fields['valueUSD'])
+                    print(f"  valueUSD from record: {value_usd}")
                 else:
                     # If valueUSD is missing but we have token amounts, use a placeholder value
-                    # In a real implementation, you might want to calculate this based on token prices
                     if amount0 > 0 or amount1 > 0:
                         value_usd = 1.0  # Placeholder value
-                        print(f"Warning: No valueUSD for LP position {fields.get('name', 'Unknown')} - using placeholder")
+                        print(f"  Warning: No valueUSD for LP position {fields.get('name', 'Unknown')} - using placeholder")
                 
                 # Skip positions with no value
                 if value_usd <= 0 and amount0 <= 0 and amount1 <= 0:
+                    print(f"  Skipping LP position with no value: {fields.get('name', 'Unknown')}")
                     continue
                     
                 position = {
@@ -613,8 +625,9 @@ class WalletSnapshotTaker:
                 }
                 
                 lp_positions.append(position)
-                print(f"✓ LP Position: {position['name']} (${position['valueUSD']:.2f})")
+                print(f"✓ Added LP Position: {position['name']} (${position['valueUSD']:.2f})")
                 
+            print(f"Total LP positions added: {len(lp_positions)}")
             return lp_positions
             
         except Exception as e:
@@ -790,6 +803,7 @@ class WalletSnapshotTaker:
         lp_positions = self.get_lp_positions()
 
         # Add LP positions to balances
+        print(f"\nAdding {len(lp_positions)} LP positions to balances")
         for position in lp_positions:
             # Create a balance entry for each LP position
             # Format: "LP: token0/token1"
@@ -806,10 +820,11 @@ class WalletSnapshotTaker:
                 'lpDetails': position  # Store full LP details
             }
             balances.append(lp_balance)
-            print(f"✓ {lp_balance['token']}: LP Position (${lp_balance['value']:.2f})")
+            print(f"✓ Added to balances: {lp_balance['token']}: LP Position (${lp_balance['value']:.2f})")
 
         # Recalculate total value including LP positions
         total_value = sum(b['value'] for b in balances)
+        print(f"\nRecalculated total value including LP positions: ${total_value:.2f}")
         
         # Get previous snapshot value (7 days ago)
         previous_value, previous_date = self.get_previous_snapshot(days=7)
@@ -847,6 +862,18 @@ class WalletSnapshotTaker:
         print(f"  PnL percentage: {pnl_percentage:.2f}%")
         
         # Record snapshot with metrics
+        holdings_json = json.dumps([{
+            'token': b['token'],
+            'amount': b['amount'],
+            'price': b['price'],
+            'value': b['value'],
+            'isLpPosition': b.get('isLpPosition', False),
+            'lpDetails': b.get('lpDetails', {}) if b.get('isLpPosition', False) else None
+        } for b in balances])
+
+        print(f"\nHoldings JSON contains {len(balances)} items")
+        print(f"LP positions in holdings JSON: {sum(1 for b in balances if b.get('isLpPosition', False))}")
+
         snapshot_data = {
             'createdAt': created_at,
             'totalValue': total_value,
@@ -856,14 +883,7 @@ class WalletSnapshotTaker:
             'netResult': net_result,
             'grossResult': gross_result,
             'pnlPercentage': pnl_percentage,
-            'holdings': json.dumps([{
-                'token': b['token'],
-                'amount': b['amount'],
-                'price': b['price'],
-                'value': b['value'],
-                'isLpPosition': b.get('isLpPosition', False),
-                'lpDetails': b.get('lpDetails', {}) if b.get('isLpPosition', False) else None
-            } for b in balances])
+            'holdings': holdings_json
         }
         
         self.snapshots_table.insert(snapshot_data)
