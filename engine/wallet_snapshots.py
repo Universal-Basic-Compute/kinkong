@@ -573,9 +573,9 @@ class WalletSnapshotTaker:
                 os.getenv('KINKONG_AIRTABLE_API_KEY')
             )
             
-            # Get all active LP positions using the correct field name 'isActive'
+            # Get all active LP positions using the correct field names 'token0Amount' and 'token1Amount'
             records = lp_positions_table.get_all(
-                formula="AND({isActive}=TRUE(), OR({amount0}>0, {amount1}>0))"
+                formula="AND({isActive}=TRUE(), OR({token0Amount}>0, {token1Amount}>0))"
             )
             
             lp_positions = []
@@ -583,9 +583,9 @@ class WalletSnapshotTaker:
             for record in records:
                 fields = record.get('fields', {})
                 
-                # Get token amounts
-                amount0 = float(fields.get('amount0', 0) or 0)
-                amount1 = float(fields.get('amount1', 0) or 0)
+                # Get token amounts using the updated field names
+                amount0 = float(fields.get('token0Amount', 0) or 0)
+                amount1 = float(fields.get('token1Amount', 0) or 0)
                 
                 # Try to get valueUSD, or calculate it if missing
                 value_usd = 0
@@ -606,8 +606,8 @@ class WalletSnapshotTaker:
                     'name': fields.get('name', 'Unknown LP'),
                     'token0': fields.get('token0', 'Unknown'),
                     'token1': fields.get('token1', 'Unknown'),
-                    'amount0': amount0,
-                    'amount1': amount1,
+                    'amount0': amount0,  # Keep the same property names in the returned object
+                    'amount1': amount1,  # Keep the same property names in the returned object
                     'valueUSD': value_usd,
                     'notes': fields.get('notes', '')
                 }
