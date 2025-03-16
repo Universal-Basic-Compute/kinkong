@@ -598,16 +598,16 @@ class WalletSnapshotTaker:
                 
                 print(f"Processing LP position: {fields.get('name', 'Unknown')} - token0Amount: {amount0}, token1Amount: {amount1}")
                 
-                # Try to get valueUSD, or calculate it if missing
+                # Try to get totalValueUsd (correct field name), or calculate it if missing
                 value_usd = 0
-                if 'valueUSD' in fields and fields['valueUSD']:
-                    value_usd = float(fields['valueUSD'])
-                    print(f"  valueUSD from record: {value_usd}")
+                if 'totalValueUsd' in fields and fields['totalValueUsd']:
+                    value_usd = float(fields['totalValueUsd'])
+                    print(f"  totalValueUsd from record: {value_usd}")
                 else:
-                    # If valueUSD is missing but we have token amounts, use a placeholder value
+                    # If totalValueUsd is missing but we have token amounts, use a placeholder value
                     if amount0 > 0 or amount1 > 0:
                         value_usd = 1.0  # Placeholder value
-                        print(f"  Warning: No valueUSD for LP position {fields.get('name', 'Unknown')} - using placeholder")
+                        print(f"  Warning: No totalValueUsd for LP position {fields.get('name', 'Unknown')} - using placeholder")
                 
                 # Skip positions with no value
                 if value_usd <= 0 and amount0 <= 0 and amount1 <= 0:
