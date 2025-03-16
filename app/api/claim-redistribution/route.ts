@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
     
     // Execute token transfers
     const transactions: Transaction[] = [];
-    let transferError = null;
+    let transferError: string | null = null;
     
     try {
       // Transfer UBC if applicable
