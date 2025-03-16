@@ -4,6 +4,13 @@ import path from 'path';
 import { exec } from 'child_process';
 import util from 'util';
 
+// Transaction interface
+interface Transaction {
+  token: string;
+  amount: number;
+  txSignature: string;
+}
+
 // Convert exec to Promise-based
 const execPromise = util.promisify(exec);
 
@@ -96,7 +103,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Execute token transfers
-    const transactions = [];
+    const transactions: Transaction[] = [];
     let transferError = null;
     
     try {
