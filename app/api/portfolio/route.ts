@@ -58,6 +58,8 @@ export async function GET() {
     try {
       holdings = JSON.parse(holdingsJson || '[]');
       console.log(`Parsed ${holdings.length} holdings from snapshot`);
+      console.log('Holdings with LP positions:', holdings.filter(h => h.isLpPosition).length);
+      console.log('Sample LP position:', holdings.find(h => h.isLpPosition));
     } catch (e) {
       console.error('Failed to parse holdings JSON:', e);
       return NextResponse.json(
@@ -113,6 +115,10 @@ export async function GET() {
       };
     });
     
+    // Log balances for debugging
+    console.log('Final balances with LP positions:', balances.filter(b => b.isLpPosition).length);
+    console.log('Sample final LP position:', balances.find(b => b.isLpPosition));
+    
     // Calculate total value
     const totalValue = balances.reduce((sum, balance) => sum + (balance.usdValue || 0), 0);
     
@@ -131,7 +137,8 @@ export async function GET() {
         usdValue: b.usdValue,
         percentage: b.percentage,
         isLpPosition: b.isLpPosition || false
-      }))
+      })),
+      lpPositionsCount: balancesWithPercentages.filter(b => b.isLpPosition).length
     });
     
     return NextResponse.json(balancesWithPercentages, { headers });
