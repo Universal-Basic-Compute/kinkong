@@ -611,29 +611,61 @@ class PoolMapper:
         return {}  # Return empty dict if all retries failed
     
     def calculate_bin_price(self, bin_id: int, bin_step: int, pool_details: Dict) -> float:
-        """Calculate price for a specific bin in a DLMM pool"""
+        """Calculate price for a specific bin in a DLMM pool with decimal adjustment"""
         try:
-            # DLMM price formula: price = 1.0001^(binStep * binId)
+            # DLMM price formula: price = (1 + binStep/10000)^binId
             price = (1 + bin_step / 10000) ** bin_id
             
-            # Determine if we need to invert the price based on token order
-            token_x = pool_details.get('tokenXName', '')
-            token_y = pool_details.get('tokenYName', '')
+            # Get token decimals (default to 9 if not found)
+            token_x_mint = pool_details.get('tokenXMint', '')
+            token_y_mint = pool_details.get('tokenYMint', '')
             
-            # Format with token names
-            return price
+            # Define token decimals (could be expanded to include more tokens)
+            token_decimals = {
+                "So11111111111111111111111111111111111111112": 9,  # SOL
+                "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump": 6,  # UBC
+                "B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo": 6   # COMPUTE
+            }
+            
+            # Get decimals for the tokens in the pair
+            token_x_decimals = token_decimals.get(token_x_mint, 9)
+            token_y_decimals = token_decimals.get(token_y_mint, 9)
+            
+            # Adjust price based on decimal difference
+            decimal_adjustment = 10 ** (token_y_decimals - token_x_decimals)
+            adjusted_price = price / decimal_adjustment
+            
+            return adjusted_price
         except Exception as e:
             logger.error(f"Error calculating bin price: {e}")
             return 0
     
     def calculate_tick_price(self, tick: int, pool_details: Dict) -> float:
-        """Calculate price for a specific tick in a DYN pool"""
+        """Calculate price for a specific tick in a DYN pool with decimal adjustment"""
         try:
             # DYN price formula: price = 1.0001^tick
             price = 1.0001 ** tick
             
-            # Format with token names
-            return price
+            # Get token decimals (default to 9 if not found)
+            token_x_mint = pool_details.get('tokenX', '')
+            token_y_mint = pool_details.get('tokenY', '')
+            
+            # Define token decimals (could be expanded to include more tokens)
+            token_decimals = {
+                "So11111111111111111111111111111111111111112": 9,  # SOL
+                "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump": 6,  # UBC
+                "B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo": 6   # COMPUTE
+            }
+            
+            # Get decimals for the tokens in the pair
+            token_x_decimals = token_decimals.get(token_x_mint, 9)
+            token_y_decimals = token_decimals.get(token_y_mint, 9)
+            
+            # Adjust price based on decimal difference
+            decimal_adjustment = 10 ** (token_y_decimals - token_x_decimals)
+            adjusted_price = price / decimal_adjustment
+            
+            return adjusted_price
         except Exception as e:
             logger.error(f"Error calculating tick price: {e}")
             return 0

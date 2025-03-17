@@ -111,7 +111,15 @@ def visualize_liquidity_distribution(data_file, output_file=None):
         ax1_price = ax1.twiny()
         ax1_price.set_xlim(ax1.get_xlim())
         ax1_price.set_xticks(label_ids)
-        ax1_price.set_xticklabels([f"{id_to_price[id_val]:.6f}" for id_val in label_ids], rotation=45)
+        # Format price labels with scientific notation for small values
+        price_labels = []
+        for id_val in label_ids:
+            price = id_to_price[id_val]
+            if price >= 0.00001:
+                price_labels.append(f"{price:.8f}")
+            else:
+                price_labels.append(f"{price:.2e}")
+        ax1_price.set_xticklabels(price_labels, rotation=45)
         ax1_price.set_xlabel("Price (SOL)")
         
         ax1.legend()
@@ -119,7 +127,12 @@ def visualize_liquidity_distribution(data_file, output_file=None):
         # Plot price vs bin/tick (bottom chart)
         ax2.plot(ids, prices, marker='o', linestyle='-', alpha=0.7)
         ax2.axvline(x=current_point, color='r', linestyle='--', label=f'Current {id_label}')
-        ax2.axhline(y=current_price, color='g', linestyle='--', label=f'Current Price: {current_price:.6f}')
+        # Format current price with scientific notation if needed
+        if current_price >= 0.00001:
+            price_label = f'Current Price: {current_price:.8f}'
+        else:
+            price_label = f'Current Price: {current_price:.2e}'
+        ax2.axhline(y=current_price, color='g', linestyle='--', label=price_label)
         ax2.set_xlabel(id_label)
         ax2.set_ylabel('Price (SOL)')
         ax2.set_title(f'Price vs {id_label}')
@@ -144,8 +157,9 @@ def visualize_liquidity_distribution(data_file, output_file=None):
                 ax2.axhline(y=point['price'], color='orange', linestyle=':', 
                             alpha=0.5, label=label)
                 
-                # Add price annotation on liquidity plot
-                ax1.annotate(f"{point['price']:.6f}", 
+                # Add price annotation on liquidity plot with scientific notation for small values
+                price_text = f"{point['price']:.8f}" if point['price'] >= 0.00001 else f"{point['price']:.2e}"
+                ax1.annotate(price_text, 
                             xy=(point_id, point['relative_liquidity']),
                             xytext=(10, 10),
                             textcoords='offset points',
@@ -168,8 +182,9 @@ def visualize_liquidity_distribution(data_file, output_file=None):
                 ax2.axhline(y=point['price'], color='green', linestyle=':', 
                             alpha=0.5, label=label)
                 
-                # Add price annotation on liquidity plot
-                ax1.annotate(f"{point['price']:.6f}", 
+                # Add price annotation on liquidity plot with scientific notation for small values
+                price_text = f"{point['price']:.8f}" if point['price'] >= 0.00001 else f"{point['price']:.2e}"
+                ax1.annotate(price_text, 
                             xy=(point_id, point['relative_liquidity']),
                             xytext=(10, -15),
                             textcoords='offset points',
