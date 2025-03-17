@@ -242,7 +242,7 @@ async def visualize_liquidity_distribution(data_file, output_file=None):
         resistance_legend_added = False
         support_legend_added = False
         
-        # Plot resistance points
+        # Plot resistance points on the liquidity chart (top)
         for point in resistance_points:
             if point_id_key in point:
                 point_id = int(point[point_id_key])
@@ -250,19 +250,8 @@ async def visualize_liquidity_distribution(data_file, output_file=None):
                 # Add marker on liquidity plot
                 ax1.plot(point_id, point['relative_liquidity'], 'ro', markersize=10, alpha=0.5)
                 
-                # Convert resistance price to USD
-                resistance_price_usd = point['price'] * quote_token_price
-                
-                # Add horizontal line on price plot
-                if resistance_price_usd >= 0.01:
-                    label = f'Resistance: ${resistance_price_usd:.2f}' if not resistance_legend_added else None
-                else:
-                    label = f'Resistance: ${resistance_price_usd:.4f}' if not resistance_legend_added else None
-                    
-                ax2.axhline(y=resistance_price_usd, color='orange', linestyle=':', 
-                            alpha=0.5, label=label)
-                
                 # Add price annotation on liquidity plot with $ sign
+                resistance_price_usd = point['price'] * quote_token_price
                 if resistance_price_usd >= 0.01:
                     price_text = f"${resistance_price_usd:.2f}"
                 else:
@@ -275,10 +264,8 @@ async def visualize_liquidity_distribution(data_file, output_file=None):
                             color='red',
                             fontsize=8,
                             arrowprops=dict(arrowstyle='->', color='red', alpha=0.5))
-                
-                resistance_legend_added = True
         
-        # Plot support points
+        # Plot support points on the liquidity chart (top)
         for point in support_points:
             if point_id_key in point:
                 point_id = int(point[point_id_key])
@@ -286,19 +273,8 @@ async def visualize_liquidity_distribution(data_file, output_file=None):
                 # Add marker on liquidity plot
                 ax1.plot(point_id, point['relative_liquidity'], 'go', markersize=10, alpha=0.5)
                 
-                # Convert support price to USD
-                support_price_usd = point['price'] * quote_token_price
-                
-                # Add horizontal line on price plot
-                if support_price_usd >= 0.01:
-                    label = f'Support: ${support_price_usd:.2f}' if not support_legend_added else None
-                else:
-                    label = f'Support: ${support_price_usd:.4f}' if not support_legend_added else None
-                    
-                ax2.axhline(y=support_price_usd, color='green', linestyle=':', 
-                            alpha=0.5, label=label)
-                
                 # Add price annotation on liquidity plot with $ sign
+                support_price_usd = point['price'] * quote_token_price
                 if support_price_usd >= 0.01:
                     price_text = f"${support_price_usd:.2f}"
                 else:
@@ -311,8 +287,102 @@ async def visualize_liquidity_distribution(data_file, output_file=None):
                             color='green',
                             fontsize=8,
                             arrowprops=dict(arrowstyle='->', color='green', alpha=0.5))
+        
+        # Clear previous resistance/support lines (if any)
+        for line in ax2.get_lines():
+            if line.get_label() and ('Resistance:' in line.get_label() or 'Support:' in line.get_label()):
+                line.remove()
+
+        # Plot resistance points as solid bands on price chart (bottom)
+        for i, point in enumerate(resistance_points):
+            if point_id_key in point:
+                # Calculate opacity based on relative liquidity (0.2 to 0.8 range)
+                opacity = 0.2 + min(0.6, point['relative_liquidity'])
+                
+                # Add horizontal band on price plot
+                resistance_price_usd = point['price'] * quote_token_price
+                
+                # Format label
+                if resistance_price_usd >= 0.01:
+                    label = f'Resistance: ${resistance_price_usd:.2f}' if i == 0 else None
+                else:
+                    label = f'Resistance: ${resistance_price_usd:.4f}' if i == 0 else None
+                
+                # Add a solid band instead of a line
+                ax2.axhspan(
+                    resistance_price_usd * 0.98,  # Slightly below the price
+                    resistance_price_usd * 1.02,  # Slightly above the price
+                    color='red',
+                    alpha=opacity,
+                    label=label
+                )
+                
+                # Add text annotation for the price
+                if resistance_price_usd >= 0.01:
+                    price_text = f"${resistance_price_usd:.2f}"
+                else:
+                    price_text = f"${resistance_price_usd:.4f}"
+                    
+                # Add text at the right edge of the plot
+                ax2.text(
+                    ax2.get_xlim()[1] * 1.01,  # Just outside the right edge
+                    resistance_price_usd,
+                    price_text,
+                    verticalalignment='center',
+                    horizontalalignment='left',
+                    color='red',
+                    fontweight='bold',
+                    fontsize=9
+                )
+                
+                resistance_legend_added = True
+
+        # Plot support points as solid bands on price chart (bottom)
+        for i, point in enumerate(support_points):
+            if point_id_key in point:
+                # Calculate opacity based on relative liquidity (0.2 to 0.8 range)
+                opacity = 0.2 + min(0.6, point['relative_liquidity'])
+                
+                # Add horizontal band on price plot
+                support_price_usd = point['price'] * quote_token_price
+                
+                # Format label
+                if support_price_usd >= 0.01:
+                    label = f'Support: ${support_price_usd:.2f}' if i == 0 else None
+                else:
+                    label = f'Support: ${support_price_usd:.4f}' if i == 0 else None
+                
+                # Add a solid band instead of a line
+                ax2.axhspan(
+                    support_price_usd * 0.98,  # Slightly below the price
+                    support_price_usd * 1.02,  # Slightly above the price
+                    color='green',
+                    alpha=opacity,
+                    label=label
+                )
+                
+                # Add text annotation for the price
+                if support_price_usd >= 0.01:
+                    price_text = f"${support_price_usd:.2f}"
+                else:
+                    price_text = f"${support_price_usd:.4f}"
+                    
+                # Add text at the right edge of the plot
+                ax2.text(
+                    ax2.get_xlim()[1] * 1.01,  # Just outside the right edge
+                    support_price_usd,
+                    price_text,
+                    verticalalignment='center',
+                    horizontalalignment='left',
+                    color='green',
+                    fontweight='bold',
+                    fontsize=9
+                )
                 
                 support_legend_added = True
+                
+        # Adjust the x-axis limits to make room for the price labels
+        ax2.set_xlim(right=ax2.get_xlim()[1] * 1.15)
         
         # Add legend if any resistance or support points exist
         if resistance_points or support_points:
