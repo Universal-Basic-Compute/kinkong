@@ -582,7 +582,8 @@ Ensure your response is valid JSON that can be parsed programmatically."""
                 pools = [
                     {"name": "UBC/SOL DLMM", "address": "DGtgdZKsVa76LvkNYTT1XMinHevrHmwjiyXGphxAPTgq", "type": "DLMM"},
                     {"name": "COMPUTE/SOL DYN", "address": "HN7ibjiyX399d1EfYXcWaSHZRSMfUmonYvXGFXG41Rr3", "type": "DYN"},
-                    {"name": "COMPUTE/UBC DLMM", "address": "xERePvynM5hAozHUE1sit2CgRS7VLHXy4phkypSKZip", "type": "DLMM"}
+                    {"name": "COMPUTE/UBC DLMM", "address": "xERePvynM5hAozHUE1sit2CgRS7VLHXy4phkypSKZip", "type": "DLMM"},
+                    {"name": "COMPUTE/SOL DLMM", "address": "7EVJ9P1M9qeNWLYPWWBbGwrWDtTCWo6r2A7J7XU19tNw", "type": "DLMM"}
                 ]
                 
                 for pool in pools:

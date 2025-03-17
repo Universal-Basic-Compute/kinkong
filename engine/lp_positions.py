@@ -84,6 +84,13 @@ class LPPositionManager:
                 "type": "DLMM",
                 "token0": "COMPUTE",
                 "token1": "UBC"
+            },
+            {
+                "name": "COMPUTE/SOL DLMM",
+                "address": "7EVJ9P1M9qeNWLYPWWBbGwrWDtTCWo6r2A7J7XU19tNw",
+                "type": "DLMM",
+                "token0": "COMPUTE",
+                "token1": "SOL"
             }
         ]
         
