@@ -631,17 +631,6 @@ class PoolMapper:
             token_x_decimals = token_decimals.get(token_x_mint, 9)
             token_y_decimals = token_decimals.get(token_y_mint, 9)
             
-            # For UBC/SOL specifically, we need a much stronger adjustment
-            # The formula is correct but needs an additional scaling factor
-            token_x_name = pool_details.get('tokenXName', '')
-            token_y_name = pool_details.get('tokenYName', '')
-            
-            if (token_x_name == 'UBC' and token_y_name == 'SOL') or \
-               (token_x_name == 'COMPUTE' and token_y_name == 'SOL'):
-                # Apply a much stronger correction factor for these pairs
-                # Based on the actual price of 0.00142 vs 1.62 shown, we need about 1000x more reduction
-                price = price * 0.00000001  # 100,000,000x reduction (8 zeroes)
-            
             # Apply standard decimal adjustment
             decimal_adjustment = 10 ** (token_y_decimals - token_x_decimals)
             adjusted_price = price / decimal_adjustment
@@ -671,16 +660,6 @@ class PoolMapper:
             # Get decimals for the tokens in the pair
             token_x_decimals = token_decimals.get(token_x_mint, 9)
             token_y_decimals = token_decimals.get(token_y_mint, 9)
-            
-            # For UBC/SOL specifically, we need a much stronger adjustment
-            token_x_name = pool_details.get('tokenXName', '')
-            token_y_name = pool_details.get('tokenYName', '')
-            
-            if (token_x_name == 'UBC' and token_y_name == 'SOL') or \
-               (token_x_name == 'COMPUTE' and token_y_name == 'SOL'):
-                # Apply a much stronger correction factor for these pairs
-                # Based on the actual price of 0.00142 vs 1.62 shown, we need about 1000x more reduction
-                price = price * 0.00000001  # 100,000,000x reduction (8 zeroes)
             
             # Apply standard decimal adjustment
             decimal_adjustment = 10 ** (token_y_decimals - token_x_decimals)
