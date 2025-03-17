@@ -639,8 +639,8 @@ class PoolMapper:
             if (token_x_name == 'UBC' and token_y_name == 'SOL') or \
                (token_x_name == 'COMPUTE' and token_y_name == 'SOL'):
                 # Apply a much stronger correction factor for these pairs
-                # This is an empirical adjustment based on observed market prices
-                price = price * 0.00001  # 100,000x reduction (4 more zeroes)
+                # Based on the actual price of 0.00142 vs 1.62 shown, we need about 1000x more reduction
+                price = price * 0.00000001  # 100,000,000x reduction (8 zeroes)
             
             # Apply standard decimal adjustment
             decimal_adjustment = 10 ** (token_y_decimals - token_x_decimals)
@@ -679,7 +679,8 @@ class PoolMapper:
             if (token_x_name == 'UBC' and token_y_name == 'SOL') or \
                (token_x_name == 'COMPUTE' and token_y_name == 'SOL'):
                 # Apply a much stronger correction factor for these pairs
-                price = price * 0.00001  # 100,000x reduction (4 more zeroes)
+                # Based on the actual price of 0.00142 vs 1.62 shown, we need about 1000x more reduction
+                price = price * 0.00000001  # 100,000,000x reduction (8 zeroes)
             
             # Apply standard decimal adjustment
             decimal_adjustment = 10 ** (token_y_decimals - token_x_decimals)
