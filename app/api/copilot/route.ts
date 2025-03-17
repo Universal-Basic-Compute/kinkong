@@ -528,6 +528,13 @@ async function getContextData(code: string) {
 }
 
 export async function POST(request: NextRequest) {
+  // Define CORS headers to use throughout the function
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With'
+  };
+
   try {
     // Global rate limit check
     await rateLimiter.check(5, 'copilot_api');
@@ -541,7 +548,10 @@ export async function POST(request: NextRequest) {
         JSON.stringify({ error: 'Code required' }),
         { 
           status: 400,
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 
+            'Content-Type': 'application/json',
+            ...corsHeaders
+          }
         }
       );
     }
@@ -561,7 +571,8 @@ export async function POST(request: NextRequest) {
       return new Response(stream, {
         headers: {
           'Content-Type': 'text/plain; charset=utf-8',
-          'Cache-Control': 'no-cache'
+          'Cache-Control': 'no-cache',
+          ...corsHeaders
         }
       });
     }
@@ -982,7 +993,10 @@ Use this token data to help the user discover promising tokens, analyze market t
           }),
           {
             status: 408,
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 
+              'Content-Type': 'application/json',
+              ...corsHeaders
+            }
           }
         );
       }
@@ -1003,7 +1017,10 @@ Use this token data to help the user discover promising tokens, analyze market t
       }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          ...corsHeaders
+        }
       }
     );
   }
@@ -1014,8 +1031,9 @@ export async function OPTIONS() {
     status: 204,
     headers: {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type'
+      'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
+      'Access-Control-Max-Age': '86400' // 24 hours
     }
   });
 }
