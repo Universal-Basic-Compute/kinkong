@@ -214,11 +214,13 @@ async def visualize_liquidity_distribution(data_file, output_file=None):
         for id_str, info in distribution.items():
             if int(id_str) == current_point:
                 current_bin_price = info.get('price', 0) * quote_token_price
+                logger.info(f"Found price for current bin {current_point}: {current_bin_price}")
                 break
 
         # If we couldn't find the exact bin, use the calculated price
         if current_bin_price is None:
             current_bin_price = current_price * quote_token_price
+            logger.info(f"Using calculated price for current bin: {current_bin_price}")
             
         # Validate and adjust current price if needed
         logger.info(f"Calculated current price: ${current_bin_price:.6f}")
@@ -229,6 +231,7 @@ async def visualize_liquidity_distribution(data_file, output_file=None):
         if abs(current_bin_price - base_token_price) / base_token_price > 0.3:  # 30% difference
             correction_factor = base_token_price / current_bin_price
             logger.warning(f"Price discrepancy detected. Applying correction factor: {correction_factor:.4f}")
+            logger.warning(f"Calculated: ${current_bin_price:.6f}, Market: ${base_token_price:.6f}")
             current_bin_price = base_token_price
             
             # Also correct all other prices
@@ -324,7 +327,7 @@ async def visualize_liquidity_distribution(data_file, output_file=None):
                     resistance_price_usd * 0.98,  # Slightly below the price
                     resistance_price_usd * 1.02,  # Slightly above the price
                     color='red',
-                    alpha=min(0.3, opacity),  # Cap opacity at 0.3
+                    alpha=min(0.15, opacity/2),  # Reduce opacity significantly
                     label=label
                 )
                 
@@ -368,7 +371,7 @@ async def visualize_liquidity_distribution(data_file, output_file=None):
                     support_price_usd * 0.98,  # Slightly below the price
                     support_price_usd * 1.02,  # Slightly above the price
                     color='green',
-                    alpha=min(0.3, opacity),  # Cap opacity at 0.3
+                    alpha=min(0.15, opacity/2),  # Reduce opacity significantly
                     label=label
                 )
                 
