@@ -210,10 +210,24 @@ class LPPositionAnalyzer:
                                        wallet_snapshot: Dict, 
                                        token_snapshots: Dict[str, Dict], 
                                        signals: Dict[str, Dict],
-                                       pool_statistics: Dict[str, Dict] = None) -> Dict:
-        """Get recommendation from Claude AI for LP allocations in JSON format"""
+                                       pool_statistics: Dict[str, Dict] = None,
+                                       analysis_type: str = "token_accumulation") -> Dict:
+        """
+        Get recommendation from Claude AI for LP allocations in JSON format
+        
+        Args:
+            lp_positions: Current LP positions
+            wallet_snapshot: Current wallet holdings
+            token_snapshots: Token price and market data
+            signals: Trading signals for tokens
+            pool_statistics: Statistics about the pools
+            analysis_type: Type of analysis to perform - "token_accumulation" or "token_enhancement"
+        
+        Returns:
+            Dictionary with Claude's recommendations
+        """
         try:
-            logger.info("Requesting Claude recommendation for LP allocations...")
+            logger.info(f"Requesting Claude recommendation for LP allocations (analysis type: {analysis_type})...")
             
             # Format data for Claude using the custom encoder
             lp_positions_str = json.dumps(lp_positions, indent=2, cls=CustomJSONEncoder)
@@ -222,25 +236,49 @@ class LPPositionAnalyzer:
             signals_str = json.dumps(signals, indent=2, cls=CustomJSONEncoder)
             pool_statistics_str = json.dumps(pool_statistics or {}, indent=2, cls=CustomJSONEncoder)
             
-            # Create system prompt
-            system_prompt = """You are an expert cryptocurrency liquidity pool (LP) allocation advisor. 
+            # Create system prompt based on analysis type
+            if analysis_type == "token_accumulation":
+                system_prompt = """You are an expert cryptocurrency liquidity pool (LP) allocation advisor. 
 Your task is to analyze the current LP positions, wallet snapshot, token snapshots, trading signals, 
 and pool statistics to provide strategic recommendations for optimal LP allocations.
 
+PRIMARY GOAL: Maximize the accumulation of UBC and COMPUTE tokens over time (not USD value).
+
 Focus on:
-1. Balancing risk and reward across different pools
-2. Optimizing for impermanent loss protection
-3. Maximizing yield based on current market conditions
-4. Considering token price trends and trading signals
-5. Analyzing pool statistics including position counts and unique wallets
+1. Strategies that will result in the highest token accumulation through fees and rewards
+2. Analyzing which pools and positions will generate the most UBC and COMPUTE tokens
+3. Optimizing for impermanent loss scenarios that result in more UBC and COMPUTE tokens
+4. Considering token price trends to predict which pools will accumulate more tokens
+5. Analyzing pool statistics to identify the most active pools for fee generation
 6. Providing specific allocation percentages for each pool
 
-Your recommendations should be data-driven, specific, and actionable.
+Your recommendations should be data-driven, specific, and actionable, with the primary focus on 
+maximizing the number of UBC and COMPUTE tokens accumulated, not their USD value.
+
+IMPORTANT: You must respond with a valid JSON object containing your recommendations."""
+            else:  # token_enhancement
+                system_prompt = """You are an expert cryptocurrency liquidity pool (LP) allocation advisor. 
+Your task is to analyze the current LP positions, wallet snapshot, token snapshots, trading signals, 
+and pool statistics to provide strategic recommendations for optimal LP allocations.
+
+PRIMARY GOAL: Enhance the stability and price of UBC and COMPUTE tokens in the market.
+
+Focus on:
+1. Strategies that will improve market depth and reduce price volatility
+2. Analyzing which pools and positions will provide the most price support
+3. Optimizing LP allocations to create price floors and resistance levels
+4. Considering token price trends to identify where liquidity is most needed
+5. Analyzing pool statistics to identify where additional liquidity would have the most impact
+6. Providing specific allocation percentages for each pool
+
+Your recommendations should be data-driven, specific, and actionable, with the primary focus on 
+enhancing the stability and supporting the price of UBC and COMPUTE tokens in the market.
 
 IMPORTANT: You must respond with a valid JSON object containing your recommendations."""
 
-            # Create user prompt with all the data
-            user_prompt = f"""Please analyze the following data and provide recommendations for LP allocations:
+            # Create user prompt with all the data, adjusted for analysis type
+            if analysis_type == "token_accumulation":
+                user_prompt = f"""Please analyze the following data and provide recommendations for LP allocations that will maximize our accumulation of UBC and COMPUTE tokens over time:
 
 ## Current LP Positions
 ```json
@@ -267,14 +305,15 @@ IMPORTANT: You must respond with a valid JSON object containing your recommendat
 {pool_statistics_str}
 ```
 
-Based on this data, create recommendations for two LP positions: UBC/SOL and COMPUTE/SOL.
+Based on this data, create recommendations for LP positions that will maximize our accumulation of UBC and COMPUTE tokens (not USD value). Consider which pools generate the most fees, which positions will result in more tokens due to impermanent loss, and which allocation strategy will result in the highest token count over time.
 
 Return your response in the following JSON format:
 ```json
 {{
-  "summary": "Brief summary of your analysis",
-  "market_analysis": "Analysis of current market conditions",
-  "pool_analysis": "Analysis of pool statistics and user behavior",
+  "summary": "Brief summary of your token accumulation strategy",
+  "market_analysis": "Analysis of current market conditions and how they affect token accumulation",
+  "pool_analysis": "Analysis of pool statistics and fee generation potential",
+  "token_accumulation_strategy": "Detailed strategy for maximizing UBC and COMPUTE token count",
   "lp_positions": [
     {{
       "name": "UBC-SOL LP",
@@ -283,8 +322,8 @@ Return your response in the following JSON format:
       "platform": "Meteora",
       "poolType": "DLMM",
       "targetAllocation": 50,
-      "apr": 15.5,
-      "reasoning": "Detailed reasoning for this allocation"
+      "estimatedTokenAccumulation": "High/Medium/Low",
+      "reasoning": "Detailed reasoning for how this allocation will increase token count"
     }},
     {{
       "name": "COMPUTE-SOL LP",
@@ -293,8 +332,71 @@ Return your response in the following JSON format:
       "platform": "Meteora",
       "poolType": "DYN",
       "targetAllocation": 50,
-      "apr": 12.3,
-      "reasoning": "Detailed reasoning for this allocation"
+      "estimatedTokenAccumulation": "High/Medium/Low",
+      "reasoning": "Detailed reasoning for how this allocation will increase token count"
+    }}
+  ]
+}}
+```
+
+Ensure your response is valid JSON that can be parsed programmatically."""
+            else:  # token_enhancement
+                user_prompt = f"""Please analyze the following data and provide recommendations for LP allocations that will enhance the stability and price of UBC and COMPUTE tokens:
+
+## Current LP Positions
+```json
+{lp_positions_str}
+```
+
+## Wallet Snapshot
+```json
+{wallet_snapshot_str}
+```
+
+## Token Snapshots
+```json
+{token_snapshots_str}
+```
+
+## Trading Signals
+```json
+{signals_str}
+```
+
+## Pool Statistics
+```json
+{pool_statistics_str}
+```
+
+Based on this data, create recommendations for LP positions that will enhance the stability and support the price of UBC and COMPUTE tokens. Consider which pools need more liquidity to reduce volatility, which positions will create the strongest price support, and which allocation strategy will have the most positive impact on token price and stability.
+
+Return your response in the following JSON format:
+```json
+{{
+  "summary": "Brief summary of your token enhancement strategy",
+  "market_analysis": "Analysis of current market conditions and liquidity needs",
+  "pool_analysis": "Analysis of pool statistics and price impact potential",
+  "token_enhancement_strategy": "Detailed strategy for improving token stability and price",
+  "lp_positions": [
+    {{
+      "name": "UBC-SOL LP",
+      "token0": "UBC",
+      "token1": "SOL",
+      "platform": "Meteora",
+      "poolType": "DLMM",
+      "targetAllocation": 50,
+      "priceImpact": "High/Medium/Low",
+      "reasoning": "Detailed reasoning for how this allocation will enhance token stability and price"
+    }},
+    {{
+      "name": "COMPUTE-SOL LP",
+      "token0": "COMPUTE",
+      "token1": "SOL",
+      "platform": "Meteora",
+      "poolType": "DYN",
+      "targetAllocation": 50,
+      "priceImpact": "High/Medium/Low",
+      "reasoning": "Detailed reasoning for how this allocation will enhance token stability and price"
     }}
   ]
 }}
@@ -327,12 +429,12 @@ Ensure your response is valid JSON that can be parsed programmatically."""
             
             # Parse the JSON
             recommendation_data = json.loads(json_str)
-            logger.info("Claude recommendation received in JSON format")
+            logger.info(f"Claude recommendation received in JSON format for {analysis_type} analysis")
             
             return recommendation_data
         except Exception as e:
             logger.error(f"Error getting Claude recommendation: {e}")
-            return f"Error generating recommendation: {str(e)}"
+            return {"error": f"Error generating recommendation: {str(e)}"}
     
     def create_lp_positions(self, recommendation_data: Dict) -> List[Dict]:
         """Create LP positions based on Claude's recommendations"""
@@ -359,10 +461,10 @@ Ensure your response is valid JSON that can be parsed programmatically."""
                         'name': position.get('name'),
                         'token0': position.get('token0'),
                         'token1': position.get('token1'),
-                        'platform': position.get('platform', 'Raydium'),
+                        'platform': position.get('platform', 'Meteora'),
+                        'poolType': position.get('poolType', 'DLMM'),
                         'targetAllocation': position.get('targetAllocation', 0),
                         'currentAllocation': 0,  # Start with 0
-                        'apr': position.get('apr', 0),
                         'status': 'ACTIVE',
                         'isActive': True,
                         'createdAt': current_time,
@@ -370,6 +472,18 @@ Ensure your response is valid JSON that can be parsed programmatically."""
                         'notes': position.get('reasoning', ''),
                         'rebalanceNeeded': True
                     }
+                    
+                    # Add token accumulation estimate if available
+                    if 'estimatedTokenAccumulation' in position:
+                        position_data['estimatedTokenAccumulation'] = position.get('estimatedTokenAccumulation')
+                    
+                    # Add price impact if available
+                    if 'priceImpact' in position:
+                        position_data['priceImpact'] = position.get('priceImpact')
+                    
+                    # Add APR if available (for backward compatibility)
+                    if 'apr' in position:
+                        position_data['apr'] = position.get('apr', 0)
                     
                     # Create position in Airtable
                     result = self.lp_positions_table.insert(position_data)
@@ -437,9 +551,9 @@ Ensure your response is valid JSON that can be parsed programmatically."""
             logger.error(f"Error updating LP positions: {e}")
     
     async def analyze_and_recommend(self) -> Dict:
-        """Main function to analyze LP positions and provide recommendations"""
+        """Main function to analyze LP positions and provide recommendations for both goals"""
         try:
-            logger.info("Starting LP position analysis...")
+            logger.info("Starting LP position analysis for both token accumulation and token enhancement...")
             
             # Get LP positions
             lp_positions = self.get_lp_positions()
@@ -476,41 +590,73 @@ Ensure your response is valid JSON that can be parsed programmatically."""
                     if stats:
                         pool_statistics[pool["name"]] = stats
             
-            # Get recommendation from Claude in JSON format
-            recommendation_data = await self.get_claude_recommendation(
+            # Get recommendations from Claude for both analysis types
+            token_accumulation_recommendation = await self.get_claude_recommendation(
                 lp_positions, 
                 wallet_snapshot, 
                 token_snapshots, 
                 signals,
-                pool_statistics
+                pool_statistics,
+                analysis_type="token_accumulation"
             )
             
-            if 'error' in recommendation_data:
-                logger.error(f"Error in recommendation: {recommendation_data['error']}")
-                return {"status": "error", "message": recommendation_data['error']}
+            token_enhancement_recommendation = await self.get_claude_recommendation(
+                lp_positions, 
+                wallet_snapshot, 
+                token_snapshots, 
+                signals,
+                pool_statistics,
+                analysis_type="token_enhancement"
+            )
             
-            # Create new LP positions based on recommendations
-            created_positions = self.create_lp_positions(recommendation_data)
+            # Check for errors in recommendations
+            if 'error' in token_accumulation_recommendation:
+                logger.error(f"Error in token accumulation recommendation: {token_accumulation_recommendation['error']}")
+                return {"status": "error", "message": token_accumulation_recommendation['error']}
+                
+            if 'error' in token_enhancement_recommendation:
+                logger.error(f"Error in token enhancement recommendation: {token_enhancement_recommendation['error']}")
+                return {"status": "error", "message": token_enhancement_recommendation['error']}
+            
+            # Combine recommendations for saving
+            combined_recommendation = {
+                "token_accumulation": token_accumulation_recommendation,
+                "token_enhancement": token_enhancement_recommendation,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "analysis_version": "2.0"
+            }
+            
+            # Create new LP positions based on token accumulation recommendations
+            # (We prioritize token accumulation for actual position creation)
+            created_positions = self.create_lp_positions(token_accumulation_recommendation)
             
             # Update existing LP positions if any
             if lp_positions:
-                # Convert recommendation to string for existing positions
-                recommendation_str = json.dumps(recommendation_data, indent=2)
+                # Convert combined recommendation to string for existing positions
+                recommendation_str = json.dumps(combined_recommendation, indent=2)
                 self.update_lp_positions(lp_positions, recommendation_str)
             
-            # Save recommendation as THOUGHT for reference
-            thought = self.save_thought(json.dumps(recommendation_data, indent=2))
+            # Save both recommendations as THOUGHTS for reference
+            accumulation_thought = self.save_thought(
+                f"TOKEN ACCUMULATION STRATEGY:\n\n{json.dumps(token_accumulation_recommendation, indent=2)}"
+            )
             
-            logger.info("LP position analysis and recommendation completed successfully")
+            enhancement_thought = self.save_thought(
+                f"TOKEN ENHANCEMENT STRATEGY:\n\n{json.dumps(token_enhancement_recommendation, indent=2)}"
+            )
+            
+            logger.info("LP position analysis and dual recommendations completed successfully")
             
             return {
                 "status": "success",
                 "positions_analyzed": len(lp_positions),
                 "positions_created": len(created_positions),
                 "pool_statistics_count": len(pool_statistics),
-                "recommendation_summary": recommendation_data.get('summary', '')[:500] + "...",  # Truncated for logging
+                "token_accumulation_summary": token_accumulation_recommendation.get('summary', '')[:250] + "...",
+                "token_enhancement_summary": token_enhancement_recommendation.get('summary', '')[:250] + "...",
                 "created_positions": [p.get('name') for p in created_positions],
-                "thought_id": thought['id'] if thought else None,
+                "accumulation_thought_id": accumulation_thought['id'] if accumulation_thought else None,
+                "enhancement_thought_id": enhancement_thought['id'] if enhancement_thought else None,
                 "message": status_message
             }
         except Exception as e:
@@ -531,17 +677,20 @@ async def main():
             logger.info(f"LP position analysis completed successfully")
             logger.info(result["message"])  # Use the message from the result
             
-            # Check if recommendation_summary exists before logging it
-            if "recommendation_summary" in result:
-                logger.info(f"Recommendation preview: {result['recommendation_summary']}")
-            else:
-                logger.info("No recommendation summary available")
+            # Log token accumulation summary
+            if "token_accumulation_summary" in result:
+                logger.info(f"Token Accumulation Strategy: {result['token_accumulation_summary']}")
+            
+            # Log token enhancement summary
+            if "token_enhancement_summary" in result:
+                logger.info(f"Token Enhancement Strategy: {result['token_enhancement_summary']}")
                 
-            # Check if thought_id exists before logging it
-            if "thought_id" in result:
-                logger.info(f"Thought ID: {result['thought_id']}")
-            else:
-                logger.info("No thought ID available")
+            # Log thought IDs
+            if "accumulation_thought_id" in result:
+                logger.info(f"Token Accumulation Thought ID: {result['accumulation_thought_id']}")
+            
+            if "enhancement_thought_id" in result:
+                logger.info(f"Token Enhancement Thought ID: {result['enhancement_thought_id']}")
         else:
             logger.error(f"LP position analysis failed: {result['message']}")
         
