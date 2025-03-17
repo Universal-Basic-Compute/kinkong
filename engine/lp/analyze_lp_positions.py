@@ -3,6 +3,7 @@ LP Position Analyzer
 
 This script analyzes liquidity pool positions, takes wallet and token snapshots,
 generates trading signals, and uses Claude AI to provide recommendations for LP allocations.
+It also identifies support and resistance levels in liquidity distributions.
 """
 
 import sys

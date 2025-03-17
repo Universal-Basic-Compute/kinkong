@@ -103,10 +103,13 @@ def visualize_liquidity_distribution(data_file, output_file=None):
         ax2.set_title(f'Price vs {x_label}')
         ax2.legend()
         
-        # Highlight resistance points
+        # Highlight resistance and support points
         resistance_points = data.get('resistance_points', [])
+        support_points = data.get('support_points', [])
         resistance_legend_added = False
+        support_legend_added = False
         
+        # Plot resistance points
         for point in resistance_points:
             if point_id_key in point:
                 point_id = int(point[point_id_key])
@@ -121,8 +124,23 @@ def visualize_liquidity_distribution(data_file, output_file=None):
                 
                 resistance_legend_added = True
         
-        # Add resistance points legend if any exist
-        if resistance_points:
+        # Plot support points
+        for point in support_points:
+            if point_id_key in point:
+                point_id = int(point[point_id_key])
+                
+                # Add marker on liquidity plot
+                ax1.plot(point_id, point['relative_liquidity'], 'go', markersize=10, alpha=0.5)
+                
+                # Add horizontal line on price plot
+                label = f'Support: {point["price"]:.6f}' if not support_legend_added else None
+                ax2.axhline(y=point['price'], color='green', linestyle=':', 
+                            alpha=0.5, label=label)
+                
+                support_legend_added = True
+        
+        # Add legend if any resistance or support points exist
+        if resistance_points or support_points:
             ax2.legend()
         
         plt.tight_layout()

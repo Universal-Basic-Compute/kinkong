@@ -730,19 +730,36 @@ class PoolMapper:
                 'bin_distribution': dict(sorted_bins)
             }
             
-            # Identify resistance points (bins with high relative liquidity)
+            # Identify resistance and support points (bins with high relative liquidity)
             resistance_points = []
+            support_points = []
             for bin_id, data in sorted_bins:
+                bin_id_int = int(bin_id)
                 if data['relative_liquidity'] > 0.1:  # Bins with >10% of positions
-                    resistance_points.append({
-                        'bin_id': bin_id,
-                        'price': data['price'],
-                        'relative_liquidity': data['relative_liquidity']
-                    })
+                    # If bin is above current price, it's resistance
+                    if bin_id_int > active_bin:
+                        resistance_points.append({
+                            'bin_id': bin_id,
+                            'price': data['price'],
+                            'relative_liquidity': data['relative_liquidity'],
+                            'type': 'resistance'
+                        })
+                    # If bin is below current price, it's support
+                    elif bin_id_int < active_bin:
+                        support_points.append({
+                            'bin_id': bin_id,
+                            'price': data['price'],
+                            'relative_liquidity': data['relative_liquidity'],
+                            'type': 'support'
+                        })
             
+            # Sort by liquidity (highest first)
             result['resistance_points'] = sorted(resistance_points, 
                                                 key=lambda x: x['relative_liquidity'], 
                                                 reverse=True)
+            result['support_points'] = sorted(support_points, 
+                                             key=lambda x: x['relative_liquidity'], 
+                                             reverse=True)
             
             return result
             
@@ -815,21 +832,40 @@ class PoolMapper:
                 'tick_distribution': dict(sorted_ticks)
             }
             
-            # Identify resistance points (ticks with high relative liquidity)
+            # Identify resistance and support points (ticks with high relative liquidity)
             resistance_points = []
+            support_points = []
             for tick_id, data in sorted_ticks:
+                tick_id_int = int(tick_id)
                 if data['relative_liquidity'] > 0.1:  # Ticks with >10% of positions
-                    resistance_points.append({
-                        'tick_id': tick_id,
-                        'price': data['price'],
-                        'relative_liquidity': data['relative_liquidity'],
-                        'is_lower_bound': data.get('is_lower_bound', False),
-                        'is_upper_bound': data.get('is_upper_bound', False)
-                    })
+                    # If tick is above current price, it's resistance
+                    if tick_id_int > current_tick:
+                        resistance_points.append({
+                            'tick_id': tick_id,
+                            'price': data['price'],
+                            'relative_liquidity': data['relative_liquidity'],
+                            'is_lower_bound': data.get('is_lower_bound', False),
+                            'is_upper_bound': data.get('is_upper_bound', False),
+                            'type': 'resistance'
+                        })
+                    # If tick is below current price, it's support
+                    elif tick_id_int < current_tick:
+                        support_points.append({
+                            'tick_id': tick_id,
+                            'price': data['price'],
+                            'relative_liquidity': data['relative_liquidity'],
+                            'is_lower_bound': data.get('is_lower_bound', False),
+                            'is_upper_bound': data.get('is_upper_bound', False),
+                            'type': 'support'
+                        })
             
+            # Sort by liquidity (highest first)
             result['resistance_points'] = sorted(resistance_points, 
                                                 key=lambda x: x['relative_liquidity'], 
                                                 reverse=True)
+            result['support_points'] = sorted(support_points, 
+                                             key=lambda x: x['relative_liquidity'], 
+                                             reverse=True)
             
             return result
             
