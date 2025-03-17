@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import argparse
 import logging
+import aiohttp
 
 # Get absolute path to project root
 project_root = str(Path(__file__).parent.parent.parent.absolute())
@@ -32,9 +33,24 @@ def setup_logging():
 
 logger = setup_logging()
 
+async def get_sol_price_usd():
+    """Fetch current SOL price in USD from CoinGecko API"""
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd') as response:
+                if response.status == 200:
+                    data = await response.json()
+                    return data.get('solana', {}).get('usd', 150.0)
+                else:
+                    logger.warning(f"Failed to fetch SOL price: {response.status}")
+                    return 150.0  # Default fallback price
+    except Exception as e:
+        logger.error(f"Error fetching SOL price: {e}")
+        return 150.0  # Default fallback price
+
 def visualize_liquidity_distribution(data_file, output_file=None):
     """
-    Visualize liquidity distribution from JSON data file with price labels on x-axis
+    Visualize liquidity distribution from JSON data file with price labels in USD
     
     Args:
         data_file: Path to JSON file with liquidity distribution data
@@ -72,22 +88,31 @@ def visualize_liquidity_distribution(data_file, output_file=None):
             logger.error(f"No {id_label.lower()} distribution data found")
             return False
         
+        # Get SOL price in USD (hardcoded for now, could be fetched from an API)
+        # You can replace this with a real-time price fetch if needed
+        sol_price_usd = 150.0  # Example SOL price in USD
+        
         # Prepare data for plotting
         ids = []
         liquidity = []
-        prices = []
+        prices_sol = []
+        prices_usd = []
         
         for id_str, info in distribution.items():
             ids.append(int(id_str))
             liquidity.append(info.get('relative_liquidity', 0))
-            prices.append(info.get('price', 0))
+            price_sol = info.get('price', 0)
+            prices_sol.append(price_sol)
+            # Convert SOL price to USD
+            prices_usd.append(price_sol * sol_price_usd)
         
         # Create figure with two subplots
         logger.info("Creating visualization plots")
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 12))
         
         # Create a mapping between bin IDs and prices for the x-axis
-        id_to_price = {id_val: price for id_val, price in zip(ids, prices)}
+        id_to_price_sol = {id_val: price for id_val, price in zip(ids, prices_sol)}
+        id_to_price_usd = {id_val: price for id_val, price in zip(ids, prices_usd)}
         
         # Create a new x-axis with prices
         unique_ids = sorted(list(set(ids)))
@@ -102,39 +127,47 @@ def visualize_liquidity_distribution(data_file, output_file=None):
         bars = ax1.bar(ids, liquidity, alpha=0.7)
         ax1.axvline(x=current_point, color='r', linestyle='--', label=f'Current {id_label}')
         
+        # Add grid to top chart
+        ax1.grid(True, linestyle='--', alpha=0.7)
+        
         # Set x-axis to show both bin IDs and prices
-        ax1.set_xlabel(f"{id_label} (Price in SOL)")
+        ax1.set_xlabel(f"{id_label} (Price in USD)")
         ax1.set_ylabel('Relative Liquidity')
         ax1.set_title(f'Liquidity Distribution for {data.get("token_x", "Unknown")}/{data.get("token_y", "Unknown")} Pool')
         
-        # Create secondary x-axis for prices
+        # Create secondary x-axis for prices in USD
         ax1_price = ax1.twiny()
         ax1_price.set_xlim(ax1.get_xlim())
         ax1_price.set_xticks(label_ids)
-        # Format price labels with scientific notation for small values
+        # Format price labels with $ sign
         price_labels = []
         for id_val in label_ids:
-            price = id_to_price[id_val]
-            if price >= 0.00001:
-                price_labels.append(f"{price:.8f}")
+            price = id_to_price_usd[id_val]
+            if price >= 0.01:
+                price_labels.append(f"${price:.2f}")
             else:
-                price_labels.append(f"{price:.2e}")
+                price_labels.append(f"${price:.4f}")
         ax1_price.set_xticklabels(price_labels, rotation=45)
-        ax1_price.set_xlabel("Price (SOL)")
+        ax1_price.set_xlabel("Price (USD)")
         
         ax1.legend()
         
         # Plot price vs bin/tick (bottom chart)
-        ax2.plot(ids, prices, marker='o', linestyle='-', alpha=0.7)
+        ax2.plot(ids, prices_usd, marker='o', linestyle='-', alpha=0.7)
         ax2.axvline(x=current_point, color='r', linestyle='--', label=f'Current {id_label}')
-        # Format current price with scientific notation if needed
-        if current_price >= 0.00001:
-            price_label = f'Current Price: {current_price:.8f}'
+        
+        # Add grid to bottom chart
+        ax2.grid(True, linestyle='--', alpha=0.7)
+        
+        # Format current price with $ sign
+        current_price_usd = current_price * sol_price_usd
+        if current_price_usd >= 0.01:
+            price_label = f'Current Price: ${current_price_usd:.2f}'
         else:
-            price_label = f'Current Price: {current_price:.2e}'
-        ax2.axhline(y=current_price, color='g', linestyle='--', label=price_label)
+            price_label = f'Current Price: ${current_price_usd:.4f}'
+        ax2.axhline(y=current_price_usd, color='g', linestyle='--', label=price_label)
         ax2.set_xlabel(id_label)
-        ax2.set_ylabel('Price (SOL)')
+        ax2.set_ylabel('Price (USD)')
         ax2.set_title(f'Price vs {id_label}')
         ax2.legend()
         
@@ -152,13 +185,24 @@ def visualize_liquidity_distribution(data_file, output_file=None):
                 # Add marker on liquidity plot
                 ax1.plot(point_id, point['relative_liquidity'], 'ro', markersize=10, alpha=0.5)
                 
+                # Convert resistance price to USD
+                resistance_price_usd = point['price'] * sol_price_usd
+                
                 # Add horizontal line on price plot
-                label = f'Resistance: {point["price"]:.6f}' if not resistance_legend_added else None
-                ax2.axhline(y=point['price'], color='orange', linestyle=':', 
+                if resistance_price_usd >= 0.01:
+                    label = f'Resistance: ${resistance_price_usd:.2f}' if not resistance_legend_added else None
+                else:
+                    label = f'Resistance: ${resistance_price_usd:.4f}' if not resistance_legend_added else None
+                    
+                ax2.axhline(y=resistance_price_usd, color='orange', linestyle=':', 
                             alpha=0.5, label=label)
                 
-                # Add price annotation on liquidity plot with scientific notation for small values
-                price_text = f"{point['price']:.8f}" if point['price'] >= 0.00001 else f"{point['price']:.2e}"
+                # Add price annotation on liquidity plot with $ sign
+                if resistance_price_usd >= 0.01:
+                    price_text = f"${resistance_price_usd:.2f}"
+                else:
+                    price_text = f"${resistance_price_usd:.4f}"
+                    
                 ax1.annotate(price_text, 
                             xy=(point_id, point['relative_liquidity']),
                             xytext=(10, 10),
@@ -177,13 +221,24 @@ def visualize_liquidity_distribution(data_file, output_file=None):
                 # Add marker on liquidity plot
                 ax1.plot(point_id, point['relative_liquidity'], 'go', markersize=10, alpha=0.5)
                 
+                # Convert support price to USD
+                support_price_usd = point['price'] * sol_price_usd
+                
                 # Add horizontal line on price plot
-                label = f'Support: {point["price"]:.6f}' if not support_legend_added else None
-                ax2.axhline(y=point['price'], color='green', linestyle=':', 
+                if support_price_usd >= 0.01:
+                    label = f'Support: ${support_price_usd:.2f}' if not support_legend_added else None
+                else:
+                    label = f'Support: ${support_price_usd:.4f}' if not support_legend_added else None
+                    
+                ax2.axhline(y=support_price_usd, color='green', linestyle=':', 
                             alpha=0.5, label=label)
                 
-                # Add price annotation on liquidity plot with scientific notation for small values
-                price_text = f"{point['price']:.8f}" if point['price'] >= 0.00001 else f"{point['price']:.2e}"
+                # Add price annotation on liquidity plot with $ sign
+                if support_price_usd >= 0.01:
+                    price_text = f"${support_price_usd:.2f}"
+                else:
+                    price_text = f"${support_price_usd:.4f}"
+                    
                 ax1.annotate(price_text, 
                             xy=(point_id, point['relative_liquidity']),
                             xytext=(10, -15),
