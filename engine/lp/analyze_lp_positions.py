@@ -16,6 +16,10 @@ from typing import Dict, List, Any, Optional
 from dotenv import load_dotenv
 import anthropic
 
+# Add project root to Python path
+project_root = str(Path(__file__).parent.parent.parent.absolute())
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 from engine.lp.pool_mapping import PoolMapper
 
@@ -30,11 +34,6 @@ class CustomJSONEncoder(json.JSONEncoder):
             return obj.isoformat()
         # Let the base class handle anything else
         return super().default(obj)
-
-# Add project root to Python path
-project_root = str(Path(__file__).parent.parent.parent.absolute())
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
 
 # Import project modules
 from engine.wallet_snapshots import WalletSnapshotTaker
