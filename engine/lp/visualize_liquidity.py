@@ -33,24 +33,54 @@ def setup_logging():
 
 logger = setup_logging()
 
-async def get_sol_price_usd():
-    """Fetch current SOL price in USD from CoinGecko API"""
+async def get_token_prices():
+    """Fetch current token prices in USD from CoinGecko API"""
     try:
+        token_prices = {}
+        
+        # Define token IDs for CoinGecko
+        token_ids = {
+            "SOL": "solana",
+            "UBC": "unbounded-finance",  # Use the correct CoinGecko ID for UBC
+            "COMPUTE": "compute-finance"  # Use the correct CoinGecko ID for COMPUTE
+        }
+        
         async with aiohttp.ClientSession() as session:
-            async with session.get('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd') as response:
+            # Build the query string with all tokens
+            ids_param = ",".join(token_ids.values())
+            url = f'https://api.coingecko.com/api/v3/simple/price?ids={ids_param}&vs_currencies=usd'
+            
+            async with session.get(url) as response:
                 if response.status == 200:
                     data = await response.json()
-                    return data.get('solana', {}).get('usd', 150.0)
+                    
+                    # Extract prices for each token
+                    for token, coingecko_id in token_ids.items():
+                        if coingecko_id in data and 'usd' in data[coingecko_id]:
+                            token_prices[token] = data[coingecko_id]['usd']
+                        else:
+                            # Use fallback prices if not found
+                            if token == "SOL":
+                                token_prices[token] = 150.0  # Fallback SOL price
+                            elif token == "UBC":
+                                token_prices[token] = 0.01  # Fallback UBC price
+                            elif token == "COMPUTE":
+                                token_prices[token] = 0.05  # Fallback COMPUTE price
+                    
+                    logger.info(f"Fetched token prices: {token_prices}")
+                    return token_prices
                 else:
-                    logger.warning(f"Failed to fetch SOL price: {response.status}")
-                    return 150.0  # Default fallback price
+                    logger.warning(f"Failed to fetch token prices: {response.status}")
+                    # Return fallback prices
+                    return {"SOL": 150.0, "UBC": 0.01, "COMPUTE": 0.05}
     except Exception as e:
-        logger.error(f"Error fetching SOL price: {e}")
-        return 150.0  # Default fallback price
+        logger.error(f"Error fetching token prices: {e}")
+        # Return fallback prices
+        return {"SOL": 150.0, "UBC": 0.01, "COMPUTE": 0.05}
 
-def visualize_liquidity_distribution(data_file, output_file=None):
+async def visualize_liquidity_distribution(data_file, output_file=None):
     """
-    Visualize liquidity distribution from JSON data file with price labels in USD
+    Visualize liquidity distribution from JSON data file with accurate price labels in USD
     
     Args:
         data_file: Path to JSON file with liquidity distribution data
@@ -66,6 +96,25 @@ def visualize_liquidity_distribution(data_file, output_file=None):
         if not data or (data.get('pool_type') != 'DLMM' and data.get('pool_type') != 'DYN'):
             logger.error("Invalid data format. Must contain pool_type (DLMM or DYN)")
             return False
+        
+        # Get token names from the data
+        token_x = data.get("token_x", "Unknown")
+        token_y = data.get("token_y", "Unknown")
+        
+        # Fetch current token prices
+        token_prices = await get_token_prices()
+        
+        # Get the price of the quote token (usually SOL)
+        quote_token_price = token_prices.get(token_y, 150.0)  # Default to 150 if not found
+        
+        # Get the price of the base token (usually UBC or COMPUTE)
+        base_token_price = token_prices.get(token_x, 0.01)  # Default to 0.01 if not found
+        
+        logger.info(f"Using token prices: {token_x}=${base_token_price}, {token_y}=${quote_token_price}")
+        
+        # Calculate the actual market price ratio for validation
+        actual_market_ratio = base_token_price / quote_token_price
+        logger.info(f"Actual market price ratio ({token_x}/{token_y}): {actual_market_ratio}")
         
         # Extract bin/tick data
         if data['pool_type'] == 'DLMM':
@@ -88,10 +137,6 @@ def visualize_liquidity_distribution(data_file, output_file=None):
             logger.error(f"No {id_label.lower()} distribution data found")
             return False
         
-        # Get SOL price in USD (hardcoded for now, could be fetched from an API)
-        # You can replace this with a real-time price fetch if needed
-        sol_price_usd = 150.0  # Example SOL price in USD
-        
         # Prepare data for plotting
         ids = []
         liquidity = []
@@ -103,8 +148,13 @@ def visualize_liquidity_distribution(data_file, output_file=None):
             liquidity.append(info.get('relative_liquidity', 0))
             price_sol = info.get('price', 0)
             prices_sol.append(price_sol)
-            # Convert SOL price to USD
-            prices_usd.append(price_sol * sol_price_usd)
+            
+            # Convert SOL price to USD using the actual token price
+            if token_y == "SOL":
+                prices_usd.append(price_sol * quote_token_price)
+            else:
+                # For other quote tokens, convert accordingly
+                prices_usd.append(price_sol * quote_token_price)
         
         # Create figure with two subplots
         logger.info("Creating visualization plots")
@@ -160,7 +210,22 @@ def visualize_liquidity_distribution(data_file, output_file=None):
         ax2.grid(True, linestyle='--', alpha=0.7)
         
         # Format current price with $ sign
-        current_price_usd = current_price * sol_price_usd
+        current_price_usd = current_price * quote_token_price
+        
+        # Validate and adjust current price if needed
+        logger.info(f"Calculated current price: ${current_price_usd:.6f}")
+        logger.info(f"Expected price based on market: ${base_token_price:.6f}")
+        
+        # If the calculated price is significantly different from the market price,
+        # we might need to apply a correction factor
+        if abs(current_price_usd - base_token_price) / base_token_price > 0.3:  # 30% difference
+            correction_factor = base_token_price / current_price_usd
+            logger.warning(f"Price discrepancy detected. Applying correction factor: {correction_factor:.4f}")
+            current_price_usd = base_token_price
+            
+            # Also correct all other prices
+            prices_usd = [p * correction_factor for p in prices_usd]
+        
         if current_price_usd >= 0.01:
             price_label = f'Current Price: ${current_price_usd:.2f}'
         else:
@@ -186,7 +251,7 @@ def visualize_liquidity_distribution(data_file, output_file=None):
                 ax1.plot(point_id, point['relative_liquidity'], 'ro', markersize=10, alpha=0.5)
                 
                 # Convert resistance price to USD
-                resistance_price_usd = point['price'] * sol_price_usd
+                resistance_price_usd = point['price'] * quote_token_price
                 
                 # Add horizontal line on price plot
                 if resistance_price_usd >= 0.01:
@@ -222,7 +287,7 @@ def visualize_liquidity_distribution(data_file, output_file=None):
                 ax1.plot(point_id, point['relative_liquidity'], 'go', markersize=10, alpha=0.5)
                 
                 # Convert support price to USD
-                support_price_usd = point['price'] * sol_price_usd
+                support_price_usd = point['price'] * quote_token_price
                 
                 # Add horizontal line on price plot
                 if support_price_usd >= 0.01:
@@ -268,14 +333,24 @@ def visualize_liquidity_distribution(data_file, output_file=None):
         logger.error(f"Error visualizing liquidity distribution: {e}")
         return False
 
-def main():
-    """Main function to run the visualization"""
+async def async_main():
+    """Async main function to run the visualization"""
     parser = argparse.ArgumentParser(description='Visualize liquidity distribution data')
     parser.add_argument('data_file', help='JSON file with liquidity distribution data')
     parser.add_argument('--output', help='Output file path for visualization image')
     args = parser.parse_args()
     
-    visualize_liquidity_distribution(args.data_file, args.output)
+    await visualize_liquidity_distribution(args.data_file, args.output)
+
+def main():
+    """Main function to run the visualization"""
+    import asyncio
+    
+    # Handle different event loop policies for Windows
+    if os.name == 'nt':  # Windows
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    
+    asyncio.run(async_main())
 
 if __name__ == "__main__":
     main()

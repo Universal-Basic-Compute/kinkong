@@ -664,7 +664,7 @@ Ensure your response is valid JSON that can be parsed programmatically."""
                             
                             # Generate visualization
                             output_file = f"liquidity_{pool['name'].replace('/', '_')}.png"
-                            visualize_liquidity_distribution(temp_file, output_file)
+                            await visualize_liquidity_distribution(temp_file, output_file)
                             
                             # Clean up temp file
                             os.remove(temp_file)
