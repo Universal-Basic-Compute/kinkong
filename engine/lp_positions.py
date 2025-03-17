@@ -13,11 +13,11 @@ from dotenv import load_dotenv
 from airtable import Airtable
 
 # Get absolute path to project root
-project_root = Path(__file__).parent.parent.absolute()
+project_root = str(Path(__file__).parent.parent.absolute())
 
 # Add project root to Python path
-if str(project_root) not in sys.path:
-    sys.path.insert(0, str(project_root))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 # Set Windows event loop policy
 if os.name == 'nt':  # Windows

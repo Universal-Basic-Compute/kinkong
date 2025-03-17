@@ -17,8 +17,9 @@ from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional
 from dotenv import load_dotenv
 
-# Add project root to Python path
+# Get absolute path to project root
 project_root = str(Path(__file__).parent.parent.parent.absolute())
+# Add project root to Python path
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
