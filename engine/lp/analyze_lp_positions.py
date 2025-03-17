@@ -22,6 +22,7 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 from engine.lp.pool_mapping import PoolMapper
+from engine.lp.visualize_liquidity import visualize_liquidity_distribution
 
 class CustomJSONEncoder(json.JSONEncoder):
     """Custom JSON encoder that can handle ChartAnalysis objects"""
@@ -141,6 +142,33 @@ class LPPositionAnalyzer:
         except Exception as e:
             logger.error(f"Error getting pool statistics: {e}")
             return {}
+            
+    async def get_liquidity_distribution(self, pool_address: str, pool_type: str) -> Dict:
+        """Get detailed liquidity distribution for a pool to identify resistance points"""
+        try:
+            if not self.pool_mapper:
+                logger.error("Pool mapper not initialized")
+                return {}
+                
+            logger.info(f"Getting liquidity distribution for pool {pool_address} ({pool_type})")
+            distribution = await self.pool_mapper.get_liquidity_distribution(pool_address, pool_type)
+            
+            if distribution:
+                if pool_type.upper() == "DLMM":
+                    resistance_points = len(distribution.get('resistance_points', []))
+                    bin_count = len(distribution.get('bin_distribution', {}))
+                    logger.info(f"Retrieved liquidity distribution for pool {pool_address}: {bin_count} bins, {resistance_points} resistance points")
+                else:
+                    resistance_points = len(distribution.get('resistance_points', []))
+                    tick_count = len(distribution.get('tick_distribution', {}))
+                    logger.info(f"Retrieved liquidity distribution for pool {pool_address}: {tick_count} ticks, {resistance_points} resistance points")
+            else:
+                logger.warning(f"No liquidity distribution found for pool {pool_address}")
+                
+            return distribution
+        except Exception as e:
+            logger.error(f"Error getting liquidity distribution: {e}")
+            return {}
     
     async def get_all_positions_for_pool(self, pool_address: str, pool_type: str) -> List[Dict]:
         """Get all positions for a specific pool using the pool mapper"""
@@ -221,7 +249,8 @@ class LPPositionAnalyzer:
                                        token_snapshots: Dict[str, Dict], 
                                        signals: Dict[str, Dict],
                                        pool_statistics: Dict[str, Dict] = None,
-                                       analysis_type: str = "token_accumulation") -> Dict:
+                                       analysis_type: str = "token_accumulation",
+                                       liquidity_distributions: Dict[str, Dict] = None) -> Dict:
         """
         Get recommendation from Claude AI for LP allocations in JSON format
         
@@ -253,6 +282,10 @@ class LPPositionAnalyzer:
                     stats['uniqueWallets'] = list(stats['uniqueWallets'])
             
             pool_statistics_str = json.dumps(safe_pool_statistics, indent=2, cls=CustomJSONEncoder)
+            
+            # Prepare liquidity distributions data
+            safe_liquidity_distributions = liquidity_distributions or {}
+            liquidity_distributions_str = json.dumps(safe_liquidity_distributions, indent=2, cls=CustomJSONEncoder)
             
             # Create system prompt based on analysis type
             if analysis_type == "token_accumulation":
@@ -321,6 +354,11 @@ IMPORTANT: You must respond with a valid JSON object containing your recommendat
 ## Pool Statistics
 ```json
 {pool_statistics_str}
+```
+
+## Liquidity Distributions (Resistance Points)
+```json
+{liquidity_distributions_str}
 ```
 
 Based on this data, create recommendations for LP positions that will maximize our accumulation of UBC and COMPUTE tokens (not USD value). Consider which pools generate the most fees, which positions will result in more tokens due to impermanent loss, and which allocation strategy will result in the highest token count over time.
@@ -593,10 +631,11 @@ Ensure your response is valid JSON that can be parsed programmatically."""
             # Generate signals for UBC, COMPUTE, and SOL
             signals = await self.generate_signals(['UBC', 'COMPUTE', 'SOL'])
             
-            # Get pool statistics for known pools
+            # Get pool statistics and liquidity distribution for known pools
             pool_statistics = {}
+            liquidity_distributions = {}
             if self.pool_mapper:
-                logger.info("Getting pool statistics for known pools")
+                logger.info("Getting pool statistics and liquidity distribution for known pools")
                 pools = [
                     {"name": "UBC/SOL DLMM", "address": "DGtgdZKsVa76LvkNYTT1XMinHevrHmwjiyXGphxAPTgq", "type": "DLMM"},
                     {"name": "COMPUTE/SOL DYN", "address": "HN7ibjiyX399d1EfYXcWaSHZRSMfUmonYvXGFXG41Rr3", "type": "DYN"},
@@ -605,9 +644,32 @@ Ensure your response is valid JSON that can be parsed programmatically."""
                 ]
                 
                 for pool in pools:
+                    # Get pool statistics
                     stats = await self.get_pool_statistics(pool["address"], pool["type"])
                     if stats:
                         pool_statistics[pool["name"]] = stats
+                    
+                    # Get liquidity distribution
+                    distribution = await self.get_liquidity_distribution(pool["address"], pool["type"])
+                    if distribution:
+                        liquidity_distributions[pool["name"]] = distribution
+                        
+                        # Save visualization for this pool
+                        try:
+                            # Save distribution to temp file
+                            temp_file = f"temp_{pool['name'].replace('/', '_')}.json"
+                            with open(temp_file, 'w') as f:
+                                json.dump(distribution, f, indent=2)
+                            
+                            # Generate visualization
+                            output_file = f"liquidity_{pool['name'].replace('/', '_')}.png"
+                            visualize_liquidity_distribution(temp_file, output_file)
+                            
+                            # Clean up temp file
+                            os.remove(temp_file)
+                            logger.info(f"Generated liquidity visualization for {pool['name']}: {output_file}")
+                        except Exception as e:
+                            logger.error(f"Error generating visualization for {pool['name']}: {e}")
             
             # Get recommendations from Claude for both analysis types
             token_accumulation_recommendation = await self.get_claude_recommendation(
@@ -616,7 +678,8 @@ Ensure your response is valid JSON that can be parsed programmatically."""
                 token_snapshots, 
                 signals,
                 pool_statistics,
-                analysis_type="token_accumulation"
+                analysis_type="token_accumulation",
+                liquidity_distributions=liquidity_distributions
             )
             
             token_enhancement_recommendation = await self.get_claude_recommendation(
@@ -625,7 +688,8 @@ Ensure your response is valid JSON that can be parsed programmatically."""
                 token_snapshots, 
                 signals,
                 pool_statistics,
-                analysis_type="token_enhancement"
+                analysis_type="token_enhancement",
+                liquidity_distributions=liquidity_distributions
             )
             
             # Check for errors in recommendations
@@ -671,6 +735,7 @@ Ensure your response is valid JSON that can be parsed programmatically."""
                 "positions_analyzed": len(lp_positions),
                 "positions_created": len(created_positions),
                 "pool_statistics_count": len(pool_statistics),
+                "liquidity_distributions_count": len(liquidity_distributions),
                 "token_accumulation_summary": token_accumulation_recommendation.get('summary', '')[:250] + "...",
                 "token_enhancement_summary": token_enhancement_recommendation.get('summary', '')[:250] + "...",
                 "created_positions": [p.get('name') for p in created_positions],
@@ -714,6 +779,10 @@ async def main():
             # Log pool statistics count safely
             if "pool_statistics_count" in result:
                 logger.info(f"Pool Statistics Count: {result['pool_statistics_count']}")
+                
+            # Log liquidity distributions count
+            if "liquidity_distributions_count" in result:
+                logger.info(f"Liquidity Distributions Count: {result['liquidity_distributions_count']}")
         else:
             logger.error(f"LP position analysis failed: {result['message']}")
         

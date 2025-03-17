@@ -610,6 +610,233 @@ class PoolMapper:
         
         return {}  # Return empty dict if all retries failed
     
+    def calculate_bin_price(self, bin_id: int, bin_step: int, pool_details: Dict) -> float:
+        """Calculate price for a specific bin in a DLMM pool"""
+        try:
+            # DLMM price formula: price = 1.0001^(binStep * binId)
+            price = (1 + bin_step / 10000) ** bin_id
+            
+            # Determine if we need to invert the price based on token order
+            token_x = pool_details.get('tokenXName', '')
+            token_y = pool_details.get('tokenYName', '')
+            
+            # Format with token names
+            return price
+        except Exception as e:
+            logger.error(f"Error calculating bin price: {e}")
+            return 0
+    
+    def calculate_tick_price(self, tick: int, pool_details: Dict) -> float:
+        """Calculate price for a specific tick in a DYN pool"""
+        try:
+            # DYN price formula: price = 1.0001^tick
+            price = 1.0001 ** tick
+            
+            # Format with token names
+            return price
+        except Exception as e:
+            logger.error(f"Error calculating tick price: {e}")
+            return 0
+    
+    async def get_liquidity_distribution(self, pool_address: str, pool_type: str = None) -> Dict:
+        """
+        Get detailed liquidity distribution for a pool to identify resistance points
+        
+        Args:
+            pool_address: The address of the pool
+            pool_type: The type of pool (DLMM or DYN)
+            
+        Returns:
+            Dictionary with bin/tick-level liquidity distribution
+        """
+        try:
+            # Determine pool type if not provided
+            if not pool_type:
+                pool_type = await self.detect_pool_type(pool_address)
+                
+            if not pool_type:
+                logger.error(f"Could not determine pool type for {pool_address}")
+                return {}
+                
+            # Get pool details
+            if pool_type.upper() == "DLMM":
+                return await self.get_dlmm_liquidity_distribution(pool_address)
+            elif pool_type.upper() == "DYN":
+                return await self.get_dyn_liquidity_distribution(pool_address)
+            else:
+                logger.error(f"Unsupported pool type: {pool_type}")
+                return {}
+                
+        except Exception as e:
+            logger.error(f"Error getting liquidity distribution: {e}")
+            return {}
+    
+    async def get_dlmm_liquidity_distribution(self, pool_address: str) -> Dict:
+        """Get detailed bin-level liquidity distribution for a DLMM pool"""
+        try:
+            # Get pool details first
+            pool_details = await self.fetch_lb_pair_details(pool_address)
+            if not pool_details:
+                logger.error(f"Could not fetch pool details for {pool_address}")
+                return {}
+                
+            # Get all positions for the pool
+            positions = await self.get_dlmm_pool_positions(pool_address)
+            
+            # Get bin step and active bin from pool details
+            bin_step = int(pool_details.get('binStep', 100))
+            active_bin = int(pool_details.get('activeId', 0))
+            
+            # Create bin distribution map
+            bin_distribution = {}
+            
+            # Analyze each position's contribution to bins
+            for position in positions:
+                lower_bin = int(position.get('lowerBinId', 0))
+                upper_bin = int(position.get('upperBinId', 0))
+                
+                # For each bin in the position's range
+                for bin_id in range(lower_bin, upper_bin + 1):
+                    if bin_id not in bin_distribution:
+                        bin_distribution[bin_id] = {
+                            'positions': 0,
+                            'price': self.calculate_bin_price(bin_id, bin_step, pool_details),
+                            'relative_liquidity': 0
+                        }
+                    
+                    # Increment position count for this bin
+                    bin_distribution[bin_id]['positions'] += 1
+                    
+                    # We'll calculate relative liquidity later
+            
+            # Calculate relative liquidity for each bin
+            total_positions = len(positions)
+            for bin_id in bin_distribution:
+                bin_distribution[bin_id]['relative_liquidity'] = bin_distribution[bin_id]['positions'] / total_positions if total_positions > 0 else 0
+            
+            # Sort bins by ID for easier analysis
+            sorted_bins = sorted(bin_distribution.items(), key=lambda x: int(x[0]))
+            
+            # Create result object
+            result = {
+                'pool_address': pool_address,
+                'pool_type': 'DLMM',
+                'token_x': pool_details.get('tokenXName', 'Unknown'),
+                'token_y': pool_details.get('tokenYName', 'Unknown'),
+                'bin_step': bin_step,
+                'active_bin': active_bin,
+                'active_price': self.calculate_bin_price(active_bin, bin_step, pool_details),
+                'total_positions': total_positions,
+                'bin_distribution': dict(sorted_bins)
+            }
+            
+            # Identify resistance points (bins with high relative liquidity)
+            resistance_points = []
+            for bin_id, data in sorted_bins:
+                if data['relative_liquidity'] > 0.1:  # Bins with >10% of positions
+                    resistance_points.append({
+                        'bin_id': bin_id,
+                        'price': data['price'],
+                        'relative_liquidity': data['relative_liquidity']
+                    })
+            
+            result['resistance_points'] = sorted(resistance_points, 
+                                                key=lambda x: x['relative_liquidity'], 
+                                                reverse=True)
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error getting DLMM liquidity distribution: {e}")
+            return {}
+    
+    async def get_dyn_liquidity_distribution(self, pool_address: str) -> Dict:
+        """Get detailed tick-level liquidity distribution for a DYN pool"""
+        try:
+            # Get pool details first
+            pool_details = await self.fetch_dyn_pool_details(pool_address)
+            if not pool_details:
+                logger.error(f"Could not fetch pool details for {pool_address}")
+                return {}
+                
+            # Get all positions for the pool
+            positions = await self.get_dyn_pool_positions(pool_address)
+            
+            # Get current tick from pool details
+            current_tick = int(pool_details.get('tick', 0))
+            
+            # Create tick distribution map
+            tick_distribution = {}
+            
+            # Analyze each position's contribution to ticks
+            for position in positions:
+                lower_tick = int(position.get('lowerTick', 0))
+                upper_tick = int(position.get('upperTick', 0))
+                
+                # For simplicity, we'll just count positions at each tick boundary
+                # A more accurate approach would analyze actual liquidity at each tick
+                if lower_tick not in tick_distribution:
+                    tick_distribution[lower_tick] = {
+                        'positions': 0,
+                        'price': self.calculate_tick_price(lower_tick, pool_details),
+                        'relative_liquidity': 0,
+                        'is_lower_bound': True
+                    }
+                
+                if upper_tick not in tick_distribution:
+                    tick_distribution[upper_tick] = {
+                        'positions': 0,
+                        'price': self.calculate_tick_price(upper_tick, pool_details),
+                        'relative_liquidity': 0,
+                        'is_upper_bound': True
+                    }
+                
+                # Increment position count for these ticks
+                tick_distribution[lower_tick]['positions'] += 1
+                tick_distribution[upper_tick]['positions'] += 1
+            
+            # Calculate relative liquidity for each tick
+            total_positions = len(positions) * 2  # Each position has 2 boundaries
+            for tick_id in tick_distribution:
+                tick_distribution[tick_id]['relative_liquidity'] = tick_distribution[tick_id]['positions'] / total_positions if total_positions > 0 else 0
+            
+            # Sort ticks by ID for easier analysis
+            sorted_ticks = sorted(tick_distribution.items(), key=lambda x: int(x[0]))
+            
+            # Create result object
+            result = {
+                'pool_address': pool_address,
+                'pool_type': 'DYN',
+                'token_x': pool_details.get('tokenXName', 'Unknown'),
+                'token_y': pool_details.get('tokenYName', 'Unknown'),
+                'current_tick': current_tick,
+                'current_price': self.calculate_tick_price(current_tick, pool_details),
+                'total_positions': len(positions),
+                'tick_distribution': dict(sorted_ticks)
+            }
+            
+            # Identify resistance points (ticks with high relative liquidity)
+            resistance_points = []
+            for tick_id, data in sorted_ticks:
+                if data['relative_liquidity'] > 0.1:  # Ticks with >10% of positions
+                    resistance_points.append({
+                        'tick_id': tick_id,
+                        'price': data['price'],
+                        'relative_liquidity': data['relative_liquidity'],
+                        'is_lower_bound': data.get('is_lower_bound', False),
+                        'is_upper_bound': data.get('is_upper_bound', False)
+                    })
+            
+            result['resistance_points'] = sorted(resistance_points, 
+                                                key=lambda x: x['relative_liquidity'], 
+                                                reverse=True)
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error getting DYN liquidity distribution: {e}")
+            return {}
+    
     async def get_pool_statistics(self, pool_address: str, pool_type: str = None) -> Dict:
         """
         Get statistics for a specific pool
@@ -695,14 +922,17 @@ async def main():
         parser.add_argument('pool_address', help='The address of the pool to analyze')
         parser.add_argument('--type', choices=['DLMM', 'DYN'], help='The type of pool (DLMM or DYN)')
         parser.add_argument('--stats', action='store_true', help='Get pool statistics instead of positions')
+        parser.add_argument('--liquidity', action='store_true', help='Get detailed liquidity distribution')
         parser.add_argument('--output', help='Output file path for JSON results')
         args = parser.parse_args()
         
         # Initialize the pool mapper
         mapper = PoolMapper()
         
-        # Get positions or statistics based on arguments
-        if args.stats:
+        # Get data based on arguments
+        if args.liquidity:
+            result = await mapper.get_liquidity_distribution(args.pool_address, args.type)
+        elif args.stats:
             result = await mapper.get_pool_statistics(args.pool_address, args.type)
         else:
             result = await mapper.get_all_positions_for_pool(args.pool_address, args.type)
