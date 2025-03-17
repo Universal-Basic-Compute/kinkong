@@ -661,7 +661,8 @@ class PoolMapper:
                 "poolAddress": pool_address,
                 "poolType": pool_type,
                 "positionCount": len(positions),
-                "uniqueWallets": len(unique_wallets),
+                "uniqueWallets": list(unique_wallets),  # Convert to list to avoid len() on set later
+                "uniqueWalletCount": len(unique_wallets),  # Store count separately
                 "poolDetails": pool_details,
                 "timestamp": datetime.now(timezone.utc).isoformat()
             }

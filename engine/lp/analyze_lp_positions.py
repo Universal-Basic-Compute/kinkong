@@ -66,6 +66,14 @@ class LPPositionAnalyzer:
         
         if not self.base_id or not self.api_key:
             raise ValueError("Missing Airtable credentials in environment variables")
+            
+    @staticmethod
+    def safe_len(value):
+        """Safely get the length of a value, returning 0 for non-iterable types"""
+        try:
+            return len(value)
+        except (TypeError, AttributeError):
+            return 0
         
         # Initialize Airtable tables
         self.lp_positions_table = Airtable(self.base_id, 'LP_POSITIONS', self.api_key)
@@ -124,7 +132,8 @@ class LPPositionAnalyzer:
             statistics = await self.pool_mapper.get_pool_statistics(pool_address, pool_type)
             
             if statistics:
-                logger.info(f"Retrieved statistics for pool {pool_address}: {len(statistics.get('uniqueWallets', []))} unique wallets")
+                unique_wallet_count = statistics.get('uniqueWalletCount', 0)
+                logger.info(f"Retrieved statistics for pool {pool_address}: {unique_wallet_count} unique wallets")
             else:
                 logger.warning(f"No statistics found for pool {pool_address}")
                 
@@ -235,7 +244,15 @@ class LPPositionAnalyzer:
             wallet_snapshot_str = json.dumps(wallet_snapshot, indent=2, cls=CustomJSONEncoder)
             token_snapshots_str = json.dumps(token_snapshots, indent=2, cls=CustomJSONEncoder)
             signals_str = json.dumps(signals, indent=2, cls=CustomJSONEncoder)
-            pool_statistics_str = json.dumps(pool_statistics or {}, indent=2, cls=CustomJSONEncoder)
+            
+            # Ensure pool_statistics is serializable
+            safe_pool_statistics = pool_statistics or {}
+            # Convert any sets to lists to make them JSON serializable
+            for key, stats in safe_pool_statistics.items():
+                if isinstance(stats, dict) and 'uniqueWallets' in stats and isinstance(stats['uniqueWallets'], set):
+                    stats['uniqueWallets'] = list(stats['uniqueWallets'])
+            
+            pool_statistics_str = json.dumps(safe_pool_statistics, indent=2, cls=CustomJSONEncoder)
             
             # Create system prompt based on analysis type
             if analysis_type == "token_accumulation":
@@ -693,6 +710,10 @@ async def main():
             
             if "enhancement_thought_id" in result:
                 logger.info(f"Token Enhancement Thought ID: {result['enhancement_thought_id']}")
+                
+            # Log pool statistics count safely
+            if "pool_statistics_count" in result:
+                logger.info(f"Pool Statistics Count: {result['pool_statistics_count']}")
         else:
             logger.error(f"LP position analysis failed: {result['message']}")
         
