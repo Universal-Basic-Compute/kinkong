@@ -15,6 +15,7 @@ from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional
 from dotenv import load_dotenv
 import anthropic
+from engine.lp.pool_mapping import PoolMapper
 
 class CustomJSONEncoder(json.JSONEncoder):
     """Custom JSON encoder that can handle ChartAnalysis objects"""
@@ -80,6 +81,14 @@ class LPPositionAnalyzer:
         self.wallet_snapshot_taker = WalletSnapshotTaker()
         self.token_snapshot_taker = TokenSnapshotTaker()
         self.signal_generator = SignalGenerator()
+        
+        # Initialize pool mapper
+        try:
+            self.pool_mapper = PoolMapper()
+            logger.info("Pool mapper initialized successfully")
+        except Exception as e:
+            logger.error(f"Error initializing pool mapper: {e}")
+            self.pool_mapper = None
     
     def get_lp_positions(self) -> List[Dict]:
         """Get all LP positions from Airtable"""
@@ -101,6 +110,46 @@ class LPPositionAnalyzer:
             return positions
         except Exception as e:
             logger.error(f"Error fetching LP positions: {e}")
+            return []
+    
+    async def get_pool_statistics(self, pool_address: str, pool_type: str) -> Dict:
+        """Get statistics for a specific pool using the pool mapper"""
+        try:
+            if not self.pool_mapper:
+                logger.error("Pool mapper not initialized")
+                return {}
+                
+            logger.info(f"Getting statistics for pool {pool_address} ({pool_type})")
+            statistics = await self.pool_mapper.get_pool_statistics(pool_address, pool_type)
+            
+            if statistics:
+                logger.info(f"Retrieved statistics for pool {pool_address}: {len(statistics.get('uniqueWallets', []))} unique wallets")
+            else:
+                logger.warning(f"No statistics found for pool {pool_address}")
+                
+            return statistics
+        except Exception as e:
+            logger.error(f"Error getting pool statistics: {e}")
+            return {}
+    
+    async def get_all_positions_for_pool(self, pool_address: str, pool_type: str) -> List[Dict]:
+        """Get all positions for a specific pool using the pool mapper"""
+        try:
+            if not self.pool_mapper:
+                logger.error("Pool mapper not initialized")
+                return []
+                
+            logger.info(f"Getting all positions for pool {pool_address} ({pool_type})")
+            positions = await self.pool_mapper.get_all_positions_for_pool(pool_address, pool_type)
+            
+            if positions:
+                logger.info(f"Retrieved {len(positions)} positions for pool {pool_address}")
+            else:
+                logger.warning(f"No positions found for pool {pool_address}")
+                
+            return positions
+        except Exception as e:
+            logger.error(f"Error getting positions for pool: {e}")
             return []
     
     async def take_wallet_snapshot(self) -> Dict:
@@ -160,7 +209,8 @@ class LPPositionAnalyzer:
                                        lp_positions: List[Dict], 
                                        wallet_snapshot: Dict, 
                                        token_snapshots: Dict[str, Dict], 
-                                       signals: Dict[str, Dict]) -> Dict:
+                                       signals: Dict[str, Dict],
+                                       pool_statistics: Dict[str, Dict] = None) -> Dict:
         """Get recommendation from Claude AI for LP allocations in JSON format"""
         try:
             logger.info("Requesting Claude recommendation for LP allocations...")
@@ -170,18 +220,20 @@ class LPPositionAnalyzer:
             wallet_snapshot_str = json.dumps(wallet_snapshot, indent=2, cls=CustomJSONEncoder)
             token_snapshots_str = json.dumps(token_snapshots, indent=2, cls=CustomJSONEncoder)
             signals_str = json.dumps(signals, indent=2, cls=CustomJSONEncoder)
+            pool_statistics_str = json.dumps(pool_statistics or {}, indent=2, cls=CustomJSONEncoder)
             
             # Create system prompt
             system_prompt = """You are an expert cryptocurrency liquidity pool (LP) allocation advisor. 
-Your task is to analyze the current LP positions, wallet snapshot, token snapshots, and trading signals 
-to provide strategic recommendations for optimal LP allocations.
+Your task is to analyze the current LP positions, wallet snapshot, token snapshots, trading signals, 
+and pool statistics to provide strategic recommendations for optimal LP allocations.
 
 Focus on:
 1. Balancing risk and reward across different pools
 2. Optimizing for impermanent loss protection
 3. Maximizing yield based on current market conditions
 4. Considering token price trends and trading signals
-5. Providing specific allocation percentages for each pool
+5. Analyzing pool statistics including position counts and unique wallets
+6. Providing specific allocation percentages for each pool
 
 Your recommendations should be data-driven, specific, and actionable.
 
@@ -210,6 +262,11 @@ IMPORTANT: You must respond with a valid JSON object containing your recommendat
 {signals_str}
 ```
 
+## Pool Statistics
+```json
+{pool_statistics_str}
+```
+
 Based on this data, create recommendations for two LP positions: UBC/SOL and COMPUTE/SOL.
 
 Return your response in the following JSON format:
@@ -217,12 +274,14 @@ Return your response in the following JSON format:
 {{
   "summary": "Brief summary of your analysis",
   "market_analysis": "Analysis of current market conditions",
+  "pool_analysis": "Analysis of pool statistics and user behavior",
   "lp_positions": [
     {{
       "name": "UBC-SOL LP",
       "token0": "UBC",
       "token1": "SOL",
-      "platform": "Raydium",
+      "platform": "Meteora",
+      "poolType": "DLMM",
       "targetAllocation": 50,
       "apr": 15.5,
       "reasoning": "Detailed reasoning for this allocation"
@@ -231,7 +290,8 @@ Return your response in the following JSON format:
       "name": "COMPUTE-SOL LP",
       "token0": "COMPUTE",
       "token1": "SOL",
-      "platform": "Raydium",
+      "platform": "Meteora",
+      "poolType": "DYN",
       "targetAllocation": 50,
       "apr": 12.3,
       "reasoning": "Detailed reasoning for this allocation"
@@ -401,12 +461,28 @@ Ensure your response is valid JSON that can be parsed programmatically."""
             # Generate signals for UBC, COMPUTE, and SOL
             signals = await self.generate_signals(['UBC', 'COMPUTE', 'SOL'])
             
+            # Get pool statistics for known pools
+            pool_statistics = {}
+            if self.pool_mapper:
+                logger.info("Getting pool statistics for known pools")
+                pools = [
+                    {"name": "UBC/SOL DLMM", "address": "DGtgdZKsVa76LvkNYTT1XMinHevrHmwjiyXGphxAPTgq", "type": "DLMM"},
+                    {"name": "COMPUTE/SOL DYN", "address": "HN7ibjiyX399d1EfYXcWaSHZRSMfUmonYvXGFXG41Rr3", "type": "DYN"},
+                    {"name": "COMPUTE/UBC DLMM", "address": "xERePvynM5hAozHUE1sit2CgRS7VLHXy4phkypSKZip", "type": "DLMM"}
+                ]
+                
+                for pool in pools:
+                    stats = await self.get_pool_statistics(pool["address"], pool["type"])
+                    if stats:
+                        pool_statistics[pool["name"]] = stats
+            
             # Get recommendation from Claude in JSON format
             recommendation_data = await self.get_claude_recommendation(
                 lp_positions, 
                 wallet_snapshot, 
                 token_snapshots, 
-                signals
+                signals,
+                pool_statistics
             )
             
             if 'error' in recommendation_data:
@@ -431,6 +507,7 @@ Ensure your response is valid JSON that can be parsed programmatically."""
                 "status": "success",
                 "positions_analyzed": len(lp_positions),
                 "positions_created": len(created_positions),
+                "pool_statistics_count": len(pool_statistics),
                 "recommendation_summary": recommendation_data.get('summary', '')[:500] + "...",  # Truncated for logging
                 "created_positions": [p.get('name') for p in created_positions],
                 "thought_id": thought['id'] if thought else None,

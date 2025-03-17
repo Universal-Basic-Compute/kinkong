@@ -96,7 +96,61 @@ class LPPositionManager:
         
         # Initialize token prices dictionary
         self.token_prices = {}
+        
+        # Initialize pool mapper for direct pool data access
+        self.pool_mapper = None
 
+    async def fetch_token_prices(self) -> Dict[str, float]:
+        """Fetch current prices for tokens from Jupiter API"""
+        try:
+            self.logger.info("Fetching token prices from Jupiter API")
+            token_prices = {}
+            
+            # Define tokens to fetch prices for
+            tokens = ["SOL", "UBC", "COMPUTE"]
+            
+            # Jupiter API endpoint for token prices
+            url = "https://price.jup.ag/v4/price"
+            
+            async with aiohttp.ClientSession() as session:
+                for token in tokens:
+                    try:
+                        # Get token mint address
+                        token_mint = self.token_mints.get(token)
+                        if not token_mint:
+                            self.logger.warning(f"No mint address found for token {token}")
+                            continue
+                        
+                        # Make API request
+                        params = {"ids": token_mint}
+                        async with session.get(url, params=params) as response:
+                            if response.status != 200:
+                                self.logger.error(f"Failed to fetch price for {token}: {await response.text()}")
+                                continue
+                            
+                            data = await response.json()
+                            
+                            # Extract price from response
+                            if "data" in data and token_mint in data["data"]:
+                                price = data["data"][token_mint]["price"]
+                                token_prices[token] = float(price)
+                                self.logger.info(f"Fetched price for {token}: ${price}")
+                            else:
+                                self.logger.warning(f"No price data found for {token}")
+                        
+                        # Add a small delay between requests
+                        await asyncio.sleep(0.5)
+                        
+                    except Exception as e:
+                        self.logger.error(f"Error fetching price for {token}: {e}")
+            
+            self.logger.info(f"Fetched prices for {len(token_prices)} tokens")
+            return token_prices
+            
+        except Exception as e:
+            self.logger.error(f"Error fetching token prices: {e}")
+            return {}
+    
     async def deactivate_existing_positions(self):
         """Deactivate all existing LP positions"""
         try:
@@ -752,6 +806,54 @@ class LPPositionManager:
         except Exception as e:
             self.logger.error(f"Error saving position: {e}")
 
+    def initialize_pool_mapper(self):
+        """Initialize the pool mapper for direct pool data access"""
+        try:
+            # Import the PoolMapper class
+            from engine.lp.pool_mapping import PoolMapper
+            
+            # Initialize the pool mapper
+            self.pool_mapper = PoolMapper()
+            self.logger.info("Pool mapper initialized successfully")
+            return True
+        except Exception as e:
+            self.logger.error(f"Error initializing pool mapper: {e}")
+            return False
+    
+    async def get_all_positions_for_pool(self, pool_address: str, pool_type: str) -> List[Dict]:
+        """Get all positions for a specific pool using the pool mapper"""
+        try:
+            # Initialize pool mapper if not already initialized
+            if not self.pool_mapper:
+                if not self.initialize_pool_mapper():
+                    self.logger.error("Failed to initialize pool mapper")
+                    return []
+            
+            # Get all positions for the pool
+            positions = await self.pool_mapper.get_all_positions_for_pool(pool_address, pool_type)
+            self.logger.info(f"Retrieved {len(positions)} positions for pool {pool_address} using pool mapper")
+            return positions
+        except Exception as e:
+            self.logger.error(f"Error getting positions for pool {pool_address}: {e}")
+            return []
+    
+    async def get_pool_statistics(self, pool_address: str, pool_type: str) -> Dict:
+        """Get statistics for a specific pool using the pool mapper"""
+        try:
+            # Initialize pool mapper if not already initialized
+            if not self.pool_mapper:
+                if not self.initialize_pool_mapper():
+                    self.logger.error("Failed to initialize pool mapper")
+                    return {}
+            
+            # Get statistics for the pool
+            statistics = await self.pool_mapper.get_pool_statistics(pool_address, pool_type)
+            self.logger.info(f"Retrieved statistics for pool {pool_address} using pool mapper")
+            return statistics
+        except Exception as e:
+            self.logger.error(f"Error getting statistics for pool {pool_address}: {e}")
+            return {}
+    
     async def process_all_positions(self):
         """Process all positions for all pools"""
         try:
@@ -766,8 +868,19 @@ class LPPositionManager:
             for pool in self.pools:
                 self.logger.info(f"Processing pool: {pool['name']} ({pool['address']})")
                 
-                # Fetch positions for this pool
-                positions = await self.fetch_positions_for_pool(pool)
+                # Try to use pool mapper first if available
+                if self.initialize_pool_mapper():
+                    self.logger.info(f"Using pool mapper for {pool['name']}")
+                    positions = await self.get_all_positions_for_pool(pool['address'], pool['type'])
+                    
+                    # If pool mapper failed, fall back to original method
+                    if not positions:
+                        self.logger.info(f"Pool mapper returned no positions, falling back to original method")
+                        positions = await self.fetch_positions_for_pool(pool)
+                else:
+                    # Fall back to original method
+                    self.logger.info(f"Pool mapper not available, using original method")
+                    positions = await self.fetch_positions_for_pool(pool)
                 
                 # Process each position
                 for position in positions:
