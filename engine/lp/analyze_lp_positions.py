@@ -56,6 +56,14 @@ logger = setup_logging()
 class LPPositionAnalyzer:
     """Analyzes LP positions and provides recommendations for allocations"""
     
+    @staticmethod
+    def safe_len(value):
+        """Safely get the length of a value, returning 0 for non-iterable types"""
+        try:
+            return len(value)
+        except (TypeError, AttributeError):
+            return 0
+    
     def __init__(self):
         # Load environment variables
         load_dotenv()
@@ -67,14 +75,6 @@ class LPPositionAnalyzer:
         if not self.base_id or not self.api_key:
             raise ValueError("Missing Airtable credentials in environment variables")
             
-    @staticmethod
-    def safe_len(value):
-        """Safely get the length of a value, returning 0 for non-iterable types"""
-        try:
-            return len(value)
-        except (TypeError, AttributeError):
-            return 0
-        
         # Initialize Airtable tables
         self.lp_positions_table = Airtable(self.base_id, 'LP_POSITIONS', self.api_key)
         self.thoughts_table = Airtable(self.base_id, 'THOUGHTS', self.api_key)
