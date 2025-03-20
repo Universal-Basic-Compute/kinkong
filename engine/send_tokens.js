@@ -68,27 +68,16 @@ const logger = setupLogging();
 // Add a global variable to track which method succeeded
 let successfulMethod = null;
 
-// Function to get alternative RPC URLs
-function getAlternativeRpcUrls() {
-  return [
-    'https://api.mainnet-beta.solana.com',
-    'https://solana-api.projectserum.com',
-    'https://rpc.ankr.com/solana',
-    'https://mainnet.solana.rpcpool.com'
-  ];
-}
+// No alternative RPC URLs - using only Helius
 
-// Function to get blockhash with retry logic
+// Function to get blockhash with retry logic - using only Helius
 async function getLatestBlockhashWithRetry(connection, maxRetries = 5, initialDelay = 1000) {
   let retries = 0;
   let delay = initialDelay;
-  let currentRpcUrl = connection.rpcEndpoint;
-  let alternativeUrls = getAlternativeRpcUrls();
-  let urlIndex = 0;
   
   while (retries < maxRetries) {
     try {
-      logger.info(`Getting latest blockhash (attempt ${retries + 1}/${maxRetries}) from ${currentRpcUrl.substring(0, 30)}...`);
+      logger.info(`Getting latest blockhash (attempt ${retries + 1}/${maxRetries})...`);
       const startTime = Date.now();
       const blockhashResponse = await connection.getLatestBlockhash('confirmed');
       const endTime = Date.now();
@@ -97,7 +86,7 @@ async function getLatestBlockhashWithRetry(connection, maxRetries = 5, initialDe
       // Record successful method
       successfulMethod = {
         method: "getLatestBlockhash",
-        url: currentRpcUrl,
+        url: connection.rpcEndpoint,
         time: endTime - startTime
       };
       
@@ -107,28 +96,8 @@ async function getLatestBlockhashWithRetry(connection, maxRetries = 5, initialDe
       logger.error(`Error getting blockhash (attempt ${retries}/${maxRetries}): ${error.message}`);
       
       if (error.message.includes('429') || error.message.includes('Too Many Requests')) {
-        logger.warn('Rate limit hit, switching to alternative RPC endpoint...');
-        
-        // Create a new connection with an alternative RPC URL
-        if (urlIndex < alternativeUrls.length) {
-          const alternativeRpcUrl = alternativeUrls[urlIndex++];
-          if (alternativeRpcUrl !== currentRpcUrl) {
-            logger.info(`Switching from ${currentRpcUrl.substring(0, 20)}... to ${alternativeRpcUrl.substring(0, 20)}...`);
-            connection = new Connection(alternativeRpcUrl, {
-              commitment: 'confirmed',
-              confirmTransactionInitialTimeout: 60000,
-              disableRetryOnRateLimit: false
-            });
-            currentRpcUrl = alternativeRpcUrl;
-            
-            // Try immediately with the new endpoint
-            continue;
-          }
-        } else {
-          // If we've tried all alternative URLs, increase backoff time
-          logger.warn('All alternative RPC endpoints tried, increasing backoff time...');
-          delay = delay * 2; // Double the delay for rate limit errors
-        }
+        logger.warn('Rate limit hit, increasing backoff time...');
+        delay = delay * 2; // Double the delay for rate limit errors
       }
       
       if (retries >= maxRetries) {
@@ -137,7 +106,7 @@ async function getLatestBlockhashWithRetry(connection, maxRetries = 5, initialDe
       
       logger.info(`Retrying in ${delay/1000} seconds...`);
       await new Promise(resolve => setTimeout(resolve, delay));
-      delay = Math.min(delay * 1.5, 15000); // Increase delay but cap at 15 seconds
+      delay = Math.min(delay * 1.5, 30000); // Increase delay but cap at 30 seconds
     }
   }
 }
@@ -212,51 +181,35 @@ async function sendTokens(
     // Reset the successful method tracker
     successfulMethod = null;
     
-    // Connect to Solana network with fallbacks and alternatives
-    const primaryRpcUrl = process.env.NEXT_PUBLIC_HELIUS_RPC_URL || process.env.HELIUS_RPC_URL || 'https://api.mainnet-beta.solana.com';
-    logger.info(`Primary RPC URL: ${primaryRpcUrl.substring(0, 20)}...`);
-
-    // Try each RPC URL in sequence
-    let connection;
-    let lastError;
-    let rpcUrls = [primaryRpcUrl, ...getAlternativeRpcUrls()];
-    let successfulRpcUrl = null;
+    // Connect to Solana network using only Helius
+    const heliusRpcUrl = process.env.NEXT_PUBLIC_HELIUS_RPC_URL || process.env.HELIUS_RPC_URL;
+    if (!heliusRpcUrl) {
+      throw new Error('Helius RPC URL not found in environment variables');
+    }
     
-    for (const rpcUrl of rpcUrls) {
-      try {
-        logger.info(`Trying RPC URL: ${rpcUrl.substring(0, 20)}...`);
-        
-        // Create connection with better timeout and commitment settings
-        connection = new Connection(rpcUrl, {
-          commitment: 'confirmed',
-          confirmTransactionInitialTimeout: 60000, // 60 seconds
-          disableRetryOnRateLimit: false,
-          httpHeaders: {
-            'Content-Type': 'application/json',
-          }
-        });
-        
-        // Test the connection with a simple request
-        const startTime = Date.now();
-        const versionInfo = await connection.getVersion();
-        const endTime = Date.now();
-        logger.info(`Successfully connected to ${rpcUrl.substring(0, 20)}... in ${endTime - startTime}ms`);
-        logger.info(`RPC version: ${JSON.stringify(versionInfo)}`);
-        
-        successfulRpcUrl = rpcUrl;
-        break; // If successful, break the loop
-      } catch (error) {
-        logger.warn(`Failed to connect to ${rpcUrl.substring(0, 20)}...: ${error.message}`);
-        lastError = error;
+    logger.info(`Using Helius RPC URL: ${heliusRpcUrl.substring(0, 20)}...`);
+    
+    // Create connection with better timeout and commitment settings
+    const connection = new Connection(heliusRpcUrl, {
+      commitment: 'confirmed',
+      confirmTransactionInitialTimeout: 60000, // 60 seconds
+      disableRetryOnRateLimit: false,
+      httpHeaders: {
+        'Content-Type': 'application/json',
       }
-    }
+    });
     
-    if (!connection) {
-      throw new Error(`Failed to connect to any RPC endpoint: ${lastError?.message}`);
+    // Test the connection with a simple request
+    try {
+      const startTime = Date.now();
+      const versionInfo = await connection.getVersion();
+      const endTime = Date.now();
+      logger.info(`Successfully connected to Helius in ${endTime - startTime}ms`);
+      logger.info(`RPC version: ${JSON.stringify(versionInfo)}`);
+    } catch (error) {
+      logger.error(`Failed to connect to Helius: ${error.message}`);
+      throw new Error(`Failed to connect to Helius RPC: ${error.message}`);
     }
-    
-    // Record successful RPC URL
-    logger.info(`Using RPC URL: ${successfulRpcUrl}`);
     
     // Get token mint public key
     const tokenMintPublicKey = new PublicKey(tokenMint);
@@ -448,19 +401,7 @@ function generateTestKeypair() {
   return keypair;
 }
 
-// Function to get a fallback RPC URL
-function getFallbackRpcUrl() {
-  const fallbacks = [
-    process.env.NEXT_PUBLIC_HELIUS_RPC_URL,
-    process.env.HELIUS_RPC_URL,
-    'https://api.mainnet-beta.solana.com',
-    'https://solana-api.projectserum.com',
-    'https://rpc.ankr.com/solana'
-  ];
-  
-  // Filter out undefined/null values and return the first valid URL
-  return fallbacks.filter(url => url).find(url => url) || 'https://api.mainnet-beta.solana.com';
-}
+// No fallback RPC URLs - using only Helius
 
 // Command line interface
 async function main() {

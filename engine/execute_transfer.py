@@ -64,7 +64,11 @@ class TokenTransferExecutor:
         self.logger = setup_logging()
         
         # Initialize Helius RPC URL
-        self.rpc_url = os.getenv('NEXT_PUBLIC_HELIUS_RPC_URL', 'https://api.mainnet-beta.solana.com')
+        self.rpc_url = os.getenv('NEXT_PUBLIC_HELIUS_RPC_URL') or os.getenv('HELIUS_RPC_URL')
+        if not self.rpc_url:
+            raise ValueError("Helius RPC URL not found in environment variables")
+        
+        self.logger.info(f"Using Helius RPC URL: {self.rpc_url[:20]}...")
         
         # Token mint addresses
         self.token_mints = {
@@ -220,7 +224,7 @@ class TokenTransferExecutor:
                     
                     # Try a different approach - use the RPC directly with a JSON-RPC call
                     try:
-                        self.logger.info("Trying direct JSON-RPC call...")
+                        self.logger.info("Trying direct JSON-RPC call to Helius...")
                         import json
                         import aiohttp
                         import time
@@ -256,7 +260,7 @@ class TokenTransferExecutor:
                             'result': account_exists
                         }
                     except Exception as direct_error:
-                        self.logger.error(f"Error with direct RPC call: {direct_error}")
+                        self.logger.error(f"Error with direct RPC call to Helius: {direct_error}")
                         raise ValueError(f"Failed to check if account exists: {e}, {direct_error}")
                 
                 # If the account doesn't exist, we need to create it
@@ -706,7 +710,7 @@ async def async_main():
         required_vars = [
             'KINKONG_WALLET_PRIVATE_KEY',
             'KINKONG_WALLET',
-            'NEXT_PUBLIC_HELIUS_RPC_URL',
+            'NEXT_PUBLIC_HELIUS_RPC_URL', # Helius RPC URL is required
             'TELEGRAM_BOT_TOKEN'
         ]
         
