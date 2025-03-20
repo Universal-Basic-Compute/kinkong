@@ -33,6 +33,11 @@
       "runtime": "@vercel/node@2.15.10",
       "memory": 1024,
       "maxDuration": 60
+    },
+    "app/api/redistribution-notification/route.ts": {
+      "runtime": "@vercel/node@2.15.10",
+      "memory": 1024,
+      "maxDuration": 30
     }
   }
 }

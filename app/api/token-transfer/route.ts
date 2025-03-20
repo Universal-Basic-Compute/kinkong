@@ -220,6 +220,32 @@ export async function POST(request: NextRequest) {
     
     console.log(`Transaction successful! Signature: ${signature}`);
     
+    // Send redistribution notification
+    try {
+      console.log('Sending redistribution notification...');
+      const notificationResponse = await fetch(`${process.env.VERCEL_URL || 'http://localhost:3000'}/api/redistribution-notification`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          wallet,
+          token: tokenSymbol,
+          amount,
+          txSignature: signature
+        }),
+      });
+      
+      if (!notificationResponse.ok) {
+        console.warn('Failed to send redistribution notification, but transaction was successful');
+      } else {
+        console.log('Redistribution notification sent successfully');
+      }
+    } catch (notifyError) {
+      console.error('Error sending redistribution notification:', notifyError);
+      // Don't fail the request if notification fails
+    }
+    
     // Return success response
     return NextResponse.json({
       success: true,

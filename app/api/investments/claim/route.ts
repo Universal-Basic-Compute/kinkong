@@ -623,6 +623,36 @@ export async function POST(request: NextRequest) {
         console.error('Failed to send notification:', notifyError);
       }
       
+      // Send redistribution notification (KongInvest format)
+      try {
+        console.log('Sending KongInvest redistribution notification...');
+        
+        // For each transaction, send a separate notification
+        for (const tx of transactions) {
+          const notificationResponse = await fetch(`${process.env.VERCEL_URL || 'http://localhost:3000'}/api/redistribution-notification`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              wallet: wallet,
+              token: tx.token,
+              amount: tx.amount,
+              txSignature: tx.txSignature
+            }),
+          });
+          
+          if (!notificationResponse.ok) {
+            console.warn(`Failed to send KongInvest redistribution notification for ${tx.token}, but transaction was successful`);
+          } else {
+            console.log(`KongInvest redistribution notification sent successfully for ${tx.token}`);
+          }
+        }
+      } catch (notifyError) {
+        console.error('Error sending KongInvest redistribution notification:', notifyError);
+        // Don't fail the request if notification fails
+      }
+      
       return NextResponse.json({
         success: true,
         message: 'Your rewards have been claimed and sent to your wallet.',
