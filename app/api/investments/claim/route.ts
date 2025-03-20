@@ -200,6 +200,9 @@ export async function POST(request: NextRequest) {
         // Try multiple approaches to find the investment
         let investmentRecord = null;
         
+        // Try multiple approaches to find the investment
+        let investmentRecord: any = null;
+        
         // Approach 1: Try to find by record ID directly
         try {
           console.log(`Approach 1: Looking up by record ID: ${recordInvestmentId}`);

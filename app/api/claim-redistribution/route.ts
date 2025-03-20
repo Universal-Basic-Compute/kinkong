@@ -155,7 +155,15 @@ export async function POST(request: NextRequest) {
         
         // Use the most recent unclaimed redistribution
         record = records[0];
-        console.log(`Found latest unclaimed redistribution for wallet: ${wallet}, ID: ${record.id}`);
+        if (record) {
+          console.log(`Found latest unclaimed redistribution for wallet: ${wallet}, ID: ${record.id}`);
+        } else {
+          console.error(`No unclaimed redistributions found for wallet: ${wallet}`);
+          return NextResponse.json(
+            { error: 'No unclaimed redistributions found for this wallet' },
+            { status: 404 }
+          );
+        }
       } catch (findError) {
         console.error('Error finding redistributions for wallet:', findError);
         return NextResponse.json(
@@ -173,7 +181,7 @@ export async function POST(request: NextRequest) {
     }
     
     // At this point, record is guaranteed to be non-null
-    // TypeScript might need this assertion
+    // TypeScript needs this assertion
     record = record as NonNullable<typeof record>;
     
     // Log record details for debugging
