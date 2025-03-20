@@ -323,7 +323,7 @@ async function sendTokens(
     
     // Log all successful methods
     logger.info(`=== SUCCESSFUL METHODS SUMMARY ===`);
-    logger.info(`RPC URL: ${successfulRpcUrl}`);
+    logger.info(`RPC URL: ${heliusRpcUrl.substring(0, 20)}...`);
     logger.info(`Account check method: ${JSON.stringify(accountCheckMethod)}`);
     logger.info(`Blockhash method: ${JSON.stringify(successfulMethod)}`);
     logger.info(`Transaction send time: ${endSendTime - startSendTime}ms`);
