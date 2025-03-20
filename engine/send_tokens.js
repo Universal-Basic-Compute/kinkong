@@ -65,6 +65,37 @@ function setupLogging() {
 
 const logger = setupLogging();
 
+// Function to get blockhash with retry logic
+async function getLatestBlockhashWithRetry(connection, maxRetries = 5, initialDelay = 1000) {
+  let retries = 0;
+  let delay = initialDelay;
+  
+  while (retries < maxRetries) {
+    try {
+      logger.info(`Getting latest blockhash (attempt ${retries + 1}/${maxRetries})...`);
+      const blockhashResponse = await connection.getLatestBlockhash('confirmed');
+      logger.info(`Successfully got blockhash: ${blockhashResponse.blockhash.substring(0, 10)}...`);
+      return blockhashResponse;
+    } catch (error) {
+      retries++;
+      logger.error(`Error getting blockhash (attempt ${retries}/${maxRetries}): ${error.message}`);
+      
+      if (error.message.includes('429') || error.message.includes('Too Many Requests')) {
+        logger.warn('Rate limit hit, increasing backoff time...');
+        delay = delay * 2; // Double the delay for rate limit errors
+      }
+      
+      if (retries >= maxRetries) {
+        throw new Error(`Failed to get blockhash after ${maxRetries} attempts: ${error.message}`);
+      }
+      
+      logger.info(`Retrying in ${delay/1000} seconds...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      delay = Math.min(delay * 1.5, 15000); // Increase delay but cap at 15 seconds
+    }
+  }
+}
+
 // Function to send tokens
 async function sendTokens(
   destinationWallet,
@@ -132,9 +163,19 @@ async function sendTokens(
       throw new Error(`Source wallet address mismatch. Expected: FnWyN4t1aoZWFjEEBxopMaAgk5hjL5P3K65oc2T9FBJY, Got: ${sourceWalletAddress}`);
     }
     
-    // Connect to Solana network
-    const rpcUrl = process.env.NEXT_PUBLIC_HELIUS_RPC_URL || 'https://api.mainnet-beta.solana.com';
-    const connection = new Connection(rpcUrl, 'confirmed');
+    // Connect to Solana network with fallbacks
+    const rpcUrl = process.env.NEXT_PUBLIC_HELIUS_RPC_URL || process.env.HELIUS_RPC_URL || 'https://api.mainnet-beta.solana.com';
+    logger.info(`Using RPC URL: ${rpcUrl.substring(0, 20)}...`);
+
+    // Create connection with better timeout and commitment settings
+    const connection = new Connection(rpcUrl, {
+      commitment: 'confirmed',
+      confirmTransactionInitialTimeout: 60000, // 60 seconds
+      disableRetryOnRateLimit: false,
+      httpHeaders: {
+        'Content-Type': 'application/json',
+      }
+    });
     
     // Get token mint public key
     const tokenMintPublicKey = new PublicKey(tokenMint);
@@ -193,10 +234,22 @@ async function sendTokens(
         amountWithDecimals
       )
     );
+    // Get blockhash with retry
+    const { blockhash, lastValidBlockHeight } = await getLatestBlockhashWithRetry(connection);
+    transaction.recentBlockhash = blockhash;
+    transaction.lastValidBlockHeight = lastValidBlockHeight;
+
+    // Add some additional options for better reliability
     const signature = await sendAndConfirmTransaction(
       connection,
       transaction,
-      [sourceWalletKeypair]
+      [sourceWalletKeypair],
+      {
+        skipPreflight: false,
+        preflightCommitment: 'confirmed',
+        commitment: 'confirmed',
+        maxRetries: 5
+      }
     );
     
     logger.info(`Transfer successful! Transaction signature: ${signature}`);
@@ -273,6 +326,20 @@ function generateTestKeypair() {
   console.log('Private key (hex):', Buffer.from(keypair.secretKey).toString('hex'));
   
   return keypair;
+}
+
+// Function to get a fallback RPC URL
+function getFallbackRpcUrl() {
+  const fallbacks = [
+    process.env.NEXT_PUBLIC_HELIUS_RPC_URL,
+    process.env.HELIUS_RPC_URL,
+    'https://api.mainnet-beta.solana.com',
+    'https://solana-api.projectserum.com',
+    'https://rpc.ankr.com/solana'
+  ];
+  
+  // Filter out undefined/null values and return the first valid URL
+  return fallbacks.filter(url => url).find(url => url) || 'https://api.mainnet-beta.solana.com';
 }
 
 // Command line interface

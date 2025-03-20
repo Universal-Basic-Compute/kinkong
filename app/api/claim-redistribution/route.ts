@@ -20,34 +20,52 @@ const TOKEN_MINTS = {
   COMPUTE: 'B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo'
 };
 
-// Function to execute token transfer
-async function executeTokenTransfer(wallet: string, tokenMint: string, amount: number): Promise<string> {
-  try {
-    const scriptPath = path.resolve(process.cwd(), 'engine/send_tokens.js');
-    
-    console.log(`Executing token transfer: ${amount} of ${tokenMint} to ${wallet}`);
-    
-    const { stdout, stderr } = await execPromise(
-      `node ${scriptPath} ${wallet} ${tokenMint} ${amount}`
-    );
-    
-    if (stderr) {
-      console.error('Token transfer stderr:', stderr);
+// Function to execute token transfer with retries
+async function executeTokenTransfer(wallet: string, tokenMint: string, amount: number, maxRetries = 3): Promise<string> {
+  let retries = 0;
+  let lastError: Error | null = null;
+  
+  while (retries < maxRetries) {
+    try {
+      const scriptPath = path.resolve(process.cwd(), 'engine/send_tokens.js');
+      
+      console.log(`Executing token transfer (attempt ${retries + 1}/${maxRetries}): ${amount} of ${tokenMint} to ${wallet}`);
+      
+      const { stdout, stderr } = await execPromise(
+        `node ${scriptPath} ${wallet} ${tokenMint} ${amount}`
+      );
+      
+      if (stderr) {
+        console.error('Token transfer stderr:', stderr);
+      }
+      
+      console.log('Token transfer stdout:', stdout);
+      
+      // Extract transaction signature from output
+      const signatureMatch = stdout.match(/Transaction signature: ([a-zA-Z0-9]+)/);
+      if (signatureMatch && signatureMatch[1]) {
+        return signatureMatch[1];
+      }
+      
+      return 'Transfer completed, signature not captured';
+    } catch (error) {
+      lastError = error as Error;
+      retries++;
+      
+      console.error(`Failed to execute token transfer (attempt ${retries}/${maxRetries}):`, error);
+      
+      if (retries >= maxRetries) {
+        throw new Error(`Token transfer failed after ${maxRetries} attempts: ${lastError.message}`);
+      }
+      
+      // Exponential backoff
+      const delay = Math.min(1000 * Math.pow(2, retries), 10000);
+      console.log(`Retrying in ${delay/1000} seconds...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
-    
-    console.log('Token transfer stdout:', stdout);
-    
-    // Extract transaction signature from output
-    const signatureMatch = stdout.match(/Transaction signature: ([a-zA-Z0-9]+)/);
-    if (signatureMatch && signatureMatch[1]) {
-      return signatureMatch[1];
-    }
-    
-    return 'Transfer completed, signature not captured';
-  } catch (error) {
-    console.error('Failed to execute token transfer:', error);
-    throw new Error(`Token transfer failed: ${(error as Error).message}`);
   }
+  
+  throw new Error(`Token transfer failed: ${lastError?.message || 'Unknown error'}`);
 }
 
 export async function POST(request: NextRequest) {
