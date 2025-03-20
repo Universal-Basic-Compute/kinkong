@@ -348,20 +348,38 @@ async function sendTokens(
 async function sendTelegramNotification(transferData) {
   try {
     const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
-    const telegramChatId = process.env.TELEGRAM_CHAT_ID;
+    // Use the specified channel ID instead of the environment variable
+    const telegramChatId = "-1001699255893";
     
-    if (!telegramBotToken || !telegramChatId) {
-      logger.warn('Telegram notification skipped: missing configuration');
+    if (!telegramBotToken) {
+      logger.warn('Telegram notification skipped: missing bot token');
       return;
     }
     
+    // Get token symbol from mint address
+    let tokenSymbol = "UNKNOWN";
+    if (transferData.token === "9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump") {
+      tokenSymbol = "UBC";
+    } else if (transferData.token === "B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo") {
+      tokenSymbol = "COMPUTE";
+    } else if (transferData.token === "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v") {
+      tokenSymbol = "USDC";
+    }
+    
+    // Format the wallet address for display
+    const shortWallet = `${transferData.destination.substring(0, 4)}...${transferData.destination.substring(transferData.destination.length - 4)}`;
+    
+    // Create a more exciting message with emojis
     const message = `
-🔄 *Token Transfer Executed*
+🎉 *KongInvest Weekly Redistribution!* 🎉
 
-*Token:* \`${transferData.token}\`
-*Amount:* ${transferData.amount}
-*Destination:* \`${transferData.destination}\`
-*Transaction:* [View on Explorer](https://solscan.io/tx/${transferData.txSignature})
+💰 *${Number(transferData.amount).toLocaleString('en-US', {maximumFractionDigits: 2})} $${tokenSymbol}* has been distributed to investor!
+
+👛 Wallet: \`${shortWallet}\`
+
+✅ [View Transaction on Solscan](https://solscan.io/tx/${transferData.txSignature})
+
+🦍 *KongInvest - Invest Together, Grow Together* 🚀
     `;
     
     const url = `https://api.telegram.org/bot${telegramBotToken}/sendMessage`;
@@ -382,7 +400,7 @@ async function sendTelegramNotification(transferData) {
       throw new Error(`Telegram API error: ${response.statusText}`);
     }
     
-    logger.info('Telegram notification sent successfully');
+    logger.info('Telegram notification sent successfully to channel: ' + telegramChatId);
   } catch (error) {
     logger.error('Failed to send Telegram notification:', error);
   }
