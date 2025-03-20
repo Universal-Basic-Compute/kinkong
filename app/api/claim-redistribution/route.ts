@@ -53,20 +53,43 @@ async function executeTokenTransfer(wallet: string, tokenMint: string, amount: n
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    console.log('Received claim request with body:', body);
+    
     const { redistributionId, wallet } = body;
 
-    if (!redistributionId || !wallet) {
+    if (!redistributionId) {
+      console.error('Missing redistributionId in request');
       return NextResponse.json(
-        { error: 'Redistribution ID and wallet are required' },
+        { error: 'Redistribution ID is required' },
+        { status: 400 }
+      );
+    }
+
+    if (!wallet) {
+      console.error('Missing wallet in request');
+      return NextResponse.json(
+        { error: 'Wallet address is required' },
         { status: 400 }
       );
     }
 
     // Get the redistribution record
     const redistributionsTable = getTable('INVESTOR_REDISTRIBUTIONS');
-    const record = await redistributionsTable.find(redistributionId);
+    console.log(`Looking up redistribution with ID: ${redistributionId}`);
+    
+    let record;
+    try {
+      record = await redistributionsTable.find(redistributionId);
+    } catch (findError) {
+      console.error('Error finding redistribution record:', findError);
+      return NextResponse.json(
+        { error: 'Failed to find redistribution record', details: (findError as Error).message },
+        { status: 500 }
+      );
+    }
 
     if (!record) {
+      console.error(`Redistribution not found with ID: ${redistributionId}`);
       return NextResponse.json(
         { error: 'Redistribution not found' },
         { status: 404 }

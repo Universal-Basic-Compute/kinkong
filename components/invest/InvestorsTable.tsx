@@ -66,6 +66,11 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
     try {
       setClaimingId(investorId); // Set claiming state to show loading
 
+      console.log('Claiming with data:', {
+        redistributionId: investorId,
+        wallet: wallet
+      });
+
       // Call the API to claim the redistribution
       const response = await fetch('/api/claim-redistribution', {
         method: 'POST',
@@ -78,9 +83,14 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
         }),
       });
 
+      const responseData = await response.json();
+      
       if (!response.ok) {
-        throw new Error('Failed to claim redistribution');
+        console.error('Claim error response:', responseData);
+        throw new Error(responseData.error || 'Failed to claim redistribution');
       }
+
+      console.log('Claim response:', responseData);
 
       // Update the local state to show as claimed
       setInvestors(prevInvestors => 
@@ -94,7 +104,7 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
       alert('Redistribution claimed successfully!');
     } catch (error) {
       console.error('Error claiming redistribution:', error);
-      alert('Failed to claim redistribution. Please try again.');
+      alert(`Failed to claim redistribution: ${(error as Error).message}`);
     } finally {
       setClaimingId(null); // Reset claiming state
     }
