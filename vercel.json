@@ -20,17 +20,17 @@
   ],
   "functions": {
     "app/api/claim-redistribution/route.ts": {
-      "runtime": "nodejs18.x",
+      "runtime": "@vercel/node@2.15.10",
       "memory": 1024,
       "maxDuration": 60
     },
     "app/api/investments/claim/route.ts": {
-      "runtime": "nodejs18.x",
+      "runtime": "@vercel/node@2.15.10",
       "memory": 1024,
       "maxDuration": 60
     },
     "app/api/token-transfer/route.ts": {
-      "runtime": "nodejs18.x",
+      "runtime": "@vercel/node@2.15.10",
       "memory": 1024,
       "maxDuration": 60
     }
