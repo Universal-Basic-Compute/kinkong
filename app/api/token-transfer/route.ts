@@ -223,7 +223,7 @@ export async function POST(request: NextRequest) {
     // Send redistribution notification
     try {
       console.log('Sending redistribution notification...');
-      const notificationResponse = await fetch(`${process.env.VERCEL_URL || 'http://localhost:3000'}/api/redistribution-notification`, {
+      const notificationResponse = await fetch(`https://${process.env.VERCEL_URL || 'localhost:3000'}/api/redistribution-notification`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
