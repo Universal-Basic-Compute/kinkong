@@ -301,7 +301,7 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
                           publicKey.toString() !== investor.wallet ||
                           claimingId === investor.investmentId
                         }
-                        onClick={() => handleClaim(investor.investmentId, investor.wallet)}
+                        onClick={() => handleClaim(investor.redistributionId || investor.investmentId, investor.wallet)}
                       >
                         {claimingId === investor.investmentId ? (
                           <span className="flex items-center justify-center">

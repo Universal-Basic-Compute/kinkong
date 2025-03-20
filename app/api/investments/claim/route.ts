@@ -66,14 +66,53 @@ export async function POST(request: NextRequest) {
     const redistributionsTable = getTable('INVESTOR_REDISTRIBUTIONS');
     
     // Get the redistribution record
-    const record = await redistributionsTable.find(investmentId);
-    
-    if (!record) {
+    let records;
+    try {
+      // Look up by the redistributionId field
+      records = await redistributionsTable.select({
+        filterByFormula: `{redistributionId} = '${investmentId}'`
+      }).all();
+      
+      if (records.length === 0) {
+        // Try looking up by record ID as fallback
+        try {
+          const recordById = await redistributionsTable.find(investmentId);
+          if (recordById) {
+            console.log(`Found redistribution by record ID: ${investmentId}`);
+            records = [recordById];
+          } else {
+            return NextResponse.json(
+              { error: 'Investment not found' },
+              { status: 404 }
+            );
+          }
+        } catch (idError) {
+          console.error('Error finding redistribution by record ID:', idError);
+          return NextResponse.json(
+            { error: 'Investment not found' },
+            { status: 404 }
+          );
+        }
+      }
+    } catch (findError) {
+      console.error('Error finding redistribution record:', findError);
       return NextResponse.json(
-        { error: 'Investment not found' },
-        { status: 404 }
+        { error: 'Failed to find redistribution record', details: (findError as Error).message },
+        { status: 500 }
       );
     }
+    
+    const record = records[0]; // Use the first matching record
+    
+    // Log record details for debugging
+    console.log('Found redistribution record:', {
+      id: record.id,
+      redistributionId: record.get('redistributionId'),
+      wallet: record.get('wallet'),
+      claimed: record.get('claimed'),
+      ubcAmount: record.get('ubcAmount'),
+      computeAmount: record.get('computeAmount')
+    });
     
     // Check if already claimed
     if (record.get('claimed')) {

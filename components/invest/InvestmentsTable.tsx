@@ -252,6 +252,11 @@ export function InvestmentsTable({ investments: propInvestments, latestSnapshot,
                           {investment.isCalculated && (
                             <span className="text-xs text-yellow-500 ml-1">(Estimated)</span>
                           )}
+                          {investment.redistributionId && (
+                            <div className="text-xs text-gray-400">
+                              ID: {investment.redistributionId.substring(0, 8)}...
+                            </div>
+                          )}
                         </>
                       ) : (
                         <>

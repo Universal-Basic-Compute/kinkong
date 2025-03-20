@@ -77,9 +77,37 @@ export async function POST(request: NextRequest) {
     const redistributionsTable = getTable('INVESTOR_REDISTRIBUTIONS');
     console.log(`Looking up redistribution with ID: ${redistributionId}`);
     
-    let record;
+    let records;
     try {
-      record = await redistributionsTable.find(redistributionId);
+      // Look up by the redistributionId field instead of the record ID
+      records = await redistributionsTable.select({
+        filterByFormula: `{redistributionId} = '${redistributionId}'`
+      }).all();
+      
+      if (records.length === 0) {
+        console.error(`No redistribution found with redistributionId: ${redistributionId}`);
+        
+        // Try looking up by record ID as fallback
+        try {
+          const recordById = await redistributionsTable.find(redistributionId);
+          if (recordById) {
+            console.log(`Found redistribution by record ID: ${redistributionId}`);
+            records = [recordById];
+          } else {
+            return NextResponse.json(
+              { error: 'Redistribution not found' },
+              { status: 404 }
+            );
+          }
+        } catch (idError) {
+          console.error('Error finding redistribution by record ID:', idError);
+          return NextResponse.json(
+            { error: 'Redistribution not found' },
+            { status: 404 }
+          );
+        }
+      }
+      
     } catch (findError) {
       console.error('Error finding redistribution record:', findError);
       return NextResponse.json(
@@ -87,14 +115,19 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-
-    if (!record) {
-      console.error(`Redistribution not found with ID: ${redistributionId}`);
-      return NextResponse.json(
-        { error: 'Redistribution not found' },
-        { status: 404 }
-      );
-    }
+    
+    const record = records[0]; // Use the first matching record
+    
+    // Log record details for debugging
+    console.log('Found redistribution record:', {
+      id: record.id,
+      redistributionId: record.get('redistributionId'),
+      wallet: record.get('wallet'),
+      claimed: record.get('claimed'),
+      ubcAmount: record.get('ubcAmount'),
+      computeAmount: record.get('computeAmount'),
+      fields: Object.keys(record.fields)
+    });
 
     // Verify the wallet matches
     const recordWallet = record.get('wallet');
