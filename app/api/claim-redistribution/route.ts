@@ -159,8 +159,11 @@ export async function POST(request: NextRequest) {
       fields: Object.keys(record.fields)
     });
 
-    // Get the wallet from the record
+    // Initialize variables for wallet validation
     let recordWallet = record.get('wallet');
+    let walletSource = 'redistribution record';
+    let walletValid = false;
+    
     console.log('Initial wallet comparison:', {
       requestWallet: wallet,
       recordWallet: recordWallet,
@@ -171,10 +174,7 @@ export async function POST(request: NextRequest) {
     // Check if wallet is missing in the record
     if (!recordWallet) {
       console.error('Wallet is missing in the redistribution record');
-      return NextResponse.json(
-        { error: 'Wallet information is missing in the record' },
-        { status: 400 }
-      );
+      // Don't return error yet, check if we can get it from the investment record
     }
 
     // Check if there's an investmentId field in the record
@@ -198,17 +198,26 @@ export async function POST(request: NextRequest) {
             requestWallet: wallet
           });
           
-          // If the original wallet matches the request wallet, update the redistribution record
-          if (originalWallet && originalWallet.toLowerCase() === wallet.toLowerCase()) {
-            console.log('Wallet matches original investment, updating redistribution record');
+          // If the original wallet exists, use it for validation
+          if (originalWallet) {
+            walletSource = 'original investment';
             
-            // Update the redistribution record with the correct wallet
-            await redistributionsTable.update(record.id, {
-              wallet: wallet // Update to the correct wallet
-            });
-            
-            // Use the updated wallet for the rest of the process
-            recordWallet = wallet;
+            // Check if the request wallet matches the original investment wallet
+            if (originalWallet.toLowerCase() === wallet.toLowerCase()) {
+              console.log('Wallet matches original investment');
+              walletValid = true;
+              
+              // Update the redistribution record with the correct wallet if needed
+              if (!recordWallet || recordWallet.toLowerCase() !== originalWallet.toLowerCase()) {
+                console.log('Updating redistribution record with correct wallet');
+                await redistributionsTable.update(record.id, {
+                  wallet: wallet // Update to the correct wallet
+                });
+              }
+              
+              // Use the original wallet for the rest of the process
+              recordWallet = originalWallet;
+            }
           }
         }
       } catch (investmentError) {
@@ -216,22 +225,33 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Compare wallets case-insensitively after potential update
-    console.log('Comparing wallets after investment check:', {
-      requestWallet: wallet,
-      recordWallet: recordWallet
-    });
+    // If we haven't validated against the investment record, try the redistribution record
+    if (!walletValid && recordWallet) {
+      console.log('Comparing wallets using redistribution record:', {
+        requestWallet: wallet,
+        recordWallet: recordWallet
+      });
 
-    if (recordWallet.toLowerCase() !== wallet.toLowerCase()) {
-      console.error('Wallet mismatch after investment check:', {
+      if (recordWallet.toLowerCase() === wallet.toLowerCase()) {
+        console.log('Wallet matches redistribution record');
+        walletValid = true;
+      }
+    }
+    
+    // If wallet is still not valid, return error
+    if (!walletValid) {
+      console.error(`Wallet mismatch (${walletSource}):`, {
         requestWallet: wallet,
         recordWallet: recordWallet
       });
       return NextResponse.json(
-        { error: 'Wallet does not match redistribution record' },
+        { error: `Wallet does not match ${walletSource}` },
         { status: 403 }
       );
     }
+    
+    // If we get here, the wallet is valid
+    console.log(`Wallet validated successfully using ${walletSource}`);
 
     // Check if already claimed
     const claimed = record.get('claimed');
@@ -241,6 +261,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    
+    // At this point, we have a valid wallet and the redistribution is not claimed
+    console.log(`Proceeding with claim for wallet: ${recordWallet}`);
 
     // Get the reward amounts
     const token = record.get('token') || 'UBC'; // Get the token type

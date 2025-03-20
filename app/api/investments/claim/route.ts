@@ -185,6 +185,10 @@ export async function POST(request: NextRequest) {
     
     let wallet = record.get('wallet');
     
+    // Initialize variables for wallet validation
+    let walletSource = 'redistribution record';
+    let walletValid = false;
+    
     // Check if there's an investmentId field in the record
     const recordInvestmentId = record.get('investmentId');
     if (recordInvestmentId) {
@@ -207,14 +211,31 @@ export async function POST(request: NextRequest) {
           });
           
           if (originalWallet) {
-            // Use the wallet from the original investment
+            walletSource = 'original investment';
+            
+            // Always use the wallet from the original investment
             wallet = originalWallet;
+            
+            // Update the redistribution record with the correct wallet if needed
+            if (record.get('wallet') !== originalWallet) {
+              console.log('Updating redistribution record with correct wallet from investment');
+              try {
+                await redistributionsTable.update(record.id, {
+                  wallet: originalWallet
+                });
+                console.log('Redistribution record updated with wallet from investment');
+              } catch (updateError) {
+                console.error('Error updating redistribution record:', updateError);
+              }
+            }
           }
         }
       } catch (investmentError) {
         console.error('Error finding original investment:', investmentError);
       }
     }
+    
+    console.log(`Using wallet from ${walletSource}: ${wallet}`);
     
     if (!wallet) {
       return NextResponse.json(

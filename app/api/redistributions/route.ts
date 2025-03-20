@@ -84,8 +84,18 @@ export async function GET(request: NextRequest) {
         });
       }
       
-      // Prioritize the investment wallet over the redistribution wallet
+      // Always prioritize the investment wallet over the redistribution wallet
+      // This ensures we're using the original investor's wallet
       const wallet = investmentWallet || recordWallet;
+      
+      // If there's a mismatch and we have both wallets, log it for debugging
+      if (investmentWallet && recordWallet && investmentWallet !== recordWallet) {
+        console.log(`Wallet mismatch for redistribution ${record.id} - using investment wallet:`, {
+          redistributionWallet: recordWallet,
+          investmentWallet: investmentWallet,
+          usingWallet: wallet
+        });
+      }
       
       return {
         investmentId: record.id, // Use the record ID as the investment ID
