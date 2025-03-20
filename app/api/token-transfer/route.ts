@@ -224,38 +224,53 @@ export async function POST(request: NextRequest) {
     try {
       console.log('Sending redistribution notification...');
       
-      // Construct the notification URL
-      const baseUrl = process.env.VERCEL_URL || 'localhost:3000';
-      const notificationUrl = `https://${baseUrl}/api/redistribution-notification`;
-      console.log(`Using notification URL: ${notificationUrl}`);
+      // Use a direct approach with the Telegram API instead of our own API
+      const botToken = process.env.TELEGRAM_BOT_TOKEN;
+      const chatId = "-1001699255893"; // The specified chat ID for redistributions
       
-      // Prepare the notification payload
-      const notificationPayload = {
-        wallet,
-        token: tokenSymbol,
-        amount,
-        txSignature: signature
-      };
-      console.log('Notification payload:', JSON.stringify(notificationPayload, null, 2));
-      
-      // Send the notification request
-      const notificationResponse = await fetch(notificationUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(notificationPayload),
-      });
-      
-      // Log the response status
-      console.log(`Notification response status: ${notificationResponse.status} ${notificationResponse.statusText}`);
-      
-      if (!notificationResponse.ok) {
-        const errorData = await notificationResponse.json();
-        console.warn('Failed to send redistribution notification:', JSON.stringify(errorData, null, 2));
+      if (!botToken) {
+        console.warn('Telegram bot token not found in environment variables');
       } else {
-        const responseData = await notificationResponse.json();
-        console.log('Redistribution notification sent successfully:', JSON.stringify(responseData, null, 2));
+        // Format the wallet address for display
+        const shortWallet = `${wallet.substring(0, 4)}...${wallet.substring(wallet.length - 4)}`;
+        
+        // Create the exact message format from send_tokens.js
+        const message = `
+🎉 *KongInvest Weekly Redistribution!* 🎉
+
+💰 *${Number(amount).toLocaleString('en-US', {maximumFractionDigits: 2})} $${tokenSymbol}* has been distributed to investor!
+
+👛 Wallet: \`${shortWallet}\`
+
+✅ [View Transaction on Solscan](https://solscan.io/tx/${signature})
+
+🦍 *KongInvest - Invest Together, Grow Together* 🚀
+        `;
+        
+        // Send the notification directly to Telegram API
+        console.log('Sending notification directly to Telegram API...');
+        const telegramApiUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+        
+        const telegramResponse = await fetch(telegramApiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: message,
+            parse_mode: 'Markdown',
+            disable_web_page_preview: true
+          }),
+        });
+        
+        if (!telegramResponse.ok) {
+          const errorData = await telegramResponse.json();
+          console.warn('Failed to send Telegram notification:', JSON.stringify(errorData, null, 2));
+        } else {
+          const responseData = await telegramResponse.json();
+          console.log('Telegram notification sent successfully:', JSON.stringify(responseData, null, 2));
+        }
       }
     } catch (notifyError) {
       console.error('Error sending redistribution notification:', notifyError);

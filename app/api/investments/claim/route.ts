@@ -629,23 +629,54 @@ export async function POST(request: NextRequest) {
         
         // For each transaction, send a separate notification
         for (const tx of transactions) {
-          const notificationResponse = await fetch(`https://${process.env.VERCEL_URL || 'localhost:3000'}/api/redistribution-notification`, {
+          // Use a direct approach with the Telegram API instead of our own API
+          const botToken = process.env.TELEGRAM_BOT_TOKEN;
+          const chatId = "-1001699255893"; // The specified chat ID for redistributions
+          
+          if (!botToken) {
+            console.warn('Telegram bot token not found in environment variables');
+            continue;
+          }
+          
+          // Format the wallet address for display
+          const shortWallet = `${wallet.substring(0, 4)}...${wallet.substring(wallet.length - 4)}`;
+          
+          // Create the exact message format from send_tokens.js
+          const message = `
+🎉 *KongInvest Weekly Redistribution!* 🎉
+
+💰 *${Number(tx.amount).toLocaleString('en-US', {maximumFractionDigits: 2})} $${tx.token}* has been distributed to investor!
+
+👛 Wallet: \`${shortWallet}\`
+
+✅ [View Transaction on Solscan](https://solscan.io/tx/${tx.txSignature})
+
+🦍 *KongInvest - Invest Together, Grow Together* 🚀
+          `;
+          
+          // Send the notification directly to Telegram API
+          console.log(`Sending notification directly to Telegram API for ${tx.token}...`);
+          const telegramApiUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+          
+          const telegramResponse = await fetch(telegramApiUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              wallet: wallet,
-              token: tx.token,
-              amount: tx.amount,
-              txSignature: tx.txSignature
+              chat_id: chatId,
+              text: message,
+              parse_mode: 'Markdown',
+              disable_web_page_preview: true
             }),
           });
           
-          if (!notificationResponse.ok) {
-            console.warn(`Failed to send KongInvest redistribution notification for ${tx.token}, but transaction was successful`);
+          if (!telegramResponse.ok) {
+            const errorData = await telegramResponse.json();
+            console.warn(`Failed to send KongInvest redistribution notification for ${tx.token}:`, JSON.stringify(errorData, null, 2));
           } else {
-            console.log(`KongInvest redistribution notification sent successfully for ${tx.token}`);
+            const responseData = await telegramResponse.json();
+            console.log(`KongInvest redistribution notification sent successfully for ${tx.token}:`, JSON.stringify(responseData, null, 2));
           }
         }
       } catch (notifyError) {
