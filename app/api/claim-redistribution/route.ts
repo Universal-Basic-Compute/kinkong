@@ -157,8 +157,8 @@ export async function POST(request: NextRequest) {
       fields: Object.keys(record.fields)
     });
 
-    // At this point, we have a valid redistribution that is not claimed
-    console.log(`Proceeding with claim for wallet: ${wallet}`);
+    // Get the wallet from the record - this is the wallet that will receive the tokens
+    const recordWallet = record.get('wallet');
 
     // Check if already claimed
     const claimed = record.get('claimed');
@@ -169,7 +169,20 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // At this point, we have a valid wallet and the redistribution is not claimed
+    // Verify that the requesting wallet matches the record wallet
+    if (wallet.toLowerCase() !== recordWallet.toLowerCase()) {
+      console.error('Wallet mismatch:', {
+        requestWallet: wallet,
+        recordWallet
+      });
+      return NextResponse.json(
+        { error: 'Wallet does not match redistribution record' },
+        { status: 403 }
+      );
+    }
+    
+    // At this point, we have a valid redistribution that is not claimed
+    // and the requesting wallet matches the record wallet
     console.log(`Proceeding with claim for wallet: ${recordWallet}`);
 
     // Get the reward amounts
@@ -200,14 +213,14 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Execute token transfers
+    // Execute token transfers - use recordWallet, not the wallet from request
     const transactions: Transaction[] = [];
     let transferError: string | null = null;
     
     try {
       // Transfer UBC if applicable
       if (ubcAmount > 0) {
-        const ubcTxSignature = await executeTokenTransfer(wallet, TOKEN_MINTS.UBC, ubcAmount);
+        const ubcTxSignature = await executeTokenTransfer(recordWallet, TOKEN_MINTS.UBC, ubcAmount);
         transactions.push({
           token: 'UBC',
           amount: ubcAmount,
@@ -217,7 +230,7 @@ export async function POST(request: NextRequest) {
       
       // Transfer COMPUTE if applicable
       if (computeAmount > 0) {
-        const computeTxSignature = await executeTokenTransfer(wallet, TOKEN_MINTS.COMPUTE, computeAmount);
+        const computeTxSignature = await executeTokenTransfer(recordWallet, TOKEN_MINTS.COMPUTE, computeAmount);
         transactions.push({
           token: 'COMPUTE',
           amount: computeAmount,
@@ -238,7 +251,7 @@ export async function POST(request: NextRequest) {
       await redistributionsTable.update(record.id, {
         status: 'MANUAL_REVIEW_NEEDED',
         claimedAt: new Date().toISOString(),
-        notes: `Automatic transfer failed: ${transferError}. Amounts: ${ubcAmount} UBC, ${computeAmount} COMPUTE to wallet ${wallet}`
+        notes: `Automatic transfer failed: ${transferError}. Amounts: ${ubcAmount} UBC, ${computeAmount} COMPUTE to wallet ${recordWallet}`
       });
       
       // Send notification about failed transfer
@@ -246,7 +259,7 @@ export async function POST(request: NextRequest) {
         const botToken = "7728404959:AAHoVX05vxCQgzxqAJa5Em8i5HCLs2hJleo";
         const chatId = "-4680349356"; // Chat ID for claims
         
-        const message = `❌ <b>Automatic Transfer Failed</b>\n\nFailed to transfer tokens to wallet <code>${wallet}</code>.\n\nAmounts:\n- UBC: ${ubcAmount}\n- COMPUTE: ${computeAmount}\n\nError: <code>${transferError}</code>\n\nRedistribution ID: <code>${redistributionId}</code>\n\nPlease process this claim manually.`;
+        const message = `❌ <b>Automatic Transfer Failed</b>\n\nFailed to transfer tokens to wallet <code>${recordWallet}</code>.\n\nAmounts:\n- UBC: ${ubcAmount}\n- COMPUTE: ${computeAmount}\n\nError: <code>${transferError}</code>\n\nRedistribution ID: <code>${redistributionId}</code>\n\nPlease process this claim manually.`;
         
         await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
           method: 'POST',
@@ -287,7 +300,7 @@ export async function POST(request: NextRequest) {
           `- ${tx.amount} ${tx.token}: <a href="https://solscan.io/tx/${tx.txSignature}">View Transaction</a>`
         ).join('\n');
         
-        const message = `✅ <b>Automatic Transfer Completed</b>\n\nSuccessfully transferred tokens to wallet <code>${wallet}</code>.\n\nTransactions:\n${transactionsText}\n\nRedistribution ID: <code>${redistributionId}</code>`;
+        const message = `✅ <b>Automatic Transfer Completed</b>\n\nSuccessfully transferred tokens to wallet <code>${recordWallet}</code>.\n\nTransactions:\n${transactionsText}\n\nRedistribution ID: <code>${redistributionId}</code>`;
         
         await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
           method: 'POST',
