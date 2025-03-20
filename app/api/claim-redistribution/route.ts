@@ -37,33 +37,119 @@ async function executeTokenTransfer(wallet: string, tokenMint: string, amount: n
   
   while (retries < maxRetries) {
     try {
-      // Determine the base URL
-      const baseUrl = process.env.VERCEL_URL 
-        ? `https://${process.env.VERCEL_URL}` 
-        : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      // Instead of using the API route, let's directly use the token transfer logic
+      console.log(`Executing direct token transfer (attempt ${retries + 1}/${maxRetries}): ${amount} of ${tokenMint} to ${wallet} with ${decimals} decimals`);
       
-      console.log(`Using base URL: ${baseUrl}`);
+      // Import the required modules
+      const { Connection, Keypair, PublicKey, Transaction, sendAndConfirmTransaction } = require('@solana/web3.js');
+      const { createTransferInstruction, getAssociatedTokenAddress, createAssociatedTokenAccountInstruction } = require('@solana/spl-token');
+      const bs58 = require('bs58');
       
-      // Call the token-transfer API route
-      const response = await fetch(`${baseUrl}/api/token-transfer`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          wallet,
-          tokenMint,
-          amount
-        }),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to execute token transfer');
+      // Load private key from environment variable
+      const privateKeyString = process.env.STRATEGY_WALLET_PRIVATE_KEY || process.env.KINKONG_WALLET_PRIVATE_KEY;
+      if (!privateKeyString) {
+        throw new Error('Wallet private key not configured');
       }
       
-      return data.signature;
+      // Decode private key
+      let sourceWalletKeypair;
+      try {
+        const privateKey = bs58.decode(privateKeyString);
+        sourceWalletKeypair = Keypair.fromSecretKey(new Uint8Array(privateKey));
+        console.log(`Source wallet: ${sourceWalletKeypair.publicKey.toString()}`);
+      } catch (error) {
+        console.error('Error decoding private key:', error);
+        throw new Error('Invalid wallet private key format');
+      }
+      
+      // Connect to Solana network
+      const heliusRpcUrl = process.env.NEXT_PUBLIC_HELIUS_RPC_URL || process.env.HELIUS_RPC_URL;
+      if (!heliusRpcUrl) {
+        throw new Error('Helius RPC URL not configured');
+      }
+      
+      console.log(`Connecting to RPC: ${heliusRpcUrl.substring(0, 20)}...`);
+      const connection = new Connection(heliusRpcUrl, {
+        commitment: 'confirmed',
+        confirmTransactionInitialTimeout: 60000
+      });
+      
+      // Get token accounts
+      const tokenMintPublicKey = new PublicKey(tokenMint);
+      const sourceWalletPublicKey = sourceWalletKeypair.publicKey;
+      const destinationWalletPublicKey = new PublicKey(wallet);
+      
+      console.log('Getting associated token addresses...');
+      const sourceTokenAccount = await getAssociatedTokenAddress(
+        tokenMintPublicKey,
+        sourceWalletPublicKey
+      );
+      
+      const destinationTokenAccount = await getAssociatedTokenAddress(
+        tokenMintPublicKey,
+        destinationWalletPublicKey
+      );
+      
+      console.log(`Source token account: ${sourceTokenAccount.toString()}`);
+      console.log(`Destination token account: ${destinationTokenAccount.toString()}`);
+      
+      // Create transaction
+      let transaction = new Transaction();
+      
+      // Check if destination token account exists
+      console.log('Checking if destination token account exists...');
+      const accountInfo = await connection.getAccountInfo(destinationTokenAccount);
+      if (!accountInfo) {
+        console.log('Destination token account does not exist, creating it...');
+        // If the account doesn't exist, create it
+        transaction.add(
+          createAssociatedTokenAccountInstruction(
+            sourceWalletPublicKey,
+            destinationTokenAccount,
+            destinationWalletPublicKey,
+            tokenMintPublicKey
+          )
+        );
+      } else {
+        console.log('Destination token account exists');
+      }
+      
+      // Calculate amount with decimals
+      const amountWithDecimals = Math.round(amount * Math.pow(10, decimals));
+      console.log(`Sending ${amount} tokens (${amountWithDecimals} base units with ${decimals} decimals)`);
+      
+      // Add transfer instruction
+      transaction.add(
+        createTransferInstruction(
+          sourceTokenAccount,
+          destinationTokenAccount,
+          sourceWalletPublicKey,
+          amountWithDecimals
+        )
+      );
+      
+      // Get blockhash
+      console.log('Getting latest blockhash...');
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
+      transaction.recentBlockhash = blockhash;
+      transaction.lastValidBlockHeight = lastValidBlockHeight;
+      
+      // Send transaction
+      console.log('Sending transaction...');
+      const signature = await sendAndConfirmTransaction(
+        connection,
+        transaction,
+        [sourceWalletKeypair],
+        {
+          skipPreflight: false,
+          preflightCommitment: 'confirmed',
+          commitment: 'confirmed',
+          maxRetries: 5
+        }
+      );
+      
+      console.log(`Transaction successful! Signature: ${signature}`);
+      return signature;
     } catch (error) {
       lastError = error as Error;
       retries++;
