@@ -60,6 +60,7 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
     // Check if the user is connected and the wallet matches
     if (!publicKey) {
       alert('Please connect your wallet to claim');
+      setClaimingId(null); // Reset claiming state if wallet not connected
       return;
     }
     
@@ -72,12 +73,12 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
 
     if (connectedWallet.toLowerCase() !== wallet.toLowerCase()) {
       alert('Please connect the correct wallet to claim');
+      setClaimingId(null); // Reset claiming state if wallet doesn't match
       return;
     }
 
     try {
-      setClaimingId(investorId); // Set claiming state to show loading
-
+      // Note: We don't set claimingId here anymore since it's set in the onClick handler
       console.log('Claiming with data:', {
         redistributionId: investorId,
         wallet: wallet
@@ -107,7 +108,7 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
       // Update the local state to show as claimed
       setInvestors(prevInvestors => 
         prevInvestors.map(investor => 
-          investor.investmentId === investorId 
+          (investor.investmentId === investorId || investor.redistributionId === investorId)
             ? { ...investor, claimed: true } 
             : investor
         )
@@ -301,34 +302,68 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
                     
                     {/* Add a new cell for the Claim button */}
                     <td className="px-4 py-4 text-center">
-                      <button
-                        className={`px-4 py-2 rounded-md ${
-                          investor.claimed || !publicKey || publicKey.toString() !== investor.wallet || claimingId === investor.investmentId
-                            ? 'bg-gray-600 text-gray-300 cursor-not-allowed opacity-50' 
-                            : 'bg-gradient-to-r from-orange-500 to-yellow-400 hover:from-orange-600 hover:to-yellow-500 text-black font-medium'
-                        }`}
-                        disabled={
-                          investor.claimed || 
-                          !publicKey || 
-                          publicKey.toString() !== investor.wallet ||
-                          claimingId === investor.investmentId
+                      {(() => {
+                        // Check if the connected wallet matches this redistribution
+                        const isWalletMatch = publicKey && 
+                          investor.wallet.toLowerCase() === publicKey.toString().toLowerCase();
+                        
+                        // Determine button state and text
+                        let buttonText = 'Claim';
+                        let buttonDisabled = true;
+                        let buttonTooltip = '';
+                        
+                        if (investor.claimed) {
+                          buttonText = 'Claimed';
+                          buttonTooltip = 'This redistribution has already been claimed';
+                        } else if (!publicKey) {
+                          buttonTooltip = 'Connect your wallet to claim';
+                        } else if (!isWalletMatch) {
+                          buttonText = 'Wrong Wallet';
+                          buttonTooltip = `Connect wallet ${investor.wallet.substring(0, 4)}...${investor.wallet.substring(investor.wallet.length - 4)} to claim`;
+                        } else if (claimingId === investor.redistributionId || claimingId === investor.investmentId) {
+                          buttonText = 'Processing';
+                        } else {
+                          buttonDisabled = false;
                         }
-                        onClick={() => handleClaim(investor.redistributionId || investor.investmentId, investor.wallet)}
-                      >
-                        {claimingId === investor.investmentId ? (
-                          <span className="flex items-center justify-center">
-                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Processing
-                          </span>
-                        ) : investor.claimed ? (
-                          'Claimed'
-                        ) : (
-                          'Claim'
-                        )}
-                      </button>
+                        
+                        return (
+                          <div className="relative group">
+                            <button
+                              className={`px-4 py-2 rounded-md ${
+                                buttonDisabled
+                                  ? 'bg-gray-600 text-gray-300 cursor-not-allowed opacity-50' 
+                                  : 'bg-gradient-to-r from-orange-500 to-yellow-400 hover:from-orange-600 hover:to-yellow-500 text-black font-medium'
+                              }`}
+                              disabled={buttonDisabled}
+                              onClick={() => {
+                                // Set claiming state immediately before the async operation
+                                setClaimingId(investor.redistributionId || investor.investmentId);
+                                handleClaim(investor.redistributionId || investor.investmentId, investor.wallet);
+                              }}
+                              title={buttonTooltip}
+                            >
+                              {claimingId === investor.redistributionId || claimingId === investor.investmentId ? (
+                                <span className="flex items-center justify-center">
+                                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                  </svg>
+                                  Processing
+                                </span>
+                              ) : investor.claimed ? (
+                                'Claimed'
+                              ) : (
+                                buttonText
+                              )}
+                            </button>
+                            {buttonTooltip && (
+                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+                                {buttonTooltip}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))}
