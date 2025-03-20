@@ -94,14 +94,15 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
       });
 
       // Call the API to claim the redistribution
+      // The redistributionId is now optional - if not provided, the API will find the latest unclaimed redistribution
       const response = await fetch('/api/claim-redistribution', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          redistributionId: investorId,
-          wallet: wallet
+          redistributionId: investorId, // This is optional now
+          wallet: wallet    // This is the primary identifier
         }),
       });
 
@@ -386,6 +387,8 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
                                     updated.add(idToUse);
                                     return updated;
                                   });
+                                  // Pass the redistributionId if available, but it's now optional
+                                  // The API will find the latest unclaimed redistribution if no ID is provided
                                   handleClaim(idToUse, investor.wallet);
                                 }}
                                 title={buttonTooltip}

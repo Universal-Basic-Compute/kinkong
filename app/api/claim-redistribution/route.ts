@@ -87,14 +87,6 @@ export async function POST(request: NextRequest) {
     
     const { redistributionId, wallet } = body;
 
-    if (!redistributionId) {
-      console.error('Missing redistributionId in request');
-      return NextResponse.json(
-        { error: 'Redistribution ID is required' },
-        { status: 400 }
-      );
-    }
-
     if (!wallet) {
       console.error('Missing wallet in request');
       return NextResponse.json(
@@ -105,48 +97,84 @@ export async function POST(request: NextRequest) {
 
     // Get the redistribution record
     const redistributionsTable = getTable('INVESTOR_REDISTRIBUTIONS');
-    console.log(`Looking up redistribution with ID: ${redistributionId}`);
     
     let records;
-    try {
-      // Look up by the redistributionId field instead of the record ID
-      records = await redistributionsTable.select({
-        filterByFormula: `{redistributionId} = '${redistributionId}'`
-      }).all();
-      
-      if (records.length === 0) {
-        console.error(`No redistribution found with redistributionId: ${redistributionId}`);
+    let record = null;
+    
+    // If redistributionId is provided, try to find that specific redistribution first
+    if (redistributionId) {
+      console.log(`Looking up specific redistribution with ID: ${redistributionId}`);
+      try {
+        // Look up by the redistributionId field
+        records = await redistributionsTable.select({
+          filterByFormula: `{redistributionId} = '${redistributionId}'`
+        }).all();
         
-        // Try looking up by record ID as fallback
-        try {
-          const recordById = await redistributionsTable.find(redistributionId);
-          if (recordById) {
-            console.log(`Found redistribution by record ID: ${redistributionId}`);
-            records = [recordById];
-          } else {
+        if (records.length === 0) {
+          console.log(`No redistribution found with redistributionId: ${redistributionId}, trying record ID lookup`);
+          
+          // Try looking up by record ID as fallback
+          try {
+            const recordById = await redistributionsTable.find(redistributionId);
+            if (recordById) {
+              console.log(`Found redistribution by record ID: ${redistributionId}`);
+              records = [recordById];
+            }
+          } catch (idError) {
+            console.error('Error finding redistribution by record ID:', idError);
+          }
+        }
+        
+        if (records && records.length > 0) {
+          record = records[0];
+          
+          // Verify the wallet matches
+          const recordWallet = record.get('wallet');
+          if (recordWallet && recordWallet.toLowerCase() !== wallet.toLowerCase()) {
+            console.error('Wallet mismatch for specific redistribution:', {
+              requestWallet: wallet,
+              recordWallet
+            });
             return NextResponse.json(
-              { error: 'Redistribution not found' },
-              { status: 404 }
+              { error: 'Wallet does not match redistribution record' },
+              { status: 403 }
             );
           }
-        } catch (idError) {
-          console.error('Error finding redistribution by record ID:', idError);
+        }
+      } catch (findError) {
+        console.error('Error finding specific redistribution record:', findError);
+      }
+    }
+    
+    // If no specific redistribution was found or provided, find the latest unclaimed one for this wallet
+    if (!record) {
+      console.log(`Looking up latest unclaimed redistribution for wallet: ${wallet}`);
+      try {
+        // Look up all unclaimed redistributions for this wallet, sorted by date (newest first)
+        records = await redistributionsTable.select({
+          filterByFormula: `AND({wallet} = '${wallet}', NOT({claimed}))`,
+          sort: [{ field: 'createdAt', direction: 'desc' }]
+        }).all();
+        
+        if (records.length === 0) {
+          console.error(`No unclaimed redistributions found for wallet: ${wallet}`);
           return NextResponse.json(
-            { error: 'Redistribution not found' },
+            { error: 'No unclaimed redistributions found for this wallet' },
             { status: 404 }
           );
         }
+        
+        // Use the most recent unclaimed redistribution
+        record = records[0];
+        console.log(`Found latest unclaimed redistribution for wallet: ${wallet}, ID: ${record.id}`);
+      } catch (findError) {
+        console.error('Error finding redistributions for wallet:', findError);
+        return NextResponse.json(
+          { error: 'Failed to find redistributions', details: (findError as Error).message },
+          { status: 500 }
+        );
       }
-      
-    } catch (findError) {
-      console.error('Error finding redistribution record:', findError);
-      return NextResponse.json(
-        { error: 'Failed to find redistribution record', details: (findError as Error).message },
-        { status: 500 }
-      );
     }
-    
-    const record = records[0]; // Use the first matching record
     
     // Log record details for debugging
     console.log('Found redistribution record:', {
