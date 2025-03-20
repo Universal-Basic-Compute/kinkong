@@ -17,5 +17,22 @@
       "path": "/api/cron/calculate-signals",
       "schedule": "0 * * * *"
     }
-  ]
+  ],
+  "functions": {
+    "app/api/claim-redistribution/route.ts": {
+      "runtime": "nodejs18.x",
+      "memory": 1024,
+      "maxDuration": 60
+    },
+    "app/api/investments/claim/route.ts": {
+      "runtime": "nodejs18.x",
+      "memory": 1024,
+      "maxDuration": 60
+    },
+    "app/api/token-transfer/route.ts": {
+      "runtime": "nodejs18.x",
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  }
 }

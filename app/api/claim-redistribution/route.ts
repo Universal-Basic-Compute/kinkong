@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTable } from '@/backend/src/airtable/tables';
 import { Record } from 'airtable';
-import path from 'path';
-import { exec } from 'child_process';
-import util from 'util';
+
+// Specify Node.js runtime
+export const runtime = 'nodejs';
 
 // Transaction interface
 interface Transaction {
@@ -11,9 +11,6 @@ interface Transaction {
   amount: number;
   txSignature: string;
 }
-
-// Convert exec to Promise-based
-const execPromise = util.promisify(exec);
 
 // Token mint addresses
 const TOKEN_MINTS = {
@@ -40,27 +37,33 @@ async function executeTokenTransfer(wallet: string, tokenMint: string, amount: n
   
   while (retries < maxRetries) {
     try {
-      const scriptPath = path.resolve(process.cwd(), 'engine/send_tokens.js');
+      // Determine the base URL
+      const baseUrl = process.env.VERCEL_URL 
+        ? `https://${process.env.VERCEL_URL}` 
+        : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
       
-      console.log(`Executing token transfer (attempt ${retries + 1}/${maxRetries}): ${amount} of ${tokenMint} to ${wallet} with ${decimals} decimals`);
+      console.log(`Using base URL: ${baseUrl}`);
       
-      const { stdout, stderr } = await execPromise(
-        `node ${scriptPath} ${wallet} ${tokenMint} ${amount} ${decimals}`
-      );
+      // Call the token-transfer API route
+      const response = await fetch(`${baseUrl}/api/token-transfer`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          wallet,
+          tokenMint,
+          amount
+        }),
+      });
       
-      if (stderr) {
-        console.error('Token transfer stderr:', stderr);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to execute token transfer');
       }
       
-      console.log('Token transfer stdout:', stdout);
-      
-      // Extract transaction signature from output
-      const signatureMatch = stdout.match(/Transaction signature: ([a-zA-Z0-9]+)/);
-      if (signatureMatch && signatureMatch[1]) {
-        return signatureMatch[1];
-      }
-      
-      return 'Transfer completed, signature not captured';
+      return data.signature;
     } catch (error) {
       lastError = error as Error;
       retries++;

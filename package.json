@@ -16,7 +16,8 @@
     "token-search": "python engine/tokens.py",
     "token-snapshot": "python engine/token_snapshots.py",
     "generate-signals": "python engine/signals.py",
-    "monitor-trades": "python engine/trades.py"
+    "monitor-trades": "python engine/trades.py",
+    "token-transfer": "node engine/send_tokens.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.10.2",
