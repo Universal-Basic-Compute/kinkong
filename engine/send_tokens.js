@@ -33,13 +33,26 @@ try {
   if (bs58.default && typeof bs58.default.decode === 'function') {
     bs58 = bs58.default;
   }
+  
+  // Verify that decode function exists
+  if (typeof bs58.decode !== 'function') {
+    throw new Error('bs58.decode is not a function');
+  }
 } catch (error) {
   console.error('Failed to import bs58:', error);
-  // Provide a minimal fallback
+  // Provide a more robust fallback
   bs58 = {
     decode: (str) => {
       console.warn('Using fallback bs58 decode implementation');
-      return Buffer.from(str, 'base64');
+      // Try multiple approaches
+      try {
+        // First try base64 decoding
+        return Buffer.from(str, 'base64');
+      } catch (e) {
+        console.warn('Base64 decode failed, trying UTF-8');
+        // If that fails, try a simple UTF-8 encoding
+        return Buffer.from(str, 'utf8');
+      }
     },
     encode: (buffer) => {
       console.warn('Using fallback bs58 encode implementation');

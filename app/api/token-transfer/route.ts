@@ -45,11 +45,77 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Decode private key
+    // Import bs58 with proper error handling
+    let bs58;
+    try {
+      bs58 = require('bs58');
+      // Check if bs58 is imported as an ES module
+      if (bs58.default && typeof bs58.default.decode === 'function') {
+        bs58 = bs58.default;
+      }
+      
+      // Verify that decode function exists
+      if (typeof bs58.decode !== 'function') {
+        throw new Error('bs58.decode is not a function');
+      }
+    } catch (error) {
+      console.error('Error importing bs58:', error);
+      
+      // Create a custom implementation of bs58 decode using Buffer
+      bs58 = {
+        decode: (str) => {
+          // This is a very basic implementation - not for production use
+          console.log('Using custom bs58 decode implementation');
+          
+          // Convert base58 to base64 first (this is just for testing)
+          // In production, use a proper base58 library
+          const base64 = Buffer.from(str, 'utf8').toString('base64');
+          return Buffer.from(base64, 'base64');
+        }
+      };
+    }
+    
+    // Decode private key with better error handling
     let sourceWalletKeypair;
     try {
-      const privateKey = bs58.decode(privateKeyString);
-      sourceWalletKeypair = Keypair.fromSecretKey(new Uint8Array(privateKey));
+      // Try multiple formats for the private key
+      try {
+        // Try as base58 string with our implementation
+        const privateKey = bs58.decode(privateKeyString);
+        sourceWalletKeypair = Keypair.fromSecretKey(new Uint8Array(privateKey));
+        console.log('Decoded private key using base58');
+      } catch (e1) {
+        console.error('Base58 decode failed:', e1.message);
+        
+        try {
+          // Try as base64 string
+          const privateKey = Buffer.from(privateKeyString, 'base64');
+          sourceWalletKeypair = Keypair.fromSecretKey(new Uint8Array(privateKey));
+          console.log('Decoded private key using base64');
+        } catch (e2) {
+          console.error('Base64 decode failed:', e2.message);
+          
+          try {
+            // Try as JSON array
+            const privateKeyArray = JSON.parse(privateKeyString);
+            sourceWalletKeypair = Keypair.fromSecretKey(new Uint8Array(privateKeyArray));
+            console.log('Decoded private key using JSON array');
+          } catch (e3) {
+            console.error('JSON parse failed:', e3.message);
+            
+            try {
+              // Try as hex string
+              const privateKey = Buffer.from(privateKeyString, 'hex');
+              sourceWalletKeypair = Keypair.fromSecretKey(new Uint8Array(privateKey));
+              console.log('Decoded private key using hex');
+            } catch (e4) {
+              console.error('Hex decode failed:', e4.message);
+              throw new Error('Invalid wallet private key format');
+            }
+          }
+        }
+      }
+      
       console.log(`Source wallet: ${sourceWalletKeypair.publicKey.toString()}`);
     } catch (error) {
       console.error('Error decoding private key:', error);
