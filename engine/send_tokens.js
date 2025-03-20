@@ -65,6 +65,9 @@ function setupLogging() {
 
 const logger = setupLogging();
 
+// Add a global variable to track which method succeeded
+let successfulMethod = null;
+
 // Function to get alternative RPC URLs
 function getAlternativeRpcUrls() {
   return [
@@ -85,9 +88,19 @@ async function getLatestBlockhashWithRetry(connection, maxRetries = 5, initialDe
   
   while (retries < maxRetries) {
     try {
-      logger.info(`Getting latest blockhash (attempt ${retries + 1}/${maxRetries})...`);
+      logger.info(`Getting latest blockhash (attempt ${retries + 1}/${maxRetries}) from ${currentRpcUrl.substring(0, 30)}...`);
+      const startTime = Date.now();
       const blockhashResponse = await connection.getLatestBlockhash('confirmed');
-      logger.info(`Successfully got blockhash: ${blockhashResponse.blockhash.substring(0, 10)}...`);
+      const endTime = Date.now();
+      logger.info(`Successfully got blockhash in ${endTime - startTime}ms: ${blockhashResponse.blockhash.substring(0, 10)}...`);
+      
+      // Record successful method
+      successfulMethod = {
+        method: "getLatestBlockhash",
+        url: currentRpcUrl,
+        time: endTime - startTime
+      };
+      
       return blockhashResponse;
     } catch (error) {
       retries++;
@@ -196,6 +209,9 @@ async function sendTokens(
       throw new Error(`Source wallet address mismatch. Expected: FnWyN4t1aoZWFjEEBxopMaAgk5hjL5P3K65oc2T9FBJY, Got: ${sourceWalletAddress}`);
     }
     
+    // Reset the successful method tracker
+    successfulMethod = null;
+    
     // Connect to Solana network with fallbacks and alternatives
     const primaryRpcUrl = process.env.NEXT_PUBLIC_HELIUS_RPC_URL || process.env.HELIUS_RPC_URL || 'https://api.mainnet-beta.solana.com';
     logger.info(`Primary RPC URL: ${primaryRpcUrl.substring(0, 20)}...`);
@@ -204,6 +220,7 @@ async function sendTokens(
     let connection;
     let lastError;
     let rpcUrls = [primaryRpcUrl, ...getAlternativeRpcUrls()];
+    let successfulRpcUrl = null;
     
     for (const rpcUrl of rpcUrls) {
       try {
@@ -220,8 +237,13 @@ async function sendTokens(
         });
         
         // Test the connection with a simple request
-        await connection.getVersion();
-        logger.info(`Successfully connected to ${rpcUrl.substring(0, 20)}...`);
+        const startTime = Date.now();
+        const versionInfo = await connection.getVersion();
+        const endTime = Date.now();
+        logger.info(`Successfully connected to ${rpcUrl.substring(0, 20)}... in ${endTime - startTime}ms`);
+        logger.info(`RPC version: ${JSON.stringify(versionInfo)}`);
+        
+        successfulRpcUrl = rpcUrl;
         break; // If successful, break the loop
       } catch (error) {
         logger.warn(`Failed to connect to ${rpcUrl.substring(0, 20)}...: ${error.message}`);
@@ -232,6 +254,9 @@ async function sendTokens(
     if (!connection) {
       throw new Error(`Failed to connect to any RPC endpoint: ${lastError?.message}`);
     }
+    
+    // Record successful RPC URL
+    logger.info(`Using RPC URL: ${successfulRpcUrl}`);
     
     // Get token mint public key
     const tokenMintPublicKey = new PublicKey(tokenMint);
@@ -251,9 +276,22 @@ async function sendTokens(
 
     // Check if destination token account exists
     let transaction = new Transaction();
+    let accountCheckMethod = null;
+    
     try {
+      logger.info(`Checking if destination token account exists: ${destinationTokenAccount.toString()}`);
+      const startTime = Date.now();
       const accountInfo = await connection.getAccountInfo(destinationTokenAccount);
+      const endTime = Date.now();
+      
+      accountCheckMethod = {
+        method: "getAccountInfo",
+        success: true,
+        time: endTime - startTime
+      };
+      
       if (!accountInfo) {
+        logger.info(`Destination token account doesn't exist, creating it...`);
         // If the account doesn't exist, create it
         transaction.add(
           createAssociatedTokenAccountInstruction(
@@ -263,9 +301,22 @@ async function sendTokens(
             tokenMintPublicKey
           )
         );
+      } else {
+        logger.info(`Destination token account exists`);
       }
     } catch (error) {
+      const endTime = Date.now();
+      logger.warn(`Error checking destination token account: ${error.message}`);
+      
+      accountCheckMethod = {
+        method: "getAccountInfo",
+        success: false,
+        error: error.message,
+        time: endTime - startTime
+      };
+      
       // If there's an error, assume the account doesn't exist and create it
+      logger.info(`Assuming destination token account doesn't exist, creating it...`);
       transaction.add(
         createAssociatedTokenAccountInstruction(
           sourceWalletPublicKey,
@@ -291,11 +342,14 @@ async function sendTokens(
       )
     );
     // Get blockhash with retry
+    logger.info(`Getting blockhash...`);
     const { blockhash, lastValidBlockHeight } = await getLatestBlockhashWithRetry(connection);
     transaction.recentBlockhash = blockhash;
     transaction.lastValidBlockHeight = lastValidBlockHeight;
 
     // Add some additional options for better reliability
+    logger.info(`Sending transaction...`);
+    const startSendTime = Date.now();
     const signature = await sendAndConfirmTransaction(
       connection,
       transaction,
@@ -308,7 +362,17 @@ async function sendTokens(
       }
     );
     
-    logger.info(`Transfer successful! Transaction signature: ${signature}`);
+    const endSendTime = Date.now();
+    
+    logger.info(`Transfer successful in ${endSendTime - startSendTime}ms! Transaction signature: ${signature}`);
+    
+    // Log all successful methods
+    logger.info(`=== SUCCESSFUL METHODS SUMMARY ===`);
+    logger.info(`RPC URL: ${successfulRpcUrl}`);
+    logger.info(`Account check method: ${JSON.stringify(accountCheckMethod)}`);
+    logger.info(`Blockhash method: ${JSON.stringify(successfulMethod)}`);
+    logger.info(`Transaction send time: ${endSendTime - startSendTime}ms`);
+    logger.info(`================================`);
     
     // Send notification if configured
     await sendTelegramNotification({

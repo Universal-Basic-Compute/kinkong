@@ -80,6 +80,9 @@ class TokenTransferExecutor:
             "USDC": 6
         }
         
+        # Add a variable to track successful methods
+        self.successful_methods = {}
+        
         # Load wallet from private key
         private_key_str = os.getenv('KINKONG_WALLET_PRIVATE_KEY')
         if not private_key_str:
@@ -112,6 +115,9 @@ class TokenTransferExecutor:
             dict: Result of the transfer operation
         """
         try:
+            # Reset successful methods tracking
+            self.successful_methods = {}
+            
             # Validate token
             if token not in self.token_mints:
                 raise ValueError(f"Unsupported token: {token}. Supported tokens: {', '.join(self.token_mints.keys())}")
@@ -138,11 +144,13 @@ class TokenTransferExecutor:
             
             # Create a Solana client
             client = AsyncClient(rpc_url)
+            self.successful_methods['rpc_url'] = rpc_url
             
             try:
                 # Convert private key to keypair
                 private_key_bytes = base58.b58decode(self.private_key)
                 keypair = Keypair.from_bytes(private_key_bytes)
+                self.successful_methods['keypair_method'] = 'base58'
                 
                 # Get the source token account (the token account for our wallet)
                 self.logger.info(f"Finding source {token} token account for wallet: {self.wallet}")
@@ -154,6 +162,7 @@ class TokenTransferExecutor:
                 )
                 
                 self.logger.info(f"Source token account: {source_token_account}")
+                self.successful_methods['source_token_account'] = str(source_token_account)
                 
                 # Get or create the destination token account
                 destination_token_account = get_associated_token_address(
@@ -162,6 +171,7 @@ class TokenTransferExecutor:
                 )
                 
                 self.logger.info(f"Destination token account: {destination_token_account}")
+                self.successful_methods['destination_token_account'] = str(destination_token_account)
                 
                 # Check if the destination token account exists
                 # Use the string representation directly with the RPC client
@@ -169,18 +179,42 @@ class TokenTransferExecutor:
                 self.logger.info(f"Destination token account string: {dest_token_account_str}")
 
                 # Try to get account info using a proper PublicKey object
+                account_exists = False
+                account_check_method = None
+                
                 try:
                     # Import the correct PublicKey class
                     try:
                         from solana.publickey import PublicKey as SolanaPublicKey
+                        pubkey_class = 'solana.publickey.PublicKey'
                     except ImportError:
                         # If that fails, use the Pubkey class we already have
                         SolanaPublicKey = Pubkey
+                        pubkey_class = 'solders.pubkey.Pubkey'
                     
                     # Create a proper PublicKey object from the string
                     pubkey_obj = SolanaPublicKey(dest_token_account_str)
-                    self.logger.info(f"Created PublicKey object: {pubkey_obj}")
+                    self.logger.info(f"Created PublicKey object: {pubkey_obj} using {pubkey_class}")
+                    
+                    import time
+                    start_time = time.time()
                     response = await client.get_account_info(pubkey_obj)
+                    end_time = time.time()
+                    
+                    self.logger.info(f"Account info check took {(end_time - start_time) * 1000:.2f}ms")
+                    account_check_method = 'get_account_info'
+                    
+                    if response.value:
+                        account_exists = True
+                        self.logger.info("Account exists according to get_account_info")
+                    else:
+                        self.logger.info("Account does not exist according to get_account_info")
+                    
+                    self.successful_methods['account_check'] = {
+                        'method': account_check_method,
+                        'time_ms': (end_time - start_time) * 1000,
+                        'result': account_exists
+                    }
                 except Exception as e:
                     self.logger.error(f"Error getting account info with PublicKey: {e}")
                     
@@ -189,7 +223,9 @@ class TokenTransferExecutor:
                         self.logger.info("Trying direct JSON-RPC call...")
                         import json
                         import aiohttp
+                        import time
                         
+                        start_time = time.time()
                         async with aiohttp.ClientSession() as session:
                             payload = {
                                 "jsonrpc": "2.0",
@@ -207,17 +243,24 @@ class TokenTransferExecutor:
                                 
                                 # Check if the account exists
                                 if "result" in result and result["result"] and result["result"]["value"]:
+                                    account_exists = True
                                     self.logger.info("Account exists according to direct RPC call")
-                                    response = type('obj', (object,), {'value': True})  # Create a simple object with value=True
                                 else:
                                     self.logger.info("Account does not exist according to direct RPC call")
-                                    response = type('obj', (object,), {'value': None})  # Create a simple object with value=None
+                        
+                        end_time = time.time()
+                        account_check_method = 'direct_json_rpc'
+                        self.successful_methods['account_check'] = {
+                            'method': account_check_method,
+                            'time_ms': (end_time - start_time) * 1000,
+                            'result': account_exists
+                        }
                     except Exception as direct_error:
                         self.logger.error(f"Error with direct RPC call: {direct_error}")
                         raise ValueError(f"Failed to check if account exists: {e}, {direct_error}")
                 
                 # If the account doesn't exist, we need to create it
-                if not response.value:
+                if not account_exists:
                     self.logger.info(f"Destination token account doesn't exist, creating it...")
                     
                     # Create the associated token account instruction
@@ -231,14 +274,31 @@ class TokenTransferExecutor:
                     create_ata_tx = Transaction().add(create_ata_ix)
                     
                     # Get recent blockhash
+                    start_time = time.time()
                     blockhash_resp = await client.get_latest_blockhash()
+                    end_time = time.time()
+                    
+                    self.logger.info(f"Get latest blockhash took {(end_time - start_time) * 1000:.2f}ms")
+                    self.successful_methods['get_blockhash'] = {
+                        'method': 'get_latest_blockhash',
+                        'time_ms': (end_time - start_time) * 1000
+                    }
+                    
                     create_ata_tx.recent_blockhash = blockhash_resp.value.blockhash
                     
                     # Sign and send the transaction
                     create_ata_tx.sign(keypair)
                     
                     self.logger.info("Sending transaction to create destination token account...")
+                    start_time = time.time()
                     create_resp = await client.send_transaction(create_ata_tx)
+                    end_time = time.time()
+                    
+                    self.logger.info(f"Send transaction took {(end_time - start_time) * 1000:.2f}ms")
+                    self.successful_methods['create_account'] = {
+                        'method': 'send_transaction',
+                        'time_ms': (end_time - start_time) * 1000
+                    }
                     
                     if not create_resp.value:
                         raise ValueError("Failed to create destination token account")
@@ -293,7 +353,16 @@ class TokenTransferExecutor:
                     transaction.add(transfer_ix)
                     
                     # Get recent blockhash
+                    start_time = time.time()
                     blockhash_resp = await client.get_latest_blockhash()
+                    end_time = time.time()
+                    
+                    self.logger.info(f"Get latest blockhash took {(end_time - start_time) * 1000:.2f}ms")
+                    self.successful_methods['get_blockhash_transfer'] = {
+                        'method': 'get_latest_blockhash',
+                        'time_ms': (end_time - start_time) * 1000
+                    }
+                    
                     transaction.recent_blockhash = blockhash_resp.value.blockhash
                     
                     # Sign the transaction
@@ -301,6 +370,7 @@ class TokenTransferExecutor:
                     
                     # Send the transaction
                     self.logger.info("Sending transaction...")
+                    start_time = time.time()
                     send_resp = await client.send_transaction(
                         transaction,
                         opts=TxOpts(
@@ -314,28 +384,54 @@ class TokenTransferExecutor:
                         raise ValueError("Failed to send transaction")
                     
                     tx_signature = str(send_resp.value)
+                    end_time = time.time()
+                    
+                    self.logger.info(f"Send transaction took {(end_time - start_time) * 1000:.2f}ms")
+                    self.successful_methods['send_transaction'] = {
+                        'method': 'send_transaction',
+                        'time_ms': (end_time - start_time) * 1000
+                    }
+                    
                     self.logger.info(f"Transaction sent successfully: {tx_signature}")
                     
                     # Wait for confirmation
                     self.logger.info("Waiting for transaction confirmation...")
-                    await asyncio.sleep(5)
-                    
-                    # Verify the transaction was successful
+                    start_time = time.time()
                     confirm_resp = await client.confirm_transaction(tx_signature)
+                    end_time = time.time()
+                    
+                    self.logger.info(f"Confirm transaction took {(end_time - start_time) * 1000:.2f}ms")
+                    self.successful_methods['confirm_transaction'] = {
+                        'method': 'confirm_transaction',
+                        'time_ms': (end_time - start_time) * 1000
+                    }
                     
                     if not confirm_resp.value:
                         self.logger.warning(f"Transaction may not be confirmed: {tx_signature}")
+                    
+                    # Log successful methods summary
+                    self.logger.info("=== SUCCESSFUL METHODS SUMMARY ===")
+                    for method_name, method_info in self.successful_methods.items():
+                        self.logger.info(f"{method_name}: {method_info}")
+                    self.logger.info("================================")
                     
                     return {
                         "success": True,
                         "signature": tx_signature,
                         "token": token,
                         "amount": amount,
-                        "destination": destination_wallet
+                        "destination": destination_wallet,
+                        "methods": self.successful_methods
                     }
                 except Exception as e:
-                    self.logger.error(f"Error with JSON RPC approach: {e}")
+                    self.logger.error(f"Error with Solana SDK approach: {e}")
                     # Fall back to a simpler approach
+                    
+                    # Log which methods were successful before the error
+                    self.logger.info("=== PARTIAL METHODS SUMMARY (BEFORE ERROR) ===")
+                    for method_name, method_info in self.successful_methods.items():
+                        self.logger.info(f"{method_name}: {method_info}")
+                    self.logger.info("================================")
                     
                     # Try a simpler approach - use the command line to execute a transfer
                     self.logger.info("Falling back to command line approach...")
@@ -529,7 +625,8 @@ print(json.dumps(result))
                 "error": str(e),
                 "token": token,
                 "amount": amount,
-                "destination": destination_wallet
+                "destination": destination_wallet,
+                "methods": self.successful_methods
             }
     
     def send_telegram_notification(self, transfer_data, tx_signature):
