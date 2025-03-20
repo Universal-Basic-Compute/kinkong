@@ -129,9 +129,9 @@ export async function POST(request: NextRequest) {
       fields: Object.keys(record.fields)
     });
 
-    // Verify the wallet matches - with improved comparison
-    const recordWallet = record.get('wallet');
-    console.log('Comparing wallets:', {
+    // Get the wallet from the record
+    let recordWallet = record.get('wallet');
+    console.log('Initial wallet comparison:', {
       requestWallet: wallet,
       recordWallet: recordWallet,
       requestWalletLower: wallet.toLowerCase(),
@@ -147,9 +147,53 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Compare wallets case-insensitively
+    // Check if there's an investmentId field in the record
+    const investmentId = record.get('investmentId');
+    if (investmentId) {
+      console.log(`Checking original investment with ID: ${investmentId}`);
+      
+      try {
+        const investmentsTable = getTable('INVESTMENTS');
+        const investmentRecords = await investmentsTable.select({
+          filterByFormula: `{investmentId} = '${investmentId}'`
+        }).all();
+        
+        if (investmentRecords.length > 0) {
+          const investmentRecord = investmentRecords[0];
+          const originalWallet = investmentRecord.get('wallet');
+          
+          console.log('Found original investment:', {
+            id: investmentRecord.id,
+            wallet: originalWallet,
+            requestWallet: wallet
+          });
+          
+          // If the original wallet matches the request wallet, update the redistribution record
+          if (originalWallet && originalWallet.toLowerCase() === wallet.toLowerCase()) {
+            console.log('Wallet matches original investment, updating redistribution record');
+            
+            // Update the redistribution record with the correct wallet
+            await redistributionsTable.update(record.id, {
+              wallet: wallet // Update to the correct wallet
+            });
+            
+            // Use the updated wallet for the rest of the process
+            recordWallet = wallet;
+          }
+        }
+      } catch (investmentError) {
+        console.error('Error finding original investment:', investmentError);
+      }
+    }
+
+    // Compare wallets case-insensitively after potential update
+    console.log('Comparing wallets after investment check:', {
+      requestWallet: wallet,
+      recordWallet: recordWallet
+    });
+
     if (recordWallet.toLowerCase() !== wallet.toLowerCase()) {
-      console.error('Wallet mismatch:', {
+      console.error('Wallet mismatch after investment check:', {
         requestWallet: wallet,
         recordWallet: recordWallet
       });

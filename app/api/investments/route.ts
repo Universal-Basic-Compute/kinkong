@@ -1,40 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTable } from '@/backend/src/airtable/tables';
+import { getInvestments } from '@/backend/src/airtable/investments';
 
 export async function GET(request: NextRequest) {
   try {
-    // Initialize Airtable
-    const redistributionsTable = getTable('INVESTOR_REDISTRIBUTIONS');
+    // Use the getInvestments function from the backend
+    const investments = await getInvestments();
     
-    // Get the latest 100 redistributions, sorted by createdAt in descending order
+    // Get the redistributions to add return data
+    const redistributionsTable = getTable('INVESTOR_REDISTRIBUTIONS');
     const redistributionsRecords = await redistributionsTable.select({
       maxRecords: 100,
       sort: [{ field: 'createdAt', direction: 'desc' }]
     }).all();
     
-    console.log(`Found ${redistributionsRecords.length} redistributions`);
+    // Create a map of investmentId to redistribution data
+    const redistributionMap = new Map();
+    redistributionsRecords.forEach(record => {
+      const investmentId = record.get('investmentId');
+      if (investmentId) {
+        redistributionMap.set(investmentId, {
+          ubcReturn: parseFloat(record.get('ubcAmount') || '0'),
+          return: parseFloat(record.get('amount') || '0'),
+          redistributionId: record.get('redistributionId') || record.id,
+          redistributionDate: record.get('createdAt'),
+          percentage: parseFloat(record.get('percentage') || '0'),
+          claimed: record.get('claimed') || false
+        });
+      }
+    });
     
-    // Map redistributions to the format expected by the frontend
-    const redistributions = redistributionsRecords.map(record => {
+    // Combine investment data with redistribution data
+    const combinedData = investments.map(investment => {
+      const redistribution = redistributionMap.get(investment.investmentId) || {};
+      
+      // Log the wallet addresses to debug
+      console.log(`Investment ${investment.investmentId}:`, {
+        investmentWallet: investment.wallet,
+        redistributionWallet: redistribution.wallet || 'N/A'
+      });
+      
       return {
-        investmentId: record.id, // Use redistribution ID as the investment ID
-        amount: parseFloat(record.get('investmentValue') || '0'), // Use investmentValue as amount
-        token: 'USDC', // Default to USDC
-        date: record.get('createdAt') || '',
-        wallet: record.get('wallet') || '',
-        username: record.get('username') || '',
-        // Return data is already in the redistribution record
-        ubcReturn: parseFloat(record.get('ubcAmount') || '0'),
-        return: parseFloat(record.get('amount') || '0'),
-        redistributionId: record.get('redistributionId'),
-        redistributionDate: record.get('createdAt'),
-        percentage: parseFloat(record.get('percentage') || '0'),
-        claimed: record.get('claimed') || false
+        ...investment,
+        ...redistribution
       };
     });
     
-    console.log(`Returning ${redistributions.length} redistributions`);
-    return NextResponse.json(redistributions);
+    console.log(`Returning ${combinedData.length} investments with redistribution data`);
+    return NextResponse.json(combinedData);
   } catch (error) {
     console.error('Error fetching redistributions:', error);
     return NextResponse.json(

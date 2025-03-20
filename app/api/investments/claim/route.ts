@@ -81,10 +81,20 @@ export async function POST(request: NextRequest) {
             console.log(`Found redistribution by record ID: ${investmentId}`);
             records = [recordById];
           } else {
-            return NextResponse.json(
-              { error: 'Investment not found' },
-              { status: 404 }
-            );
+            // Try looking up by investmentId field
+            const investmentRecords = await redistributionsTable.select({
+              filterByFormula: `{investmentId} = '${investmentId}'`
+            }).all();
+            
+            if (investmentRecords.length > 0) {
+              console.log(`Found redistribution by investmentId: ${investmentId}`);
+              records = [investmentRecords[0]];
+            } else {
+              return NextResponse.json(
+                { error: 'Investment not found' },
+                { status: 404 }
+              );
+            }
           }
         } catch (idError) {
           console.error('Error finding redistribution by record ID:', idError);
@@ -125,7 +135,38 @@ export async function POST(request: NextRequest) {
     // Get the reward amounts and wallet
     const ubcAmount = parseFloat(record.get('ubcAmount') || '0');
     const computeAmount = parseFloat(record.get('computeAmount') || '0');
-    const wallet = record.get('wallet');
+    let wallet = record.get('wallet');
+    
+    // Check if there's an investmentId field in the record
+    const recordInvestmentId = record.get('investmentId');
+    if (recordInvestmentId) {
+      console.log(`Checking original investment with ID: ${recordInvestmentId}`);
+      
+      try {
+        const investmentsTable = getTable('INVESTMENTS');
+        const investmentRecords = await investmentsTable.select({
+          filterByFormula: `{investmentId} = '${recordInvestmentId}'`
+        }).all();
+        
+        if (investmentRecords.length > 0) {
+          const investmentRecord = investmentRecords[0];
+          const originalWallet = investmentRecord.get('wallet');
+          
+          console.log('Found original investment:', {
+            id: investmentRecord.id,
+            originalWallet: originalWallet,
+            redistributionWallet: wallet
+          });
+          
+          if (originalWallet) {
+            // Use the wallet from the original investment
+            wallet = originalWallet;
+          }
+        }
+      } catch (investmentError) {
+        console.error('Error finding original investment:', investmentError);
+      }
+    }
     
     if (!wallet) {
       return NextResponse.json(
