@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
           );
         }
         
-        console.log(`Found latest unclaimed redistribution for wallet: ${wallet}, ID: ${record.id}`);
+        console.log(`Found latest unclaimed redistribution for wallet: ${wallet}, ID: ${(record as any).id}`);
       } catch (findError) {
         console.error('Error finding redistributions for wallet:', findError);
         return NextResponse.json(
