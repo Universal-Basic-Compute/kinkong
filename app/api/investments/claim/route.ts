@@ -133,8 +133,26 @@ export async function POST(request: NextRequest) {
     }
     
     // Get the reward amounts and wallet
-    const ubcAmount = parseFloat(record.get('ubcAmount') || '0');
-    const computeAmount = parseFloat(record.get('computeAmount') || '0');
+    const token = record.get('token') || 'UBC'; // Get the token type
+    const amount = parseFloat(record.get('amount') || '0'); // Get the amount
+    
+    // Set the appropriate token amount based on the token type
+    let ubcAmount = 0;
+    let computeAmount = 0;
+
+    if (token.toUpperCase() === 'UBC') {
+      ubcAmount = amount;
+    } else if (token.toUpperCase() === 'COMPUTE') {
+      computeAmount = amount;
+    }
+
+    console.log('Reward amounts:', {
+      token,
+      amount,
+      ubcAmount,
+      computeAmount
+    });
+    
     let wallet = record.get('wallet');
     
     // Check if there's an investmentId field in the record
@@ -175,7 +193,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    if (ubcAmount <= 0 && computeAmount <= 0) {
+    if (amount <= 0) {
       return NextResponse.json(
         { error: 'No rewards to claim' },
         { status: 400 }
