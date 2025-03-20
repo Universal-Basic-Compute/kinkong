@@ -253,10 +253,10 @@ export async function POST(request: NextRequest) {
     // Update the record based on transfer results
     if (transferError) {
       // If transfer failed, mark for manual processing
-      await redistributionsTable.update(investmentId, {
-        processingStatus: 'MANUAL_REVIEW_NEEDED',
-        processingRequestedAt: new Date().toISOString(),
-        processingNote: `Automatic transfer failed: ${transferError}. Amounts: ${ubcAmount} UBC, ${computeAmount} COMPUTE to wallet ${wallet}`
+      await redistributionsTable.update(record.id, {
+        status: 'MANUAL_REVIEW_NEEDED',
+        claimedAt: new Date().toISOString(),
+        notes: `Automatic transfer failed: ${transferError}. Amounts: ${ubcAmount} UBC, ${computeAmount} COMPUTE to wallet ${wallet}`
       });
       
       // Send notification about failed transfer
@@ -289,11 +289,11 @@ export async function POST(request: NextRequest) {
       });
     } else {
       // If transfer succeeded, mark as claimed
-      await redistributionsTable.update(investmentId, {
+      await redistributionsTable.update(record.id, {
         claimed: true,
         claimedAt: new Date().toISOString(),
-        processingStatus: 'COMPLETED',
-        processingNote: `Automatic transfer completed. Transactions: ${JSON.stringify(transactions)}`
+        status: 'COMPLETED',
+        notes: `Automatic transfer completed. Transactions: ${JSON.stringify(transactions)}`
       });
       
       // Send notification about successful transfer

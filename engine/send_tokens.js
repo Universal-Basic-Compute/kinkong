@@ -65,10 +65,23 @@ function setupLogging() {
 
 const logger = setupLogging();
 
+// Function to get alternative RPC URLs
+function getAlternativeRpcUrls() {
+  return [
+    'https://api.mainnet-beta.solana.com',
+    'https://solana-api.projectserum.com',
+    'https://rpc.ankr.com/solana',
+    'https://mainnet.solana.rpcpool.com'
+  ];
+}
+
 // Function to get blockhash with retry logic
 async function getLatestBlockhashWithRetry(connection, maxRetries = 5, initialDelay = 1000) {
   let retries = 0;
   let delay = initialDelay;
+  let currentRpcUrl = connection.rpcEndpoint;
+  let alternativeUrls = getAlternativeRpcUrls();
+  let urlIndex = 0;
   
   while (retries < maxRetries) {
     try {
@@ -81,8 +94,28 @@ async function getLatestBlockhashWithRetry(connection, maxRetries = 5, initialDe
       logger.error(`Error getting blockhash (attempt ${retries}/${maxRetries}): ${error.message}`);
       
       if (error.message.includes('429') || error.message.includes('Too Many Requests')) {
-        logger.warn('Rate limit hit, increasing backoff time...');
-        delay = delay * 2; // Double the delay for rate limit errors
+        logger.warn('Rate limit hit, switching to alternative RPC endpoint...');
+        
+        // Create a new connection with an alternative RPC URL
+        if (urlIndex < alternativeUrls.length) {
+          const alternativeRpcUrl = alternativeUrls[urlIndex++];
+          if (alternativeRpcUrl !== currentRpcUrl) {
+            logger.info(`Switching from ${currentRpcUrl.substring(0, 20)}... to ${alternativeRpcUrl.substring(0, 20)}...`);
+            connection = new Connection(alternativeRpcUrl, {
+              commitment: 'confirmed',
+              confirmTransactionInitialTimeout: 60000,
+              disableRetryOnRateLimit: false
+            });
+            currentRpcUrl = alternativeRpcUrl;
+            
+            // Try immediately with the new endpoint
+            continue;
+          }
+        } else {
+          // If we've tried all alternative URLs, increase backoff time
+          logger.warn('All alternative RPC endpoints tried, increasing backoff time...');
+          delay = delay * 2; // Double the delay for rate limit errors
+        }
       }
       
       if (retries >= maxRetries) {
@@ -163,19 +196,42 @@ async function sendTokens(
       throw new Error(`Source wallet address mismatch. Expected: FnWyN4t1aoZWFjEEBxopMaAgk5hjL5P3K65oc2T9FBJY, Got: ${sourceWalletAddress}`);
     }
     
-    // Connect to Solana network with fallbacks
-    const rpcUrl = process.env.NEXT_PUBLIC_HELIUS_RPC_URL || process.env.HELIUS_RPC_URL || 'https://api.mainnet-beta.solana.com';
-    logger.info(`Using RPC URL: ${rpcUrl.substring(0, 20)}...`);
+    // Connect to Solana network with fallbacks and alternatives
+    const primaryRpcUrl = process.env.NEXT_PUBLIC_HELIUS_RPC_URL || process.env.HELIUS_RPC_URL || 'https://api.mainnet-beta.solana.com';
+    logger.info(`Primary RPC URL: ${primaryRpcUrl.substring(0, 20)}...`);
 
-    // Create connection with better timeout and commitment settings
-    const connection = new Connection(rpcUrl, {
-      commitment: 'confirmed',
-      confirmTransactionInitialTimeout: 60000, // 60 seconds
-      disableRetryOnRateLimit: false,
-      httpHeaders: {
-        'Content-Type': 'application/json',
+    // Try each RPC URL in sequence
+    let connection;
+    let lastError;
+    let rpcUrls = [primaryRpcUrl, ...getAlternativeRpcUrls()];
+    
+    for (const rpcUrl of rpcUrls) {
+      try {
+        logger.info(`Trying RPC URL: ${rpcUrl.substring(0, 20)}...`);
+        
+        // Create connection with better timeout and commitment settings
+        connection = new Connection(rpcUrl, {
+          commitment: 'confirmed',
+          confirmTransactionInitialTimeout: 60000, // 60 seconds
+          disableRetryOnRateLimit: false,
+          httpHeaders: {
+            'Content-Type': 'application/json',
+          }
+        });
+        
+        // Test the connection with a simple request
+        await connection.getVersion();
+        logger.info(`Successfully connected to ${rpcUrl.substring(0, 20)}...`);
+        break; // If successful, break the loop
+      } catch (error) {
+        logger.warn(`Failed to connect to ${rpcUrl.substring(0, 20)}...: ${error.message}`);
+        lastError = error;
       }
-    });
+    }
+    
+    if (!connection) {
+      throw new Error(`Failed to connect to any RPC endpoint: ${lastError?.message}`);
+    }
     
     // Get token mint public key
     const tokenMintPublicKey = new PublicKey(tokenMint);
