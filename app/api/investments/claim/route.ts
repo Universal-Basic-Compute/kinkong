@@ -198,9 +198,6 @@ export async function POST(request: NextRequest) {
         const investmentsTable = getTable('INVESTMENTS');
         
         // Try multiple approaches to find the investment
-        let investmentRecord = null;
-        
-        // Try multiple approaches to find the investment
         let investmentRecord: any = null;
         
         // Approach 1: Try to find by record ID directly
