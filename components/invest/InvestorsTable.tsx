@@ -308,41 +308,33 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
                           investor.wallet.toLowerCase() === publicKey.toString().toLowerCase();
                         
                         // Determine button state and text
-                        let buttonText = 'Claim';
                         let buttonDisabled = true;
                         let buttonTooltip = '';
                         
                         if (investor.claimed) {
-                          buttonText = 'Claimed';
-                          buttonTooltip = 'This redistribution has already been claimed';
-                        } else if (!publicKey) {
-                          buttonTooltip = 'Connect your wallet to claim';
-                        } else if (!isWalletMatch) {
-                          buttonText = 'Wrong Wallet';
-                          buttonTooltip = `Connect wallet ${investor.wallet.substring(0, 4)}...${investor.wallet.substring(investor.wallet.length - 4)} to claim`;
+                          // Claimed state
+                          return (
+                            <div className="relative group">
+                              <button
+                                className="px-4 py-2 rounded-md bg-gray-600 text-gray-300 cursor-not-allowed opacity-50"
+                                disabled={true}
+                                title="This redistribution has already been claimed"
+                              >
+                                Claimed
+                              </button>
+                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+                                This redistribution has already been claimed
+                              </div>
+                            </div>
+                          );
                         } else if (claimingId === investor.redistributionId || claimingId === investor.investmentId) {
-                          buttonText = 'Processing';
-                        } else {
-                          buttonDisabled = false;
-                        }
-                        
-                        return (
-                          <div className="relative group">
-                            <button
-                              className={`px-4 py-2 rounded-md ${
-                                buttonDisabled
-                                  ? 'bg-gray-600 text-gray-300 cursor-not-allowed opacity-50' 
-                                  : 'bg-gradient-to-r from-orange-500 to-yellow-400 hover:from-orange-600 hover:to-yellow-500 text-black font-medium'
-                              }`}
-                              disabled={buttonDisabled}
-                              onClick={() => {
-                                // Set claiming state immediately before the async operation
-                                setClaimingId(investor.redistributionId || investor.investmentId);
-                                handleClaim(investor.redistributionId || investor.investmentId, investor.wallet);
-                              }}
-                              title={buttonTooltip}
-                            >
-                              {claimingId === investor.redistributionId || claimingId === investor.investmentId ? (
+                          // Processing state
+                          return (
+                            <div className="relative group">
+                              <button
+                                className="px-4 py-2 rounded-md bg-gray-600 text-gray-300 cursor-not-allowed opacity-50"
+                                disabled={true}
+                              >
                                 <span className="flex items-center justify-center">
                                   <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -350,19 +342,45 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
                                   </svg>
                                   Processing
                                 </span>
-                              ) : investor.claimed ? (
-                                'Claimed'
-                              ) : (
-                                buttonText
+                              </button>
+                            </div>
+                          );
+                        } else {
+                          // Normal claim button (enabled or disabled based on wallet match)
+                          if (!publicKey) {
+                            buttonTooltip = 'Connect your wallet to claim';
+                          } else if (!isWalletMatch) {
+                            buttonTooltip = `Connect wallet ${investor.wallet.substring(0, 4)}...${investor.wallet.substring(investor.wallet.length - 4)} to claim`;
+                          } else {
+                            buttonDisabled = false;
+                          }
+                          
+                          return (
+                            <div className="relative group">
+                              <button
+                                className={`px-4 py-2 rounded-md ${
+                                  buttonDisabled
+                                    ? 'bg-gray-600 text-gray-300 cursor-not-allowed opacity-50' 
+                                    : 'bg-gradient-to-r from-orange-500 to-yellow-400 hover:from-orange-600 hover:to-yellow-500 text-black font-medium'
+                                }`}
+                                disabled={buttonDisabled}
+                                onClick={() => {
+                                  // Set claiming state immediately before the async operation
+                                  setClaimingId(investor.redistributionId || investor.investmentId);
+                                  handleClaim(investor.redistributionId || investor.investmentId, investor.wallet);
+                                }}
+                                title={buttonTooltip}
+                              >
+                                Claim
+                              </button>
+                              {buttonTooltip && (
+                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+                                  {buttonTooltip}
+                                </div>
                               )}
-                            </button>
-                            {buttonTooltip && (
-                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-                                {buttonTooltip}
-                              </div>
-                            )}
-                          </div>
-                        );
+                            </div>
+                          );
+                        }
                       })()}
                     </td>
                   </tr>
