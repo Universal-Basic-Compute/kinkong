@@ -53,14 +53,19 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
   const [investors, setInvestors] = useState<Investor[]>(initialData);
   const [isLoading, setIsLoading] = useState(true);
   const [totalInvestment, setTotalInvestment] = useState(0);
-  const [claimingId, setClaimingId] = useState<string | null>(null); // Add state for tracking claiming process
+  const [claimingIds, setClaimingIds] = useState<Set<string>>(new Set()); // Track multiple claiming IDs
 
   // Add a function to handle claiming
   const handleClaim = async (investorId: string, wallet: string) => {
     // Check if the user is connected and the wallet matches
     if (!publicKey) {
       alert('Please connect your wallet to claim');
-      setClaimingId(null); // Reset claiming state if wallet not connected
+      // Remove this ID from claiming state
+      setClaimingIds(prev => {
+        const updated = new Set(prev);
+        updated.delete(investorId);
+        return updated;
+      });
       return;
     }
     
@@ -73,12 +78,16 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
 
     if (connectedWallet.toLowerCase() !== wallet.toLowerCase()) {
       alert('Please connect the correct wallet to claim');
-      setClaimingId(null); // Reset claiming state if wallet doesn't match
+      // Remove this ID from claiming state
+      setClaimingIds(prev => {
+        const updated = new Set(prev);
+        updated.delete(investorId);
+        return updated;
+      });
       return;
     }
 
     try {
-      // Note: We don't set claimingId here anymore since it's set in the onClick handler
       console.log('Claiming with data:', {
         redistributionId: investorId,
         wallet: wallet
@@ -119,7 +128,12 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
       console.error('Error claiming redistribution:', error);
       alert(`Failed to claim redistribution: ${(error as Error).message}`);
     } finally {
-      setClaimingId(null); // Reset claiming state
+      // Remove this ID from claiming state
+      setClaimingIds(prev => {
+        const updated = new Set(prev);
+        updated.delete(investorId);
+        return updated;
+      });
     }
   };
 
@@ -327,7 +341,7 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
                               </div>
                             </div>
                           );
-                        } else if (claimingId === investor.redistributionId || claimingId === investor.investmentId) {
+                        } else if (claimingIds.has(investor.redistributionId || '') || claimingIds.has(investor.investmentId || '')) {
                           // Processing state
                           return (
                             <div className="relative group">
@@ -365,9 +379,14 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
                                 }`}
                                 disabled={buttonDisabled}
                                 onClick={() => {
-                                  // Set claiming state immediately before the async operation
-                                  setClaimingId(investor.redistributionId || investor.investmentId);
-                                  handleClaim(investor.redistributionId || investor.investmentId, investor.wallet);
+                                  // Add this ID to the claiming set
+                                  const idToUse = investor.redistributionId || investor.investmentId;
+                                  setClaimingIds(prev => {
+                                    const updated = new Set(prev);
+                                    updated.add(idToUse);
+                                    return updated;
+                                  });
+                                  handleClaim(idToUse, investor.wallet);
                                 }}
                                 title={buttonTooltip}
                               >
