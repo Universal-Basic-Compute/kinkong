@@ -129,9 +129,30 @@ export async function POST(request: NextRequest) {
       fields: Object.keys(record.fields)
     });
 
-    // Verify the wallet matches
+    // Verify the wallet matches - with improved comparison
     const recordWallet = record.get('wallet');
-    if (recordWallet !== wallet) {
+    console.log('Comparing wallets:', {
+      requestWallet: wallet,
+      recordWallet: recordWallet,
+      requestWalletLower: wallet.toLowerCase(),
+      recordWalletLower: recordWallet ? recordWallet.toLowerCase() : null
+    });
+
+    // Check if wallet is missing in the record
+    if (!recordWallet) {
+      console.error('Wallet is missing in the redistribution record');
+      return NextResponse.json(
+        { error: 'Wallet information is missing in the record' },
+        { status: 400 }
+      );
+    }
+
+    // Compare wallets case-insensitively
+    if (recordWallet.toLowerCase() !== wallet.toLowerCase()) {
+      console.error('Wallet mismatch:', {
+        requestWallet: wallet,
+        recordWallet: recordWallet
+      });
       return NextResponse.json(
         { error: 'Wallet does not match redistribution record' },
         { status: 403 }

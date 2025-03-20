@@ -58,7 +58,19 @@ export function RedistributionsTable({ initialData = [] }: InvestorsTableProps) 
   // Add a function to handle claiming
   const handleClaim = async (investorId: string, wallet: string) => {
     // Check if the user is connected and the wallet matches
-    if (!publicKey || publicKey.toString() !== wallet) {
+    if (!publicKey) {
+      alert('Please connect your wallet to claim');
+      return;
+    }
+    
+    const connectedWallet = publicKey.toString();
+    console.log('Wallet comparison:', {
+      connectedWallet,
+      investorWallet: wallet,
+      match: connectedWallet.toLowerCase() === wallet.toLowerCase()
+    });
+
+    if (connectedWallet.toLowerCase() !== wallet.toLowerCase()) {
       alert('Please connect the correct wallet to claim');
       return;
     }
