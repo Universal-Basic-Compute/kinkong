@@ -9,6 +9,8 @@ function getTokenDecimals(tokenMint) {
     'So11111111111111111111111111111111111111112': 9, // SOL (wrapped)
     'mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So': 9, // mSOL
     'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263': 5, // Bonk
+    '9psiRdn9cXYVps4F1kFuoNjd2EtmqNJXrCPmRppJpump': 6, // UBC
+    'B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo': 6, // COMPUTE
     // Add more tokens as needed
   };
   

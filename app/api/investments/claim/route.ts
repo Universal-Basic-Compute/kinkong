@@ -20,19 +20,31 @@ const TOKEN_MINTS = {
   COMPUTE: 'B1N1HcMm4RysYz4smsXwmk2UnS8NziqKCM6Ho8i62vXo'
 };
 
+// Token decimals
+const TOKEN_DECIMALS = {
+  UBC: 6,
+  COMPUTE: 6
+};
+
 // Function to execute token transfer with retries
 async function executeTokenTransfer(wallet: string, tokenMint: string, amount: number, maxRetries = 3): Promise<string> {
   let retries = 0;
   let lastError: Error | null = null;
   
+  // Determine the token symbol from the mint address
+  const tokenSymbol = Object.keys(TOKEN_MINTS).find(key => TOKEN_MINTS[key] === tokenMint) || 'UNKNOWN';
+  
+  // Get the correct decimals for this token
+  const decimals = TOKEN_DECIMALS[tokenSymbol] || 9;
+  
   while (retries < maxRetries) {
     try {
       const scriptPath = path.resolve(process.cwd(), 'engine/send_tokens.js');
       
-      console.log(`Executing token transfer (attempt ${retries + 1}/${maxRetries}): ${amount} of ${tokenMint} to ${wallet}`);
+      console.log(`Executing token transfer (attempt ${retries + 1}/${maxRetries}): ${amount} of ${tokenMint} to ${wallet} with ${decimals} decimals`);
       
       const { stdout, stderr } = await execPromise(
-        `node ${scriptPath} ${wallet} ${tokenMint} ${amount}`
+        `node ${scriptPath} ${wallet} ${tokenMint} ${amount} ${decimals}`
       );
       
       if (stderr) {
