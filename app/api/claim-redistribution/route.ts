@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTable } from '@/backend/src/airtable/tables';
+import { Record } from 'airtable';
 import path from 'path';
 import { exec } from 'child_process';
 import util from 'util';
@@ -154,7 +155,7 @@ export async function POST(request: NextRequest) {
         }
         
         // Use the most recent unclaimed redistribution
-        const record = records[0];
+        const record = records[0] as Record<any>;
         if (!record) {
           console.error(`No unclaimed redistributions found for wallet: ${wallet}`);
           return NextResponse.json(
@@ -174,8 +175,8 @@ export async function POST(request: NextRequest) {
     }
     
     // At this point, record is guaranteed to be non-null
-    // TypeScript needs this assertion
-    const nonNullRecord = record as NonNullable<typeof record>;
+    // TypeScript needs this assertion with the correct type
+    const nonNullRecord = record as Record<any>;
     
     // Log record details for debugging
     console.log('Found redistribution record:', {
