@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
         }
         
         // Use the most recent unclaimed redistribution
-        record = records[0];
+        const record = records[0];
         if (!record) {
           console.error(`No unclaimed redistributions found for wallet: ${wallet}`);
           return NextResponse.json(
@@ -173,42 +173,24 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    if (!record) {
-      return NextResponse.json(
-        { error: 'No matching redistribution found for this wallet' },
-        { status: 404 }
-      );
-    }
-    
     // At this point, record is guaranteed to be non-null
     // TypeScript needs this assertion
-    record = record as NonNullable<typeof record>;
-    
-    if (!record) {
-      return NextResponse.json(
-        { error: 'No matching redistribution found for this wallet' },
-        { status: 404 }
-      );
-    }
-    
-    // At this point, record is guaranteed to be non-null
-    // TypeScript needs this assertion
-    record = record as NonNullable<typeof record>;
+    const nonNullRecord = record as NonNullable<typeof record>;
     
     // Log record details for debugging
     console.log('Found redistribution record:', {
-      id: record.id,
-      redistributionId: record.get('redistributionId'),
-      wallet: record.get('wallet'),
-      claimed: record.get('claimed'),
-      fields: Object.keys(record.fields)
+      id: nonNullRecord.id,
+      redistributionId: nonNullRecord.get('redistributionId'),
+      wallet: nonNullRecord.get('wallet'),
+      claimed: nonNullRecord.get('claimed'),
+      fields: Object.keys(nonNullRecord.fields)
     });
 
     // Get the wallet from the record - this is the wallet that will receive the tokens
-    const recordWallet = record.get('wallet');
+    const recordWallet = nonNullRecord.get('wallet');
 
     // Check if already claimed
-    const claimed = record.get('claimed');
+    const claimed = nonNullRecord.get('claimed');
     if (claimed) {
       return NextResponse.json(
         { error: 'Redistribution already claimed' },
@@ -233,8 +215,8 @@ export async function POST(request: NextRequest) {
     console.log(`Proceeding with claim for wallet: ${recordWallet}`);
 
     // Get the reward amounts
-    const token = record.get('token') || 'UBC'; // Get the token type
-    const amount = parseFloat(record.get('amount') || '0'); // Get the amount
+    const token = nonNullRecord.get('token') || 'UBC'; // Get the token type
+    const amount = parseFloat(nonNullRecord.get('amount') || '0'); // Get the amount
 
     // Set the appropriate token amount based on the token type
     let ubcAmount = 0;
@@ -295,7 +277,7 @@ export async function POST(request: NextRequest) {
     // Update the record based on transfer results
     if (transferError) {
       // If transfer failed, mark for manual processing
-      await redistributionsTable.update(record.id, {
+      await redistributionsTable.update(nonNullRecord.id, {
         status: 'MANUAL_REVIEW_NEEDED',
         claimedAt: new Date().toISOString(),
         notes: `Automatic transfer failed: ${transferError}. Amounts: ${ubcAmount} UBC, ${computeAmount} COMPUTE to wallet ${recordWallet}`
@@ -331,7 +313,7 @@ export async function POST(request: NextRequest) {
       });
     } else {
       // If transfer succeeded, mark as claimed
-      await redistributionsTable.update(record.id, {
+      await redistributionsTable.update(nonNullRecord.id, {
         claimed: true,
         claimedAt: new Date().toISOString(),
         status: 'COMPLETED',
