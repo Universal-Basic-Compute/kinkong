@@ -89,31 +89,35 @@ async function executeTokenTransfer(wallet: string, tokenMint: string, amount: n
           const privateKey = bs58.decode(privateKeyString);
           sourceWalletKeypair = Keypair.fromSecretKey(new Uint8Array(privateKey));
           console.log('Decoded private key using base58');
-        } catch (e1) {
+        } catch (error) {
+          const e1 = error as Error;
           console.error('Base58 decode failed:', e1.message);
-          
+        
           try {
             // Try as base64 string
             const privateKey = Buffer.from(privateKeyString, 'base64');
             sourceWalletKeypair = Keypair.fromSecretKey(new Uint8Array(privateKey));
             console.log('Decoded private key using base64');
-          } catch (e2) {
+          } catch (error) {
+            const e2 = error as Error;
             console.error('Base64 decode failed:', e2.message);
-            
+          
             try {
               // Try as JSON array
               const privateKeyArray = JSON.parse(privateKeyString);
               sourceWalletKeypair = Keypair.fromSecretKey(new Uint8Array(privateKeyArray));
               console.log('Decoded private key using JSON array');
-            } catch (e3) {
+            } catch (error) {
+              const e3 = error as Error;
               console.error('JSON parse failed:', e3.message);
-              
+            
               try {
                 // Try as hex string
                 const privateKey = Buffer.from(privateKeyString, 'hex');
                 sourceWalletKeypair = Keypair.fromSecretKey(new Uint8Array(privateKey));
                 console.log('Decoded private key using hex');
-              } catch (e4) {
+              } catch (error) {
+                const e4 = error as Error;
                 console.error('Hex decode failed:', e4.message);
                 throw new Error('Invalid wallet private key format');
               }
