@@ -223,23 +223,39 @@ export async function POST(request: NextRequest) {
     // Send redistribution notification
     try {
       console.log('Sending redistribution notification...');
-      const notificationResponse = await fetch(`https://${process.env.VERCEL_URL || 'localhost:3000'}/api/redistribution-notification`, {
+      
+      // Construct the notification URL
+      const baseUrl = process.env.VERCEL_URL || 'localhost:3000';
+      const notificationUrl = `https://${baseUrl}/api/redistribution-notification`;
+      console.log(`Using notification URL: ${notificationUrl}`);
+      
+      // Prepare the notification payload
+      const notificationPayload = {
+        wallet,
+        token: tokenSymbol,
+        amount,
+        txSignature: signature
+      };
+      console.log('Notification payload:', JSON.stringify(notificationPayload, null, 2));
+      
+      // Send the notification request
+      const notificationResponse = await fetch(notificationUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          wallet,
-          token: tokenSymbol,
-          amount,
-          txSignature: signature
-        }),
+        body: JSON.stringify(notificationPayload),
       });
       
+      // Log the response status
+      console.log(`Notification response status: ${notificationResponse.status} ${notificationResponse.statusText}`);
+      
       if (!notificationResponse.ok) {
-        console.warn('Failed to send redistribution notification, but transaction was successful');
+        const errorData = await notificationResponse.json();
+        console.warn('Failed to send redistribution notification:', JSON.stringify(errorData, null, 2));
       } else {
-        console.log('Redistribution notification sent successfully');
+        const responseData = await notificationResponse.json();
+        console.log('Redistribution notification sent successfully:', JSON.stringify(responseData, null, 2));
       }
     } catch (notifyError) {
       console.error('Error sending redistribution notification:', notifyError);
