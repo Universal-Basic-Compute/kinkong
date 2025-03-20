@@ -186,36 +186,66 @@ export async function POST(request: NextRequest) {
       try {
         const investmentsTable = getTable('INVESTMENTS');
         
-        // Try to find the investment by ID
-        let investmentRecords;
+        // Log the investmentId for debugging
+        console.log(`Looking up investment with ID: ${investmentId}`);
+        console.log(`Investment ID type: ${typeof investmentId}`);
+        
+        // Try multiple approaches to find the investment
+        let investmentRecord = null;
+        
+        // Approach 1: Try to find by record ID directly
         try {
-          // First try to find by investmentId field
-          investmentRecords = await investmentsTable.select({
-            filterByFormula: `{investmentId} = '${investmentId}'`
-          }).all();
-          
-          if (investmentRecords.length === 0) {
-            // If not found, try to find by record ID
-            try {
-              const recordById = await investmentsTable.find(investmentId);
-              if (recordById) {
-                console.log(`Found investment by record ID: ${investmentId}`);
-                investmentRecords = [recordById];
-              }
-            } catch (idError) {
-              console.error('Error finding investment by record ID:', idError);
-            }
+          console.log(`Approach 1: Looking up by record ID: ${investmentId}`);
+          const recordById = await investmentsTable.find(investmentId);
+          if (recordById) {
+            console.log(`Found investment by record ID: ${investmentId}`);
+            investmentRecord = recordById;
           }
-        } catch (selectError) {
-          console.error('Error selecting investment records:', selectError);
+        } catch (idError) {
+          console.error('Error finding investment by record ID:', idError);
         }
         
-        if (investmentRecords && investmentRecords.length > 0) {
-          const investmentRecord = investmentRecords[0];
+        // Approach 2: Try to find by investmentId field
+        if (!investmentRecord) {
+          try {
+            console.log(`Approach 2: Looking up by investmentId field: ${investmentId}`);
+            const records = await investmentsTable.select({
+              filterByFormula: `{investmentId} = '${investmentId}'`
+            }).all();
+            
+            if (records.length > 0) {
+              console.log(`Found investment by investmentId field: ${investmentId}`);
+              investmentRecord = records[0];
+            }
+          } catch (fieldError) {
+            console.error('Error finding investment by investmentId field:', fieldError);
+          }
+        }
+        
+        // Approach 3: Try to find by wallet address
+        if (!investmentRecord && recordWallet) {
+          try {
+            console.log(`Approach 3: Looking up by wallet address: ${recordWallet}`);
+            const records = await investmentsTable.select({
+              filterByFormula: `{wallet} = '${recordWallet}'`
+            }).all();
+            
+            if (records.length > 0) {
+              console.log(`Found investment by wallet address: ${recordWallet}`);
+              investmentRecord = records[0];
+            }
+          } catch (walletError) {
+            console.error('Error finding investment by wallet address:', walletError);
+          }
+        }
+        
+        // If we found an investment record, use it for validation
+        if (investmentRecord) {
           const originalWallet = investmentRecord.get('wallet');
           
           console.log('Found original investment:', {
             id: investmentRecord.id,
+            investmentId: investmentRecord.get('investmentId'),
             wallet: originalWallet,
             requestWallet: wallet
           });
