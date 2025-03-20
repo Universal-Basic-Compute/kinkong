@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
         }
         
         // Use the most recent unclaimed redistribution
-        const record = records[0] as Record<any>;
+        record = records[0];
         if (!record) {
           console.error(`No unclaimed redistributions found for wallet: ${wallet}`);
           return NextResponse.json(
@@ -176,7 +176,7 @@ export async function POST(request: NextRequest) {
     
     // At this point, record is guaranteed to be non-null
     // TypeScript needs this assertion with the correct type
-    const nonNullRecord = record as Record<any>;
+    const nonNullRecord = record as unknown as Record<any>;
     
     // Log record details for debugging
     console.log('Found redistribution record:', {
