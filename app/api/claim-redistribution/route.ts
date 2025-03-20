@@ -105,20 +105,22 @@ export async function POST(request: NextRequest) {
     if (redistributionId) {
       console.log(`Looking up specific redistribution with ID: ${redistributionId}`);
       try {
-        // Look up by the redistributionId field
+        // Look up by the redistributionId field, but also filter by wallet for security
         records = await redistributionsTable.select({
-          filterByFormula: `{redistributionId} = '${redistributionId}'`
+          filterByFormula: `AND({redistributionId} = '${redistributionId}', {wallet} = '${wallet}')`
         }).all();
         
         if (records.length === 0) {
-          console.log(`No redistribution found with redistributionId: ${redistributionId}, trying record ID lookup`);
+          console.log(`No redistribution found with redistributionId: ${redistributionId} and wallet: ${wallet}, trying record ID lookup`);
           
           // Try looking up by record ID as fallback
           try {
             const recordById = await redistributionsTable.find(redistributionId);
-            if (recordById) {
+            if (recordById && recordById.get('wallet') === wallet) {
               console.log(`Found redistribution by record ID: ${redistributionId}`);
               records = [recordById];
+            } else if (recordById) {
+              console.log(`Found redistribution by record ID but wallet doesn't match: ${recordById.get('wallet')} vs ${wallet}`);
             }
           } catch (idError) {
             console.error('Error finding redistribution by record ID:', idError);
@@ -127,19 +129,6 @@ export async function POST(request: NextRequest) {
         
         if (records && records.length > 0) {
           record = records[0];
-          
-          // Verify the wallet matches
-          const recordWallet = record.get('wallet');
-          if (recordWallet && recordWallet.toLowerCase() !== wallet.toLowerCase()) {
-            console.error('Wallet mismatch for specific redistribution:', {
-              requestWallet: wallet,
-              recordWallet
-            });
-            return NextResponse.json(
-              { error: 'Wallet does not match redistribution record' },
-              { status: 403 }
-            );
-          }
         }
       } catch (findError) {
         console.error('Error finding specific redistribution record:', findError);
@@ -176,6 +165,13 @@ export async function POST(request: NextRequest) {
       }
     }
     
+    if (!record) {
+      return NextResponse.json(
+        { error: 'No matching redistribution found for this wallet' },
+        { status: 404 }
+      );
+    }
+    
     // Log record details for debugging
     console.log('Found redistribution record:', {
       id: record.id,
@@ -197,7 +193,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Verify that the requesting wallet matches the record wallet
+    // Double-check that the requesting wallet matches the record wallet
     if (wallet.toLowerCase() !== recordWallet.toLowerCase()) {
       console.error('Wallet mismatch:', {
         requestWallet: wallet,
