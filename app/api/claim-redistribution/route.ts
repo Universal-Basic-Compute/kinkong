@@ -172,6 +172,10 @@ export async function POST(request: NextRequest) {
       );
     }
     
+    // At this point, record is guaranteed to be non-null
+    // TypeScript might need this assertion
+    record = record as NonNullable<typeof record>;
+    
     // Log record details for debugging
     console.log('Found redistribution record:', {
       id: record.id,
