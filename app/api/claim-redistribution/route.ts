@@ -156,7 +156,8 @@ export async function POST(request: NextRequest) {
       claimed: record.get('claimed'),
       ubcAmount: record.get('ubcAmount'),
       computeAmount: record.get('computeAmount'),
-      fields: Object.keys(record.fields)
+      fields: Object.keys(record.fields),
+      investmentId: record.get('investmentId')
     });
 
     // Initialize variables for wallet validation
@@ -177,18 +178,39 @@ export async function POST(request: NextRequest) {
       // Don't return error yet, check if we can get it from the investment record
     }
 
-    // Check if there's an investmentId field in the record
+    // First, try to validate against the original investment record
     const investmentId = record.get('investmentId');
     if (investmentId) {
       console.log(`Checking original investment with ID: ${investmentId}`);
       
       try {
         const investmentsTable = getTable('INVESTMENTS');
-        const investmentRecords = await investmentsTable.select({
-          filterByFormula: `{investmentId} = '${investmentId}'`
-        }).all();
         
-        if (investmentRecords.length > 0) {
+        // Try to find the investment by ID
+        let investmentRecords;
+        try {
+          // First try to find by investmentId field
+          investmentRecords = await investmentsTable.select({
+            filterByFormula: `{investmentId} = '${investmentId}'`
+          }).all();
+          
+          if (investmentRecords.length === 0) {
+            // If not found, try to find by record ID
+            try {
+              const recordById = await investmentsTable.find(investmentId);
+              if (recordById) {
+                console.log(`Found investment by record ID: ${investmentId}`);
+                investmentRecords = [recordById];
+              }
+            } catch (idError) {
+              console.error('Error finding investment by record ID:', idError);
+            }
+          }
+        } catch (selectError) {
+          console.error('Error selecting investment records:', selectError);
+        }
+        
+        if (investmentRecords && investmentRecords.length > 0) {
           const investmentRecord = investmentRecords[0];
           const originalWallet = investmentRecord.get('wallet');
           
@@ -219,6 +241,8 @@ export async function POST(request: NextRequest) {
               recordWallet = originalWallet;
             }
           }
+        } else {
+          console.log(`No investment record found for ID: ${investmentId}`);
         }
       } catch (investmentError) {
         console.error('Error finding original investment:', investmentError);
