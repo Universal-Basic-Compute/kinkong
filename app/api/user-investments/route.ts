@@ -53,7 +53,8 @@ export async function GET(request: NextRequest) {
         // Add debug info
         rawToken: record.get('token')
       };
-    });
+    })
+    .filter(investment => investment.amount !== 0); // Filter out investments with amount = 0
     
     return NextResponse.json(investments);
     
